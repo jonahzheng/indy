@@ -57,7 +57,13 @@
 unit IdCompressorZLibEx;
 
 interface
-uses Classes, IdException, IdIOHandler, IdZLibCompressorBase, IdStreamVCL, IdZLibEx;
+uses Classes,
+  IdException,
+  IdIOHandler,
+  IdStreamVCL,
+  IdSysUtils,
+  IdZLibCompressorBase,
+  IdZLibEx;
 
 type
   TIdCompressorZLibEx = class(TIdZLibCompressorBase)
@@ -84,7 +90,7 @@ type
   EIdDecompressionError = class(EIdCompressionException);
 
 implementation
-uses IdComponent, IdResourceStringsProtocols, IdGlobal, IdGlobalProtocols, SysUtils;
+uses IdComponent, IdResourceStringsProtocols, IdGlobal, IdGlobalProtocols;
 
 const
   bufferSize = 32768;
