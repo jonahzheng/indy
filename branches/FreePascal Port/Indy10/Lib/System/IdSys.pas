@@ -9,7 +9,6 @@ uses
   {$ENDIF}
   {$IFDEF MSWindows}
   IdSysWin32,
-  SysUtils;
   {$ENDIF}
   {$IFDEF Linux}
   IdSysLinux;
@@ -17,8 +16,7 @@ uses
 
 type
   {$IFDEF DotNet}
-  Sys = TIdSysUtilsNet;
-  EIdExceptionBase = class(System.Exception);
+  Sys = TIdSysNet;
   {$ENDIF}
   {$IFDEF MSWindows}
   Sys = TIdSysWin32;

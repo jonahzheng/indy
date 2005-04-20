@@ -11,7 +11,7 @@ type
   //is made to the EAbort exception.
   EAbort = class(Exception);
   TSysCharSet = set of AnsiChar;
-  TIdSysUtilsNet = class(TIdSysUtils)
+  TIdSysNet = class(TIdSysBase)
   public
     class function AddMSecToTime(const ADateTime : TDateTime; const AMSec : Integer):TDateTime; static;
     class function StrToInt64(const S: string): Int64; overload; static;
@@ -69,38 +69,38 @@ uses
 
 { SysUtils }
 
-class procedure TIdSysUtilsNet.Abort;
+class procedure TIdSysNet.Abort;
 begin
   raise EAbort.Create;
 end;
 
-class function TIdSysUtilsNet.CompareStr(const S1, S2: string): Integer;
+class function TIdSysNet.CompareStr(const S1, S2: string): Integer;
 begin
   Result := System.&String.Compare(S1,S2,False);
 end;
 
-class function TIdSysUtilsNet.DateTimeToStr(const ADateTime: TDateTime): string;
+class function TIdSysNet.DateTimeToStr(const ADateTime: TDateTime): string;
 begin
   Result := ADateTime.ToString;
 end;
 
-class function TIdSysUtilsNet.FileExists(const FileName: string): Boolean;
+class function TIdSysNet.FileExists(const FileName: string): Boolean;
 begin
   Result := System.IO.File.Exists(FileName);
 end;
 
-class function TIdSysUtilsNet.Format(const Format: string;  const Args: array of const): string;
+class function TIdSysNet.Format(const Format: string;  const Args: array of const): string;
 begin
 
 end;
 
-class procedure TIdSysUtilsNet.FreeAndNil(var Obj);
+class procedure TIdSysNet.FreeAndNil(var Obj);
 begin
   TObject(Obj).Free;
   Obj := nil;
 end;
 
-class function TIdSysUtilsNet.IncludeTrailingPathDelimiter( const S: string): string;
+class function TIdSysNet.IncludeTrailingPathDelimiter( const S: string): string;
 begin
   Result := S;
   if Copy(S,Length(S),1)<>PATH_DELIN then
@@ -109,42 +109,42 @@ begin
   end;
 end;
 
-class function TIdSysUtilsNet.IntToHex(Value: Int64; Digits: Integer): string;
+class function TIdSysNet.IntToHex(Value: Int64; Digits: Integer): string;
 begin
   Result := System.&String.Format('{0:x' + Digits.ToString + '}', TObject(Value) );
   //Borland's standard string is one based, not zero based
   Result := Copy(Result,Length(Result)-Digits+1,Digits);
 end;
 
-class function TIdSysUtilsNet.IntToHex(Value, Digits: Integer): string;
+class function TIdSysNet.IntToHex(Value, Digits: Integer): string;
 begin
   Result := System.&String.Format('{0:x' + Digits.ToString + '}', TObject(Value));
   //Borland's standard string is one based, not zero based
   Result := Copy(Result,Length(Result)-Digits+1,Digits);
 end;
 
-class function TIdSysUtilsNet.IntToStr(Value: Int64): string;
+class function TIdSysNet.IntToStr(Value: Int64): string;
 begin
   Result := System.Convert.ToString(Value);
 end;
 
-class function TIdSysUtilsNet.IntToStr(Value: Integer): string;
+class function TIdSysNet.IntToStr(Value: Integer): string;
 begin
  Result := System.Convert.ToString(Value);
 end;
 
-class function TIdSysUtilsNet.LastDelimiter(const Delimiters,
+class function TIdSysNet.LastDelimiter(const Delimiters,
   S: string): Integer;
 begin
   Result := s.LastIndexOfAny(Delimiters.ToCharArray);
 end;
 
-class function TIdSysUtilsNet.Now: TDateTime;
+class function TIdSysNet.Now: TDateTime;
 begin
   Result := System.DateTime.Now;
 end;
 
-class function TIdSysUtilsNet.StringReplace(const S, OldPattern,
+class function TIdSysNet.StringReplace(const S, OldPattern,
   NewPattern: string): string;
 var LS : StringBuilder;
 begin
@@ -153,7 +153,7 @@ begin
   Result := LS.ToString;
 end;
 
-class function TIdSysUtilsNet.ReplaceOnlyFirst(const S, OldPattern,
+class function TIdSysNet.ReplaceOnlyFirst(const S, OldPattern,
   NewPattern: string): string;
 var LS : StringBuilder;
   i : Integer;
@@ -173,7 +173,7 @@ begin
   Result := LS.ToString;
 end;
 
-class function TIdSysUtilsNet.StringReplace(const S: String; const OldPattern,
+class function TIdSysNet.StringReplace(const S: String; const OldPattern,
   NewPattern: array of string): string;
 var LS : StringBuilder;
   i : Integer;
@@ -186,7 +186,7 @@ begin
   Result := LS.ToString;
 end;
 
-class function TIdSysUtilsNet.StrToInt64Def(const S: string;
+class function TIdSysNet.StrToInt64Def(const S: string;
   const Default: Int64): Int64;
 var LErr : Integer;
 begin
@@ -197,12 +197,12 @@ begin
   end;
 end;
 
-class function TIdSysUtilsNet.StrToInt(const S: string): Integer;
+class function TIdSysNet.StrToInt(const S: string): Integer;
 begin
   Result := StrToInt(S,0);
 end;
 
-class function TIdSysUtilsNet.StrToInt(const S: string;
+class function TIdSysNet.StrToInt(const S: string;
   Default: Integer): Integer;
 var LErr : Integer;
 begin
@@ -213,34 +213,34 @@ begin
   end;
 end;
 
-class function TIdSysUtilsNet.Trim(const S: string): string;
+class function TIdSysNet.Trim(const S: string): string;
 begin
   Result := s.Trim;
 end;
 
-class function TIdSysUtilsNet.UpperCase(const S: string): string;
+class function TIdSysNet.UpperCase(const S: string): string;
 begin
   Result := System.String(S).ToUpper;
 end;
 
-class function TIdSysUtilsNet.LowerCase(const S: string): string;
+class function TIdSysNet.LowerCase(const S: string): string;
 begin
   Result := System.String(S).ToLower;
 end;
 
-class procedure TIdSysUtilsNet.DecodeDate(const ADateTime: TDateTime; var Year,
+class procedure TIdSysNet.DecodeDate(const ADateTime: TDateTime; var Year,
   Month, Day: Word);
 begin
   TDateTime.DecodeDate(ADateTime,Year,Month,Day);
 end;
 
-class procedure TIdSysUtilsNet.DecodeTime(const ADateTime: TDateTime; var Hour,
+class procedure TIdSysNet.DecodeTime(const ADateTime: TDateTime; var Hour,
   Min, Sec, MSec: Word);
 begin
   TDateTime.DecodeTime(ADateTime,Hour,Min,Sec,MSec);
 end;
 
-class function TIdSysUtilsNet.TrimLeft(const S: string): string;
+class function TIdSysNet.TrimLeft(const S: string): string;
 var LS : StringBuilder;
   i : Integer;
   LDelTo : Integer;
@@ -265,7 +265,7 @@ begin
   Result := LS.ToString;
 end;
 
-class function TIdSysUtilsNet.TrimRight(const S: string): string;
+class function TIdSysNet.TrimRight(const S: string): string;
 var LS : StringBuilder;
   i : Integer;
   LDelPos : Integer;
@@ -291,38 +291,38 @@ begin
   Result := LS.ToString;
 end;
 
-class function TIdSysUtilsNet.DirectoryExists(const Directory: string): Boolean;
+class function TIdSysNet.DirectoryExists(const Directory: string): Boolean;
 begin
   Result := System.IO.Directory.Exists(Directory);
 end;
 
-class function TIdSysUtilsNet.ExtractFileExt(const FileName: string): string;
+class function TIdSysNet.ExtractFileExt(const FileName: string): string;
 begin
   Result := System.IO.Path.GetExtension(FileName);
 end;
 
-class function TIdSysUtilsNet.EncodeTime(Hour, Min, Sec, MSec: Word): TDateTime;
+class function TIdSysNet.EncodeTime(Hour, Min, Sec, MSec: Word): TDateTime;
 begin
   Result := TDateTime.EncodeTime(Hour,Min,Sec,MSec);
 end;
 
-class function TIdSysUtilsNet.EncodeDate(Year, Month, Day: Word): TDateTime;
+class function TIdSysNet.EncodeDate(Year, Month, Day: Word): TDateTime;
 begin
  Result := TDateTime.EncodeDate(Year,Month,Day);
 end;
 
-class function TIdSysUtilsNet.AlignLeftCol(const AStr: String;
+class function TIdSysNet.AlignLeftCol(const AStr: String;
   const AWidth: Integer): String;
 begin
   Result := Copy(Result,Length(AStr)-AWidth+1,AWidth);
 end;
 
-class function TIdSysUtilsNet.FloatToIntStr(const AFloat: Extended): String;
+class function TIdSysNet.FloatToIntStr(const AFloat: Extended): String;
 begin
   Result := Int( AFloat).ToString;
 end;
 
-class function TIdSysUtilsNet.TwoDigitYearCenturyWindow: Word;
+class function TIdSysNet.TwoDigitYearCenturyWindow: Word;
 begin
 //in SysUtils, this value is adjustable but I haven't figured out how to do that
 //here.  Borland's is 50 but for our purposes, 1970 should work since it is the Unix epech
@@ -331,12 +331,12 @@ begin
   Result := 70;
 end;
 
-class function TIdSysUtilsNet.ExtractFileName(const FileName: string): string;
+class function TIdSysNet.ExtractFileName(const FileName: string): string;
 begin
   Result := System.IO.Path.GetFileName(FileName);
 end;
 
-class function TIdSysUtilsNet.DeleteFile(const FileName: string): Boolean;
+class function TIdSysNet.DeleteFile(const FileName: string): Boolean;
 begin
   Result := False;
   if System.IO.&File.Exists(FileName) then
@@ -346,7 +346,7 @@ begin
   end;
 end;
 
-class function TIdSysUtilsNet.FileAge(const FileName: string): TDateTime;
+class function TIdSysNet.FileAge(const FileName: string): TDateTime;
 begin
   if System.IO.&File.Exists(FileName) then
   begin
@@ -360,18 +360,18 @@ end;
 
 
 
-class function TIdSysUtilsNet.CompareDate(const D1, D2: TDateTime): Integer;
+class function TIdSysNet.CompareDate(const D1, D2: TDateTime): Integer;
 begin
   Result := D1.CompareTo(D2);
 end;
 
-class function TIdSysUtilsNet.StrToDateTime(const S: String): TDateTime;
+class function TIdSysNet.StrToDateTime(const S: String): TDateTime;
 begin
 
   Result := TDateTime.Parse(S)
 end;
 
-class function TIdSysUtilsNet.StrToInt64(const S: string): Int64;
+class function TIdSysNet.StrToInt64(const S: string): Int64;
 var LErr : Integer;
 begin
   Val(S,Result,LErr);
@@ -381,7 +381,7 @@ begin
   end;
 end;
 
-class function TIdSysUtilsNet.StrToInt64(const S: string;
+class function TIdSysNet.StrToInt64(const S: string;
   const Default: Int64): Int64;
 var LErr : Integer;
 begin
@@ -393,23 +393,23 @@ begin
 
 end;
 
-class function TIdSysUtilsNet.SameText(const S1, S2: String): Boolean;
+class function TIdSysNet.SameText(const S1, S2: String): Boolean;
 begin
   Result := System.&String.Compare(S1,S2,True)=0;
 end;
 
-class function TIdSysUtilsNet.FormatDateTime(const Format: string;
+class function TIdSysNet.FormatDateTime(const Format: string;
   ADateTime: TDateTime): string;
 begin
 
 end;
 
-class function TIdSysUtilsNet.DayOfWeek(const ADateTime: TDateTime): Word;
+class function TIdSysNet.DayOfWeek(const ADateTime: TDateTime): Word;
 begin
   Result := ADateTime.DayOfWeek;
 end;
 
-class function TIdSysUtilsNet.AddMSecToTime(const ADateTime: TDateTime;
+class function TIdSysNet.AddMSecToTime(const ADateTime: TDateTime;
   const AMSec: Integer): TDateTime;
 var LD : DateTime;
 begin
