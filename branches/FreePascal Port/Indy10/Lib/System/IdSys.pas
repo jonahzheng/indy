@@ -8,7 +8,7 @@ uses
   IdSysNet;
   {$ENDIF}
   {$IFDEF MSWindows}
-  IdSysWin32,
+  IdSysWin32;
   {$ENDIF}
   {$IFDEF Linux}
   IdSysLinux;
