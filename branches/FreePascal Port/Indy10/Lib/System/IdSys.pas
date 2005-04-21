@@ -6,6 +6,8 @@ interface
 uses
   {$IFDEF DotNet}
   IdSysNet;
+  {$ELSE}
+  SysUtils,  //SysUtils has to be here for non-Dot NET stuff
   {$ENDIF}
   {$IFDEF MSWindows}
   IdSysWin32;
@@ -31,6 +33,7 @@ type
   {$IFDEF DotNet}
   EIdExceptionBase = class(System.Exception);
   {$ELSE}
+  Exception = SysUtils.Exception;
   EIdExceptionBase = class(Exception);
   {$ENDIF}
 
