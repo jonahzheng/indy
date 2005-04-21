@@ -34,6 +34,7 @@ type
   EIdExceptionBase = class(System.Exception);
   {$ELSE}
   Exception = SysUtils.Exception;
+  EAbort = SysUtils.EAbort;
   EIdExceptionBase = class(Exception);
   {$ENDIF}
 
