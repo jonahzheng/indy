@@ -57,11 +57,12 @@
 unit IdCompressorZLibEx;
 
 interface
-uses Classes,
+
+uses
+  Classes,
   IdException,
   IdIOHandler,
   IdStreamVCL,
-  IdSysUtils,
   IdZLibCompressorBase,
   IdZLibEx;
 
