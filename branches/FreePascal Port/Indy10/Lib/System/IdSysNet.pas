@@ -490,23 +490,23 @@ class function TIdSysNet.ConvertFormat(const AFormat : String;
   const ADate : TDateTime;
   DTInfo : System.Globalization.DateTimeFormatInfo): String;
 var LSB : StringBuilder;
-  I, Count, HPos, H2Pos, Len: Integer;
+  I, LCount, LHPos, LH2Pos, LLen: Integer;
   c : Char;
   LAMPM : String;
 
 begin
   Result := '';
   LSB := StringBuilder.Create;
-  len := AFormat.Length;
-  if Len=0 then
+  Llen := AFormat.Length;
+  if LLen=0 then
   begin
     Exit;
   end;
   I := 1;
-  HPos := -1;
-  H2Pos := -1;
+  LHPos := -1;
+  LH2Pos := -1;
   repeat
-    if I > Len then
+    if I > LLen then
     begin
       Break;
     end;
@@ -514,7 +514,7 @@ begin
     case C of
       't', 'T' : //t - short time, tt - long time
       begin
-        if (i < Len) and ((AFormat[i+1]='t') or (AFormat[i+1]='T')) then
+        if (i < LLen) and ((AFormat[i+1]='t') or (AFormat.Chars[i]='T')) then
         begin
           LSB.Append(DTInfo.LongTimePattern );
           i := i + 2;
@@ -533,31 +533,31 @@ begin
       end;
       'd' : //must do some mapping
       begin
-        Count := 0;
-        while (i + Count<=Len) and ((AFormat[i+Count] ='D') or
-          (AFormat[i+Count] ='d')) do
+        LCount := 0;
+        while (i + LCount<=LLen) and ((AFormat[i+LCount] ='D') or
+          (AFormat[i+LCount] ='d')) do
         begin
-          Inc(Count);
+          Inc(LCount);
         end;
-        case COunt of
+        case LCount of
           5 : LSB.Append(DTInfo.ShortDatePattern);
           6 : LSB.Append(DTInfo.LongDatePattern);
         else
-          LSB.Append(StringOfChar(c,Count));
+          LSB.Append(StringOfChar(c,LCount));
         end;
-        Inc(i,Count);
+        Inc(i,LCount);
       end;
       'h' : //h -
       //assume 24 hour format
       //remember positions in case am/pm pattern appears later
       begin
-        HPos := LSB.Length;
+        LHPos := LSB.Length;
         i := AddStringToFormat(LSB,i,'H');
-        if (i <= Len) then
+        if (i <= LLen) then
         begin
           if (AFormat[i] ='H') or (AFormat[i] = 'h') then
           begin
-            H2Pos := LSB.Length;
+            LH2Pos := LSB.Length;
             i := AddStringToFormat(LSB,i,'H');
           end;
         end;
@@ -638,20 +638,20 @@ begin
             i := i + 5;
           end;
         end;
-        if HPos <> -1 then
+        if LHPos <> -1 then
         begin
-          LSB.Chars[HPos] := 'h';
-          if H2Pos<>-1 then
+          LSB.Chars[LHPos] := 'h';
+          if LH2Pos<>-1 then
           begin
-            LSB.Chars[H2Pos] := 'h';
+            LSB.Chars[LH2Pos] := 'h';
           end;
-          HPos := -1;
-          H2Pos := -1;
+          LHPos := -1;
+          LH2Pos := -1;
         end;
       end;
       'z', 'Z' :
       begin
-        if (i+2 < Len) and (System.&String.Compare(AFormat,i-1,'zzz',0,3,True)=0) then
+        if (i+2 < LLen) and (System.&String.Compare(AFormat,i-1,'zzz',0,3,True)=0) then
         begin
           LSB.Append(  ADate.MilliSecond.ToString );
           i := i + 3;
@@ -669,14 +669,14 @@ begin
       '''','"' : //litteral
       begin
         i := AddStringToFormat(LSB,i,C);
-        Count := 0;
-        while (i + Count < Len) and (AFormat[I+Count]<>C) do
+        LCount := 0;
+        while (i + LCount < LLen) and (AFormat.Chars[I+LCount]<>C) do
         begin
-          Inc(Count);
+          Inc(LCount);
         end;
-        LSB.Append(AFormat,i-1,Count);
-        inc(i,Count);
-        if i<=Len then
+        LSB.Append(AFormat,i-1,LCount);
+        inc(i,LCount);
+        if i<=LLen then
         begin
           AddStringToFormat(LSB,i,c);
         end;
