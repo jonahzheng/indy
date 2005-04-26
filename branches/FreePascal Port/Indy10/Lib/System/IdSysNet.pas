@@ -39,7 +39,14 @@ type
   TIdSysNet = class(TIdSysBase)
   protected
     class function AddStringToFormat(SB: StringBuilder; I: Integer; S: String): Integer; static;
+    class procedure FmtStr(var Result: string; const Format: string;
+      const Args: array of const); static;
   public
+    class function FormatBuf(var Buffer: System.Text.StringBuilder; const Format: string;
+      FmtLen: Cardinal; const Args: array of const; Provider: IFormatProvider): Cardinal; overload; static;
+    class function FormatBuf(var Buffer: System.Text.StringBuilder; const Format: string;
+      FmtLen: Cardinal; const Args: array of const): Cardinal;  overload; static;
+
     class function LastChars(const AStr : String; const ALen : Integer): String; static;
     class function AddMSecToTime(const ADateTime : TDateTime; const AMSec : Integer):TDateTime; static;
     class function StrToInt64(const S: string): Int64; overload; static;
@@ -166,7 +173,7 @@ end;
 
 class function TIdSysNet.Format(const Format: string;  const Args: array of const): string;
 begin
-
+  FmtStr(Result, Format, Args);
 end;
 
 class procedure TIdSysNet.FreeAndNil(var Obj);
@@ -498,8 +505,11 @@ begin
   I := 1;
   HPos := -1;
   H2Pos := -1;
-  while I <= Len do
-  begin
+  repeat
+    if I > Len then
+    begin
+      Break;
+    end;
     C := AFormat[I];
     case C of
       't', 'T' : //t - short time, tt - long time
@@ -693,7 +703,7 @@ begin
         i := AddStringToFormat(LSB,i,C);
       end;
     end;
-  end;
+  until False;
   Result := LSB.ToString;
 end;
 
@@ -912,6 +922,212 @@ function TIdStringBuilderHelper.ReplaceOnlyLast(const oldValue,
 
 begin
   Result := Self.ReplaceOnlyLast(oldValue,newValue,Self.Length,Self.Length);
+end;
+
+class function TIdSysNet.FormatBuf(var Buffer: System.Text.StringBuilder;
+  const Format: string; FmtLen: Cardinal; const Args: array of const): Cardinal;
+var
+  LFormat: NumberFormatInfo;
+begin
+  //for most of our uses, we want the immutable settings instead of the user's
+  //local settings.
+  LFormat := NumberFormatInfo.InvariantInfo;
+
+  Result := FormatBuf(Buffer, Format, FmtLen, Args, LFormat);
+end;
+
+class function TIdSysNet.FormatBuf(var Buffer: System.Text.StringBuilder;
+  const Format: string; FmtLen: Cardinal; const Args: array of const;
+  Provider: IFormatProvider): Cardinal;
+
+  function ReadNumber(const AFmt : String;
+    const AArgs: array of const;
+    AProvider: IFormatProvider;
+    var VIdx : Integer;
+    var VArgIdx : Integer;
+    AScratch : System.Text.StringBuilder): Integer;
+
+  begin
+
+    Result := 0;
+    AScratch.Length := 0;
+    if AFmt.Chars[VIdx] = '-' then
+    begin
+      AScratch.Append(AFmt.Chars[VIdx]);
+      Inc(VIdx);
+      if VIdx >= AFmt.Length then
+      begin
+        Exit;
+      end;
+    end;
+    if AFmt.Chars[VIdx] = '*' then
+    begin
+      //The value is embedded in the Args paramer;
+
+       AScratch.Append(AArgs[VArgIdx]);
+      Inc(VArgIdx);
+      Inc(VIdx);
+    end
+    else
+    begin
+      //parse the value
+      repeat
+
+        if VIdx >= AFmt.Length then
+        begin
+          Break;
+        end;
+
+         if System.Char.IsDigit(AFmt.Chars[VIdx]) then
+         begin
+           AScratch.Append( AFmt.Chars[VIdx]);
+         end
+         else
+         begin
+           break;
+         end;
+         inc(VIdx);
+      until False;
+    end;
+    if AScratch.Length>0 then
+    begin
+      Result := System.Convert.ToInt32 ( AScratch.ToString, AProvider );
+    end;
+  end;
+  
+
+var
+  LStrLen : Integer;
+  LIdx, LArgIdx : Integer;
+  LPerLen : Integer;
+  LWidth : Integer;
+  LFmStr : System.Text.StringBuilder;
+  LScratch : System.Text.StringBuilder; //scratch pad for int. usage
+
+begin
+  LWidth := 0;
+  LIdx := 0;
+  LArgIdx := 0;
+  LStrLen := Format.Length;
+  LFmStr := System.Text.StringBuilder.Create;
+  LScratch := System.Text.StringBuilder.Create;
+  repeat
+    if LIdx >= LStrLen then
+    begin
+      Break;
+    end;
+    if Format.Chars[LIdx]='%' then
+    begin
+      inc(LIdx);
+      if LIdx >= LStrLen then
+      begin
+        break;
+      end;
+      //interpret as one litteral % in a string
+      if Format.Chars[LIdx] ='%' then
+      begin
+        Buffer.Append(Format.Chars[LIdx]);
+        Continue;
+      end;
+      LFmStr.Length := 0;
+      LFmStr.Append('{0');
+      //width specifier might be first
+      LWidth := ReadNumber(Format,Args,Provider,LIdx,LArgIdx,LScratch);
+
+      if Format.Chars[LIdx] = ':' then
+      begin
+        inc(LIdx);
+        if LIdx >= LStrLen then
+        begin
+          break;
+        end;
+        //That was not the width but the Index
+        if LWidth >-1 then
+        begin
+          LArgIdx := 0 - LWidth;
+          LWidth := -1;
+        end
+        else
+        begin
+          LArgIdx := 0;
+          Inc(LIdx);
+          if LIdx >= LStrLen then
+          begin
+            break;
+          end;
+        end;
+
+        LWidth := ReadNumber(Format,Args,Provider,LIdx,LArgIdx,LScratch);
+      end;
+      //Percission value
+      if Format.Chars[LIdx] = '.' then
+      begin
+        inc(LIdx);
+        if LIdx >= LStrLen then
+        begin
+          break;
+        end;
+        LPerLen := ReadNumber(Format,Args,Provider,LIdx,LArgIdx,LScratch);
+      end
+      else
+      begin
+        LPerLen := 0;
+      end;
+      if LWidth <> 0 then
+      begin
+        LFmStr.Append(','+LWidth.ToString);
+      end;
+      LFmStr.Append(Char(':'));
+
+      case Format.Chars[LIdx] of
+        'd', 'D',
+        'u', 'U': LFmStr.Append(Char('d'));
+        'e', 'E',
+        'f', 'F',
+        'g', 'G',
+        'n', 'N',
+        'x', 'X':  LFmStr.Append(Char(Format.Chars[LIdx]));
+
+        'm', 'M': LFmStr.Append(Char('c'));
+        'p', 'P': LFmStr.Append(Char('x'));
+        's', 'S': ;  // no format spec needed for strings
+      else
+        Continue;
+      end;
+      if LPerLen>0 then
+      begin
+        LFmStr.Append(LPerLen.ToString);
+      end;
+      LFmStr.Append(Char('}'));
+      //we'll AppendFormat to our scratchpad instead of directly into
+      //buffer because the Width specifier needs to truncate with a string.
+      LScratch.Length := 0;
+      LScratch.AppendFormat(Provider, LFmStr.ToString, [Args[LArgIdx]]);
+      if ((Format.Chars[LIdx] = 's') or (Format.Chars[LIdx] = 'S')) and
+        (LPerLen>0) then
+      begin
+        LScratch.Length := LPerLen;
+      end;
+      Buffer.Append(LScratch);
+      Inc(LArgIdx);
+    end
+    else
+    begin
+      Buffer.Append(Format.Chars[LIdx]);
+    end;
+    Inc(LIdx);
+  until False;
+  Result := Buffer.Length;
+end;
+
+class procedure TIdSysNet.FmtStr(var Result: string; const Format: string;
+  const Args: array of const);
+var
+  Buffer: System.Text.StringBuilder;
+begin
+  Buffer := System.Text.StringBuilder.Create(Length(Format) * 2);
+  FormatBuf(Buffer, Format, Length(Format), Args);
+  Result := Buffer.ToString;
 end;
 
 end.
