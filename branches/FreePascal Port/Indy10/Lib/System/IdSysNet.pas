@@ -102,52 +102,7 @@ const PATH_DELIN = '\';
 
 implementation
 uses
-
   System.IO;
-
-const
-  ShortDaysOfWeek : array [1..7] of string =
-   ('Sun',
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat');
-  LongDaysOfWeek  : array [1..7] of string =
-  ('Sunday',
-   'Monday',
-   'Tuesday',
-   'Wednesday',
-   'Thursday',
-   'Friday',
-   'Saturday');
-  ShortMonthes : array [1..12] of string =
-  ('Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec');
-  LongMonthes : array [1..12] of string =
-  ('January',
-   'February',
-   'March',
-   'April',
-   'May',
-   'June',
-   'July',
-   'August',
-   'September',
-   'October',
-   'November',
-   'December');
 
 { SysUtils }
 
