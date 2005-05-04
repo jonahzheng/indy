@@ -38,6 +38,7 @@ type
   //
   {$IFDEF DotNet}
   EIdExceptionBase = System.Exception;
+  EAbort = IdSysNET.EAbort;
   {$ELSE}
   EIdExceptionBase = Exception;
   Exception = SysUtils.Exception;
