@@ -46,6 +46,7 @@ type
       FmtLen: Cardinal; const Args: array of const; Provider: IFormatProvider): Cardinal; overload; static;
     class function FormatBuf(var Buffer: System.Text.StringBuilder; const Format: string;
       FmtLen: Cardinal; const Args: array of const): Cardinal;  overload; static;
+    class function AnsiCompareText(const S1, S2: WideString): Integer; static;
 
     class function LastChars(const AStr : String; const ALen : Integer): String; static;
     class function AddMSecToTime(const ADateTime : TDateTime; const AMSec : Integer):TDateTime; static;
@@ -1083,6 +1084,11 @@ begin
   Buffer := System.Text.StringBuilder.Create(Length(Format) * 2);
   FormatBuf(Buffer, Format, Length(Format), Args);
   Result := Buffer.ToString;
+end;
+
+class function TIdSysNet.AnsiCompareText(const S1, S2: WideString): Integer;
+begin
+  Result := System.String.Compare(S1, S2, True);
 end;
 
 end.
