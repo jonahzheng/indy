@@ -89,6 +89,7 @@ type
     class function DeleteFile(const FileName: string): Boolean; static;
     class function ExtractFileName(const FileName: string): string; static;
     class function ExtractFileExt(const FileName: string): string; static;
+    class function ChangeFileExt(const FileName, Extension: string): string; static;
     class function LastDelimiter(const Delimiters, S: string): Integer; static;
     class function StrToInt64Def(const S: string; const Default: Int64): Int64;  static;
     class function StringReplace(const S, OldPattern, NewPattern: string): string; overload; static;
@@ -1089,6 +1090,19 @@ end;
 class function TIdSysNet.AnsiCompareText(const S1, S2: WideString): Integer;
 begin
   Result := System.String.Compare(S1, S2, True);
+end;
+
+class function TIdSysNet.ChangeFileExt(const FileName,
+  Extension: string): string;
+begin
+  if Extension.Length <> 0 then
+  begin
+    Result := System.IO.Path.ChangeExtension(FileName, Extension)
+  end
+  else
+  begin
+    Result := System.IO.Path.ChangeExtension(FileName, System.String(nil));
+  end;
 end;
 
 end.
