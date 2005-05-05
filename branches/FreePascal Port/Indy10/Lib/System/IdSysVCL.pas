@@ -90,7 +90,7 @@ type
     class function DeleteFile(const FileName: string): Boolean; 
     class function ExtractFileName(const FileName: string): string; 
     class function ExtractFileExt(const FileName: string): string;
-
+    class function ChangeFileExt(const FileName, Extension: string): string;
     class function FloatToIntStr(const AFloat: Extended): String;
     class function GetEnglishSetting : TFormatSettings;
   end;
@@ -558,6 +558,12 @@ begin
   Result.LongDayNames[7] := 'Saturday';
 
   Result.ListSeparator := ',';
+end;
+
+class function TIdSysVCL.ChangeFileExt(const FileName,
+  Extension: string): string;
+begin
+  Result := SysUtils.ChangeFileExt(FileName,Extension);
 end;
 
 end.
