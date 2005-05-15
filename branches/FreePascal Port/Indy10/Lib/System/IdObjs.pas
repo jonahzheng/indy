@@ -6,16 +6,18 @@ interface
 
 uses
 {$IFDEF DotNet}
-  IdObjsNET
+  IdObjsFCL
 {$ELSE}
   Classes
 {$ENDIF};
 
 type
 {$IFDEF DotNet}
-  TIdStrings = TIdStringsDotNet;
+  TIdStrings = TIdStringsFCL;
+  TIdStringList = TIdStringListFCL;
 {$ELSE}
   TIdStrings = Classes.TStrings;
+  TIdStringList = Classes.TStringList;
 {$ENDIF}
 
 
