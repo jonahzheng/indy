@@ -4,11 +4,11 @@ interface
 
 uses
   Windows,
-  IdSysVCL,
+  IdSysNativeVCL,
   SysUtils;
 
 type
-  TIdSysWin32 = class(TIdSysVCL)
+  TIdSysWin32 = class(TIdSysNativeVCL)
   public
     class function Win32Platform: Integer;
     class function Win32MajorVersion : Integer;

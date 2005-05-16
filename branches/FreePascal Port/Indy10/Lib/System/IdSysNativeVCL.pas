@@ -14,35 +14,36 @@ type
   end;
 
 implementation
+uses SysUtils;
 
 class function TIdSysNativeVCL.CompareMem(P1, P2: Pointer;
   Length: Integer): Boolean;
 begin
   Result := SysUtils.CompareMem(P1,P2,Length);
 end;
-class function TIdSysVCL.AnsiExtractQuotedStr(var Src: PChar;
+class function TIdSysNativeVCL.AnsiExtractQuotedStr(var Src: PChar;
   Quote: Char): string;
 begin
   Result := SysUtils.AnsiExtractQuotedStr(Src,Quote);
 end;
 
-class function TIdSysVCL.StrLCopy(Dest: PChar; const Source: PChar;
+class function TIdSysNativeVCL.StrLCopy(Dest: PChar; const Source: PChar;
   MaxLen: Cardinal): PChar;
 begin
   Result := SysUtils.StrLCopy(Dest,Source,MaxLen);
 end;
 
-class function TIdSysVCL.StrPas(const Str: PChar): string;
+class function TIdSysNativeVCL.StrPas(const Str: PChar): string;
 begin
   Result := SysUtils.StrPas(Str);
 end;
 
-class function TIdSysVCL.StrNew(const Str: PChar): PChar;
+class function TIdSysNativeVCL.StrNew(const Str: PChar): PChar;
 begin
   Result := SysUtils.StrNew(Str);
 end;
 
-class procedure TIdSysVCL.StrDispose(Str: PChar);
+class procedure TIdSysNativeVCL.StrDispose(Str: PChar);
 begin
   SysUtils.StrDispose(Str);
 end;

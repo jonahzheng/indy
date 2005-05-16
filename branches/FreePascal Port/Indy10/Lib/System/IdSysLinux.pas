@@ -3,10 +3,11 @@ unit IdSysLinux;
 interface
 
 uses
+  IdSysNativeVCL,
   IdSysVCL;
 
 type
-  TIdSysLinux = class(TIdSysVCL)
+  TIdSysLinux = class(TIdSysNativeVCL)
   end;
 
 implementation
