@@ -4,29 +4,36 @@ unit IdSys;
 interface
 
 uses
-  {$IFDEF DotNet}
+  {$IFDEF DotNetDistro}
   IdSysNet;
   {$ELSE}
-  SysUtils,  //SysUtils has to be here for non-Dot NET stuff
-  {$ENDIF}
-  {$IFDEF MSWindows}
-  IdSysWin32;
-  {$ENDIF}
-  {$IFDEF Linux}
-  IdSysLinux;
+    SysUtils,  //SysUtils has to be here for non-Dot NET stuff
+
+    {$IFDEF MSWindows}
+    IdSysWin32
+    {$ELSE}
+      {$IFDEF Linux}
+      IdSysLinux;
+      {$ELSE}
+      IdSysVCL;
+      {$ENDIF}
+    {$ENDIF}
   {$ENDIF}
 
 type
-  {$IFDEF DotNet}
+  {$IFDEF DotNetDistro}
   Sys = TIdSysNet;
-  {$ENDIF}
-  {$IFDEF MSWindows}
+  {$ELSE}
+    {$IFDEF MSWindows}
   Sys = TIdSysWin32;
-  {$ENDIF}
-  {$IFDEF Linux}
+    {$ELSE}
+      {$IFDEF Linux}
   Sys = TIdSysLinux;
+      {$ELSE}
+      Sys = TIdSysVCL;
+      {$ENDIF}
+    {$ENDIF}
   {$ENDIF}
-
   // Exceptions
   //
   // ALL Indy exceptions must descend from EIdException or descendants of it and not directly
@@ -36,12 +43,16 @@ type
   // Do NOT use the class keyword, we do not want a new class, we just want an alias
   // so that it actually IS the base.
   //
-  {$IFDEF DotNet}
+  {$IFDEF DotNetDistro}
   EIdExceptionBase = System.Exception;
   EAbort = IdSysNET.EAbort;
   {$ELSE}
   EIdExceptionBase = Exception;
-  Exception = SysUtils.Exception;
+  {$IFDEF DOTNET}
+    Exception = System.Exception;
+  {$ELSE}
+    Exception = SysUtils.Exception;
+  {$ENDIF}
   EAbort = SysUtils.EAbort;
   {$ENDIF}
 

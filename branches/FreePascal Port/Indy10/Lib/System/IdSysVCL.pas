@@ -3,12 +3,16 @@ unit IdSysVCL;
 interface
 
 uses
+{$I IdCompilerDefines.inc}
+{$IFDEF DOTNET}
+  System.IO,
+{$ELSE}
+{$ENDIF}
   IdSysBase,
   SysUtils;
 
 type
-  EAbort = SysUtils.EAbort;
-  Exception = SysUtils.Exception;
+
   TAnsiCharSet = set of AnsiChar;
   TSysCharSet = SysUtils.TSysCharSet;
   TIdSysVCL = class(TIdSysBase)
@@ -23,13 +27,9 @@ type
 
     class function Now : TDateTime;  
     class function FormatDateTime(const Format: string; ADateTime: TDateTime): string; 
-    class function Format(const Format: string; const Args: array of const): string; 
+    class function Format(const Format: string; const Args: array of const): string;
 
-    class function AnsiExtractQuotedStr(var Src: PChar; Quote: Char): string;  
-    class function StrLCopy(Dest: PChar; const Source: PChar; MaxLen: Cardinal): PChar; 
-    class function StrPas(const Str: PChar): string; 
-    class function StrNew(const Str: PChar): PChar;
-    class procedure StrDispose(Str: PChar); 
+
 
     class function AnsiUpperCase(const S: AnsiString): AnsiString; overload; 
     class function AnsiUpperCase(const S: WideString): WideString; overload; deprecated;
@@ -40,11 +40,20 @@ type
     class function ByteType(const S: string; Index: Integer): TMbcsByteType; 
     //done because for some reason, mbSingleByte can only be exposed directly from the SysUtils unit,
     //I tried doing it from here without luck
-    class function IsSingleByteType(const S: string; Index: Integer): Boolean; 
+    class function IsSingleByteType(const S: string; Index: Integer): Boolean;
+    {$IFDEF DOTNET}
+    class function FileCreate(const FileName: string) : FileStream; overload;
+    class function FileCreate(const FileName: string;
+     Rights: Integer): FileStream; overload;
+    class procedure FileClose(Handle: FileStream);
+
+
+    {$ELSE}
     class function FileCreate(const FileName: string; Rights: Integer): Integer; overload;
     class function FileCreate(const FileName: string): Integer; overload; 
-    class procedure FileClose(Handle: Integer); 
-    class function FileDateToDateTime(FileDate: Integer): TDateTime; 
+    class procedure FileClose(Handle: Integer);
+    {$ENDIF}
+    class function FileDateToDateTime(FileDate: Integer): TDateTime;
     class function AnsiCompareText(const S1, S2: AnsiString): Integer; overload;
     class function AnsiCompareText(const S1, S2: WideString): Integer; overload; deprecated;
     class function CompareStr(const S1, S2: string): Integer; 
@@ -73,7 +82,7 @@ type
     class function TrimLeft(const S: string): string;
     class function TrimRight(const S: string): string;
 
-    class function CompareMem(P1, P2: Pointer; Length: Integer): Boolean;
+
     class procedure Abort;
     class function FileExists(const FileName: string): Boolean;
     class function LastDelimiter(const Delimiters, S: string): Integer;
@@ -157,11 +166,6 @@ begin
   Result := SysUtils.AnsiUpperCase(S);
 end;
 
-class function TIdSysVCL.CompareMem(P1, P2: Pointer;
-  Length: Integer): Boolean;
-begin
-  Result := SysUtils.CompareMem(P1,P2,Length);
-end;
 
 class function TIdSysVCL.FileExists(const FileName: string): Boolean;
 begin
@@ -424,32 +428,7 @@ begin
   Result := SysUtils.SameText(S1,S2);
 end;
 
-class function TIdSysVCL.AnsiExtractQuotedStr(var Src: PChar;
-  Quote: Char): string;
-begin
-  Result := SysUtils.AnsiExtractQuotedStr(Src,Quote);
-end;
 
-class function TIdSysVCL.StrLCopy(Dest: PChar; const Source: PChar;
-  MaxLen: Cardinal): PChar;
-begin
-  Result := SysUtils.StrLCopy(Dest,Source,MaxLen);
-end;
-
-class function TIdSysVCL.StrPas(const Str: PChar): string;
-begin
-  Result := SysUtils.StrPas(Str);
-end;
-
-class function TIdSysVCL.StrNew(const Str: PChar): PChar;
-begin
-  Result := SysUtils.StrNew(Str);
-end;
-
-class procedure TIdSysVCL.StrDispose(Str: PChar);
-begin
-  SysUtils.StrDispose(Str);
-end;
 
 class function TIdSysVCL.AddMSecToTime(const ADateTime: TDateTime;
   const AMSec: Integer): TDateTime;
@@ -467,6 +446,24 @@ begin
   Result := SysUtils.ByteType(S,Index)
 end;
 
+{$IFDEF DOTNET}
+class function TIdSysVCL.FileCreate(const FileName: string;
+  Rights: Integer): FileStream;
+begin
+   Result := SysUtils.FileCreate(FileName,Rights);
+end;
+
+class procedure TIdSysVCL.FileClose(Handle: FileStream);
+begin
+  SysUtils.FileClose(Handle);
+end;
+
+class function TIdSysVCL.FileCreate(const FileName: string): FileStream;
+begin
+  Result := SysUtils.FileCreate(FileName);
+end;
+
+{$ELSE}
 class function TIdSysVCL.FileCreate(const FileName: string;
   Rights: Integer): Integer;
 begin
@@ -482,6 +479,10 @@ class function TIdSysVCL.FileCreate(const FileName: string): Integer;
 begin
   Result := SysUtils.FileCreate(FileName);
 end;
+{$ENDIF}
+
+
+
 
 class function TIdSysVCL.IsSingleByteType(const S: string;
   Index: Integer): Boolean; 

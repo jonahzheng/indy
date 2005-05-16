@@ -5,14 +5,14 @@ unit IdObjs;
 interface
 
 uses
-{$IFDEF DotNet}
+{$IFDEF DotNetDistro}
   IdObjsFCL
 {$ELSE}
   Classes
 {$ENDIF};
 
 type
-{$IFDEF DotNet}
+{$IFDEF DotNetDistro}
   TIdStrings = TIdStringsFCL;
   TIdStringList = TIdStringListFCL;
 {$ELSE}
