@@ -10,7 +10,7 @@ uses
     SysUtils,  //SysUtils has to be here for non-Dot NET stuff
 
     {$IFDEF MSWindows}
-    IdSysWin32
+    IdSysWin32;
     {$ELSE}
       {$IFDEF Linux}
       IdSysLinux;
