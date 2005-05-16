@@ -22,7 +22,7 @@ uses
 
 type
   {$IFDEF DotNetDistro}
-  Sys = TIdSysNet;
+  Sys = class(TIdSysNet);
   {$ELSE}
     {$IFDEF MSWindows}
   Sys = TIdSysWin32;
