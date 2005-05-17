@@ -13,6 +13,8 @@ type
     class function CompareMem(P1, P2: Pointer; Length: Integer): Boolean;
   end;
 
+  TIdDateTimeBase = TDateTime;
+
 implementation
 uses SysUtils;
 

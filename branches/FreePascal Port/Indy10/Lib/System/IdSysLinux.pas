@@ -10,6 +10,8 @@ type
   TIdSysLinux = class(TIdSysNativeVCL)
   end;
 
+  TIdDateTimeBase = TDateTime;
+
 implementation
 
 end.

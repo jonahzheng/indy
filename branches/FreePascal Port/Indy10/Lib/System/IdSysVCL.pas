@@ -12,7 +12,7 @@ uses
   SysUtils;
 
 type
-
+  TIdDateTimeBase = TDateTime;
   TAnsiCharSet = set of AnsiChar;
   TSysCharSet = SysUtils.TSysCharSet;
   TIdSysVCL = class(TIdSysBase)

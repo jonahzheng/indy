@@ -34,6 +34,9 @@ type
       {$ENDIF}
     {$ENDIF}
   {$ENDIF}
+
+  TIdDateTime = TIdDateTimeBase;
+
   // Exceptions
   //
   // ALL Indy exceptions must descend from EIdException or descendants of it and not directly
