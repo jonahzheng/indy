@@ -227,11 +227,13 @@ end;
 
 class function TIdSysVCL.StringReplace(const S: String; const OldPattern,
   NewPattern: array of string): string;
-var i : Integer;
+var
+  i : Integer;
 begin
+  Result:=s;
   for i := Low(OldPattern) to High(OldPattern) do
   begin
-    Result := SysUtils.StringReplace(s,OldPattern[i],NewPattern[i],[rfReplaceAll]);
+    Result := SysUtils.StringReplace(Result,OldPattern[i],NewPattern[i],[rfReplaceAll]);
   end;
 end;
 
