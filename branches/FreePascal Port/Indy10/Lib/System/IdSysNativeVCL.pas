@@ -1,7 +1,7 @@
 unit IdSysNativeVCL;
 
 interface
-uses IdSysVCL;
+uses IdSysVCL, SysUtils;
 type
   TIdSysNativeVCL = class(TIdSysVCL)
   public
@@ -33,7 +33,6 @@ type
   TIdDateTimeBase = TDateTime;
 
 implementation
-uses SysUtils;
 
 class function TIdSysNativeVCL.CompareMem(P1, P2: Pointer;
   Length: Integer): Boolean;
