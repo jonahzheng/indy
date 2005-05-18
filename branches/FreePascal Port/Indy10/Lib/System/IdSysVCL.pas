@@ -29,18 +29,6 @@ type
     class function FormatDateTime(const Format: string; ADateTime: TDateTime): string; 
     class function Format(const Format: string; const Args: array of const): string;
 
-
-
-    class function AnsiUpperCase(const S: AnsiString): AnsiString; overload; 
-    class function AnsiUpperCase(const S: WideString): WideString; overload; deprecated;
-
-    class function AnsiLowerCase(const S: AnsiString): AnsiString; overload;
-    class function AnsiLowerCase(const S: WideString): WideString; overload; deprecated;
-
-    class function ByteType(const S: string; Index: Integer): TMbcsByteType; 
-    //done because for some reason, mbSingleByte can only be exposed directly from the SysUtils unit,
-    //I tried doing it from here without luck
-    class function IsSingleByteType(const S: string; Index: Integer): Boolean;
     {$IFDEF DOTNET}
     class function FileCreate(const FileName: string) : FileStream; overload;
     class function FileCreate(const FileName: string;
@@ -54,18 +42,10 @@ type
     class procedure FileClose(Handle: Integer);
     {$ENDIF}
     class function FileDateToDateTime(FileDate: Integer): TDateTime;
-    class function AnsiCompareText(const S1, S2: AnsiString): Integer; overload;
-    class function AnsiCompareText(const S1, S2: WideString): Integer; overload; deprecated;
-    class function CompareStr(const S1, S2: string): Integer; 
-    class function AnsiCompareStr(const S1, S2: AnsiString): Integer; overload; 
-    class function AnsiCompareStr(const S1, S2: WideString): Integer; overload; deprecated;
-    class function AddMSecToTime(const ADateTime : TDateTime; const AMSec : Integer):TDateTime; 
+    class function CompareStr(const S1, S2: string): Integer;
+    class function AddMSecToTime(const ADateTime : TDateTime; const AMSec : Integer):TDateTime;
     class function CompareDate(const D1, D2 : TDateTime) : Integer; 
-    class function SameText(const S1, S2 : String) : Boolean; 
-
-    class function AnsiPos(const Substr, S: AnsiString): Integer; overload; 
-    class function AnsiPos(const Substr, S: WideString): Integer; overload;  deprecated;
-
+    class function SameText(const S1, S2 : String) : Boolean;
     class procedure FreeAndNil(var Obj);  
     class function LeadBytes: TAnsiCharSet; 
     class function IntToHex(Value: Integer; Digits: Integer): string; overload;
@@ -111,61 +91,6 @@ class procedure TIdSysVCL.Abort;
 begin
   SysUtils.Abort;
 end;
-
-class function TIdSysVCL.AnsiCompareStr(const S1,
-  S2: WideString): Integer;
-begin
-  Result := SysUtils.AnsiCompareStr(S1,S2);
-end;
-
-class function TIdSysVCL.AnsiCompareStr(const S1,
-  S2: AnsiString): Integer;
-begin
-  Result := SysUtils.AnsiCompareStr(S1,S2);
-end;
-
-class function TIdSysVCL.AnsiCompareText(const S1,
-  S2: WideString): Integer;
-begin
-  Result := SysUtils.AnsiCompareText(S1,S2);
-end;
-
-class function TIdSysVCL.AnsiCompareText(const S1,
-  S2: AnsiString): Integer;
-begin
-  Result := SysUtils.AnsiCompareText(S1,S2);
-end;
-
-class function TIdSysVCL.AnsiLowerCase(const S: WideString): WideString;
-begin
-  Result := SysUtils.AnsiLowerCase(S);
-end;
-
-class function TIdSysVCL.AnsiLowerCase(const S: AnsiString): AnsiString;
-begin
-  Result := SysUtils.AnsiLowerCase(S);
-end;
-
-class function TIdSysVCL.AnsiPos(const Substr, S: WideString): Integer;
-begin
-  Result := SysUtils.AnsiPos(Substr,S);
-end;
-
-class function TIdSysVCL.AnsiPos(const Substr, S: AnsiString): Integer;
-begin
-  Result := SysUtils.AnsiPos(Substr,S);
-end;
-
-class function TIdSysVCL.AnsiUpperCase(const S: WideString): WideString;
-begin
-  Result := SysUtils.AnsiUpperCase(S);
-end;
-
-class function TIdSysVCL.AnsiUpperCase(const S: AnsiString): AnsiString;
-begin
-  Result := SysUtils.AnsiUpperCase(S);
-end;
-
 
 class function TIdSysVCL.FileExists(const FileName: string): Boolean;
 begin
@@ -442,12 +367,6 @@ begin
   Result :=  TimeStampToDateTime(LTM);
 end;
 
-class function TIdSysVCL.ByteType(const S: string;
-  Index: Integer): TMbcsByteType;
-begin
-  Result := SysUtils.ByteType(S,Index)
-end;
-
 {$IFDEF DOTNET}
 class function TIdSysVCL.FileCreate(const FileName: string;
   Rights: Integer): FileStream;
@@ -482,15 +401,6 @@ begin
   Result := SysUtils.FileCreate(FileName);
 end;
 {$ENDIF}
-
-
-
-
-class function TIdSysVCL.IsSingleByteType(const S: string;
-  Index: Integer): Boolean; 
-begin
-  Result  := ByteType(S,Index)=mbSingleByte;
-end;
 
 class function TIdSysVCL.FileDateToDateTime(
   FileDate: Integer): TDateTime;

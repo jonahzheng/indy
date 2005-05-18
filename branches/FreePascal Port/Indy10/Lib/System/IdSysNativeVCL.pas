@@ -5,12 +5,29 @@ uses IdSysVCL;
 type
   TIdSysNativeVCL = class(TIdSysVCL)
   public
+    class function AnsiCompareStr(const S1, S2: AnsiString): Integer; overload; 
+    class function AnsiCompareStr(const S1, S2: WideString): Integer; overload; deprecated;
+    class function AnsiUpperCase(const S: AnsiString): AnsiString; overload;
+    class function AnsiUpperCase(const S: WideString): WideString; overload; deprecated;
+
+    class function AnsiLowerCase(const S: AnsiString): AnsiString; overload;
+    class function AnsiLowerCase(const S: WideString): WideString; overload; deprecated;
+    class function AnsiCompareText(const S1, S2: AnsiString): Integer; overload;
+    class function AnsiCompareText(const S1, S2: WideString): Integer; overload; deprecated;
+    class function AnsiPos(const Substr, S: AnsiString): Integer; overload;
+    class function AnsiPos(const Substr, S: WideString): Integer; overload;  deprecated;
+
     class function AnsiExtractQuotedStr(var Src: PChar; Quote: Char): string;
     class function StrLCopy(Dest: PChar; const Source: PChar; MaxLen: Cardinal): PChar;
     class function StrPas(const Str: PChar): string;
     class function StrNew(const Str: PChar): PChar;
     class procedure StrDispose(Str: PChar);
     class function CompareMem(P1, P2: Pointer; Length: Integer): Boolean;
+    class function ByteType(const S: string; Index: Integer): TMbcsByteType;
+    //done because for some reason, mbSingleByte can only be exposed directly from the SysUtils unit,
+    //I tried doing it from here without luck
+    class function IsSingleByteType(const S: string; Index: Integer): Boolean;
+
   end;
 
   TIdDateTimeBase = TDateTime;
@@ -48,6 +65,72 @@ end;
 class procedure TIdSysNativeVCL.StrDispose(Str: PChar);
 begin
   SysUtils.StrDispose(Str);
+end;
+
+class function TIdSysNativeVCL.AnsiCompareStr(const S1,
+  S2: AnsiString): Integer;
+begin
+  Result := SysUtils.AnsiCompareStr(S1,S2);
+end;
+
+class function TIdSysNativeVCL.AnsiCompareStr(const S1,
+  S2: WideString): Integer;
+begin
+  Result := SysUtils.AnsiCompareStr(S1,S2);
+end;
+
+class function TIdSysNativeVCL.AnsiLowerCase(const S: WideString): WideString;
+begin
+  Result := SysUtils.AnsiLowerCase(S);
+end;
+
+class function TIdSysNativeVCL.AnsiLowerCase(const S: AnsiString): AnsiString;
+begin
+  Result := SysUtils.AnsiLowerCase(S);
+end;
+
+class function TIdSysNativeVCL.AnsiUpperCase(const S: WideString): WideString;
+begin
+  Result := SysUtils.AnsiUpperCase(S);
+end;
+
+class function TIdSysNativeVCL.AnsiUpperCase(const S: AnsiString): AnsiString;
+begin
+  Result := SysUtils.AnsiUpperCase(S);
+end;
+
+class function TIdSysNativeVCL.AnsiCompareText(const S1,
+  S2: WideString): Integer;
+begin
+  Result := SysUtils.AnsiCompareText(S1,S2);
+end;
+
+class function TIdSysNativeVCL.AnsiCompareText(const S1,
+  S2: AnsiString): Integer;
+begin
+  Result := SysUtils.AnsiCompareText(S1,S2);
+end;
+
+class function TIdSysNativeVCL.AnsiPos(const Substr, S: WideString): Integer;
+begin
+  Result := SysUtils.AnsiPos(Substr,S);
+end;
+
+class function TIdSysNativeVCL.AnsiPos(const Substr, S: AnsiString): Integer;
+begin
+  Result := SysUtils.AnsiPos(Substr,S);
+end;
+
+class function TIdSysNativeVCL.ByteType(const S: string;
+  Index: Integer): TMbcsByteType;
+begin
+  Result := SysUtils.ByteType(S,Index)
+end;
+
+class function TIdSysNativeVCL.IsSingleByteType(const S: string;
+  Index: Integer): Boolean;
+begin
+  Result  := ByteType(S,Index)=mbSingleByte;
 end;
 
 end.
