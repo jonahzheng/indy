@@ -8,6 +8,9 @@ uses
   System.IO,
 {$ELSE}
 {$ENDIF}
+ {$IFDEF MSWindows}
+   Windows,
+ {$ENDIF}
   IdSysBase,
   SysUtils;
 
