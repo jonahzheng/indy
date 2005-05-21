@@ -36,31 +36,7 @@ type
 
   end;
 
-  TIdDateTimeBase = packed record
-  private
-    FValue: Double;
-  public
-    constructor Create(AValue: Double);
-    class operator Implicit(AValue: System.DateTime) : TIdDateTimeBase;
-    class operator Implicit(AValue: TIdDateTimeBase) : System.DateTime;
-    class operator Implicit(AValue: Double) : TIdDateTimeBase;
-    class operator Implicit(AValue: TIdDateTimeBase) : Double;
-    class operator Add(const Left, Right: TIdDateTimeBase): TIdDateTimeBase;
-    class operator Subtract(const Left: TIdDateTimeBase; Right: TIdDateTimeBase): TIdDateTimeBase;
-    class operator Subtract(const Left: TIdDateTimeBase; Right: Double): Double;
-    class operator Multiply(const Left, Right: TIdDateTimeBase): TIdDateTimeBase;
-    class operator Multiply(const Left: TIdDateTimeBase; Right: Double): TIdDateTimeBase;
-    class operator Multiply(const Left: TIdDateTimeBase; Right: Integer): TIdDateTimeBase;
-    class operator Negative(const AValue: TIdDateTimeBase) : TIdDateTimeBase;
-    class operator Equal(const Left, Right: TIdDateTimeBase): Boolean;
-    class operator NotEqual(const Left, Right: TIdDateTimeBase): Boolean;
-    class operator LessThan(const Left, Right: TIdDateTimeBase): Boolean;
-    class operator LessThanOrEqual(const Left, Right: TIdDateTimeBase): Boolean;
-    class operator GreaterThan(const Left, Right: TIdDateTimeBase): Boolean;
-    class operator GreaterThanOrEqual(const Left, Right: TIdDateTimeBase): Boolean;
-
-    function ToString: string; override;
-  end;
+  TIdDateTimeBase = &Double;
 
   TIdSysNet = class(TIdSysBase)
   protected
@@ -207,7 +183,7 @@ end;
 
 class function TIdSysNet.Now: TIdDateTimeBase;
 begin
-  Result := System.DateTime.Now;
+  Result := System.DateTime.Now.ToOADate;
 end;
 
 class function TIdSysNet.StringReplace(const S, OldPattern,
@@ -296,19 +272,25 @@ end;
 
 class procedure TIdSysNet.DecodeDate(const ADateTime: TIdDateTimeBase; var Year,
   Month, Day: Word);
+var
+  TempDate: DateTime;
 begin
-  Year := DateTime(ADateTime).Year;
-  Month := DateTime(ADateTime).Month;
-  Day := DateTime(ADateTime).Day;
+  TempDate := DateTime.FromOADate(ADateTime);
+  Year := TempDate.Year;
+  Month := TempDate.Month;
+  Day := TempDate.Day;
 end;
 
 class procedure TIdSysNet.DecodeTime(const ADateTime: TIdDateTimeBase; var Hour,
   Min, Sec, MSec: Word);
+var
+  TempDate: DateTime;
 begin
-  Hour := DateTime(ADateTime).Hour;
-  Min := DateTime(ADateTime).Minute;
-  Sec := DateTime(ADateTime).Second;
-  MSec := DateTime(ADateTime).Millisecond;
+  TempDate := DateTime.FromOADate(ADateTime);
+  Hour := TempDate.Hour;
+  Min := TempDate.Minute;
+  Sec := TempDate.Second;
+  MSec := TempDate.Millisecond;
 end;
 
 class function TIdSysNet.TrimLeft(const S: string): string;
@@ -374,12 +356,12 @@ end;
 
 class function TIdSysNet.EncodeTime(Hour, Min, Sec, MSec: Word): TIdDateTimeBase;
 begin
-  Result := System.DateTime.Create(1, 1, 1, Hour, Min, Sec, MSec);
+  Result := System.DateTime.Create(1, 1, 1, Hour, Min, Sec, MSec).ToOADate;
 end;
 
 class function TIdSysNet.EncodeDate(Year, Month, Day: Word): TIdDateTimeBase;
 begin
- Result := System.DateTime.Create(Year, Month, Day, 0, 0, 0, 0);
+ Result := System.DateTime.Create(Year, Month, Day, 0, 0, 0, 0).ToOADate;
 end;
 
 class function TIdSysNet.AlignLeftCol(const AStr: String;
@@ -421,24 +403,22 @@ class function TIdSysNet.FileAge(const FileName: string): TIdDateTimeBase;
 begin
   if System.IO.&File.Exists(FileName) then
   begin
-    Result := System.IO.&File.GetLastWriteTime(FileName);
+    Result := System.IO.&File.GetLastWriteTime(FileName).ToOADate;
   end
   else
   begin
-    Result := TIdDateTimeBase.Create(0);
+    Result := 0;
   end;
 end;
 
-
-
 class function TIdSysNet.CompareDate(const D1, D2: TIdDateTimeBase): Integer;
 begin
-  Result := DateTime(D1).CompareTo(DateTime(D2));
+  Result := D1.CompareTo(&Object(D2));
 end;
 
 class function TIdSysNet.StrToDateTime(const S: String): TIdDateTimeBase;
 begin
-  Result := DateTime.Parse(S)
+  Result := DateTime.Parse(S).ToOADate;
 end;
 
 class function TIdSysNet.StrToInt64(const S: string): Int64;
@@ -556,7 +536,7 @@ begin
         begin
           //We want to honor both lower and uppercase just like Borland's
           //FormatDate should
-          if DateTime(ADate).Hour <12 then
+          if DateTime.FromOADate(ADate).Hour <12 then
           begin
             LAMPM := DTInfo.AMDesignator;
           end
@@ -641,7 +621,7 @@ begin
       begin
         if (i+2 < LLen) and (System.&String.Compare(AFormat,i-1,'zzz',0,3,True)=0) then
         begin
-          LSB.Append(DateTime(ADate).Millisecond.ToString );
+          LSB.Append(DateTime.FromOADate(ADate).Millisecond.ToString );
           i := i + 3;
         end
         else
@@ -701,21 +681,21 @@ var LF : System.Globalization.DateTimeFormatInfo;
 begin
   //unlike Borland's FormatDate, we only want the ENglish language
   LF := System.Globalization.DateTimeFormatInfo.InvariantInfo;
-  Result := DateTime(ADateTime).ToString(ConvertFormat(Format,ADateTime,LF),LF);
+  Result := DateTime.FromOADate(ADateTime).ToString(ConvertFormat(Format,ADateTime,LF),LF);
 end;
 
 class function TIdSysNet.DayOfWeek(const ADateTime: TIdDateTimeBase): Word;
 begin
-  Result := Integer(DateTime(ADateTime).DayOfWeek) + 1;
+  Result := Integer(DateTime.FromOADate(ADateTime).DayOfWeek) + 1;
 end;
 
 class function TIdSysNet.AddMSecToTime(const ADateTime: TIdDateTimeBase;
   const AMSec: Integer): TIdDateTimeBase;
 var LD : DateTime;
 begin
-  LD := ADateTime;
+  LD := DateTime.FromOADate(ADateTime);
   LD := LD.AddMilliseconds(AMSec);
-  Result := LD;
+  Result := LD.ToOADate;
 end;
 
 class function TIdSysNet.LastChars(const AStr: String; const ALen : Integer): String;
@@ -1134,117 +1114,6 @@ begin
   begin
     Result := System.IO.Path.ChangeExtension(FileName, System.String(nil));
   end;
-end;
-
-{ TIdDateTimeBase }
-
-class operator TIdDateTimeBase.Add(const Left, Right: TIdDateTimeBase): TIdDateTimeBase;
-begin
-  Result := TIdDateTimeBase.Create(Left.FValue + Right.FValue);
-end;
-
-constructor TIdDateTimeBase.Create(AValue: Double);
-begin
-  inherited;
-  FValue := AValue;
-end;
-
-class operator TIdDateTimeBase.Implicit(
-  AValue: TIdDateTimeBase): System.DateTime;
-begin
-  Result := DateTime.FromOADate(AValue.FValue);
-end;
-
-class operator TIdDateTimeBase.Implicit(
-  AValue: System.DateTime): TIdDateTimeBase;
-begin
-  Result := TIdDateTimeBase.Create(AValue.ToOADate);
-end;
-
-class operator TIdDateTimeBase.Implicit(AValue: Double): TIdDateTimeBase;
-begin
-  Result := TIdDateTimeBase.Create(AValue);
-end;
-
-class operator TIdDateTimeBase.Implicit(AValue: TIdDateTimeBase) : Double;
-begin
-  Result := AValue.FValue;
-end;
-
-class operator TIdDateTimeBase.Multiply(const Left,
-  Right: TIdDateTimeBase): TIdDateTimeBase;
-begin
-  Result := TIdDateTimeBase.Create(Left.FValue * Right.FValue);
-end;
-
-class operator TIdDateTimeBase.Multiply(const Left: TIdDateTimeBase;
-  Right: Double): TIdDateTimeBase;
-begin
-  Result := TIdDateTimeBase.Create(Left.FValue * Right);
-end;
-
-class operator TIdDateTimeBase.Multiply(const Left: TIdDateTimeBase;
-  Right: Integer): TIdDateTimeBase;
-begin
-  Result := TIdDateTimeBase.Create(Left.FValue * Right);
-end;
-
-class operator TIdDateTimeBase.Subtract(const Left: TIdDateTimeBase;
-  Right: TIdDateTimeBase): TIdDateTimeBase;
-begin
-  Result := TIdDateTimeBase.Create(Left.FValue - Right.FValue);
-end;
-
-class operator TIdDateTimeBase.Negative(
-  const AValue: TIdDateTimeBase): TIdDateTimeBase;
-begin
-  Result := -AValue.FValue;
-end;
-
-class operator TIdDateTimeBase.Subtract(const Left: TIdDateTimeBase; Right: Double): Double;
-begin
-  Result := Left.FValue - Right;
-end;
-
-function TIdDateTimeBase.ToString: string;
-begin
-  Result := DateTime(Self).ToString;
-end;
-
-class operator TIdDateTimeBase.Equal(const Left,
-  Right: TIdDateTimeBase): Boolean;
-begin
-  Result := Left.FValue = Right.FValue;
-end;
-
-class operator TIdDateTimeBase.GreaterThan(const Left,
-  Right: TIdDateTimeBase): Boolean;
-begin
-  Result := Left.FValue > Right.FValue;
-end;
-
-class operator TIdDateTimeBase.LessThan(const Left,
-  Right: TIdDateTimeBase): Boolean;
-begin
-  Result := Left.FValue < Right.FValue;
-end;
-
-class operator TIdDateTimeBase.GreaterThanOrEqual(const Left,
-  Right: TIdDateTimeBase): Boolean;
-begin
-  Result := Left.FValue >= Right.FValue;
-end;
-
-class operator TIdDateTimeBase.NotEqual(const Left,
-  Right: TIdDateTimeBase): Boolean;
-begin
-  Result := Left.FValue <> Right.FValue;
-end;
-
-class operator TIdDateTimeBase.LessThanOrEqual(const Left,
-  Right: TIdDateTimeBase): Boolean;
-begin
-  Result := Left.FValue <= Right.FValue;
 end;
 
 end.
