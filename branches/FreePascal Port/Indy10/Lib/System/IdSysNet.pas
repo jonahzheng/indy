@@ -36,141 +36,16 @@ type
 
   end;
 
-  TOADate = double;
-  TIdDateTimeBase = packed record(IFormattable, IComparable, IConvertible)
-  strict private
-    var
-      FValue: System.DateTime;
-    class var
-      FMinValue, FMaxValue: System.DateTime;
+  TIdDateTimeBase = packed record
+  private
+    FValue: Double;
   public
-    class constructor Create;
-    constructor Create(const AValue: Double); overload;
-    constructor Create(const ADays: Integer); overload;
-    constructor Create(const AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond: Integer); overload;
-
-    function ToString: string; overload; override;
-
-    class function Parse(const AValue: string): TIdDateTimeBase; overload; static;
-    class function Parse(const AValue: string;
-      AProvider: IFormatProvider): TIdDateTimeBase; overload; static;
-    class function Parse(const AValue: string; AProvider: IFormatProvider;
-      AStyle: System.Globalization.DateTimeStyles): TIdDateTimeBase; overload; static;
-
-    procedure AddMSec(AMSec: Integer);
-
-    function Year: Integer;
-    function Month: Integer;
-    function Day: Integer;
-    function Hour: Integer;
-    function Minute: Integer;
-    function Second: Integer;
-    function MilliSecond: Integer;
-    function DayOfYear: Integer;
-    function DayOfWeek: Integer;
-    function Time: TIdDateTimeBase;
-    function Date: TIdDateTimeBase;
-    class function IsLeapYear(AYear: Word): Boolean; static;
-    class function DaysInMonth(AYear, AMonth: Word): Word; static;
-    class function Now: TIdDateTimeBase; static;
-    class function TheDate: TIdDateTimeBase; static;
-    class function TheTime: TIdDateTimeBase; static;
-    class function TheYear: Word; static;
-
-    class procedure DecodeDate(const AValue: TIdDateTimeBase; out AYear, AMonth, ADay: Word); overload; static;
-    class function DecodeDate(const AValue: TIdDateTimeBase; out AYear, AMonth, ADay, ADOW: Word): Boolean; overload; static;
-    class procedure DecodeTime(const AValue: TIdDateTimeBase; out AHour, AMinute, ASecond, AMilliSecond: Word); static;
-    class procedure DecodeDateTime(const AValue: TIdDateTimeBase; out AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond: Word); static;
-    class function EncodeDate(AYear, AMonth, ADay: Word): TIdDateTimeBase; static;
-    class function EncodeTime(AHour, AMinute, ASecond, AMilliSecond: Word): TIdDateTimeBase; static;
-    class function EncodeDateTime(const AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond: Word): TIdDateTimeBase; static;
-    class function TryEncodeDate(AYear, AMonth, ADay: Word; out ADate: TIdDateTimeBase): Boolean; static;
-    class function TryEncodeTime(AHour, AMinute, ASecond, AMilliSecond: Word; out ATime: TIdDateTimeBase): Boolean; static;
-    class function TryEncodeDateTime(const AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond: Word; out AValue: TIdDateTimeBase): Boolean; static;
-
-    function ReplaceDate(AYear, AMonth, ADay: Word): TIdDateTimeBase; overload;
-    function ReplaceDate(const ADate: TIdDateTimeBase): TIdDateTimeBase; overload;
-    function ReplaceTime(AHour, AMinute, ASecond, AMilliSecond: Word): TIdDateTimeBase; overload;
-    function ReplaceTime(const ATime: TIdDateTimeBase): TIdDateTimeBase; overload;
-    function AddMonth(AMonths: Integer = 1): TIdDateTimeBase;
-
-    class function MinValue: TIdDateTimeBase; static; { 01/01/0100 12:00:00.000 AM }
-    class function MaxValue: TIdDateTimeBase; static; { 12/31/9999 11:59:59.999 PM }
-
-    class function FromOADate(const AValue: TOADate): TIdDateTimeBase; static;
-    function ToOADate: TOADate; 
-    class function FromBytes(const AValue: TBytes): TIdDateTimeBase; static;
-    class function ToBytes(const AValue: TIdDateTimeBase): TBytes; static;
-    class function FromObject(AObject: System.Object): TIdDateTimeBase; static;
-
-    class operator Trunc(const AValue: TIdDateTimeBase): Int64;
-    class operator Round(const AValue: TIdDateTimeBase): Int64;
-
-    class operator Negative(const AValue: TIdDateTimeBase): Double;
-    class operator Positive(const AValue: TIdDateTimeBase): Double;
-
-    class operator Add(const Left, Right: TIdDateTimeBase): Double;
-    class operator Add(const Left: TIdDateTimeBase; const Right: Double): TIdDateTimeBase;
-    class operator Add(const Left: TIdDateTimeBase; const Right: System.TimeSpan): TIdDateTimeBase;
-    class operator Subtract(const Left, Right: TIdDateTimeBase): Double;
-    class operator Subtract(const Left: TIdDateTimeBase; const Right: Double): TIdDateTimeBase;
-    class operator Subtract(const Left: TIdDateTimeBase; const Right: System.TimeSpan): TIdDateTimeBase;
-    class operator Multiply(const Left, Right: TIdDateTimeBase): Double;
-    class operator Multiply(const Left: TIdDateTimeBase; const Right: Double): Double;
-    class operator Divide(const Left, Right: TIdDateTimeBase): Double;
-    class operator Divide(const Left: TIdDateTimeBase; const Right: Double): Double;
-
-    class operator Equal(const Left, Right: TIdDateTimeBase): Boolean;
-    class operator NotEqual(const Left, Right: TIdDateTimeBase): Boolean;
-    class operator LessThan(const Left, Right: TIdDateTimeBase): Boolean;
-    class operator LessThanOrEqual(const Left, Right: TIdDateTimeBase): Boolean;
-    class operator GreaterThan(const Left, Right: TIdDateTimeBase): Boolean;
-    class operator GreaterThanOrEqual(const Left, Right: TIdDateTimeBase): Boolean;
-
-    class operator Implicit(const AValue: Integer): TIdDateTimeBase;
-    class operator Implicit(const AValue: Int64): TIdDateTimeBase;
-    class operator Implicit(const AValue: Double): TIdDateTimeBase;
-    class operator Implicit(const AValue: TIdDateTimeBase): Double;
-    class operator Implicit(const AValue: Extended): TIdDateTimeBase;
-    class operator Implicit(const AValue: TIdDateTimeBase): Extended;
-    class operator Implicit(const aValue: System.DateTime): TIdDateTimeBase;
-    class operator Implicit(const AValue: TIdDateTimeBase): System.DateTime;
-    class operator Implicit(const aValue: TDate): TIdDateTimeBase;
-    class operator Implicit(const AValue: TIdDateTimeBase): TDate;
-    class operator Implicit(const aValue: TTime): TIdDateTimeBase;
-    class operator Implicit(const AValue: TIdDateTimeBase): TTime;
-
-// remove when TDateTime isn't used anymore
-    class operator Implicit(const AValue: TIdDateTimeBase): TDateTime;
-    class operator Implicit(const AValue: TDateTime): TIdDateTimeBase;
-// end removal-todo
-
-
-    // IFormattable
-    /// Note: format is the CLR format string, not a Delphi format string
-    function ToString(AFormat: string; AProvider: IFormatProvider): string; overload;
-
-    // IComparable
-    function CompareTo(AValue: TObject): Integer;
-
-    // IConvertible
-    function GetTypeCode: TypeCode;
-    function ToInt16(AProvider: IFormatProvider): SmallInt;
-    function ToInt32(AProvider: IFormatProvider): Integer;
-    function ToSingle(AProvider: IFormatProvider): Single;
-    function ToDouble(AProvider: IFormatProvider): Double;
-    function ToDateTime(AProvider: IFormatProvider): DateTime;
-    function ToBoolean(AProvider: IFormatProvider): Boolean;
-    function ToDecimal(AProvider: IFormatProvider): Decimal;
-    function ToSByte(AProvider: IFormatProvider): ShortInt;
-    function ToByte(AProvider: IFormatProvider): Byte;
-    function ToUInt16(AProvider: IFormatProvider): Word;
-    function ToUInt32(AProvider: IFormatProvider): LongWord;
-    function ToInt64(AProvider: IFormatProvider): Int64;
-    function ToUInt64(AProvider: IFormatProvider): UInt64;
-    function ToString(AProvider: IFormatProvider): string; overload;
-    function ToChar(AProvider: IFormatProvider): Char;
-    function ToType(AType: System.Type; AProvider: IFormatProvider): TObject;
+    constructor Create(AValue: Double);
+    class operator Implicit(AValue: System.DateTime) : TIdDateTimeBase;
+    class operator Implicit(AValue: TIdDateTimeBase) : System.DateTime;
+    class operator Implicit(AValue: Double) : TIdDateTimeBase;
+    class operator Implicit(AValue: TIdDateTimeBase) : Double;
+    function ToString: string; override;
   end;
 
 // helper class
@@ -409,18 +284,18 @@ end;
 class procedure TIdSysNet.DecodeDate(const ADateTime: TIdDateTimeBase; var Year,
   Month, Day: Word);
 begin
-  Year := ADateTime.Year;
-  Month := ADateTime.Month;
-  Day := ADateTime.Day;
+  Year := DateTime(ADateTime).Year;
+  Month := DateTime(ADateTime).Month;
+  Day := DateTime(ADateTime).Day;
 end;
 
 class procedure TIdSysNet.DecodeTime(const ADateTime: TIdDateTimeBase; var Hour,
   Min, Sec, MSec: Word);
 begin
-  Hour := ADateTime.Hour;
-  Min := ADateTime.Minute;
-  Sec := ADateTime.Second;
-  MSec := ADateTime.Millisecond;
+  Hour := DateTime(ADateTime).Hour;
+  Min := DateTime(ADateTime).Minute;
+  Sec := DateTime(ADateTime).Second;
+  MSec := DateTime(ADateTime).Millisecond;
 end;
 
 class function TIdSysNet.TrimLeft(const S: string): string;
@@ -486,12 +361,12 @@ end;
 
 class function TIdSysNet.EncodeTime(Hour, Min, Sec, MSec: Word): TIdDateTimeBase;
 begin
-  Result := TIdDateTimeBase.Create(0, 1, 1, Hour, Min, Sec, MSec);
+  Result := System.DateTime.Create(1, 1, 1, Hour, Min, Sec, MSec);
 end;
 
 class function TIdSysNet.EncodeDate(Year, Month, Day: Word): TIdDateTimeBase;
 begin
- Result := TIdDateTimeBase.Create(Year, Month, Day, 0, 0, 0, 0);
+ Result := System.DateTime.Create(Year, Month, Day, 0, 0, 0, 0);
 end;
 
 class function TIdSysNet.AlignLeftCol(const AStr: String;
@@ -545,13 +420,12 @@ end;
 
 class function TIdSysNet.CompareDate(const D1, D2: TIdDateTimeBase): Integer;
 begin
-  Result := D1.CompareTo(D2);
+  Result := DateTime(D1).CompareTo(DateTime(D2));
 end;
 
 class function TIdSysNet.StrToDateTime(const S: String): TIdDateTimeBase;
 begin
-
-  Result := TIdDateTimeBase.Parse(S)
+  Result := DateTime.Parse(S)
 end;
 
 class function TIdSysNet.StrToInt64(const S: string): Int64;
@@ -669,7 +543,7 @@ begin
         begin
           //We want to honor both lower and uppercase just like Borland's
           //FormatDate should
-          if ADate.Hour <12 then
+          if DateTime(ADate).Hour <12 then
           begin
             LAMPM := DTInfo.AMDesignator;
           end
@@ -754,7 +628,7 @@ begin
       begin
         if (i+2 < LLen) and (System.&String.Compare(AFormat,i-1,'zzz',0,3,True)=0) then
         begin
-          LSB.Append(  ADate.MilliSecond.ToString );
+          LSB.Append(DateTime(ADate).Millisecond.ToString );
           i := i + 3;
         end
         else
@@ -814,20 +688,20 @@ var LF : System.Globalization.DateTimeFormatInfo;
 begin
   //unlike Borland's FormatDate, we only want the ENglish language
   LF := System.Globalization.DateTimeFormatInfo.InvariantInfo;
-  Result := ADateTime.ToString(ConvertFormat(Format,ADateTime,LF),LF);
+  Result := DateTime(ADateTime).ToString(ConvertFormat(Format,ADateTime,LF),LF);
 end;
 
 class function TIdSysNet.DayOfWeek(const ADateTime: TIdDateTimeBase): Word;
 begin
-  Result := Integer(ADateTime.DayOfWeek) + 1;
+  Result := Integer(DateTime(ADateTime).DayOfWeek) + 1;
 end;
 
 class function TIdSysNet.AddMSecToTime(const ADateTime: TIdDateTimeBase;
   const AMSec: Integer): TIdDateTimeBase;
-var LD : TIdDateTimeBase;
+var LD : DateTime;
 begin
   LD := ADateTime;
-  LD.AddMSec(AMSec);
+  LD := LD.AddMilliseconds(AMSec);
   Result := LD;
 end;
 
@@ -1249,616 +1123,39 @@ begin
   end;
 end;
 
-// TIdDateTimeBase
+{ TIdDateTimeBase }
 
-class constructor TIdDateTimeBase.Create;
+constructor TIdDateTimeBase.Create(AValue: Double);
 begin
-  FMinValue := System.DateTime.Create(100, 1, 1, 0, 0, 0, 0);
-  FMaxValue := System.DateTime.Create(9999, 12, 31, 23, 59, 59, 999);
-end;
-
-constructor TIdDateTimeBase.Create(const AValue: Double);
-begin
-  inherited Create;
-  FValue := System.DateTime.FromOADate(AValue);
-end;
-
-constructor TIdDateTimeBase.Create(const ADays: Integer);
-begin
-  inherited Create;
-  FValue := System.DateTime.FromOADate(ADays);
-end;
-
-constructor TIdDateTimeBase.Create(const AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond: Integer);
-begin
-  inherited Create;
-  FValue := System.DateTime.Create(AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond);
-end;
-
-function TIdDateTimeBase.ToString: string;
-begin
-  Result := FValue.ToString;
-end;
-
-function TIdDateTimeBase.ToString(AProvider: IFormatProvider): string;
-begin
-  Result := FValue.ToString(AProvider);
-end;
-
-function TIdDateTimeBase.ToString(AFormat: string; AProvider: IFormatProvider): string;
-begin
-  Result := FValue.ToString(AFormat, AProvider);
-end;
-
-class function TIdDateTimeBase.Parse(const AValue: string): TIdDateTimeBase;
-begin
-  Result.FValue := System.DateTime.Parse(AValue);
-end;
-
-class function TIdDateTimeBase.Parse(const AValue: string; AProvider: IFormatProvider): TIdDateTimeBase;
-begin
-  Result.FValue := System.DateTime.Parse(AValue, AProvider);
-end;
-
-class function TIdDateTimeBase.Parse(const AValue: string; AProvider: IFormatProvider;
-  AStyle: System.Globalization.DateTimeStyles): TIdDateTimeBase;
-begin
-  Result.FValue := System.DateTime.Parse(AValue, AProvider, AStyle);
-end;
-
-function TIdDateTimeBase.CompareTo(AValue: TObject): Integer;
-begin
-  if AValue is TIdDateTimeBase then
-    Result := FValue.CompareTo(TIdDateTimeBase(AValue).FValue)
-  else if AValue is System.DateTime then
-    Result := FValue.CompareTo(AValue)
-  else
-    try
-      try
-        Result := FValue.CompareTo(Convert.ToDateTime(AValue));
-      except
-        Result := FValue.CompareTo(System.DateTime.FromOADate(Convert.ToDouble(AValue)));
-      end;
-    except
-      ConvertError(SObjectToDateError);
-      Result := 0;
-    end;
-end;
-
-function TIdDateTimeBase.Year: Integer;
-begin
-  Result := FValue.Year;
-end;
-
-function TIdDateTimeBase.Month: Integer;
-begin
-  Result := FValue.Month;
-end;
-
-function TIdDateTimeBase.Day: Integer;
-begin
-  Result := FValue.Day;
-end;
-
-function TIdDateTimeBase.Hour: Integer;
-begin
-  Result := FValue.Hour;
-end;
-
-function TIdDateTimeBase.Minute: Integer;
-begin
-  Result := FValue.Minute;
-end;
-
-function TIdDateTimeBase.Second: Integer;
-begin
-  Result := FValue.Second;
-end;
-
-function TIdDateTimeBase.MilliSecond: Integer;
-begin
-  Result := FValue.MilliSecond;
-end;
-
-function TIdDateTimeBase.DayOfYear: Integer;
-begin
-  Result := FValue.DayOfYear;
-end;
-
-function TIdDateTimeBase.DayOfWeek: Integer;
-begin
-  Result := Ord(FValue.DayOfWeek) + 1; // Sunday = 1...Saturday = 7
-end;
-
-const
-  CDefaultYear = 1899;
-  CDefaultMonth = 12;
-  CDefaultDay = 30;
-  CDefaultHour = 0;
-  CDefaultMinute = 0;
-  CDefaultSecond = 0;
-  CDefaultMilliSecond = 0;
-
-function TIdDateTimeBase.Time: TIdDateTimeBase;
-begin
-  with FValue do
-    Result := EncodeTime(Hour, Minute, Second, Millisecond);
-end;
-
-function TIdDateTimeBase.Date: TIdDateTimeBase;
-begin
-  Result.FValue := FValue.Date;
-end;
-
-class function TIdDateTimeBase.IsLeapYear(AYear: Word): Boolean;
-begin
-  Result := System.DateTime.IsLeapYear(AYear);
-end;
-
-class function TIdDateTimeBase.DaysInMonth(AYear, AMonth: Word): Word;
-begin
-  Result := System.DateTime.DaysInMonth(AYear, AMonth);
-end;
-
-class function TIdDateTimeBase.Now: TIdDateTimeBase;
-begin
-  Result.FValue := System.DateTime.Now;
-end;
-
-class function TIdDateTimeBase.TheDate: TIdDateTimeBase;
-begin
-  Result := Now.Date;
-end;
-
-class function TIdDateTimeBase.TheTime: TIdDateTimeBase;
-begin
-  Result := Now.Time;
-end;
-
-class function TIdDateTimeBase.TheYear: Word;
-begin
-  Result := Now.Year;
-end;
-
-class procedure TIdDateTimeBase.DecodeDate(const AValue: TIdDateTimeBase; out AYear, AMonth, ADay: Word); overload;
-var
-  LDOW: Word;
-begin
-  DecodeDate(AValue, AYear, AMonth, ADay, LDOW);
-end;
-
-class function TIdDateTimeBase.DecodeDate(const AValue: TIdDateTimeBase; out AYear, AMonth, ADay, ADOW: Word): Boolean; overload;
-begin
-  with AValue do
-  begin
-    AYear := Year;
-    if (AYear < 100) or (AYear > 9999) then
-    begin
-      AYear := 0;
-      AMonth := 0;
-      ADay := 0;
-      ADOW := 0;
-      Result := False;
-    end
-    else
-    begin
-      AMonth := Month;
-      ADay := Day;
-      ADOW := DayOfWeek;
-      Result := IsLeapYear(AYear);
-    end;
-  end;
-end;
-
-class procedure TIdDateTimeBase.DecodeTime(const AValue: TIdDateTimeBase; out AHour, AMinute, ASecond, AMilliSecond: Word);
-begin
-  with AValue do
-  begin
-    AHour := Hour;
-    AMinute := Minute;
-    ASecond := Second;
-    AMilliSecond := Millisecond;
-  end;
-end;
-
-class procedure TIdDateTimeBase.DecodeDateTime(const AValue: TIdDateTimeBase; out AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond: Word);
-begin
-  DecodeDate(AValue, AYear, AMonth, ADay);
-  DecodeTime(AValue, AHour, AMinute, ASecond, AMilliSecond);
-end;
-
-class function TIdDateTimeBase.EncodeDate(AYear, AMonth, ADay: Word): TIdDateTimeBase;
-begin
-  if not TryEncodeDate(AYear, AMonth, ADay, Result) then
-    ConvertError(SDateEncodeError);
-end;
-
-class function TIdDateTimeBase.EncodeTime(AHour, AMinute, ASecond, AMilliSecond: Word): TIdDateTimeBase;
-begin
-  if not TryEncodeTime(AHour, AMinute, ASecond, AMilliSecond, Result) then
-    ConvertError(STimeEncodeError);
-end;
-
-class function TIdDateTimeBase.EncodeDateTime(const AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond: Word): TIdDateTimeBase;
-begin
-  if not TryEncodeDateTime(AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond, Result) then
-    ConvertError(SDateTimeEncodeError);
-end;
-
-class function TIdDateTimeBase.TryEncodeDate(AYear, AMonth, ADay: Word; out ADate: TIdDateTimeBase): Boolean;
-begin
-  Result := TryEncodeDateTime(AYear, AMonth, ADay, CDefaultHour, CDefaultMinute, CDefaultSecond, CDefaultMilliSecond, ADate);
-end;
-
-class function TIdDateTimeBase.TryEncodeTime(AHour, AMinute, ASecond, AMilliSecond: Word; out ATime: TIdDateTimeBase): Boolean;
-begin
-  Result := TryEncodeDateTime(CDefaultYear, CDefaultMonth, CDefaultDay, AHour, AMinute, ASecond, AMilliSecond, ATime);
-end;
-
-class function TIdDateTimeBase.TryEncodeDateTime(const AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond: Word; out AValue: TIdDateTimeBase): Boolean;
-begin
-  Result := not ((AYear < 100) or (AYear > 9999) or
-                 (AMonth < 1) or (AMonth > 12) or
-                 (ADay < 1) or (ADay > DaysInMonth(AYear, AMonth)) or
-                 (AHour > 23) or (AMinute > 59) or (ASecond > 59) or (AMilliSecond > 999));
-  if Result then
-    AValue.FValue := System.DateTime.Create(AYear, AMonth, ADay, AHour, AMinute, ASecond, AMilliSecond);
-end;
-
-function TIdDateTimeBase.ReplaceDate(AYear, AMonth, ADay: Word): TIdDateTimeBase;
-var
-  LHour, LMinute, LSecond, LMilliSecond: Word;
-begin
-  DecodeTime(Self, LHour, LMinute, LSecond, LMilliSecond);
-  Result := EncodeDateTime(AYear, AMonth, ADay, LHour, LMinute, LSecond, LMilliSecond);
-end;
-
-function TIdDateTimeBase.ReplaceDate(const ADate: TIdDateTimeBase): TIdDateTimeBase;
-var
-  LYear, LMonth, LDay: Word;
-begin
-  DecodeDate(ADate, LYear, LMonth, LDay);
-  Result := ReplaceDate(LYear, LMonth, LDay);
-end;
-
-function TIdDateTimeBase.ReplaceTime(AHour, AMinute, ASecond, AMilliSecond: Word): TIdDateTimeBase;
-var
-  LYear, LMonth, LDay: Word;
-begin
-  DecodeDate(Self, LYear, LMonth, LDay);
-  Result := EncodeDateTime(LYear, LMonth, LDay, AHour, AMinute, ASecond, AMilliSecond);
-end;
-
-function TIdDateTimeBase.ReplaceTime(const ATime: TIdDateTimeBase): TIdDateTimeBase;
-var
-  LHour, LMinute, LSecond, LMilliSecond: Word;
-begin
-  DecodeTime(ATime, LHour, LMinute, LSecond, LMilliSecond);
-  Result := ReplaceTime(LHour, LMinute, LSecond, LMilliSecond);
-end;
-
-function TIdDateTimeBase.AddMonth(AMonths: Integer): TIdDateTimeBase;
-begin
-  Result.FValue := FValue.AddMonths(AMonths);
-end;
-
-class function TIdDateTimeBase.MinValue: TIdDateTimeBase;
-begin
-  Result.FValue := FMinValue;
-end;
-
-class function TIdDateTimeBase.MaxValue: TIdDateTimeBase;
-begin
-  Result.FValue := FMaxValue;
-end;
-
-class function TIdDateTimeBase.FromOADate(const AValue: TOADate): TIdDateTimeBase;
-begin
-  Result.FValue := System.DateTime.FromOADate(AValue);
-end;
-
-function TIdDateTimeBase.ToOADate: TOADate;
-begin
-  Result := FValue.ToOADate;
-end;
-
-class function TIdDateTimeBase.FromBytes(const AValue: TBytes): TIdDateTimeBase;
-begin
-  Result := FromOADate(System.BitConverter.ToDouble(AValue, 0));
-end;
-
-class function TIdDateTimeBase.ToBytes(const AValue: TIdDateTimeBase): TBytes;
-begin
-  Result := System.BitConverter.GetBytes(AValue.ToOADate);
-end;
-
-class function TIdDateTimeBase.FromObject(AObject: TObject): TIdDateTimeBase;
-begin
-  if AObject is TIdDateTimeBase then
-    Result.FValue := TIdDateTimeBase(AObject).FValue
-  else if AObject is System.DateTime then
-    Result := System.DateTime(AObject)
-  else if AObject is System.Double then
-    Result := FromOADate(Double(AObject))
-  else if AObject is System.Boolean then
-    if Boolean(AObject) then
-      Result.FValue := FromOADate(-1)
-    else
-      Result.FValue := FromOADate(0)
-  else
-    try
-      // We have to attempt conversion via double first as System.DateTime's
-      //  Parse (which TIdDateTimeBase uses) will interpert strings like '5.01'
-      //  as equaling a little after 5am on 12/30/1899.  Crazy but true.
-      Result := FromOADate(Convert.ToDouble(AObject));
-    except
-      Result := Parse(Convert.ToString(AObject));
-    end;
-end;
-
-class operator TIdDateTimeBase.Trunc(const AValue: TIdDateTimeBase): Int64;
-begin
-  Result := Trunc(AValue.ToOADate);
-end;
-
-class operator TIdDateTimeBase.Round(const AValue: TIdDateTimeBase): Int64;
-begin
-  Result := Round(AValue.ToOADate);
-end;
-
-class operator TIdDateTimeBase.Negative(const AValue: TIdDateTimeBase): Double;
-begin
-  Result := -(AValue.ToOADate);
-end;
-
-class operator TIdDateTimeBase.Positive(const AValue: TIdDateTimeBase): Double;
-begin
-  Result := AValue.ToOADate;
-end;
-
-class operator TIdDateTimeBase.Add(const Left, Right: TIdDateTimeBase): Double;
-begin
-  Result := Left.ToOADate + Right.ToOADate;
-end;
-
-class operator TIdDateTimeBase.Add(const Left: TIdDateTimeBase; const Right: Double): TIdDateTimeBase;
-begin
-  Result.FValue := Left.FValue + TimeSpan.FromDays(Right);
-end;
-
-class operator TIdDateTimeBase.Add(const Left: TIdDateTimeBase; const Right: System.TimeSpan): TIdDateTimeBase;
-begin
-  Result.FValue := Left.FValue + Right;
-end;
-
-class operator TIdDateTimeBase.Subtract(const Left, Right: TIdDateTimeBase): Double;
-begin
-  Result := Left.ToOADate - Right.ToOADate;
-end;
-
-class operator TIdDateTimeBase.Subtract(const Left: TIdDateTimeBase; const Right: Double): TIdDateTimeBase;
-begin
-  Result.FValue := Left.FValue - TimeSpan.FromDays(Right);
-end;
-
-class operator TIdDateTimeBase.Subtract(const Left: TIdDateTimeBase; const Right: System.TimeSpan): TIdDateTimeBase;
-begin
-  Result.FValue := Left.FValue - Right;
-end;
-
-class operator TIdDateTimeBase.Multiply(const Left, Right: TIdDateTimeBase): Double;
-begin
-  Result := Left.ToOADate * Right.ToOADate;
-end;
-
-class operator TIdDateTimeBase.Multiply(const Left: TIdDateTimeBase; const Right: Double): Double;
-begin
-  Result := Left.ToOADate * Right;
-end;
-
-class operator TIdDateTimeBase.Divide(const Left, Right: TIdDateTimeBase): Double;
-begin
-  Result := Left.ToOADate / Right.ToOADate;
-end;
-
-class operator TIdDateTimeBase.Divide(const Left: TIdDateTimeBase; const Right: Double): Double;
-begin
-  Result := Left.ToOADate / Right;
-end;
-
-class operator TIdDateTimeBase.Equal(const Left, Right: TIdDateTimeBase): Boolean;
-begin
-  Result := Left.FValue = Right.FValue;
-end;
-
-class operator TIdDateTimeBase.NotEqual(const Left, Right: TIdDateTimeBase): Boolean;
-begin
-  Result := Left.FValue <> Right.FValue;
-end;
-
-class operator TIdDateTimeBase.LessThan(const Left, Right: TIdDateTimeBase): Boolean;
-begin
-  Result := Left.FValue < Right.FValue;
-end;
-
-class operator TIdDateTimeBase.LessThanOrEqual(const Left, Right: TIdDateTimeBase): Boolean;
-begin
-  Result := Left.FValue <= Right.FValue;
-end;
-
-class operator TIdDateTimeBase.GreaterThan(const Left, Right: TIdDateTimeBase): Boolean;
-begin
-  Result := Left.FValue > Right.FValue;
-end;
-
-class operator TIdDateTimeBase.GreaterThanOrEqual(const Left, Right: TIdDateTimeBase): Boolean;
-begin
-  Result := Left.FValue >= Right.FValue;
-end;
-
-class operator TIdDateTimeBase.Implicit(const AValue: Integer): TIdDateTimeBase;
-begin
-  Result := FromOADate(AValue);
-end;
-
-class operator TIdDateTimeBase.Implicit(const AValue: Int64): TIdDateTimeBase;
-begin
-  Result := FromOADate(AValue);
-end;
-
-class operator TIdDateTimeBase.Implicit(const AValue: Double): TIdDateTimeBase;
-begin
-  Result := FromOADate(AValue);
-end;
-
-class operator TIdDateTimeBase.Implicit(const AValue: TIdDateTimeBase): Double;
-begin
-  Result := AValue.ToOADate;
-end;
-
-class operator TIdDateTimeBase.Implicit(const AValue: Extended): TIdDateTimeBase;
-begin
-  Result := FromOADate(AValue);
-end;
-
-class operator TIdDateTimeBase.Implicit(const AValue: TIdDateTimeBase): Extended;
-begin
-  Result := AValue.ToOADate;
-end;
-
-class operator TIdDateTimeBase.Implicit(const AValue: System.DateTime): TIdDateTimeBase;
-begin
-  Result.FValue := AValue;
-end;
-
-class operator TIdDateTimeBase.Implicit(const AValue: TIdDateTimeBase): System.DateTime;
-begin
-  Result := AValue.FValue;
-end;
-
-class operator TIdDateTimeBase.Implicit(const AValue: TDate): TIdDateTimeBase;
-begin
-  Result.FValue := AValue;
-end;
-
-class operator TIdDateTimeBase.Implicit(const AValue: TIdDateTimeBase): TDate;
-begin
-  Result := AValue.FValue;
-end;
-
-class operator TIdDateTimeBase.Implicit(const AValue: TTime): TIdDateTimeBase;
-begin
-  Result.FValue := AValue;
-end;
-
-class operator TIdDateTimeBase.Implicit(const AValue: TIdDateTimeBase): TTime;
-begin
-  Result := AValue.FValue;
-end;
-
-function TIdDateTimeBase.GetTypeCode: TypeCode;
-begin
-  Result := TypeCode.Object;
-end;
-
-function TIdDateTimeBase.ToInt16(AProvider: IFormatProvider): SmallInt;
-begin
-  Result := Trunc(ToOADate);
-end;
-
-function TIdDateTimeBase.ToInt32(AProvider: IFormatProvider): Integer;
-begin
-  Result := Trunc(ToOADate);
-end;
-
-function TIdDateTimeBase.ToSingle(AProvider: IFormatProvider): Single;
-begin
-  Result := ToOADate;
-end;
-
-function TIdDateTimeBase.ToDouble(AProvider: IFormatProvider): Double;
-begin
-  Result := ToOADate;
-end;
-
-function TIdDateTimeBase.ToDateTime(AProvider: IFormatProvider): DateTime;
-begin
-  Result := Self;
-end;
-
-function TIdDateTimeBase.ToBoolean(AProvider: IFormatProvider): Boolean;
-begin
-  Result := ToOADate <> 0;
-end;
-
-function TIdDateTimeBase.ToDecimal(AProvider: IFormatProvider): Decimal;
-begin
-  Result := Convert.ToDecimal(ToOADate);
-end;
-
-function TIdDateTimeBase.ToSByte(AProvider: IFormatProvider): ShortInt;
-begin
-  Result := Trunc(ToOADate);
-end;
-
-function TIdDateTimeBase.ToByte(AProvider: IFormatProvider): Byte;
-begin
-  Result := Trunc(ToOADate);
-end;
-
-function TIdDateTimeBase.ToUInt16(AProvider: IFormatProvider): Word;
-begin
-  Result := Trunc(ToOADate);
-end;
-
-function TIdDateTimeBase.ToUInt32(AProvider: IFormatProvider): LongWord;
-begin
-  Result := Trunc(ToOADate);
-end;
-
-function TIdDateTimeBase.ToInt64(AProvider: IFormatProvider): Int64;
-begin
-  Result := Trunc(ToOADate);
-end;
-
-function TIdDateTimeBase.ToUInt64(AProvider: IFormatProvider): UInt64;
-begin
-  Result := Convert.ToUInt64(ToOADate);
-end;
-
-function TIdDateTimeBase.ToChar(AProvider: IFormatProvider): Char;
-begin
-  Result := ToString(AProvider)[1];
-end;
-
-function TIdDateTimeBase.ToType(AType: System.Type; AProvider: IFormatProvider): TObject;
-begin
-  if AType = typeof(TIdDateTimeBase) then
-    Result := Self
-  else
-    case System.Type.GetTypeCode(AType) of
-      TypeCode.Empty:
-        Result := FromOADate(0);
-      // any others?
-    else
-      Result := (FValue as IConvertible).ToType(AType, AProvider);
-    end;
-end;
-
-procedure TIdDateTimeBase.AddMSec(AMSec: Integer);
-begin
-  FValue := FValue.AddMilliseconds(AMSec);
+  inherited;
+  FValue := AValue;
 end;
 
 class operator TIdDateTimeBase.Implicit(
-  const AValue: TDateTime): TIdDateTimeBase;
+  AValue: TIdDateTimeBase): System.DateTime;
+begin
+  Result := DateTime.FromOADate(AValue.FValue);
+end;
+
+class operator TIdDateTimeBase.Implicit(
+  AValue: System.DateTime): TIdDateTimeBase;
+begin
+  Result := TIdDateTimeBase.Create(AValue.ToOADate);
+end;
+
+class operator TIdDateTimeBase.Implicit(AValue: Double): TIdDateTimeBase;
 begin
   Result := TIdDateTimeBase.Create(AValue);
 end;
 
-class operator TIdDateTimeBase.Implicit(const AValue: TIdDateTimeBase): TDateTime;
+class operator TIdDateTimeBase.Implicit(AValue: TIdDateTimeBase) : Double;
 begin
-  Result := AValue.ToOADate;
+  Result := AValue.FValue;
+end;
+
+function TIdDateTimeBase.ToString: string;
+begin
+  Result := DateTime(Self).ToString;
 end;
 
 end.
