@@ -65,7 +65,7 @@ type
   public
     constructor Create;
 
-    class operator Implicit(const aValue: TIdStringListFCL): StringCollection;
+    class operator Implicit(const aValue: TIdStringsFCL): StringCollection;
     class operator Implicit(AValue: StringCollection): TIdStringsFCL;
 
     function Clone: &Object; virtual;
@@ -153,6 +153,8 @@ type
     procedure CopyTo(ADest: &Array; AIndex: Integer); override;
     destructor Destroy; override;
     procedure Clear; override;
+
+    class operator Implicit(const aValue: TIdStringListFCL): StringCollection;
   end;
 
 implementation
@@ -807,12 +809,6 @@ begin
   FUpdateCount := 0;
 end;
 
-class operator TIdStringsFCL.Implicit(const aValue: TIdStringListFCL): StringCollection;
-begin
-  EIdException.IfFalse(aValue is TIdStringListFCL, 'Invalid implicit conversion.');
-  Result := TIdStringListFCL(aValue).FCollection;
-end;
-
 class operator TIdStringsFCL.Implicit(AValue: StringCollection): TIdStringsFCL;
 begin
   Result := TIdStringListFCL.Create(AValue);
@@ -825,6 +821,12 @@ begin
   sl := TIdStringListFCL.Create;
   sl.Assign(Self);
   Result := sl;
+end;
+
+class operator TIdStringsFCL.Implicit(const aValue: TIdStringsFCL): StringCollection;
+begin
+  EIdException.IfFalse(aValue is TIdStringListFCL, 'Invalid implicit conversion.');
+  Result := TIdStringListFCL(aValue).FCollection;
 end;
 
 { TIdStringsFCLEnumerator }
@@ -856,6 +858,11 @@ begin
 end;
 
 { TIdStringListFCL }
+
+class operator TIdStringListFCL.Implicit(const aValue: TIdStringListFCL): StringCollection;
+begin
+  Result := aValue.FCollection;
+end;
 
 function TIdStringListFCL.GetCount: Integer;
 begin
