@@ -45,10 +45,22 @@ type
     class operator Implicit(AValue: TIdDateTimeBase) : System.DateTime;
     class operator Implicit(AValue: Double) : TIdDateTimeBase;
     class operator Implicit(AValue: TIdDateTimeBase) : Double;
+    class operator Add(const Left, Right: TIdDateTimeBase): TIdDateTimeBase;
+    class operator Subtract(const Left: TIdDateTimeBase; Right: TIdDateTimeBase): TIdDateTimeBase;
+    class operator Subtract(const Left: TIdDateTimeBase; Right: Double): Double;
+    class operator Multiply(const Left, Right: TIdDateTimeBase): TIdDateTimeBase;
+    class operator Multiply(const Left: TIdDateTimeBase; Right: Double): TIdDateTimeBase;
+    class operator Multiply(const Left: TIdDateTimeBase; Right: Integer): TIdDateTimeBase;
+    class operator Negative(const AValue: TIdDateTimeBase) : TIdDateTimeBase;
+    class operator Equal(const Left, Right: TIdDateTimeBase): Boolean;
+    class operator NotEqual(const Left, Right: TIdDateTimeBase): Boolean;
+    class operator LessThan(const Left, Right: TIdDateTimeBase): Boolean;
+    class operator LessThanOrEqual(const Left, Right: TIdDateTimeBase): Boolean;
+    class operator GreaterThan(const Left, Right: TIdDateTimeBase): Boolean;
+    class operator GreaterThanOrEqual(const Left, Right: TIdDateTimeBase): Boolean;
+
     function ToString: string; override;
   end;
-
-// helper class
 
   TIdSysNet = class(TIdSysBase)
   protected
@@ -117,6 +129,7 @@ type
 const PATH_DELIN = '\';
 
 implementation
+
 uses
   System.IO;
 
@@ -1125,6 +1138,11 @@ end;
 
 { TIdDateTimeBase }
 
+class operator TIdDateTimeBase.Add(const Left, Right: TIdDateTimeBase): TIdDateTimeBase;
+begin
+  Result := TIdDateTimeBase.Create(Left.FValue + Right.FValue);
+end;
+
 constructor TIdDateTimeBase.Create(AValue: Double);
 begin
   inherited;
@@ -1153,9 +1171,80 @@ begin
   Result := AValue.FValue;
 end;
 
+class operator TIdDateTimeBase.Multiply(const Left,
+  Right: TIdDateTimeBase): TIdDateTimeBase;
+begin
+  Result := TIdDateTimeBase.Create(Left.FValue * Right.FValue);
+end;
+
+class operator TIdDateTimeBase.Multiply(const Left: TIdDateTimeBase;
+  Right: Double): TIdDateTimeBase;
+begin
+  Result := TIdDateTimeBase.Create(Left.FValue * Right);
+end;
+
+class operator TIdDateTimeBase.Multiply(const Left: TIdDateTimeBase;
+  Right: Integer): TIdDateTimeBase;
+begin
+  Result := TIdDateTimeBase.Create(Left.FValue * Right);
+end;
+
+class operator TIdDateTimeBase.Subtract(const Left: TIdDateTimeBase;
+  Right: TIdDateTimeBase): TIdDateTimeBase;
+begin
+  Result := TIdDateTimeBase.Create(Left.FValue - Right.FValue);
+end;
+
+class operator TIdDateTimeBase.Negative(
+  const AValue: TIdDateTimeBase): TIdDateTimeBase;
+begin
+  Result := -AValue.FValue;
+end;
+
+class operator TIdDateTimeBase.Subtract(const Left: TIdDateTimeBase; Right: Double): Double;
+begin
+  Result := Left.FValue - Right;
+end;
+
 function TIdDateTimeBase.ToString: string;
 begin
   Result := DateTime(Self).ToString;
+end;
+
+class operator TIdDateTimeBase.Equal(const Left,
+  Right: TIdDateTimeBase): Boolean;
+begin
+  Result := Left.FValue = Right.FValue;
+end;
+
+class operator TIdDateTimeBase.GreaterThan(const Left,
+  Right: TIdDateTimeBase): Boolean;
+begin
+  Result := Left.FValue > Right.FValue;
+end;
+
+class operator TIdDateTimeBase.LessThan(const Left,
+  Right: TIdDateTimeBase): Boolean;
+begin
+  Result := Left.FValue < Right.FValue;
+end;
+
+class operator TIdDateTimeBase.GreaterThanOrEqual(const Left,
+  Right: TIdDateTimeBase): Boolean;
+begin
+  Result := Left.FValue >= Right.FValue;
+end;
+
+class operator TIdDateTimeBase.NotEqual(const Left,
+  Right: TIdDateTimeBase): Boolean;
+begin
+  Result := Left.FValue <> Right.FValue;
+end;
+
+class operator TIdDateTimeBase.LessThanOrEqual(const Left,
+  Right: TIdDateTimeBase): Boolean;
+begin
+  Result := Left.FValue <= Right.FValue;
 end;
 
 end.
