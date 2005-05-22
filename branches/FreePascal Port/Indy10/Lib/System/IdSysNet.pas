@@ -100,6 +100,11 @@ type
            const ADate : TIdDateTimeBase;
            DTInfo : System.Globalization.DateTimeFormatInfo): String; static;
     class function ReplaceOnlyFirst(const S, OldPattern, NewPattern: string): string; overload; static;
+    class function AnsiCompareStr(const S1, S2: WideString): Integer; overload; deprecated;
+    class function AnsiUpperCase(const S: WideString): WideString; overload; deprecated;
+
+    class function AnsiLowerCase(const S: WideString): WideString; overload; deprecated;
+    class function AnsiPos(const Substr, S: WideString): Integer; overload;  deprecated;
   end;
 
 const PATH_DELIN = '\';
@@ -1114,6 +1119,27 @@ begin
   begin
     Result := System.IO.Path.ChangeExtension(FileName, System.String(nil));
   end;
+end;
+
+class function TIdSysNet.AnsiCompareStr(const S1,
+  S2: string): Integer;
+begin
+  Result := S1.CompareTo(S2);
+end;
+
+class function TIdSysNet.AnsiLowerCase(const S: WideString): WideString;
+begin
+  Result := S.ToLower;
+end;
+
+class function TIdSysNet.AnsiUpperCase(const S: WideString): WideString;
+begin
+  Result := S.ToUpper;
+end;
+
+class function TIdSysNet.AnsiPos(const Substr, S: WideString): Integer;
+begin
+  Result := S.IndexOf(Substr);
 end;
 
 end.
