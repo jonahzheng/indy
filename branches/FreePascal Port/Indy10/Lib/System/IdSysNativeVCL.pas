@@ -1,11 +1,25 @@
+{ $HDR$}
+{**********************************************************************}
+{ Unit archived using Team Coherence                                   }
+{ Team Coherence is Copyright 2002 by Quality Software Components      }
+{                                                                      }
+{ For further information / comments, visit our WEB site at            }
+{ http://www.TeamCoherence.com                                         }
+{**********************************************************************}
+{}
+{ $Log: }
+
 unit IdSysNativeVCL;
 
 interface
+
 uses IdSysVCL, SysUtils;
+
 type
+
   TIdSysNativeVCL = class(TIdSysVCL)
   public
-    class function AnsiCompareStr(const S1, S2: AnsiString): Integer; overload; 
+    class function AnsiCompareStr(const S1, S2: AnsiString): Integer; overload;
     class function AnsiCompareStr(const S1, S2: WideString): Integer; overload; deprecated;
     class function AnsiUpperCase(const S: AnsiString): AnsiString; overload;
     class function AnsiUpperCase(const S: WideString): WideString; overload; deprecated;

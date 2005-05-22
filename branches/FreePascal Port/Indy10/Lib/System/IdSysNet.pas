@@ -1,3 +1,14 @@
+{ $HDR$}
+{**********************************************************************}
+{ Unit archived using Team Coherence                                   }
+{ Team Coherence is Copyright 2002 by Quality Software Components      }
+{                                                                      }
+{ For further information / comments, visit our WEB site at            }
+{ http://www.TeamCoherence.com                                         }
+{**********************************************************************}
+{}
+{ $Log: }
+
 unit IdSysNet;
 
 interface
@@ -8,17 +19,21 @@ uses
   IdSysBase;
 
 type
+
   //I know EAbort violates our rule about basing exceptions on EIdException.
   //I'm doing this for one reason, to be compatible with SysUtils where a reference
   //is made to the EAbort exception.
   EAbort = class(Exception);
+
   TSysCharSet = set of AnsiChar;
+
   //I'm doing it this way because you can't inherit directly from StringBuilder
   //because of MS defined it.
   //This is necessary because the StringBuilder does NOT have an IndexOF method and
   //StringBuilder is being used for speed to prevent immutability problems with the String class
   //in DotNET
   TIdStringBuilder = System.Text.StringBuilder;
+
   TIdStringBuilderHelper =  class helper for System.Text.StringBuilder
   public
    function IndexOf(const value : String; const startIndex, count : Integer) : Integer; overload;

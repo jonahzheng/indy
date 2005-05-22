@@ -1,3 +1,14 @@
+{ $HDR$}
+{**********************************************************************}
+{ Unit archived using Team Coherence                                   }
+{ Team Coherence is Copyright 2002 by Quality Software Components      }
+{                                                                      }
+{ For further information / comments, visit our WEB site at            }
+{ http://www.TeamCoherence.com                                         }
+{**********************************************************************}
+{}
+{ $Log: }
+
 unit IdSysWin32;
 
 interface
@@ -8,6 +19,7 @@ uses
   SysUtils;
 
 type
+
   TIdDateTimeBase = TDateTime;
 
   TIdSysWin32 = class(TIdSysNativeVCL)
@@ -19,9 +31,6 @@ type
   end;
 
 implementation
-
-{ SysUtils }
-
 
 class function TIdSysWin32.Win32MinorVersion: Integer;
 begin
