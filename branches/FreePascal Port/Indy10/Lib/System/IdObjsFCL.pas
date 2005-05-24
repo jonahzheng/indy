@@ -79,6 +79,8 @@ type
     procedure RemoveAt(AIndex: Integer);
     function ToString: string; override;
 
+    procedure SaveToStream(AStream: &Object);
+
     function Add(const S: string): Integer; overload; virtual;
     function AddObject(S: string; AObject: &Object) : Integer; virtual;
     procedure Append(S: string);
@@ -88,6 +90,7 @@ type
     procedure Clear; virtual; abstract;
     procedure Delete(AIndex: Integer); virtual; abstract;
     procedure EndUpdate;
+    procedure Sort;
     function Equals(AObject: &Object) : Boolean; overload; override;
     function Equals(AStrings: TIdStringsFCL): Boolean; overload; 
 
@@ -827,6 +830,16 @@ class operator TIdStringsFCL.Implicit(const aValue: TIdStringsFCL): StringCollec
 begin
   EIdException.IfFalse(aValue is TIdStringListFCL, 'Invalid implicit conversion.');
   Result := TIdStringListFCL(aValue).FCollection;
+end;
+
+procedure TIdStringsFCL.SaveToStream(AStream: &Object);
+begin
+  raise NotImplementedException.Create;
+end;
+
+procedure TIdStringsFCL.Sort;
+begin
+  //
 end;
 
 { TIdStringsFCLEnumerator }
