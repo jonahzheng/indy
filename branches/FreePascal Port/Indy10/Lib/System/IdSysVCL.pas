@@ -168,9 +168,9 @@ end;
 class procedure TIdSysVCL.RaiseLastOSError;
 begin
   {$IFDEF DELPHI5}
-  SysUtils.RaiseLastOSError;
-  {$ELSE}
   SysUtils.RaiseLastWin32Error;
+  {$ELSE}
+  SysUtils.RaiseLastOSError;
   {$ENDIF}
 end;
 
