@@ -14,14 +14,16 @@ unit IdSysVCL;
 interface
 
 uses
-{$I IdCompilerDefines.inc}
-{$IFDEF DOTNET}
+  {$I IdCompilerDefines.inc}
+  {$IFDEF DOTNET}
   System.IO,
-{$ELSE}
-{$ENDIF}
- {$IFDEF MSWindows}
-   Windows,
- {$ENDIF}
+  {$ENDIF}
+  {$IFDEF MSWindows}
+  Windows,
+  {$ENDIF}
+  {$IFDEF DELPHI5}
+  FileCtrl,
+  {$ENDIF}
   IdSysBase,
   SysUtils;
 
@@ -89,7 +91,7 @@ type
     class function EncodeTime(Hour, Min, Sec, MSec: Word): TDateTime;
     class function EncodeDate(Year, Month, Day: Word): TDateTime;
     class function FileAge(const FileName: string): TDateTime;
-    class function DirectoryExists(const Directory: string): Boolean; 
+    class function DirectoryExists(const Directory: string): Boolean;
     class function DeleteFile(const FileName: string): Boolean; 
     class function ExtractFileName(const FileName: string): string; 
     class function ExtractFileExt(const FileName: string): string;
@@ -125,7 +127,11 @@ end;
 class function TIdSysVCL.IncludeTrailingPathDelimiter(
   const S: string): string;
 begin
+  {$IFDEF DELPHI5}
+  Result := SysUtils.IncludeTrailingBackslash(S);
+  {$ELSE}
   Result := SysUtils.IncludeTrailingPathDelimiter(S);
+  {$ENDIF}
 end;
 
 class function TIdSysVCL.IntToHex(Value: Int64; Digits: Integer): string;
@@ -161,7 +167,11 @@ end;
 
 class procedure TIdSysVCL.RaiseLastOSError;
 begin
+  {$IFDEF DELPHI5}
   SysUtils.RaiseLastOSError;
+  {$ELSE}
+  SysUtils.RaiseLastWin32Error;
+  {$ENDIF}
 end;
 
 class function TIdSysVCL.StringReplace(const S: String; const OldPattern,
@@ -320,7 +330,11 @@ end;
 class function TIdSysVCL.DirectoryExists(
   const Directory: string): Boolean;
 begin
+  {$IFDEF DELPHI5}
+  Result := FileCtrl.DirectoryExists(Directory);
+  {$ELSE}
   Result := SysUtils.DirectoryExists(Directory);
+  {$ENDIF}
 end;
 
 class function TIdSysVCL.DeleteFile(const FileName: string): Boolean;
