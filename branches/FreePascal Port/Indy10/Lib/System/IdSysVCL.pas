@@ -85,11 +85,78 @@ type
     class function ExtractFileExt(const FileName: string): string;
     class function ChangeFileExt(const FileName, Extension: string): string;
     class function FloatToIntStr(const AFloat: Extended): String;
-    class function GetEnglishSetting : TFormatSettings;
   end;
 
 implementation
 
+{$IFNDEF DELPHI5}
+//Delphi5 does not have TFormatSettings
+//this should be changed to a singleton?
+function GetEnglishSetting: TFormatSettings;
+begin
+  Result.CurrencyFormat := $00; // 0 = '$1'
+  Result.NegCurrFormat := $00; //0 = '($1)'
+  Result.CurrencyString := '$';
+  Result.CurrencyDecimals := 2;
+
+  Result.ThousandSeparator := ',';
+  Result.DecimalSeparator := '.';
+
+  Result.DateSeparator := '/';
+  Result.ShortDateFormat := 'M/d/yyyy';
+  Result.LongDateFormat := 'dddd, MMMM dd, yyyy';
+
+  Result.TimeSeparator := ':';
+  Result.TimeAMString := 'AM';
+  Result.TimePMString := 'PM';
+  Result.LongTimeFormat := 'h:mm:ss AMPM';
+  Result.ShortTimeFormat := 'h:mm AMPM';
+
+  Result.ShortMonthNames[1] := 'Jan';
+  Result.ShortMonthNames[2] := 'Feb';
+  Result.ShortMonthNames[3] := 'Mar';
+  Result.ShortMonthNames[4] := 'Apr';
+  Result.ShortMonthNames[5] := 'May';
+  Result.ShortMonthNames[6] := 'Jun';
+  Result.ShortMonthNames[7] := 'Jul';
+  Result.ShortMonthNames[8] := 'Aug';
+  Result.ShortMonthNames[9] := 'Sep';
+  Result.ShortMonthNames[10] := 'Oct';
+  Result.ShortMonthNames[11] := 'Nov';
+  Result.ShortMonthNames[12] := 'Dec';
+
+  Result.LongMonthNames[1] := 'January';
+  Result.LongMonthNames[2] := 'February';
+  Result.LongMonthNames[3] := 'March';
+  Result.LongMonthNames[4] := 'April';
+  Result.LongMonthNames[5] := 'May';
+  Result.LongMonthNames[6] := 'June';
+  Result.LongMonthNames[7] := 'July';
+  Result.LongMonthNames[8] := 'August';
+  Result.LongMonthNames[9] := 'September';
+  Result.LongMonthNames[10] := 'October';
+  Result.LongMonthNames[11] := 'November';
+  Result.LongMonthNames[12] := 'December';
+
+  Result.ShortDayNames[1] := 'Sun';
+  Result.ShortDayNames[2] := 'Mon';
+  Result.ShortDayNames[3] := 'Tue';
+  Result.ShortDayNames[4] := 'Wed';
+  Result.ShortDayNames[5] := 'Thu';
+  Result.ShortDayNames[6] := 'Fri';
+  Result.ShortDayNames[7] := 'Sat';
+
+  Result.LongDayNames[1] := 'Sunday';
+  Result.LongDayNames[2] := 'Monday';
+  Result.LongDayNames[3] := 'Tuesday';
+  Result.LongDayNames[4] := 'Wednesday';
+  Result.LongDayNames[5] := 'Thursday';
+  Result.LongDayNames[6] := 'Friday';
+  Result.LongDayNames[7] := 'Saturday';
+
+  Result.ListSeparator := ',';
+end;
+{$ENDIF}
 
 class procedure TIdSysVCL.Abort;
 begin
@@ -104,7 +171,17 @@ end;
 class function TIdSysVCL.Format(const Format: string;
   const Args: array of const): string;
 begin
+  {$IFDEF DELPHI5}
+  //Is there a way to get delphi5 to use locale in format? something like:
+  //  SetThreadLocale(TheNewLocaleId);
+  //  GetFormatSettings;
+  //  Application.UpdateFormatSettings := False; //needed?
+  //  format()
+  //  set locale back to prior
+  Result := SysUtils.Format(Format,Args);
+  {$ELSE}
   Result := SysUtils.Format(Format,Args,GetEnglishSetting);
+  {$ENDIF}
 end;
 
 class procedure TIdSysVCL.FreeAndNil(var Obj);
@@ -206,8 +283,6 @@ class function TIdSysVCL.UpperCase(const S: string): string;
 begin
   Result := SysUtils.UpperCase(S);
 end;
-
-
 
 class function TIdSysVCL.DateTimeToStr(
   const ADateTime: TDateTime): string;
@@ -371,8 +446,6 @@ begin
   Result := SysUtils.SameText(S1,S2);
 end;
 
-
-
 class function TIdSysVCL.AddMSecToTime(const ADateTime: TDateTime;
   const AMSec: Integer): TDateTime;
 var
@@ -387,71 +460,6 @@ class function TIdSysVCL.FileDateToDateTime(
   FileDate: Integer): TDateTime;
 begin
   Result := SysUtils.FileDateToDateTime(FileDate);
-end;
-
-class function TIdSysVCL.GetEnglishSetting: TFormatSettings;
-begin
-  Result.CurrencyFormat := $00; // 0 = '$1'
-  Result.NegCurrFormat := $00; //0 = '($1)'
-  Result.CurrencyString := '$';
-  Result.CurrencyDecimals := 2;
-
-  Result.ThousandSeparator := ',';
-  Result.DecimalSeparator := '.';
-
-  Result.DateSeparator := '/';
-  Result.ShortDateFormat := 'M/d/yyyy';
-  Result.LongDateFormat := 'dddd, MMMM dd, yyyy';
-
-  Result.TimeSeparator := ':';
-  Result.TimeAMString := 'AM';
-  Result.TimePMString := 'PM';
-  Result.LongTimeFormat := 'h:mm:ss AMPM';
-  Result.ShortTimeFormat := 'h:mm AMPM';
-
-  Result.ShortMonthNames[1] := 'Jan';
-  Result.ShortMonthNames[2] := 'Feb';
-  Result.ShortMonthNames[3] := 'Mar';
-  Result.ShortMonthNames[4] := 'Apr';
-  Result.ShortMonthNames[5] := 'May';
-  Result.ShortMonthNames[6] := 'Jun';
-  Result.ShortMonthNames[7] := 'Jul';
-  Result.ShortMonthNames[8] := 'Aug';
-  Result.ShortMonthNames[9] := 'Sep';
-  Result.ShortMonthNames[10] := 'Oct';
-  Result.ShortMonthNames[11] := 'Nov';
-  Result.ShortMonthNames[12] := 'Dec';
-
-  Result.LongMonthNames[1] := 'January';
-  Result.LongMonthNames[2] := 'February';
-  Result.LongMonthNames[3] := 'March';
-  Result.LongMonthNames[4] := 'April';
-  Result.LongMonthNames[5] := 'May';
-  Result.LongMonthNames[6] := 'June';
-  Result.LongMonthNames[7] := 'July';
-  Result.LongMonthNames[8] := 'August';
-  Result.LongMonthNames[9] := 'September';
-  Result.LongMonthNames[10] := 'October';
-  Result.LongMonthNames[11] := 'November';
-  Result.LongMonthNames[12] := 'December';
-
-  Result.ShortDayNames[1] := 'Sun';
-  Result.ShortDayNames[2] := 'Mon';
-  Result.ShortDayNames[3] := 'Tue';
-  Result.ShortDayNames[4] := 'Wed';
-  Result.ShortDayNames[5] := 'Thu';
-  Result.ShortDayNames[6] := 'Fri';
-  Result.ShortDayNames[7] := 'Sat';
-
-  Result.LongDayNames[1] := 'Sunday';
-  Result.LongDayNames[2] := 'Monday';
-  Result.LongDayNames[3] := 'Tuesday';
-  Result.LongDayNames[4] := 'Wednesday';
-  Result.LongDayNames[5] := 'Thursday';
-  Result.LongDayNames[6] := 'Friday';
-  Result.LongDayNames[7] := 'Saturday';
-
-  Result.ListSeparator := ',';
 end;
 
 class function TIdSysVCL.ChangeFileExt(const FileName,
