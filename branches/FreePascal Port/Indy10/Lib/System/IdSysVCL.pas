@@ -45,18 +45,6 @@ type
     class function FormatDateTime(const Format: string; ADateTime: TDateTime): string; 
     class function Format(const Format: string; const Args: array of const): string;
 
-    {$IFDEF DOTNET}
-    class function FileCreate(const FileName: string) : FileStream; overload;
-    class function FileCreate(const FileName: string;
-     Rights: Integer): FileStream; overload;
-    class procedure FileClose(Handle: FileStream);
-
-
-    {$ELSE}
-    class function FileCreate(const FileName: string; Rights: Integer): Integer; overload;
-    class function FileCreate(const FileName: string): Integer; overload; 
-    class procedure FileClose(Handle: Integer);
-    {$ENDIF}
     class function FileDateToDateTime(FileDate: Integer): TDateTime;
     class function CompareStr(const S1, S2: string): Integer;
     class function AddMSecToTime(const ADateTime : TDateTime; const AMSec : Integer):TDateTime;
@@ -394,41 +382,6 @@ begin
   LTM.Time := LTM.Time + AMSec;
   Result :=  TimeStampToDateTime(LTM);
 end;
-
-{$IFDEF DOTNET}
-class function TIdSysVCL.FileCreate(const FileName: string;
-  Rights: Integer): FileStream;
-begin
-   Result := SysUtils.FileCreate(FileName,Rights);
-end;
-
-class procedure TIdSysVCL.FileClose(Handle: FileStream);
-begin
-  SysUtils.FileClose(Handle);
-end;
-
-class function TIdSysVCL.FileCreate(const FileName: string): FileStream;
-begin
-  Result := SysUtils.FileCreate(FileName);
-end;
-
-{$ELSE}
-class function TIdSysVCL.FileCreate(const FileName: string;
-  Rights: Integer): Integer;
-begin
-   Result := SysUtils.FileCreate(FileName,Rights);
-end;
-
-class procedure TIdSysVCL.FileClose(Handle: Integer);
-begin
-  SysUtils.FileClose(Handle);
-end;
-
-class function TIdSysVCL.FileCreate(const FileName: string): Integer;
-begin
-  Result := SysUtils.FileCreate(FileName);
-end;
-{$ENDIF}
 
 class function TIdSysVCL.FileDateToDateTime(
   FileDate: Integer): TDateTime;
