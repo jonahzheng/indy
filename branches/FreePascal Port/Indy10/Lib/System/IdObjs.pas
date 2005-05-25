@@ -13,11 +13,56 @@ uses
 
 type
 {$IFDEF DotNetDistro}
+  TIdBaseObject = &Object;
   TIdStrings = TIdStringsFCL;
   TIdStringList = TIdStringListFCL;
+  TIdStream2 = TIdNetStream;
+  TIdMemoryStream = TIdNetMemoryStream;
+  TIdStringStream = TIdNetStringStream;
+  TIdFileStream = TIdNetFileStream;
+  TIdSeekOrigin = TIdNetSeekOrigin;
 {$ELSE}
+  TIdBaseObject = TObject;
   TIdStrings = Classes.TStrings;
   TIdStringList = Classes.TStringList;
+  TIdStream2 = TStream;
+  TIdMemoryStream = TMemoryStream;
+  TIdStringStream = TStringStream;
+  TIdFileStream = TFileStream;
+  TIdSeekOrigin = TSeekOrigin;
+{$ENDIF}
+
+const
+  IdFromBeginning   = TIdSeekOrigin.soBeginning;
+  IdFromCurrent     = TIdSeekOrigin.soCurrent;
+  IdFromEnd         = TIdSeekOrigin.soEnd;
+{$IFDEF DOTNET}
+  fmCreate          = $FFFF;
+  fmOpenRead        = $0000;
+  fmOpenWrite       = $0001;
+  fmOpenReadWrite   = $0002;
+
+  fmShareExclusive  = $0010;
+  fmShareDenyWrite  = $0020;
+  fmShareDenyNone   = $0040;
+{$ELSE}
+{$IFDEF LINUX}
+  fmOpenRead        = O_RDONLY;
+  fmOpenWrite       = O_WRONLY;
+  fmOpenReadWrite   = O_RDWR;
+  fmShareExclusive  = $0010;
+  fmShareDenyWrite  = $0020;
+  fmShareDenyNone   = $0030;
+{$ENDIF}
+{$IFDEF MSWINDOWS}
+  fmOpenRead        = $0000;
+  fmOpenWrite       = $0001;
+  fmOpenReadWrite   = $0002;
+
+  fmShareExclusive  = $0010;
+  fmShareDenyWrite  = $0020;
+  fmShareDenyNone   = $0040;
+{$ENDIF}
 {$ENDIF}
 
 procedure SplitColumnsNoTrim(const AData: string; AStrings: TIdStrings; const ADelim: string = ' ');    {Do not Localize}
