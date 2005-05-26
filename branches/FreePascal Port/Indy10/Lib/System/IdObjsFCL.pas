@@ -442,7 +442,8 @@ end;
 
 function TIdStringsFCL.AddObject(S: string; AObject: &Object): Integer;
 begin
-  Result := Add(S);
+  Result := GetCount;
+  Insert(Result, S);
   PutObject(Result, AObject);
 end;
 
@@ -474,8 +475,7 @@ end;
 
 function TIdStringsFCL.Add(const S: string): Integer;
 begin
-  Result := GetCount;
-  Insert(Result, S);
+  Result := AddObject(S, nil);
 end;
 
 function TIdStringsFCL.Add(AObject: &Object): Integer;
@@ -1198,6 +1198,7 @@ end;
 procedure TIdStringListFCL.Insert(Index: Integer; const S: string);
 begin
   FCollection.Insert(Index, S);
+  FObjectArray.Insert(Index, nil);
   PutObject(Index, nil);
 end;
 
