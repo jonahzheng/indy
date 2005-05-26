@@ -53,10 +53,11 @@ type
     class procedure FreeAndNil(var Obj);  
     class function LeadBytes: TAnsiCharSet; 
     class function IntToHex(Value: Integer; Digits: Integer): string; overload;
-    class function IntToHex(Value: Int64; Digits: Integer): string; overload; 
+    class function IntToHex(Value: Int64; Digits: Integer): string; overload;
     class function IntToStr(Value: Integer): string; overload; 
     class function IntToStr(Value: Int64): string; overload;
     class function IncludeTrailingPathDelimiter(const S: string): string;
+    class function ExcludeTrailingPathDelimiter(const S: string): string;
     class function StrToInt(const S: string; Default: Integer): Integer; overload;
     class function StrToInt(const S: string): Integer; overload;
     class function LowerCase(const S: string): string;
@@ -189,13 +190,21 @@ begin
   SysUtils.FreeAndNil(Obj);
 end;
 
-class function TIdSysVCL.IncludeTrailingPathDelimiter(
-  const S: string): string;
+class function TIdSysVCL.IncludeTrailingPathDelimiter(const S: string): string;
 begin
   {$IFDEF DELPHI5}
   Result := SysUtils.IncludeTrailingBackslash(S);
   {$ELSE}
   Result := SysUtils.IncludeTrailingPathDelimiter(S);
+  {$ENDIF}
+end;
+
+class function TIdSysVCL.ExcludeTrailingPathDelimiter(const S: string): string;
+begin
+  {$IFDEF DELPHI5}
+  Result := SysUtils.ExcludeTrailingBackslash(S);
+  {$ELSE}
+  Result := SysUtils.ExcludeTrailingPathDelimiter(S);
   {$ENDIF}
 end;
 
@@ -284,8 +293,7 @@ begin
   Result := SysUtils.UpperCase(S);
 end;
 
-class function TIdSysVCL.DateTimeToStr(
-  const ADateTime: TDateTime): string;
+class function TIdSysVCL.DateTimeToStr(const ADateTime: TDateTime): string;
 begin
   Result := SysUtils.DateTimeToStr(ADateTime);
 end;
@@ -390,8 +398,7 @@ begin
   Result := SysUtils.FileDateToDateTime( SysUtils.FileAge(FileName));
 end;
 
-class function TIdSysVCL.DirectoryExists(
-  const Directory: string): Boolean;
+class function TIdSysVCL.DirectoryExists(const Directory: string): Boolean;
 begin
   {$IFDEF DELPHI5}
   Result := FileCtrl.DirectoryExists(Directory);
@@ -430,8 +437,7 @@ begin
   Result := SysUtils.CompareStr(S1,S2);
 end;
 
-class function TIdSysVCL.StrToInt64(const S: string;
-  const Default: Int64): Int64;
+class function TIdSysVCL.StrToInt64(const S: string; const Default: Int64): Int64;
 begin
   Result := SysUtils.StrToInt64Def(S,Default);
 end;
@@ -462,8 +468,7 @@ begin
   Result := SysUtils.FileDateToDateTime(FileDate);
 end;
 
-class function TIdSysVCL.ChangeFileExt(const FileName,
-  Extension: string): string;
+class function TIdSysVCL.ChangeFileExt(const FileName, Extension: string): string;
 begin
   Result := SysUtils.ChangeFileExt(FileName,Extension);
 end;

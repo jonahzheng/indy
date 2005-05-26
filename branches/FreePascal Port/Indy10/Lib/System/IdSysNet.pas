@@ -94,6 +94,7 @@ type
     class function UpperCase(const S: string): string;  static;
     class function LowerCase(const S: string): string;  static;
     class function IncludeTrailingPathDelimiter(const S: string): string; static;
+    class function ExcludeTrailingPathDelimiter(const S: string): string; static;
     class function StrToInt(const S: string): Integer; overload; static;
     class function StrToInt(const S: string; Default: Integer): Integer; overload; static;
     class function Trim(const S: string): string; static;
@@ -165,9 +166,18 @@ end;
 class function TIdSysNet.IncludeTrailingPathDelimiter( const S: string): string;
 begin
   Result := S;
-  if Copy(S,Length(S),1)<>PATH_DELIN then
+  if (S = '') or (S[Length(S)] <> PATH_DELIN) then
   begin
     Result := S + PATH_DELIN;
+  end;
+end;
+
+class function TIdSysNet.ExcludeTrailingPathDelimiter(const S: string): string;
+begin
+  Result := S;
+  if (S <> '') and (S[Length(S)] = PATH_DELIN) then
+  begin
+    Result := Copy(S, 1, Length(S) - 1);
   end;
 end;
 
@@ -192,13 +202,17 @@ end;
 
 class function TIdSysNet.IntToStr(Value: Integer): string;
 begin
- Result := System.Convert.ToString(Value);
+  Result := System.Convert.ToString(Value);
 end;
 
 class function TIdSysNet.LastDelimiter(const Delimiters,
   S: string): Integer;
 begin
-  Result := s.LastIndexOfAny(Delimiters.ToCharArray);
+  Result := 0;
+  if Assigned(S) and Assigned(Delimiters) then
+  begin
+    Result := s.LastIndexOfAny(Delimiters.ToCharArray) + 1;
+  end;
 end;
 
 class function TIdSysNet.Now: TIdDateTimeBase;
@@ -208,31 +222,38 @@ end;
 
 class function TIdSysNet.StringReplace(const S, OldPattern,
   NewPattern: string): string;
-var LS : StringBuilder;
 begin
-  LS := StringBuilder.Create(S);
-  LS.Replace(OldPattern,NewPattern);
-  Result := LS.ToString;
+  if Assigned(S) then
+  begin
+    Result := S.Replace(OldPattern, NewPattern)
+  end
+  else
+  begin
+    Result := S;
+  end;
 end;
 
 class function TIdSysNet.ReplaceOnlyFirst(const S, OldPattern,
   NewPattern: string): string;
-var LS : StringBuilder;
+var
+  LS : StringBuilder;
   i : Integer;
   i2 : Integer;
 begin
-  i := s.IndexOf(OldPattern);
-  if i < 0 then
+  Result := S;
+  if Assigned(S) then
   begin
-    Result := s;
-    Exit;
+    i := S.IndexOf(OldPattern);
+    if i >= 0 then
+    begin
+      i2 := OldPattern.Length;
+      LS := StringBuilder.Create;
+      LS.Append(S,0,i);
+      LS.Append(NewPattern);
+      LS.Append(S,i+i2,S.Length-(i2+i));
+      Result := LS.ToString;
+    end;
   end;
-  i2 := OldPattern.Length;
-  LS := StringBUilder.Create;
-  LS.Append(s,0,i);
-  LS.Append( NewPattern);
-  LS.Append(s,i+i2,S.Length-(i2+i));
-  Result := LS.ToString;
 end;
 
 class function TIdSysNet.StringReplace(const S: String; const OldPattern,
@@ -277,17 +298,29 @@ end;
 
 class function TIdSysNet.Trim(const S: string): string;
 begin
-  Result := s.Trim;
+  Result := S;
+  if Assigned(S) then
+  begin
+    Result := S.Trim;
+  end;
 end;
 
 class function TIdSysNet.UpperCase(const S: string): string;
 begin
-  Result := System.String(S).ToUpper;
+  Result := S;
+  if Assigned(S) then
+  begin
+    Result := S.ToUpper
+  end;
 end;
 
 class function TIdSysNet.LowerCase(const S: string): string;
 begin
-  Result := System.String(S).ToLower;
+  Result := S;
+  if Assigned(S) then
+  begin
+    Result := S.ToLower;
+  end;
 end;
 
 class procedure TIdSysNet.DecodeDate(const ADateTime: TIdDateTimeBase; var Year,
@@ -314,54 +347,45 @@ begin
 end;
 
 class function TIdSysNet.TrimLeft(const S: string): string;
-var LS : StringBuilder;
-  i : Integer;
-  LDelTo : Integer;
+var
+  Len: Integer;
+  LDelTo: Integer;
 begin
-  LDelTo := 0;
-  LS := StringBuilder.Create(S);
-  for i := 0 to LS.Length-1 do
+  Result := S;
+  if Assigned(S) then
   begin
-    if LS.Chars[i]<=' ' then
+    Len := S.Length;
+    LDelTo := 0;
+    while (LDelTo < Len) and (S.Chars[LDelTo] <= ' ') do
     begin
       Inc(LDelTo);
-    end
-    else
+    end;
+    if LDelTo > 0 then
     begin
-      Break;
+      Result := S.Substring(LDelTo);
     end;
   end;
-  if LDelTo>0 then
-  begin
-    LS.Remove(0,LDelTo);
-  end;
-  Result := LS.ToString;
 end;
 
 class function TIdSysNet.TrimRight(const S: string): string;
-var LS : StringBuilder;
-  i : Integer;
-  LDelPos : Integer;
+var
+  LastIndex: Integer;
+  LDelPos: Integer;
 begin
-
-  LS := StringBuilder.Create(S);
-  LDelPos := LS.Length;
-  for i := LS.Length-1 downto 0 do
+  Result := S;
+  if Assigned(S) then
   begin
-    if LS.Chars[i]<=' ' then
+    LastIndex := S.Length - 1;
+    LDelPos := LastIndex;
+    while (LDelPos >= 0) and (S.Chars[LDelPos] <= ' ') do
     begin
       Dec(LDelPos);
-    end
-    else
+    end;
+    if LDelPos < LastIndex then
     begin
-      Break;
+      Result := S.Substring(0, LDelPos + 1);
     end;
   end;
-  if LDelPos < LS.Length then
-  begin
-     LS.Remove(LDelPos,LS.Length-LDelPos);
-  end;
-  Result := LS.ToString;
 end;
 
 class function TIdSysNet.DirectoryExists(const Directory: string): Boolean;
@@ -392,7 +416,7 @@ end;
 
 class function TIdSysNet.FloatToIntStr(const AFloat: Extended): String;
 begin
-  Result := Int( AFloat).ToString;
+  Result := Int(AFloat).ToString;
 end;
 
 class function TIdSysNet.TwoDigitYearCenturyWindow: Word;
@@ -460,7 +484,6 @@ begin
   begin
     Result := Default;
   end;
-
 end;
 
 class function TIdSysNet.SameText(const S1, S2: String): Boolean;
@@ -477,11 +500,11 @@ end;
 class function TIdSysNet.ConvertFormat(const AFormat : String;
   const ADate : TIdDateTimeBase;
   DTInfo : System.Globalization.DateTimeFormatInfo): String;
-var LSB : StringBuilder;
+var
+  LSB : StringBuilder;
   I, LCount, LHPos, LH2Pos, LLen: Integer;
   c : Char;
   LAMPM : String;
-
 begin
   Result := '';
   LSB := StringBuilder.Create;
@@ -650,7 +673,7 @@ begin
           i := i + 1;
         end;
       end;
-      '/' : //double this
+      '/' : //double his
       begin
         i := AddStringToFormat(LSB,i,'\\');
       end;
@@ -720,7 +743,7 @@ end;
 
 class function TIdSysNet.LastChars(const AStr: String; const ALen : Integer): String;
 begin
-  if AStr.Length > ALen then
+  if Assigned(AStr) and (AStr.Length > ALen) then
   begin
     Result := Copy(AStr,Length(AStr)-ALen+1,ALen);
   end
@@ -749,7 +772,8 @@ var i,j,l : Integer;
     LFoundSubStr : Boolean;
 begin
   Result := -1;
-  if (value.Length + startIndex > (Self.Length + startIndex))
+  if not Assigned(value)
+    or (value.Length + startIndex > (Self.Length + startIndex))
     or (value.Length > startIndex + count)  then
   begin
     Exit;
@@ -822,7 +846,7 @@ begin
   begin
     LEndIndex := 0;
   end;
-  if LEndIndex > Self.Length then
+  if (LEndIndex > Self.Length) or not Assigned(value) then
   begin
     Exit;
   end;
@@ -879,7 +903,10 @@ begin
   begin
     Exit;
   end;
-  Self.Remove(i,oldValue.Length);
+  if Assigned(oldValue) then
+  begin
+    Self.Remove(i,oldValue.Length);
+  end;
   Self.Insert(i,newValue);
 end;
 
@@ -901,7 +928,10 @@ begin
   begin
     Exit;
   end;
-  Self.Remove(i,oldValue.Length);
+  if Assigned(oldValue) then
+  begin
+    Self.Remove(i,oldValue.Length);
+  end;
   Self.Insert(i,newValue);
 end;
 
@@ -936,7 +966,6 @@ class function TIdSysNet.FormatBuf(var Buffer: System.Text.StringBuilder;
     AScratch : System.Text.StringBuilder): Integer;
 
   begin
-
     Result := 0;
     AScratch.Length := 0;
     if AFmt.Chars[VIdx] = '-' then
@@ -982,7 +1011,7 @@ class function TIdSysNet.FormatBuf(var Buffer: System.Text.StringBuilder;
       Result := System.Convert.ToInt32 ( AScratch.ToString, AProvider );
     end;
   end;
-  
+
 
 var
   LStrLen : Integer;
@@ -1126,7 +1155,7 @@ end;
 class function TIdSysNet.ChangeFileExt(const FileName,
   Extension: string): string;
 begin
-  if Extension.Length <> 0 then
+  if Length(Extension) <> 0 then
   begin
     Result := System.IO.Path.ChangeExtension(FileName, Extension)
   end
@@ -1136,25 +1165,45 @@ begin
   end;
 end;
 
-class function TIdSysNet.AnsiCompareStr(const S1,
-  S2: string): Integer;
+class function TIdSysNet.AnsiCompareStr(const S1, S2: string): Integer;
 begin
-  Result := S1.CompareTo(S2);
+  if not Assigned(S1) and not Assigned(S2) then
+  begin
+    Result := 0;
+  end
+  else if not Assigned(S1) then
+  begin
+    Result := S1.CompareTo(S2);
+  end
+  else
+    Result := -1;
 end;
 
 class function TIdSysNet.AnsiLowerCase(const S: WideString): WideString;
 begin
-  Result := S.ToLower;
+  Result := S;
+  if Assigned(S) then
+  begin
+    Result := S.ToLower;
+  end;
 end;
 
 class function TIdSysNet.AnsiUpperCase(const S: WideString): WideString;
 begin
-  Result := S.ToUpper;
+  Result := S;
+  if Assigned(S) then
+  begin
+    Result := S.ToUpper;
+  end;
 end;
 
 class function TIdSysNet.AnsiPos(const Substr, S: WideString): Integer;
 begin
-  Result := S.IndexOf(Substr);
+  Result := 0;
+  if Assigned(S) then
+  begin
+    Result := S.IndexOf(Substr) + 1;
+  end;
 end;
 
 end.
