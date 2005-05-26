@@ -22,6 +22,10 @@ type
   TIdFileStream = TIdNetFileStream;
   TIdSeekOrigin = TIdNetSeekOrigin;
 {$ELSE}
+  {$IFDEF DELPHI5}
+  TSeekOrigin = Word;
+  {$ENDIF}
+
   TIdBaseObject = TObject;
   TIdStrings = Classes.TStrings;
   TIdStringList = Classes.TStringList;
@@ -47,6 +51,12 @@ const
   fmShareDenyWrite  = $0020;
   fmShareDenyNone   = $0040;
 {$ELSE}
+
+  {$IFDEF DELPHI5}
+  soBeginning = soFromBeginning;
+  soCurrent = soFromCurrent;
+  soEnd = soFromEnd;
+  {$ENDIF}
 
   IdFromBeginning   = TIdSeekOrigin(soBeginning);
   IdFromCurrent     = TIdSeekOrigin(soCurrent);
