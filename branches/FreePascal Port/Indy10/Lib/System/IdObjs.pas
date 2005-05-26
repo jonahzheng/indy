@@ -33,10 +33,11 @@ type
 {$ENDIF}
 
 const
+{$IFDEF DOTNET}
   IdFromBeginning   = TIdSeekOrigin.soBeginning;
   IdFromCurrent     = TIdSeekOrigin.soCurrent;
   IdFromEnd         = TIdSeekOrigin.soEnd;
-{$IFDEF DOTNET}
+
   fmCreate          = $FFFF;
   fmOpenRead        = $0000;
   fmOpenWrite       = $0001;
@@ -46,10 +47,17 @@ const
   fmShareDenyWrite  = $0020;
   fmShareDenyNone   = $0040;
 {$ELSE}
+
+  IdFromBeginning   = TIdSeekOrigin(soBeginning);
+  IdFromCurrent     = TIdSeekOrigin(soCurrent);
+  IdFromEnd         = TIdSeekOrigin(soEnd);
+
+  fmCreate          = $FFFF;
 {$IFDEF LINUX}
   fmOpenRead        = O_RDONLY;
   fmOpenWrite       = O_WRONLY;
   fmOpenReadWrite   = O_RDWR;
+
   fmShareExclusive  = $0010;
   fmShareDenyWrite  = $0020;
   fmShareDenyNone   = $0030;
