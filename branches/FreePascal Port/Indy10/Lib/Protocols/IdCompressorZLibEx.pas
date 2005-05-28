@@ -62,7 +62,7 @@ uses
   Classes,
   IdException,
   IdIOHandler,
-  IdStreamVCL,
+  IdObjs,
   IdZLibCompressorBase,
   IdZLibEx;
 
@@ -70,18 +70,18 @@ type
   TIdCompressorZLibEx = class(TIdZLibCompressorBase)
   protected
     procedure InternalDecompressStream(LZstream: TZStreamRec; AIOHandler : TIdIOHandler;
-      AOutStream: TIdStreamVCL);
+      AOutStream: TIdStream2);
   public
 
-    procedure DeflateStream(AStream : TIdStreamVCL; const ALevel : TIdCompressionLevel=0; const AOutStream : TIdStreamVCL=nil); override;
-    procedure InflateStream(AStream : TIdStreamVCL; const AOutStream : TIdStreamVCL=nil); override;
+    procedure DeflateStream(AStream : TIdStream2; const ALevel : TIdCompressionLevel=0; const AOutStream : TIdStream2=nil); override;
+    procedure InflateStream(AStream : TIdStream2; const AOutStream : TIdStream2=nil); override;
 
-    procedure CompressStream(AStream : TIdStreamVCL; const ALevel : TIdCompressionLevel; const AWindowBits, AMemLevel,
-      AStrategy: Integer; AOutStream : TIdStreamVCL); override;
-    procedure DecompressStream(AStream : TIdStreamVCL; const AWindowBits : Integer; const AOutStream : TIdStreamVCL=nil); override;
-    procedure CompressFTPToIO(AStream : TIdStreamVCL; AIOHandler : TIdIOHandler; const ALevel, AWindowBits, AMemLevel,
+    procedure CompressStream(AStream : TIdStream2; const ALevel : TIdCompressionLevel; const AWindowBits, AMemLevel,
+      AStrategy: Integer; AOutStream : TIdStream2); override;
+    procedure DecompressStream(AStream : TIdStream2; const AWindowBits : Integer; const AOutStream : TIdStream2=nil); override;
+    procedure CompressFTPToIO(AStream : TIdStream2; AIOHandler : TIdIOHandler; const ALevel, AWindowBits, AMemLevel,
       AStrategy: Integer); override;
-     procedure DecompressFTPFromIO(AIOHandler : TIdIOHandler; const AWindowBits : Integer; AOutputStream : TIdStreamVCL); override;
+     procedure DecompressFTPFromIO(AIOHandler : TIdIOHandler; const AWindowBits : Integer; AOutputStream : TIdStream2); override;
   end;
 
   EIdCompressionException = class(EIdException);
@@ -99,7 +99,7 @@ const
 { TIdCompressorZLibEx }
 
 procedure TIdCompressorZLibEx.InternalDecompressStream(
-  LZstream: TZStreamRec; AIOHandler: TIdIOHandler; AOutStream: TIdStreamVCL);
+  LZstream: TZStreamRec; AIOHandler: TIdIOHandler; AOutStream: TIdStream2);
 {Note that much of this is taken from the ZLibEx unit and adapted to use the IOHandler}
 const
   bufferSize = 32768;
@@ -148,7 +148,7 @@ begin
 
       ZDecompressCheck(inflate(LZstream,Z_NO_FLUSH));
       outSize := bufferSize - LZstream.avail_out;
-      AOutStream.VCLStream.Write(outBuffer,outSize);
+      AOutStream.Write(outBuffer,outSize);
     until (LZstream.avail_in = 0) and (LZstream.avail_out > 0);
     inSize := RawReadFromIOHandler(LBuf, AIOHandler, bufferSize);
   end;
@@ -175,7 +175,7 @@ begin
         zresult := ZDecompressCheck(zresult);
       end;
       outSize := bufferSize - LZstream.avail_out;
-      AOutStream.VCLStream.Write(outBuffer,outSize);
+      AOutStream.Write(outBuffer,outSize);
 
     until ((zresult = Z_STREAM_END) and (LZstream.avail_out > 0)) or (zresult = Z_BUF_ERROR);
 
@@ -183,7 +183,7 @@ begin
 end;
 
 procedure TIdCompressorZLibEx.DecompressFTPFromIO(AIOHandler: TIdIOHandler;
-  const AWindowBits: Integer; AOutputStream: TIdStreamVCL);
+  const AWindowBits: Integer; AOutputStream: TIdStream2);
 {Note that much of this is taken from the ZLibEx unit and adapted to use the IOHandler}
 var
   Lzstream: TZStreamRec;
@@ -215,7 +215,7 @@ begin
   end;
 end;
 
-procedure TIdCompressorZLibEx.CompressFTPToIO(AStream: TIdStreamVCL;
+procedure TIdCompressorZLibEx.CompressFTPToIO(AStream: TIdStream2;
   AIOHandler: TIdIOHandler; const ALevel, AWindowBits, AMemLevel,
   AStrategy: Integer);
 {Note that much of this is taken from the ZLibEx unit and adapted to use the IOHandler}
@@ -233,7 +233,7 @@ begin
   ZCompressCheck( deflateInit2_(LCompressRec, ALevel, Z_DEFLATED, AWindowBits, AMemLevel,
       AStrategy, ZLIB_VERSION,  SizeOf(LCompressRec)));
 
-  inSize := AStream.VCLStream.Read(inBuffer,bufferSize);
+  inSize := AStream.Read(inBuffer,bufferSize);
 
   while inSize > 0 do
   begin
@@ -254,7 +254,7 @@ begin
       end;
     until ( LCompressRec.avail_in = 0) and ( LCompressRec.avail_out > 0);
 
-    inSize := AStream.VCLStream.Read(inBuffer,bufferSize);
+    inSize := AStream.Read(inBuffer,bufferSize);
   end;
 
   repeat
@@ -277,8 +277,8 @@ begin
   AIOHandler.EndWork(wmWrite);
 end;
 
-procedure TIdCompressorZLibEx.CompressStream(AStream : TIdStreamVCL; const ALevel : TIdCompressionLevel; const AWindowBits, AMemLevel,
-      AStrategy: Integer; AOutStream : TIdStreamVCL);
+procedure TIdCompressorZLibEx.CompressStream(AStream : TIdStream2; const ALevel : TIdCompressionLevel; const AWindowBits, AMemLevel,
+      AStrategy: Integer; AOutStream : TIdStream2);
 var
     LCompressRec: TZStreamRec;
 var
@@ -313,19 +313,19 @@ begin
         ReallocMem(LSendBuf, LSendSize);
       end;
       // Get the data from the input stream and save it off
-      LSendCount := AStream.VCLStream.Read(LSendBuf^, AStream.Size);
+      LSendCount := AStream.Read(LSendBuf^, AStream.Size);
       LCompressRec.next_in := LSendBuf;
       LCompressRec.avail_in := LSendCount;
       LCompressRec.avail_out := 0;
 
       if Assigned(AOutStream) then
       begin
-        AOutStream.VCLStream.Size := 0;
+        AOutStream.Size := 0;
       end
       else
       begin
         // reset and clear the input stream in preparation for compression
-        AStream.VCLStream.Size := 0;
+        AStream.Size := 0;
       end;
       // As long as data is being outputted, keep compressing
       while LCompressRec.avail_out = 0 do
@@ -340,12 +340,12 @@ begin
 
         if Assigned(AOutStream) then
         begin
-          AOutStream.VCLStream.Write(Buffer, SizeOf(Buffer) - LCompressRec.avail_out);
+          AOutStream.Write(Buffer, SizeOf(Buffer) - LCompressRec.avail_out);
         end
         else
         begin
           // Place the compressed data back into the input stream
-          AStream.VCLStream.Write(Buffer, SizeOf(Buffer) - LCompressRec.avail_out);
+          AStream.Write(Buffer, SizeOf(Buffer) - LCompressRec.avail_out);
         end;
       end;
     //finalization cleanup
@@ -360,7 +360,7 @@ begin
   end;
 end;
 
-procedure TIdCompressorZLibEx.DecompressStream(AStream : TIdStreamVCL; const AWindowBits : Integer; const AOutStream : TIdStreamVCL=nil);
+procedure TIdCompressorZLibEx.DecompressStream(AStream : TIdStream2; const AWindowBits : Integer; const AOutStream : TIdStream2=nil);
 var
   Buffer: array[0..2047] of Char;
   nChars, C: Integer;
@@ -383,7 +383,7 @@ begin
       //decompression
       StreamEnd := False;
       repeat
-        nChars := AStream.VCLStream.Read(Buffer, SizeOf(Buffer));
+        nChars := AStream.Read(Buffer, SizeOf(Buffer));
         if nChars = 0 then
         begin
           Break;
@@ -422,13 +422,13 @@ begin
       until StreamEnd;
       if Assigned(AOutStream) then
       begin
-        AOutStream.VCLStream.Size := 0;
-        AOutStream.VCLStream.Write(LRecvBuf^, LRecvCount);
+        AOutStream.Size := 0;
+        AOutStream.Write(LRecvBuf^, LRecvCount);
       end
       else
       begin
-        AStream.VCLStream.Size := 0;
-        AStream.VCLStream.Write(LRecvBuf^, LRecvCount);
+        AStream.Size := 0;
+        AStream.Write(LRecvBuf^, LRecvCount);
       end;
     finally
       //deinitialization
@@ -441,7 +441,7 @@ begin
     end;
 end;
 
-procedure TIdCompressorZLibEx.DeflateStream(AStream : TIdStreamVCL; const ALevel : TIdCompressionLevel=0; const AOutStream : TIdStreamVCL=nil);
+procedure TIdCompressorZLibEx.DeflateStream(AStream : TIdStream2; const ALevel : TIdCompressionLevel=0; const AOutStream : TIdStream2=nil);
 
 var 
     LCompressRec: TZStreamRec;
@@ -476,18 +476,18 @@ begin
         ReallocMem(LSendBuf, LSendSize);
       end;
       // Get the data from the input stream and save it off
-      LSendCount := AStream.VCLStream.Read(LSendBuf^, AStream.Size);
+      LSendCount := AStream.Read(LSendBuf^, AStream.Size);
       LCompressRec.next_in := LSendBuf;
       LCompressRec.avail_in := LSendCount;
       LCompressRec.avail_out := 0;
       if Assigned(AOutStream) then
       begin
-        AOutStream.VCLStream.Size := 0;
+        AOutStream.Size := 0;
       end
       else
       begin
         // reset and clear the input stream in preparation for compression
-        AStream.VCLStream.Size := 0;
+        AStream.Size := 0;
       end;
       // As long as data is being outputted, keep compressing
       while LCompressRec.avail_out = 0 do
@@ -502,12 +502,12 @@ begin
         end;
         if Assigned(AOutStream) then
         begin
-          AOutStream.VCLStream.Write(Buffer, SizeOf(Buffer) - LCompressRec.avail_out);
+          AOutStream.Write(Buffer, SizeOf(Buffer) - LCompressRec.avail_out);
         end
         else
         begin
           // Place the compressed data back into the input stream
-          AStream.VCLStream.Write(Buffer, SizeOf(Buffer) - LCompressRec.avail_out);
+          AStream.Write(Buffer, SizeOf(Buffer) - LCompressRec.avail_out);
         end;
       end;
     //finalization cleanup
@@ -523,7 +523,7 @@ begin
   end;
 end;
 
-procedure TIdCompressorZLibEx.InflateStream(AStream : TIdStreamVCL; const AOutStream : TIdStreamVCL=nil);
+procedure TIdCompressorZLibEx.InflateStream(AStream : TIdStream2; const AOutStream : TIdStream2=nil);
 var
   Buffer: array[0..2047] of Char;
   nChars, C: Integer;
@@ -547,7 +547,7 @@ begin
       //decompression
       StreamEnd := False;
       repeat
-        nChars := AStream.VCLStream.Read(Buffer, SizeOf(Buffer));
+        nChars := AStream.Read(Buffer, SizeOf(Buffer));
         if nChars = 0 then
         begin
           Break;
@@ -588,13 +588,13 @@ begin
       until StreamEnd;
       if Assigned(AOutStream) then
       begin
-        AOutStream.VCLStream.Size := 0;
-        AOutStream.VCLStream.Write(LRecvBuf^, LRecvCount);
+        AOutStream.Size := 0;
+        AOutStream.Write(LRecvBuf^, LRecvCount);
       end
       else
       begin
-        AStream.VCLStream.Size := 0;
-        AStream.VCLStream.Write(LRecvBuf^, LRecvCount);
+        AStream.Size := 0;
+        AStream.Write(LRecvBuf^, LRecvCount);
       end;
     finally
       //deinitialization
