@@ -14,6 +14,11 @@ uses
 type
 {$IFDEF DotNetDistro}
   TIdBaseObject = &Object;
+  TIdPersistent = TIdNetPersistent;
+  TIdPersistentHelper = class helper (TIdNetPersistentHelper) for TIdPersistent
+  public
+    constructor Create; override;
+  end;
   TIdStrings = TIdStringsFCL;
   TIdStringList = TIdStringListFCL;
   TIdStream2 = TIdNetStream;
@@ -34,6 +39,7 @@ type
   {$ENDIF}
 
   TIdBaseObject = TObject;
+  TIdPersistent = TPersistent;
   TIdStrings = Classes.TStrings;
   TIdStringList = Classes.TStringList;
   TIdStream2 = TStream;
@@ -189,5 +195,15 @@ Begin
     AStrings.AddObject(Sys.Trim(Copy(LData, LLastPos, MaxInt)), TObject(LLastPos + LLeadingSpaceCnt));
   end;
 end;
+
+{$IFDEF DotNetDistro}
+{ TIdPersistentHelper }
+
+constructor TIdPersistentHelper.Create;
+begin
+  inherited Create;
+end;
+
+{$ENDIF}
 
 end.

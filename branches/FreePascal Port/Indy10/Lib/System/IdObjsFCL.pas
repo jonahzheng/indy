@@ -12,6 +12,17 @@ type
   EReadError = Exception;
   EWriteError = Exception;
   TByteArray = array of Byte;
+  TIdNetPersistent = MarshalByRefObject;
+  TIdNetPersistentHelper = class helper for TIdNetPersistent
+  protected
+    procedure AssignTo(Dest: TIdNetPersistent); virtual;
+    function GetOwner: TIdNetPersistent; virtual;
+  public
+    constructor Create; virtual;
+    procedure Assign(ASource: TIdNetPersistent); virtual;
+    function GetNamePath: string; virtual;
+  end;
+
   TIdNetStream = class
   private
     function Skip(Amount: Integer): Integer;
@@ -240,7 +251,7 @@ type
   EIdStringListErrorFCL = class(EIdException);
   TIdStringsDefined = set of (sdDelimiter, sdQuoteChar, sdNameValueSeparator);
 
-  TIdStringsFCL = class(MarshalByRefObject, ICloneable, IEnumerable, ICollection)
+  TIdStringsFCL = class(TIdNetPersistent, ICloneable, IEnumerable, ICollection)
   private
     FDefined: TIdStringsDefined;
     FDelimiter: Char;
@@ -308,7 +319,7 @@ type
     function AddObject(S: string; AObject: &Object) : Integer; virtual;
     procedure Append(S: string);
     procedure AddStrings(AStrings: TIdStringsFCL); virtual;
-    procedure Assign(ASource: TIdStringsFCL); virtual;
+    procedure Assign(ASource: TIdNetPersistent); override;
     procedure BeginUpdate;
     procedure Clear; virtual; abstract;
     procedure Delete(AIndex: Integer); virtual; abstract;
@@ -464,7 +475,7 @@ type
     function GetIndex: Integer;
   protected
     procedure Changed(AllItems: Boolean);
-    function GetOwner: &Object;
+    function GetOwner: &Object; override;
     function GetDisplayName: string; virtual;
     procedure SetCollection(Value: TIdNetCollection); virtual;
     procedure SetIndex(Value: Integer); virtual;
@@ -472,7 +483,7 @@ type
   public
     constructor Create(Collection: TIdNetCollection); virtual;
     destructor Destroy; override;
-    procedure Assign(ASource: Component); virtual;
+    procedure Assign(ASource: Component); override;
     property Owner: &Object read GetOwner;
     property Collection: TIdNetCollection read FCollection write SetCollection;
     property ID: Integer read FID;
@@ -480,7 +491,7 @@ type
     property DisplayName: string read GetDisplayName write SetDisplayName;
   end;
 
-  TIdNetCollection = class(Component)
+  TIdNetCollection = class(TIdNetPersistent)
   private
     FItemClass: TIdNetCollectionItemClass;
     FItems: TIdNetList;
@@ -499,7 +510,7 @@ type
     procedure SetItemName(Item: TIdNetCollectionItem); virtual;
     procedure Update(Item: TIdNetCollectionItem); virtual;
     property UpdateCount: Integer read FUpdateCount;
-    function GetOwner: Component; virtual;
+    function GetOwner: TIdNetPersistent; override;
   public
     constructor Create(ItemClass: TIdNetCollectionItemClass);
     destructor Destroy; override;
@@ -512,7 +523,7 @@ type
     function GetEnumerator: TIdNetCollectionEnumerator;
     function Insert(Index: Integer): TIdNetCollectionItem;
     property Count: Integer read GetCount;
-    property Owner: Component read GetOwner;
+    property Owner: TIdNetPersistent read GetOwner;
     property ItemClass: TIdNetCollectionItemClass read FItemClass;
     property Items[Index: Integer]: TIdNetCollectionItem read GetItem write SetItem;
   end;
@@ -527,7 +538,7 @@ type
     FSynchronizeException: &Object;
   end;
 
-  TIdNetThread = class(Component)
+  TIdNetThread = class
   private
     FHandle: System.Threading.Thread;
     FCreateSuspended: Boolean;
@@ -590,11 +601,11 @@ type
 
   TIdNetOwnedCollection = class(TIdNetCollection)
   private
-    FOwner: Component;
+    FOwner: TIdNetPersistent;
   protected
-    function GetOwner: Component; override;
+    function GetOwner: TIdNetPersistent; override;
   public
-    constructor Create(AOwner: Component; ItemClass: TIdNetCollectionItemClass);
+    constructor Create(AOwner: TIdNetPersistent; ItemClass: TIdNetCollectionItemClass);
   end;
 
 const
@@ -923,18 +934,24 @@ begin
   end;
 end;
 
-procedure TIdStringsFCL.Assign(ASource: TIdStringsFCL);
+procedure TIdStringsFCL.Assign(ASource: TIdNetPersistent);
+var
+  LSrc: TIdStringsFCL;
 begin
-  BeginUpdate;
-  try
-    Clear;
-    FDefined := ASource.FDefined;
-    FNameValueSeparator := ASource.FNameValueSeparator;
-    FQuoteChar := ASource.FQuoteChar;
-    FDelimiter := ASource.FDelimiter;
-    AddStrings(ASource);
-  finally
-    EndUpdate;
+  if ASource is TIdStringsFCL then
+  begin
+    LSrc := TIdStringsFCL(ASource);
+    BeginUpdate;
+    try
+      Clear;
+      FDefined := LSrc.FDefined;
+      FNameValueSeparator := LSrc.FNameValueSeparator;
+      FQuoteChar := LSrc.FQuoteChar;
+      FDelimiter := LSrc.FDelimiter;
+      AddStrings(LSrc);
+    finally
+      EndUpdate;
+    end;
   end;
 end;
 
@@ -3492,7 +3509,7 @@ begin
   Result := TIdNetCollectionEnumerator.Create(Self);
 end;
 
-function TIdNetCollection.GetOwner: Component;
+function TIdNetCollection.GetOwner: TIdNetPersistent;
 begin
   Result := nil;
 end;            
@@ -3963,14 +3980,14 @@ end;
 
 { TIdNetOwnedCollection }
 
-constructor TIdNetOwnedCollection.Create(AOwner: Component;
+constructor TIdNetOwnedCollection.Create(AOwner: TIdNetPersistent;
   ItemClass: TIdNetCollectionItemClass);
 begin
   inherited Create(ItemClass);
   FOwner := AOwner;
 end;
 
-function TIdNetOwnedCollection.GetOwner: Component;
+function TIdNetOwnedCollection.GetOwner: TIdNetPersistent;
 begin
   Result := FOwner;
 end;
@@ -3978,6 +3995,42 @@ end;
 procedure TIdNetCollectionItem.Assign(ASource: Component);
 begin
 //
+end;
+
+{ TIdNetPersistentHelper }
+
+constructor TIdNetPersistentHelper.Create;
+begin
+  inherited Create;
+end;
+
+procedure TIdNetPersistentHelper.Assign(ASource: TIdNetPersistent);
+begin
+  if ASource <> nil then
+    ASource.AssignTo(Self);
+end;
+
+procedure TIdNetPersistentHelper.AssignTo(Dest: TIdNetPersistent);
+begin
+
+end;
+
+function TIdNetPersistentHelper.GetNamePath: string;
+var
+  S: string;
+begin
+  Result := ClassName;
+  if GetOwner <> nil then
+  begin
+    S := GetOwner.GetNamePath;
+    if S <> '' then
+      Result := S + '.' + Result;
+  end;
+end;
+
+function TIdNetPersistentHelper.GetOwner: TIdNetPersistent;
+begin
+  Result := nil;
 end;
 
 end.
