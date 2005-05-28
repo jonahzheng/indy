@@ -21,6 +21,23 @@ type
     constructor Create; virtual;
     procedure Assign(ASource: TIdNetPersistent); virtual;
     function GetNamePath: string; virtual;
+    property Owner: TIdNetPersistent read GetOwner;
+  end;
+
+  TIdNetMultiReadExclusiveWriteSynchronizer = class
+  private
+    FReaderWriterLock: System.Threading.ReaderWriterLock;
+    function GetRevisionLevel: Integer;
+  public
+    constructor Create;
+
+    procedure BeginRead;
+    procedure EndRead;
+    function BeginWrite: Boolean;
+    procedure EndWrite;
+
+    {! RevisionLevel used to be Cardinal in DCC32 }
+    property RevisionLevel: Integer read GetRevisionLevel;
   end;
 
   TIdNetStream = class
@@ -468,14 +485,14 @@ type
     property Current: TIdNetCollectionItem read GetCurrent;
   end;
 
-  TIdNetCollectionItem = class(Component)
+  TIdNetCollectionItem = class(TIdNetPersistent)
   private
     FCollection: TIdNetCollection;
     FID: Integer;
     function GetIndex: Integer;
   protected
     procedure Changed(AllItems: Boolean);
-    function GetOwner: &Object; override;
+    function GetOwner: TIdNetPersistent; override;
     function GetDisplayName: string; virtual;
     procedure SetCollection(Value: TIdNetCollection); virtual;
     procedure SetIndex(Value: Integer); virtual;
@@ -483,8 +500,7 @@ type
   public
     constructor Create(Collection: TIdNetCollection); virtual;
     destructor Destroy; override;
-    procedure Assign(ASource: Component); override;
-    property Owner: &Object read GetOwner;
+    procedure Assign(ASource: TIdNetPersistent); override;
     property Collection: TIdNetCollection read FCollection write SetCollection;
     property ID: Integer read FID;
     property Index: Integer read GetIndex write SetIndex;
@@ -523,7 +539,6 @@ type
     function GetEnumerator: TIdNetCollectionEnumerator;
     function Insert(Index: Integer): TIdNetCollectionItem;
     property Count: Integer read GetCount;
-    property Owner: TIdNetPersistent read GetOwner;
     property ItemClass: TIdNetCollectionItemClass read FItemClass;
     property Items[Index: Integer]: TIdNetCollectionItem read GetItem write SetItem;
   end;
@@ -3381,7 +3396,7 @@ begin
   Result := ClassName;
 end;
 
-function TIdNetCollectionItem.GetOwner: &Object;
+function TIdNetCollectionItem.GetOwner: TIdNetPersistent;
 begin
   Result := FCollection;
 end;
@@ -3992,7 +4007,7 @@ begin
   Result := FOwner;
 end;
 
-procedure TIdNetCollectionItem.Assign(ASource: Component);
+procedure TIdNetCollectionItem.Assign(ASource: TIdNetPersistent);
 begin
 //
 end;
@@ -4031,6 +4046,40 @@ end;
 function TIdNetPersistentHelper.GetOwner: TIdNetPersistent;
 begin
   Result := nil;
+end;
+
+{ TIdNetMultiReadExclusiveWriteSynchronizer }
+
+constructor TIdNetMultiReadExclusiveWriteSynchronizer.Create;
+begin
+  inherited;
+  FReaderWriterLock := System.Threading.ReaderWriterLock.Create;
+end;
+
+function TIdNetMultiReadExclusiveWriteSynchronizer.GetRevisionLevel: Integer;
+begin
+  Result := FReaderWriterLock.WriterSeqNum;
+end;
+
+procedure TIdNetMultiReadExclusiveWriteSynchronizer.BeginRead;
+begin
+  FReaderWriterLock.AcquireReaderLock(-1);
+end;
+
+procedure TIdNetMultiReadExclusiveWriteSynchronizer.EndRead;
+begin
+  FReaderWriterLock.ReleaseReaderLock;
+end;
+
+function TIdNetMultiReadExclusiveWriteSynchronizer.BeginWrite: Boolean;
+begin
+  FReaderWriterLock.AcquireWriterLock(-1);
+  Result := FReaderWriterLock.IsWriterLockHeld;
+end;
+
+procedure TIdNetMultiReadExclusiveWriteSynchronizer.EndWrite;
+begin
+  FReaderWriterLock.ReleaseWriterLock;
 end;
 
 end.

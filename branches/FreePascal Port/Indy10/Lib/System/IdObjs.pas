@@ -8,7 +8,8 @@ uses
 {$IFDEF DotNetDistro}
   IdObjsFCL
 {$ELSE}
-  Classes
+  Classes,
+  SysUtils
 {$ENDIF};
 
 type
@@ -30,9 +31,11 @@ type
   TIdCollection = TIdNetCollection;
   TIdCollectionItem = TIdNetCollectionItem;
   TIdNativeThread = TIdNetThread;
+  TIdThreadMethod = TIdNetThreadMethod;
   TIdNotifyEvent = TIdNetNotifyEvent;
   TIdThreadList = TIdNetThreadList;
   TidOwnedCollection = TIdNetOwnedCollection;
+  TIdMultiReadExclusiveWriteSynchronizer = TIdNetMultiReadExclusiveWriteSynchronizer;
 {$ELSE}
   {$IFDEF DELPHI5}
   TSeekOrigin = Word;
@@ -51,9 +54,11 @@ type
   TIdCollection = TCollection;
   TIdCollectionItem = TCollectionItem;
   TIdNativeThread = TThread;
+  TIdThreadMethod = TThreadMethod;
   TIdNotifyEvent = TNotifyEvent;
   TIdThreadList = TThreadList;
   TIdOwnedCollection = TOwnedCollection;
+  TIdMultiReadExclusiveWriteSynchronizer = TMultiReadExclusiveWriteSynchronizer;
 {$ENDIF}
 
 const
