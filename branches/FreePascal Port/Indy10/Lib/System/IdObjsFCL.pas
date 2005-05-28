@@ -4,7 +4,7 @@ interface
 
 uses
   System.Collections, System.Collections.Specialized, System.Text, System.IO,
-  IdException;
+  System.Threading, IdException;
 
 type             
   TIdStringListFCL = class;
@@ -383,7 +383,205 @@ type
     class operator Implicit(const aValue: TIdStringListFCL): StringCollection;
   end;
 
+  TIdNetListSortCompare = function (Item1, Item2: &Object): Integer;
+  TIdNetListNotification = (lnAdded, lnExtracted, lnDeleted);
+
+  TIdNetListAssignOp = (laCopy, laAnd, laOr, laXor, laSrcUnique, laDestUnique);
+
+  EListError = class(Exception);
+
+  TIdNetList = class;
+
+  TIdNetListEnumerator = class
+  private
+    FIndex: Integer;
+    FList: TIdNetList;
+  public
+    constructor Create(AList: TIdNetList);
+    function GetCurrent: &Object;
+    function MoveNext: Boolean;
+    property Current: &Object read GetCurrent;
+  end;
+
+  TIdNetList = class(TObject)
+  private
+    FList: System.Collections.ArrayList;
+  protected
+    function Get(Index: Integer): &Object;
+    function GetCount: Integer;
+    function GetCapacity: Integer;
+    procedure Grow; virtual;
+    procedure Put(Index: Integer; Item: &Object);
+    procedure Notify(Instance: &Object; Action: TIdNetListNotification); virtual;
+    procedure SetCapacity(NewCapacity: Integer);
+    procedure SetCount(NewCount: Integer);
+  public
+    constructor Create;
+    function Add(Item: &Object): Integer;
+    procedure Clear; virtual;
+    procedure Delete(Index: Integer);
+                                      
+    class procedure Error(const Msg: string; Data: Integer); overload; //virtual;
+    procedure Exchange(Index1, Index2: Integer);
+    function Expand: TIdNetList;
+    function Extract(Item: &Object): &Object;
+    function First: TObject;
+    function GetEnumerator: TIdNetListEnumerator;
+    function IndexOf(Item: &Object): Integer;
+    procedure Insert(Index: Integer; Item: &Object);
+    function Last: TObject;
+    procedure Move(CurIndex, NewIndex: Integer);
+    function Remove(Item: &Object): Integer;
+    procedure Pack;
+    procedure Sort(Compare: TIdNetListSortCompare);
+    procedure Assign(ListA: TIdNetList; AOperator: TIdNetListAssignOp = laCopy; ListB: TIdNetList = nil);
+    property Capacity: Integer read GetCapacity write SetCapacity;
+    property Count: Integer read GetCount write SetCount;
+    property Items[Index: Integer]: &Object read Get write Put; default;
+    property List: System.Collections.ArrayList read FList;
+  end;
+
+  TIdNetCollectionItem = class;
+  TIdNetCollection = class;
+  TIdNetCollectionItemClass = class of TIdNetCollectionItem;
+  TIdNetCollectionNotification = (cnAdded, cnExtracting, cnDeleting);
+
+  TIdNetCollectionEnumerator = class
+  private
+    FIndex: Integer;
+    FCollection: TIdNetCollection;
+  public
+    constructor Create(ACollection: TIdNetCollection);
+    function GetCurrent: TIdNetCollectionItem;
+    function MoveNext: Boolean;
+    property Current: TIdNetCollectionItem read GetCurrent;
+  end;
+
+  TIdNetCollectionItem = class
+  private
+    FCollection: TIdNetCollection;
+    FID: Integer;
+    function GetIndex: Integer;
+  protected
+    procedure Changed(AllItems: Boolean);
+    function GetOwner: &Object;
+    function GetDisplayName: string; virtual;
+    procedure SetCollection(Value: TIdNetCollection); virtual;
+    procedure SetIndex(Value: Integer); virtual;
+    procedure SetDisplayName(const Value: string); virtual;
+  public
+    constructor Create(Collection: TIdNetCollection); virtual;
+    destructor Destroy; override;
+    property Owner: &Object read GetOwner;
+    property Collection: TIdNetCollection read FCollection write SetCollection;
+    property ID: Integer read FID;
+    property Index: Integer read GetIndex write SetIndex;
+    property DisplayName: string read GetDisplayName write SetDisplayName;
+  end;
+
+  TIdNetCollection = class
+  private
+    FItemClass: TIdNetCollectionItemClass;
+    FItems: TIdNetList;
+    FUpdateCount: Integer;
+    FNextID: Integer;
+    function GetCount: Integer;
+    procedure InsertItem(Item: TIdNetCollectionItem);
+    procedure RemoveItem(Item: TIdNetCollectionItem);
+  protected
+    property NextID: Integer read FNextID;
+    procedure Notify(Item: TIdNetCollectionItem; Action: TIdNetCollectionNotification); virtual;
+    { Design-time editor support }
+    procedure Changed;
+    function GetItem(Index: Integer): TIdNetCollectionItem;
+    procedure SetItem(Index: Integer; Value: TIdNetCollectionItem);
+    procedure SetItemName(Item: TIdNetCollectionItem); virtual;
+    procedure Update(Item: TIdNetCollectionItem); virtual;
+    property UpdateCount: Integer read FUpdateCount;
+  public
+    constructor Create(ItemClass: TIdNetCollectionItemClass);
+    destructor Destroy; override;
+    function Add: TIdNetCollectionItem;
+    procedure BeginUpdate; virtual;
+    procedure Clear;
+    procedure Delete(Index: Integer);
+    procedure EndUpdate; virtual;
+    function FindItemID(ID: Integer): TIdNetCollectionItem;
+    function GetEnumerator: TIdNetCollectionEnumerator;
+    function Insert(Index: Integer): TIdNetCollectionItem;
+    property Count: Integer read GetCount;
+    property ItemClass: TIdNetCollectionItemClass read FItemClass;
+    property Items[Index: Integer]: TIdNetCollectionItem read GetItem write SetItem;
+  end;
+
+  TIdNetThreadPriority = ThreadPriority;
+  EThread = class(Exception);
+  TIdNetNotifyEvent = procedure(ASender: &Object);
+  TIdNetThreadMethod = procedure;
+  TIdNetSynchronizeRecord = record
+    FThread: &Object;
+    FMethod: TIdNetThreadMethod;
+    FSynchronizeException: &Object;
+  end;
+
+  TIdNetThread = class
+  private
+    FHandle: System.Threading.Thread;
+    FCreateSuspended: Boolean;
+    FStarted: Boolean;
+    FSuspendCount: Integer;
+    FTerminated: Boolean;
+    FSuspended: Boolean;
+    FFreeOnTerminate: Boolean;
+    FFinished: Boolean;
+    FReturnValue: Integer;
+    FOnTerminate: TIdNetNotifyEvent;
+    FSynchronize: TIdNetSynchronizeRecord;
+    FFatalException: TObject;
+    procedure ThreadError(O: &Object);
+    procedure CallOnTerminate;
+    function GetPriority: TIdNetThreadPriority;
+    procedure SetPriority(Value: TIdNetThreadPriority);
+    procedure SetSuspended(Value: Boolean);
+    class procedure Synchronize(ASyncRec: TIdNetSynchronizeRecord; QueueEvent: Boolean = False); overload;
+  protected
+    procedure Initialize; virtual;
+    procedure DoTerminate; virtual;
+    procedure Execute; virtual; abstract;
+    procedure Queue(AMethod: TIdNetThreadMethod); overload;
+    procedure Synchronize(Method: TIdNetThreadMethod); overload;
+    property ReturnValue: Integer read FReturnValue write FReturnValue;
+    property Terminated: Boolean read FTerminated;
+  public
+    constructor Create(CreateSuspended: Boolean);
+    destructor Destroy; override; 
+    procedure Resume;
+    procedure Suspend;
+    procedure Terminate;
+    function WaitFor: LongWord; overload;
+    function WaitFor(TimeOut: Integer; var ReturnValue: LongWord): Boolean; overload;
+    class procedure Queue(AThread: TIdNetThread; AMethod: TIdNetThreadMethod); overload;
+    class procedure RemoveQueuedEvents(AThread: TIdNetThread; AMethod: TIdNetThreadMethod);
+    class procedure StaticQueue(AThread: TIdNetThread; AMethod: TIdNetThreadMethod);
+    property FatalException: &Object read FFatalException;
+    property FreeOnTerminate: Boolean read FFreeOnTerminate write FFreeOnTerminate;
+    property Handle: System.Threading.Thread read FHandle;
+    property Priority: TIdNetThreadPriority read GetPriority write SetPriority;
+    property Suspended: Boolean read FSuspended write SetSuspended;
+    property OnTerminate: TIdNetNotifyEvent read FOnTerminate write FOnTerminate;
+  end;
+
+const
+  tpIdNetLowest = ThreadPriority.Lowest;
+  tpIdNetBelowNormal = ThreadPriority.BelowNormal;
+  tpIdNetNormal = ThreadPriority.Normal;
+  tpIdNetAboveNormal = ThreadPriority.AboveNormal;
+  tpIdNetHighest = ThreadPriority.Highest;
+
 implementation
+
+uses
+  IdSys;
 
 const
   MaxBufSize = 5 * 1024;
@@ -398,6 +596,115 @@ const
 resourcestring
   SReadError = 'Read Error.';
   SWriteError = 'Write Error.';
+  SListCapacityError = 'List capacity out of bounds (%d)';
+  SListCountError = 'List count out of bounds (%d)';
+  SListIndexError = 'List index out of bounds (%d)';
+  SInvalidProperty = 'Invalid property value';
+  SThreadCreateError = 'Thread creation error: %s';
+  SThreadError = 'Thread Error: %s (%d)';
+  SCheckSynchronizeError = 'CheckSynchronize called from thread $%x, which is NOT the main thread';
+
+var
+  SyncList: TIdNetList;
+  SyncEvent: System.Threading.ManualResetEvent;
+  ThreadLock: &Object;
+  WakeMainThread: TIdNetNotifyEvent;
+
+type
+  TIdNetSyncProc = record
+    SyncRec: TIdNetSynchronizeRecord;
+    Queued: Boolean;
+    Signal: ManualResetEvent;
+  end;
+
+
+
+{ Local functions}
+
+procedure InitThreadSynchronization;
+begin
+  ThreadLock := &Object.Create;
+  SyncEvent := System.Threading.ManualResetEvent.Create(False);
+// Should we check for errors?
+//  if SyncEvent.Handle = nil then
+//    ;
+end;
+
+procedure DoneThreadSynchronization;
+begin
+  Sys.FreeAndNil(ThreadLock);
+  SyncEvent.Close;
+end;
+
+procedure ResetSyncEvent;
+begin
+  SyncEvent.Reset;
+end;
+
+procedure WaitForSyncEvent(Timeout: Integer);
+begin
+  if SyncEvent.WaitOne(Timeout, True) then
+    ResetSyncEvent;
+end;
+
+procedure SignalSyncEvent;
+begin
+  SyncEvent.&Set;
+end;
+
+function CheckSynchronize(Timeout: Integer = 0): Boolean;
+var
+  SyncProc: TIdNetSyncProc;
+  LocalSyncList, TempSyncList: TIdNetList;
+begin
+  if System.Threading.Thread.CurrentThread <> MainThread then
+    raise EThread.Create(SCheckSynchronizeError);
+  if Timeout > 0 then
+    WaitForSyncEvent(Timeout)
+  else
+    ResetSyncEvent;
+  LocalSyncList := nil;
+  System.Threading.Monitor.Enter(ThreadLock);
+  try
+    if SyncList <> nil then
+    begin
+      System.Threading.Monitor.Enter(SyncList);
+//      Integer(LocalSyncList) := InterlockedExchange(Integer(SyncList), Integer(LocalSyncList));
+      TempSyncList := SyncList;
+      SyncList := LocalSyncList;
+      LocalSyncList := TempSyncList;
+      System.Threading.Monitor.Exit(LocalSyncList);
+    end;
+    try
+      Result := (LocalSyncList <> nil) and (LocalSyncList.Count > 0);
+      if Result then
+      begin
+        while LocalSyncList.Count > 0 do
+        begin
+          SyncProc := TIdNetSyncProc(LocalSyncList[0]);
+          LocalSyncList.Delete(0);
+          System.Threading.Monitor.Exit(ThreadLock);
+          try
+            try
+              SyncProc.SyncRec.FMethod;
+            except
+              on E: Exception do
+                SyncProc.SyncRec.FSynchronizeException := E;
+            end;
+          finally
+            System.Threading.Monitor.Enter(ThreadLock);
+          end;
+          if not SyncProc.Queued then
+            SyncProc.Signal.&Set;
+        end;
+      end;
+    finally
+      LocalSyncList.Free;
+    end;
+  finally
+    System.Threading.Monitor.Exit(ThreadLock);
+  end;
+end;
 
 { TIdStringsFCL }
 
@@ -1633,7 +1940,7 @@ end;
 
 function TIdNetStream.Read(var Buffer: Boolean): Longint;
 var
-  Buf: array[] of Byte;
+  Buf: array of Byte;
 begin
   Result := Read(Buf, 1);
   Buffer := Boolean(Buf[0]);
@@ -2450,7 +2757,7 @@ var
 begin
   case Origin of
     SeekOrigin.Current:
-      LOrigin := SeekOrigin.Current;  
+      LOrigin := SeekOrigin.Current;
     SeekOrigin.End:
       LOrigin := SeekOrigin.End;
   else
@@ -2660,6 +2967,912 @@ end;
 constructor TIdNetFileStream.Create(const AFileName: string; const AMode: UInt16);
 begin
   Create(AFileName, AMode, 0);
+end;
+
+type
+  TIdNetListComparer = class(&Object, IComparer)
+  private
+    FCompare: TIdNetListSortCompare;
+  public
+    function Compare(O1, O2: &Object): Integer;
+    constructor Create(Compare: TIdNetListSortCompare);
+  end;
+
+{ TListComparer }
+
+function TIdNetListComparer.Compare(O1, O2: &Object): Integer;
+begin
+  Result := FCompare(O1, O2);
+end;
+
+constructor TIdNetListComparer.Create(Compare: TIdNetListSortCompare);
+begin
+  inherited Create;
+  FCompare := Compare;
+end;
+
+{ TIdNetList }
+
+constructor TIdNetList.Create;
+begin
+  inherited Create;
+  FList := System.Collections.ArrayList.Create;
+end;
+
+function TIdNetList.Add(Item: &Object): Integer;
+begin
+  Result := FList.Add(Item);
+  if Item <> nil then
+    Notify(Item, lnAdded);
+end;
+
+procedure TIdNetList.Clear;
+begin
+  FList.Clear;
+end;
+
+procedure TIdNetList.Delete(Index: Integer);
+var
+  Temp: &Object;
+begin
+  Temp := FList[Index];
+  FList.RemoveAt(Index);
+  if Temp <> nil then
+    Notify(Temp, lnDeleted);
+end;
+
+class procedure TIdNetList.Error(const Msg: string; Data: Integer);
+begin
+  raise EListError.Create(Sys.Format(Msg, [Data]));
+end;
+
+procedure TIdNetList.Exchange(Index1, Index2: Integer);
+var
+  Item: &Object;
+begin
+  Item := FList[Index1];
+  FList[Index1] := FList[Index2];
+  FList[Index2] := Item;
+end;
+
+function TIdNetList.Expand: TIdNetList;
+begin
+  if FList.Count = FList.Capacity then
+    Grow;
+  Result := Self;
+end;
+
+function TIdNetList.First: &Object;
+begin
+  Result := Get(0);
+end;
+
+function TIdNetList.Get(Index: Integer): &Object;
+begin
+  Result := FList[Index];
+end;
+
+function TIdNetList.GetCapacity: Integer;
+begin
+  Result := FList.Capacity;
+end;
+
+function TIdNetList.GetCount: Integer;
+begin
+  Result := FList.Count;
+end;
+
+function TIdNetList.GetEnumerator: TIdNetListEnumerator;
+begin
+  Result := TIdNetListEnumerator.Create(Self);
+end;
+
+procedure TIdNetList.Grow;
+var
+  Delta: Integer;
+  LCapacity: Integer;
+begin
+  LCapacity := FList.Capacity;
+  if LCapacity > 64 then
+    Delta := LCapacity div 4
+  else
+    if LCapacity > 8 then
+      Delta := 16
+    else
+      Delta := 4;
+  SetCapacity(LCapacity + Delta);
+end;
+
+function TIdNetList.IndexOf(Item: &Object): Integer;
+begin
+  Result := FList.IndexOf(&Object(Item));
+end;
+
+procedure TIdNetList.Insert(Index: Integer; Item: &Object);
+begin
+  FList.Insert(Index, Item);
+  if Item <> nil then
+    Notify(Item, lnAdded);
+end;
+
+function TIdNetList.Last: &Object;
+begin
+  Result := Get(Count - 1);
+end;
+
+procedure TIdNetList.Move(CurIndex, NewIndex: Integer);
+var
+  Item: &Object;
+begin
+  if CurIndex <> NewIndex then
+  begin
+    if (NewIndex < 0) or (NewIndex >= Count) then
+      Error(SListIndexError, NewIndex);
+    Item := Get(CurIndex);
+    FList.RemoveAt(CurIndex);
+    FList.Insert(NewIndex, Item);
+  end;
+end;
+
+procedure TIdNetList.Put(Index: Integer; Item: &Object);
+var
+  Temp: &Object;
+begin
+  if (Index < 0) or (Index >= Count) then
+    Error(SListIndexError, Index);
+  if Item <> FList[Index] then
+  begin
+    Temp := FList[Index];
+    FList[Index] := Item;
+    if Temp <> nil then
+      Notify(Temp, lnDeleted);
+    if Item <> nil then
+      Notify(Item, lnAdded);
+  end;
+end;
+
+function TIdNetList.Remove(Item: &Object): Integer;
+begin
+  Result := IndexOf(Item);
+  if Result >= 0 then
+    Delete(Result);
+end;
+
+procedure TIdNetList.Pack;
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if Items[I] = nil then
+      Delete(I);
+end;
+
+procedure TIdNetList.SetCapacity(NewCapacity: Integer);
+begin
+  if NewCapacity < Count then
+    Error(SListCapacityError, NewCapacity);
+  FList.Capacity := NewCapacity;
+end;
+
+procedure TIdNetList.SetCount(NewCount: Integer);
+var
+  I, C: Integer;
+  TempArray: array of System.Object;
+begin
+  if NewCount < 0 then
+    Error(SListCountError, NewCount);
+  C := FList.Count;
+  if NewCount > C then
+  begin
+    SetLength(TempArray, NewCount - C);
+    FList.AddRange(System.Object(TempArray) as ICollection);
+  end
+  else
+  begin
+    SetLength(TempArray, C - NewCount);
+    FList.CopyTo(TempArray, NewCount);
+    FList.RemoveRange(NewCount, C - NewCount);
+    for I := 0 to Length(TempArray) - 1 do
+      Notify(TempArray[I], lnDeleted);
+  end;
+end;
+
+procedure TIdNetList.Sort(Compare: TIdNetListSortCompare);
+begin
+  FList.Sort(TIdNetListComparer.Create(Compare));
+end;
+
+function TIdNetList.Extract(Item: &Object): &Object;
+var
+  I: Integer;
+begin
+  Result := nil;
+  I := IndexOf(Item);
+  if I >= 0 then
+  begin
+    Result := Item;
+    FList.RemoveAt(I);
+    Notify(Result, lnExtracted);
+  end;
+end;
+
+procedure TIdNetList.Notify(Instance: &Object; Action: TIdNetListNotification);
+begin
+end;
+
+procedure TIdNetList.Assign(ListA: TIdNetList; AOperator: TIdNetListAssignOp; ListB: TIdNetList);
+var
+  I: Integer;
+  LTemp, LSource: TIdNetList;
+begin
+  // ListB given?
+  if ListB <> nil then
+  begin
+    LSource := ListB;
+    Assign(ListA);
+  end
+  else
+    LSource := ListA;
+
+  // on with the show
+  case AOperator of
+
+    // 12345, 346 = 346 : only those in the new list
+    laCopy:
+      begin
+        Clear;
+        Capacity := LSource.Capacity;
+        for I := 0 to LSource.Count - 1 do
+          Add(LSource[I]);
+      end;
+
+    // 12345, 346 = 34 : intersection of the two lists
+    laAnd:
+      for I := Count - 1 downto 0 do
+        if LSource.IndexOf(Items[I]) = -1 then
+          Delete(I);
+
+    // 12345, 346 = 123456 : union of the two lists
+    laOr:
+      for I := 0 to LSource.Count - 1 do
+        if IndexOf(LSource[I]) = -1 then
+          Add(LSource[I]);
+
+    // 12345, 346 = 1256 : only those not in both lists
+    laXor:
+      begin
+        LTemp := TIdNetList.Create; // Temp holder of 4 byte values
+        LTemp.Capacity := LSource.Count;
+        for I := 0 to LSource.Count - 1 do
+          if IndexOf(LSource[I]) = -1 then
+            LTemp.Add(LSource[I]);
+        for I := Count - 1 downto 0 do
+          if LSource.IndexOf(Items[I]) <> -1 then
+            Delete(I);
+        I := Count + LTemp.Count;
+        if Capacity < I then
+          Capacity := I;
+        for I := 0 to LTemp.Count - 1 do
+          Add(LTemp[I]);
+      end;
+
+    // 12345, 346 = 125 : only those unique to source
+    laSrcUnique:
+      for I := Count - 1 downto 0 do
+        if LSource.IndexOf(Items[I]) <> -1 then
+          Delete(I);
+
+    // 12345, 346 = 6 : only those unique to dest
+    laDestUnique:
+      begin
+        LTemp := TIdNetList.Create;
+        LTemp.Capacity := LSource.Count;
+        for I := LSource.Count - 1 downto 0 do
+          if IndexOf(LSource[I]) = -1 then
+            LTemp.Add(LSource[I]);
+        Assign(LTemp);
+      end;
+  end;
+end;
+
+{ TIdNetListEnumerator }
+
+constructor TIdNetListEnumerator.Create(AList: TIdNetList);
+begin
+  inherited Create;
+  FIndex := -1;
+  FList := AList;
+end;
+
+function TIdNetListEnumerator.GetCurrent: &Object;
+begin
+  Result := FList[FIndex];
+end;
+
+function TIdNetListEnumerator.MoveNext: Boolean;
+begin
+  Result := FIndex < FList.Count - 1;
+  if Result then
+    Inc(FIndex);
+end;
+
+{ TCollectionItem }
+
+constructor TIdNetCollectionItem.Create(Collection: TIdNetCollection);
+begin
+  inherited Create;
+  SetCollection(Collection);
+end;
+
+destructor TIdNetCollectionItem.Destroy;
+begin
+  SetCollection(nil);
+  inherited;
+end;
+
+procedure TIdNetCollectionItem.Changed(AllItems: Boolean);
+var
+  Item: TIdNetCollectionItem;
+begin
+  if (FCollection <> nil) and (FCollection.FUpdateCount = 0) then
+  begin
+    if AllItems then
+      Item := nil
+    else
+      Item := Self;
+    FCollection.Update(Item);
+  end;
+end;
+
+function TIdNetCollectionItem.GetIndex: Integer;
+begin
+  if FCollection <> nil then
+    Result := FCollection.FItems.IndexOf(Self)
+  else
+    Result := -1;
+end;
+
+function TIdNetCollectionItem.GetDisplayName: string;
+begin
+  Result := ClassName;
+end;
+
+function TIdNetCollectionItem.GetOwner: &Object;
+begin
+  Result := FCollection;
+end;
+
+procedure TIdNetCollectionItem.SetCollection(Value: TIdNetCollection);
+begin
+  if FCollection <> Value then
+  begin
+    if FCollection <> nil then
+      FCollection.RemoveItem(Self);
+    if Value <> nil then
+      Value.InsertItem(Self);
+  end;
+end;
+
+procedure TIdNetCollectionItem.SetDisplayName(const Value: string);
+begin
+  Changed(False);
+end;
+
+procedure TIdNetCollectionItem.SetIndex(Value: Integer);
+var
+  CurIndex: Integer;
+begin
+  CurIndex := GetIndex;
+  if (CurIndex >= 0) and (CurIndex <> Value) then
+  begin
+    FCollection.FItems.Move(CurIndex, Value);
+    Changed(True);
+  end;
+end;
+
+{ TCollectionEnumerator }
+
+constructor TIdNetCollectionEnumerator.Create(ACollection: TIdNetCollection);
+begin
+  inherited Create;
+  FIndex := -1;
+  FCollection := ACollection;
+end;
+
+function TIdNetCollectionEnumerator.GetCurrent: TIdNetCollectionItem;
+begin
+  Result := FCollection.Items[FIndex];
+end;
+
+function TIdNetCollectionEnumerator.MoveNext: Boolean;
+begin
+  Result := FIndex < FCollection.Count - 1;
+  if Result then
+    Inc(FIndex);
+end;
+
+{ TCollection }
+
+constructor TIdNetCollection.Create(ItemClass: TIdNetCollectionItemClass);
+begin
+  inherited Create;
+  FItemClass := ItemClass;
+  FItems := TIdNetList.Create;
+end;
+
+destructor TIdNetCollection.Destroy;
+begin
+  FUpdateCount := 1;
+  inherited Destroy;
+end;
+
+function TIdNetCollection.Add: TIdNetCollectionItem;
+begin
+  Result := FItemClass.Create(Self);
+end;
+
+procedure TIdNetCollection.BeginUpdate;
+begin
+  Inc(FUpdateCount);
+end;
+
+procedure TIdNetCollection.Changed;
+begin
+  if FUpdateCount = 0 then
+    Update(nil);
+end;
+
+procedure TIdNetCollection.Clear;
+begin
+  if FItems.Count > 0 then
+  begin
+    BeginUpdate;
+    try
+      while FItems.Count > 0 do
+        TIdNetCollectionItem(FItems.Last).Free;
+    finally
+      EndUpdate;
+    end;
+  end;
+end;
+
+procedure TIdNetCollection.EndUpdate;
+begin
+  Dec(FUpdateCount);
+  Changed;
+end;
+
+function TIdNetCollection.FindItemID(ID: Integer): TIdNetCollectionItem;
+var
+  I: Integer;
+begin
+  for I := 0 to FItems.Count-1 do
+  begin
+    Result := TIdNetCollectionItem(FItems[I]);
+    if Result.ID = ID then
+      Exit;
+  end;
+  Result := nil;
+end;
+
+function TIdNetCollection.GetCount: Integer;
+begin
+  Result := FItems.Count;
+end;
+
+function TIdNetCollection.GetEnumerator: TIdNetCollectionEnumerator;
+begin
+  Result := TIdNetCollectionEnumerator.Create(Self);
+end;
+
+function TIdNetCollection.GetItem(Index: Integer): TIdNetCollectionItem;
+begin
+  Result := TIdNetCollectionItem(FItems[Index]);
+end;
+
+function TIdNetCollection.Insert(Index: Integer): TIdNetCollectionItem;
+begin
+  Result := Add;
+  Result.Index := Index;
+end;
+
+procedure TIdNetCollection.InsertItem(Item: TIdNetCollectionItem);
+begin
+  if not (Item is FItemClass) then
+    TIdNetList.Error(SInvalidProperty, 0);
+  FItems.Add(Item);
+  Item.FCollection := Self;
+  Item.FID := FNextID;
+  Inc(FNextID);
+  SetItemName(Item);
+  Notify(Item, cnAdded);
+  Changed;
+end;
+
+procedure TIdNetCollection.RemoveItem(Item: TIdNetCollectionItem);
+begin
+  Notify(Item, cnExtracting);
+  if Item = FItems.Last then
+    FItems.Delete(FItems.Count - 1)
+  else
+    FItems.Remove(Item);
+  Item.FCollection := nil;
+  Changed;
+end;
+
+procedure TIdNetCollection.SetItem(Index: Integer; Value: TIdNetCollectionItem);
+begin
+  FItems[Index] := Value;
+end;
+
+procedure TIdNetCollection.SetItemName(Item: TIdNetCollectionItem);
+begin
+end;
+
+procedure TIdNetCollection.Update(Item: TIdNetCollectionItem);
+begin
+end;
+
+procedure TIdNetCollection.Delete(Index: Integer);
+begin
+  Notify(TIdNetCollectionItem(FItems[Index]), cnDeleting);
+  TIdNetCollectionItem(FItems[Index]).Free;
+end;
+
+procedure TIdNetCollection.Notify(Item: TIdNetCollectionItem;
+  Action: TIdNetCollectionNotification);
+begin
+end;
+
+{ TIdNetThreadRunner }
+
+type
+  TIdNetThreadRunner = class
+    FThread: TIdNetThread;
+  public
+    constructor Create(AThread: TIdNetThread);
+    procedure ThreadProc;
+    procedure Initialize; virtual;
+  end;
+
+constructor TIdNetThreadRunner.Create(AThread: TIdNetThread);
+begin
+  inherited Create;
+  FThread := AThread;
+end;
+
+procedure TIdNetThreadRunner.ThreadProc;
+var
+  FreeThread: Boolean;
+begin
+  try
+    if not FThread.Terminated then
+    try
+      Initialize;
+      FThread.Execute;
+    except
+      on E: Exception do
+        FThread.FFatalException := E;
+    end;
+  finally
+    FreeThread := FThread.FFreeOnTerminate;
+    FThread.DoTerminate;
+    FThread.FFinished := True;
+    SignalSyncEvent;
+    if FreeThread then FThread.Free;
+  end;
+end;
+
+procedure TIdNetThreadRunner.Initialize;
+begin
+end;
+
+{ TIdNetThread }
+
+constructor TIdNetThread.Create(CreateSuspended: Boolean);
+begin
+  inherited Create;
+//  AddThread;
+  FSuspended := CreateSuspended;
+  FCreateSuspended := CreateSuspended;
+  Initialize;
+end;
+
+procedure TIdNetThread.Initialize;
+var
+  Runner: TIdNetThreadRunner;
+begin
+  Runner := TIdNetThreadRunner.Create(self);
+  FHandle := System.Threading.Thread.Create(@Runner.ThreadProc);
+  if not FCreateSuspended then
+  begin
+    FStarted := True;
+    FHandle.Start;
+  end
+  else
+    FSuspendCount := 1;
+end;
+
+destructor TIdNetThread.Destroy;
+begin
+  if (FHandle <> nil) and FStarted and not FFinished then
+  begin
+    Terminate;
+    if not FHandle.IsAlive then
+      Resume;
+    WaitFor;
+  end;
+  RemoveQueuedEvents(Self, nil);
+  FHandle := nil;
+  FFatalException.Free;
+  inherited Destroy;
+//  RemoveThread;
+end;
+
+procedure TIdNetThread.ThreadError(O: TObject);
+var
+  S: string;
+begin
+  if Assigned(O) then
+  begin
+    if O is Exception then
+      S := Exception(O).Message
+    else
+      S := O.ToString;
+    raise EThread.Create(Sys.Format(SThreadError, [S]));
+  end;
+end;
+
+procedure TIdNetThread.CallOnTerminate;
+begin
+  if Assigned(FOnTerminate) then FOnTerminate(Self);
+end;
+
+procedure TIdNetThread.DoTerminate;
+begin
+  if Assigned(FOnTerminate) then Synchronize(CallOnTerminate);
+end;
+
+const
+  Priorities: array [TIdNetThreadPriority] of System.Threading.ThreadPriority =
+   (System.Threading.ThreadPriority.Lowest,
+    System.Threading.ThreadPriority.BelowNormal,
+    System.Threading.ThreadPriority.Normal,
+    System.Threading.ThreadPriority.AboveNormal,
+    System.Threading.ThreadPriority.Highest);
+
+function TIdNetThread.GetPriority: TIdNetThreadPriority;
+var
+  P: System.Threading.ThreadPriority;
+  I: TIdNetThreadPriority;
+begin
+  Result := TIdNetThreadPriority.Normal;
+  try
+    P := FHandle.Priority;
+
+    for I := Low(TIdNetThreadPriority) to High(TIdNetThreadPriority) do
+      if Priorities[I] = P then
+      begin
+        Result := I;
+        Break;
+      end;
+  except
+    on E: Exception do
+      ThreadError(E);
+  end;
+end;
+
+procedure TIdNetThread.SetPriority(Value: TIdNetThreadPriority);
+begin
+  try
+    FHandle.Priority := Priorities[Value];
+  except
+    on E: Exception do
+      ThreadError(E);
+  end;
+end;
+
+procedure TIdNetThread.Queue(AMethod: TIdNetThreadMethod);
+var
+  LSynchronize: TIdNetSynchronizeRecord;
+begin
+  LSynchronize.FThread := Self;
+  LSynchronize.FSynchronizeException := nil;
+  LSynchronize.FMethod := AMethod;
+  Synchronize(LSynchronize, True);
+end;
+
+class procedure TIdNetThread.Queue(AThread: TIdNetThread; AMethod: TIdNetThreadMethod);
+var
+  LSynchronize: TIdNetSynchronizeRecord;
+begin
+  if AThread <> nil then
+    AThread.Queue(AMethod)
+  else
+  begin
+    LSynchronize.FThread := nil;
+    LSynchronize.FSynchronizeException := nil;
+    LSynchronize.FMethod := AMethod;
+    Synchronize(LSynchronize, True);
+  end;
+end;
+
+class procedure TIdNetThread.RemoveQueuedEvents(AThread: TIdNetThread; AMethod: TIdNetThreadMethod);
+var
+  I: Integer;
+  SyncProc: TIdNetSyncProc;
+begin
+  System.Threading.Monitor.Enter(ThreadLock);
+  try
+    if SyncList <> nil then
+      for I := SyncList.Count - 1 downto 0 do
+      begin
+        SyncProc := TIdNetSyncProc(SyncList[I]);
+        if (SyncProc.Signal = nil) and
+          (((AThread <> nil) and (SyncProc.SyncRec.FThread = AThread)) or
+            (Assigned(AMethod) and TObject(@AMethod).Equals(TObject(@SyncProc.SyncRec.FMethod)))) then
+          SyncList.Delete(I);
+      end;
+  finally
+    System.Threading.Monitor.Exit(ThreadLock);
+  end;
+end;
+
+class procedure TIdNetThread.StaticQueue(AThread: TIdNetThread; AMethod: TIdNetThreadMethod);
+begin
+  Queue(AThread, AMethod);
+end;
+
+class procedure TIdNetThread.Synchronize(ASyncRec: TIdNetSynchronizeRecord; QueueEvent: Boolean = False);
+var
+  SyncProc: TIdNetSyncProc;
+begin
+  if System.Threading.Thread.CurrentThread = MainThread then
+    ASyncRec.FMethod
+  else
+  begin
+    if not QueueEvent then
+      SyncProc.Signal := System.Threading.ManualResetEvent.Create(False)
+    else
+      SyncProc.Signal := nil;
+    try
+      System.Threading.Monitor.Enter(ThreadLock);
+      try
+        SyncProc.Queued := QueueEvent; 
+        if SyncList = nil then
+          SyncList := TIdNetList.Create;
+        SyncProc.SyncRec := ASyncRec;
+        System.Threading.Monitor.Enter(SyncList);
+        try
+          SyncList.Add(TObject(SyncProc));
+        finally
+          System.Threading.Monitor.Exit(SyncList);
+        end;
+        SignalSyncEvent;
+        if Assigned(WakeMainThread) then
+          WakeMainThread(SyncProc.SyncRec.FThread);
+        if not QueueEvent then
+        begin 
+          System.Threading.Monitor.Exit(ThreadLock);
+          try
+            SyncProc.Signal.WaitOne;
+          finally
+            System.Threading.Monitor.Enter(ThreadLock);
+          end;
+        end;
+      finally
+        System.Threading.Monitor.Exit(ThreadLock);
+      end;
+    finally
+      if not QueueEvent then
+        SyncProc.Signal.Close;
+    end;
+    if not QueueEvent and Assigned(ASyncRec.FSynchronizeException) then 
+      raise ASyncRec.FSynchronizeException;
+  end;
+end;
+
+procedure TIdNetThread.Synchronize(Method: TIdNetThreadMethod);
+begin
+  FSynchronize.FThread := Self;
+  FSynchronize.FSynchronizeException := nil;
+  FSynchronize.FMethod := Method;
+  Synchronize(FSynchronize);
+end;
+
+procedure TIdNetThread.SetSuspended(Value: Boolean);
+begin
+  if Value <> FSuspended then
+    if Value then
+      Suspend
+    else
+      Resume;
+end;
+
+procedure TIdNetThread.Suspend;
+var
+  OldSuspend: Boolean;
+begin
+  OldSuspend := FSuspended;
+  try
+    System.Threading.Monitor.Enter(self);
+    try
+      FSuspended := True;
+      FHandle.Suspend;
+      Inc(FSuspendCount);
+    finally
+      System.Threading.Monitor.Exit(self);
+    end;
+  except
+    on E: Exception do
+    begin
+      FSuspended := OldSuspend;
+      ThreadError(E);
+    end;
+  end;
+end;
+
+procedure TIdNetThread.Resume;
+begin
+  if FSuspendCount > 0 then
+  begin
+    System.Threading.Monitor.Enter(self);
+    try
+      Dec(FSuspendCount);
+      if FSuspendCount = 0 then
+      begin
+        if not FStarted then
+          FHandle.Start
+        else
+          FHandle.Resume;
+        FSuspended := False;
+      end;
+    finally
+      System.Threading.Monitor.Exit(self);
+    end;
+  end;
+end;
+
+procedure TIdNetThread.Terminate;
+begin
+  FTerminated := True;
+end;
+
+function TIdNetThread.WaitFor: LongWord;
+begin
+  WaitFor(System.Threading.Timeout.Infinite, Result);
+end;
+
+function TIdNetThread.WaitFor(TimeOut: Integer; var ReturnValue: LongWord): Boolean;
+begin
+  Result := False;
+  try
+    if (TimeOut = System.Threading.Timeout.Infinite) and
+       (System.Threading.Thread.CurrentThread = MainThread) then
+    begin
+      while True do
+      begin
+      { This prevents a potential deadlock if the background thread
+        does a Synchronize to the foreground thread }
+        Result := FHandle.Join(500);
+        if Result then
+        begin
+          ReturnValue := FReturnValue;
+          Exit;
+        end;
+        if SyncEvent.WaitOne(500, True) then
+          CheckSynchronize;
+      end
+    end else
+    begin
+      Result := FHandle.Join(Timeout);
+      if Result then
+        ReturnValue := FReturnValue;
+    end;
+  except
+    on E: Exception do
+      ThreadError(E);
+  end;
 end;
 
 end.

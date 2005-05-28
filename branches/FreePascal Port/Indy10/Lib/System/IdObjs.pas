@@ -21,6 +21,11 @@ type
   TIdStringStream = TIdNetStringStream;
   TIdFileStream = TIdNetFileStream;
   TIdSeekOrigin = TIdNetSeekOrigin;
+  TIdList = TIdNetList;
+  TIdCollection = TIdNetCollection;
+  TIdCollectionItem = TIdNetCollectionItem;
+  TIdNativeThread = TIdNetThread;
+  TIdNotifyEvent = TIdNetNotifyEvent;
 {$ELSE}
   {$IFDEF DELPHI5}
   TSeekOrigin = Word;
@@ -34,6 +39,11 @@ type
   TIdStringStream = TStringStream;
   TIdFileStream = TFileStream;
   TIdSeekOrigin = TSeekOrigin;
+  TIdList = TList;
+  TIdCollection = TCollection;
+  TIdCollectionItem = TCollectionItem;
+  TIdNativeThread = TThread;
+  TIdNotifyEvent = TNotifyEvent; 
 {$ENDIF}
 
 const
@@ -81,6 +91,19 @@ const
   fmShareDenyWrite  = $0020;
   fmShareDenyNone   = $0040;
 {$ENDIF}
+{$ENDIF}
+{$IFDEF DotNetDistro}
+  tpIdLowest = tpIdNetLowest;
+  tpIdBelowNormal = tpIdNetBelowNormal;
+  tpIdNormal = tpIdNetNormal;
+  tpIdAboveNormal = tpIdNetAboveNormal;
+  tpIdHighest = tpIdNetHighest;
+{$ELSE}
+  tpIdLowest = tpLowest;
+  tpIdBelowNormal = tpLower;
+  tpIdNormal = tpNormal;
+  tpIdAboveNormal = tpHigher;
+  tpIdHighest = tpHighest;
 {$ENDIF}
 
 procedure SplitColumnsNoTrim(const AData: string; AStrings: TIdStrings; const ADelim: string = ' ');    {Do not Localize}
