@@ -85,6 +85,7 @@ type
     class function ExtractFileName(const FileName: string): string; 
     class function ExtractFileExt(const FileName: string): string;
     class function ChangeFileExt(const FileName, Extension: string): string;
+    class function IsLeapYear(Year: Word): Boolean;
     class function FloatToIntStr(const AFloat: Extended): String;
   end;
 
@@ -471,6 +472,11 @@ end;
 class function TIdSysVCL.ChangeFileExt(const FileName, Extension: string): string;
 begin
   Result := SysUtils.ChangeFileExt(FileName,Extension);
+end;
+
+class function TIdSysVCL.IsLeapYear(Year: Word): Boolean;
+begin
+  Result := SysUtils.IsLeapYear(Year);
 end;
 
 end.

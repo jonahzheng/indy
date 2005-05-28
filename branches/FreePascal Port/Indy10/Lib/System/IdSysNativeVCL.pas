@@ -35,7 +35,6 @@ type
     //done because for some reason, mbSingleByte can only be exposed directly from the SysUtils unit,
     //I tried doing it from here without luck
     class function IsSingleByteType(const S: string; Index: Integer): Boolean;
-
   end;
 
   TIdDateTimeBase = TDateTime;

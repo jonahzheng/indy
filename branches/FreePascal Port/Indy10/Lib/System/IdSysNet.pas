@@ -118,7 +118,7 @@ type
     class function ReplaceOnlyFirst(const S, OldPattern, NewPattern: string): string; overload; static;
     class function AnsiCompareStr(const S1, S2: WideString): Integer; overload; deprecated;
     class function AnsiUpperCase(const S: WideString): WideString; overload; deprecated;
-
+    class function IsLeapYear(Year: Word): Boolean;
     class function AnsiLowerCase(const S: WideString): WideString; overload; deprecated;
     class function AnsiPos(const Substr, S: WideString): Integer; overload;  deprecated;
   end;
@@ -136,6 +136,12 @@ class procedure TIdSysNet.Abort;
 begin
   raise EAbort.Create;
 end;
+
+class function TIdSysNet.IsLeapYear(Year: Word): Boolean;
+begin
+  Result := DateTime.IsLeapYear(Year)
+end;
+
 
 class function TIdSysNet.CompareStr(const S1, S2: string): Integer;
 begin
