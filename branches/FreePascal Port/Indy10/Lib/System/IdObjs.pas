@@ -26,6 +26,8 @@ type
   TIdCollectionItem = TIdNetCollectionItem;
   TIdNativeThread = TIdNetThread;
   TIdNotifyEvent = TIdNetNotifyEvent;
+  TIdThreadList = TIdNetThreadList;
+  TidOwnedCollection = TIdNetOwnedCollection;
 {$ELSE}
   {$IFDEF DELPHI5}
   TSeekOrigin = Word;
@@ -43,7 +45,9 @@ type
   TIdCollection = TCollection;
   TIdCollectionItem = TCollectionItem;
   TIdNativeThread = TThread;
-  TIdNotifyEvent = TNotifyEvent; 
+  TIdNotifyEvent = TNotifyEvent;
+  TIdThreadList = TThreadList;
+  TIdOwnedCollection = TOwnedCollection;
 {$ENDIF}
 
 const

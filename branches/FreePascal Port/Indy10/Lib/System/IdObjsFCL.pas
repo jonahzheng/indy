@@ -4,7 +4,7 @@ interface
 
 uses
   System.Collections, System.Collections.Specialized, System.Text, System.IO,
-  System.Threading, IdException;
+  System.Threading, IdException, System.ComponentModel;
 
 type             
   TIdStringListFCL = class;
@@ -236,7 +236,7 @@ type
   end;
 
   TIdStringListSortCompareFCL = function (AList: TIdStringListFCL; AIndex1, AIndex2: Integer) : Integer;
-  TIdDuplicates = (duIgnore, duAccept, duError);
+  TIdDuplicates = (dupIgnore, dupAccept, dupError);
   EIdStringListErrorFCL = class(EIdException);
   TIdStringsDefined = set of (sdDelimiter, sdQuoteChar, sdNameValueSeparator);
 
@@ -457,7 +457,7 @@ type
     property Current: TIdNetCollectionItem read GetCurrent;
   end;
 
-  TIdNetCollectionItem = class
+  TIdNetCollectionItem = class(Component)
   private
     FCollection: TIdNetCollection;
     FID: Integer;
@@ -472,6 +472,7 @@ type
   public
     constructor Create(Collection: TIdNetCollection); virtual;
     destructor Destroy; override;
+    procedure Assign(ASource: Component); virtual;
     property Owner: &Object read GetOwner;
     property Collection: TIdNetCollection read FCollection write SetCollection;
     property ID: Integer read FID;
@@ -479,7 +480,7 @@ type
     property DisplayName: string read GetDisplayName write SetDisplayName;
   end;
 
-  TIdNetCollection = class
+  TIdNetCollection = class(Component)
   private
     FItemClass: TIdNetCollectionItemClass;
     FItems: TIdNetList;
@@ -498,6 +499,7 @@ type
     procedure SetItemName(Item: TIdNetCollectionItem); virtual;
     procedure Update(Item: TIdNetCollectionItem); virtual;
     property UpdateCount: Integer read FUpdateCount;
+    function GetOwner: Component; virtual;
   public
     constructor Create(ItemClass: TIdNetCollectionItemClass);
     destructor Destroy; override;
@@ -510,6 +512,7 @@ type
     function GetEnumerator: TIdNetCollectionEnumerator;
     function Insert(Index: Integer): TIdNetCollectionItem;
     property Count: Integer read GetCount;
+    property Owner: Component read GetOwner;
     property ItemClass: TIdNetCollectionItemClass read FItemClass;
     property Items[Index: Integer]: TIdNetCollectionItem read GetItem write SetItem;
   end;
@@ -524,7 +527,7 @@ type
     FSynchronizeException: &Object;
   end;
 
-  TIdNetThread = class
+  TIdNetThread = class(Component)
   private
     FHandle: System.Threading.Thread;
     FCreateSuspended: Boolean;
@@ -571,6 +574,29 @@ type
     property OnTerminate: TIdNetNotifyEvent read FOnTerminate write FOnTerminate;
   end;
 
+  TIdNetThreadList = class
+  private
+    FList: TIdNetList;
+    FDuplicates: TIdDuplicates;
+  public
+    constructor Create;
+    procedure Add(Item: &Object);
+    procedure Clear;
+    function  LockList: TIdNetList;
+    procedure Remove(Item: &Object);
+    procedure UnlockList;
+    property Duplicates: TIdDuplicates read FDuplicates write FDuplicates;
+  end;
+
+  TIdNetOwnedCollection = class(TIdNetCollection)
+  private
+    FOwner: Component;
+  protected
+    function GetOwner: Component; override;
+  public
+    constructor Create(AOwner: Component; ItemClass: TIdNetCollectionItemClass);
+  end;
+
 const
   tpIdNetLowest = ThreadPriority.Lowest;
   tpIdNetBelowNormal = ThreadPriority.BelowNormal;
@@ -603,6 +629,7 @@ resourcestring
   SThreadCreateError = 'Thread creation error: %s';
   SThreadError = 'Thread Error: %s (%d)';
   SCheckSynchronizeError = 'CheckSynchronize called from thread $%x, which is NOT the main thread';
+  SDuplicateItem = 'List does not allow duplicates ($0%x)';
 
 var
   SyncList: TIdNetList;
@@ -3465,6 +3492,11 @@ begin
   Result := TIdNetCollectionEnumerator.Create(Self);
 end;
 
+function TIdNetCollection.GetOwner: Component;
+begin
+  Result := nil;
+end;            
+
 function TIdNetCollection.GetItem(Index: Integer): TIdNetCollectionItem;
 begin
   Result := TIdNetCollectionItem(FItems[Index]);
@@ -3873,6 +3905,79 @@ begin
     on E: Exception do
       ThreadError(E);
   end;
+end;
+
+{ TThreadList }
+
+constructor TIdNetThreadList.Create;
+begin
+  inherited Create;
+  FList := TIdNetList.Create;
+  FDuplicates := dupIgnore;
+end;
+
+procedure TIdNetThreadList.Add(Item: &Object);
+begin
+  LockList;
+  try
+    if (Duplicates = dupAccept) or
+       (FList.IndexOf(Item) = -1) then
+      FList.Add(Item)
+    else if Duplicates = dupError then
+      FList.Error(SDuplicateItem, Integer(Item));
+  finally
+    UnlockList;
+  end;
+end;
+
+procedure TIdNetThreadList.Clear;
+begin
+  LockList;
+  try
+    FList.Clear;
+  finally
+    UnlockList;
+  end;
+end;
+
+function  TIdNetThreadList.LockList: TIdNetList;
+begin
+  System.Threading.Monitor.Enter(Self);
+  Result := FList;
+end;
+
+procedure TIdNetThreadList.Remove(Item: &Object);
+begin
+  LockList;
+  try
+    FList.Remove(Item);
+  finally
+    UnlockList;
+  end;
+end;
+
+procedure TIdNetThreadList.UnlockList;
+begin
+  System.Threading.Monitor.Exit(Self);
+end;
+
+{ TIdNetOwnedCollection }
+
+constructor TIdNetOwnedCollection.Create(AOwner: Component;
+  ItemClass: TIdNetCollectionItemClass);
+begin
+  inherited Create(ItemClass);
+  FOwner := AOwner;
+end;
+
+function TIdNetOwnedCollection.GetOwner: Component;
+begin
+  Result := FOwner;
+end;
+
+procedure TIdNetCollectionItem.Assign(ASource: Component);
+begin
+//
 end;
 
 end.
