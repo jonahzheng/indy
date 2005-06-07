@@ -23,6 +23,55 @@ type
     function GetNamePath: string; virtual;
     property Owner: TIdNetPersistent read GetOwner;
   end;
+  TIdNetComponentState = set of (csLoading, csDesigning);
+
+  TIdNetNativeComponent = class(Component, ISupportInitialize)
+  private
+    FIsLoading: Boolean;
+  protected
+    function GetComponentState: TIdNetComponentState; virtual;
+    procedure BeginInit;
+    procedure EndInit;
+  public
+    constructor Create;
+    property ComponentState: TIdNetComponentState read GetComponentState;
+  end;
+
+  TIdNetNativeComponentSite = class(&Object, ISite)
+  private
+    FComponent: IComponent;
+    FOwner: TIdNetNativeComponent;
+    FName: string;
+    FTag: &Object;
+    FDesignMode: Boolean;
+  public
+    property Component: IComponent read FComponent;
+    function get_Container: IContainer;
+    property Container: IContainer read get_Container;
+    property DesignMode: Boolean read FDesignMode;
+    property Name: string read FName write FName;
+
+    function GetService(AType: System.Type): &Object;
+    constructor Create(AInstance, AOwner: TIdNetNativeComponent); reintroduce;
+  end;
+
+  TIdNetNativeComponentHelper = class helper(TIdNetPersistentHelper) for TIdNetNativeComponent
+  private
+  protected
+    function GetSelfOwner: TIdNetNativeComponent;
+    function GetSiteObject: TIdNetNativeComponentSite;
+//    function GetComponentState: TIdNetComponentState; override;
+  public
+    property Owner: TIdNetNativeComponent read GetSelfOwner;
+    function GetName: string;
+    function GetTag: &Object;
+    procedure SetName(const Value: string);
+    procedure SetTag(const Value: &Object);
+  published
+    property Name: string read GetName write SetName stored False;
+    property Tag: &Object read GetTag write SetTag;
+
+  end;
 
   TIdNetMultiReadExclusiveWriteSynchronizer = class
   private
@@ -4082,4 +4131,103 @@ begin
   FReaderWriterLock.ReleaseWriterLock;
 end;
 
+{ TIdNetNativeComponentHelper }
+
+function TIdNetNativeComponentHelper.GetName: string;
+begin
+  Result := GetSiteObject.FName;
+end;
+
+function TIdNetNativeComponentHelper.GetSelfOwner: TIdNetNativeComponent;
+begin
+  Result := nil;
+end;
+
+procedure TIdNetNativeComponentHelper.SetName(const Value: string);
+begin
+  GetSiteObject.FName := Value;
+end;
+
+function TIdNetNativeComponentHelper.GetTag: &Object;
+begin
+  Result := GetSiteObject.FTag;
+end;
+
+procedure TIdNetNativeComponentHelper.SetTag(const Value: &Object);
+begin
+  GetSiteObject.FTag := Value;
+end;
+
+function TIdNetNativeComponentHelper.GetSiteObject: TIdNetNativeComponentSite;
+begin
+  if Site = nil then
+    Site := TIdNetNativeComponentSite.Create(Self, nil);
+  if TObject(Site) is TIdNetNativeComponentSite then
+    Result := &Object(Site) as TIdNetNativeComponentSite
+  else
+    Result := TIdNetNativeComponentSite.Create(Self, nil);
+end;
+
+//function TIdNetNativeComponentHelper.GetComponentState: TIdNetComponentState;
+//begin
+//  Result := inherited;
+//  if GetSiteObject.FDesigning then
+//  Result := Result + [csDesigning];
+//end;
+
+{ TIdNetNativeComponent }
+
+procedure TIdNetNativeComponent.EndInit;
+begin
+  FIsLoading := False;
+end;
+
+procedure TIdNetNativeComponent.BeginInit;
+begin
+  FIsLoading := True;
+end;
+
+function TIdNetNativeComponent.GetComponentState: TIdNetComponentState;
+begin
+  if FIsLoading then
+    Result := [csLoading]
+  else
+    Result := [];
+end;
+
+constructor TIdNetNativeComponent.Create;
+begin
+  inherited;
+  FIsLoading := False;
+end;
+
+{ TIdNetNativeComponentSite }
+
+constructor TIdNetNativeComponentSite.Create(AInstance,
+  AOwner: TIdNetNativeComponent);
+begin
+  inherited Create;
+  if Assigned(AInstance) then
+    FComponent := AInstance as IComponent
+  else
+    FComponent := nil;
+  FOwner := AOwner;
+  FName := '';
+  FDesignMode := False;
+end;
+
+function TIdNetNativeComponentSite.GetService(AType: System.Type): &Object;
+begin
+  Result := nil;
+end;
+
+function TIdNetNativeComponentSite.get_Container: IContainer;
+begin
+  if (FOwner <> nil) and (FOwner.Site is IContainer) then
+    Result := FOwner.Site as IContainer
+  else
+    Result := nil;
+end;
+
 end.
+

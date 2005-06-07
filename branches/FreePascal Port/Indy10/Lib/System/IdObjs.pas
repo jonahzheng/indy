@@ -5,8 +5,13 @@ unit IdObjs;
 interface
 
 uses
-{$IFDEF DotNetDistro}
+{$IFDEF DotNet}
+  {$IFDEF DotNetDistro}
   IdObjsFCL
+  {$ELSE}
+  Classes,
+  SysUtils
+  {$ENDIF}
 {$ELSE}
   Classes,
   SysUtils
@@ -16,10 +21,9 @@ type
 {$IFDEF DotNetDistro}
   TIdBaseObject = &Object;
   TIdPersistent = TIdNetPersistent;
-  TIdPersistentHelper = class helper (TIdNetPersistentHelper) for TIdPersistent
-  public
-    constructor Create; override;
-  end;
+  TIdNativeComponent = TIdNetNativeComponent;
+  TIdNativeComponentState = TIdNetNativeComponentState;
+  TIdOperation = (opInsert, opRemove);
   TIdStrings = TIdStringsFCL;
   TIdStringList = TIdStringListFCL;
   TIdStream2 = TIdNetStream;
@@ -40,7 +44,15 @@ type
   {$IFDEF DELPHI5}
   TSeekOrigin = Word;
   {$ENDIF}
-
+  {$IFDEF DOTNET}
+  TIdNativeComponent = TComponent;
+  TIdNativeComponentState = TComponentState;
+  TIdNativeComponentHelper = class helper (TComponentHelper) for TIdNativeComponent
+  end;
+  {$ELSE}
+  TIdNativeComponent = TComponent;
+  {$ENDIF}
+  TIdOperation = TOperation;
   TIdBaseObject = TObject;
   TIdPersistent = TPersistent;
   TIdStrings = Classes.TStrings;
@@ -113,12 +125,16 @@ const
   tpIdNormal = tpIdNetNormal;
   tpIdAboveNormal = tpIdNetAboveNormal;
   tpIdHighest = tpIdNetHighest;
+  csLoading = IdObjsFCL.csLoading;
+  csDesigning = IdObjsFCL.csDesigning;
 {$ELSE}
   tpIdLowest = tpLowest;
   tpIdBelowNormal = tpLower;
   tpIdNormal = tpNormal;
   tpIdAboveNormal = tpHigher;
   tpIdHighest = tpHighest;
+  csLoading = Classes.csLoading;
+  csDesigning = Classes.csDesigning;
 {$ENDIF}
 
 procedure SplitColumnsNoTrim(const AData: string; AStrings: TIdStrings; const ADelim: string = ' ');    {Do not Localize}
@@ -212,3 +228,4 @@ end;
 {$ENDIF}
 
 end.
+
