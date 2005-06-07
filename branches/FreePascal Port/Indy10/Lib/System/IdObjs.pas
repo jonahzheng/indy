@@ -50,7 +50,7 @@ type
   TIdNativeComponentHelper = class helper (TComponentHelper) for TIdNativeComponent
   end;
   {$ELSE}
-  TIdNativeComponent = TComponent;
+    TIdNativeComponent = TComponent;
   {$ENDIF}
   TIdOperation = TOperation;
   TIdBaseObject = TObject;
@@ -88,7 +88,7 @@ const
   fmShareDenyWrite  = $0020;
   fmShareDenyNone   = $0040;
 {$ELSE}
-
+  opRemove = Classes.opRemove;
   {$IFDEF DELPHI5}
   soBeginning = soFromBeginning;
   soCurrent = soFromCurrent;
