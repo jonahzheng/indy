@@ -55,12 +55,16 @@ type
   TIdNativeComponentState = TComponentState;
   TIdNativeComponentHelper = class helper (TComponentHelper) for TIdNativeComponent
   end;
+   TIdPersistent = TPersistent;
+   TIdPersistantHelper = class helper(TPersistentHelper) for TIdPersistent
+   end;
   {$ELSE}
+     TIdPersistent = TPersistent;
     TIdNativeComponent = TComponent;
   {$ENDIF}
   TIdOperation = TOperation;
   TIdBaseObject = TObject;
-  TIdPersistent = TPersistent;
+
   TIdStrings = Classes.TStrings;
   TIdStringList = Classes.TStringList;
   TIdStream2 = TStream;
