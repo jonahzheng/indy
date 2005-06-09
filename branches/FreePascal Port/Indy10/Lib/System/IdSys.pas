@@ -14,6 +14,18 @@ unit IdSys;
 
 interface
 
+{
+The model we are using is this:
+
+ IdSysBase - base class for everything
+   IdSysFCL - stuff for DotNET with NO VCL dependancies for Visual Studio and Mono
+   IdSysVCL - stuff that uses the VCL including packages for Borland Delphi VCL NET
+     IdSysNativeVCL - stuff that is shared betwen Linux and Win32 versions that uses pointers
+             and would make NO sense in DotNET.
+        IdSysLinux - Linux specific stuff
+        IdSysWindows - Windows specific stuff
+
+}
 uses
   {$IFDEF DotNetDistro}
   IdSysNet;
