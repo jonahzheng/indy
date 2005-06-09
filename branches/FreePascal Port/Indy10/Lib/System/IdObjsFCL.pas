@@ -8,6 +8,7 @@ uses
 
 type             
   TIdStringListFCL = class;
+  TIdNetList = class;
   TIdNetSeekOrigin = (soBeginning, soCurrent, soEnd);
   EReadError = Exception;
   EWriteError = Exception;
@@ -21,20 +22,31 @@ type
     constructor Create; virtual;
     procedure Assign(ASource: TIdNetPersistent); virtual;
     function GetNamePath: string; virtual;
-    property Owner: TIdNetPersistent read GetOwner;
   end;
-  TIdNetComponentState = set of (csLoading, csDesigning);
+  
+  TIdNetNativeComponentState = set of (csLoading, csDesigning, csDestroying,
+        csFreeNotification);
+  TIdNetNativeOperation = (opInsert, opRemove);
+  TIdNetNativeComponentSite = class;
 
   TIdNetNativeComponent = class(Component, ISupportInitialize)
   private
-    FIsLoading: Boolean;
+    FFreeNotifies: TIdNetList;
+    FComponents: TIdNetList;
+    FComponentState: TIdNetNativeComponentState;
+    procedure RemoveNotification(AComponent: TIdNetNativeComponent);
   protected
-    function GetComponentState: TIdNetComponentState; virtual;
+    function GetComponentState: TIdNetNativeComponentState; virtual;
     procedure BeginInit;
     procedure EndInit;
+    procedure Loaded; virtual;
+    procedure Notification(AComponent: TIdNetNativeComponent;
+      Operation: TIdNetNativeOperation); virtual;
   public
     constructor Create;
-    property ComponentState: TIdNetComponentState read GetComponentState;
+    procedure FreeNotification(AComponent: TIdNetNativeComponent);
+    procedure RemoveFreeNotification(AComponent: TIdNetNativeComponent);
+    property ComponentState: TIdNetNativeComponentState read GetComponentState;
   end;
 
   TIdNetNativeComponentSite = class(&Object, ISite)
@@ -44,6 +56,7 @@ type
     FName: string;
     FTag: &Object;
     FDesignMode: Boolean;
+  protected
   public
     property Component: IComponent read FComponent;
     function get_Container: IContainer;
@@ -58,15 +71,14 @@ type
   TIdNetNativeComponentHelper = class helper(TIdNetPersistentHelper) for TIdNetNativeComponent
   private
   protected
-    function GetSelfOwner: TIdNetNativeComponent;
     function GetSiteObject: TIdNetNativeComponentSite;
-//    function GetComponentState: TIdNetComponentState; override;
-  public
-    property Owner: TIdNetNativeComponent read GetSelfOwner;
     function GetName: string;
     function GetTag: &Object;
     procedure SetName(const Value: string);
     procedure SetTag(const Value: &Object);
+    function GetSelfOwner: TIdNetNativeComponent;
+  public
+    property Owner: TIdNetNativeComponent read GetSelfOwner;
   published
     property Name: string read GetName write SetName stored False;
     property Tag: &Object read GetTag write SetTag;
@@ -466,8 +478,6 @@ type
   TIdNetListAssignOp = (laCopy, laAnd, laOr, laXor, laSrcUnique, laDestUnique);
 
   EListError = class(Exception);
-
-  TIdNetList = class;
 
   TIdNetListEnumerator = class
   private
@@ -4138,11 +4148,6 @@ begin
   Result := GetSiteObject.FName;
 end;
 
-function TIdNetNativeComponentHelper.GetSelfOwner: TIdNetNativeComponent;
-begin
-  Result := nil;
-end;
-
 procedure TIdNetNativeComponentHelper.SetName(const Value: string);
 begin
   GetSiteObject.FName := Value;
@@ -4168,37 +4173,92 @@ begin
     Result := TIdNetNativeComponentSite.Create(Self, nil);
 end;
 
-//function TIdNetNativeComponentHelper.GetComponentState: TIdNetComponentState;
-//begin
-//  Result := inherited;
-//  if GetSiteObject.FDesigning then
-//  Result := Result + [csDesigning];
-//end;
-
 { TIdNetNativeComponent }
 
 procedure TIdNetNativeComponent.EndInit;
 begin
-  FIsLoading := False;
+  Exclude(FComponentState, csLoading);
+  Loaded;
 end;
 
 procedure TIdNetNativeComponent.BeginInit;
 begin
-  FIsLoading := True;
+  Include(FComponentState, csLoading);
 end;
 
-function TIdNetNativeComponent.GetComponentState: TIdNetComponentState;
+function TIdNetNativeComponent.GetComponentState: TIdNetNativeComponentState;
 begin
-  if FIsLoading then
-    Result := [csLoading]
-  else
-    Result := [];
+  Result := FComponentState;
 end;
 
 constructor TIdNetNativeComponent.Create;
 begin
   inherited;
-  FIsLoading := False;
+  FComponentState := [];
+end;
+
+procedure TIdNetNativeComponent.Notification(AComponent: TIdNetNativeComponent;
+  Operation: TIdNetNativeOperation);
+var
+  I: Integer;
+begin
+  if (Operation = opRemove) and (AComponent <> nil) then
+    RemoveFreeNotification(AComponent);
+  with GetSiteObject do
+    if FComponents <> nil then
+    begin
+      I := FComponents.Count - 1;
+      while I >= 0 do
+      begin
+        TIdNetNativeComponent(FComponents[I]).Notification(AComponent, Operation);
+        Dec(I);
+        if I >= FComponents.Count then
+          I := FComponents.Count - 1;
+      end;
+    end;
+end;
+
+procedure TIdNetNativeComponent.RemoveFreeNotification(
+  AComponent: TIdNetNativeComponent);
+begin
+  RemoveNotification(AComponent);
+  AComponent.RemoveNotification(Self);
+end;
+
+procedure TIdNetNativeComponent.FreeNotification(
+  AComponent: TIdNetNativeComponent);
+begin
+  if (Owner = nil) or (AComponent.Owner <> Owner) then
+  begin
+    // Never acquire a reference to a component that is being deleted.
+    assert(not (csDestroying in (ComponentState + AComponent.ComponentState)));
+    if not Assigned(FFreeNotifies) then
+      FFreeNotifies := TIdNetList.Create;
+    if FFreeNotifies.IndexOf(AComponent) < 0 then
+    begin
+      FFreeNotifies.Add(AComponent);
+      AComponent.FreeNotification(Self);
+    end;
+  end;
+  FComponentState := FComponentState + [csFreeNotification];
+end;
+
+procedure TIdNetNativeComponent.RemoveNotification(AComponent: TIdNetNativeComponent);
+begin
+  if FFreeNotifies <> nil then
+  begin
+    FFreeNotifies.Remove(AComponent);
+    if FFreeNotifies.Count = 0 then
+    begin
+      FFreeNotifies.Free;
+      FFreeNotifies := nil;
+    end;
+  end;
+end;
+
+procedure TIdNetNativeComponent.Loaded;
+begin
+
 end;
 
 { TIdNetNativeComponentSite }
@@ -4214,6 +4274,11 @@ begin
   FOwner := AOwner;
   FName := '';
   FDesignMode := False;
+end;
+
+function TIdNetNativeComponentHelper.GetSelfOwner: TIdNetNativeComponent;
+begin
+  Result := TIdNetNativeComponent(TIdNetNativeComponent(Self).Owner);
 end;
 
 function TIdNetNativeComponentSite.GetService(AType: System.Type): &Object;
