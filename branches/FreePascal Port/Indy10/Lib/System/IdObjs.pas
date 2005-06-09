@@ -21,9 +21,15 @@ type
 {$IFDEF DotNetDistro}
   TIdBaseObject = &Object;
   TIdPersistent = TIdNetPersistent;
+  TIdPersistentHelper = class helper (TIdNetPersistentHelper) for TIdPersistent
+  public
+    constructor Create; overload; override;
+  end;
   TIdNativeComponent = TIdNetNativeComponent;
+  TIdNativeComponentHelper = class helper (TIdNetNativeComponentHelper) for TIdNativeComponent
+  end;
   TIdNativeComponentState = TIdNetNativeComponentState;
-  TIdOperation = (opInsert, opRemove);
+  TIdOperation = TIdNetNativeOperation;
   TIdStrings = TIdStringsFCL;
   TIdStringList = TIdStringListFCL;
   TIdStream2 = TIdNetStream;
@@ -88,7 +94,6 @@ const
   fmShareDenyWrite  = $0020;
   fmShareDenyNone   = $0040;
 {$ELSE}
-  opRemove = Classes.opRemove;
   {$IFDEF DELPHI5}
   soBeginning = soFromBeginning;
   soCurrent = soFromCurrent;
@@ -127,6 +132,7 @@ const
   tpIdHighest = tpIdNetHighest;
   csLoading = IdObjsFCL.csLoading;
   csDesigning = IdObjsFCL.csDesigning;
+  opRemove = IdObjsFCL.opRemove;
 {$ELSE}
   tpIdLowest = tpLowest;
   tpIdBelowNormal = tpLower;
@@ -135,6 +141,7 @@ const
   tpIdHighest = tpHighest;
   csLoading = Classes.csLoading;
   csDesigning = Classes.csDesigning;
+  opRemove = Classes.opRemove;
 {$ENDIF}
 
 
@@ -154,4 +161,5 @@ end;
 {$ENDIF}
 
 end.
+
 
