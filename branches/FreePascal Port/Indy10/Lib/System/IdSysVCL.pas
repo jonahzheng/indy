@@ -91,7 +91,7 @@ type
 
 implementation
 
-{$IFNDEF DELPHI5}
+{$IFDEF VCL7ORABOVE}
 //Delphi5 does not have TFormatSettings
 //this should be changed to a singleton?
 function GetEnglishSetting: TFormatSettings;
@@ -173,7 +173,7 @@ end;
 class function TIdSysVCL.Format(const Format: string;
   const Args: array of const): string;
 begin
-  {$IFDEF DELPHI5}
+  {$IFNDEF VCL7ORABOVE}
   //Is there a way to get delphi5 to use locale in format? something like:
   //  SetThreadLocale(TheNewLocaleId);
   //  GetFormatSettings;
