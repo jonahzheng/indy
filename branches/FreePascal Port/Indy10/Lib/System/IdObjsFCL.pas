@@ -43,7 +43,7 @@ type
     procedure Notification(AComponent: TIdNetNativeComponent;
       Operation: TIdNetNativeOperation); virtual;
   public
-    constructor Create; override;
+    constructor Create; reintroduce; virtual;
     procedure FreeNotification(AComponent: TIdNetNativeComponent);
     procedure RemoveFreeNotification(AComponent: TIdNetNativeComponent);
     property ComponentState: TIdNetNativeComponentState read GetComponentState;
