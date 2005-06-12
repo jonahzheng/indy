@@ -956,7 +956,7 @@ begin
     while (I <> -1) and (I < AText.Length) do
     begin
       oi := I;
-      I := AText.IndexOf(NL, I);
+      I := AText.IndexOf(NL, I+1);
       if I <> -1 then
       begin
         Add(AText.Substring(oi, I - oi));
@@ -976,9 +976,9 @@ function TIdStringsFCL.GetQuoteChar: Char;
 begin
   if not (sdQuoteChar in FDefined) then
   begin
-    QuoteChar := '"';
+    FQuoteChar := '"';
   end;
-  Result := QuoteChar;
+  Result := FQuoteChar;
 end;
 
 function TIdStringsFCL.AnsiExtractQuotedStr(AValue: string; AQuote: Char): string;
@@ -1160,7 +1160,7 @@ begin
     for I := 0 to Count - 1 do
     begin
       S := Get(I);
-      P := 0;
+      P := 1;
       while (P < S.Length)
         and (S[p] > ' ')
         and (S[p] <> QuoteChar)
