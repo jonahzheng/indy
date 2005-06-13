@@ -142,81 +142,81 @@ type
     function Read(var Buffer: Extended; Count: Longint): Longint; overload; 
     function Write(const Buffer: array of Byte; Offset, Count: Longint): Longint; overload; virtual; abstract;
     function Write(const Buffer: array of Byte; Count: Longint): Longint; overload;
-    function Write(const Buffer: Byte): Longint; overload;
-    function Write(const Buffer: Byte; Count: Longint): Longint; overload; 
+    //function Write(const Buffer: Byte): Longint; overload;
+    //function Write(const Buffer: Byte; Count: Longint): Longint; overload;
     function Write(const Buffer: Boolean): Longint; overload;
-    function Write(const Buffer: Boolean; Count: Longint): Longint; overload; 
+    function Write(const Buffer: Boolean; Count: Longint): Longint; overload;
     function Write(const Buffer: Char): Longint; overload;
-    function Write(const Buffer: Char; Count: Longint): Longint; overload; 
+    function Write(const Buffer: Char; Count: Longint): Longint; overload;
     function Write(const Buffer: AnsiChar): Longint; overload;
-    function Write(const Buffer: AnsiChar; Count: Longint): Longint; overload; 
+    function Write(const Buffer: AnsiChar; Count: Longint): Longint; overload;
     function Write(const Buffer: ShortInt): Longint; overload;
-    function Write(const Buffer: ShortInt; Count: Longint): Longint; overload; 
+    function Write(const Buffer: ShortInt; Count: Longint): Longint; overload;
     function Write(const Buffer: SmallInt): Longint; overload;
-    function Write(const Buffer: SmallInt; Count: Longint): Longint; overload; 
+    function Write(const Buffer: SmallInt; Count: Longint): Longint; overload;
     function Write(const Buffer: Word): Longint; overload;
-    function Write(const Buffer: Word; Count: Longint): Longint; overload; 
+    function Write(const Buffer: Word; Count: Longint): Longint; overload;
     function Write(const Buffer: Integer): Longint; overload;
-    function Write(const Buffer: Integer; Count: Longint): Longint; overload; 
+    function Write(const Buffer: Integer; Count: Longint): Longint; overload;
     function Write(const Buffer: Cardinal): Longint; overload;
-    function Write(const Buffer: Cardinal; Count: Longint): Longint; overload; 
+    function Write(const Buffer: Cardinal; Count: Longint): Longint; overload;
     function Write(const Buffer: Int64): Longint; overload;
-    function Write(const Buffer: Int64; Count: Longint): Longint; overload; 
+    function Write(const Buffer: Int64; Count: Longint): Longint; overload;
     function Write(const Buffer: UInt64): Longint; overload;
-    function Write(const Buffer: UInt64; Count: Longint): Longint; overload; 
+    function Write(const Buffer: UInt64; Count: Longint): Longint; overload;
     function Write(const Buffer: Single): Longint; overload;
-    function Write(const Buffer: Single; Count: Longint): Longint; overload; 
+    function Write(const Buffer: Single; Count: Longint): Longint; overload;
     function Write(const Buffer: Double): Longint; overload;
-    function Write(const Buffer: Double; Count: Longint): Longint; overload; 
-    function Write(const Buffer: Extended): Longint; overload; 
-    function Write(const Buffer: Extended; Count: Longint): Longint; overload; 
+    function Write(const Buffer: Double; Count: Longint): Longint; overload;
+    function Write(const Buffer: Extended): Longint; overload;
+    function Write(const Buffer: Extended; Count: Longint): Longint; overload;
     function Seek(const Offset: Int64; Origin: TIdNetSeekOrigin): Int64; overload; virtual; abstract;
     procedure ReadBuffer(Buffer: array of Byte; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: Byte); overload;
-    procedure ReadBuffer(var Buffer: Byte; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: Byte; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: Boolean); overload;
-    procedure ReadBuffer(var Buffer: Boolean; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: Boolean; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: Char); overload;
-    procedure ReadBuffer(var Buffer: Char; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: Char; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: AnsiChar); overload;
-    procedure ReadBuffer(var Buffer: AnsiChar; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: AnsiChar; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: ShortInt); overload;
-    procedure ReadBuffer(var Buffer: ShortInt; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: ShortInt; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: SmallInt); overload;
-    procedure ReadBuffer(var Buffer: SmallInt; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: SmallInt; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: Word); overload;
-    procedure ReadBuffer(var Buffer: Word; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: Word; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: Integer); overload;
-    procedure ReadBuffer(var Buffer: Integer; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: Integer; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: Cardinal); overload;
-    procedure ReadBuffer(var Buffer: Cardinal; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: Cardinal; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: Int64); overload;
-    procedure ReadBuffer(var Buffer: Int64; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: Int64; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: UInt64); overload;
-    procedure ReadBuffer(var Buffer: UInt64; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: UInt64; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: Single); overload;
-    procedure ReadBuffer(var Buffer: Single; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: Single; Count: Longint); overload;
     procedure ReadBuffer(var Buffer: Double); overload;
-    procedure ReadBuffer(var Buffer: Double; Count: Longint); overload; 
-    procedure ReadBuffer(var Buffer: Extended); overload; 
-    procedure ReadBuffer(var Buffer: Extended; Count: Longint); overload; 
+    procedure ReadBuffer(var Buffer: Double; Count: Longint); overload;
+    procedure ReadBuffer(var Buffer: Extended); overload;
+    procedure ReadBuffer(var Buffer: Extended; Count: Longint); overload;
     procedure WriteBuffer(const Buffer: array of Byte; Count: Longint); overload;
-    procedure WriteBuffer(const Buffer: Byte); overload;
-    procedure WriteBuffer(const Buffer: Byte; Count: Longint); overload; 
+    //procedure WriteBuffer(const Buffer: Byte); overload;
+    //procedure WriteBuffer(const Buffer: Byte; Count: Longint); overload;
     procedure WriteBuffer(const Buffer: Boolean); overload;
-    procedure WriteBuffer(const Buffer: Boolean; Count: Longint); overload; 
+    procedure WriteBuffer(const Buffer: Boolean; Count: Longint); overload;
     procedure WriteBuffer(const Buffer: Char); overload;
-    procedure WriteBuffer(const Buffer: Char; Count: Longint); overload; 
+    procedure WriteBuffer(const Buffer: Char; Count: Longint); overload;
     procedure WriteBuffer(const Buffer: AnsiChar); overload;
-    procedure WriteBuffer(const Buffer: AnsiChar; Count: Longint); overload; 
+    procedure WriteBuffer(const Buffer: AnsiChar; Count: Longint); overload;
     procedure WriteBuffer(const Buffer: ShortInt); overload;
-    procedure WriteBuffer(const Buffer: ShortInt; Count: Longint); overload; 
+    procedure WriteBuffer(const Buffer: ShortInt; Count: Longint); overload;
     procedure WriteBuffer(const Buffer: SmallInt); overload;
     procedure WriteBuffer(const Buffer: SmallInt; Count: Longint); overload;
     procedure WriteBuffer(const Buffer: Word); overload;
-    procedure WriteBuffer(const Buffer: Word; Count: Longint); overload; 
+    procedure WriteBuffer(const Buffer: Word; Count: Longint); overload;
     procedure WriteBuffer(const Buffer: Integer); overload;
-    procedure WriteBuffer(const Buffer: Integer; Count: Longint); overload; 
+    procedure WriteBuffer(const Buffer: Integer; Count: Longint); overload;
     procedure WriteBuffer(const Buffer: Cardinal); overload;
     procedure WriteBuffer(const Buffer: Cardinal; Count: Longint); overload; 
     procedure WriteBuffer(const Buffer: Int64); overload;
@@ -1818,7 +1818,7 @@ begin
   if (Count <> 0) and (Write(Buffer, Count) <> Count) then
     raise EWriteError.Create(SWriteError);
 end;
-
+{
 procedure TIdNetStream.WriteBuffer(const Buffer: Byte);
 begin
   if Write(Buffer) <> SizeOf(Byte) then
@@ -1830,7 +1830,7 @@ begin
   if (Count <> 0) and (Write(Buffer, Count) <> Count) then
     raise EWriteError.Create(SWriteError);
 end;
-
+}
 procedure TIdNetStream.WriteBuffer(const Buffer: Boolean);
 begin
   if Write(Buffer) <> SizeOf(Boolean) then
@@ -2461,7 +2461,7 @@ function TIdNetStream.Write(const Buffer: array of Byte; Count: Longint): Longin
 begin
   Result := Write(Buffer, 0, Count);
 end;
-
+{
 function TIdNetStream.Write(const Buffer: Byte): Longint;
 var
   Buf: array[] of Byte;
@@ -2483,7 +2483,7 @@ begin
   if C < Count then
     Inc(Result, Skip(Count - C));
 end;
-
+}
 function TIdNetStream.Write(const Buffer: Boolean): Longint;
 var
   Buf: array[] of Byte;
@@ -2959,7 +2959,7 @@ function TIdNetMemoryStream.Seek(const Offset: Int64;
       soBeginning:  Result := SeekOrigin.&Begin;
       soCurrent:    Result := SeekOrigin.Current;
       soEnd:        Result := SeekOrigin.&End;
-    end;                                                                    
+    end;
   end;
 begin
   Result := FFCLStream.Seek(Offset, GetSeekOrigin);
