@@ -4296,7 +4296,7 @@ end;
 
 function TIdNetNativeComponentHelper.GetSelfOwner: TIdNetNativeComponent;
 begin
-  Result := TIdNetNativeComponent(TIdNetNativeComponent(Self).Owner);
+  Result := TIdNetNativeComponent(TIdNetNativeComponent(Self).GetOwner);
 end;
 
 function TIdNetNativeComponentSite.GetService(AType: System.Type): &Object;
