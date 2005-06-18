@@ -4314,5 +4314,8 @@ begin
     Result := nil;
 end;
 
+initialization
+	InitThreadSynchronization;
+finalization
+	DoneThreadSynchronization;
 end.
-
