@@ -779,6 +779,7 @@ end;
 
 procedure SignalSyncEvent;
 begin
+  Assert(SyncEvent<>nil);
   SyncEvent.&Set;
 end;
 
@@ -4001,6 +4002,7 @@ begin
           ReturnValue := FReturnValue;
           Exit;
         end;
+        Assert(SyncEvent<>nil);
         if SyncEvent.WaitOne(500, True) then
           CheckSynchronize;
       end
