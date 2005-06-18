@@ -115,7 +115,6 @@ type
     function BeginWrite: Boolean;
     procedure EndWrite;
 
-    {! RevisionLevel used to be Cardinal in DCC32 }
     property RevisionLevel: Integer read GetRevisionLevel;
   end;
 
@@ -3096,6 +3095,7 @@ end;
 
 destructor TIdNetFileStream.Destroy;
 begin
+  FFCLStream.Flush;
   FFCLStream.Close;
   FFCLStream := nil;
   inherited;
