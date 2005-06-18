@@ -709,7 +709,7 @@ const
 implementation
 
 uses
-  IdSys;
+  IdSys, IdGlobal;
 
 const
   MaxBufSize = 5 * 1024;
@@ -962,19 +962,17 @@ end;
 
 procedure TIdStringsFCL.SetTextStr(AText: string);
 var
-  NL: string;
   I: Integer;
   oi: Integer;
 begin
   BeginUpdate;
   try
     Clear;
-    NL := Environment.NewLine;
     I := 0;
     while (I <> -1) and (I < AText.Length) do
     begin
       oi := I;
-      I := AText.IndexOf(NL, I+1);
+      I := AText.IndexOf(EOL, I+1);
       if I <> -1 then
       begin
         Add(AText.Substring(oi, I - oi));
@@ -1358,12 +1356,11 @@ var
   LCount: Integer;
   I: Integer;
 begin
-  NL := Environment.NewLine;
   sb := StringBuilder.Create;
   LCount := GetCount;
   for I := 0 to LCount - 1 do
   begin
-    sb.Append(Get(i) + NL);
+    sb.Append(Get(i) + EOL);
   end;
   Result := sb.ToString;
 end;
