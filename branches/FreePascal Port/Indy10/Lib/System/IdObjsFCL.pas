@@ -3001,14 +3001,14 @@ end;
 
 function TIdNetStringStream.GetString: string;
 begin
-  Result := Encoding.ASCII.GetString(FFCLStream.GetBuffer, 0, Size)
+  Result := System.Text.Encoding.ASCII.GetString(FFCLStream.GetBuffer, 0, Size)
 end;
 
 procedure TIdNetStringStream.WriteString(const AString: string);
 var
   Bytes: TBytes;
 begin
-  Bytes := Encoding.ASCII.GetBytes(AString);
+  Bytes := System.Text.Encoding.ASCII.GetBytes(AString);
   Write(Bytes, Length(Bytes));
 end;
 
