@@ -1351,7 +1351,6 @@ end;
 
 function TIdStringsFCL.GetTextStr: string;
 var
-  NL: string;
   sb: StringBuilder;
   LCount: Integer;
   I: Integer;
