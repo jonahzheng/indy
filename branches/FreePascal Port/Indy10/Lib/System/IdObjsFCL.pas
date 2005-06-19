@@ -1167,8 +1167,7 @@ var
 begin
   LCount := GetCount;
   Result := '';
-  if (LCount = 1) and
-     (Get(0) = '') then
+  if (LCount = 0) then
   begin
     Result := QuoteChar.ToString;
   end
@@ -4085,7 +4084,7 @@ end;
 
 procedure TIdNetCollectionItem.Assign(ASource: TIdNetPersistent);
 begin
-//
+  inherited Assign(ASource);
 end;
 
 { TIdNetPersistentHelper }
