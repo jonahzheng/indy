@@ -976,6 +976,7 @@ begin
       if I <> -1 then
       begin
         Add(AText.Substring(oi, I - oi));
+        I := I + 2;
       end
       else
       begin
@@ -1403,14 +1404,14 @@ begin
   BeginUpdate;
   try
     Clear;
-    P := 0;
-    while (P < AValue.Length)
+    P := 1;
+    while (P <= AValue.Length)
       and (AValue[P] > #0)
-      and (AValue[P] <= ' ') do
+      and (AValue[P] <= #32) do
     begin
       Inc(P);
     end;
-    while P < AValue.Length do
+    while P <= AValue.Length do
     begin
       if AValue[P] = QuoteChar then
       begin
@@ -1419,33 +1420,33 @@ begin
       else
       begin
         P1 := P;
-        while (P < AValue.Length)
-          and (AValue[P] > ' ')
+        while (P <= AValue.Length)
+          and (AValue[P] > #32)
           and (AValue[P] <> Delimiter) do
         begin
           Inc(P);
         end;
-        S := AValue.Substring(P1, P - P1);
+        S := AValue.Substring(P1 - 1, P - P1);
       end;
       Add(S);
-      while (P < AValue.Length)
+      while (P <= AValue.Length)
         and (AValue[P] > #0)
-        and (AValue[P] <= ' ') do
+        and (AValue[P] <= #32) do
       begin
         Inc(P);
       end;
-      if (P < AValue.Length) and
+      if (P <= AValue.Length) and
          (AValue[P] = Delimiter) then
       begin
-        if (P + 1) >= AValue.Length then
+        if (P + 1) > AValue.Length then
         begin
           Add('');
         end;
         repeat
           Inc(P);
-        until not (   (P < AValue.Length)
+        until not (   (P <= AValue.Length)
                   and (AValue[P] > #0)
-                  and (AValue[P] <= ' '));
+                  and (AValue[P] <= #32));
       end;
     end;
   finally
