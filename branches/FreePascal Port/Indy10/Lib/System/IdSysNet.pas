@@ -31,7 +31,7 @@ type
   //I'm doing this for one reason, to be compatible with SysUtils where a reference
   //is made to the EAbort exception.
   EAbort = class(Exception);
-
+  EConvertError = class(Exception);
   TSysCharSet = set of AnsiChar;
 
   //I'm doing it this way because you can't inherit directly from StringBuilder
@@ -286,7 +286,7 @@ class function TIdSysNet.StrToInt64Def(const S: string;
   const Default: Int64): Int64;
 var LErr : Integer;
 begin
-  Val(S,Result,LErr);
+  Val(Trim(S),Result,LErr);
   if LErr<>0 then
   begin
     Result := Default;
@@ -294,8 +294,14 @@ begin
 end;
 
 class function TIdSysNet.StrToInt(const S: string): Integer;
+var
+  LErr: Integer;
 begin
-  Result := StrToInt(Trim(S),0);
+  Val(Trim(S),Result,LErr);
+  if LErr <> 0 then
+  begin
+    raise EConvertError.Create('');
+  end;
 end;
 
 class function TIdSysNet.StrToInt(const S: string;
@@ -484,7 +490,7 @@ begin
   Val(Trim(S),Result,LErr);
   if LErr <> 0 then
   begin
-    Result := 0;
+    raise EConvertError.Create('');
   end;
 end;
 
