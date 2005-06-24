@@ -101,9 +101,6 @@ type
   TIdMultiReadExclusiveWriteSynchronizer = TMultiReadExclusiveWriteSynchronizer;
 {$ENDIF}
 
-  // temporary:
-  TIdStream2 = TIdStream;
-
 const
 {$IFDEF DOTNET}
   IdFromBeginning   = TIdSeekOrigin.soBeginning;
