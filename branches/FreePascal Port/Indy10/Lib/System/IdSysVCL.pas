@@ -282,13 +282,13 @@ end;
 
 class function TIdSysVCL.StrToInt(const S: string): Integer;
 begin
-  Result := SysUtils.StrToInt(S);
+  Result := SysUtils.StrToInt(Trim(S));
 end;
 
 class function TIdSysVCL.StrToInt(const S: string;
   Default: Integer): Integer;
 begin
-  Result := SysUtils.StrToIntDef(S,Default);
+  Result := SysUtils.StrToIntDef(Trim(S),Default);
 end;
 
 class function TIdSysVCL.Trim(const S: string): string;
@@ -447,12 +447,12 @@ end;
 
 class function TIdSysVCL.StrToInt64(const S: string; const Default: Int64): Int64;
 begin
-  Result := SysUtils.StrToInt64Def(S,Default);
+  Result := SysUtils.StrToInt64Def(Trim(S),Default);
 end;
 
 class function TIdSysVCL.StrToInt64(const S: string): Int64;
 begin
-  Result := SysUtils.StrToInt64(S);
+  Result := SysUtils.StrToInt64(Trim(S));
 end;
 
 class function TIdSysVCL.SameText(const S1, S2: String): Boolean;

@@ -295,14 +295,14 @@ end;
 
 class function TIdSysNet.StrToInt(const S: string): Integer;
 begin
-  Result := StrToInt(S,0);
+  Result := StrToInt(Trim(S),0);
 end;
 
 class function TIdSysNet.StrToInt(const S: string;
   Default: Integer): Integer;
 var LErr : Integer;
 begin
-  Val(S,Result,LErr);
+  Val(Trim(S),Result,LErr);
   if LErr<>0 then
   begin
     Result := Default;
@@ -481,7 +481,7 @@ end;
 class function TIdSysNet.StrToInt64(const S: string): Int64;
 var LErr : Integer;
 begin
-  Val(S,Result,LErr);
+  Val(Trim(S),Result,LErr);
   if LErr <> 0 then
   begin
     Result := 0;
@@ -492,7 +492,7 @@ class function TIdSysNet.StrToInt64(const S: string;
   const Default: Int64): Int64;
 var LErr : Integer;
 begin
-  Val(S,Result,LErr);
+  Val(Trim(S),Result,LErr);
   if LErr <> 0 then
   begin
     Result := Default;
