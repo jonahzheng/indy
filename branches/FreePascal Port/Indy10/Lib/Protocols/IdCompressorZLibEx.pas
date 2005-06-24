@@ -77,18 +77,18 @@ type
   TIdCompressorZLibEx = class(TIdZLibCompressorBase)
   protected
     procedure InternalDecompressStream(LZstream: TZStreamRec; AIOHandler : TIdIOHandler;
-      AOutStream: TIdStream2);
+      AOutStream: TIdStream);
   public
 
-    procedure DeflateStream(AStream : TIdStream2; const ALevel : TIdCompressionLevel=0; const AOutStream : TIdStream2=nil); override;
-    procedure InflateStream(AStream : TIdStream2; const AOutStream : TIdStream2=nil); override;
+    procedure DeflateStream(AStream : TIdStream; const ALevel : TIdCompressionLevel=0; const AOutStream : TIdStream=nil); override;
+    procedure InflateStream(AStream : TIdStream; const AOutStream : TIdStream=nil); override;
 
-    procedure CompressStream(AStream : TIdStream2; const ALevel : TIdCompressionLevel; const AWindowBits, AMemLevel,
-      AStrategy: Integer; AOutStream : TIdStream2); override;
-    procedure DecompressStream(AStream : TIdStream2; const AWindowBits : Integer; const AOutStream : TIdStream2=nil); override;
-    procedure CompressFTPToIO(AStream : TIdStream2; AIOHandler : TIdIOHandler; const ALevel, AWindowBits, AMemLevel,
+    procedure CompressStream(AStream : TIdStream; const ALevel : TIdCompressionLevel; const AWindowBits, AMemLevel,
+      AStrategy: Integer; AOutStream : TIdStream); override;
+    procedure DecompressStream(AStream : TIdStream; const AWindowBits : Integer; const AOutStream : TIdStream=nil); override;
+    procedure CompressFTPToIO(AStream : TIdStream; AIOHandler : TIdIOHandler; const ALevel, AWindowBits, AMemLevel,
       AStrategy: Integer); override;
-     procedure DecompressFTPFromIO(AIOHandler : TIdIOHandler; const AWindowBits : Integer; AOutputStream : TIdStream2); override;
+     procedure DecompressFTPFromIO(AIOHandler : TIdIOHandler; const AWindowBits : Integer; AOutputStream : TIdStream); override;
   end;
 
   EIdCompressionException = class(EIdException);
@@ -106,7 +106,7 @@ const
 { TIdCompressorZLibEx }
 
 procedure TIdCompressorZLibEx.InternalDecompressStream(
-  LZstream: TZStreamRec; AIOHandler: TIdIOHandler; AOutStream: TIdStream2);
+  LZstream: TZStreamRec; AIOHandler: TIdIOHandler; AOutStream: TIdStream);
 {Note that much of this is taken from the ZLibEx unit and adapted to use the IOHandler}
 const
   bufferSize = 32768;
@@ -190,7 +190,7 @@ begin
 end;
 
 procedure TIdCompressorZLibEx.DecompressFTPFromIO(AIOHandler: TIdIOHandler;
-  const AWindowBits: Integer; AOutputStream: TIdStream2);
+  const AWindowBits: Integer; AOutputStream: TIdStream);
 {Note that much of this is taken from the ZLibEx unit and adapted to use the IOHandler}
 var
   Lzstream: TZStreamRec;
@@ -222,7 +222,7 @@ begin
   end;
 end;
 
-procedure TIdCompressorZLibEx.CompressFTPToIO(AStream: TIdStream2;
+procedure TIdCompressorZLibEx.CompressFTPToIO(AStream: TIdStream;
   AIOHandler: TIdIOHandler; const ALevel, AWindowBits, AMemLevel,
   AStrategy: Integer);
 {Note that much of this is taken from the ZLibEx unit and adapted to use the IOHandler}
@@ -284,8 +284,8 @@ begin
   AIOHandler.EndWork(wmWrite);
 end;
 
-procedure TIdCompressorZLibEx.CompressStream(AStream : TIdStream2; const ALevel : TIdCompressionLevel; const AWindowBits, AMemLevel,
-      AStrategy: Integer; AOutStream : TIdStream2);
+procedure TIdCompressorZLibEx.CompressStream(AStream : TIdStream; const ALevel : TIdCompressionLevel; const AWindowBits, AMemLevel,
+      AStrategy: Integer; AOutStream : TIdStream);
 var
     LCompressRec: TZStreamRec;
 var
@@ -367,7 +367,7 @@ begin
   end;
 end;
 
-procedure TIdCompressorZLibEx.DecompressStream(AStream : TIdStream2; const AWindowBits : Integer; const AOutStream : TIdStream2=nil);
+procedure TIdCompressorZLibEx.DecompressStream(AStream : TIdStream; const AWindowBits : Integer; const AOutStream : TIdStream=nil);
 var
   Buffer: array[0..2047] of Char;
   nChars, C: Integer;
@@ -448,7 +448,7 @@ begin
     end;
 end;
 
-procedure TIdCompressorZLibEx.DeflateStream(AStream : TIdStream2; const ALevel : TIdCompressionLevel=0; const AOutStream : TIdStream2=nil);
+procedure TIdCompressorZLibEx.DeflateStream(AStream : TIdStream; const ALevel : TIdCompressionLevel=0; const AOutStream : TIdStream=nil);
 
 var 
     LCompressRec: TZStreamRec;
@@ -530,7 +530,7 @@ begin
   end;
 end;
 
-procedure TIdCompressorZLibEx.InflateStream(AStream : TIdStream2; const AOutStream : TIdStream2=nil);
+procedure TIdCompressorZLibEx.InflateStream(AStream : TIdStream; const AOutStream : TIdStream=nil);
 var
   Buffer: array[0..2047] of Char;
   nChars, C: Integer;
