@@ -50,7 +50,7 @@ type
   TIdOperation = TIdNetNativeOperation;
   TIdStrings = TIdStringsFCL;
   TIdStringList = TIdStringListFCL;
-  TIdStream2 = TIdNetStream;
+  TIdStream = TIdNetStream;
   TIdMemoryStream = TIdNetMemoryStream;
   TIdStringStream = TIdNetStringStream;
   TIdFileStream = TIdNetFileStream;
@@ -85,7 +85,7 @@ type
 
   TIdStrings = Classes.TStrings;
   TIdStringList = Classes.TStringList;
-  TIdStream2 = TStream;
+  TIdStream = TStream;
   TIdMemoryStream = TMemoryStream;
   TIdStringStream = TStringStream;
   TIdFileStream = TFileStream;
@@ -100,6 +100,9 @@ type
   TIdOwnedCollection = TOwnedCollection;
   TIdMultiReadExclusiveWriteSynchronizer = TMultiReadExclusiveWriteSynchronizer;
 {$ENDIF}
+
+  // temporary:
+  TIdStream2 = TIdStream;
 
 const
 {$IFDEF DOTNET}
