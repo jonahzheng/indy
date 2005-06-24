@@ -1080,7 +1080,7 @@ begin
         //That was not the width but the Index
         if LWidth >-1 then
         begin
-          LArgIdx := 0 - LWidth;
+          LArgIdx := LWidth;
           LWidth := -1;
         end
         else
