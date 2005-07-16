@@ -36,8 +36,9 @@ type
   protected
     procedure AssignTo(Dest: TIdNetPersistent); virtual;
     function GetOwner: TIdNetPersistent; virtual;
+    procedure InsideCreate; virtual;
   public
-    constructor Create; virtual;
+    constructor Create; reintroduce; virtual;
     procedure Assign(ASource: TIdNetPersistent); virtual;
     function GetNamePath: string; virtual;
   end;
@@ -58,10 +59,10 @@ type
     procedure BeginInit;
     procedure EndInit;
     procedure Loaded; virtual;
+    procedure InsideCreate; override;
     procedure Notification(AComponent: TIdNetNativeComponent;
       Operation: TIdNetNativeOperation); virtual;
   public
-    constructor Create; reintroduce; virtual;
     procedure FreeNotification(AComponent: TIdNetNativeComponent);
     procedure RemoveFreeNotification(AComponent: TIdNetNativeComponent);
     property ComponentState: TIdNetNativeComponentState read GetComponentState;
@@ -4092,6 +4093,7 @@ end;
 constructor TIdNetPersistentHelper.Create;
 begin
   inherited Create;
+  InsideCreate;
 end;
 
 procedure TIdNetPersistentHelper.Assign(ASource: TIdNetPersistent);
@@ -4207,12 +4209,6 @@ begin
   Result := FComponentState;
 end;
 
-constructor TIdNetNativeComponent.Create;
-begin
-  inherited;
-  FComponentState := [];
-end;
-
 procedure TIdNetNativeComponent.Notification(AComponent: TIdNetNativeComponent;
   Operation: TIdNetNativeOperation);
 var
@@ -4308,6 +4304,16 @@ begin
     Result := FOwner.Site as IContainer
   else
     Result := nil;
+end;
+
+procedure TIdNetPersistentHelper.InsideCreate;
+begin
+end;
+
+procedure TIdNetNativeComponent.InsideCreate;
+begin
+  inherited InsideCreate;
+  FComponentState := [];
 end;
 
 initialization

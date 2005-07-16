@@ -41,7 +41,7 @@ type
   TIdPersistent = TIdNetPersistent;
   TIdPersistentHelper = class helper (TIdNetPersistentHelper) for TIdPersistent
   public
-    constructor Create; overload; override;
+    constructor Create; override;
   end;
   TIdNativeComponent = TIdNetNativeComponent;
   TIdNativeComponentHelper = class helper (TIdNetNativeComponentHelper) for TIdNativeComponent
