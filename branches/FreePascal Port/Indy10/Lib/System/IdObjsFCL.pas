@@ -3769,7 +3769,7 @@ end;
 
 procedure TIdNetThread.DoTerminate;
 begin
-  if Assigned(FOnTerminate) then Synchronize(CallOnTerminate);
+  if Assigned(FOnTerminate) then CallOnTerminate; //Synchronize(CallOnTerminate);
 end;
 
 const
@@ -3866,6 +3866,7 @@ class procedure TIdNetThread.Synchronize(ASyncRec: TIdNetSynchronizeRecord; Queu
 var
   SyncProc: TIdNetSyncProc;
 begin
+  raise InvalidOperationException.Create('Synchronization is not supported on .NET');
   if System.Threading.Thread.CurrentThread = MainThread then
     ASyncRec.FMethod
   else
