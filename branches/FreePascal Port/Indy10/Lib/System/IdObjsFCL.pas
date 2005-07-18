@@ -649,7 +649,6 @@ type
     function GetPriority: TIdNetThreadPriority;
     procedure SetPriority(Value: TIdNetThreadPriority);
     procedure SetSuspended(Value: Boolean);
-    class procedure Synchronize(ASyncRec: TIdNetSynchronizeRecord; QueueEvent: Boolean = False); overload;
   protected
     procedure Initialize; virtual;
     procedure DoTerminate; virtual;
@@ -3769,7 +3768,7 @@ end;
 
 procedure TIdNetThread.DoTerminate;
 begin
-  if Assigned(FOnTerminate) then CallOnTerminate; //Synchronize(CallOnTerminate);
+  if Assigned(FOnTerminate) then CallOnTerminate;
 end;
 
 const
@@ -3812,28 +3811,13 @@ begin
 end;
 
 procedure TIdNetThread.Queue(AMethod: TIdNetThreadMethod);
-var
-  LSynchronize: TIdNetSynchronizeRecord;
 begin
-  LSynchronize.FThread := Self;
-  LSynchronize.FSynchronizeException := nil;
-  LSynchronize.FMethod := AMethod;
-  Synchronize(LSynchronize, True);
+  AMethod;
 end;
 
 class procedure TIdNetThread.Queue(AThread: TIdNetThread; AMethod: TIdNetThreadMethod);
-var
-  LSynchronize: TIdNetSynchronizeRecord;
 begin
-  if AThread <> nil then
-    AThread.Queue(AMethod)
-  else
-  begin
-    LSynchronize.FThread := nil;
-    LSynchronize.FSynchronizeException := nil;
-    LSynchronize.FMethod := AMethod;
-    Synchronize(LSynchronize, True);
-  end;
+  AMethod;
 end;
 
 class procedure TIdNetThread.RemoveQueuedEvents(AThread: TIdNetThread; AMethod: TIdNetThreadMethod);
@@ -3859,65 +3843,12 @@ end;
 
 class procedure TIdNetThread.StaticQueue(AThread: TIdNetThread; AMethod: TIdNetThreadMethod);
 begin
-  Queue(AThread, AMethod);
-end;
-
-class procedure TIdNetThread.Synchronize(ASyncRec: TIdNetSynchronizeRecord; QueueEvent: Boolean = False);
-var
-  SyncProc: TIdNetSyncProc;
-begin
-  raise InvalidOperationException.Create('Synchronization is not supported on .NET');
-  if System.Threading.Thread.CurrentThread = MainThread then
-    ASyncRec.FMethod
-  else
-  begin
-    if not QueueEvent then
-      SyncProc.Signal := System.Threading.ManualResetEvent.Create(False)
-    else
-      SyncProc.Signal := nil;
-    try
-      System.Threading.Monitor.Enter(ThreadLock);
-      try
-        SyncProc.Queued := QueueEvent; 
-        if SyncList = nil then
-          SyncList := TIdNetList.Create;
-        SyncProc.SyncRec := ASyncRec;
-        System.Threading.Monitor.Enter(SyncList);
-        try
-          SyncList.Add(TObject(SyncProc));
-        finally
-          System.Threading.Monitor.Exit(SyncList);
-        end;
-        SignalSyncEvent;
-        if Assigned(WakeMainThread) then
-          WakeMainThread(SyncProc.SyncRec.FThread);
-        if not QueueEvent then
-        begin 
-          System.Threading.Monitor.Exit(ThreadLock);
-          try
-            SyncProc.Signal.WaitOne;
-          finally
-            System.Threading.Monitor.Enter(ThreadLock);
-          end;
-        end;
-      finally
-        System.Threading.Monitor.Exit(ThreadLock);
-      end;
-    finally
-      if not QueueEvent then
-        SyncProc.Signal.Close;
-    end;
-    if not QueueEvent and Assigned(ASyncRec.FSynchronizeException) then 
-      raise ASyncRec.FSynchronizeException;
-  end;
+  AMethod;
 end;
 
 procedure TIdNetThread.Synchronize(Method: TIdNetThreadMethod);
 begin
-  FSynchronize.FThread := Self;
-  FSynchronize.FSynchronizeException := nil;
-  FSynchronize.FMethod := Method;
-  Synchronize(FSynchronize);
+  Method;
 end;
 
 procedure TIdNetThread.SetSuspended(Value: Boolean);
