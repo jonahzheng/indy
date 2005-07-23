@@ -35,9 +35,38 @@ type
     class function Win32MajorVersion : Integer;
     class function Win32MinorVersion : Integer;
     class function Win32BuildNumber : Integer;
+    class function OffsetFromUTC: TIdDateTimeBase;
   end;
 
 implementation
+
+class function OffsetFromUTC: TIdDateTimeBase;
+var
+  iBias: Integer;
+  tmez: TTimeZoneInformation;
+begin
+  Case GetTimeZoneInformation(tmez) of
+    TIME_ZONE_ID_INVALID:
+      raise EIdFailedToRetreiveTimeZoneInfo.Create(RSFailedTimeZoneInfo);
+    TIME_ZONE_ID_UNKNOWN  :
+       iBias := tmez.Bias;
+    TIME_ZONE_ID_DAYLIGHT :
+      iBias := tmez.Bias + tmez.DaylightBias;
+    TIME_ZONE_ID_STANDARD :
+      iBias := tmez.Bias + tmez.StandardBias;
+    else
+      raise EIdFailedToRetreiveTimeZoneInfo.Create(RSFailedTimeZoneInfo);
+  end;
+  {We use ABS because EncodeTime will only accept positve values}
+  Result := EncodeTime(Abs(iBias) div 60, Abs(iBias) mod 60, 0, 0);
+  {The GetTimeZone function returns values oriented towards convertin
+   a GMT time into a local time.  We wish to do the do the opposit by returning
+   the difference between the local time and GMT.  So I just make a positive
+   value negative and leave a negative value as positive}
+  if iBias > 0 then begin
+    Result := 0 - Result;
+  end;
+end;
 
 class function TIdSysWin32.Win32MinorVersion: Integer;
 begin

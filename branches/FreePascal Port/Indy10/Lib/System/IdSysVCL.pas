@@ -486,4 +486,60 @@ begin
   Result := SysUtils.IsLeapYear(Year);
 end;
 
+const
+  wdays: array[1..7] of string = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'    {Do not Localize}
+   , 'Sat'); {do not localize}
+  monthnames: array[1..12] of string = ('Jan', 'Feb', 'Mar', 'Apr', 'May'    {Do not Localize}
+   , 'Jun',  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'); {do not localize}
+
+class function TIdSysNet.DateTimeGMTToHttpStr(const GMTValue: TIdDateTimeBase) : String;
+// should adhere to RFC 2616
+
+var
+  wDay,
+  wMonth,
+  wYear: Word;
+begin
+  DecodeDate(GMTValue, wYear, wMonth, wDay);
+  Result := Format('%s, %.2d %s %.4d %s %s',    {do not localize}
+                   [wdays[DayOfWeek(GMTValue)], wDay, monthnames[wMonth],
+                    wYear, FormatDateTime(GMTValue, 'HH":"mm":"ss'), 'GMT']);  {do not localize}
+end;
+
+
+{This should never be localized}
+class function TIdSysNet.DateTimeToInternetStr(const Value: TIdDateTimeBase; const AIsGMT : Boolean = False) : String;
+var
+  wDay,
+  wMonth,
+  wYear: Word;
+begin
+  DecodeDate(Value, wYear, wMonth, wDay);
+  Result := Format('%s, %d %s %d %s %s',    {do not localize}
+                   [ wdays[DayOfWeek(Value)], wDay, monthnames[wMonth],
+                    wYear, FormatDateTime(Value, 'HH":"mm":"ss'),  {do not localize}
+                    DateTimeToGmtOffSetStr(OffsetFromUTC, AIsGMT)]);
+end;
+
+class function TIdSysNet.DateTimeToGmtOffSetStr(ADateTime: TIdDateTimeBase; SubGMT: Boolean): string;
+var
+  AHour, AMin, ASec, AMSec: Word;
+begin
+  if (ADateTime = 0.0) and SubGMT then
+  begin
+    Result := 'GMT'; {do not localize}
+    Exit;
+  end;
+  DecodeTime(ADateTime, AHour, AMin, ASec, AMSec);
+  Result := Format(' %0.2d%0.2d', [AHour, AMin]); {do not localize}
+  if ADateTime < 0.0 then
+  begin
+    Result[1] := '-'; {do not localize}
+  end
+  else
+  begin
+    Result[1] := '+';  {do not localize}
+  end;
+end;
+
 end.

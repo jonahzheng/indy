@@ -25,11 +25,22 @@ uses
   IdSysVCL;
 
 type
-  TIdSysLinux = class(TIdSysNativeVCL)
-  end;
-
   TIdDateTimeBase = TDateTime;
 
+  TIdSysLinux = class(TIdSysNativeVCL)
+  public
+    class function OffsetFromUTC: TIdDateTimeBase;
+  end;
+
+var
+  GOffsetFromUTC: TIdDateTimeBase = 0;
+
 implementation
+
+class function TIdSysLinux.OffsetFromUTC: TIdDateTimeBase;
+begin
+  //TODO: Fix OffsetFromUTC for Linux to be automatic from OS
+  Result := GOffsetFromUTC;
+end;
 
 end.

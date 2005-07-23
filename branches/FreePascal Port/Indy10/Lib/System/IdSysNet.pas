@@ -71,7 +71,6 @@ type
     class function FormatBuf(var Buffer: System.Text.StringBuilder; const Format: string;
       FmtLen: Cardinal; const Args: array of const): Cardinal;  overload; static;
     class function AnsiCompareText(const S1, S2: WideString): Integer; static;
-
     class function LastChars(const AStr : String; const ALen : Integer): String; static;
     class function AddMSecToTime(const ADateTime : TIdDateTimeBase; const AMSec : Integer): TIdDateTimeBase; static;
     class function StrToInt64(const S: string): Int64; overload; static;
@@ -96,7 +95,10 @@ type
         class function IntToStr(Value: Integer): string; overload; static;
     class function IntToHex(Value: Integer; Digits: Integer): string; overload; static;
     class function IntToHex(Value: Int64; Digits: Integer): string; overload; static;
-
+    class function DateTimeToInternetStr(const Value: TIdDateTimeBase; const AIsGMT : Boolean = False) : String;
+    class function DateTimeGMTToHttpStr(const GMTValue: TIdDateTimeBase) : String;
+    class function DateTimeToGmtOffSetStr(ADateTime: TIdDateTimeBase; SubGMT: Boolean): string;
+    class function OffsetFromUTC: TIdDateTimeBase; 
     class function IntToStr(Value: Int64): string; overload; static;
     class function UpperCase(const S: string): string;  static;
     class function LowerCase(const S: string): string;  static;
@@ -1222,6 +1224,67 @@ begin
   if Assigned(S) then
   begin
     Result := S.IndexOf(Substr) + 1;
+  end;
+end;
+
+class function TIdSysNet.OffsetFromUTC: TIdDateTimeBase;
+begin
+  Result := System.Timezone.CurrentTimezone.GetUTCOffset(DateTime.FromOADate(Now)).TotalDays;
+end;
+
+const
+  wdays: array[1..7] of string = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'    {Do not Localize}
+   , 'Sat'); {do not localize}
+  monthnames: array[1..12] of string = ('Jan', 'Feb', 'Mar', 'Apr', 'May'    {Do not Localize}
+   , 'Jun',  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'); {do not localize}
+
+class function TIdSysNet.DateTimeGMTToHttpStr(const GMTValue: TIdDateTimeBase) : String;
+// should adhere to RFC 2616
+
+var
+  wDay,
+  wMonth,
+  wYear: Word;
+begin
+  DecodeDate(GMTValue, wYear, wMonth, wDay);
+  Result := Format('%s, %.2d %s %.4d %s %s',    {do not localize}
+                   [wdays[DayOfWeek(GMTValue)], wDay, monthnames[wMonth],
+                    wYear, GMTValue.ToString('HH:mm:ss'), 'GMT']);  {do not localize}
+end;
+
+
+{This should never be localized}
+class function TIdSysNet.DateTimeToInternetStr(const Value: TIdDateTimeBase; const AIsGMT : Boolean = False) : String;
+var
+  wDay,
+  wMonth,
+  wYear: Word;
+begin
+  DecodeDate(Value, wYear, wMonth, wDay);
+  Result := Format('%s, %d %s %d %s %s',    {do not localize}
+                   [ wdays[DayOfWeek(Value)], wDay, monthnames[wMonth],
+                    wYear, Value.ToString('HH:mm:ss'),  {do not localize}
+                    DateTimeToGmtOffSetStr(OffsetFromUTC, AIsGMT)]);
+end;
+
+class function TIdSysNet.DateTimeToGmtOffSetStr(ADateTime: TIdDateTimeBase; SubGMT: Boolean): string;
+var
+  AHour, AMin, ASec, AMSec: Word;
+begin
+  if (ADateTime = 0.0) and SubGMT then
+  begin
+    Result := 'GMT'; {do not localize}
+    Exit;
+  end;
+  DecodeTime(ADateTime, AHour, AMin, ASec, AMSec);
+  Result := Format(' %0.2d%0.2d', [AHour, AMin]); {do not localize}
+  if ADateTime < 0.0 then
+  begin
+    Result[1] := '-'; {do not localize}
+  end
+  else
+  begin
+    Result[1] := '+';  {do not localize}
   end;
 end;
 
