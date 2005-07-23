@@ -642,7 +642,6 @@ type
     FFinished: Boolean;
     FReturnValue: Integer;
     FOnTerminate: TIdNetNotifyEvent;
-    FSynchronize: TIdNetSynchronizeRecord;
     FFatalException: TObject;
     procedure ThreadError(O: &Object);
     procedure CallOnTerminate;
@@ -737,7 +736,6 @@ var
   SyncList: TIdNetList;
   SyncEvent: System.Threading.ManualResetEvent;
   ThreadLock: &Object;
-  WakeMainThread: TIdNetNotifyEvent;
 
 type
   TIdNetSyncProc = record
