@@ -94,6 +94,10 @@ type
     class function ChangeFileExt(const FileName, Extension: string): string;
     class function IsLeapYear(Year: Word): Boolean;
     class function FloatToIntStr(const AFloat: Extended): String;
+    class function DateTimeGMTToHttpStr(const GMTValue: TIdDateTimeBase) : String;
+    class function DateTimeToInternetStr(const Value: TIdDateTimeBase; const AIsGMT : Boolean = False) : String;
+    class function DateTimeToGmtOffSetStr(ADateTime: TIdDateTimeBase; SubGMT: Boolean): string;
+    class function OffsetFromUTC: TIdDateTimeBase;  virtual; abstract;
   end;
 
 implementation
@@ -492,7 +496,7 @@ const
   monthnames: array[1..12] of string = ('Jan', 'Feb', 'Mar', 'Apr', 'May'    {Do not Localize}
    , 'Jun',  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'); {do not localize}
 
-class function TIdSysNet.DateTimeGMTToHttpStr(const GMTValue: TIdDateTimeBase) : String;
+class function TIdSysVCL.DateTimeGMTToHttpStr(const GMTValue: TIdDateTimeBase) : String;
 // should adhere to RFC 2616
 
 var
@@ -503,12 +507,12 @@ begin
   DecodeDate(GMTValue, wYear, wMonth, wDay);
   Result := Format('%s, %.2d %s %.4d %s %s',    {do not localize}
                    [wdays[DayOfWeek(GMTValue)], wDay, monthnames[wMonth],
-                    wYear, FormatDateTime(GMTValue, 'HH":"mm":"ss'), 'GMT']);  {do not localize}
+                    wYear, FormatDateTime('HH":"mm":"ss',GMTValue),'GMT']);  {do not localize}
 end;
 
 
 {This should never be localized}
-class function TIdSysNet.DateTimeToInternetStr(const Value: TIdDateTimeBase; const AIsGMT : Boolean = False) : String;
+class function TIdSysVCL.DateTimeToInternetStr(const Value: TIdDateTimeBase; const AIsGMT : Boolean = False) : String;
 var
   wDay,
   wMonth,
@@ -517,11 +521,11 @@ begin
   DecodeDate(Value, wYear, wMonth, wDay);
   Result := Format('%s, %d %s %d %s %s',    {do not localize}
                    [ wdays[DayOfWeek(Value)], wDay, monthnames[wMonth],
-                    wYear, FormatDateTime(Value, 'HH":"mm":"ss'),  {do not localize}
+                    wYear, FormatDateTime( 'HH":"mm":"ss', Value), {do not localize}
                     DateTimeToGmtOffSetStr(OffsetFromUTC, AIsGMT)]);
 end;
 
-class function TIdSysNet.DateTimeToGmtOffSetStr(ADateTime: TIdDateTimeBase; SubGMT: Boolean): string;
+class function TIdSysVCL.DateTimeToGmtOffSetStr(ADateTime: TIdDateTimeBase; SubGMT: Boolean): string;
 var
   AHour, AMin, ASec, AMSec: Word;
 begin

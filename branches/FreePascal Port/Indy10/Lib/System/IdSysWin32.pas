@@ -21,7 +21,8 @@ unit IdSysWin32;
 interface
 
 uses
-  Windows,
+
+
   IdSysNativeVCL,
   SysUtils;
 
@@ -35,19 +36,30 @@ type
     class function Win32MajorVersion : Integer;
     class function Win32MinorVersion : Integer;
     class function Win32BuildNumber : Integer;
-    class function OffsetFromUTC: TIdDateTimeBase;
+    class function OffsetFromUTC: TIdDateTimeBase; override;
   end;
 
-implementation
 
-class function OffsetFromUTC: TIdDateTimeBase;
+implementation
+uses  IdException, IdResourceStrings, Windows;
+//EIdException is only in IdSys and that causes a circular reference
+//if IdException is the interface section so we have to move the declaration
+//of our exception type down here.
+
+type
+  //This is called whenever there is a failure to retreive the time zone information
+  EIdFailedToRetreiveTimeZoneInfo = class(EIdException);
+
+class function TIdSysWin32.OffsetFromUTC: TIdDateTimeBase;
 var
   iBias: Integer;
   tmez: TTimeZoneInformation;
 begin
   Case GetTimeZoneInformation(tmez) of
     TIME_ZONE_ID_INVALID:
+    begin
       raise EIdFailedToRetreiveTimeZoneInfo.Create(RSFailedTimeZoneInfo);
+    end;
     TIME_ZONE_ID_UNKNOWN  :
        iBias := tmez.Bias;
     TIME_ZONE_ID_DAYLIGHT :
@@ -55,7 +67,9 @@ begin
     TIME_ZONE_ID_STANDARD :
       iBias := tmez.Bias + tmez.StandardBias;
     else
+    begin
       raise EIdFailedToRetreiveTimeZoneInfo.Create(RSFailedTimeZoneInfo);
+    end;
   end;
   {We use ABS because EncodeTime will only accept positve values}
   Result := EncodeTime(Abs(iBias) div 60, Abs(iBias) mod 60, 0, 0);
