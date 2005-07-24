@@ -45,7 +45,12 @@ uses
       {$IFDEF Linux}
       IdSysLinux;
       {$ELSE}
-      IdSysVCL;
+        {$IFDEF DOTNET}
+        IdSysVCL,
+        IdSysVCLNET;
+        {$ELSE}
+        IdSysVCL;
+      {$ENDIF}
       {$ENDIF}
     {$ENDIF}
   {$ENDIF}
@@ -60,7 +65,11 @@ type
       {$IFDEF Linux}
   Sys = TIdSysLinux;
       {$ELSE}
-      Sys = TIdSysVCL;
+        {$IFDEF DOTNET}
+        Sys = TIdSysVCLNET;
+        {$ELSE}
+        Sys = TIdSysVCL;
+        {$ENDIF}
       {$ENDIF}
     {$ENDIF}
   {$ENDIF}
