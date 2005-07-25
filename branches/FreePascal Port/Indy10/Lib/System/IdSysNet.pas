@@ -1261,7 +1261,7 @@ var
   wYear: Word;
 begin
   DecodeDate(Value, wYear, wMonth, wDay);
-  Result := &String.Format('{0}, {0} {0} {0} {0} {0}',    {do not localize}
+  Result := Format('%s, %d %s %d %s %s',    {do not localize}
                    [ wdays[DayOfWeek(Value)], wDay, monthnames[wMonth],
                     wYear, DateTime.FromOADate(Value).ToString('HH:mm:ss'),  {do not localize}
                     DateTimeToGmtOffSetStr(OffsetFromUTC, AIsGMT)]);
@@ -1277,7 +1277,7 @@ begin
     Exit;
   end;
   DecodeTime(ADateTime, AHour, AMin, ASec, AMSec);
-  Result := Format(' {0}{1}', [AHour.ToString("G2"), AMin.ToString("G2")]); {do not localize}
+  Result := Format(' {0}{1}', [AHour.ToString('G2'), AMin.ToString('G2')]); {do not localize}
   if ADateTime < 0.0 then
   begin
     Result[1] := '-'; {do not localize}
