@@ -80,15 +80,17 @@ type
       AOutStream: TIdStream);
   public
 
-    procedure DeflateStream(AStream : TIdStream; const ALevel : TIdCompressionLevel=0; const AOutStream : TIdStream=nil); override;
-    procedure InflateStream(AStream : TIdStream; const AOutStream : TIdStream=nil); override;
+    procedure DeflateStream(AInStream, AOutStream : TIdStream;
+      const ALevel : TIdCompressionLevel=0); override;
+    procedure InflateStream(AInStream, AOutStream : TIdStream); override;
 
-    procedure CompressStream(AStream : TIdStream; const ALevel : TIdCompressionLevel; const AWindowBits, AMemLevel,
-      AStrategy: Integer; AOutStream : TIdStream); override;
-    procedure DecompressStream(AStream : TIdStream; const AWindowBits : Integer; const AOutStream : TIdStream=nil); override;
-    procedure CompressFTPToIO(AStream : TIdStream; AIOHandler : TIdIOHandler; const ALevel, AWindowBits, AMemLevel,
+    procedure CompressStream(AInStream, AOutStream : TIdStream; const ALevel : TIdCompressionLevel; const AWindowBits, AMemLevel,
       AStrategy: Integer); override;
-     procedure DecompressFTPFromIO(AIOHandler : TIdIOHandler; const AWindowBits : Integer; AOutputStream : TIdStream); override;
+    procedure DecompressStream(AInStream, AOutStream : TIdStream; const AWindowBits : Integer); override;
+    procedure CompressFTPToIO(AInStream : TIdStream; AIOHandler : TIdIOHandler;
+      const ALevel, AWindowBits, AMemLevel, AStrategy: Integer); override;
+     procedure DecompressFTPFromIO(AIOHandler : TIdIOHandler; AOutputStream : TIdStream;
+       const AWindowBits : Integer); override;
   end;
 
   EIdCompressionException = class(EIdException);
@@ -189,8 +191,8 @@ begin
   ZDecompressCheck(inflateEnd(LZstream));
 end;
 
-procedure TIdCompressorZLibEx.DecompressFTPFromIO(AIOHandler: TIdIOHandler;
-  const AWindowBits: Integer; AOutputStream: TIdStream);
+procedure TIdCompressorZLibEx.DecompressFTPFromIO(AIOHandler : TIdIOHandler; AOutputStream : TIdStream;
+       const AWindowBits : Integer);
 {Note that much of this is taken from the ZLibEx unit and adapted to use the IOHandler}
 var
   Lzstream: TZStreamRec;
@@ -222,9 +224,9 @@ begin
   end;
 end;
 
-procedure TIdCompressorZLibEx.CompressFTPToIO(AStream: TIdStream;
-  AIOHandler: TIdIOHandler; const ALevel, AWindowBits, AMemLevel,
-  AStrategy: Integer);
+procedure TIdCompressorZLibEx.CompressFTPToIO(AInStream : TIdStream;
+      AIOHandler : TIdIOHandler;
+      const ALevel, AWindowBits, AMemLevel, AStrategy: Integer);
 {Note that much of this is taken from the ZLibEx unit and adapted to use the IOHandler}
 var
   LCompressRec : TZStreamRec;
@@ -235,12 +237,12 @@ var
   inSize   : Integer;
   outSize  : Integer;
 begin
-  AIOHandler.BeginWork(wmWrite,AStream.Size);
+  AIOHandler.BeginWork(wmWrite,AInStream.Size);
   FillChar(LCompressRec,SizeOf(TZStreamRec),0);
   ZCompressCheck( deflateInit2_(LCompressRec, ALevel, Z_DEFLATED, AWindowBits, AMemLevel,
       AStrategy, ZLIB_VERSION,  SizeOf(LCompressRec)));
 
-  inSize := AStream.Read(inBuffer,bufferSize);
+  inSize := AInStream.Read(inBuffer,bufferSize);
 
   while inSize > 0 do
   begin
@@ -261,7 +263,7 @@ begin
       end;
     until ( LCompressRec.avail_in = 0) and ( LCompressRec.avail_out > 0);
 
-    inSize := AStream.Read(inBuffer,bufferSize);
+    inSize := AInStream.Read(inBuffer,bufferSize);
   end;
 
   repeat
@@ -276,7 +278,7 @@ begin
    // outStream.Write(outBuffer,outSize);
     if outSize <> 0 then
     begin
-    AIOHandler.Write( RawToBytes(outBuffer,outSize));
+      AIOHandler.Write( RawToBytes(outBuffer,outSize));
     end;
   until (zresult = Z_STREAM_END) and ( LCompressRec.avail_out > 0);
 
@@ -284,10 +286,13 @@ begin
   AIOHandler.EndWork(wmWrite);
 end;
 
-procedure TIdCompressorZLibEx.CompressStream(AStream : TIdStream; const ALevel : TIdCompressionLevel; const AWindowBits, AMemLevel,
-      AStrategy: Integer; AOutStream : TIdStream);
-var
-    LCompressRec: TZStreamRec;
+procedure TIdCompressorZLibEx.CompressStream(AInStream,AOutStream : TIdStream;
+  const ALevel : TIdCompressionLevel;
+  const AWindowBits, AMemLevel, AStrategy: Integer);
+begin
+   IdZLibEx.ZCompressStream2(AInStream,AOutStream,ALevel,AWindowBits,AMemLevel,AStrategy);
+end;
+{
 var
   Buffer: array[0..1023] of Char;
    LSendBuf: Pointer;
@@ -307,9 +312,9 @@ begin
     end;
     try
       // Make sure the Send buffer is large enough to hold the input stream data
-      if AStream.Size > LSendSize then
+      if AInStream.Size > LSendSize then
       begin
-        if AStream.Size > 2048 then
+        if AInStream.Size > 2048 then
         begin
           LSendSize := AStream.Size + (AStream.Size + 1023) mod 1024
         end
@@ -365,10 +370,13 @@ begin
       end;
     end;
   end;
-end;
+end;  }
 
-procedure TIdCompressorZLibEx.DecompressStream(AStream : TIdStream; const AWindowBits : Integer; const AOutStream : TIdStream=nil);
-var
+procedure TIdCompressorZLibEx.DecompressStream(AInStream, AOutStream : TIdStream; const AWindowBits : Integer);
+begin
+  ZDecompressStream2(AInStream,AOutStream,AWindowBits);
+end;
+{var
   Buffer: array[0..2047] of Char;
   nChars, C: Integer;
   StreamEnd: Boolean;
@@ -446,10 +454,13 @@ begin
         FreeMem(LRecvBuf);
       end;
     end;
+end;      }
+
+procedure TIdCompressorZLibEx.DeflateStream(AInStream, AOutStream : TIdStream; const ALevel : TIdCompressionLevel=0);
+begin
+  ZCompressStream(AInStream,AOutStream,ALevel);
 end;
-
-procedure TIdCompressorZLibEx.DeflateStream(AStream : TIdStream; const ALevel : TIdCompressionLevel=0; const AOutStream : TIdStream=nil);
-
+{
 var 
     LCompressRec: TZStreamRec;
 var
@@ -528,10 +539,13 @@ begin
       end;
     end;
   end;
-end;
+end;  }
 
-procedure TIdCompressorZLibEx.InflateStream(AStream : TIdStream; const AOutStream : TIdStream=nil);
-var
+procedure TIdCompressorZLibEx.InflateStream(AInStream, AOutStream : TIdStream);
+begin
+  ZDecompressStream(AInStream,AOutStream);
+end;
+{var
   Buffer: array[0..2047] of Char;
   nChars, C: Integer;
   StreamEnd: Boolean;
@@ -613,6 +627,6 @@ begin
         FreeMem(LRecvBuf);
       end;
     end;
-end;
+end;    }
 
 end.
