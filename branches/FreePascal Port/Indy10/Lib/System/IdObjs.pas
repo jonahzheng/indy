@@ -54,6 +54,7 @@ type
   TIdMemoryStream = TIdNetMemoryStream;
   TIdStringStream = TIdNetStringStream;
   TIdFileStream = TIdNetFileStream;
+  TIdComponentName = TIdNetComponentName;
   TIdSeekOrigin = TIdNetSeekOrigin;
   TIdList = TIdNetList;
   TIdCollection = TIdNetCollection;
@@ -86,6 +87,7 @@ type
   TIdStrings = Classes.TStrings;
   TIdStringList = Classes.TStringList;
   TIdStream = TStream;
+  TIdComponentName = TComponentName;
   TIdMemoryStream = TMemoryStream;
   TIdStringStream = TStringStream;
   TIdFileStream = TFileStream;
@@ -166,6 +168,9 @@ const
   csDesigning = Classes.csDesigning;
   opRemove = Classes.opRemove;
 {$ENDIF}
+  iddupIgnore = dupIgnore;
+  iddupAccept = dupAccept;
+  iddupError = dupError;
 
 
 implementation

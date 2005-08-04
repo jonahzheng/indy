@@ -47,7 +47,7 @@ type
         csFreeNotification);
   TIdNetNativeOperation = (opInsert, opRemove);
   TIdNetNativeComponentSite = class;
-
+  TIdNetComponentName = string;
   TIdNetNativeComponent = class(Component, ISupportInitialize)
   private
     FFreeNotifies: TIdNetList;
