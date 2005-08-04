@@ -88,8 +88,9 @@ type
     class function EncodeDate(Year, Month, Day: Word): TDateTime;
     class function FileAge(const FileName: string): TDateTime;
     class function DirectoryExists(const Directory: string): Boolean;
-    class function DeleteFile(const FileName: string): Boolean; 
-    class function ExtractFileName(const FileName: string): string; 
+    class function DeleteFile(const FileName: string): Boolean;
+    class function ExtractFilePath(const FileName: string): string;
+    class function ExtractFileName(const FileName: string): string;
     class function ExtractFileExt(const FileName: string): string;
     class function ChangeFileExt(const FileName, Extension: string): string;
     class function IsLeapYear(Year: Word): Boolean;
@@ -544,6 +545,11 @@ begin
   begin
     Result[1] := '+';  {do not localize}
   end;
+end;
+
+class function TIdSysVCL.ExtractFilePath(const FileName: string): string;
+begin
+  Result := SysUtils.ExtractFilePath(FileName);
 end;
 
 end.
