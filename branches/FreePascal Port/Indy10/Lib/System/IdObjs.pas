@@ -100,6 +100,7 @@ type
   TIdOwnedCollection = TOwnedCollection;
   TIdMultiReadExclusiveWriteSynchronizer = TMultiReadExclusiveWriteSynchronizer;
 {$ENDIF}
+  TIdComponentClass = class of TIdNativeComponent;
 
 const
 {$IFDEF DOTNET}
