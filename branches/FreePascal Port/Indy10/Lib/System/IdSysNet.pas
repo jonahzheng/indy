@@ -61,6 +61,8 @@ type
   TIdDateTimeBase = &Double;
 
   TIdSysNet = class(TIdSysBase)
+  private
+    class function AnsiCompareStr(const S1, S2: string): Integer; static;
   protected
     class function AddStringToFormat(SB: StringBuilder; I: Integer; S: String): Integer; static;
     class procedure FmtStr(var Result: string; const Format: string;
@@ -115,6 +117,7 @@ type
     class function DirectoryExists(const Directory: string): Boolean; static;
     class function DeleteFile(const FileName: string): Boolean; static;
     class function ExtractFileName(const FileName: string): string; static;
+    class function ExtractFilePath(const AFileName: string) : string; static;
     class function ExtractFileExt(const FileName: string): string; static;
     class function ChangeFileExt(const FileName, Extension: string): string; static;
     class function LastDelimiter(const Delimiters, S: string): Integer; static;
@@ -1286,6 +1289,16 @@ begin
   begin
     Result[1] := '+';  {do not localize}
   end;
+end;
+
+class function TIdSysNet.ExtractFilePath(const AFileName: string): string;
+begin
+  Result := Path.GetDirectoryName(AFileName);
+end;
+
+class function TIdSysNet.AnsiCompareStr(const S1, S2: WideString): Integer;
+begin
+  Result := S1.CompareTo(S2);
 end;
 
 end.
