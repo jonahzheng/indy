@@ -73,7 +73,6 @@ type
     procedure SetTag(const Value: &Object);
     function GetSelfOwner: TIdNetNativeComponent;
   public
-    constructor Create(AOwner: TIdNetNativeComponent); reintroduce; virtual;
     procedure FreeNotification(AComponent: TIdNetNativeComponent);
     procedure RemoveFreeNotification(AComponent: TIdNetNativeComponent);
     property ComponentState: TIdNetNativeComponentState read GetComponentState;
@@ -84,6 +83,8 @@ type
   end;
 
   TIdNetNativeComponentHelper = class helper(TIdNetPersistentHelper) for TIdNetNativeComponent
+  public
+    constructor Create(AOwner: TIdNetNativeComponent); reintroduce; virtual;
   end;
 
   TIdNetNativeComponentSite = class(&Object, ISite)
@@ -4253,12 +4254,6 @@ begin
   FComponentState := [];
 end;
 
-constructor TIdNetNativeComponent.Create(AOwner: TIdNetNativeComponent);
-begin
-  inherited Create;
-  FOwner := AOwner;
-end;
-
 function TIdNetNativeComponent.GetOwner: TIdNetPersistent;
 begin
   Result := FOwner;
@@ -4274,6 +4269,12 @@ begin
     end;
   end;
   Result := inherited AddObject(S, AObject);
+end;
+
+constructor TIdNetNativeComponentHelper.Create(AOwner: TIdNetNativeComponent);
+begin
+  inherited Create;
+  FOwner := AOwner;
 end;
 
 initialization
