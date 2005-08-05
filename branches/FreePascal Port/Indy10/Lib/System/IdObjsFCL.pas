@@ -32,13 +32,15 @@ type
   EWriteError = Exception;
   TByteArray = array of Byte;
   TIdNetPersistent = MarshalByRefObject;
+  TIdNetNativeComponent = class;
   TIdNetPersistentHelper = class helper for TIdNetPersistent
   protected
     procedure AssignTo(Dest: TIdNetPersistent); virtual;
     function GetOwner: TIdNetPersistent; virtual;
     procedure InsideCreate; virtual;
   public
-    constructor Create; reintroduce; virtual;
+    constructor Create; overload; virtual;
+    constructor Create(AOwner: TIdNetNativeComponent); overload; virtual;
     procedure Assign(ASource: TIdNetPersistent); virtual;
     function GetNamePath: string; virtual;
   end;
@@ -53,19 +55,35 @@ type
     FFreeNotifies: TIdNetList;
     FComponents: TIdNetList;
     FComponentState: TIdNetNativeComponentState;
+    FOwner: TIdNetNativeComponent;
     procedure RemoveNotification(AComponent: TIdNetNativeComponent);
   protected
     function GetComponentState: TIdNetNativeComponentState; virtual;
     procedure BeginInit;
     procedure EndInit;
     procedure Loaded; virtual;
+    function GetOwner: TIdNetPersistent; override;
     procedure InsideCreate; override;
     procedure Notification(AComponent: TIdNetNativeComponent;
       Operation: TIdNetNativeOperation); virtual;
+    function GetSiteObject: TIdNetNativeComponentSite;
+    function GetName: string;
+    function GetTag: &Object;
+    procedure SetName(const Value: TIdNetComponentName); virtual;
+    procedure SetTag(const Value: &Object);
+    function GetSelfOwner: TIdNetNativeComponent;
   public
+    constructor Create(AOwner: TIdNetNativeComponent); reintroduce; virtual;
     procedure FreeNotification(AComponent: TIdNetNativeComponent);
     procedure RemoveFreeNotification(AComponent: TIdNetNativeComponent);
     property ComponentState: TIdNetNativeComponentState read GetComponentState;
+    property Owner: TIdNetNativeComponent read GetSelfOwner;
+  published
+    property Name: string read GetName write SetName stored False;
+    property Tag: &Object read GetTag write SetTag;
+  end;
+
+  TIdNetNativeComponentHelper = class helper(TIdNetPersistentHelper) for TIdNetNativeComponent
   end;
 
   TIdNetNativeComponentSite = class(&Object, ISite)
@@ -85,23 +103,6 @@ type
 
     function GetService(AType: System.Type): &Object;
     constructor Create(AInstance, AOwner: TIdNetNativeComponent); reintroduce;
-  end;
-
-  TIdNetNativeComponentHelper = class helper(TIdNetPersistentHelper) for TIdNetNativeComponent
-  private
-  protected
-    function GetSiteObject: TIdNetNativeComponentSite;
-    function GetName: string;
-    function GetTag: &Object;
-    procedure SetName(const Value: string);
-    procedure SetTag(const Value: &Object);
-    function GetSelfOwner: TIdNetNativeComponent;
-  public
-    property Owner: TIdNetNativeComponent read GetSelfOwner;
-  published
-    property Name: string read GetName write SetName stored False;
-    property Tag: &Object read GetTag write SetTag;
-
   end;
 
   TIdNetMultiReadExclusiveWriteSynchronizer = class
@@ -470,7 +471,7 @@ type
   protected
     FCollection: StringCollection;
     FObjectArray: ArrayList;
-
+    FDuplicates: TIdDuplicates;
     //
     function Get(Index: Integer): string; override;
     function GetCount: Integer; override;
@@ -484,10 +485,11 @@ type
     constructor Create(AValue: StringCollection); reintroduce; overload;
     constructor Create(); overload;
     procedure CopyTo(ADest: &Array; AIndex: Integer); override;
+    function AddObject(S: string; AObject: &Object): Integer; override;
     destructor Destroy; override;
     procedure Clear; override;
-
     class operator Implicit(const aValue: TIdStringListFCL): StringCollection;
+    property Duplicates: TIdDuplicates read FDuplicates write FDuplicates;
   end;
 
   TIdNetListSortCompare = function (Item1, Item2: &Object): Integer;
@@ -4091,27 +4093,27 @@ end;
 
 { TIdNetNativeComponentHelper }
 
-function TIdNetNativeComponentHelper.GetName: string;
+function TIdNetNativeComponent.GetName: string;
 begin
   Result := GetSiteObject.FName;
 end;
 
-procedure TIdNetNativeComponentHelper.SetName(const Value: string);
+procedure TIdNetNativeComponent.SetName(const Value: string);
 begin
   GetSiteObject.FName := Value;
 end;
 
-function TIdNetNativeComponentHelper.GetTag: &Object;
+function TIdNetNativeComponent.GetTag: &Object;
 begin
   Result := GetSiteObject.FTag;
 end;
 
-procedure TIdNetNativeComponentHelper.SetTag(const Value: &Object);
+procedure TIdNetNativeComponent.SetTag(const Value: &Object);
 begin
   GetSiteObject.FTag := Value;
 end;
 
-function TIdNetNativeComponentHelper.GetSiteObject: TIdNetNativeComponentSite;
+function TIdNetNativeComponent.GetSiteObject: TIdNetNativeComponentSite;
 begin
   if Site = nil then
     Site := TIdNetNativeComponentSite.Create(Self, nil);
@@ -4218,7 +4220,7 @@ begin
   FDesignMode := False;
 end;
 
-function TIdNetNativeComponentHelper.GetSelfOwner: TIdNetNativeComponent;
+function TIdNetNativeComponent.GetSelfOwner: TIdNetNativeComponent;
 begin
   Result := TIdNetNativeComponent(TIdNetNativeComponent(Self).GetOwner);
 end;
@@ -4240,10 +4242,38 @@ procedure TIdNetPersistentHelper.InsideCreate;
 begin
 end;
 
+constructor TIdNetPersistentHelper.Create(AOwner: TIdNetNativeComponent);
+begin
+  inherited Create;
+end;
+
 procedure TIdNetNativeComponent.InsideCreate;
 begin
   inherited InsideCreate;
   FComponentState := [];
+end;
+
+constructor TIdNetNativeComponent.Create(AOwner: TIdNetNativeComponent);
+begin
+  inherited Create;
+  FOwner := AOwner;
+end;
+
+function TIdNetNativeComponent.GetOwner: TIdNetPersistent;
+begin
+  Result := FOwner;
+end;
+
+function TIdStringListFCL.AddObject(S: string; AObject: &Object): Integer;
+begin
+  if IndexOf(S) > -1 then
+  begin
+    case Duplicates of
+      dupIgnore: Exit;
+      dupError: raise Exception.Create('Duplicate items in stringlist not allowed!');
+    end;
+  end;
+  Result := inherited AddObject(S, AObject);
 end;
 
 initialization
