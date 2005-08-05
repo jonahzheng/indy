@@ -98,7 +98,7 @@ type
     class function DateTimeGMTToHttpStr(const GMTValue: TIdDateTimeBase) : String;
     class function DateTimeToInternetStr(const Value: TIdDateTimeBase; const AIsGMT : Boolean = False) : String;
     class function DateTimeToGmtOffSetStr(ADateTime: TIdDateTimeBase; SubGMT: Boolean): string;
-    class function OffsetFromUTC: TIdDateTimeBase;  virtual; abstract;
+    class function OffsetFromUTC: TIdDateTimeBase;
   end;
 
 implementation
@@ -175,6 +175,11 @@ end;
 class procedure TIdSysVCL.Abort;
 begin
   SysUtils.Abort;
+end;
+
+class function TIdSysVCL.OffsetFromUTC: TIdDateTimeBase;
+begin
+  Result := 0;
 end;
 
 class function TIdSysVCL.FileExists(const FileName: string): Boolean;

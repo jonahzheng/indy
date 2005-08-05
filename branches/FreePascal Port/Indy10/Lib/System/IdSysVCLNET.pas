@@ -6,7 +6,7 @@ uses IdSysVCL;
 type
   TIdSysVCLNET = class(TIdSysVCL)
   public
-    class function OffsetFromUTC: TIdDateTimeBase; override;
+    class function OffsetFromUTC: TIdDateTimeBase;// override;
 
   end;
 

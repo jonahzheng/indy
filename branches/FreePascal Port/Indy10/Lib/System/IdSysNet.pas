@@ -62,7 +62,6 @@ type
 
   TIdSysNet = class(TIdSysBase)
   private
-    class function AnsiCompareStr(const S1, S2: string): Integer; static;
   protected
     class function AddStringToFormat(SB: StringBuilder; I: Integer; S: String): Integer; static;
     class procedure FmtStr(var Result: string; const Format: string;
@@ -1294,11 +1293,6 @@ end;
 class function TIdSysNet.ExtractFilePath(const AFileName: string): string;
 begin
   Result := Path.GetDirectoryName(AFileName);
-end;
-
-class function TIdSysNet.AnsiCompareStr(const S1, S2: WideString): Integer;
-begin
-  Result := S1.CompareTo(S2);
 end;
 
 end.
