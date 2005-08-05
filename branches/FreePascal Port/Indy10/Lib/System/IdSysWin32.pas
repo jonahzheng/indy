@@ -36,7 +36,7 @@ type
     class function Win32MajorVersion : Integer;
     class function Win32MinorVersion : Integer;
     class function Win32BuildNumber : Integer;
-    class function OffsetFromUTC: TIdDateTimeBase; override;
+    class function OffsetFromUTC: TIdDateTimeBase;// override;
   end;
 
 
