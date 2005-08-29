@@ -71,7 +71,7 @@ uses
   IdIOHandler,
   IdObjs,
   IdZLibCompressorBase,
-  IdZLibEx;
+  IdZLib;
 
 type
   TIdCompressorZLibEx = class(TIdZLibCompressorBase)
@@ -155,7 +155,7 @@ begin
       LZstream.next_out := outBuffer;
       LZstream.avail_out := bufferSize;
 
-      ZDecompressCheck(inflate(LZstream,Z_NO_FLUSH));
+      DCheck(inflate(LZstream,Z_NO_FLUSH));
       outSize := bufferSize - LZstream.avail_out;
       AOutStream.Write(outBuffer,outSize);
     until (LZstream.avail_in = 0) and (LZstream.avail_out > 0);
@@ -181,14 +181,14 @@ begin
       zresult := inflate(LZstream,Z_FINISH);
       if zresult<>Z_BUF_ERROR then
       begin
-        zresult := ZDecompressCheck(zresult);
+        zresult := DCheck(zresult);
       end;
       outSize := bufferSize - LZstream.avail_out;
       AOutStream.Write(outBuffer,outSize);
 
     until ((zresult = Z_STREAM_END) and (LZstream.avail_out > 0)) or (zresult = Z_BUF_ERROR);
 
-  ZDecompressCheck(inflateEnd(LZstream));
+  DCheck(inflateEnd(LZstream));
 end;
 
 procedure TIdCompressorZLibEx.DecompressFTPFromIO(AIOHandler : TIdIOHandler; AOutputStream : TIdStream;
@@ -214,9 +214,9 @@ begin
     begin
       LWinBits := Abs( LWinBits) + 32;
     end;
-    LZstream.zalloc := zcalloc;
-    LZstream.zfree := zcfree;
-    ZDecompressCheck(inflateInit2_(Lzstream,LWinBits,ZLIB_VERSION,SizeOf(TZStreamRec)));
+    LZstream.zalloc := zlibAllocMem;
+    LZstream.zfree := zlibFreeMem;
+    DCheck(inflateInit2_(Lzstream,LWinBits,ZLIB_VERSION,SizeOf(TZStreamRec)));
 
     InternalDecompressStream(Lzstream,AIOHandler,AOutputStream);
   finally
@@ -239,7 +239,7 @@ var
 begin
   AIOHandler.BeginWork(wmWrite,AInStream.Size);
   FillChar(LCompressRec,SizeOf(TZStreamRec),0);
-  ZCompressCheck( deflateInit2_(LCompressRec, ALevel, Z_DEFLATED, AWindowBits, AMemLevel,
+  CCheck( deflateInit2_(LCompressRec, ALevel, Z_DEFLATED, AWindowBits, AMemLevel,
       AStrategy, ZLIB_VERSION,  SizeOf(LCompressRec)));
 
   inSize := AInStream.Read(inBuffer,bufferSize);
@@ -253,7 +253,7 @@ begin
       LCompressRec.next_out := outBuffer;
       LCompressRec.avail_out := bufferSize;
 
-      ZCompressCheck(deflate(LCompressRec,Z_NO_FLUSH));
+      CCheck(deflate(LCompressRec,Z_NO_FLUSH));
 
       // outSize := zstream.next_out - outBuffer;
       outSize := bufferSize - LCompressRec.avail_out;
@@ -270,7 +270,7 @@ begin
     LCompressRec.next_out := outBuffer;
     LCompressRec.avail_out := bufferSize;
 
-    zresult := ZCompressCheck(deflate( LCompressRec,Z_FINISH));
+    zresult := CCheck(deflate( LCompressRec,Z_FINISH));
 
     // outSize := zstream.next_out - outBuffer;
     outSize := bufferSize -  LCompressRec.avail_out;
@@ -282,351 +282,31 @@ begin
     end;
   until (zresult = Z_STREAM_END) and ( LCompressRec.avail_out > 0);
 
-  ZCompressCheck(deflateEnd(LCompressRec));
+  CCheck(deflateEnd(LCompressRec));
   AIOHandler.EndWork(wmWrite);
 end;
 
 procedure TIdCompressorZLibEx.CompressStream(AInStream,AOutStream : TIdStream;
   const ALevel : TIdCompressionLevel;
   const AWindowBits, AMemLevel, AStrategy: Integer);
+
 begin
-   IdZLibEx.ZCompressStream2(AInStream,AOutStream,ALevel,AWindowBits,AMemLevel,AStrategy);
+  IdZLib.CompressStream(AInStream,AOutStream,ALevel,AWindowBits,AMemLevel,AStrategy);
 end;
-{
-var
-  Buffer: array[0..1023] of Char;
-   LSendBuf: Pointer;
-   LSendCount, LSendSize: Int64;
-begin
-  if ALevel in [1..9] then
-  begin
-    LSendSize := 0;
-    LSendBuf := nil;
-    //initialization
-    LCompressRec.zalloc := zcalloc;
-    LCompressRec.zfree := zcfree;
-    if deflateInit2_(LCompressRec, ALevel, Z_DEFLATED, AWindowBits, AMemLevel,
-      AStrategy, ZLIB_VERSION,  SizeOf(LCompressRec)) <> Z_OK then
-    begin
-      raise EIdCompressorInitFailure.Create(RSZLCompressorInitializeFailure);
-    end;
-    try
-      // Make sure the Send buffer is large enough to hold the input stream data
-      if AInStream.Size > LSendSize then
-      begin
-        if AInStream.Size > 2048 then
-        begin
-          LSendSize := AStream.Size + (AStream.Size + 1023) mod 1024
-        end
-        else
-        begin
-          LSendSize := 2048;
-        end;
-        ReallocMem(LSendBuf, LSendSize);
-      end;
-      // Get the data from the input stream and save it off
-      LSendCount := AStream.Read(LSendBuf^, AStream.Size);
-      LCompressRec.next_in := LSendBuf;
-      LCompressRec.avail_in := LSendCount;
-      LCompressRec.avail_out := 0;
-
-      if Assigned(AOutStream) then
-      begin
-        AOutStream.Size := 0;
-      end
-      else
-      begin
-        // reset and clear the input stream in preparation for compression
-        AStream.Size := 0;
-      end;
-      // As long as data is being outputted, keep compressing
-      while LCompressRec.avail_out = 0 do
-      begin
-        LCompressRec.next_out := Buffer;
-        LCompressRec.avail_out := SizeOf(Buffer);
-        case deflate(LCompressRec, Z_SYNC_FLUSH) of
-          Z_STREAM_ERROR,
-          Z_DATA_ERROR,
-          Z_MEM_ERROR: raise EIdCompressionError.Create(RSZLCompressionError);
-        end;
-
-        if Assigned(AOutStream) then
-        begin
-          AOutStream.Write(Buffer, SizeOf(Buffer) - LCompressRec.avail_out);
-        end
-        else
-        begin
-          // Place the compressed data back into the input stream
-          AStream.Write(Buffer, SizeOf(Buffer) - LCompressRec.avail_out);
-        end;
-      end;
-    //finalization cleanup
-    finally
-      deflateEnd(LCompressRec);
-      FillChar(LCompressRec, SizeOf(LCompressRec), 0);
-      if LSendBuf<>nil then
-      begin
-        FreeMem(LSendBuf);
-      end;
-    end;
-  end;
-end;  }
 
 procedure TIdCompressorZLibEx.DecompressStream(AInStream, AOutStream : TIdStream; const AWindowBits : Integer);
 begin
-  ZDecompressStream2(AInStream,AOutStream,AWindowBits);
-end;
-{var
-  Buffer: array[0..2047] of Char;
-  nChars, C: Integer;
-  StreamEnd: Boolean;
-  LDecompressRec: TZStreamRec;
-  LRecvCount, LRecvSize: Int64;
-  LRecvBuf: Pointer;
-begin
-    LRecvCount := 0;
-    LRecvSize := 0;
-    LRecvBuf := nil;
-    //initialization section
-    LDecompressRec.zalloc := zcalloc;
-    LDecompressRec.zfree := zcfree;
-    if inflateInit2_(LDecompressRec, AWindowBits, zlib_Version, SizeOf(LDecompressRec)) <> Z_OK then
-    begin
-      raise EIdDecompressorInitFailure.Create(RSZLDecompressorInitializeFailure);
-    end;
-    try
-      //decompression
-      StreamEnd := False;
-      repeat
-        nChars := AStream.Read(Buffer, SizeOf(Buffer));
-        if nChars = 0 then
-        begin
-          Break;
-        end;
-        LDecompressRec.next_in := Buffer;
-        LDecompressRec.avail_in := nChars;
-        LDecompressRec.total_in := 0;
-        while LDecompressRec.avail_in > 0 do
-        begin
-          if LRecvCount = LRecvSize then
-          begin
-            if LRecvSize = 0 then
-            begin
-              LRecvSize := 2048;
-            end
-            else
-            begin
-              Inc(LRecvSize, 1024);
-            end;
-            ReallocMem(LRecvBuf, LRecvSize);
-          end;
-          LDecompressRec.next_out := PChar(LRecvBuf) + LRecvCount;
-          C := LRecvSize - LRecvCount;
-          LDecompressRec.avail_out := C;
-          LDecompressRec.total_out := 0;
-          case inflate(LDecompressRec, Z_NO_FLUSH) of
-            Z_STREAM_END:
-              StreamEnd := True;
-            Z_STREAM_ERROR,
-            Z_DATA_ERROR,
-            Z_MEM_ERROR:
-              raise EIdDecompressionError.Create(RSZLDecompressionError);
-          end;
-          Inc(LRecvCount, C - LDecompressRec.avail_out);
-        end;
-      until StreamEnd;
-      if Assigned(AOutStream) then
-      begin
-        AOutStream.Size := 0;
-        AOutStream.Write(LRecvBuf^, LRecvCount);
-      end
-      else
-      begin
-        AStream.Size := 0;
-        AStream.Write(LRecvBuf^, LRecvCount);
-      end;
-    finally
-      //deinitialization
-      inflateEnd(LDecompressRec);
-      FillChar(LDecompressRec, SizeOf(LDecompressRec), 0);
-      if LRecvBuf<>nil then
-      begin
-        FreeMem(LRecvBuf);
-      end;
-    end;
-end;      }
+  IdZLib.DeCompressStream(AInStream,AOutStream, AWindowBits);
+end;    
 
 procedure TIdCompressorZLibEx.DeflateStream(AInStream, AOutStream : TIdStream; const ALevel : TIdCompressionLevel=0);
 begin
-  ZCompressStream(AInStream,AOutStream,ALevel);
+  IdZLib.CompressStream(AInStream,AOutStream,ALevel);
 end;
-{
-var 
-    LCompressRec: TZStreamRec;
-var
-  Buffer: array[0..1023] of Char;
-   LSendBuf: Pointer;
-   LSendCount, LSendSize: Int64;
-begin
-  if ALevel in [1..9] then
-  begin
-    LSendSize := 0;
-    LSendBuf := nil;
-    //initialization
-    LCompressRec.zalloc := zcalloc;
-    LCompressRec.zfree := zcfree;
-    if deflateInit_(LCompressRec, ALevel, ZLIB_VERSION,  SizeOf(LCompressRec)) <> Z_OK then
-    begin
-      raise EIdCompressorInitFailure.Create(RSZLCompressorInitializeFailure);
-    end;
-    try
-      // Make sure the Send buffer is large enough to hold the input stream data
-      if AStream.Size > LSendSize then
-      begin
-        if AStream.Size > 2048 then
-        begin
-          LSendSize := AStream.Size + (AStream.Size + 1023) mod 1024
-        end
-        else
-        begin
-          LSendSize := 2048;
-        end;
-        ReallocMem(LSendBuf, LSendSize);
-      end;
-      // Get the data from the input stream and save it off
-      LSendCount := AStream.Read(LSendBuf^, AStream.Size);
-      LCompressRec.next_in := LSendBuf;
-      LCompressRec.avail_in := LSendCount;
-      LCompressRec.avail_out := 0;
-      if Assigned(AOutStream) then
-      begin
-        AOutStream.Size := 0;
-      end
-      else
-      begin
-        // reset and clear the input stream in preparation for compression
-        AStream.Size := 0;
-      end;
-      // As long as data is being outputted, keep compressing
-      while LCompressRec.avail_out = 0 do
-      begin
-        LCompressRec.next_out := Buffer;
-        LCompressRec.avail_out := SizeOf(Buffer);
-
-        case deflate(LCompressRec, Z_SYNC_FLUSH) of
-          Z_STREAM_ERROR,
-          Z_DATA_ERROR,
-          Z_MEM_ERROR: raise EIdCompressionError.Create(RSZLCompressionError);
-        end;
-        if Assigned(AOutStream) then
-        begin
-          AOutStream.Write(Buffer, SizeOf(Buffer) - LCompressRec.avail_out);
-        end
-        else
-        begin
-          // Place the compressed data back into the input stream
-          AStream.Write(Buffer, SizeOf(Buffer) - LCompressRec.avail_out);
-        end;
-      end;
-    //finalization cleanup
-    finally
-      deflateEnd(LCompressRec);
-
-      FillChar(LCompressRec, SizeOf(LCompressRec), 0);
-      if LSendBuf<>nil then
-      begin
-        FreeMem(LSendBuf);
-      end;
-    end;
-  end;
-end;  }
 
 procedure TIdCompressorZLibEx.InflateStream(AInStream, AOutStream : TIdStream);
 begin
-  ZDecompressStream(AInStream,AOutStream);
+  IdZlib.DeCompressStream(AInStream,AOutStream);
 end;
-{var
-  Buffer: array[0..2047] of Char;
-  nChars, C: Integer;
-  StreamEnd: Boolean;
-  LDecompressRec: TZStreamRec;
-  LRecvCount, LRecvSize: Int64;
-  LRecvBuf: Pointer;
-begin
-    LRecvCount := 0;
-    LRecvSize := 0;
-    LRecvBuf := nil;
-    LDecompressRec.adler := 0;
-    //initialization section
-    LDecompressRec.zalloc := zcalloc;
-    LDecompressRec.zfree := zcfree;
-    if inflateInit_(LDecompressRec, zlib_Version, SizeOf(LDecompressRec)) <> Z_OK then
-    begin
-      raise EIdDecompressorInitFailure.Create(RSZLDecompressorInitializeFailure);
-    end;
-    try
-      //decompression
-      StreamEnd := False;
-      repeat
-        nChars := AStream.Read(Buffer, SizeOf(Buffer));
-        if nChars = 0 then
-        begin
-          Break;
-        end;
-        LDecompressRec.next_in := Buffer;
-        LDecompressRec.avail_in := nChars;
-        LDecompressRec.total_in := 0;
-
-        while LDecompressRec.avail_in > 0 do
-        begin
-          if LRecvCount = LRecvSize then
-          begin
-            if LRecvSize = 0 then
-            begin
-              LRecvSize := 2048;
-            end
-            else
-            begin
-              Inc(LRecvSize, 1024);
-            end;
-            ReallocMem(LRecvBuf, LRecvSize);
-          end;
-          LDecompressRec.next_out := PChar(LRecvBuf) + LRecvCount;
-          C := LRecvSize - LRecvCount;
-          LDecompressRec.avail_out := C;
-          LDecompressRec.total_out := 0;
-          case inflate(LDecompressRec, Z_NO_FLUSH) of
-            Z_STREAM_END:
-              StreamEnd := True;
-            Z_STREAM_ERROR,
-            Z_DATA_ERROR,
-            Z_MEM_ERROR:
-              raise EIdDecompressionError.Create(RSZLDecompressionError);
-          end;
-
-          Inc(LRecvCount, C - LDecompressRec.avail_out);
-        end;
-      until StreamEnd;
-      if Assigned(AOutStream) then
-      begin
-        AOutStream.Size := 0;
-        AOutStream.Write(LRecvBuf^, LRecvCount);
-      end
-      else
-      begin
-        AStream.Size := 0;
-        AStream.Write(LRecvBuf^, LRecvCount);
-      end;
-    finally
-      //deinitialization
-      inflateEnd(LDecompressRec);
-
-      FillChar(LDecompressRec, SizeOf(LDecompressRec), 0);
-      if LRecvBuf<>nil then
-      begin
-        FreeMem(LRecvBuf);
-      end;
-    end;
-end;    }
 
 end.
