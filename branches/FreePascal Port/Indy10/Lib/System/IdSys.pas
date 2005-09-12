@@ -11,10 +11,17 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-
-
+}
+{
   $Log$
+}
 
+unit IdSys;
+{$I IdCompilerDefines.inc}
+
+interface
+
+{
 The model we are using is this:
 
  IdSysBase - base class for everything
@@ -24,14 +31,8 @@ The model we are using is this:
              and would make NO sense in DotNET.
         IdSysLinux - Linux specific stuff
         IdSysWindows - Windows specific stuff
+
 }
-
-unit IdSys;
-{$I IdCompilerDefines.inc}
-
-
-interface
-
 uses
   {$IFDEF DotNetDistro}
   IdSysNet;
@@ -67,10 +68,7 @@ type
         {$IFDEF DOTNET}
         Sys = TIdSysVCLNET;
         {$ELSE}
-          {$IFDEF FPC}
-          {$ELSE}
-          Sys = TIdSysVCL;
-          {$ENDIF}
+        Sys = TIdSysVCL;
         {$ENDIF}
       {$ENDIF}
     {$ENDIF}
@@ -92,14 +90,12 @@ type
   EAbort = IdSysNET.EAbort;
   {$ELSE}
   EIdExceptionBase = Exception;
-    {$IFNDEF FPC}
-      {$IFDEF DOTNET}
+  {$IFDEF DOTNET}
     Exception = System.Exception;
-     {$ELSE}
+  {$ELSE}
     Exception = SysUtils.Exception;
-     {$ENDIF}
-    EAbort = SysUtils.EAbort;
-    {$ENDIF}
+  {$ENDIF}
+  EAbort = SysUtils.EAbort;
   {$ENDIF}
 
 implementation

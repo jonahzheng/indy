@@ -103,7 +103,6 @@ type
 
 implementation
 
-{$IFNDEF FPC}
 {$IFDEF VCL7ORABOVE}
 //Delphi5 does not have TFormatSettings
 //this should be changed to a singleton?
@@ -172,7 +171,6 @@ begin
   Result.ListSeparator := ',';
 end;
 {$ENDIF}
-{$ENDIF}
 
 class procedure TIdSysVCL.Abort;
 begin
@@ -192,20 +190,16 @@ end;
 class function TIdSysVCL.Format(const Format: string;
   const Args: array of const): string;
 begin
-  {$IFDEF FPC}
-  Result := SysUtils.Format(Format,Args);
-  {$ELSE}
-    {$IFNDEF VCL7ORABOVE}
+  {$IFNDEF VCL7ORABOVE}
   //Is there a way to get delphi5 to use locale in format? something like:
   //  SetThreadLocale(TheNewLocaleId);
   //  GetFormatSettings;
   //  Application.UpdateFormatSettings := False; //needed?
   //  format()
   //  set locale back to prior
-    Result := SysUtils.Format(Format,Args);
-    {$ELSE}
-    Result := SysUtils.Format(Format,Args,GetEnglishSetting);
-    {$ENDIF}
+  Result := SysUtils.Format(Format,Args);
+  {$ELSE}
+  Result := SysUtils.Format(Format,Args,GetEnglishSetting);
   {$ENDIF}
 end;
 
