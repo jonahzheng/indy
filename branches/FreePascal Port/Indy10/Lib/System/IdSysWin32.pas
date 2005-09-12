@@ -42,6 +42,7 @@ type
 
 implementation
 uses  IdException, IdResourceStrings, Windows;
+
 //EIdException is only in IdSys and that causes a circular reference
 //if IdException is the interface section so we have to move the declaration
 //of our exception type down here.

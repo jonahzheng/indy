@@ -44,7 +44,7 @@ type
     class function IsSingleByteType(const S: string; Index: Integer): Boolean;
   end;
 
-  TIdDateTimeBase = TDateTime;
+ // TIdDateTimeBase = TDateTime;
 
 implementation
 
