@@ -24,6 +24,7 @@ type
   TIdSysBase = class
   end;
 
+  
 implementation
 
 end.

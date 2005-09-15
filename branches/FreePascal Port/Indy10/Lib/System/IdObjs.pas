@@ -32,6 +32,9 @@ uses
   {$ENDIF}
 {$ELSE}
   Classes,
+  {$IFDEF NO_TMultiReadExclusiveWriteSynchronizer}
+  SyncObjs,
+  {$ENDIF}
   SysUtils
 {$ENDIF};
 
@@ -100,7 +103,21 @@ type
   TIdNotifyEvent = TNotifyEvent;
   TIdThreadList = TThreadList;
   TIdOwnedCollection = TOwnedCollection;
+  {$IFDEF NO_TMultiReadExclusiveWriteSynchronizer}
+  TIdMultiReadExclusiveWriteSynchronizer = class(TObject)
+  protected
+    FCrit : TCriticalSection;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure BeginWrite;
+    procedure BeginRead;
+    procedure EndWrite;
+    procedure EndRead;
+  end;
+  {$ELSE}
   TIdMultiReadExclusiveWriteSynchronizer = TMultiReadExclusiveWriteSynchronizer;
+  {$ENDIF}
 {$ENDIF}
   TIdComponentClass = class of TIdNativeComponent;
 
@@ -188,6 +205,38 @@ end;
 
 {$ENDIF}
 
+{$IFDEF NO_TMultiReadExclusiveWriteSynchronizer}
+constructor TIdMultiReadExclusiveWriteSynchronizer.Create;
+begin
+ inherited Create;
+ FCrit := TCriticalSection.Create;
+end;
+
+destructor TIdMultiReadExclusiveWriteSynchronizer.Destroy;
+begin
+  FreeANdNil(FCrit);
+  inherited Destroy;
+end;
+procedure TIdMultiReadExclusiveWriteSynchronizer.BeginWrite;
+begin
+  FCrit.Enter;
+end;
+procedure TIdMultiReadExclusiveWriteSynchronizer.BeginRead;
+begin
+  FCrit.Enter;
+end;
+
+procedure TIdMultiReadExclusiveWriteSynchronizer.EndWrite;
+begin
+  FCrit.Leave;
+end;
+
+procedure TIdMultiReadExclusiveWriteSynchronizer.EndRead;
+begin
+  FCrit.Leave;
+end;
+{$ENDIF}
+  
 end.
 
 

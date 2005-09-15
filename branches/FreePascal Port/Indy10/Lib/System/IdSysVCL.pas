@@ -50,7 +50,7 @@ type
 
     class function Now : TDateTime;  
     class function FormatDateTime(const Format: string; ADateTime: TDateTime): string; 
-    class function Format(const Format: string; const Args: array of const): string;
+    class function Format(const AFormat: string; const AArgs: array of const): string;
 
     class function FileDateToDateTime(FileDate: Integer): TDateTime;
     class function CompareStr(const S1, S2: string): Integer;
@@ -103,7 +103,7 @@ type
 
 implementation
 
-{$IFDEF VCL7ORABOVE}
+{$IFDEF TFormatSettings}
 //Delphi5 does not have TFormatSettings
 //this should be changed to a singleton?
 function GetEnglishSetting: TFormatSettings;
@@ -187,19 +187,19 @@ begin
   Result := SysUtils.FileExists(FileName);
 end;
 
-class function TIdSysVCL.Format(const Format: string;
-  const Args: array of const): string;
+class function TIdSysVCL.Format(const AFormat: string;
+  const AArgs: array of const): string;
 begin
-  {$IFNDEF VCL7ORABOVE}
+  {$IFNDEF TFormatSettings}
   //Is there a way to get delphi5 to use locale in format? something like:
   //  SetThreadLocale(TheNewLocaleId);
   //  GetFormatSettings;
   //  Application.UpdateFormatSettings := False; //needed?
   //  format()
   //  set locale back to prior
-  Result := SysUtils.Format(Format,Args);
+  Result := SysUtils.Format(AFormat,AArgs);
   {$ELSE}
-  Result := SysUtils.Format(Format,Args,GetEnglishSetting);
+  Result := SysUtils.Format(AFormat,AArgs,GetEnglishSetting);
   {$ENDIF}
 end;
 
