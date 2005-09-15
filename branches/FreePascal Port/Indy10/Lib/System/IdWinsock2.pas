@@ -1476,10 +1476,15 @@ type
 const
 //from winnt.h
 //For 64 bit, these values will have to change
-
+  {$IFDEF CPU32}
   MAX_NATURAL_ALIGNMENT = sizeof(Cardinal);
   MEMORY_ALLOCATION_ALIGNMENT =8;
-
+  {$ENDIF}
+  {$IFDEF CPU64}
+  MAX_NATURAL_ALIGNMENT = sizeof(Int64);
+  MEMORY_ALLOCATION_ALIGNMENT =16;
+  {$ENDIF}
+  
 function TYPE_ALIGNMENT(const AInt : Cardinal): Cardinal;
 
 //*
