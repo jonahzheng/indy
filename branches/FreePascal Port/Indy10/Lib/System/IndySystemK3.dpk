@@ -1,6 +1,5 @@
 package IndySystemK3;
 
-{$R *.res}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
 {$DEBUGINFO ON}

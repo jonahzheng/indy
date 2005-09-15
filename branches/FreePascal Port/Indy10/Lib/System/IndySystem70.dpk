@@ -1,6 +1,5 @@
 package IndySystem70;
 
-{$R *.res}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
 {$DEBUGINFO ON}

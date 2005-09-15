@@ -154,12 +154,30 @@
   {$DEFINE DotNetExclude}
 {$ENDIF}
 
+// FPC (2+)
+
+{$IFDEF FPC}
+  {$MODE Delphi}
+  {$DEFINE VCL4ORABOVE}
+  {$DEFINE VCL5ORABOVE}
+  {$DEFINE VCL6ORABOVE}
+  {$DEFINE VCL7ORABOVE}
+  {$DEFINE VCL70}
+  {$DEFINE DELPHI7}
+  {$DEFINE OPTIONALPARAMS}
+  {$DEFINE SAMETEXT}
+  {$DEFINE ALLOW_NAMED_THREADS}
+{$ENDIF}
+
+
 // Kylix
 //
 //Important:  Don't use CompilerVersion here as
 //$IF's are evaluated before $IFDEF's
 //and Kylix 1 does not have CompilerVersion defined at all.
+{$IFNDEF FPC}
 {$IFDEF LINUX}
+  {$DEFINE UNIX}
   {$IFDEF CONDITIONALEXPRESSIONS}
     {$IF RTLVersion = 14.0}
       {$DEFINE KYLIX1}
@@ -186,4 +204,4 @@
   {$DEFINE VCL6ORABOVE}
   {$DEFINE VCL60}
 {$ENDIF}
-
+{$ENDIF}
