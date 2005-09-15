@@ -193,7 +193,7 @@ const
 implementation
 
 uses
-  IdGlobal, IdSys;
+  IdGlobal;
 
 {$IFDEF DotNetDistro}
 { TIdPersistentHelper }

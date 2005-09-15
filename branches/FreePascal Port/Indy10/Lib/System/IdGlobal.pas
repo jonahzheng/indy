@@ -784,7 +784,9 @@ type
     procedure Leave;
   end;
   {$ELSE}
+    {$IFNDEF NoRedeclare}
    TCriticalSection = SyncObjs.TCriticalSection;
+     {$ENDIF}
   {$ENDIF}
 
   TIdLocalEvent = class(TEvent)
@@ -847,19 +849,20 @@ type
   TIdThreadPriority = TThreadPriority;
   {$ENDIF}
   {$ENDIF}
-
-  {$IFDEF LINUX}
-    {$IFNDEF VCL6ORABOVE}
+  {$IFNDEF NoRedeclare}
+    {$IFDEF LINUX}
+      {$IFNDEF VCL6ORABOVE}
   THandle = LongWord; //D6.System
+      {$ENDIF}
     {$ENDIF}
-  {$ENDIF}
-  {$IFDEF DotNetDistro}
+    {$IFDEF DotNetDistro}
   THandle = Integer;
-  {$ELSE}
-    {$IFDEF DOTNET}
-    THandle = Integer;
     {$ELSE}
+      {$IFDEF DOTNET}
+    THandle = Integer;
+      {$ELSE}
     THandle = Windows.THandle;
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
 
@@ -1335,7 +1338,7 @@ begin
   Result := HEXPREFIX;
 
   for i := 0 to 3 do begin
-    LTmp := ByteToHex( Sys.StrToInt(Fetch(LBuf, '.', True)));
+    LTmp := ByteToHex( Sys.StrToInt(Fetch(LBuf, '.', True)) and $FF);
     if ASDotted then begin
       Result := Result + '.' + HEXPREFIX + LTmp;
     end else begin
@@ -1373,10 +1376,10 @@ var
   LBuf: string;
 begin
   LBuf :=  Sys.Trim(AIPAddress);
-  Result := ByteToOctal( Sys.StrToInt(Fetch(LBuf, '.', True), 0));
+  Result := ByteToOctal( Sys.StrToInt(Fetch(LBuf, '.', True), 0) and $FF);
   for i := 0 to 2 do
   begin
-    Result := Result + '.' + ByteToOctal(Sys.StrToInt(Fetch(LBuf, '.', True), 0));
+    Result := Result + '.' + ByteToOctal(Sys.StrToInt(Fetch(LBuf, '.', True), 0) and $FF);
   end;
 end;
 
@@ -1878,7 +1881,11 @@ begin
     3: Result := (AInt and POWER_3);
     2: Result := (AInt and POWER_2);
   else
+  {$IFDEF FPC}
+    Result := AInt and POWER_1;
+  {$ELSE}
     Result := Lo(AInt and POWER_1);
+  {$ENDIF}
   end;
 end;
 {$ENDIF}
@@ -2160,7 +2167,7 @@ begin
     raise EIdInvalidIPv6Address.Create(Sys.Format(RSInvalidIPv6Address,[AIPAddress]));
   end;
   for i := 0 to 7 do begin
-    Result[i]:=Sys.StrToInt('$'+fetch(LAddress,':'),0);
+    Result[i]:=Sys.StrToInt('$'+fetch(LAddress,':'),0) and $FF;
   end;
 end;
 
@@ -2724,7 +2731,7 @@ begin
   {$IFDEF DotNet}
   Bytes := ToBytes(AValue);
   {$ELSE}
-  PShortint(@Bytes[0])^ := AValue;
+  PShort(@Bytes[0])^ := AValue;
   {$ENDIF}
 end;
 

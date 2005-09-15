@@ -34,6 +34,9 @@
   {$DEFINE CBUILDER4}
   {$DEFINE OPTIONALPARAMS}
   {$DEFINE MSWINDOWS}
+  {$define i386}
+  {$define ENDIAN_LITTLE}
+  {$define CPU32}
 {$ENDIF}
 
 // Delphi 5 & CBuilder 5
@@ -91,8 +94,8 @@
   {$DEFINE ALLOW_NAMED_THREADS}
   {$DEFINE TFormatSettings}
   {$define i386}
-{$define ENDIAN_LITTLE}
-{$define CPU32}
+  {$define ENDIAN_LITTLE}
+  {$define CPU32}
 {$ENDIF}
 
 //Delphi 8
@@ -108,6 +111,9 @@
   {$DEFINE SAMETEXT}
   {$DEFINE ALLOW_NAMED_THREADS}
   {$DEFINE TFormatSettings}
+  {$define i386}
+  {$define ENDIAN_LITTLE}
+  {$define CPU32}
 {$ENDIF}
 
 //Delphi 9
@@ -144,6 +150,9 @@
   {$DEFINE SAMETEXT}
   {$DEFINE ALLOW_NAMED_THREADS}
   {$DEFINE TFormatSettings}
+  {$define i386}
+  {$define ENDIAN_LITTLE}
+  {$define CPU32}
 {$ENDIF}
 
 //Delphi 11
@@ -163,6 +172,9 @@
   {$DEFINE ALLOW_NAMED_THREADS}
   {$DEFINE TFormatSettings}
   {$DEFINE FPC_CircularBug}
+  {$define i386}
+  {$define ENDIAN_LITTLE}
+  {$define CPU32}
 {$ENDIF}
 
 //Delphi.NET
@@ -194,6 +206,7 @@
   {$DEFINE ALLOW_NAMED_THREADS}
   {$DEFINE NO_TMultiReadExclusiveWriteSynchronizer}
    {$DEFINE FPC_CircularBug}
+   {$DEFINE NoRedeclare}
 {$ENDIF}
 
 

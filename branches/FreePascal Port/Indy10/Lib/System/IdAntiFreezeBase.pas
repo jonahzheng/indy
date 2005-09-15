@@ -62,8 +62,7 @@ unit IdAntiFreezeBase;
 interface
 
 uses
-  IdBaseComponent,
-  IdSys;
+  IdBaseComponent;
 
 const
   ID_Default_TIdAntiFreezeBase_Active = True;
