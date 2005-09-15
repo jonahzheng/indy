@@ -295,11 +295,11 @@ type
       ASize: Integer = -1
       ): Integer; override;
     function ReceiveFrom(ASocket: TIdStackSocketHandle; var VBuffer: TIdBytes;
-             var VIP: string; var VPort: Integer;
+             var VIP: string; var VPort: TIdPort;
              const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION
              ): Integer; override;
     function SendTo(ASocket: TIdStackSocketHandle; const ABuffer: TIdBytes;
-             const AOffset: Integer; const AIP: string; const APort: integer;
+             const AOffset: Integer; const AIP: string; const APort: TIdPort;
              const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION
              ): Integer; override;
     procedure SetSocketOption( const ASocket: TIdStackSocketHandle;
@@ -311,10 +311,10 @@ type
     function WSGetServByName(const AServiceName: string): Integer; virtual; abstract;
     function WSGetServByPort(const APortNumber: Integer): TIdStrings; virtual; abstract;
     function RecvFrom(const ASocket: TIdStackSocketHandle; var ABuffer;
-     const ALength, AFlags: Integer; var VIP: string; var VPort: Integer;
+     const ALength, AFlags: Integer; var VIP: string; var VPort: TIdPort;
      AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer; virtual; abstract;
     procedure WSSendTo(ASocket: TIdStackSocketHandle; const ABuffer;
-     const ABufferLength, AFlags: Integer; const AIP: string; const APort: integer; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); virtual; abstract;
+     const ABufferLength, AFlags: Integer; const AIP: string; const APort: TIdPort; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); virtual; abstract;
     function WSSocket(AFamily, AStruct, AProtocol: Integer;
      const AOverlapped: Boolean = False): TIdStackSocketHandle; virtual; abstract;
     function WSTranslateSocketErrorMsg(const AErr: integer): string; virtual;
@@ -601,7 +601,7 @@ begin
 end;
 
 function TIdStackBSDBase.ReceiveFrom(ASocket: TIdStackSocketHandle;
-  var VBuffer: TIdBytes; var VIP: string; var VPort: Integer;
+  var VBuffer: TIdBytes; var VIP: string; var VPort: TIdPort;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION
   ): Integer;
 begin
@@ -610,7 +610,7 @@ end;
 
 function TIdStackBSDBase.SendTo(ASocket: TIdStackSocketHandle;
   const ABuffer: TIdBytes; const AOffset: Integer; const AIP: string;
-  const APort: integer;
+  const APort: TIdPort;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer;
 begin
    // must use pointer(ABuffer)^, can't use ABuffer[0], because ABuffer may have a 0 length

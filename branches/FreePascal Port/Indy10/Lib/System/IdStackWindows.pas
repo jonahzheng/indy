@@ -193,7 +193,7 @@ interface
 uses
   Classes,
   IdGlobal, IdException, IdStackBSDBase, IdStackConsts, IdWinsock2, IdStack, IdObjs,
-  SyncObjs, IdSys,
+   IdSys,
   SysUtils, // Legal because this is a Windows only unit already
   Windows;
 
@@ -250,7 +250,7 @@ type
     function WSShutdown(ASocket: TIdStackSocketHandle; AHow: Integer): Integer; override;
   public
     function Accept(ASocket: TIdStackSocketHandle; var VIP: string;
-             var VPort: Integer; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION
+             var VPort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION
              ): TIdStackSocketHandle; override;
     function HostToNetwork(AValue: Word): Word; override;
     function HostToNetwork(AValue: LongWord): LongWord; override;
@@ -272,7 +272,7 @@ type
     function WSGetServByPort(const APortNumber: Integer): TIdStrings; override;
 
     function RecvFrom(const ASocket: TIdStackSocketHandle; var VBuffer;
-     const ALength, AFlags: Integer; var VIP: string; var VPort: Integer;
+     const ALength, AFlags: Integer; var VIP: string; var VPort: TIdPort;
      AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer; override;
    function ReceiveMsg(ASocket: TIdStackSocketHandle;
      var VBuffer: TIdBytes;
@@ -280,23 +280,23 @@ type
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Cardinal; override;
 
     procedure WSSendTo(ASocket: TIdStackSocketHandle; const ABuffer;
-     const ABufferLength, AFlags: Integer; const AIP: string; const APort: integer; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
+     const ABufferLength, AFlags: Integer; const AIP: string; const APort: TIdPort; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
 
     function WSSocket(AFamily, AStruct, AProtocol: Integer;
      const AOverlapped: Boolean = False): TIdStackSocketHandle; override;
     function WSTranslateSocketErrorMsg(const AErr: integer): string; override;
     function WSGetLastError: Integer; override;
-    procedure WSGetSockOpt(ASocket: TIdStackSocketHandle; Alevel, AOptname: Integer; AOptval: PChar; var AOptlen: Integer); override;
+    procedure WSGetSockOpt(ASocket: TIdStackSocketHandle; Alevel, AOptname:Integer; AOptval: PChar; var AOptlen: Integer); override;
     //
     procedure Bind(ASocket: TIdStackSocketHandle; const AIP: string;
-     const APort: Integer; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
+     const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
     procedure Connect(const ASocket: TIdStackSocketHandle; const AIP: string;
      const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
     constructor Create; override;
     destructor Destroy; override;
     procedure Disconnect(ASocket: TIdStackSocketHandle); override;
     procedure GetPeerName(ASocket: TIdStackSocketHandle; var VIP: string;
-     var VPort: Integer); override;
+     var VPort: TIdPort); override;
     procedure GetSocketName(ASocket: TIdStackSocketHandle; var VIP: string;
      var VPort: TIdPort); override;
     procedure GetSocketOption(ASocket: TIdStackSocketHandle;
@@ -313,15 +313,15 @@ type
        var VBuffer : TIdBytes;
       const AOffset : Integer;
       const AIP : String;
-      const APort : Integer;
+      const APort : TIdPort;
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
   end;
-
+  {$IFNDEF NoRedeclare}
   TLinger = record
 	  l_onoff: Word;
 	  l_linger: Word;
   end;
-
+  {$endif}
   TIdLinger = TLinger;
 
 var
@@ -357,7 +357,7 @@ begin
 end;
 
 function TIdStackWindows.Accept(ASocket: TIdStackSocketHandle;
-  var VIP: string; var VPort: Integer;
+  var VIP: string; var VPort: TIdPort;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): TIdStackSocketHandle;
 var
   i: Integer;
@@ -370,7 +370,7 @@ begin
 end;
 
 procedure TIdStackWindows.Bind(ASocket: TIdStackSocketHandle;
-  const AIP: string; const APort: Integer;
+  const AIP: string; const APort: TIdPort;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 var
   LAddr: TSockAddrIn;
@@ -476,7 +476,7 @@ end;
 
 function TIdStackWindows.RecvFrom(const ASocket: TIdStackSocketHandle;
   var VBuffer; const ALength, AFlags: Integer; var VIP: string;
-  var VPort: Integer; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION ): Integer;
+  var VPort: TIdPort; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION ): Integer;
 var
   iSize: integer;
   Addr4: TSockAddrIn;
@@ -511,7 +511,7 @@ end;
 
 procedure TIdStackWindows.WSSendTo(ASocket: TIdStackSocketHandle;
   const ABuffer; const ABufferLength, AFlags: Integer; const AIP: string;
-  const APort: integer; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+  const APort: TIdPort; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 var
   Addr4: TSockAddrIn;
   Addr6: TSockAddrIn6;
@@ -723,7 +723,7 @@ begin
 end;
 
 procedure TIdStackWindows.GetSocketName(ASocket: TIdStackSocketHandle;
- var VIP: string; var VPort: Integer);
+ var VIP: string; var VPort: TIdPort);
 var
   i: Integer;
   LAddr: TSockAddrIn6;
@@ -1016,7 +1016,7 @@ begin
 end;
 
 procedure TIdStackWindows.GetPeerName(ASocket: TIdStackSocketHandle;
- var VIP: string; var VPort: Integer);
+ var VIP: string; var VPort: TIdPort);
 var
   i: Integer;
   LAddr: TSockAddrIn6;
@@ -1139,7 +1139,7 @@ end;
 
 procedure TIdStackWindows.WriteChecksum(s: TIdStackSocketHandle;
   var VBuffer: TIdBytes; const AOffset: Integer; const AIP: String;
-  const APort: Integer; const AIPVersion: TIdIPVersion);
+  const APort: TIdPort; const AIPVersion: TIdIPVersion);
 begin
   case AIPVersion of
     Id_IPv4 : CopyTIdWord(CalcCheckSum(VBuffer),VBuffer,AOffset);
@@ -1221,7 +1221,7 @@ type
   PByte = ^Byte;
 var
   LIP : String;
-  LPort : Integer;
+  LPort : TIdPort;
   LSize: Cardinal;
   LAddr4: TSockAddrIn;
   LAddr6: TSockAddrIn6;

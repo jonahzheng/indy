@@ -250,11 +250,11 @@ type
     function GetLocalAddresses: TIdStrings; virtual; abstract;
   public
     function Accept(ASocket: TIdStackSocketHandle; var VIP: string;
-             var VPort: Integer;
+             var VPort: TIdPort;
              const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION
              ): TIdStackSocketHandle; virtual; abstract;
     procedure Bind(ASocket: TIdStackSocketHandle; const AIP: string;
-              const APort: Integer;
+              const APort: TIdPort;
               const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION ); virtual; abstract;
     procedure Connect(const ASocket: TIdStackSocketHandle; const AIP: string;
               const APort: TIdPort;
@@ -266,7 +266,7 @@ type
     class procedure IncUsage; //create stack if necessary and inc counter
     class procedure DecUsage; //decrement counter and free if it gets to zero
     procedure GetPeerName(ASocket: TIdStackSocketHandle; var VIP: string;
-              var VPort: Integer); virtual; abstract;
+              var VPort: TIdPort); virtual; abstract;
     procedure GetSocketName(ASocket: TIdStackSocketHandle; var VIP: string;
               var VPort: TIdPort); virtual; abstract;
     function HostByAddress(const AAddress: string;
@@ -309,11 +309,11 @@ type
       ): Integer; virtual; abstract;
 
     function ReceiveFrom(ASocket: TIdStackSocketHandle; var VBuffer: TIdBytes;
-             var VIP: string; var VPort: Integer;
+             var VIP: string; var VPort: TIdPort;
              const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION
              ): Integer; virtual; abstract;
     function SendTo(ASocket: TIdStackSocketHandle; const ABuffer: TIdBytes;
-             const AOffset: Integer; const AIP: string; const APort: integer;
+             const AOffset: Integer; const AIP: string; const APort: TIdPort;
              const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION
              ): Integer; virtual; abstract;
     function ReceiveMsg(ASocket: TIdStackSocketHandle;
@@ -350,7 +350,7 @@ type
       var VBuffer : TIdBytes;
       const AOffset : Integer;
       const AIP : String;
-      const APort : Integer;
+      const APort : TIdPort;
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); virtual; abstract;
     //
     // Properties

@@ -25,9 +25,6 @@ uses
   {$IFDEF DOTNET}
   System.IO,
   {$ENDIF}
-  {$IFDEF MSWindows}
-  Windows,
-  {$ENDIF}
   {$IFDEF DELPHI5}
   FileCtrl,
   {$ENDIF}

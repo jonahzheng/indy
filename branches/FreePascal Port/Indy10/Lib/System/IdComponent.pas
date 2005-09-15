@@ -71,7 +71,7 @@ unit IdComponent;
 interface
 
 uses
-  IdAntiFreezeBase, IdBaseComponent, IdGlobal, IdResourceStrings,
+  IdBaseComponent, IdGlobal, IdResourceStrings,
   IdStack;
 
 type
@@ -109,10 +109,10 @@ type
   end;
 
   TWorkBeginEvent = procedure(ASender: TObject; AWorkMode: TWorkMode;
-   AWorkCountMax: Integer) of object;
-  TWorkEndEvent = procedure(ASender: TObject; AWorkMode: TWorkMode) of object;
+   AWorkCountMax: Int64) of object;
+  TWorkEndEvent = procedure(AWSender: TObject; AWorkMode: TWorkMode) of object;
   TWorkEvent = procedure(ASender: TObject; AWorkMode: TWorkMode;
-   AWorkCount: Integer) of object;
+   AWorkCount: Int64) of object;
 
   TIdComponent = class(TIdBaseComponent)
   protected

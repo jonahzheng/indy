@@ -823,7 +823,11 @@ type
   TBytes = array of Byte;
   {$ENDIF}
   TIdBytes = TBytes;
+  {$IFDEF FPC}
+  TIdPort = Word;
+  {$ELSE}
   TIdPort = Integer;
+  {$ENDIF}
   //We don't have a native type that can hold an IPv6 address.
   TIdIPv6Address = array [0..7] of word;
 
