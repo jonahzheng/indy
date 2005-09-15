@@ -22,6 +22,9 @@
   {$DEFINE DELPHI4}
   {$DEFINE OPTIONALPARAMS}
   {$DEFINE MSWINDOWS}
+  {$define i386}
+  {$define ENDIAN_LITTLE}
+  {$define CPU32}
 {$ENDIF}
 
 // C++ Builder 4
@@ -46,6 +49,9 @@
   {$DEFINE OPTIONALPARAMS}
   {$DEFINE SAMETEXT}
   {$DEFINE MSWINDOWS}
+  {$define i386}
+{$define ENDIAN_LITTLE}
+{$define CPU32}
 {$ENDIF}
 
 //Delphi 6
@@ -63,6 +69,9 @@
   {$DEFINE VCL6ORABOVE}
   {$DEFINE VCL60}
   {$DEFINE TFormatSettings}
+  {$define i386}
+  {$define ENDIAN_LITTLE}
+  {$define CPU32}
 {$ENDIF}
 
 //Delphi 7
@@ -81,6 +90,9 @@
   {$DEFINE SAMETEXT}
   {$DEFINE ALLOW_NAMED_THREADS}
   {$DEFINE TFormatSettings}
+  {$define i386}
+{$define ENDIAN_LITTLE}
+{$define CPU32}
 {$ENDIF}
 
 //Delphi 8
@@ -112,6 +124,9 @@
   {$DEFINE SAMETEXT}
   {$DEFINE ALLOW_NAMED_THREADS}
   {$DEFINE TFormatSettings}
+  {$define i386}
+  {$define ENDIAN_LITTLE}
+  {$define CPU32}
 {$ENDIF}
 
 //Delphi 10
@@ -159,6 +174,9 @@
   // ported. Used to selectively exclude non ported parts. Allowed in places
   // IFDEFs are otherwise not permitted.
   {$DEFINE DotNetExclude}
+  {$define i386}
+  {$define ENDIAN_LITTLE}
+  {$define CPU32}
 {$ENDIF}
 
 // FPC (2+)
@@ -212,5 +230,8 @@
   {$DEFINE SAMETEXT}
   {$DEFINE VCL6ORABOVE}
   {$DEFINE VCL60}
+  {$define i386}
+  {$define ENDIAN_LITTLE}
+  {$define CPU32}
 {$ENDIF}
 {$ENDIF}
