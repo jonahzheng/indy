@@ -1473,6 +1473,12 @@ type
   PWSACMSGHDR = ^TWSACMSGHDR;
   LPWSACMSGHDR = PWSACMSGHDR;
 
+
+{$ifndef FPC}
+type ptrint = integer;
+         ptruint= cardinal;
+{$endif}
+
 const
 //from winnt.h
 //For 64 bit, these values will have to change
@@ -1485,15 +1491,15 @@ const
   MEMORY_ALLOCATION_ALIGNMENT =16;
   {$ENDIF}
   
-function TYPE_ALIGNMENT(const AInt : Cardinal): Cardinal;
+function TYPE_ALIGNMENT(const AInt : PtrUInt): PtrUInt;
 
 //*
 // * Alignment macros for header and data members of
 // * the control buffer.
 // */
-function WSA_CMSGHDR_ALIGN(length : Cardinal) : Cardinal;
+function WSA_CMSGHDR_ALIGN(length : PtrUInt) : PtrUInt;
 
-function WSA_CMSGDATA_ALIGN(length : Cardinal) : Cardinal;
+function WSA_CMSGDATA_ALIGN(length : PtrUInt) : PtrUInt;
 //*
 // *  WSA_CMSG_FIRSTHDR
 // *
@@ -1546,7 +1552,7 @@ function WSA_CMSG_DATA(cmsg : LPWSACMSGHDR) : Pointer;
  *      SIZE_T length
  *      );
  */ }
-function WSA_CMSG_SPACE(length : Cardinal) : Cardinal;
+function WSA_CMSG_SPACE(length : PtrInt) : PtrInt;
 {
 /*
  *  WSA_CMSG_LEN
@@ -1558,7 +1564,7 @@ function WSA_CMSG_SPACE(length : Cardinal) : Cardinal;
  *      SIZE_T length
  *  );
  */  }
-function WSA_CMSG_LEN(length : Cardinal) : Cardinal;
+function WSA_CMSG_LEN(length : PtrUInt) : PtrUInt;
 
 
 type
@@ -4604,7 +4610,7 @@ end;
 
 //This is an attempt to simulate a macro in Winnt.h
 
-function TYPE_ALIGNMENT(const AInt : Cardinal): Cardinal;
+function TYPE_ALIGNMENT(const AInt : PtrUInt): PtrUInt;
 begin
   if AInt mod 4 <> 0 then
   begin
@@ -4620,13 +4626,13 @@ end;
 // * Alignment macros for header and data members of
 // * the control buffer.
 // */
-function WSA_CMSGHDR_ALIGN(length : Cardinal) : Cardinal;
+function WSA_CMSGHDR_ALIGN(length : PtrUInt) : PtrUInt;
 begin
-  Result := ( ((length) + TYPE_ALIGNMENT(Cardinal(SizeOf(WSACMSGHDR)))-1) and
-     ( not (TYPE_ALIGNMENT(Cardinal(SizeOf(WSACMSGHDR)))-1)) );
+  Result := ( ((length) + TYPE_ALIGNMENT(PtrInt(SizeOf(WSACMSGHDR)))-1) and
+     ( not (TYPE_ALIGNMENT(PtrInt(SizeOf(WSACMSGHDR)))-1)) );
 end;
 
-function WSA_CMSGDATA_ALIGN(length : Cardinal) : Cardinal;
+function WSA_CMSGDATA_ALIGN(length : PtrUInt) : PtrUInt;
 begin
   Result := ( ((length) + MAX_NATURAL_ALIGNMENT-1) and
             ( not (MAX_NATURAL_ALIGNMENT-1)) );
@@ -4670,11 +4676,11 @@ begin
   if cmsg=nil then begin
     result:=WSA_CMSG_FIRSTHDR(msg);
   end else begin
-  	if  ((Cardinal(cmsg) + WSA_CMSGHDR_ALIGN((cmsg)^.cmsg_len) + sizeof(WSACMSGHDR) ) >
-      Cardinal ((msg)^.Control.buf) + msg^.Control.len ) then begin
+  	if  ((PtrUInt(cmsg) + WSA_CMSGHDR_ALIGN((cmsg)^.cmsg_len) + sizeof(WSACMSGHDR) ) >
+      PtrUInt ((msg)^.Control.buf) + msg^.Control.len ) then begin
   		result := nil;
   	end else begin
-  	  result := LPWSACMSGHDR(Cardinal (cmsg) + WSA_CMSGHDR_ALIGN((cmsg)^.cmsg_len)) ;
+  	  result := LPWSACMSGHDR(PtrUInt (cmsg) + WSA_CMSGHDR_ALIGN((cmsg)^.cmsg_len)) ;
   	end;
   end;
 end;
@@ -4694,7 +4700,7 @@ end;
 
 function WSA_CMSG_DATA(cmsg : LPWSACMSGHDR) : Pointer;
 begin
-  Result := Pointer( Cardinal(cmsg) + WSA_CMSGDATA_ALIGN(sizeof(WSACMSGHDR)) );
+  Result := Pointer( PtrUInt(cmsg) + WSA_CMSGDATA_ALIGN(sizeof(WSACMSGHDR)) );
 end;
 {/*
  *  WSA_CMSG_SPACE
@@ -4708,7 +4714,7 @@ end;
  *      SIZE_T length
  *      );
  */ }
-function WSA_CMSG_SPACE(length : Cardinal) : Cardinal;
+function WSA_CMSG_SPACE(length : PtrInt) : PtrInt;
 begin
   Result := (WSA_CMSGDATA_ALIGN(sizeof(WSACMSGHDR) + WSA_CMSGHDR_ALIGN(length)))
 end;
@@ -4723,7 +4729,7 @@ end;
  *      SIZE_T length
  *  );
  */  }
-function WSA_CMSG_LEN(length : Cardinal) : Cardinal;
+function WSA_CMSG_LEN(length : PtrUInt) : PtrUInt;
 begin
   Result := (WSA_CMSGDATA_ALIGN(sizeof(WSACMSGHDR)) + length)
 end;
