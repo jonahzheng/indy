@@ -20,11 +20,11 @@
   Added l,ocalization comments.
 }
 {
-{   Rev 1.1    1/31/2003 02:54:04 PM  JPMugaas
-{ Updated with IdContext.pas.
+   Rev 1.1    1/31/2003 02:54:04 PM  JPMugaas
+ Updated with IdContext.pas.
 }
 {
-{   Rev 1.0    11/13/2002 08:37:54 AM  JPMugaas
+   Rev 1.0    11/13/2002 08:37:54 AM  JPMugaas
 }
 unit IdAssignedNumbers;
 
