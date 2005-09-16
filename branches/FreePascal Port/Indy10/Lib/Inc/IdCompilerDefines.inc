@@ -214,7 +214,7 @@
 // Kylix
 //
 //Important:  Don't use CompilerVersion here as
-//$IF's are evaluated before $IFDEF's
+// $ IF's are evaluated before $ IFDEF's
 //and Kylix 1 does not have CompilerVersion defined at all.
 {$IFNDEF FPC}
 {$IFDEF LINUX}

@@ -738,6 +738,13 @@ const
 //  {$ENDIF}
 
 type
+  {$ifndef DotNET}
+     {$ifndef FPC}
+     //needed so that in FreePascal, we can use pointers of different sizes
+   ptrint = integer;
+   ptruint= cardinal;
+     {$endif}
+  {$endif}
   TIdEncoding = (enDefault, enANSI, enUTF8);
 
   TAppendFileStream = class(TIdFileStream)
@@ -898,7 +905,11 @@ type
     {$IFDEF DotNet}
     procedure SetSize(ASize: Int64); override;
     {$ELSE}
+      {$ifdef fpc}
+    procedure SetSize(const NewSize: Int64); override;
+      {$else}
     procedure SetSize(ASize: Integer); override;
+      {$endif}
     {$ENDIF}
   public
     {$IFDEF DotNet}
@@ -906,9 +917,15 @@ type
     function Write(const ABuffer: array of Byte; AOffset, ACount: Longint): Longint; override;
     function Seek(const AOffset: Int64; AOrigin: TIdSeekOrigin): Int64; override;
     {$ELSE}
+      {$ifdef FPC}
+    function Read(var Buffer; Count: Longint): Longint; override;
+    function Write(const Buffer; Count: Longint): Longint; override;
+    function Seek(Offset: Longint; Origin: Word): Longint; override;
+      {$else}
     function Read(var VBuffer; ACount: Longint): Longint; override;
     function Write(const ABuffer; ACount: Longint): Longint; override;
     function Seek(AOffset: Longint; AOrigin: Word): Longint; override;
+      {$endif}
     {$ENDIF}
   end;
 
@@ -1020,7 +1037,11 @@ function ReadLnFromStream(AStream: TIdStream; AMaxLineLength: Integer = -1; AExc
 function ReadStringFromStream(AStream: TIdStream; ASize: Integer = -1): string;
 procedure WriteStringToStream(AStream: TIdStream; const AStr: string);
 function ReadCharFromStream(AStream: TIdStream; var AChar: Char): Integer;
+{$ifdef fpc}
+function ReadTIdBytesFromStream(const AStream: TIdStream; var ABytes: TIdBytes; const Count: Int64): Int64;
+{$else}
 function ReadTIdBytesFromStream(const AStream: TIdStream; var ABytes: TIdBytes; const Count: Integer): Integer;
+{$endif}
 procedure WriteTIdBytesToStream(const AStream: TIdStream; const ABytes: TIdBytes);
 
 function ByteToHex(const AByte: Byte): string;
@@ -2408,7 +2429,7 @@ var
   i: Integer;
   LDelim: Integer; //delim len
   LLeft: string;
-  LLastPos: Integer;
+  LLastPos: PtrInt;
 begin
   Assert(Assigned(AStrings));
   AStrings.Clear;
@@ -2975,9 +2996,13 @@ begin
   Result := BytesToString(LBytes, 0, ASize);  // is the 0 right?
 end;
 
+{$ifdef fpc}
+function ReadTIdBytesFromStream(const AStream: TIdStream; var ABytes: TIdBytes; const Count: Int64): Int64;
+{$else}
 function ReadTIdBytesFromStream(const AStream: TIdStream; var ABytes: TIdBytes; const Count: Integer): Integer;
+{$endif}
 begin
-  Result := TIdStreamHelper.ReadBytes(AStream, ABytes, Count);
+  Result := TIdStreamHelper.ReadBytes(AStream, ABytes, Count and $FFFFFFFF);
 end;
 
 function ReadCharFromStream(AStream: TIdStream; var AChar: Char): Integer;
@@ -3033,6 +3058,47 @@ end;
 
 {$ELSE}
 
+  {$ifdef fpc}
+procedure TIdBaseStream.SetSize(const NewSize: Int64);
+begin
+   IdSetSize(NewSize and $FFFFFFFF);
+end;
+
+function TIdBaseStream.Read(var Buffer; Count: Longint): Longint;
+var
+  LBytes: TIdBytes;
+begin
+  SetLength(LBytes, Count);
+  Result := IdRead(LBytes, 0, Count);
+  if Result > 0 then begin
+    Move(LBytes[0], Buffer, Result);
+  end;
+end;
+
+function TIdBaseStream.Write(const Buffer; Count: Longint): Longint;
+begin
+  if Count > 0 then begin
+    Result := IdWrite(RawToBytes(Buffer, Count), 0, Count);
+  end else begin
+    Result := 0;
+  end;
+end;
+
+function TIdBaseStream.Seek(Offset: Longint; Origin: Word): Longint;
+var LSeek : TSeekOrigin;
+begin
+  case Origin of
+    soFromBeginning : LSeek := soBeginning;
+    soFromCurrent : LSeek := soCurrent;
+    soFromEnd : LSeek := soEnd;
+  else
+    Result := 0;
+    Exit;
+  end;
+  result := IdSeek(Offset, LSeek) and $FFFFFFFF;
+end;
+
+  {$else}
 procedure TIdBaseStream.SetSize(ASize: Integer);
 begin
   IdSetSize(ASize);
@@ -3062,6 +3128,7 @@ function TIdBaseStream.Seek(AOffset: Longint; AOrigin: Word): Longint;
 begin
   result := IdSeek(AOffset, TIdSeekOrigin(AOrigin));
 end;
+  {$endif}
 {$ENDIF}
 
 procedure AppendBytes(var VBytes: TIdBytes; AAdd: TIdBytes);
@@ -3188,13 +3255,23 @@ function ReadLnFromStream(AStream: TIdStream; AMaxLineLength: Integer = -1; AExc
 const
   LBUFMAXSIZE = 2048;
 var
-  LBufSize, LStringLen, LResultLen: LongInt;
+   LStringLen, LResultLen: LongInt;
   LBuf: TIdBytes;
  // LBuf: packed array [0..LBUFMAXSIZE] of Char;
+ {$ifdef fpc}
+ LBufSize,
+  LStrmPos, LStrmSize: Int64; //LBytesToRead = stream size - Position
+ {$else}
+ LBufSize,
   LStrmPos, LStrmSize: Integer; //LBytesToRead = stream size - Position
+  {$endif}
   LCrEncountered: Boolean;
 
+  {$ifdef fpc}
+  function FindEOL(const ABuf: TIdBytes; var VLineBufSize: Int64; var VCrEncountered: Boolean): Int64;
+  {$else}
   function FindEOL(const ABuf: TIdBytes; var VLineBufSize: Integer; var VCrEncountered: Boolean): Integer;
+  {$endif}
   var
     i: Integer;
   begin

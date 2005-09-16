@@ -27,9 +27,7 @@ uses
   SysUtils;
 
 type
-
-  TIdDateTimeBase = TDateTime;
-
+ // TIdDateTimeBase = TDateTime;
   TIdSysWin32 = class(TIdSysNativeVCL)
   public
     class function Win32Platform: Integer;

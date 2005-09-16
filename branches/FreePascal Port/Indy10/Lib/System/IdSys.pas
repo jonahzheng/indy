@@ -40,6 +40,7 @@ uses
     SysUtils,  //SysUtils has to be here for non-Dot NET stuff
 
     {$IFDEF MSWindows}
+    IdSysNativeVCL,
     IdSysWin32;
     {$ELSE}
       {$IFDEF Linux}
