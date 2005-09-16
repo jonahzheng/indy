@@ -17,10 +17,10 @@
 }
 
 unit IdSys;
-{$I IdCompilerDefines.inc}
+
 
 interface
-
+{$I IdCompilerDefines.inc}
 {
 The model we are using is this:
 
@@ -96,13 +96,9 @@ type
   {$IFDEF DOTNET}
     Exception = System.Exception;
   {$ELSE}
-     {$IFNDEF NoRedeclare}
     Exception = SysUtils.Exception;
-    {$ENDIF}
   {$ENDIF}
-    {$IFNDEF NoRedeclare}
   EAbort = SysUtils.EAbort;
-    {$ENDIF}
   {$ENDIF}
 
 implementation

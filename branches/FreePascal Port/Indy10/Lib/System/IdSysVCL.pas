@@ -19,9 +19,9 @@
 unit IdSysVCL;
 
 interface
-
+{$I IdCompilerDefines.inc}
 uses
-  {$I IdCompilerDefines.inc}
+
   {$IFDEF DOTNET}
   System.IO,
   {$ENDIF}
