@@ -207,6 +207,7 @@
   {$DEFINE NO_TMultiReadExclusiveWriteSynchronizer}
    {$DEFINE FPC_CircularBug}
    {$DEFINE NoRedeclare}
+   {$DEFINE ByteCompareSets}
 {$ENDIF}
 
 

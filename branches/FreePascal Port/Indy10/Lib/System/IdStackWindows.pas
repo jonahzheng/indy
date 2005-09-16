@@ -187,9 +187,9 @@
    Rev 1.0    11/13/2002 08:59:38 AM  JPMugaas
 }
 unit IdStackWindows;
-{$I IdCompilerDefines.inc}
-interface
 
+interface
+{$I IdCompilerDefines.inc}
 uses
   Classes,
   IdGlobal, IdException, IdStackBSDBase, IdStackConsts, IdWinsock2, IdStack, IdObjs,
@@ -235,7 +235,7 @@ type
       var VBuffer : TIdBytes;
       const AOffset : Integer;
       const AIP : String;
-      const APort : Integer);
+      const APort : TIdPort);
     function HostByName(const AHostName: string;
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string; override;
     procedure PopulateLocalAddresses; override;
@@ -268,8 +268,8 @@ type
     function HostByAddress(const AAddress: string;
               const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string; override;
 
-    function WSGetServByName(const AServiceName: string): Integer; override;
-    function WSGetServByPort(const APortNumber: Integer): TIdStrings; override;
+    function WSGetServByName(const AServiceName: string): TIdPort; override;
+    function WSGetServByPort(const APortNumber: TIdPort): TIdStrings; override;
 
     function RecvFrom(const ASocket: TIdStackSocketHandle; var VBuffer;
      const ALength, AFlags: Integer; var VIP: string; var VPort: TIdPort;
@@ -584,7 +584,7 @@ begin
   end;
 end;
 
-function TIdStackWindows.WSGetServByName(const AServiceName: string): Integer;
+function TIdStackWindows.WSGetServByName(const AServiceName: string): TIdPort;
 var
   ps: PServEnt;
 begin
@@ -593,7 +593,7 @@ begin
     Result := Ntohs(ps^.s_port);
   end else begin
     try
-      Result := Sys.StrToInt(AServiceName);
+      Result := Sys.StrToInt(AServiceName) and $FFFF;
     except
       on EConvertError do begin
         raise EIdInvalidServiceName.CreateFmt(RSInvalidServiceName, [AServiceName]);
@@ -603,7 +603,7 @@ begin
 end;
 
 function TIdStackWindows.WSGetServByPort(
-  const APortNumber: Integer): TIdStrings;
+  const APortNumber: TIdPort): TIdStrings;
 var
   ps: PServEnt;
   i: integer;
@@ -1151,7 +1151,7 @@ end;
 
 procedure TIdStackWindows.WriteChecksumIPv6(s: TIdStackSocketHandle;
   var VBuffer: TIdBytes; const AOffset: Integer; const AIP: String;
-  const APort: Integer);
+  const APort: TIdPort);
 var 
   LSource : TIdIn6Addr;
   LDest : TIdIn6Addr;
@@ -1217,8 +1217,10 @@ end;
 function TIdStackWindows.ReceiveMsg(ASocket: TIdStackSocketHandle; var VBuffer : TIdBytes;
   APkt: TIdPacketInfo;
   const AIPVersion: TIdIPVersion): Cardinal;
+{$IFNDEF NoRedeclare}
 type
   PByte = ^Byte;
+{$endif}
 var
   LIP : String;
   LPort : TIdPort;

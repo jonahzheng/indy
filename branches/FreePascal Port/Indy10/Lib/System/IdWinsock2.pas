@@ -900,21 +900,22 @@ type
   LPWSANetworkEvents = PWSANetworkEvents;
 
 //TransmitFile types used for the TransmitFile API function in WinNT/2000/XP
-
-  {$NODEFINE PTransmitFileBuffers}
-  PTransmitFileBuffers = ^TTransmitFileBuffers;
-  {$NODEFINE _TRANSMIT_FILE_BUFFERS}
-  _TRANSMIT_FILE_BUFFERS = record
+  {$IFNDEF NoRedeclare}
+    {$NODEFINE PTransmitFileBuffers}
+    PTransmitFileBuffers = ^TTransmitFileBuffers;
+    {$NODEFINE _TRANSMIT_FILE_BUFFERS}
+    _TRANSMIT_FILE_BUFFERS = record
       Head: Pointer;
-      HeadLength: DWORD;
+       HeadLength: DWORD;
       Tail: Pointer;
       TailLength: DWORD;
-  end;
-  {$NODEFINE TTransmitFileBuffers}
-  TTransmitFileBuffers = _TRANSMIT_FILE_BUFFERS;
-  {$NODEFINE TRANSMIT_FILE_BUFFERS}
-  TRANSMIT_FILE_BUFFERS = _TRANSMIT_FILE_BUFFERS;
+    end;
 
+    {$NODEFINE TTransmitFileBuffers}
+    TTransmitFileBuffers = _TRANSMIT_FILE_BUFFERS;
+    {$NODEFINE TRANSMIT_FILE_BUFFERS}
+    TRANSMIT_FILE_BUFFERS = _TRANSMIT_FILE_BUFFERS;
+  {$ENDIF}
 const
   {$NODEFINE TP_ELEMENT_MEMORY}
   TP_ELEMENT_MEMORY   = 1;
@@ -959,6 +960,7 @@ type
 
 //  WinSock 2 extension -- WSAPROTOCOL_INFO structure
 
+{$ifndef FPC}
 {$ifndef ver130}
 {  TGUID = packed record
     D1: LongInt;
@@ -971,7 +973,7 @@ type
 {$endif}
   {$NODEFINE LPGUID}
   LPGUID = PGUID;
-
+{$ENDIF}
 //  WinSock 2 extension -- WSAPROTOCOL_INFO manifest constants
 const
   {$NODEFINE max_protocol_chain}
@@ -1146,12 +1148,10 @@ const
   th_netdev = $00000001;
   th_tapi   = $00000002;
 
-type
-
-
 //  Manifest constants and type definitions related to name resolution and
 //  registration (RNR) API
-
+{$IFNDEF FPC}
+type
   {$IFDEF CIL}
   TBLOB = packed record
     cbSize : U_LONG;
@@ -1165,7 +1165,7 @@ type
   end;
   PBLOB = ^TBLOB;
   {$ENDIF}
-
+{$ENDIF}
 //  Service Install Flags
 
 const
@@ -3349,9 +3349,6 @@ uses IdResourceStrings;
 
 //=============================================================
 // (c) March 2001,  "Alex Konshin"<alexk@mtgroup.ru>
-
-type
-  PPointer = ^Pointer;
 
 var
   hWS2Dll : THandle = 0; // WS2.DLL handle

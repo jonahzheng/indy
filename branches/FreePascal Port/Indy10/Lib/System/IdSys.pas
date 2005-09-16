@@ -95,10 +95,13 @@ type
   {$IFDEF DOTNET}
     Exception = System.Exception;
   {$ELSE}
-
+     {$IFNDEF NoRedeclare}
     Exception = SysUtils.Exception;
+    {$ENDIF}
   {$ENDIF}
+    {$IFNDEF NoRedeclare}
   EAbort = SysUtils.EAbort;
+    {$ENDIF}
   {$ENDIF}
 
 implementation

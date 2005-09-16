@@ -43,8 +43,9 @@
  Move
 }
 unit IdException;
-{$I IdCompilerDefines.inc}
+
 interface
+{$I IdCompilerDefines.inc}
 
 uses
     {$IFDEF FPC_CircularBug}

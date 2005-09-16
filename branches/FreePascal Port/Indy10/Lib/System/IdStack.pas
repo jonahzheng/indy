@@ -167,10 +167,8 @@
 }
 unit IdStack;
 
-{$I IdCompilerDefines.inc}
-
 interface
-
+{$I IdCompilerDefines.inc}
 uses
   IdException, IdStackConsts, IdObjs, IdGlobal, IdSys;
 
@@ -471,7 +469,11 @@ function TIdStack.MakeCanonicalIPv6Address(const AAddr: string): string;
 // for easy checking if its an address or not.
 var
   p, i: integer;
+  {$IFDEF FPC}
+  dots, colons: Byte;
+  {$ELSE}
   dots, colons: integer;
+  {$ENDIF}
   colonpos: array[1..8] of integer;
   dotpos: array[1..3] of integer;
   LAddr: string;

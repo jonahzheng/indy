@@ -34,14 +34,16 @@ uses
 type
   TIdDateTimeBase = TDateTime;
   TAnsiCharSet = set of AnsiChar;
+   {$IFNDEF NoRedeclare}
   TSysCharSet = SysUtils.TSysCharSet;
+   {$ENDIF}
   TIdSysVCL = class(TIdSysBase)
   public
     class function StrToInt64(const S: string): Int64; overload;
     class function StrToInt64(const S: string; const Default : Int64): Int64; overload; 
 
     class function TwoDigitYearCenturyWindow : Word; 
-    class function DayOfWeek(const ADateTime: TDateTime): Word;
+    class function DayOfWeek(const ADateTime: TDateTime): Integer;
     class function DateTimeToStr(const ADateTime: TDateTime): string;  
     class function StrToDateTime(const S: String): TDateTime;
 
@@ -365,7 +367,7 @@ begin
    Result := SysUtils.FormatDateTime(Format,ADateTime);
 end;
 
-class function TIdSysVCL.DayOfWeek(const ADateTime: TDateTime): Word;
+class function TIdSysVCL.DayOfWeek(const ADateTime: TDateTime): Integer;
 begin
   Result := SysUtils.DayOfWeek(ADateTime);
 end;

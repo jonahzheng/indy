@@ -308,8 +308,8 @@ type
       const Aoptlen: Integer ); overload; virtual; abstract;
     function TranslateTInAddrToString(var AInAddr; const AIPVersion: TIdIPVersion): string;
     procedure TranslateStringToTInAddr(AIP: string; var AInAddr; const AIPVersion: TIdIPVersion);
-    function WSGetServByName(const AServiceName: string): Integer; virtual; abstract;
-    function WSGetServByPort(const APortNumber: Integer): TIdStrings; virtual; abstract;
+    function WSGetServByName(const AServiceName: string): TIdPort; virtual; abstract;
+    function WSGetServByPort(const APortNumber: TIdPort): TIdStrings; virtual; abstract;
     function RecvFrom(const ASocket: TIdStackSocketHandle; var ABuffer;
      const ALength, AFlags: Integer; var VIP: string; var VPort: TIdPort;
      AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer; virtual; abstract;

@@ -18,10 +18,10 @@
 
 unit IdObjs;
 
-{$I IdCompilerDefines.inc}
+
 
 interface
-
+{$I IdCompilerDefines.inc}
 uses
 {$IFDEF DotNet}
   {$IFDEF DotNetDistro}

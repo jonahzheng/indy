@@ -651,11 +651,9 @@
 }
 unit IdGlobal;
 
-{$I IdCompilerDefines.inc}
-
 interface
 
-
+{$I IdCompilerDefines.inc}
 
 uses
   {$IFDEF DotNet}
@@ -1101,11 +1099,13 @@ function IsOctal(const AString: string): Boolean; overload;
 function MakeCanonicalIPv4Address(const AAddr: string): string;
 function MakeCanonicalIPv6Address(const AAddr: string): string;
 function MakeDWordIntoIPv4Address(const ADWord: Cardinal): string;
-function Max(const AValueOne,AValueTwo: Int64): Int64;
+function Max(const AValueOne, AValueTwo: Int64): Int64;  overload;
+function Max(const AValueOne,AValueTwo: LongInt): LongInt;  overload;
 {$IFNDEF DotNet}
 function MemoryPos(const ASubStr: string; MemBuff: PChar; MemorySize: Integer): Integer;
 {$ENDIF}
-function Min(const AValueOne, AValueTwo: Int64): Int64;
+function Min(const AValueOne, AValueTwo: Int64): Int64; overload;
+function Min(const AValueOne, AValueTwo: LongInt): LongInt;  overload;
 function PosIdx(const ASubStr, AStr: AnsiString; AStartPos: Cardinal = 0): Cardinal; //For "ignoreCase" use AnsiUpperCase
 function PosInSmallIntArray(const ASearchInt: SmallInt; AArray: array of SmallInt): Integer;
 function PosInStrArray(const SearchStr: string; Contents: array of string;
@@ -1701,7 +1701,11 @@ end;
 function IdPorts: TList;
 var
   s: string;
+  {$IFDEF ByteCompareSets}
+  idx, i, iPrev, iPosSlash: Byte;
+  {$ELSE}
   idx, i, iPrev, iPosSlash: Integer;
+  {$ENDIF}
   sl: TIdStringList;
 begin
   if GIdPorts = nil then
@@ -1714,8 +1718,8 @@ begin
       for idx := 0 to sl.Count - 1 do
       begin
         s := sl[idx];
-        iPosSlash := IndyPos('/', s);   {do not localize}
-        if (iPosSlash > 0) and (not (IndyPos('#', s) in [1..iPosSlash])) then {do not localize}
+        iPosSlash := IndyPos('/', s) and $FF;   {do not localize}
+        if (iPosSlash > 0) and (not (Byte(IndyPos('#', s) and $FF) in [1..iPosSlash])) then {do not localize}
         begin // presumably found a port number that isn't commented    {Do not Localize}
           i := iPosSlash;
           repeat
@@ -1725,7 +1729,7 @@ begin
             end;
           //TODO: Make Whitespace a function to elim warning
           until Ord(s[i]) in WhiteSpace;
-          i := Sys.StrToInt(Copy(s, i+1, iPosSlash-i-1));
+          i := Sys.StrToInt(Copy(s, i+1, iPosSlash-i-1)) and $FF;
           if i <> iPrev then begin
             GIdPorts.Add(TObject(i));
           end;
@@ -1781,7 +1785,11 @@ begin
   {$IFDEF DotNet}
   Dest.Write(Src.Memory, Count);
   {$ELSE}
+    {$IFDEF FPC}
+  Dest.Write(Src.Memory^, Count and $FFFFFFFF);
+    {$ELSE}
   Dest.Write(Src.Memory^, Count);
+    {$ENDIF}
   {$ENDIF}
 end;
 
@@ -2028,7 +2036,11 @@ function MakeCanonicalIPv6Address(const AAddr: string): string;
 // for easy checking if its an address or not.
 var
   p, i: Integer;
+  {$IFDEF ByteCompareSets}
+   dots, colons: Byte;
+  {$ELSE}
   dots, colons: Integer;
+  {$ENDIF}
   colonpos: array[1..8] of Integer;
   dotpos: array[1..3] of Integer;
   LAddr: string;
@@ -2171,11 +2183,23 @@ begin
     raise EIdInvalidIPv6Address.Create(Sys.Format(RSInvalidIPv6Address,[AIPAddress]));
   end;
   for i := 0 to 7 do begin
-    Result[i]:=Sys.StrToInt('$'+fetch(LAddress,':'),0) and $FF;
+    Result[i]:=Sys.StrToInt('$'+fetch(LAddress,':'),0) and $FFFF;
   end;
 end;
 
 function Max(const AValueOne,AValueTwo: Int64): Int64;
+begin
+  if AValueOne < AValueTwo then
+  begin
+    Result := AValueTwo
+  end //if AValueOne < AValueTwo then
+  else
+  begin
+    Result := AValueOne;
+  end; //else..if AValueOne < AValueTwo then
+end;
+
+function Max(const AValueOne,AValueTwo: LongInt): LongInt;
 begin
   if AValueOne < AValueTwo then
   begin
@@ -2233,6 +2257,18 @@ begin
   Result := 0;
 End;
 {$ENDIF}
+
+function Min(const AValueOne, AValueTwo: LongInt): LongInt;
+begin
+  If AValueOne > AValueTwo then
+  begin
+    Result := AValueTwo
+  end //If AValueOne > AValueTwo then
+  else
+  begin
+    Result := AValueOne;
+  end; //..If AValueOne > AValueTwo then
+end;
 
 function Min(const AValueOne, AValueTwo: Int64): Int64;
 begin

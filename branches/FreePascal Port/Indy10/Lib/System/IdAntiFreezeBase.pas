@@ -56,11 +56,9 @@
 }
 unit IdAntiFreezeBase;
 
+interface
 // TODO: Remove this when D.NET problem is resolved
 {$I IdCompilerDefines.inc}
-
-interface
-
 uses
   IdBaseComponent;
 

@@ -79,13 +79,11 @@
    Rev 1.0    11/13/2002 08:38:26 AM  JPMugaas
 }
 unit IdBaseComponent;
-// Kudzu: This unit is permitted to viloate IFDEF restriction to harmonize
-// VCL / .Net difference at the base level.
-
-{$I IdCompilerDefines.inc}
 
 interface
-
+// Kudzu: This unit is permitted to viloate IFDEF restriction to harmonize
+// VCL / .Net difference at the base level.
+{$I IdCompilerDefines.inc}
 
 uses
   {$IFDEF DotNet}
