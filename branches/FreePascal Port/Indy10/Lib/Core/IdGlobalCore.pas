@@ -31,11 +31,11 @@ unit IdGlobalCore;
 
 interface
 
+{$I IdCompilerDefines.inc}
 uses
   IdObjs,
   IdGlobal;
 
-{$I IdCompilerDefines.inc}
 const
   {$IFDEF Linux}
   tpListener = tpIdNormal;
