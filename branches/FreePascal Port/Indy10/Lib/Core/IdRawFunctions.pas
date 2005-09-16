@@ -105,7 +105,7 @@ procedure IdRawBuildIcmpUnreach(AType, ACode: byte;
 // IGMP
 procedure IdRawBuildIgmp(AType, ACode: byte;
   AnIp: TIdInAddr;
-  const APayload, APayloadSize: integer;
+  const APayload : Word; const APayloadSize: integer;
   var VBuffer : TIdBytes);
 
 // IP
@@ -532,7 +532,7 @@ end;
 
 procedure IdRawBuildIgmp(AType, ACode: byte;
   AnIp: TIdInAddr;
-  const APayload, APayloadSize: integer;
+  const APayload : Word; const APayloadSize: integer;
   var VBuffer : TIdBytes);
 var
   HdrIgmp: TIdIgmpHdr;

@@ -318,7 +318,8 @@ end;
 procedure TIdUDPListenerThread.Run;
 var
   PeerIP: string;
-  i, PeerPort, ByteCount: Integer;
+  PeerPort : TIdPort;
+  i,  ByteCount: Integer;
 begin
   FReadList.SelectRead(AcceptWait);
   for i := 0 to FReadList.Count - 1 do try

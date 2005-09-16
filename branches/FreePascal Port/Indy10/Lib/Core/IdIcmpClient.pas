@@ -63,7 +63,7 @@ If we support a later version of the NET framework that has a better API, I may
 consider revisiting this.
 
 }
-{$I IdCompilerDefines.inc}
+
 // SG 25/1/02: Modified the component to support multithreaded PING and traceroute
 // SG 25/1/02: NOTE!!!
 // SG 25/1/02:   The component no longer use the timing informations contained
@@ -72,7 +72,7 @@ consider revisiting this.
 // SG 25/1/02:   In case of TTL, it is incorrect.
 
 interface
-
+{$I IdCompilerDefines.inc}
 uses
   IdGlobal,
   IdObjs,

@@ -512,10 +512,10 @@
 }
 unit IdIOHandler;
 
-{$I IdCompilerDefines.inc}
+
 
 interface
-
+{$I IdCompilerDefines.inc}
 uses
   IdException,
   IdAntiFreezeBase, IdBuffer, IdBaseComponent, IdComponent, IdGlobal, IdExceptionCore,
@@ -787,6 +787,7 @@ type
 implementation
 
 uses
+
   IdStack, IdResourceStrings;
 
 var

@@ -58,6 +58,8 @@ Because it links to Forms:
 
 interface
 
+{$I IdCompilerDefines.inc}
+
 uses
   Classes,
   IdAntiFreezeBase,
@@ -66,7 +68,7 @@ uses
 {Directive needed for C++Builder HPP and OBJ files for this that will force it
 to be statically compiled into the code}
 
-{$I IdCompilerDefines.inc}
+
 
 {$IFDEF MSWINDOWS}
 {$HPPEMIT '#pragma link "IdAntiFreeze.obj"'}    {Do not Localize}

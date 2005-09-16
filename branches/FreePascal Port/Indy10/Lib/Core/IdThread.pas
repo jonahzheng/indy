@@ -162,10 +162,10 @@ unit IdThread;
 2003-01-27 -Andrew P.Rybin
   -TIdThreadOptions
 }
-{$I IdCompilerDefines.inc}
+
 
 interface
-
+{$I IdCompilerDefines.inc}
 uses
   IdGlobal, IdException, IdSys, IdYarn, IdTask, IdThreadSafe, IdObjs;
 

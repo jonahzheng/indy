@@ -212,7 +212,7 @@ end;
 function TIdRawBase.ReceiveBuffer(var VBuffer : TIdBytes; ATimeOut: integer = -1): integer;
 var
   LIP : String;
-  LPort : Integer;
+  LPort : TIdPort;
 begin
   Result := 0;
     // TODO: pass flags to recv()

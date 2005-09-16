@@ -36,10 +36,10 @@
 }
 unit IdCoreDsnRegister;
 
-{$I IdCompilerDefines.inc}
+
 
 interface
-
+{$I IdCompilerDefines.inc}
 uses
   {$IFDEF VCL8ORABOVE}
      {$IFDEF DOTNET}

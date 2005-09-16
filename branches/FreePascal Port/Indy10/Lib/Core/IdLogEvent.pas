@@ -31,7 +31,7 @@ unit IdLogEvent;
 interface
 
 uses
-  IdLogBase, IdObjs, IdBaseComponent;
+  IdLogBase, IdObjs;
 
 type
   TLogItemStatusEvent = procedure(ASender: TIdNativeComponent; AText: string) of object;

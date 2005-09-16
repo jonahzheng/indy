@@ -207,23 +207,23 @@ type
    
     //
     function DisasmUDPReplyPacket(const APacket : TIdBytes;
-      var VHost : String; var VPort : Integer): TIdBytes;
+      var VHost : String; var VPort : TIdPort): TIdBytes;
     function MakeUDPRequestPacket(const AData: TIdBytes;
-      const AHost : String; const APort : Integer) : TIdBytes;
+      const AHost : String; const APort : TIdPort) : TIdBytes;
     procedure AssignTo(ASource: TIdPersistent); override;
     function GetEnabled: Boolean; override;
     procedure InitComponent; override;
     procedure AuthenticateSocks5Connection(AIOHandler: TIdIOHandler);
     // This must be defined with an port value that's a word so that we use the 2 byte Network Order byte functions instead
     // the 4 byte or 8 byte functions.  If we use the wrong byte order functions, we can get a zero port value causing an error.
-    procedure MakeSocks4Request(AIOHandler: TIdIOHandler; const AHost: string; const APort: Word; const ARequest : Byte);
-    procedure MakeSocks5Request(AIOHandler: TIdIOHandler; const AHost: string; const APort: Word; const ARequest : Byte; var VBuf : TIdBytes; var VLen : Integer);
-    procedure MakeSocks4Connection(AIOHandler: TIdIOHandler; const AHost: string; const APort: Integer);
-    procedure MakeSocks4Bind(AIOHandler: TIdIOHandler; const AHost: string; const APort: Integer);
-    procedure MakeSocks5Connection(AIOHandler: TIdIOHandler; const AHost: string; const APort: Integer; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+    procedure MakeSocks4Request(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort; const ARequest : Byte);
+    procedure MakeSocks5Request(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort; const ARequest : Byte; var VBuf : TIdBytes; var VLen : Integer);
+    procedure MakeSocks4Connection(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort);
+    procedure MakeSocks4Bind(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort);
+    procedure MakeSocks5Connection(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
     procedure MakeSocks5Bind(AIOHandler: TIdIOHandler; const AHost: string;
-      const APort: Integer; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
-    procedure MakeConnection(AIOHandler: TIdIOHandler; const AHost: string; const APort: Integer; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
+      const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+    procedure MakeConnection(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
     function  MakeSocks4Listen(AIOHandler: TIdIOHandler; const ATimeOut:integer):boolean;
     function  MakeSocks5Listen(AIOHandler: TIdIOHandler; const ATimeOut:integer):boolean;
 
@@ -232,15 +232,15 @@ type
     procedure CloseSocks5UDPAssociation;
   public
     destructor Destroy; override;
-    procedure Bind(AIOHandler: TIdIOHandler; const AHost: string; const APort: Integer; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
+    procedure Bind(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
     function  Listen(AIOHandler: TIdIOHandler; const ATimeOut:integer):boolean;override;
-    procedure OpenUDP(AHandle : TIdSocketHandle; const AHost: string=''; const APort: Integer=0; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
+    procedure OpenUDP(AHandle : TIdSocketHandle; const AHost: string=''; const APort: TIdPort=0; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
     function RecvFromUDP(AHandle: TIdSocketHandle;
       var ABuffer : TIdBytes;
-      var VPeerIP: string; var VPeerPort: integer; const AIPVersion: TIdIPVersion;
+      var VPeerIP: string; var VPeerPort: TIdPort; const AIPVersion: TIdIPVersion;
        AMSec: Integer = IdTimeoutDefault): integer; override;
     procedure SendToUDP(AHandle: TIdSocketHandle;
-      AHost: string; const APort: Integer; const AIPVersion: TIdIPVersion; const ABuffer : TIdBytes); override;
+      AHost: string; const APort: TIdPort; const AIPVersion: TIdIPVersion; const ABuffer : TIdBytes); override;
     procedure CloseUDP(AHandle: TIdSocketHandle); override;
   published
     property Authentication: TSocksAuthentication read FAuthentication write FAuthentication default ID_SOCKS_AUTH;
@@ -275,7 +275,8 @@ begin
   end;
 end;
 
-procedure TIdSocksInfo.MakeSocks4Request(AIOHandler: TIdIOHandler; const AHost: string; const APort: Word; const ARequest : Byte);
+procedure TIdSocksInfo.MakeSocks4Request(AIOHandler: TIdIOHandler;
+  const AHost: string; const APort: Word; const ARequest : Byte);
 var
   LIpAddr: String;
   LTempPort : Word;
@@ -314,7 +315,8 @@ begin
   end;
 end;
 
-procedure TIdSocksInfo.MakeSocks4Connection(AIOHandler: TIdIOHandler; const AHost: string; const APort: Integer);
+procedure TIdSocksInfo.MakeSocks4Connection(AIOHandler: TIdIOHandler;
+  const AHost: string; const APort: Word);
 var
   LResponse: TIdBytes;
 begin
@@ -397,7 +399,7 @@ begin
   VLen := VLen + 2;
 end;
 
-procedure TIdSocksInfo.MakeSocks5Connection(AIOHandler: TIdIOHandler; const AHost: string; const APort: Integer; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+procedure TIdSocksInfo.MakeSocks5Connection(AIOHandler: TIdIOHandler; const AHost: string; const APort: Word; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 var
   pos: Integer;
   LBuf: TIdBytes;
@@ -448,7 +450,7 @@ begin
   end;
 end;
 
-procedure TIdSocksInfo.MakeSocks4Bind(AIOHandler: TIdIOHandler; const AHost: string; const APort: Integer);
+procedure TIdSocksInfo.MakeSocks4Bind(AIOHandler: TIdIOHandler; const AHost: string; const APort: Word);
 var
   LResponse: TIdBytes;
   LClient: TIdTcpClient;
@@ -486,7 +488,7 @@ begin
   end;
 end;
 
-procedure TIdSocksInfo.MakeConnection(AIOHandler: TIdIOHandler; const AHost: string; const APort: Integer; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+procedure TIdSocksInfo.MakeConnection(AIOHandler: TIdIOHandler; const AHost: string; const APort: Word; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 begin
   case Version of
     svSocks4, svSocks4A: MakeSocks4Connection(AIOHandler, AHost, APort);
@@ -578,7 +580,7 @@ begin
 end;
 
 procedure TIdSocksInfo.MakeSocks5Bind(AIOHandler: TIdIOHandler; const AHost: string;
-  const APort: Integer; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+  const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 var
   Lpos: Integer;
   LBuf: TIdBytes;
@@ -655,7 +657,7 @@ begin
 end;
 
 procedure TIdSocksInfo.Bind(AIOHandler: TIdIOHandler; const AHost: string;
-  const APort: Integer; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+  const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 begin
   case Version of
     svSocks4, svSocks4A: MakeSocks4Bind(AIOHandler, AHost, APort);
@@ -843,7 +845,7 @@ begin
 end;
 
 procedure TIdSocksInfo.OpenUDP(AHandle: TIdSocketHandle;
-  const AHost: string=''; const APort: Integer=0; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+  const AHost: string=''; const APort: TIdPort=0; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 begin
   case Version of
     svSocks4, svSocks4A: raise EIdSocksUDPNotSupportedBySOCKSVersion.Create(RSSocksUDPNotSupported);
@@ -852,7 +854,7 @@ begin
 end;
 
 function TIdSocksInfo.DisasmUDPReplyPacket(const APacket : TIdBytes;
-  var VHost : String; var VPort : Integer): TIdBytes;
+  var VHost : String; var VPort : TIdPort): TIdBytes;
 {
 
 
@@ -924,7 +926,7 @@ begin
 end;
 
 function TIdSocksInfo.MakeUDPRequestPacket(const AData: TIdBytes;
-      const AHost : String; const APort : Integer) : TIdBytes;
+      const AHost : String; const APort : TIdPort) : TIdBytes;
 
 {
 
@@ -1020,7 +1022,7 @@ end;
 
 function TIdSocksInfo.RecvFromUDP(AHandle: TIdSocketHandle;
  var ABuffer : TIdBytes;
-  var VPeerIP: string; var VPeerPort: integer;  const AIPVersion: TIdIPVersion;
+  var VPeerIP: string; var VPeerPort: TIdPort;  const AIPVersion: TIdIPVersion;
   AMSec: Integer = IdTimeoutDefault): integer;
 var LBuf : TIdBytes;
 
@@ -1044,7 +1046,7 @@ begin
 end;
 
 procedure TIdSocksInfo.SendToUDP(AHandle: TIdSocketHandle;
-      AHost: string; const APort: Integer; const AIPVersion: TIdIPVersion; const ABuffer : TIdBytes);
+      AHost: string; const APort: TIdPort; const AIPVersion: TIdIPVersion; const ABuffer : TIdBytes);
 var LBuf : TIdBytes;
 begin
   case Version of

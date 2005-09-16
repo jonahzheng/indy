@@ -411,7 +411,7 @@ begin
   end;
 end;
 
-procedure TIdTCPClientCustom.SetPort(const AValue: integer);
+procedure TIdTCPClientCustom.SetPort(const AValue: TIdPort);
 begin
   FPort := AValue;
   if IOHandler <> nil then begin

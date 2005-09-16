@@ -226,7 +226,7 @@ type
       AOffset: Integer;
       ASize: Integer = -1
       ): Integer;
-    procedure SendTo(const AIP: string; const APort: Integer; const ABuffer : TIdBytes; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+    procedure SendTo(const AIP: string; const APort: TIdPort; const ABuffer : TIdBytes; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
     procedure SetPeer(const AIP: string; const APort: TIdPort; const AIPVersion : TIdIPVersion = ID_DEFAULT_IP_VERSION);
     procedure SetBinding(const AIP: string; const APort: TIdPort; const AIPVersion : TIdIPVersion = ID_DEFAULT_IP_VERSION);
     procedure GetSockOpt(ALevel:TIdSocketOptionLevel; AOptName: TIdSocketOption; out VOptVal: Integer);
@@ -332,7 +332,7 @@ begin
 ////  (GStack as TIdStackBSDBase).WSSetSockOpt(Handle, level, optname, optval, optlen);
 end;
 
-procedure TIdSocketHandle.SendTo(const AIP: string; const APort: Integer; const ABuffer : TIdBytes; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+procedure TIdSocketHandle.SendTo(const AIP: string; const APort: TIdPort; const ABuffer : TIdBytes; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 begin
   GStack.SendTo(Handle, ABuffer, 0, AIP, APort,AIPVersion);
 end;

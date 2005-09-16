@@ -251,7 +251,7 @@ end;
 procedure TIdIPMCastListenerThread.Run;
 var
   PeerIP: string;
-  PeerPort: Integer;
+  PeerPort:TIdPort;
   ByteCount: Integer;
   LReadList: TIdSocketList;
   i: Integer;
