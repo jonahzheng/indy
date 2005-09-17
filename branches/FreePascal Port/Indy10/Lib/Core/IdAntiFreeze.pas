@@ -16,31 +16,31 @@
   $Log$
 }
 {
-{   Rev 1.6    2004.02.03 4:16:42 PM  czhower
-{ For unit name changes.
+   Rev 1.6    2004.02.03 4:16:42 PM  czhower
+ For unit name changes.
 }
 {
-{   Rev 1.5    2004.01.01 3:13:32 PM  czhower
-{ Updated comment.
+   Rev 1.5    2004.01.01 3:13:32 PM  czhower
+ Updated comment.
 }
 {
-{   Rev 1.4    2003.12.31 10:30:24 PM  czhower
-{ Comment update.
+   Rev 1.4    2003.12.31 10:30:24 PM  czhower
+ Comment update.
 }
 {
-{   Rev 1.3    2003.12.31 7:25:14 PM  czhower
-{ Now works in .net
+   Rev 1.3    2003.12.31 7:25:14 PM  czhower
+ Now works in .net
 }
 {
-{   Rev 1.2    10/4/2003 9:52:08 AM  GGrieve
-{ add IdCoreGlobal to uses list
+   Rev 1.2    10/4/2003 9:52:08 AM  GGrieve
+ add IdCoreGlobal to uses list
 }
 {
-{   Rev 1.1    2003.10.01 1:12:30 AM  czhower
-{ .Net
+   Rev 1.1    2003.10.01 1:12:30 AM  czhower
+ .Net
 }
 {
-{   Rev 1.0    11/13/2002 08:37:36 AM  JPMugaas
+   Rev 1.0    11/13/2002 08:37:36 AM  JPMugaas
 }
 unit IdAntiFreeze;
 

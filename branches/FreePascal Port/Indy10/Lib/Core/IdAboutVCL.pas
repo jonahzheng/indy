@@ -6,7 +6,7 @@ uses
   {$IFDEF LINUX}
   QStdCtrls, QForms, QExtCtrls, QControls, QComCtrls, QGraphics, Types, Qt,
   {$ELSE}
-  Windows, Messages, StdCtrls, Buttons, ExtCtrls, Graphics, Controls, ComCtrls, Forms,
+  Windows,  StdCtrls, Buttons, ExtCtrls, Graphics, Controls, ComCtrls, Forms,
   {$ENDIF}
   Classes, SysUtils;
 
@@ -92,9 +92,10 @@ begin
     Font.Height := -11;
     Font.Name := 'Tahoma';
     Font.Style := [];
-    OldCreateOrder := False;
     Position := poScreenCenter;
+    {$IFNDEF FPC}
     Scaled := True;
+    {$ENDIF}
     Self.Constraints.MinHeight := Height;
      Self.Constraints.MinWidth := Width;
   //  PixelsPerInch := 96;
@@ -127,7 +128,9 @@ begin
     Font.Name := 'Verdana';
     Font.Style := [fsBold];
     ParentFont := False;
+    {$IFNDEF FPC}
     Transparent := True;
+    {$ENDIF}
     WordWrap := True;
 
   end;
@@ -147,7 +150,9 @@ begin
     Font.Name := 'Verdana';
     Font.Style := [fsBold];
     ParentFont := False;
+    {$IFNDEF FPC}
     Transparent := True;
+    {$ENDIF}
     Anchors := [akLeft, akTop, akRight];
   end;
   with FlblCopyRight do
@@ -168,7 +173,9 @@ begin
     Font.Name := 'Verdana';
     Font.Style := [fsBold];
     ParentFont := False;
+    {$IFNDEF FPC}
     Transparent := True;
+    {$ENDIF}
     WordWrap := True;
   end;
 
@@ -183,7 +190,9 @@ begin
     Height := 23;
     Alignment := taCenter;
     AutoSize := False;
+    {$IFNDEF FPC}
     Transparent := True;
+    {$ENDIF}
     Font.Height := -13;
     Font.Name := 'Verdana';
     Caption := RSAAboutBoxPleaseVisit;
@@ -206,7 +215,9 @@ begin
     Font.Name := 'Verdana';
     Font.Style := [fsUnderline];
     ParentFont := False;
-   Transparent := True;
+    {$IFNDEF FPC}
+    Transparent := True;
+    {$ENDIF}
     OnClick := lblURLClick;
     Caption := RSAAboutBoxIndyWebsite;
     Anchors := [akLeft, akTop, akRight];
@@ -245,7 +256,7 @@ end;
 procedure TfrmAbout.lblURLClick(Sender: TObject);
 begin
   {$IFDEF MSWINDOWS}
-  ShellAPI.shellExecute((Self as TControl).Handle,PChar('open'),PChar(FlblURL.Caption),nil,nil, 0);    {Do not Localize}
+  ShellAPI.shellExecute(Handle,PChar('open'),PChar(FlblURL.Caption),nil,nil, 0);    {Do not Localize}
   FlblURL.Font.Color := clPurple;
   {$ENDIF}
 end;

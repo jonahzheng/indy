@@ -11,12 +11,12 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
+
+
   $Log$
-}
-{
-{   Rev 1.0    11/13/2002 08:45:32 AM  JPMugaas
+
+
+   Rev 1.0    11/13/2002 08:45:32 AM  JPMugaas
 }
 unit IdRawClient;
 

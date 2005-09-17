@@ -11,40 +11,40 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
-  $Log$
-}
-{
-{   Rev 1.7    14/06/2004 21:38:42  CCostelloe
-{ Converted StringToTIn4Addr call
-}
-{
-{   Rev 1.6    09/06/2004 10:00:50  CCostelloe
-{ Kylix 3 patch
-}
-{
-{   Rev 1.5    2004.02.03 5:43:52 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.4    1/21/2004 3:11:10 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.3    10/26/2003 09:11:54 AM  JPMugaas
-{ Should now work in NET.
-}
-{
-{   Rev 1.2    2003.10.24 10:38:28 AM  czhower
-{ UDP Server todos
-}
-{
-{   Rev 1.1    2003.10.12 4:03:58 PM  czhower
-{ compile todos
-}
-{
-{   Rev 1.0    11/13/2002 07:55:26 AM  JPMugaas
+
+
+ $Log$
+
+
+   Rev 1.7    14/06/2004 21:38:42  CCostelloe
+ Converted StringToTIn4Addr call
+
+
+   Rev 1.6    09/06/2004 10:00:50  CCostelloe
+ Kylix 3 patch
+
+
+   Rev 1.5    2004.02.03 5:43:52 PM  czhower
+ Name changes
+
+
+   Rev 1.4    1/21/2004 3:11:10 PM  JPMugaas
+ InitComponent
+
+
+   Rev 1.3    10/26/2003 09:11:54 AM  JPMugaas
+ Should now work in NET.
+
+
+   Rev 1.2    2003.10.24 10:38:28 AM  czhower
+ UDP Server todos
+
+
+   Rev 1.1    2003.10.12 4:03:58 PM  czhower
+ compile todos
+
+
+   Rev 1.0    11/13/2002 07:55:26 AM  JPMugaas
 }
 unit IdIPMCastServer;
 

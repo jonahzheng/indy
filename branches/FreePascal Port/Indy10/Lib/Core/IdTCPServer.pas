@@ -11,13 +11,13 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
-  $Log$
-}
-{
-{   Rev 1.69    12/2/2004 9:26:42 PM  JPMugaas
-{ Bug fix.
+
+
+ $Log$
+
+
+   Rev 1.69    12/2/2004 9:26:42 PM  JPMugaas
+ Bug fix.
 }
 unit IdTCPServer;
 

@@ -11,20 +11,20 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
+
+
   $Log$
-}
-{
-{   Rev 1.2    9/5/2004 2:08:16 PM  JPMugaas
-{ Should work in D9 NET.
-}
-{
-{   Rev 1.1    2/3/2004 11:42:50 AM  JPMugaas
-{ Fixed for new design.
-}
-{
-{   Rev 1.0    11/13/2002 08:43:16 AM  JPMugaas
+
+
+   Rev 1.2    9/5/2004 2:08:16 PM  JPMugaas
+ Should work in D9 NET.
+
+
+   Rev 1.1    2/3/2004 11:42:50 AM  JPMugaas
+ Fixed for new design.
+
+
+   Rev 1.0    11/13/2002 08:43:16 AM  JPMugaas
 }
 unit IdDsnBaseCmpEdt;
 
@@ -43,15 +43,26 @@ uses
      {$ENDIF}
   {$ELSE}
     {$IFDEF VCL6ORABOVE}
+      {$IFDEF FPC}
+      ComponentEditors;
+      {$ELSE}
       DesignIntf, 
-      DesignEditors;
+       DesignEditors;
+       {$ENDIF}
+
     {$ELSE}
+
        Dsgnintf;
+
     {$ENDIF}
   {$ENDIF}
 
 type
+  {$IFDEF FPC}
+  TIdBaseComponentEditor = class(TDefaultComponentEditor)
+  {$ELSE}
   TIdBaseComponentEditor = class(TDefaultEditor)
+  {$ENDIF}
   public
     procedure ExecuteVerb(Index: Integer); override;
     function GetVerb(Index: Integer): string; override;

@@ -11,20 +11,20 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
+
+
   $Log$
-}
-{
-{   Rev 1.2    2004.05.20 12:34:28 PM  czhower
-{ Removed more non .NET compatible stream read and writes
-}
-{
-{   Rev 1.1    2003.10.17 8:17:22 PM  czhower
-{ Removed const
-}
-{
-{   Rev 1.0    11/13/2002 07:56:08 AM  JPMugaas
+
+
+   Rev 1.2    2004.05.20 12:34:28 PM  czhower
+ Removed more non .NET compatible stream read and writes
+
+
+   Rev 1.1    2003.10.17 8:17:22 PM  czhower
+ Removed const
+
+
+   Rev 1.0    11/13/2002 07:56:08 AM  JPMugaas
 }
 unit IdLogEvent;
 

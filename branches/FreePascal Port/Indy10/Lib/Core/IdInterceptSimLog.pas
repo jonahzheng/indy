@@ -11,33 +11,33 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
+
+
   $Log$
-}
-{
-{   Rev 1.6    7/23/04 6:40:08 PM  RLebeau
-{ Added extra exception handling to Connect()
-}
-{
-{   Rev 1.5    2004.05.20 11:39:10 AM  czhower
-{ IdStreamVCL
-}
-{
-{   Rev 1.4    2004.02.03 4:17:18 PM  czhower
-{ For unit name changes.
-}
-{
-    Rev 1.3    10/19/2003 11:38:26 AM  DSiders
-  Added localization comments.
-}
-{
-{   Rev 1.2    2003.10.18 1:56:46 PM  czhower
-{ Now uses ASCII instead of binary format.
-}
-{
-{   Rev 1.1    2003.10.17 6:16:20 PM  czhower
-{ Functional complete.
+
+
+   Rev 1.6    7/23/04 6:40:08 PM  RLebeau
+ Added extra exception handling to Connect()
+
+
+   Rev 1.5    2004.05.20 11:39:10 AM  czhower
+ IdStreamVCL
+
+
+   Rev 1.4    2004.02.03 4:17:18 PM  czhower
+ For unit name changes.
+
+
+   Rev 1.3    10/19/2003 11:38:26 AM  DSiders
+ Added localization comments.
+
+
+   Rev 1.2    2003.10.18 1:56:46 PM  czhower
+ Now uses ASCII instead of binary format.
+
+
+   Rev 1.1    2003.10.17 6:16:20 PM  czhower
+ Functional complete.
 }
 unit IdInterceptSimLog;
 

@@ -16,9 +16,9 @@
   $Log$
 }
 {
-{   Rev 1.5    1/29/2004 8:54:30 AM  JPMugaas
-{ Removed myself from the distribution Team Chairperson entry as I am resigning
-{ from that role.
+   Rev 1.5    1/29/2004 8:54:30 AM  JPMugaas
+ Removed myself from the distribution Team Chairperson entry as I am resigning
+ from that role.
 }
 {
     Rev 1.4    10/15/2003 10:11:46 PM  DSiders
@@ -26,19 +26,19 @@
   Corrected spelling error in comments.
 }
 {
-{   Rev 1.3    6/16/2003 12:01:44 PM  JPMugaas
-{ Updated copyright to say 2003.
+   Rev 1.3    6/16/2003 12:01:44 PM  JPMugaas
+ Updated copyright to say 2003.
 }
 {
-{   Rev 1.2    6/8/2003 05:46:58 AM  JPMugaas
-{ The kitchen sink has now been implemented.
+   Rev 1.2    6/8/2003 05:46:58 AM  JPMugaas
+ The kitchen sink has now been implemented.
 }
 {
-{   Rev 1.1    1/15/2003 08:03:56 AM  JPMugaas
-{ Updated with new website address.
+   Rev 1.1    1/15/2003 08:03:56 AM  JPMugaas
+ Updated with new website address.
 }
 {
-{   Rev 1.0    11/13/2002 08:43:24 AM  JPMugaas
+   Rev 1.0    11/13/2002 08:43:24 AM  JPMugaas
 }
 unit IdDsnCoreResourceStrings;
 {
