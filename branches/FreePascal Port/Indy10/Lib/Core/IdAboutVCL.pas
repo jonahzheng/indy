@@ -38,7 +38,10 @@ Procedure ShowAboutBox(const AProductName, AProductVersion : String);
 Procedure ShowDlg;
 
 implementation
+{$IFDEF FPC}
+{$ELSE}
 {$R IdAboutVCL.RES}
+{$ENDIF}
 uses
   {$IFNDEF Linux}ShellApi, {$ENDIF}
   IdDsnCoreResourceStrings,

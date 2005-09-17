@@ -11,17 +11,17 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
+
+
   $Log$
-}
-{
-{   Rev 1.2    2003.11.04 3:49:00 PM  czhower
-{ Update to sync TC
-}
-{
-{   Rev 1.1    2003.10.21 12:19:02 AM  czhower
-{ TIdTask support and fiber bug fixes.
+
+
+   Rev 1.2    2003.11.04 3:49:00 PM  czhower
+ Update to sync TC
+
+
+   Rev 1.1    2003.10.21 12:19:02 AM  czhower
+ TIdTask support and fiber bug fixes.
 }
 unit IdTask;
 
