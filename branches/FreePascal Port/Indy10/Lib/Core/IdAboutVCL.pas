@@ -8,6 +8,9 @@ uses
   {$ELSE}
   Windows,  StdCtrls, Buttons, ExtCtrls, Graphics, Controls, ComCtrls, Forms,
   {$ENDIF}
+  {$IFDEF FPC}
+  LResources, Types,
+  {$ENDIF}
   Classes, SysUtils;
 
 type
@@ -38,8 +41,8 @@ Procedure ShowAboutBox(const AProductName, AProductVersion : String);
 Procedure ShowDlg;
 
 implementation
-{$IFDEF FPC}
-{$ELSE}
+{$IFNDEF FPC}
+
 {$R IdAboutVCL.RES}
 {$ENDIF}
 uses
@@ -68,6 +71,9 @@ end;
 { TfrmAbout }
 
 constructor TfrmAbout.Create(AOwner: TComponent);
+{$IFDEF FPC}
+var Bmp : TBitmap;
+{$ENDIF}
 begin
   inherited CreateNew(AOwner,0);
 
@@ -111,7 +117,14 @@ begin
     Width := 388;
     Height := 240;
    // AutoSize := True;
+    {$IFDEF FPC}
+
+   Picture.Bitmap.LoadFromLazarusResource('IndyCar');//this is XPM format
+   Picture.Bitmap.TransparentColor := Picture.Bitmap.Canvas.Pixels[0,0];
+   Picture.Bitmap.Transparent := True;
+      {$ELSE}
     Picture.Bitmap.LoadFromResourceName(HInstance, 'INDYCAR');    {Do not Localize}
+    {$ENDIF}
     Transparent := True;
   end;
   with FlblName do
@@ -297,4 +310,8 @@ begin
   Create(nil);
 end;
 
+{$IFDEF FPC}
+initialization
+  {$i IdAboutVCL.lrs}
+{$ENDIF}
 end.

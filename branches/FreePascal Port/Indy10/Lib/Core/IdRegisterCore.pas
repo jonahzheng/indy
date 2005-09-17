@@ -141,6 +141,9 @@ implementation
 {$I IdCompilerDefines.inc}
 
 uses
+  {$IFDEF FPC}
+  LResources,
+  {$ENDIF}
   {$IFNDEF DOTNET}
   IdIcmpClient,
   {$ENDIF}
@@ -250,4 +253,8 @@ begin
   ]);
 end;
 
+{$IFDEF FPC}
+initialization
+{$i IdRegisterCore.lrs}
+{$ENDIF}
 end.
