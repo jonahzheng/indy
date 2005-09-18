@@ -3,15 +3,22 @@ unit IdAboutVCL;
 interface
 {$I IdCompilerDefines.inc}
 uses
-  {$IFDEF LINUX}
-  QStdCtrls, QForms, QExtCtrls, QControls, QComCtrls, QGraphics, Types, Qt,
+{$ifdef clx}
+  QStdCtrls, QForms, QExtCtrls, QControls, QComCtrls, QGraphics,  Qt,
   {$ELSE}
-  Windows,  StdCtrls, Buttons, ExtCtrls, Graphics, Controls, ComCtrls, Forms,
+   StdCtrls, Buttons, ExtCtrls, Graphics, Controls, ComCtrls, Forms,
   {$ENDIF}
-  {$IFDEF FPC}
-  LResources, Types,
-  {$ENDIF}
-  Classes, SysUtils;
+{$ifdef Delphi6up}
+  types
+{$endif}
+
+  {$IFDEF Windows}
+    Windows,
+ {$ENDIF}
+  {$IFDEF LCL}
+    LResources,
+ {$ENDIF}
+  classes, sysutils;
 
 type
   TfrmAbout = class(TForm)
@@ -22,7 +29,11 @@ type
     FlblVersion : TLabel;
     FlblPleaseVisitUs : TLabel;
     FlblURL : TLabel;
+    {$IFDEF FPC}
+    FbbtnOk : TBitBtn;
+    {$ELSE}
     FbbtnOk : TButton;
+    {$ENDIF}
     procedure lblURLClick(Sender: TObject);
     function GetProductName: String;
     procedure SetProductName(const AValue: String);
@@ -46,7 +57,7 @@ implementation
 {$R IdAboutVCL.RES}
 {$ENDIF}
 uses
-  {$IFNDEF Linux}ShellApi, {$ENDIF}
+  {$IFDEF MSWINDOWS}ShellApi, {$ENDIF}
   IdDsnCoreResourceStrings,
   IdGlobal,
   IdSys;
@@ -83,8 +94,11 @@ begin
   FlblVersion := TLabel.Create(Self);
   FlblPleaseVisitUs := TLabel.Create(Self);
   FlblURL := TLabel.Create(Self);
+  {$IFDEF LCL}
+  FbbtnOk := TBitBtn.Create(Self);
+  {$ELSE}
   FbbtnOk := TButton.Create(Self);
-
+  {$ENDIF}
     Name := 'formAbout';
     Left := 0;
     Top := 0;
@@ -96,7 +110,7 @@ begin
     ClientHeight := 336;
     ClientWidth := 554;
     Color := clBtnFace;
-    Font.Charset := DEFAULT_CHARSET;
+
     Font.Color := clBtnText;
     Font.Height := -11;
     Font.Name := 'Tahoma';
@@ -116,7 +130,7 @@ begin
     Top := 0;
     Width := 388;
     Height := 240;
-   // AutoSize := True;
+//    AutoSize := True;
     {$IFDEF FPC}
 
    Picture.Bitmap.LoadFromLazarusResource('IndyCar');//this is XPM format
@@ -138,7 +152,9 @@ begin
     Alignment := taCenter;
     AutoSize := False;
     Anchors := [akLeft, akTop, akRight];
+     {$IFNDEF FPC}
     Font.Charset := DEFAULT_CHARSET;
+    {$ENDIF}
     Font.Color := clBtnText;
     Font.Height := -16;
     Font.Name := 'Verdana';
@@ -160,7 +176,9 @@ begin
     Height := 40;
     Alignment := taCenter;
     AutoSize := False;
+    {$IFNDEF FPC}
     Font.Charset := DEFAULT_CHARSET;
+    {$ENDIF}
     Font.Color := clBtnText;
     Font.Height := -15;
     Font.Name := 'Verdana';
@@ -183,7 +201,9 @@ begin
     Anchors := [akLeft, akTop, akRight];
     AutoSize := False;
     Caption := RSAAboutBoxCopyright;
+    {$IFNDEF FPC}
     Font.Charset := DEFAULT_CHARSET;
+    {$ENDIF}
     Font.Color := clBtnText;
     Font.Height := -13;
     Font.Name := 'Verdana';
@@ -206,6 +226,9 @@ begin
     Height := 23;
     Alignment := taCenter;
     AutoSize := False;
+        {$IFNDEF FPC}
+    Font.Charset := DEFAULT_CHARSET;
+    {$ENDIF}
     {$IFNDEF FPC}
     Transparent := True;
     {$ENDIF}
@@ -225,7 +248,9 @@ begin
     Cursor := crHandPoint;
     Alignment := taCenter;
     AutoSize := False;
+    {$IFNDEF FPC}
     Font.Charset := DEFAULT_CHARSET;
+    {$ENDIF}
     Font.Color := clBlue;
     Font.Height := -13;
     Font.Name := 'Verdana';
@@ -244,15 +269,25 @@ begin
     Name := 'bbtnOk';
 
     Left := 475;
-    Top := 302;
+    {$IFDEF FPC}
+    Top := 297;
+    {$ELSE}
+      Top := 302;
+      Height := 25;
+    {$ENDIF}
     Width := 75;
-    Height := 25;
+
     Anchors := [akRight, akBottom];
+    {$IFDEF FPC}
+     Kind := bkOk;
+    {$ELSE}
     Cancel := True;
     Default := True;
     ModalResult := 1;
-    TabOrder := 0;
+
      Caption := RSOk;
+     {$ENDIF}
+     TabOrder := 0;
     Anchors := [akLeft, akTop, akRight];
     Parent := Self;
 
