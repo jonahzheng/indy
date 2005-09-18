@@ -813,7 +813,11 @@ type
   {$IFDEF LINUX}
   Short = Smallint;  //Only needed for ToBytes(Short) and BytesToShort
   {$ENDIF}
-
+  {$IFNDEF DOTNET}
+    {$IFNDEF NO_Redeclare}
+  PShort = ^Short;
+    {$ENDIF}
+  {$ENDIF}
   {$IFDEF VCL4ORABOVE}
    {$IFNDEF VCL6ORABOVE} // Delphi 6 has PCardinal
   PCardinal = ^Cardinal;
@@ -2429,7 +2433,15 @@ var
   i: Integer;
   LDelim: Integer; //delim len
   LLeft: string;
+  {$IFDEF DOTNET}
+  LLastPos: Integer;
+  {$ELSE}
   LLastPos: PtrInt;
+  //note that we use PtrInt instead of Integer because in FPC,
+  //you can't assume a pointer will be exactly 4 bytes.  It could be 8 or possibly
+  //2 bytes.  Remember that that supports operating systems with versions for different
+  //architectures
+  {$ENDIF}
 begin
   Assert(Assigned(AStrings));
   AStrings.Clear;

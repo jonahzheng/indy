@@ -90,7 +90,7 @@ type
   EIdExceptionBase = System.Exception;
   EAbort = IdSysNET.EAbort;
   {$ELSE}
-  {$IFDEF FPC_CircularBug}
+  {$IFNDEF FPC_CircularBug}
   EIdExceptionBase = Exception;
   {$ENDIF}
   {$IFDEF DOTNET}
