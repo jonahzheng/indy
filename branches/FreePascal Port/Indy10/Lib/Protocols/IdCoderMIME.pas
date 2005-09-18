@@ -14,25 +14,26 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.3    26/03/2005 19:19:30  CCostelloe
-{ Fixes for "uneven size" exception
-}
-{
-{   Rev 1.2    2004.01.21 1:04:54 PM  czhower
-{ InitComponenet
-}
-{
-{   Rev 1.1    10/6/2003 5:37:02 PM  SGrobety
-{ Bug fix in decoders.
-}
-{
-{   Rev 1.0    11/14/2002 02:14:54 PM  JPMugaas
+
+
+    Rev 1.3    26/03/2005 19:19:30  CCostelloe
+  Fixes for "uneven size" exception
+
+
+    Rev 1.2    2004.01.21 1:04:54 PM  czhower
+  InitComponenet
+
+
+    Rev 1.1    10/6/2003 5:37:02 PM  SGrobety
+  Bug fix in decoders.
+
+
+    Rev 1.0    11/14/2002 02:14:54 PM  JPMugaas
 }
 unit IdCoderMIME;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdCoder3to4;

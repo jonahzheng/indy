@@ -14,93 +14,94 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.18    12/10/04 1:13:34 PM  RLebeau
-{ FormatDateTime() fixes.  Was using 'mm' instead of 'nn' for minutes.
-}
-{
-{   Rev 1.17    10/26/2004 9:36:26 PM  JPMugaas
-{ Updated ref.
-}
-{
-{   Rev 1.16    10/26/2004 9:19:14 PM  JPMugaas
-{ Fixed references.
-}
-{
-{   Rev 1.15    10/1/2004 6:17:12 AM  JPMugaas
-{ Removed some dead code.
-}
-{
-{   Rev 1.14    6/27/2004 1:45:36 AM  JPMugaas
-{ Can now optionally support LastAccessTime like Smartftp's FTP Server could. 
-{ I also made the MLST listing object and parser support this as well.
-}
-{
+
+
+    Rev 1.18    12/10/04 1:13:34 PM  RLebeau
+  FormatDateTime() fixes.  Was using 'mm' instead of 'nn' for minutes.
+
+
+    Rev 1.17    10/26/2004 9:36:26 PM  JPMugaas
+  Updated ref.
+
+
+    Rev 1.16    10/26/2004 9:19:14 PM  JPMugaas
+  Fixed references.
+
+
+    Rev 1.15    10/1/2004 6:17:12 AM  JPMugaas
+  Removed some dead code.
+
+
+    Rev 1.14    6/27/2004 1:45:36 AM  JPMugaas
+  Can now optionally support LastAccessTime like Smartftp's FTP Server could.
+  I also made the MLST listing object and parser support this as well.
+
+
     Rev 1.13    6/11/2004 9:34:44 AM  DSiders
   Added "Do not Localize" comments.
-}
-{
-{   Rev 1.12    4/19/2004 5:06:02 PM  JPMugaas
-{ Class rework Kudzu wanted.
-}
-{
-{   Rev 1.11    2004.02.03 5:45:34 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.10    24/01/2004 19:18:48  CCostelloe
-{ Cleaned up warnings
-}
-{
-{   Rev 1.9    1/4/2004 12:09:54 AM  BGooijen
-{ changed System.Delete to IdDelete
-}
-{
-{   Rev 1.8    11/26/2003 6:23:44 PM  JPMugaas
-{ Quite a number of fixes for recursive dirs and a few other things that
-{ slipped my mind.
-}
-{
+
+
+    Rev 1.12    4/19/2004 5:06:02 PM  JPMugaas
+  Class rework Kudzu wanted.
+
+
+    Rev 1.11    2004.02.03 5:45:34 PM  czhower
+  Name changes
+
+
+    Rev 1.10    24/01/2004 19:18:48  CCostelloe
+  Cleaned up warnings
+
+
+    Rev 1.9    1/4/2004 12:09:54 AM  BGooijen
+  changed System.Delete to IdDelete
+
+
+    Rev 1.8    11/26/2003 6:23:44 PM  JPMugaas
+  Quite a number of fixes for recursive dirs and a few other things that
+  slipped my mind.
+
+
     Rev 1.7    10/19/2003 2:04:02 PM  DSiders
   Added localization comments.
-}
-{
-{   Rev 1.6    3/11/2003 07:36:00 PM  JPMugaas
-{ Now reports permission denied in subdirs when doing recursive listts in Unix
-{ export.
-}
-{
-{   Rev 1.5    3/9/2003 12:01:26 PM  JPMugaas
-{ Now can report errors in recursive lists.
-{ Permissions work better.
-}
-{
-{   Rev 1.4    3/3/2003 07:18:34 PM  JPMugaas
-{ Now honors the FreeBSD -T flag and parses list output from a program using
-{ it.  Minor changes to the File System component.
-}
-{
-{   Rev 1.3    2/26/2003 08:57:10 PM  JPMugaas
-{ Bug fix.  The owner and group should be left-justified.
-}
-{
-{   Rev 1.2    2/24/2003 07:24:00 AM  JPMugaas
-{ Now honors more Unix switches just like the old code and now work with the
-{ NLIST command when emulating Unix.  -A switch support added.  Switches are
-{ now in constants.
-}
-{
-{   Rev 1.1    2/23/2003 06:19:42 AM  JPMugaas
-{ Now uses Classes instead of classes.
-}
-{
-{   Rev 1.0    2/21/2003 06:51:46 PM  JPMugaas
-{ FTP Directory list output object for the FTP server.
+
+
+    Rev 1.6    3/11/2003 07:36:00 PM  JPMugaas
+  Now reports permission denied in subdirs when doing recursive listts in Unix
+  export.
+
+
+    Rev 1.5    3/9/2003 12:01:26 PM  JPMugaas
+  Now can report errors in recursive lists.
+  Permissions work better.
+
+
+    Rev 1.4    3/3/2003 07:18:34 PM  JPMugaas
+  Now honors the FreeBSD -T flag and parses list output from a program using
+  it.  Minor changes to the File System component.
+
+
+    Rev 1.3    2/26/2003 08:57:10 PM  JPMugaas
+  Bug fix.  The owner and group should be left-justified.
+
+
+    Rev 1.2    2/24/2003 07:24:00 AM  JPMugaas
+  Now honors more Unix switches just like the old code and now work with the
+  NLIST command when emulating Unix.  -A switch support added.  Switches are
+  now in constants.
+
+
+    Rev 1.1    2/23/2003 06:19:42 AM  JPMugaas
+  Now uses Classes instead of classes.
+
+
+    Rev 1.0    2/21/2003 06:51:46 PM  JPMugaas
+  FTP Directory list output object for the FTP server.
 }
 unit IdFTPListOutput;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses IdFTPList, IdObjs, IdSys;
 

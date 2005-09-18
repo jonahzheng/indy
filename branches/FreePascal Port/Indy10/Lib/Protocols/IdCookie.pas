@@ -14,33 +14,33 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.6    2004.10.27 9:17:46 AM  czhower
-{ For TIdStrings
-}
-{
-{   Rev 1.5    10/26/2004 11:08:08 PM  JPMugaas
-{ Updated refs.
-}
-{
-{   Rev 1.4    13.04.2004 12:56:44  ARybin
-{ M$ IE behavior 
-}
-{
-{   Rev 1.3    2004.02.03 5:45:00 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.2    2004.01.22 6:09:02 PM  czhower
-{ IdCriticalSection
-}
-{
-{   Rev 1.1    1/22/2004 7:09:58 AM  JPMugaas
-{ Tried to fix AnsiSameText depreciation.
-}
-{
-{   Rev 1.0    11/14/2002 02:16:20 PM  JPMugaas
+
+
+    Rev 1.6    2004.10.27 9:17:46 AM  czhower
+  For TIdStrings
+
+
+    Rev 1.5    10/26/2004 11:08:08 PM  JPMugaas
+  Updated refs.
+
+
+    Rev 1.4    13.04.2004 12:56:44  ARybin
+  M$ IE behavior
+
+
+    Rev 1.3    2004.02.03 5:45:00 PM  czhower
+  Name changes
+
+
+    Rev 1.2    2004.01.22 6:09:02 PM  czhower
+  IdCriticalSection
+
+
+    Rev 1.1    1/22/2004 7:09:58 AM  JPMugaas
+  Tried to fix AnsiSameText depreciation.
+
+
+    Rev 1.0    11/14/2002 02:16:20 PM  JPMugaas
 }
 unit IdCookie;
 
@@ -88,6 +88,7 @@ Implementation status
 // TODO: Make this unit to implement compleatly [Netscape], [RFC2109] & [RFC2965]
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdGlobal, IdException, IdGlobalProtocols, IdObjs, IdSys;

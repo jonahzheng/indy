@@ -14,227 +14,227 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.53    29/12/2004 11:01:56  CCostelloe
-{ IsMsgSinglePartMime Sys.Now cleared in TIdMessage.Clear.
-}
-{
-{   Rev 1.52    28/11/2004 20:06:28  CCostelloe
-{ Enhancement to preserve case of MIME boundary
-}
-{
-{   Rev 1.51    10/26/2004 10:25:44 PM  JPMugaas
-{ Updated refs.
-}
-{
-{   Rev 1.50    2004.10.26 9:10:00 PM  czhower
-{ TIdStrings
-}
-{
-{   Rev 1.49    24.08.2004 18:01:44  Andreas Hausladen
-{ Added AttachmentBlocked property to TIdAttachmentFile.
-}
-{
-{   Rev 1.48    6/29/04 12:29:04 PM  RLebeau
-{ Updated TIdMIMEBoundary.FindBoundary() to check the string length after
-{ calling Sys.Trim() before referencing the string data
-}
-{
-{   Rev 1.47    6/9/04 5:38:48 PM  RLebeau
-{ Updated ClearHeader() to clear the MsgId and UID properties.
-{ 
-{ Updated SetUseSys.NowForDate() to support AValue being set to False
-}
-{
-{   Rev 1.46    16/05/2004 18:54:42  CCostelloe
-{ New TIdText/TIdAttachment processing
-}
-{
-{   Rev 1.45    03/05/2004 20:43:08  CCostelloe
-{ Fixed bug where QP or base64 encoded text part got header encoding
-{ incorrectly outputted as 8bit.
-}
-{
-{   Rev 1.44    4/25/04 1:29:34 PM  RLebeau
-{ Bug fix for SaveToStream
-}
-{
-{   Rev 1.42    23/04/2004 20:42:18  CCostelloe
-{ Bug fixes plus support for From containing multiple addresses
-}
-{
-{   Rev 1.41    2004.04.18 1:39:20 PM  czhower
-{ Bug fix for .NET with attachments, and several other issues found along the
-{ way.
-}
-{
-{   Rev 1.40    2004.04.16 11:30:56 PM  czhower
-{ Size fix to IdBuffer, optimizations, and memory leaks
-}
-{
-{   Rev 1.39    14/03/2004 17:47:54  CCostelloe
-{ Bug fix: quoted-printable attachment encoding was changed to base64.
-}
-{
-{   Rev 1.38    2004.02.03 5:44:00 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.37    2004.02.03 2:12:14 PM  czhower
-{ $I path change
-}
-{
-{   Rev 1.36    26/01/2004 01:51:14  CCostelloe
-{ Changed implementation of supressing BCC List generation
-}
-{
-{   Rev 1.35    25/01/2004 21:15:42  CCostelloe
-{ Added SuppressBCCListInHeader property for use by TIdSMTP
-}
-{
-{   Rev 1.34    1/21/2004 1:17:14 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.33    1/19/04 11:36:02 AM  RLebeau
-{ Updated GenerateHeader() to remove support for the BBCList property
-}
-{
-{   Rev 1.32    16/01/2004 17:30:18  CCostelloe
-{ Added support for BinHex4.0 encoding
-}
-{
-{   Rev 1.31    11/01/2004 19:53:20  CCostelloe
-{ Revisions for TIdMessage SaveToFile & LoadFromFile for D7 & D8
-}
-{
-{   Rev 1.29    08/01/2004 23:43:40  CCostelloe
-{ LoadFromFile/SaveToFile Sys.Now work in D7 again
-}
-{
-{   Rev 1.28    1/7/04 11:07:16 PM  RLebeau
-{ Bug fix for various TIdMessage properties that were not previously using
-{ setter methods correctly.
-}
-{
-{   Rev 1.27    08/01/2004 00:30:26  CCostelloe
-{ Start of reimplementing LoadFrom/SaveToFile
-}
-{
-{   Rev 1.26    21/10/2003 23:04:32  CCostelloe
-{ Bug fix: removed AttachmentEncoding := '' in SetEncoding.
-}
-{
-{   Rev 1.25    21/10/2003 00:33:04  CCostelloe
-{ meMIME changed to meDefault in TIdMessage.Create
-}
-{
-{   Rev 1.24    10/17/2003 7:42:54 PM  BGooijen
-{ Changed default Encoding to MIME
-}
-{
+
+
+    Rev 1.53    29/12/2004 11:01:56  CCostelloe
+  IsMsgSinglePartMime Sys.Now cleared in TIdMessage.Clear.
+
+
+    Rev 1.52    28/11/2004 20:06:28  CCostelloe
+  Enhancement to preserve case of MIME boundary
+
+
+    Rev 1.51    10/26/2004 10:25:44 PM  JPMugaas
+  Updated refs.
+
+
+    Rev 1.50    2004.10.26 9:10:00 PM  czhower
+  TIdStrings
+
+
+    Rev 1.49    24.08.2004 18:01:44  Andreas Hausladen
+  Added AttachmentBlocked property to TIdAttachmentFile.
+
+
+    Rev 1.48    6/29/04 12:29:04 PM  RLebeau
+  Updated TIdMIMEBoundary.FindBoundary() to check the string length after
+  calling Sys.Trim() before referencing the string data
+
+
+    Rev 1.47    6/9/04 5:38:48 PM  RLebeau
+  Updated ClearHeader() to clear the MsgId and UID properties.
+
+  Updated SetUseSys.NowForDate() to support AValue being set to False
+
+
+    Rev 1.46    16/05/2004 18:54:42  CCostelloe
+  New TIdText/TIdAttachment processing
+
+
+    Rev 1.45    03/05/2004 20:43:08  CCostelloe
+  Fixed bug where QP or base64 encoded text part got header encoding
+  incorrectly outputted as 8bit.
+
+
+    Rev 1.44    4/25/04 1:29:34 PM  RLebeau
+  Bug fix for SaveToStream
+
+
+    Rev 1.42    23/04/2004 20:42:18  CCostelloe
+  Bug fixes plus support for From containing multiple addresses
+
+
+    Rev 1.41    2004.04.18 1:39:20 PM  czhower
+  Bug fix for .NET with attachments, and several other issues found along the
+  way.
+
+
+    Rev 1.40    2004.04.16 11:30:56 PM  czhower
+  Size fix to IdBuffer, optimizations, and memory leaks
+
+
+    Rev 1.39    14/03/2004 17:47:54  CCostelloe
+  Bug fix: quoted-printable attachment encoding was changed to base64.
+
+
+    Rev 1.38    2004.02.03 5:44:00 PM  czhower
+  Name changes
+
+
+    Rev 1.37    2004.02.03 2:12:14 PM  czhower
+  $I path change
+
+
+    Rev 1.36    26/01/2004 01:51:14  CCostelloe
+  Changed implementation of supressing BCC List generation
+
+
+    Rev 1.35    25/01/2004 21:15:42  CCostelloe
+  Added SuppressBCCListInHeader property for use by TIdSMTP
+
+
+    Rev 1.34    1/21/2004 1:17:14 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.33    1/19/04 11:36:02 AM  RLebeau
+  Updated GenerateHeader() to remove support for the BBCList property
+
+
+    Rev 1.32    16/01/2004 17:30:18  CCostelloe
+  Added support for BinHex4.0 encoding
+
+
+    Rev 1.31    11/01/2004 19:53:20  CCostelloe
+  Revisions for TIdMessage SaveToFile & LoadFromFile for D7 & D8
+
+
+    Rev 1.29    08/01/2004 23:43:40  CCostelloe
+  LoadFromFile/SaveToFile Sys.Now work in D7 again
+
+
+    Rev 1.28    1/7/04 11:07:16 PM  RLebeau
+  Bug fix for various TIdMessage properties that were not previously using
+  setter methods correctly.
+
+
+    Rev 1.27    08/01/2004 00:30:26  CCostelloe
+  Start of reimplementing LoadFrom/SaveToFile
+
+
+    Rev 1.26    21/10/2003 23:04:32  CCostelloe
+  Bug fix: removed AttachmentEncoding := '' in SetEncoding.
+
+
+    Rev 1.25    21/10/2003 00:33:04  CCostelloe
+  meMIME changed to meDefault in TIdMessage.Create
+
+
+    Rev 1.24    10/17/2003 7:42:54 PM  BGooijen
+  Changed default Encoding to MIME
+
+
     Rev 1.23    10/17/2003 12:14:08 AM  DSiders
   Added localization comments.
-}
-{
-{   Rev 1.22    2003.10.14 9:57:04 PM  czhower
-{ Compile todos
-}
-{
-{   Rev 1.21    10/12/2003 1:55:46 PM  BGooijen
-{ Removed IdStrings from uses
-}
-{
-{   Rev 1.20    2003.10.11 10:01:26 PM  czhower
-{ .inc path
-}
-{
-{   Rev 1.19    10/10/2003 10:42:26 PM  BGooijen
-{ DotNet
-}
-{
-{   Rev 1.18    9/10/2003 1:50:54 PM  SGrobety
-{ DotNet
-}
-{
-{   Rev 1.17    10/8/2003 9:53:12 PM  GGrieve
-{ use IdCharsets
-}
-{
-{   Rev 1.16    05/10/2003 16:38:50  CCostelloe
-{ Restructured MIME boundary output
-}
-{
-{   Rev 1.15    2003.10.02 9:27:50 PM  czhower
-{ DotNet Excludes
-}
-{
-{   Rev 1.14    01/10/2003 17:58:52  HHariri
-{ More fixes for Multipart Messages and also fixes for incorrect transfer
-{ encoding settings
-}
-{
-{   Rev 1.12    9/28/03 1:36:04 PM  RLebeau
-{ Updated GenerateHeader() to support the BBCList property
-}
-{
-{   Rev 1.11    26/09/2003 00:29:34  CCostelloe
-{ IdMessage.Encoding Sys.Now set when email decoded; XXencoded emails Sys.Now decoded;
-{ logic added to GenerateHeader
-}
-{
-{   Rev 1.10    04/09/2003 20:42:04  CCostelloe
-{ GenerateHeader sets From's Name field to Address field if Name blank;
-{ trailing spaces removed after boundary in FindBoundary; force generation of
-{ InReplyTo header.
-}
-{
-{   Rev 1.9    29/07/2003 01:14:30  CCostelloe
-{ In-Reply-To fixed in GenerateHeader
-}
-{
-{   Rev 1.8    11/07/2003 01:11:02  CCostelloe
-{ GenerateHeader changed from function to procedure, results Sys.Now put in
-{ LastGeneratedHeaders.  Better for user (can see headers sent) and code still
-{ efficient.
-}
-{
-{   Rev 1.7    10/07/2003 22:39:00  CCostelloe
-{ Added LastGeneratedHeaders field and modified GenerateHeaders so that a copy
-{ of the last set of headers generated for this message is maintained (see
-{ comments starting "CC")
-}
-{
-{   Rev 1.6    2003.06.23 9:46:54 AM  czhower
-{ Russian, Ukranian support for headers.
-}
-{
-{   Rev 1.5    6/3/2003 10:46:54 PM  JPMugaas
-{ In-Reply-To header Sys.Now supported.
-}
-{
+
+
+    Rev 1.22    2003.10.14 9:57:04 PM  czhower
+  Compile todos
+
+
+    Rev 1.21    10/12/2003 1:55:46 PM  BGooijen
+  Removed IdStrings from uses
+
+
+    Rev 1.20    2003.10.11 10:01:26 PM  czhower
+  .inc path
+
+
+    Rev 1.19    10/10/2003 10:42:26 PM  BGooijen
+  DotNet
+
+
+    Rev 1.18    9/10/2003 1:50:54 PM  SGrobety
+  DotNet
+
+
+    Rev 1.17    10/8/2003 9:53:12 PM  GGrieve
+  use IdCharsets
+
+
+    Rev 1.16    05/10/2003 16:38:50  CCostelloe
+  Restructured MIME boundary output
+
+
+    Rev 1.15    2003.10.02 9:27:50 PM  czhower
+  DotNet Excludes
+
+
+    Rev 1.14    01/10/2003 17:58:52  HHariri
+  More fixes for Multipart Messages and also fixes for incorrect transfer
+  encoding settings
+
+
+    Rev 1.12    9/28/03 1:36:04 PM  RLebeau
+  Updated GenerateHeader() to support the BBCList property
+
+
+    Rev 1.11    26/09/2003 00:29:34  CCostelloe
+  IdMessage.Encoding Sys.Now set when email decoded; XXencoded emails Sys.Now decoded;
+  logic added to GenerateHeader
+
+
+    Rev 1.10    04/09/2003 20:42:04  CCostelloe
+  GenerateHeader sets From's Name field to Address field if Name blank;
+  trailing spaces removed after boundary in FindBoundary; force generation of
+  InReplyTo header.
+
+
+    Rev 1.9    29/07/2003 01:14:30  CCostelloe
+  In-Reply-To fixed in GenerateHeader
+
+
+    Rev 1.8    11/07/2003 01:11:02  CCostelloe
+  GenerateHeader changed from function to procedure, results Sys.Now put in
+  LastGeneratedHeaders.  Better for user (can see headers sent) and code still
+  efficient.
+
+
+    Rev 1.7    10/07/2003 22:39:00  CCostelloe
+  Added LastGeneratedHeaders field and modified GenerateHeaders so that a copy
+  of the last set of headers generated for this message is maintained (see
+  comments starting "CC")
+
+
+    Rev 1.6    2003.06.23 9:46:54 AM  czhower
+  Russian, Ukranian support for headers.
+
+
+    Rev 1.5    6/3/2003 10:46:54 PM  JPMugaas
+  In-Reply-To header Sys.Now supported.
+
+
     Rev 1.4    1/27/2003 10:07:46 PM  DSiders
   Corrected error setting file stream permissions in LoadFromFile.  Bug Report
   649502.
-}
-{
-{   Rev 1.3    27/1/2003 3:07:10 PM  SGrobety
-{ X-Priority header only added if priority <> mpNormal (because of spam filters)
-}
-{
-{   Rev 1.2    09/12/2002 18:19:00  ANeillans    Version: 1.2
-{ Removed X-Library Line that was causing people problems with spam detection
-{ software , etc.
-}
-{
-{   Rev 1.1    12/5/2002 02:53:56 PM  JPMugaas
-{ Updated for new API definitions.
-}
-{
-{   Rev 1.0    11/13/2002 07:56:52 AM  JPMugaas
-}
-{//////////////////////////////////////////////////////////////////
+
+
+    Rev 1.3    27/1/2003 3:07:10 PM  SGrobety
+  X-Priority header only added if priority <> mpNormal (because of spam filters)
+
+
+    Rev 1.2    09/12/2002 18:19:00  ANeillans    Version: 1.2
+  Removed X-Library Line that was causing people problems with spam detection
+  software , etc.
+
+
+    Rev 1.1    12/5/2002 02:53:56 PM  JPMugaas
+  Updated for new API definitions.
+
+
+    Rev 1.0    11/13/2002 07:56:52 AM  JPMugaas
+
+ //////////////////////////////////////////////////////////////////
 2001-Jul-11 Hadi Hariri
   TODO: Make checks for encoding and content-type later on.
   TODO: Add TIdHTML, TIdRelated
@@ -242,8 +242,8 @@
   TODO: Merge Encoding and AttachmentEncoding
   TODO: Make encoding plugable
   TODO: Clean up ISO header coding
-/////////////////////////////////////////////////////////////////}
-
+/////////////////////////////////////////////////////////////////
+}
 unit IdMessage;
 
 {
@@ -331,8 +331,8 @@ unit IdMessage;
     }
 
 interface
+{$i idcompilerdefines.inc}
 
-{$I IdCompilerDefines.inc}
 
 uses
   IdAttachment,

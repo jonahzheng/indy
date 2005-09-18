@@ -14,23 +14,23 @@
 }
 {
   $Log$
-}
-{
+
+
     Rev 1.3    10/16/2003 10:49:18 PM  DSiders
   Added localization comments.
-}
-{
-{   Rev 1.2    10/8/2003 9:49:02 PM  GGrieve
-{ merge all TIdCharset to here
-}
-{
-{   Rev 1.1    10/3/2003 5:39:26 PM  GGrieve
-{ dotnet work
-}
-{
-{   Rev 1.0    11/14/2002 02:14:14 PM  JPMugaas
-}
-{
+
+
+    Rev 1.2    10/8/2003 9:49:02 PM  GGrieve
+  merge all TIdCharset to here
+
+
+    Rev 1.1    10/3/2003 5:39:26 PM  GGrieve
+  dotnet work
+
+
+    Rev 1.0    11/14/2002 02:14:14 PM  JPMugaas
+
+
   This file is automatically created from
   http://www.iana.org/assignments/character-sets
 
@@ -120,6 +120,7 @@
 unit IdCharsets;
 
 interface
+{$i idcompilerdefines.inc}
 
 // once upon a time Indy had 3 different declarations of TIdCharSet
 // now all use this one. For reference, one of the more widely used

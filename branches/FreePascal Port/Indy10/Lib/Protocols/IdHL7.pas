@@ -14,48 +14,48 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.9    9/30/2004 5:04:18 PM  BGooijen
-{ Self was not initialized
-}
-{
+
+
+    Rev 1.9    9/30/2004 5:04:18 PM  BGooijen
+  Self was not initialized
+
+
     Rev 1.8    6/11/2004 9:36:14 AM  DSiders
   Added "Do not Localize" comments.
-}
-{
-{   Rev 1.7    2004.02.07 5:03:02 PM  czhower
-{ .net fixes.
-}
-{
-{   Rev 1.6    2004.02.03 5:43:44 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.5    1/21/2004 2:42:46 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.4    1/3/2004 12:59:54 PM  JPMugaas
-{ These should now compile with Kudzu's change in IdCoreGlobal.
-}
-{
-{   Rev 1.3    4/12/2003 9:21:32 PM  GGrieve
-{ give up on Indy10 for the moment
-}
-{
-{   Rev 1.2    10/15/2003 9:53:42 PM  GGrieve
-{ DotNet changes
-}
-{
-{   Rev 1.1    23/6/2003 22:33:54  GGrieve
-{ update for indy10 IOHandler model
-}
-{
-{   Rev 1.0    11/13/2002 07:53:58 AM  JPMugaas
-}
 
-{==============================================================================
+
+    Rev 1.7    2004.02.07 5:03:02 PM  czhower
+  .net fixes.
+
+
+    Rev 1.6    2004.02.03 5:43:44 PM  czhower
+  Name changes
+
+
+    Rev 1.5    1/21/2004 2:42:46 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.4    1/3/2004 12:59:54 PM  JPMugaas
+  These should now compile with Kudzu's change in IdCoreGlobal.
+
+
+    Rev 1.3    4/12/2003 9:21:32 PM  GGrieve
+  give up on Indy10 for the moment
+
+
+    Rev 1.2    10/15/2003 9:53:42 PM  GGrieve
+  DotNet changes
+
+
+    Rev 1.1    23/6/2003 22:33:54  GGrieve
+  update for indy10 IOHandler model
+
+
+    Rev 1.0    11/13/2002 07:53:58 AM  JPMugaas
+
+
+ ==============================================================================
   Warning: this code is currently broken in Indy 10.
 
   The extensive changes to the IOHandler architecture mean that the way
@@ -65,9 +65,9 @@
 
   This code needs to be re-written to resolve these issues somehow, but
   no clear design has emerged at this point
- ==============================================================================}
+ ==============================================================================
 
-{
+
   Indy HL7 Minimal Lower Layer Protocol TIdHL7
 
     Original author Grahame Grieve
@@ -88,9 +88,9 @@
 
   This component will operate as either a server or a client depending on
   the configuration
-}
 
-{
+
+
  Version History:
    05/09/2002   Grahame Grieve      Fixed SingleThread Timeout Issues + WaitForConnection
    23/01/2002   Grahame Grieve      Fixed for network changes to TIdTCPxxx
@@ -100,15 +100,15 @@
    07/12/2001   Grahame Grieve      Various fixes for cmSingleThread mode
    05/11/2001   Grahame Grieve      Merge into Indy
    03/09/2001   Grahame Grieve      Prepare for Indy
-}
 
-(* note: Events are structurally important for this component. However there is
+
+  note: Events are structurally important for this component. However there is
   a bug in SyncObjs for Linux under Kylix 1 and 2 where TEvent.WaitFor cannot be
   used with timeouts. If you compile your own RTL, then you can fix the routine
   like this:
 
     function TEvent.WaitFor(Timeout: LongWord): TWaitResult;
-    {$IFDEF LINUX}
+    IFDEF LINUX
     var ts : TTimeSpec;
     begin
       ts.tv_sec  := timeout div 1000;
@@ -117,20 +117,21 @@
         result := wrSignaled
       else
         result := wrTimeOut;
-    {$ENDIF}
+      ENDIF
 
-  and then disable this define: *)
+  and then disable this define:
 
-  { this is a serious issue - unless you fix the RTL, this component does not
+   this is a serious issue - unless you fix the RTL, this component does not
     function properly on Linux at the present time. This may be fixed in a
-    future version }
+    future version
 
-{
+
   TODO : use Server.MaxConnections
 }
 unit IdHL7;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdBaseComponent,

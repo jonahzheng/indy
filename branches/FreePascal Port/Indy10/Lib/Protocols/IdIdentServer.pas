@@ -14,40 +14,40 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.8    12/2/2004 4:23:54 PM  JPMugaas
-{ Adjusted for changes in Core.
-}
-{
-{   Rev 1.7    2004.02.03 5:43:48 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.6    1/21/2004 3:10:38 PM  JPMugaas
-{ InitComponent
-}
-{
+
+
+    Rev 1.8    12/2/2004 4:23:54 PM  JPMugaas
+  Adjusted for changes in Core.
+
+
+    Rev 1.7    2004.02.03 5:43:48 PM  czhower
+  Name changes
+
+
+    Rev 1.6    1/21/2004 3:10:38 PM  JPMugaas
+  InitComponent
+
+
     Rev 1.5    3/27/2003 3:42:02 PM  BGooijen
   Changed because some properties are moved to IOHandler
-}
-{
-{   Rev 1.4    2/24/2003 09:00:38 PM  JPMugaas
-}
-{
-{   Rev 1.3    1/17/2003 07:10:32 PM  JPMugaas
-{ Now compiles under new framework.
-}
-{
-{   Rev 1.2    1-1-2003 20:13:20  BGooijen
-{ Changed to support the new TIdContext class
-}
-{
-{   Rev 1.1    12/6/2002 04:35:16 PM  JPMugaas
-{ Now compiles with new code.
-}
-{
-{   Rev 1.0    11/13/2002 07:54:44 AM  JPMugaas
+
+
+    Rev 1.4    2/24/2003 09:00:38 PM  JPMugaas
+
+
+    Rev 1.3    1/17/2003 07:10:32 PM  JPMugaas
+  Now compiles under new framework.
+
+
+    Rev 1.2    1-1-2003 20:13:20  BGooijen
+  Changed to support the new TIdContext class
+
+
+    Rev 1.1    12/6/2002 04:35:16 PM  JPMugaas
+  Now compiles with new code.
+
+
+    Rev 1.0    11/13/2002 07:54:44 AM  JPMugaas
 }
 unit IdIdentServer;
 
@@ -63,6 +63,7 @@ unit IdIdentServer;
         }
 
 interface
+{$i idcompilerdefines.inc}
 uses IdAssignedNumbers, IdContext, IdCustomTCPServer;
 
 const IdDefIdentQueryTimeOut = 60000; // 1 minute

@@ -14,290 +14,290 @@
 }
 {
   $Log$
-}
-{
+
+
     Rev 1.66    3/24/2005 3:03:28 AM  DSiders
   Modified TIdIMAP4.ParseStatusResult to correct an endless loop parsing an odd
   number of status messages/values in the server response.
-}
-{
+
+
     Rev 1.65    3/23/2005 3:03:40 PM  DSiders
   Modified TIdIMAP4.Destroy to free resources for Capabilities and MUtf7
   properties.
-}
-{
-{   Rev 1.64    3/4/2005 3:08:42 PM  JPMugaas
-{ Removed compiler warning with stream.  You sometimes need to use IdStreamVCL.
-}
-{
-{   Rev 1.63    3/3/2005 12:54:04 PM  JPMugaas
-{ Replaced TStringList with TIdStringList.
-}
-{
-{   Rev 1.62    3/3/2005 12:09:04 PM  JPMugaas
-{ TStrings were replaced with TIdStrings.
-}
-{
-{   Rev 1.60    20/02/2005 20:41:06  CCostelloe
-{ Cleanup and reorganisations
-}
-{
-{   Rev 1.59    11/29/2004 2:46:10 AM  JPMugaas
-{ I hope that this fixes a compile error.
-}
-{
-{   Rev 1.58    11/27/04 3:11:56 AM  RLebeau
-{ Fixed bug in ownership of SASLMechanisms property.
-{
-{ Updated to use TextIsSame() instead of Uppercase() comparisons.
-}
-{
+
+
+    Rev 1.64    3/4/2005 3:08:42 PM  JPMugaas
+  Removed compiler warning with stream.  You sometimes need to use IdStreamVCL.
+
+
+    Rev 1.63    3/3/2005 12:54:04 PM  JPMugaas
+  Replaced TStringList with TIdStringList.
+
+
+    Rev 1.62    3/3/2005 12:09:04 PM  JPMugaas
+  TStrings were replaced with TIdStrings.
+
+
+    Rev 1.60    20/02/2005 20:41:06  CCostelloe
+  Cleanup and reorganisations
+
+
+    Rev 1.59    11/29/2004 2:46:10 AM  JPMugaas
+  I hope that this fixes a compile error.
+
+
+    Rev 1.58    11/27/04 3:11:56 AM  RLebeau
+  Fixed bug in ownership of SASLMechanisms property.
+
+  Updated to use TextIsSame() instead of Uppercase() comparisons.
+
+
     Rev 1.57    11/8/2004 8:39:00 AM  DSiders
   Removed comment in TIdIMAP4.SearchMailBox implementation that caused DOM
   problem when locating the symbol id.
-}
-{
-{   Rev 1.56    10/26/2004 10:19:58 PM  JPMugaas
-{ Updated refs.
-}
-{
-{   Rev 1.55    2004.10.26 2:19:56 PM  czhower
-{ Resolved alias conflict.
-}
-{
+
+
+    Rev 1.56    10/26/2004 10:19:58 PM  JPMugaas
+  Updated refs.
+
+
+    Rev 1.55    2004.10.26 2:19:56 PM  czhower
+  Resolved alias conflict.
+
+
     Rev 1.54    6/11/2004 9:36:34 AM  DSiders
   Added "Do not Localize" comments.
-}
-{
-{   Rev 1.53    6/4/04 12:48:12 PM  RLebeau
-{ ContentTransferEncoding bug fix
-}
-{
-{   Rev 1.52    01/06/2004 19:03:46  CCostelloe
-{ .NET bug fix
-}
-{
-{   Rev 1.51    01/06/2004 01:16:18  CCostelloe
-{ Various improvements
-}
-{
-{   Rev 1.50    20/05/2004 22:04:14  CCostelloe
-{ IdStreamVCL changes
-}
-{
-{   Rev 1.49    20/05/2004 08:43:12  CCostelloe
-{ IdStream change
-}
-{
-{   Rev 1.48    16/05/2004 20:40:46  CCostelloe
-{ New TIdText/TIdAttachment processing
-}
-{
-{   Rev 1.47    24/04/2004 23:54:42  CCostelloe
-{ IMAP-style UTF-7 encoding/decoding of mailbox names added
-}
-{
-{   Rev 1.46    13/04/2004 22:24:28  CCostelloe
-{ Bug fix (FCapabilities not created if not DOTNET)
-}
-{
-{   Rev 1.45    3/18/2004 2:32:40 AM  JPMugaas
-{ Should compile under D8 properly.
-}
-{
-{   Rev 1.44    3/8/2004 10:10:32 AM  JPMugaas
-{ IMAP4 should now have SASLMechanisms again.  Those work in DotNET now.
-{ SSL abstraction is now supported even in DotNET so that should not be
-{ IFDEF'ed out.
-}
-{
-{   Rev 1.43    07/03/2004 17:55:16  CCostelloe
-{ Updates to cover changes in other units
-}
-{
-{   Rev 1.42    2/4/2004 2:36:58 AM  JPMugaas
-{ Moved more units down to the implementation clause in the units to make them
-{ easier to compile.
-}
-{
-{   Rev 1.41    2/3/2004 4:12:50 PM  JPMugaas
-{ Fixed up units so they should compile.
-}
-{
-{   Rev 1.40    2004.02.03 5:43:48 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.39    2004.02.03 2:12:10 PM  czhower
-{ $I path change
-}
-{
-{   Rev 1.38    1/27/2004 4:01:12 PM  SPerry
-{ StringStream ->IdStringStream
-}
-{
-{   Rev 1.37    1/25/2004 3:11:12 PM  JPMugaas
-{ SASL Interface reworked to make it easier for developers to use.
-{ SSL and SASL reenabled components.
-}
-{
-{   Rev 1.36    23/01/2004 01:48:28  CCostelloe
-{ Added BinHex4.0 encoding support for parts
-}
-{
-{   Rev 1.35    1/21/2004 3:10:40 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.34    31/12/2003 09:40:32  CCostelloe
-{ ChangeReplyClass removed, replaced AnsiSameText with TextIsSame, stream code
-{ not tested.
-}
-{   Rev 1.33    28/12/2003 23:48:18  CCostelloe
-{ More TEMPORARY fixes to get it to compile under D7 and D8 .NET
-}
-{
-{   Rev 1.32    22/12/2003 01:20:20  CCostelloe
-{ .NET fixes.  This is a TEMPORARY combined Indy9/10/.NET master file.
-}
-{
-{   Rev 1.31    14/12/2003 21:03:16  CCostelloe
-{ First version for .NET
-}
-{
-{    Rev 1.30    10/17/2003 12:11:06 AM  DSiders
-{  Added localization comments.
-{  Added resource strings for exception messages.
-}
-{
-{   Rev 1.29    2003.10.12 3:53:10 PM  czhower
-{ compile todos
-}
-{
-{   Rev 1.28    10/12/2003 1:49:50 PM  BGooijen
-{ Changed comment of last checkin
-}
-{
-{   Rev 1.27    10/12/2003 1:43:34 PM  BGooijen
-{ Changed IdCompilerDefines.inc to Core\IdCompilerDefines.inc
-}
-{
-{   Rev 1.26    20/09/2003 15:38:38  CCostelloe
-{ More patches added for different IMAP servers
-}
-{
-{   Rev 1.25    12/08/2003 01:17:38  CCostelloe
-{ Retrieve and AppendMsg updated to suit changes made to attachment encoding
-{ changes in other units
-}
-{
-{   Rev 1.24    21/07/2003 01:22:24  CCostelloe
-{ Added CopyMsg and UIDCopyMsgs.  (UID)Receive(Peek) rewritten.  AppendMsg
-{ still buggy with attachments.  Public variable FGreetingBanner added.  Added
-{ "if Connected then " to Destroy.  Attachment filenames now decoded if
-{ necessary.  Added support for multisection parts.  Resolved issue of some
-{ servers leaving out the trailing "NIL NIL NIL" at the end of some body
-{ structures.  UIDRetrieveAllHeaders removed
-}
-{
-{   Rev 1.23    18/06/2003 21:53:36  CCostelloe
-{ Rewrote GetResponse from scratch.  Restored Capabilities for login.  Compiles
-{ and runs properly (may be a couple of minor bugs not yet discovered).
-}
-{
-{   Rev 1.22    6/16/2003 11:48:18 PM  JPMugaas
-{ Capabilities has to be restored for SASL and SSL support.
-}
-{
-{   Rev 1.21    17/06/2003 01:33:46  CCostelloe
-{ Updated to support new LoginSASL.  Compiles OK, may not yet run OK.
-}
-{
-{   Rev 1.20    12/06/2003 10:17:54  CCostelloe
-{ Partial update for Indy 10's new Reply structure.  Compiles but does not run
-{ correctly.  Checked in to show problem with Get/SetNumericCode in IdReplyIMAP.
-}
-{
-{   Rev 1.19    04/06/2003 02:33:44  CCostelloe
-{ Compiles under Indy 10 with the revised Indy 10 structure, but does not yet
-{ work properly due to some of the changes.  Will be fixed by me in a later
-{ check-in.
-}
-{
-{   Rev 1.18    14/05/2003 01:55:50  CCostelloe
-{ This version (with the extra IMAP functionality recently added) now compiles
-{ on Indy 10 and works in a real application.
-}
-{
-{   Rev 1.17    5/12/2003 02:19:56 AM  JPMugaas
-{ Now should work properly again.  I also removed all warnings and errors in
-{ Indy 10.
-}
-{
-{   Rev 1.16    5/11/2003 07:35:44 PM  JPMugaas
-}
-{
-{   Rev 1.15    5/11/2003 07:11:06 PM  JPMugaas
-{ Fixed to eliminate some warnings and compile errors in Indy 10.
-}
-{
-{   Rev 1.14    11/05/2003 23:53:52  CCostelloe
-{ Bug fix due to Windows 98 / 2000 discrepancies
-}
-{
-{   Rev 1.13    11/05/2003 23:08:36  CCostelloe
-{ Lots more bug fixes, plus IMAP code moved up from IdRFCReply
-}
-{
-{   Rev 1.12    5/10/2003 07:31:22 PM  JPMugaas
-{ Updated with some bug fixes and some cleanups.
-}
-{
-{   Rev 1.11    5/9/2003 10:51:26 AM  JPMugaas
-{ Bug fixes.  Now works as it should.  Verified.
-}
-{
-{   Rev 1.9    5/9/2003 03:49:44 AM  JPMugaas
-{ IMAP4 now supports SASL.  Merged some code from Ciaran which handles the +
-{ SASL continue reply in IMAP4 and makes a few improvements.  Verified to work
-{ on two servers.
-}
-{
-{   Rev 1.8    5/8/2003 05:41:48 PM  JPMugaas
-{ Added constant for SASL continuation.
-}
-{
-{   Rev 1.7    5/8/2003 03:17:50 PM  JPMugaas
-{ Flattened ou the SASL authentication API, made a custom descendant of SASL
-{ enabled TIdMessageClient classes.
-}
-{
-{   Rev 1.6    5/8/2003 11:27:52 AM  JPMugaas
-{ Moved feature negoation properties down to the ExplicitTLSClient level as
-{ feature negotiation goes hand in hand with explicit TLS support.
-}
-{
-{   Rev 1.5    5/8/2003 02:17:44 AM  JPMugaas
-{ Fixed an AV in IdPOP3 with SASL list on forms.  Made exceptions for SASL
-{ mechanisms missing more consistant, made IdPOP3 support feature feature
-{ negotiation, and consolidated some duplicate code.
-}
-{
-{   Rev 1.4    5/7/2003 10:20:32 PM  JPMugaas
-}
-{
-{   Rev 1.3    5/7/2003 04:35:30 AM  JPMugaas
-{ IMAP4 should now compile.  Started on prelimary SSL support (not finished
-{ yet).
-}
-{
-{   Rev 1.2    15/04/2003 00:57:08  CCostelloe
-}
-{
-{   Rev 1.1    2/24/2003 09:03:06 PM  JPMugaas
-}
-{
-{   Rev 1.0    11/13/2002 07:54:50 AM  JPMugaas
+
+
+    Rev 1.53    6/4/04 12:48:12 PM  RLebeau
+  ContentTransferEncoding bug fix
+
+
+    Rev 1.52    01/06/2004 19:03:46  CCostelloe
+  .NET bug fix
+
+
+    Rev 1.51    01/06/2004 01:16:18  CCostelloe
+  Various improvements
+
+
+    Rev 1.50    20/05/2004 22:04:14  CCostelloe
+  IdStreamVCL changes
+
+
+    Rev 1.49    20/05/2004 08:43:12  CCostelloe
+  IdStream change
+
+
+    Rev 1.48    16/05/2004 20:40:46  CCostelloe
+  New TIdText/TIdAttachment processing
+
+
+    Rev 1.47    24/04/2004 23:54:42  CCostelloe
+  IMAP-style UTF-7 encoding/decoding of mailbox names added
+
+
+    Rev 1.46    13/04/2004 22:24:28  CCostelloe
+  Bug fix (FCapabilities not created if not DOTNET)
+
+
+    Rev 1.45    3/18/2004 2:32:40 AM  JPMugaas
+  Should compile under D8 properly.
+
+
+    Rev 1.44    3/8/2004 10:10:32 AM  JPMugaas
+  IMAP4 should now have SASLMechanisms again.  Those work in DotNET now.
+  SSL abstraction is now supported even in DotNET so that should not be
+  IFDEF'ed out.
+
+
+    Rev 1.43    07/03/2004 17:55:16  CCostelloe
+  Updates to cover changes in other units
+
+
+    Rev 1.42    2/4/2004 2:36:58 AM  JPMugaas
+  Moved more units down to the implementation clause in the units to make them
+  easier to compile.
+
+
+    Rev 1.41    2/3/2004 4:12:50 PM  JPMugaas
+  Fixed up units so they should compile.
+
+
+    Rev 1.40    2004.02.03 5:43:48 PM  czhower
+  Name changes
+
+
+    Rev 1.39    2004.02.03 2:12:10 PM  czhower
+  $I path change
+
+
+    Rev 1.38    1/27/2004 4:01:12 PM  SPerry
+  StringStream ->IdStringStream
+
+
+    Rev 1.37    1/25/2004 3:11:12 PM  JPMugaas
+  SASL Interface reworked to make it easier for developers to use.
+  SSL and SASL reenabled components.
+
+
+    Rev 1.36    23/01/2004 01:48:28  CCostelloe
+  Added BinHex4.0 encoding support for parts
+
+
+    Rev 1.35    1/21/2004 3:10:40 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.34    31/12/2003 09:40:32  CCostelloe
+  ChangeReplyClass removed, replaced AnsiSameText with TextIsSame, stream code
+  not tested.
+
+    Rev 1.33    28/12/2003 23:48:18  CCostelloe
+  More TEMPORARY fixes to get it to compile under D7 and D8 .NET
+
+
+    Rev 1.32    22/12/2003 01:20:20  CCostelloe
+  .NET fixes.  This is a TEMPORARY combined Indy9/10/.NET master file.
+
+
+    Rev 1.31    14/12/2003 21:03:16  CCostelloe
+  First version for .NET
+
+
+     Rev 1.30    10/17/2003 12:11:06 AM  DSiders
+   Added localization comments.
+   Added resource strings for exception messages.
+
+
+    Rev 1.29    2003.10.12 3:53:10 PM  czhower
+  compile todos
+
+
+    Rev 1.28    10/12/2003 1:49:50 PM  BGooijen
+  Changed comment of last checkin
+
+
+    Rev 1.27    10/12/2003 1:43:34 PM  BGooijen
+  Changed IdCompilerDefines.inc to Core\IdCompilerDefines.inc
+
+
+    Rev 1.26    20/09/2003 15:38:38  CCostelloe
+  More patches added for different IMAP servers
+
+
+    Rev 1.25    12/08/2003 01:17:38  CCostelloe
+  Retrieve and AppendMsg updated to suit changes made to attachment encoding
+  changes in other units
+
+
+    Rev 1.24    21/07/2003 01:22:24  CCostelloe
+  Added CopyMsg and UIDCopyMsgs.  (UID)Receive(Peek) rewritten.  AppendMsg
+  still buggy with attachments.  Public variable FGreetingBanner added.  Added
+  "if Connected then " to Destroy.  Attachment filenames now decoded if
+  necessary.  Added support for multisection parts.  Resolved issue of some
+  servers leaving out the trailing "NIL NIL NIL" at the end of some body
+  structures.  UIDRetrieveAllHeaders removed
+
+
+    Rev 1.23    18/06/2003 21:53:36  CCostelloe
+  Rewrote GetResponse from scratch.  Restored Capabilities for login.  Compiles
+  and runs properly (may be a couple of minor bugs not yet discovered).
+
+
+    Rev 1.22    6/16/2003 11:48:18 PM  JPMugaas
+  Capabilities has to be restored for SASL and SSL support.
+
+
+    Rev 1.21    17/06/2003 01:33:46  CCostelloe
+  Updated to support new LoginSASL.  Compiles OK, may not yet run OK.
+
+
+    Rev 1.20    12/06/2003 10:17:54  CCostelloe
+  Partial update for Indy 10's new Reply structure.  Compiles but does not run
+  correctly.  Checked in to show problem with Get/SetNumericCode in IdReplyIMAP.
+
+
+    Rev 1.19    04/06/2003 02:33:44  CCostelloe
+  Compiles under Indy 10 with the revised Indy 10 structure, but does not yet
+  work properly due to some of the changes.  Will be fixed by me in a later
+  check-in.
+
+
+    Rev 1.18    14/05/2003 01:55:50  CCostelloe
+  This version (with the extra IMAP functionality recently added) now compiles
+  on Indy 10 and works in a real application.
+
+
+    Rev 1.17    5/12/2003 02:19:56 AM  JPMugaas
+  Now should work properly again.  I also removed all warnings and errors in
+  Indy 10.
+
+
+    Rev 1.16    5/11/2003 07:35:44 PM  JPMugaas
+
+
+    Rev 1.15    5/11/2003 07:11:06 PM  JPMugaas
+  Fixed to eliminate some warnings and compile errors in Indy 10.
+
+
+    Rev 1.14    11/05/2003 23:53:52  CCostelloe
+  Bug fix due to Windows 98 / 2000 discrepancies
+
+
+    Rev 1.13    11/05/2003 23:08:36  CCostelloe
+  Lots more bug fixes, plus IMAP code moved up from IdRFCReply
+
+
+    Rev 1.12    5/10/2003 07:31:22 PM  JPMugaas
+  Updated with some bug fixes and some cleanups.
+
+
+    Rev 1.11    5/9/2003 10:51:26 AM  JPMugaas
+  Bug fixes.  Now works as it should.  Verified.
+
+
+    Rev 1.9    5/9/2003 03:49:44 AM  JPMugaas
+  IMAP4 now supports SASL.  Merged some code from Ciaran which handles the +
+  SASL continue reply in IMAP4 and makes a few improvements.  Verified to work
+  on two servers.
+
+
+    Rev 1.8    5/8/2003 05:41:48 PM  JPMugaas
+  Added constant for SASL continuation.
+
+
+    Rev 1.7    5/8/2003 03:17:50 PM  JPMugaas
+  Flattened ou the SASL authentication API, made a custom descendant of SASL
+  enabled TIdMessageClient classes.
+
+
+    Rev 1.6    5/8/2003 11:27:52 AM  JPMugaas
+  Moved feature negoation properties down to the ExplicitTLSClient level as
+  feature negotiation goes hand in hand with explicit TLS support.
+
+
+    Rev 1.5    5/8/2003 02:17:44 AM  JPMugaas
+  Fixed an AV in IdPOP3 with SASL list on forms.  Made exceptions for SASL
+  mechanisms missing more consistant, made IdPOP3 support feature feature
+  negotiation, and consolidated some duplicate code.
+
+
+    Rev 1.4    5/7/2003 10:20:32 PM  JPMugaas
+
+
+    Rev 1.3    5/7/2003 04:35:30 AM  JPMugaas
+  IMAP4 should now compile.  Started on prelimary SSL support (not finished
+  yet).
+
+
+    Rev 1.2    15/04/2003 00:57:08  CCostelloe
+
+
+    Rev 1.1    2/24/2003 09:03:06 PM  JPMugaas
+
+
+    Rev 1.0    11/13/2002 07:54:50 AM  JPMugaas
 }
 unit IdIMAP4;
 
@@ -486,11 +486,11 @@ add the automatic stripping of double-quotes if passed in mailbox names,
 to avoid ending up with ""INBOX""
 }
 interface
+{$i idcompilerdefines.inc}
 
 {CC3: WARNING - if the following gives a "File not found" error on compilation,
 you need to add the path "C:\Program Files\Borland\Delphi7\Source\Indy" in
 Project -> Options -> Directories/Conditionals -> Search Path}
-{$I IdCompilerDefines.inc}
 
 uses
     IdMessage,

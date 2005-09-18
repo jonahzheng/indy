@@ -14,14 +14,15 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.0    15/04/2005 7:25:02 AM  GGrieve
-{ first ported to INdy
+
+
+    Rev 1.0    15/04/2005 7:25:02 AM  GGrieve
+  first ported to INdy
 }
 unit IdASN1Coder;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   Classes,

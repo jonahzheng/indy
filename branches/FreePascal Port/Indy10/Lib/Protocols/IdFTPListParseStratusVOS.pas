@@ -14,24 +14,25 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.1    2/23/2005 6:34:26 PM  JPMugaas
-{ New property for displaying permissions ina GUI column.  Note that this
-{ should not be used like a CHMOD because permissions are different on
-{ different platforms - you have been warned.
-}
-{
-{   Rev 1.0    11/24/2004 12:17:00 PM  JPMugaas
-{ New parser for Stratus VOS.  This will work with:
-{ 
-{ FTP server (FTP 1.0 for Stratus STCP) 
-{ 
-{ FTP server (OS TCP/IP) 
+
+
+    Rev 1.1    2/23/2005 6:34:26 PM  JPMugaas
+  New property for displaying permissions ina GUI column.  Note that this
+  should not be used like a CHMOD because permissions are different on
+  different platforms - you have been warned.
+
+
+    Rev 1.0    11/24/2004 12:17:00 PM  JPMugaas
+  New parser for Stratus VOS.  This will work with:
+
+  FTP server (FTP 1.0 for Stratus STCP)
+
+  FTP server (OS TCP/IP)
 }
 unit IdFTPListParseStratusVOS;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdFTPList, IdFTPListParseBase, IdFTPListTypes, IdObjs;

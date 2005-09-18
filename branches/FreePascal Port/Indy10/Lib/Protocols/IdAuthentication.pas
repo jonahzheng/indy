@@ -14,31 +14,31 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.5    10/26/2004 10:59:30 PM  JPMugaas
-{ Updated ref.
-}
-{
-{   Rev 1.4    2004.02.03 5:44:52 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.3    10/5/2003 5:01:34 PM  GGrieve
-{ fix to compile Under DotNet
-}
-{
-{   Rev 1.2    10/4/2003 9:09:28 PM  GGrieve
-{ DotNet fixes
-}
-{
-{   Rev 1.1    10/3/2003 11:40:38 PM  GGrieve
-{ move InfyGetHostName here
-}
-{
-{   Rev 1.0    11/14/2002 02:12:52 PM  JPMugaas
-}
-{
+
+
+    Rev 1.5    10/26/2004 10:59:30 PM  JPMugaas
+  Updated ref.
+
+
+    Rev 1.4    2004.02.03 5:44:52 PM  czhower
+  Name changes
+
+
+    Rev 1.3    10/5/2003 5:01:34 PM  GGrieve
+  fix to compile Under DotNet
+
+
+    Rev 1.2    10/4/2003 9:09:28 PM  GGrieve
+  DotNet fixes
+
+
+    Rev 1.1    10/3/2003 11:40:38 PM  GGrieve
+  move InfyGetHostName here
+
+
+    Rev 1.0    11/14/2002 02:12:52 PM  JPMugaas
+
+
  Implementation of the Basic authentication as specified in
   RFC 2616
 
@@ -50,11 +50,12 @@
 
   2001-Sep-11 : DSiders
     Corrected spelling for EIdAlreadyRegisteredAuthenticationMethod
-}
 
+}
 unit IdAuthentication;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdHeaderList,

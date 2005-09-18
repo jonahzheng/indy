@@ -14,12 +14,12 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.0    12/8/2004 8:45:02 AM  JPMugaas
-{ Unisys ClearPath (MCP and OS/2) 
-{ 
-{ DIRECTORY_FORMAT=NATIVE
+
+
+    Rev 1.0    12/8/2004 8:45:02 AM  JPMugaas
+  Unisys ClearPath (MCP and OS/2)
+
+  DIRECTORY_FORMAT=NATIVE
 }
 unit IdFTPListParseUnisysClearPath;
 
@@ -73,6 +73,7 @@ DIRECTORY_FORMAT=STANDARD does not need be supported because that is probably li
 If not, we'll deal with it given some data samples.
 }
 interface
+{$i idcompilerdefines.inc}
 uses IdObjs, IdFTPList, IdFTPListParseBase, IdFTPListTypes;
 
 type

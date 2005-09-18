@@ -14,21 +14,22 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.2    12/2/2004 4:23:54 PM  JPMugaas
-{ Adjusted for changes in Core.
-}
-{
-{   Rev 1.1    4/12/2003 10:24:08 PM  GGrieve
-{ Fix to Compile
-}
-{
-{   Rev 1.0    11/13/2002 07:54:06 AM  JPMugaas
+
+
+    Rev 1.2    12/2/2004 4:23:54 PM  JPMugaas
+  Adjusted for changes in Core.
+
+
+    Rev 1.1    4/12/2003 10:24:08 PM  GGrieve
+  Fix to Compile
+
+
+    Rev 1.0    11/13/2002 07:54:06 AM  JPMugaas
 }
 unit IdHostnameServer;
 
 interface
+{$i idcompilerdefines.inc}
 {
 2000-May-18: J. Peter Mugaas
   -Ported to Indy
@@ -98,6 +99,7 @@ implementation
 uses
   IdGlobalCore,
   IdGlobal,
+  SysUtils,
   IdSys;
 
 procedure TIdHostNameServer.InitComponent;

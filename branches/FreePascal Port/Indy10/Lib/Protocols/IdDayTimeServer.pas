@@ -14,29 +14,30 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.4    12/2/2004 4:23:50 PM  JPMugaas
-{ Adjusted for changes in Core.
-}
-{
-{   Rev 1.3    1/21/2004 2:12:40 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.2    1/17/2003 05:35:18 PM  JPMugaas
-{ Now compiles with new design.
-}
-{
-{   Rev 1.1    1-1-2003 20:12:48  BGooijen
-{ Changed to support the new TIdContext class
-}
-{
-{   Rev 1.0    11/14/2002 02:17:06 PM  JPMugaas
+
+
+    Rev 1.4    12/2/2004 4:23:50 PM  JPMugaas
+  Adjusted for changes in Core.
+
+
+    Rev 1.3    1/21/2004 2:12:40 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.2    1/17/2003 05:35:18 PM  JPMugaas
+  Now compiles with new design.
+
+
+    Rev 1.1    1-1-2003 20:12:48  BGooijen
+  Changed to support the new TIdContext class
+
+
+    Rev 1.0    11/14/2002 02:17:06 PM  JPMugaas
 }
 unit IdDayTimeServer;
 
 interface
+{$i idcompilerdefines.inc}
 
 {
 2000-Apr-22: J Peter Mugass

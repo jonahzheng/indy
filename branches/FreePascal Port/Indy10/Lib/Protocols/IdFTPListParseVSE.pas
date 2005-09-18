@@ -14,38 +14,39 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.6    10/26/2004 10:03:22 PM  JPMugaas
-{ Updated refs.
-}
-{
-{   Rev 1.5    4/19/2004 5:05:34 PM  JPMugaas
-{ Class rework Kudzu wanted.
-}
-{
-{   Rev 1.4    2004.02.03 5:45:24 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.3    1/23/2004 12:44:52 PM  SPerry
-{ fixed set problems
-}
-{
+
+
+    Rev 1.6    10/26/2004 10:03:22 PM  JPMugaas
+  Updated refs.
+
+
+    Rev 1.5    4/19/2004 5:05:34 PM  JPMugaas
+  Class rework Kudzu wanted.
+
+
+    Rev 1.4    2004.02.03 5:45:24 PM  czhower
+  Name changes
+
+
+    Rev 1.3    1/23/2004 12:44:52 PM  SPerry
+  fixed set problems
+
+
     Rev 1.2    10/19/2003 3:48:14 PM  DSiders
   Added localization comments.
-}
-{
-{   Rev 1.1    4/7/2003 04:04:38 PM  JPMugaas
-{ User can now descover what output a parser may give.
-}
-{
-{   Rev 1.0    2/19/2003 04:18:24 AM  JPMugaas
-{ More things restructured for the new list framework.
+
+
+    Rev 1.1    4/7/2003 04:04:38 PM  JPMugaas
+  User can now descover what output a parser may give.
+
+
+    Rev 1.0    2/19/2003 04:18:24 AM  JPMugaas
+  More things restructured for the new list framework.
 }
 unit IdFTPListParseVSE;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdFTPCommon, 

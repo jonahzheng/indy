@@ -14,29 +14,29 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.5    10/26/2004 11:08:04 PM  JPMugaas
-{ Updated refs.
-}
-{
-{   Rev 1.4    2004.02.03 5:43:54 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.3    2/1/2004 3:33:46 AM  JPMugaas
-{ Reenabled.  SHould work in DotNET.
-}
-{
-{   Rev 1.2    1/21/2004 3:11:12 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.1    2003.10.12 4:03:58 PM  czhower
-{ compile todos
-}
-{
-{   Rev 1.0    11/13/2002 07:55:32 AM  JPMugaas
+
+
+    Rev 1.5    10/26/2004 11:08:04 PM  JPMugaas
+  Updated refs.
+
+
+    Rev 1.4    2004.02.03 5:43:54 PM  czhower
+  Name changes
+
+
+    Rev 1.3    2/1/2004 3:33:46 AM  JPMugaas
+  Reenabled.  SHould work in DotNET.
+
+
+    Rev 1.2    1/21/2004 3:11:12 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.1    2003.10.12 4:03:58 PM  czhower
+  compile todos
+
+
+    Rev 1.0    11/13/2002 07:55:32 AM  JPMugaas
 }
 unit IdIPWatch;
 
@@ -68,6 +68,7 @@ Original Author: Dave Nosker - AfterWave Technologies (allbyte@jetlink.net)
 // just communications).
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdComponent, IdThread, IdObjs;

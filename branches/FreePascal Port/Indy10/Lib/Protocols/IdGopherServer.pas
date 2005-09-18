@@ -14,41 +14,42 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.7    12/2/2004 4:23:54 PM  JPMugaas
-{ Adjusted for changes in Core.
-}
-{
-{   Rev 1.6    2004.02.03 5:44:48 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.5    1/21/2004 3:26:46 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.4    2/24/2003 08:54:00 PM  JPMugaas
-}
-{
-{   Rev 1.3    1/17/2003 07:10:26 PM  JPMugaas
-{ Now compiles under new framework.
-}
-{
-{   Rev 1.2    1-1-2003 20:13:12  BGooijen
-{ Changed to support the new TIdContext class
-}
-{
-{   Rev 1.1    12/6/2002 04:35:10 PM  JPMugaas
-{ Now compiles with new code.
-}
-{
-{   Rev 1.0    11/13/2002 08:30:20 AM  JPMugaas
-{ Initial import from FTP VC.
+
+
+    Rev 1.7    12/2/2004 4:23:54 PM  JPMugaas
+  Adjusted for changes in Core.
+
+
+    Rev 1.6    2004.02.03 5:44:48 PM  czhower
+  Name changes
+
+
+    Rev 1.5    1/21/2004 3:26:46 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.4    2/24/2003 08:54:00 PM  JPMugaas
+
+
+    Rev 1.3    1/17/2003 07:10:26 PM  JPMugaas
+  Now compiles under new framework.
+
+
+    Rev 1.2    1-1-2003 20:13:12  BGooijen
+  Changed to support the new TIdContext class
+
+
+    Rev 1.1    12/6/2002 04:35:10 PM  JPMugaas
+  Now compiles with new code.
+
+
+    Rev 1.0    11/13/2002 08:30:20 AM  JPMugaas
+  Initial import from FTP VC.
 }
 unit IdGopherServer;
 
 interface
+{$i idcompilerdefines.inc}
 
 {
 2000-Apr-29 Pete Mee

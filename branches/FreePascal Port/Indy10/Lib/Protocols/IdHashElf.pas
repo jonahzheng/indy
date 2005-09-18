@@ -14,17 +14,18 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.1    2003-10-16 11:22:42  HHellström
-{ Fixed for dotNET
-}
-{
-{   Rev 1.0    11/13/2002 07:53:32 AM  JPMugaas
+
+
+    Rev 1.1    2003-10-16 11:22:42  HHellström
+  Fixed for dotNET
+
+
+    Rev 1.0    11/13/2002 07:53:32 AM  JPMugaas
 }
 unit IdHashElf;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdObjs,

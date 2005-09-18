@@ -14,19 +14,20 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.1    10/26/2004 11:21:16 PM  JPMugaas
-{ Updated refs.
-}
-{
-{   Rev 1.0    10/21/2004 10:27:32 PM  JPMugaas
-{ BayNetworks WfFTP FTP Server.  WfFTP is a FTP interface for Bay Network's
-{ Wellfleet router.
+
+
+    Rev 1.1    10/26/2004 11:21:16 PM  JPMugaas
+  Updated refs.
+
+
+    Rev 1.0    10/21/2004 10:27:32 PM  JPMugaas
+  BayNetworks WfFTP FTP Server.  WfFTP is a FTP interface for Bay Network's
+  Wellfleet router.
 }
 unit IdFTPListParseWfFTP;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdFTPList, IdFTPListParseBase, IdFTPListTypes, IdObjs;

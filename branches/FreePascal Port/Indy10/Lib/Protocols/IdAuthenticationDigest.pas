@@ -14,34 +14,34 @@
 }
 {
   $Log$
-}
-{
+
+
   2005-04-22 BTaylor
   Fixed AV from incorrect object being freed
   Fixed memory leak
   Improved parsing
-}
 
-{
-{   Rev 1.6    1/3/05 4:48:24 PM  RLebeau
-{ Removed reference to StrUtils unit, not being used.
-}
-{
-{   Rev 1.5    12/1/2004 1:57:50 PM  JPMugaas
-{ Updated with some code posted by:
-{ 
-{ Interpulse Systeemontwikkeling
-{ Interpulse Automatisering B.V.
-{ http://www.interpulse.nl
-}
-{
-{   Rev 1.1    2004.11.25 06:17:00 PM  EDMeester 
-}
-{
-{   Rev 1.0    2002.11.12 10:30:44 PM  czhower
-}
 
-{
+
+    Rev 1.6    1/3/05 4:48:24 PM  RLebeau
+  Removed reference to StrUtils unit, not being used.
+
+
+    Rev 1.5    12/1/2004 1:57:50 PM  JPMugaas
+  Updated with some code posted by:
+
+  Interpulse Systeemontwikkeling
+  Interpulse Automatisering B.V.
+  http://www.interpulse.nl
+
+
+    Rev 1.1    2004.11.25 06:17:00 PM  EDMeester
+
+
+    Rev 1.0    2002.11.12 10:30:44 PM  czhower
+
+
+
   Implementation of the digest authentication as specified in
   RFC2617
 
@@ -49,11 +49,12 @@
   Author: Doychin Bondzhev (doychin@dsoft-bg.com)
   Copyright: (c) Chad Z. Hower and The Winshoes Working Group.
 
-}
 
+}
 unit IdAuthenticationDigest;
 
 interface
+{$i idcompilerdefines.inc}
 
 Uses
   IdAuthentication,

@@ -14,15 +14,16 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.0    8/24/2003 06:47:42 PM  JPMugaas
-{ FTPContext base class so that the ThreadClass may be shared with the
-{ FileSystem classes.
+
+
+    Rev 1.0    8/24/2003 06:47:42 PM  JPMugaas
+  FTPContext base class so that the ThreadClass may be shared with the
+  FileSystem classes.
 }
 unit IdFTPServerContextBase;
 
 interface
+{$i idcompilerdefines.inc}
 uses
   IdContext;
 

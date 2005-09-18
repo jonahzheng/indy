@@ -14,14 +14,15 @@
 }
 {
   $Log$
-}
-{
+
+
   HMAC specification on the NIST website
   http://csrc.nist.gov/publications/fips/fips198/fips-198a.pdf
 }
 unit IdHMACMD5;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdHash, IdHashMessageDigest, IdHMAC, IdGlobal, IdObjs, IdSys;

@@ -14,40 +14,40 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.7    10/6/2004 10:47:00 PM  BGooijen
-{ changed array indexer from 64 to 32 bit, it gave errors in dotnet, and making
-{ >2GB arrays is not done anyways
-}
-{
-{   Rev 1.6    2004.05.20 1:39:28 PM  czhower
-{ Last of the IdStream updates
-}
-{
-{   Rev 1.5    2004.05.20 11:37:24 AM  czhower
-{ IdStreamVCL
-}
-{
-{   Rev 1.4    2004.05.19 3:06:56 PM  czhower
-{ IdStream / .NET fix
-}
-{
-{   Rev 1.3    2004.02.03 5:45:50 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.2    1/21/2004 1:19:58 PM  JPMugaas
-{ InitComponent.
-}
-{
-{   Rev 1.1    16/01/2004 18:00:26  CCostelloe
-{ This is now working code.
-}
-{
-{   Rev 1.0    14/01/2004 00:46:14  CCostelloe
-{ An implementation of Apple's BinHex4 encoding.  It is a "work-in-progress",
-{ it does not yet work properly, only checked in as a placeholder.
+
+
+    Rev 1.7    10/6/2004 10:47:00 PM  BGooijen
+  changed array indexer from 64 to 32 bit, it gave errors in dotnet, and making
+  >2GB arrays is not done anyways
+
+
+    Rev 1.6    2004.05.20 1:39:28 PM  czhower
+  Last of the IdStream updates
+
+
+    Rev 1.5    2004.05.20 11:37:24 AM  czhower
+  IdStreamVCL
+
+
+    Rev 1.4    2004.05.19 3:06:56 PM  czhower
+  IdStream / .NET fix
+
+
+    Rev 1.3    2004.02.03 5:45:50 PM  czhower
+  Name changes
+
+
+    Rev 1.2    1/21/2004 1:19:58 PM  JPMugaas
+  InitComponent.
+
+
+    Rev 1.1    16/01/2004 18:00:26  CCostelloe
+  This is now working code.
+
+
+    Rev 1.0    14/01/2004 00:46:14  CCostelloe
+  An implementation of Apple's BinHex4 encoding.  It is a "work-in-progress",
+  it does not yet work properly, only checked in as a placeholder.
 }
 unit IdCoderBinHex4;
 
@@ -156,6 +156,7 @@ ContentTransfer := 'binhex40'.
 }
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdException,

@@ -14,8 +14,8 @@
 }
 {
   $Log$
-}
-{
+
+
   Prior revision history
 
   Rev 1.13    10/26/2004 9:09:36 PM  JPMugaas
@@ -91,8 +91,8 @@
 
     The GetText and SetText were originally the ToArpa and FromArpa
     functions in the TIdMessage component
-}
-{
+
+
   Developer(s):
     J. Peter Mugaas
 
@@ -106,11 +106,12 @@
     Peter Mee
     Andy Neillans
     Allen O'Neill
-}
 
+}
 unit IdEMailAddress;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdException,

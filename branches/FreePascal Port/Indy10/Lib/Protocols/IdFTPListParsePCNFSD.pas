@@ -14,18 +14,19 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.0    12/8/2004 10:58:34 AM  JPMugaas
-{ PC-NFSD FTP List parser.
-}
-{
-{   Rev 1.0    12/8/2004 10:37:42 AM  JPMugaas
-{ Parser for PC-NFS for DOS.
+
+
+    Rev 1.0    12/8/2004 10:58:34 AM  JPMugaas
+  PC-NFSD FTP List parser.
+
+
+    Rev 1.0    12/8/2004 10:37:42 AM  JPMugaas
+  Parser for PC-NFS for DOS.
 }
 unit IdFTPListParsePCNFSD;
 
 interface
+{$i idcompilerdefines.inc}
 uses IdFTPList, IdFTPListParseBase, IdFTPListTypes, IdObjs;
 
 {

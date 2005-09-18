@@ -14,23 +14,23 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.3    2004.02.03 5:44:54 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.2    2/1/2004 3:33:48 AM  JPMugaas
-{ Reenabled.  SHould work in DotNET.
-}
-{
-{   Rev 1.1    2003.10.12 3:36:26 PM  czhower
-{ todo item
-}
-{
-{   Rev 1.0    11/14/2002 02:13:44 PM  JPMugaas
-}
-{
+
+
+    Rev 1.3    2004.02.03 5:44:54 PM  czhower
+  Name changes
+
+
+    Rev 1.2    2/1/2004 3:33:48 AM  JPMugaas
+  Reenabled.  SHould work in DotNET.
+
+
+    Rev 1.1    2003.10.12 3:36:26 PM  czhower
+  todo item
+
+
+    Rev 1.0    11/14/2002 02:13:44 PM  JPMugaas
+
+
 
   Implementation of the NTLM authentication as specified in
   http://www.innovation.ch/java/ntlm.html with some fixes
@@ -40,12 +40,13 @@
 
   S.G. 12/7/2002: Moved the user query one step up: the domain name is required
                   to properly format the Type 1 message.
+
+
 }
-
-
 unit IdAuthenticationNTLM;
 
 interface
+{$i idcompilerdefines.inc}
 
 Uses
   Classes, 

@@ -14,14 +14,15 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.0    11/29/2004 2:44:16 AM  JPMugaas
-{ New FTP list parsers for some legacy FTP servers.
+
+
+    Rev 1.0    11/29/2004 2:44:16 AM  JPMugaas
+  New FTP list parsers for some legacy FTP servers.
 }
 unit IdFTPListParseChameleonNewt;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses IdFTPList, IdFTPListParseBase,IdFTPListTypes, IdObjs;
 

@@ -14,25 +14,25 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.4    2004.02.03 5:44:56 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.3    1/21/2004 1:49:36 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.2    10/24/2003 02:54:50 PM  JPMugaas
-{ These should now work with the new code.
-}
-{
-{   Rev 1.1    2003.10.24 10:38:24 AM  czhower
-{ UDP Server todos
-}
-{
-{   Rev 1.0    11/14/2002 02:14:08 PM  JPMugaas
+
+
+    Rev 1.4    2004.02.03 5:44:56 PM  czhower
+  Name changes
+
+
+    Rev 1.3    1/21/2004 1:49:36 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.2    10/24/2003 02:54:50 PM  JPMugaas
+  These should now work with the new code.
+
+
+    Rev 1.1    2003.10.24 10:38:24 AM  czhower
+  UDP Server todos
+
+
+    Rev 1.0    11/14/2002 02:14:08 PM  JPMugaas
 }
 unit IdChargenUDPServer;
 {
@@ -41,6 +41,7 @@ unit IdChargenUDPServer;
     Started this with code from Rune Moburg's UDP Chargen Server  
 }
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdAssignedNumbers, IdGlobal, IdSocketHandle, IdUDPBase, IdUDPServer;

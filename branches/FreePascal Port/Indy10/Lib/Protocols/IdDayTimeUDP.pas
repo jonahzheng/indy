@@ -14,17 +14,18 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.1    1/21/2004 2:12:42 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.0    11/14/2002 02:17:14 PM  JPMugaas
+
+
+    Rev 1.1    1/21/2004 2:12:42 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.0    11/14/2002 02:17:14 PM  JPMugaas
 }
 unit IdDayTimeUDP;
 
 interface
+{$i idcompilerdefines.inc}
 uses IdAssignedNumbers, IdUDPBase, IdUDPClient;
 type
   TIdDayTimeUDP = class(TIdUDPClient)

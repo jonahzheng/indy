@@ -14,34 +14,35 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.5    10/26/2004 10:03:22 PM  JPMugaas
-{ Updated refs.
-}
-{
-{   Rev 1.4    4/19/2004 5:05:42 PM  JPMugaas
-{ Class rework Kudzu wanted.
-}
-{
-{   Rev 1.3    2004.02.03 5:45:26 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.2    1/22/2004 7:20:56 AM  JPMugaas
-{ System.Delete changed to IdDelete so the code can work in NET.
-}
-{
+
+
+    Rev 1.5    10/26/2004 10:03:22 PM  JPMugaas
+  Updated refs.
+
+
+    Rev 1.4    4/19/2004 5:05:42 PM  JPMugaas
+  Class rework Kudzu wanted.
+
+
+    Rev 1.3    2004.02.03 5:45:26 PM  czhower
+  Name changes
+
+
+    Rev 1.2    1/22/2004 7:20:56 AM  JPMugaas
+  System.Delete changed to IdDelete so the code can work in NET.
+
+
     Rev 1.1    10/19/2003 3:48:20 PM  DSiders
   Added localization comments.
-}
-{
-{   Rev 1.0    2/19/2003 05:49:50 PM  JPMugaas
-{ Parsers ported from old framework.
+
+
+    Rev 1.0    2/19/2003 05:49:50 PM  JPMugaas
+  Parsers ported from old framework.
 }
 unit IdFTPListParseWinQVTNET;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdFTPList, IdFTPListParseBase, IdObjs;

@@ -14,30 +14,31 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.4    10/26/2004 9:36:28 PM  JPMugaas
-{ Updated ref.
-}
-{
-{   Rev 1.3    4/19/2004 5:05:54 PM  JPMugaas
-{ Class rework Kudzu wanted.
-}
-{
-{   Rev 1.2    2004.02.03 5:45:32 PM  czhower
-{ Name changes
-}
-{
+
+
+    Rev 1.4    10/26/2004 9:36:28 PM  JPMugaas
+  Updated ref.
+
+
+    Rev 1.3    4/19/2004 5:05:54 PM  JPMugaas
+  Class rework Kudzu wanted.
+
+
+    Rev 1.2    2004.02.03 5:45:32 PM  czhower
+  Name changes
+
+
     Rev 1.1    10/19/2003 2:27:06 PM  DSiders
   Added localization comments.
-}
-{
-{   Rev 1.0    2/19/2003 10:13:28 PM  JPMugaas
-{ Moved parsers to their own classes.
+
+
+    Rev 1.0    2/19/2003 10:13:28 PM  JPMugaas
+  Moved parsers to their own classes.
 }
 unit IdFTPListParseCiscoIOS;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses IdFTPList, IdFTPListParseBase,IdFTPListTypes, IdObjs;
 {

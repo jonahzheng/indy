@@ -14,42 +14,43 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.7    12/2/2004 4:23:52 PM  JPMugaas
-{ Adjusted for changes in Core.
-}
-{
-{   Rev 1.6    1/21/2004 3:27:48 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.5    2003.11.29 10:18:54 AM  czhower
-{ Updated for core change to InputBuffer.
-}
-{
-{   Rev 1.4    3/6/2003 5:08:50 PM  SGrobety
-{ Updated the read buffer methodes to fit the new core (InputBuffer ->
-{ InputBufferAsString + call to CheckForDataOnSource)
-}
-{
-{   Rev 1.3    2/24/2003 08:41:32 PM  JPMugaas
-{ Should compile with new code.
-}
-{
-{   Rev 1.2    1/17/2003 05:35:06 PM  JPMugaas
-{ Now compiles with new design.
-}
-{
-{   Rev 1.1    1-1-2003 20:13:00  BGooijen
-{ Changed to support the new TIdContext class
-}
-{
-{   Rev 1.0    11/14/2002 02:19:30 PM  JPMugaas
+
+
+    Rev 1.7    12/2/2004 4:23:52 PM  JPMugaas
+  Adjusted for changes in Core.
+
+
+    Rev 1.6    1/21/2004 3:27:48 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.5    2003.11.29 10:18:54 AM  czhower
+  Updated for core change to InputBuffer.
+
+
+    Rev 1.4    3/6/2003 5:08:50 PM  SGrobety
+  Updated the read buffer methodes to fit the new core (InputBuffer ->
+  InputBufferAsString + call to CheckForDataOnSource)
+
+
+    Rev 1.3    2/24/2003 08:41:32 PM  JPMugaas
+  Should compile with new code.
+
+
+    Rev 1.2    1/17/2003 05:35:06 PM  JPMugaas
+  Now compiles with new design.
+
+
+    Rev 1.1    1-1-2003 20:13:00  BGooijen
+  Changed to support the new TIdContext class
+
+
+    Rev 1.0    11/14/2002 02:19:30 PM  JPMugaas
 }
 unit IdEchoServer;
 
 interface
+{$i idcompilerdefines.inc}
 
 {
 2000-Apr=22 J Peter Mugaas

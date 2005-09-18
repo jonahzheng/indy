@@ -14,17 +14,17 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.2    3/3/2005 9:13:36 AM  JPMugaas
-{ Should work in DotNET.
-}
-{
-{   Rev 1.1    02/03/2005 00:09:14  CCostelloe
-{ Bug fix (high bit treated as sign instead of MSB)
-}
-{
-{   Rev 1.0    11/14/2002 02:12:30 PM  JPMugaas
+
+
+    Rev 1.2    3/3/2005 9:13:36 AM  JPMugaas
+  Should work in DotNET.
+
+
+    Rev 1.1    02/03/2005 00:09:14  CCostelloe
+  Bug fix (high bit treated as sign instead of MSB)
+
+
+    Rev 1.0    11/14/2002 02:12:30 PM  JPMugaas
 }
 unit IdASN1Util;
 
@@ -64,6 +64,7 @@ unit IdASN1Util;
 {$WEAKPACKAGEUNIT ON}
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdSys;

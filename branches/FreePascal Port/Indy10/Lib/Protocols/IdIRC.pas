@@ -14,8 +14,8 @@
 }
 {
   $Log$
-}
-{
+
+
 //----------------------------------------------------------------------------//
   2003-11-Jul:
     Original author: Sergio Perry
@@ -29,6 +29,7 @@
 unit IdIRC;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdAssignedNumbers, IdContext, IdCmdTCPClient, IdCommandHandlers, IdIOHandler,

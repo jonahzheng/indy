@@ -14,33 +14,33 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.6    11/12/2004 11:31:06 AM  JPMugaas
-{ IPv6 expansions.
-}
-{
-{   Rev 1.5    2004.02.03 5:45:00 PM  czhower
-{ Name changes
-}
-{
+
+
+    Rev 1.6    11/12/2004 11:31:06 AM  JPMugaas
+  IPv6 expansions.
+
+
+    Rev 1.5    2004.02.03 5:45:00 PM  czhower
+  Name changes
+
+
     Rev 1.4    10/19/2003 11:48:12 AM  DSiders
   Added localization comments.
-}
-{
+
+
     Rev 1.3    4/5/2003 7:27:48 PM  BGooijen
   Checks for errors, added authorisation
-}
-{
+
+
     Rev 1.2    4/1/2003 4:14:22 PM  BGooijen
   Fixed + cleaned up
-}
-{
-{   Rev 1.1    2/24/2003 08:20:46 PM  JPMugaas
-{ Now should compile with new code.
-}
-{
-{   Rev 1.0    11/14/2002 02:16:10 PM  JPMugaas
+
+
+    Rev 1.1    2/24/2003 08:20:46 PM  JPMugaas
+  Now should compile with new code.
+
+
+    Rev 1.0    11/14/2002 02:16:10 PM  JPMugaas
 }
 unit IdConnectThroughHttpProxy;
 
@@ -50,6 +50,7 @@ http://www.web-cache.com/Writings/Internet-Drafts/draft-luotonen-web-proxy-tunne
 }
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdCustomTransparentProxy, IdGlobal, IdIOHandler;
@@ -61,9 +62,9 @@ type
     FEnabled: Boolean;
     function  GetEnabled: Boolean; override;
     procedure SetEnabled(AValue: Boolean); override;
-    procedure MakeConnection(AIOHandler: TIdIOHandler; const AHost: string; const APort: Integer; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
+    procedure MakeConnection(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
     procedure DoMakeConnection(AIOHandler: TIdIOHandler; const AHost: string;
-      const APort: Integer; const ALogin:boolean; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);virtual;
+      const APort: TIdPort; const ALogin:boolean; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);virtual;
   public
   published
     property  Enabled;
@@ -87,7 +88,7 @@ Begin
 End;
 
 procedure TIdConnectThroughHttpProxy.DoMakeConnection(AIOHandler: TIdIOHandler;
-  const AHost: string;const APort: Integer; const ALogin:boolean; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+  const AHost: string;const APort: TIdPort; const ALogin:boolean; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 var
   LStatus:string;
   LResponseCode:integer;
@@ -117,7 +118,7 @@ Begin
 end;
 
 procedure TIdConnectThroughHttpProxy.MakeConnection(AIOHandler: TIdIOHandler;
-  const AHost: string; const APort: Integer; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+  const AHost: string; const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 Begin
   DoMakeConnection(AIOHandler,AHost,APort,false);
 End;

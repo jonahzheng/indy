@@ -14,16 +14,16 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.14    9/18/2003 10:44:00 AM  JPMugaas
-{ Moved IdThread to Core.
-}
-{
-{   Rev 1.0    7/24/2003 12:13:58 PM  JPMugaas
-{ Test compile template and the IdDummyUnit template for managing run-time
-{ units we put into the design-time package and force to be statically linked
-{ into the program.
+
+
+    Rev 1.14    9/18/2003 10:44:00 AM  JPMugaas
+  Moved IdThread to Core.
+
+
+    Rev 1.0    7/24/2003 12:13:58 PM  JPMugaas
+  Test compile template and the IdDummyUnit template for managing run-time
+  units we put into the design-time package and force to be statically linked
+  into the program.
 }
 unit IdDummyUnit;
 {
@@ -37,6 +37,7 @@ Contributed by John Doe
 }
 
 interface
+{$i idcompilerdefines.inc}
 uses
     IdAntiFreeze;
 

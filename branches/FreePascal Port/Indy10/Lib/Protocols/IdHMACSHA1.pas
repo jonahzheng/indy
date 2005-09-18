@@ -14,14 +14,15 @@
 }
 {
   $Log$
-}
-{
+
+
   HMAC specification on the NIST website
   http://csrc.nist.gov/publications/fips/fips198/fips-198a.pdf
 }
 unit IdHMACSHA1;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdHash, IdHashSHA1, IdHMAC, IdGlobal, IdObjs, IdSys;
@@ -41,7 +42,6 @@ implementation
 
 procedure TIdHMACSHA1.InitHash;
 begin
-  inherited;
   FHashSHA1 := TIdHashSHA1.Create;
   FHash := FHashSHA1;
   FHashSize := 20;

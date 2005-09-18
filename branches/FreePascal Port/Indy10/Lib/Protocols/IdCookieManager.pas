@@ -14,29 +14,29 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.5    2004.10.27 9:17:46 AM  czhower
-{ For TIdStrings
-}
-{
-{   Rev 1.4    7/28/04 11:43:32 PM  RLebeau
-{ Bug fix for CleanupCookieList()
-}
-{
-{   Rev 1.3    2004.02.03 5:45:02 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.2    1/22/2004 7:10:02 AM  JPMugaas
-{ Tried to fix AnsiSameText depreciation.
-}
-{
-{   Rev 1.1    2004.01.21 1:04:54 PM  czhower
-{ InitComponenet
-}
-{
-{   Rev 1.0    11/14/2002 02:16:26 PM  JPMugaas
+
+
+    Rev 1.5    2004.10.27 9:17:46 AM  czhower
+  For TIdStrings
+
+
+    Rev 1.4    7/28/04 11:43:32 PM  RLebeau
+  Bug fix for CleanupCookieList()
+
+
+    Rev 1.3    2004.02.03 5:45:02 PM  czhower
+  Name changes
+
+
+    Rev 1.2    1/22/2004 7:10:02 AM  JPMugaas
+  Tried to fix AnsiSameText depreciation.
+
+
+    Rev 1.1    2004.01.21 1:04:54 PM  czhower
+  InitComponenet
+
+
+    Rev 1.0    11/14/2002 02:16:26 PM  JPMugaas
 }
 unit IdCookieManager;
 
@@ -61,6 +61,7 @@ Details of implementation
 }
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdBaseComponent,

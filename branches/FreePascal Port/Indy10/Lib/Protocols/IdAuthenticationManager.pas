@@ -14,29 +14,30 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.4    10/26/2004 10:59:30 PM  JPMugaas
-{ Updated ref.
-}
-{
+
+
+    Rev 1.4    10/26/2004 10:59:30 PM  JPMugaas
+  Updated ref.
+
+
     Rev 1.3    5/29/2004 10:02:20 AM  DSiders
   Corrected case in Create parameter.
-}
-{
-{   Rev 1.2    2004.02.03 5:44:54 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.1    2004.01.21 1:04:52 PM  czhower
-{ InitComponenet
-}
-{
-{   Rev 1.0    11/14/2002 02:13:40 PM  JPMugaas
+
+
+    Rev 1.2    2004.02.03 5:44:54 PM  czhower
+  Name changes
+
+
+    Rev 1.1    2004.01.21 1:04:52 PM  czhower
+  InitComponenet
+
+
+    Rev 1.0    11/14/2002 02:13:40 PM  JPMugaas
 }
 unit IdAuthenticationManager;
 
 interface
+{$i idcompilerdefines.inc}
 
 Uses
   IdAuthentication,

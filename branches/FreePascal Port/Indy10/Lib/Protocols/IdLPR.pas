@@ -14,56 +14,56 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.12    7/24/04 12:56:14 PM  RLebeau
-{ Compiler fix for Print(TIdBytes)
-}
-{
-{   Rev 1.11    7/23/04 7:15:16 PM  RLebeau
-{ Added extra exception handling to various Print...() methods
-}
-{
-{   Rev 1.10    2004.05.20 11:36:50 AM  czhower
-{ IdStreamVCL
-}
-{
-{   Rev 1.9    2004.03.03 11:54:32 AM  czhower
-{ IdStream change
-}
-{
-{   Rev 1.8    2004.02.03 5:43:56 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.7    1/21/2004 3:11:22 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.6    10/24/2003 02:54:52 PM  JPMugaas
-{ These should now work with the new code.
-}
-{
-{   Rev 1.5    2003.10.24 10:43:10 AM  czhower
-{ TIdSTream to dos
-}
-{
-{   Rev 1.4    2003.10.12 4:04:00 PM  czhower
-{ compile todos
-}
-{
-{   Rev 1.3    2/24/2003 09:07:26 PM  JPMugaas
-}
-{
-{   Rev 1.2    2/6/2003 03:18:08 AM  JPMugaas
-{ Updated components that compile with Indy 10.
-}
-{
-{   Rev 1.1    12/6/2002 05:30:18 PM  JPMugaas
-{ Now decend from TIdTCPClientCustom instead of TIdTCPClient.
-}
-{
-{   Rev 1.0    11/13/2002 07:56:22 AM  JPMugaas
+
+
+    Rev 1.12    7/24/04 12:56:14 PM  RLebeau
+  Compiler fix for Print(TIdBytes)
+
+
+    Rev 1.11    7/23/04 7:15:16 PM  RLebeau
+  Added extra exception handling to various Print...() methods
+
+
+    Rev 1.10    2004.05.20 11:36:50 AM  czhower
+  IdStreamVCL
+
+
+    Rev 1.9    2004.03.03 11:54:32 AM  czhower
+  IdStream change
+
+
+    Rev 1.8    2004.02.03 5:43:56 PM  czhower
+  Name changes
+
+
+    Rev 1.7    1/21/2004 3:11:22 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.6    10/24/2003 02:54:52 PM  JPMugaas
+  These should now work with the new code.
+
+
+    Rev 1.5    2003.10.24 10:43:10 AM  czhower
+  TIdSTream to dos
+
+
+    Rev 1.4    2003.10.12 4:04:00 PM  czhower
+  compile todos
+
+
+    Rev 1.3    2/24/2003 09:07:26 PM  JPMugaas
+
+
+    Rev 1.2    2/6/2003 03:18:08 AM  JPMugaas
+  Updated components that compile with Indy 10.
+
+
+    Rev 1.1    12/6/2002 05:30:18 PM  JPMugaas
+  Now decend from TIdTCPClientCustom instead of TIdTCPClient.
+
+
+    Rev 1.0    11/13/2002 07:56:22 AM  JPMugaas
 }
 unit IdLPR;
 
@@ -84,6 +84,7 @@ unit IdLPR;
 {*******************************************************)
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdAssignedNumbers, IdGlobal, IdException, IdTCPClient, IdComponent, 

@@ -14,8 +14,8 @@
 }
 {
   $Log$
-}
-{
+
+
   4/19/2005 BTaylor
 
   Added support for SVR and NAPTR records. (Used for SIP/VOIP) (parts by Frank Shearar)
@@ -32,140 +32,140 @@
   fixed TTextRecord.Parse issue. DomainKeys (yahoo's anti-spam method) can now be used.
 
   Minor cleanups/spelling errors fixed.
-}
-{
-{   Rev 1.26    3/21/2005 10:36:20 PM  VVassiliev
-{ NextDNSLabel fix
-{ TTextRecord.Parse fix
-{ ClearInternalQuery before resolving
-}
-{
-{   Rev 1.25    2/9/05 2:10:34 AM  RLebeau
-{ Removed compiler hint
-}
-{
-{   Rev 1.24    2/8/05 6:17:14 PM  RLebeau
-{ Updated CreateQuery() to use Fetch() and AppendString() instead of Pos(),
-{ ToBytes(), and AppendBytes()
-}
-{
-{   Rev 1.23    10/26/2004 9:06:30 PM  JPMugaas
-{ Updated references.
-}
-{
-{   Rev 1.22    2004.10.25 10:18:38 PM  czhower
-{ Removed unused var.
-}
-{
-{   Rev 1.21    25/10/2004 15:55:28  ANeillans
-{ Bug fix:
-{ http://apps.atozedsoftware.com/cgi-bin/BBGIndy/BugBeGoneISAPI.dll/?item=122
-{
-{ Checked in for Dennies Chang
-}
-{
-{   Rev 1.20    2004/7/19 下午 09:40:52  DChang
-{ 1. fix the TIdResolver.ParseAnswers, add 2 parameters for the function to
-{ check if QueryResult should be clear or not, TIdResolver.FillResult  is
-{ modified at the same time. 
-{ 
-{ Fix AXFR procedure, fully support BIND 8 AXFR procedures.
-{ 
-{ 2. Replace the original type indicator in TQueryResult.Add
-{ . It can understand AAAA type correctly.
-{ 
-{ 3. Add qtIXFR type for TIdDNSResover, add 2 parameters for
-{ TIdDNSResolver.Resolver, add one parameter for TIdDNSResolver.CreateHeader.
-{ 
-{ 4. Support query type CHAOS, but only for checking version.bind. (Check DNS
-{ server version.)
-}
-{
+
+
+    Rev 1.26    3/21/2005 10:36:20 PM  VVassiliev
+  NextDNSLabel fix
+  TTextRecord.Parse fix
+  ClearInternalQuery before resolving
+
+
+    Rev 1.25    2/9/05 2:10:34 AM  RLebeau
+  Removed compiler hint
+
+
+    Rev 1.24    2/8/05 6:17:14 PM  RLebeau
+  Updated CreateQuery() to use Fetch() and AppendString() instead of Pos(),
+  ToBytes(), and AppendBytes()
+
+
+    Rev 1.23    10/26/2004 9:06:30 PM  JPMugaas
+  Updated references.
+
+
+    Rev 1.22    2004.10.25 10:18:38 PM  czhower
+  Removed unused var.
+
+
+    Rev 1.21    25/10/2004 15:55:28  ANeillans
+  Bug fix:
+  http://apps.atozedsoftware.com/cgi-bin/BBGIndy/BugBeGoneISAPI.dll/?item=122
+
+  Checked in for Dennies Chang
+
+
+    Rev 1.20    2004/7/19 下午 09:40:52  DChang
+  1. fix the TIdResolver.ParseAnswers, add 2 parameters for the function to
+  check if QueryResult should be clear or not, TIdResolver.FillResult  is
+  modified at the same time.
+
+  Fix AXFR procedure, fully support BIND 8 AXFR procedures.
+
+  2. Replace the original type indicator in TQueryResult.Add
+  . It can understand AAAA type correctly.
+
+  3. Add qtIXFR type for TIdDNSResover, add 2 parameters for
+  TIdDNSResolver.Resolver, add one parameter for TIdDNSResolver.CreateHeader.
+
+  4. Support query type CHAOS, but only for checking version.bind. (Check DNS
+  server version.)
+
+
     Rev 1.19    7/12/2004 9:42:26 PM  DSiders
   Removed TODO for Address property.
-}
-{
+
+
     Rev 1.18    7/12/2004 9:24:04 PM  DSiders
   Added TODOs for property name inconsistencies.
-}
-{
-{   Rev 1.17    7/8/04 11:48:28 PM  RLebeau
-{ Tweaked TQueryResult.NextDNSLabel()
-}
-{
-{   Rev 1.16    2004.05.20 1:39:30 PM  czhower
-{ Last of the IdStream updates
-}
-{
-{   Rev 1.15    2004.04.08 3:57:28 PM  czhower
-{ Removal of bytes from buffer.
-}
-{
-{   Rev 1.14    2004.03.01 9:37:04 PM  czhower
-{ Fixed name conflicts for .net
-}
-{
-{   Rev 1.13    2/11/2004 5:47:26 AM  JPMugaas
-{ Can now assign a port for the DNS host as well as IPVersion.
-{
-{ In addition, you can now use socks with TCP zone transfers.
-}
-{
-{   Rev 1.12    2/11/2004 5:21:16 AM  JPMugaas
-{ Vladimir Vassiliev changes for removal of byte flipping.  Network conversion
-{ order conversion functions are used instead.
-{ IPv6 addresses are returned in the standard form.
-{ In WKS records, Address was changed to IPAddress to be consistant with other
-{ record types.  Address can also imply a hostname.
-}
-{
-{   Rev 1.11    2/9/2004 11:27:36 AM  JPMugaas
-{ Some functions weren't working as expected.  Renamed them to describe them
-{ better.
-}
-{
-{   Rev 1.10    2004.02.03 5:45:58 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.9    11/13/2003 5:46:54 PM  VVassiliev
-{ DotNet
-{ AAAA record fix
-{ Add PTR for IPV6
-}
-{
-{   Rev 1.8    10/25/2003 06:51:54 AM  JPMugaas
-{ Updated for new API changes and tried to restore some functionality.
-}
-{
+
+
+    Rev 1.17    7/8/04 11:48:28 PM  RLebeau
+  Tweaked TQueryResult.NextDNSLabel()
+
+
+    Rev 1.16    2004.05.20 1:39:30 PM  czhower
+  Last of the IdStream updates
+
+
+    Rev 1.15    2004.04.08 3:57:28 PM  czhower
+  Removal of bytes from buffer.
+
+
+    Rev 1.14    2004.03.01 9:37:04 PM  czhower
+  Fixed name conflicts for .net
+
+
+    Rev 1.13    2/11/2004 5:47:26 AM  JPMugaas
+  Can now assign a port for the DNS host as well as IPVersion.
+
+  In addition, you can now use socks with TCP zone transfers.
+
+
+    Rev 1.12    2/11/2004 5:21:16 AM  JPMugaas
+  Vladimir Vassiliev changes for removal of byte flipping.  Network conversion
+  order conversion functions are used instead.
+  IPv6 addresses are returned in the standard form.
+  In WKS records, Address was changed to IPAddress to be consistant with other
+  record types.  Address can also imply a hostname.
+
+
+    Rev 1.11    2/9/2004 11:27:36 AM  JPMugaas
+  Some functions weren't working as expected.  Renamed them to describe them
+  better.
+
+
+    Rev 1.10    2004.02.03 5:45:58 PM  czhower
+  Name changes
+
+
+    Rev 1.9    11/13/2003 5:46:54 PM  VVassiliev
+  DotNet
+  AAAA record fix
+  Add PTR for IPV6
+
+
+    Rev 1.8    10/25/2003 06:51:54 AM  JPMugaas
+  Updated for new API changes and tried to restore some functionality.
+
+
     Rev 1.7    10/19/2003 11:57:32 AM  DSiders
   Added localization comments.
-}
-{
-{   Rev 1.6    2003.10.12 3:50:38 PM  czhower
-{ Compile todos
-}
-{
-{   Rev 1.5    2003/4/30 下午 12:39:54  DChang
-{ fix the TIdResolver.ParseAnswers, add 2 parameters for the function
-{ to check if QueryResult should be clear or not, TIdResolver.FillResult
-{ is modified at the same time.
-{ fix AXFR procedure, fully support BIND 8 AXFR procedures.
-}
-{
-{   Rev 1.4    4/28/2003 02:30:50 PM  JPMugaas
-{ reverted back to the old one as the new one checked will not compile, has
-{ problametic dependancies on Contrs and Dialogs (both not permitted).
-}
-{
-{   Rev 1.2    4/28/2003 07:00:10 AM  JPMugaas
-{ Should now compile.
-}
-{
-{   Rev 1.0    11/14/2002 02:18:34 PM  JPMugaas
+
+
+    Rev 1.6    2003.10.12 3:50:38 PM  czhower
+  Compile todos
+
+
+    Rev 1.5    2003/4/30 下午 12:39:54  DChang
+  fix the TIdResolver.ParseAnswers, add 2 parameters for the function
+  to check if QueryResult should be clear or not, TIdResolver.FillResult
+  is modified at the same time.
+  fix AXFR procedure, fully support BIND 8 AXFR procedures.
+
+
+    Rev 1.4    4/28/2003 02:30:50 PM  JPMugaas
+  reverted back to the old one as the new one checked will not compile, has
+  problametic dependancies on Contrs and Dialogs (both not permitted).
+
+
+    Rev 1.2    4/28/2003 07:00:10 AM  JPMugaas
+  Should now compile.
+
+
+    Rev 1.0    11/14/2002 02:18:34 PM  JPMugaas
     Rev 1.3    04/26/2003 02:30:10 PM  DenniesChang
-}
-{
+
+
   IdDNSResolver.
 
   Started: sometime.
@@ -178,7 +178,7 @@
 
   The resolver also does not support Chaos RR. Only IN RR are supported as of this time.
   Part of code from Ray Malone
-}
+
 
 // Dennies Chang : Combine TIdDNSSyncResolver and TIdDNSCommResolver as TIdDNSResolver.
 // 2003/04/26.
@@ -187,16 +187,17 @@
 // Dennies Chang : Add atAAAA and TAAAARecord (2002 Oct.)
 // Dennies Chang : Add TDNSHeader for IDHeader to maintain DNS Header, but not complete yet.
 // SG 28/1/02: Changed the DNSStrToDomain function according to original Author of the old comp: Ray Malone
-{SG 10/07/01 Added support for qrStar query}
-{VV 12/09/01 Added construction of reverse query (PTR)}
-{DS 12/31/01 Corrected ReponsiblePerson spelling}
-{VV 01/02/03 TQueryResult.DNSStrToDomain fix}
+ SG 10/07/01 Added support for qrStar query
+ VV 12/09/01 Added construction of reverse query (PTR)
+ DS 12/31/01 Corrected ReponsiblePerson spelling
+ VV 01/02/03 TQueryResult.DNSStrToDomain fix
 
-{ TODO : Add structure of IDHEADER IN FIGURE }
-
+  TODO : Add structure of IDHEADER IN FIGURE
+}
 unit IdDNSResolver;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdAssignedNumbers,

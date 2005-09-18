@@ -14,8 +14,8 @@
 }
 {
   $Log$
-}
-{
+
+
   Prior revision history
 
   Rev 1.31    2/9/2005 11:44:20 AM  JPMugaas
@@ -131,8 +131,8 @@
 
   1999-Aug-26 - Ray Malone
     Started unit
-}
 
+}
 unit IdIMAP4Server;
 
 {
@@ -211,8 +211,10 @@ unit IdIMAP4Server;
 }
 
 interface
+{$i idcompilerdefines.inc}
+
 {$IFDEF INDY100}
-  {$I Core\IdCompilerDefines.inc}
+
   {$IFDEF DOTNET}
   {$WARN UNIT_PLATFORM OFF}
   {$WARN SYMBOL_PLATFORM OFF}

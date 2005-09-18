@@ -14,56 +14,57 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.9    3/5/2005 3:33:54 PM  JPMugaas
-{ Fix for some compiler warnings having to do with TStream.Read being platform
-{ specific.  This was fixed by changing the Compressor API to use TIdStreamVCL
-{ instead of TStream.  I also made appropriate adjustments to other units for
-{ this. 
-}
-{
-{   Rev 1.8    10/24/2004 2:40:28 PM  JPMugaas
-{ Made a better fix for the problem with SmartFTP.  It turns out that we may
-{ not be able to avoid a Z_BUF_ERROR in some cases.
-}
-{
-{   Rev 1.7    10/24/2004 11:17:08 AM  JPMugaas
-{ Reimplemented ZLIB Decompression in FTP better.  It now should work properly
-{ at ftp://ftp.smartftp.com.
-}
-{
-{   Rev 1.6    9/16/2004 3:24:04 AM  JPMugaas
-{ TIdFTP now compresses to the IOHandler and decompresses from the IOHandler.
-{ 
-{ Noted some that the ZLib code is based was taken from ZLibEx.
-}
-{
-{   Rev 1.4    9/11/2004 10:58:04 AM  JPMugaas
-{ FTP now decompresses output directly to the IOHandler.
-}
-{
-{   Rev 1.3    6/21/2004 12:10:52 PM  JPMugaas
-{ Attempt to expand the ZLib support for Int64 support.
-}
-{
-{   Rev 1.2    2/21/2004 3:32:58 PM  JPMugaas
-{ Foxed for Unit rename.
-}
-{
-{   Rev 1.1    2/14/2004 9:59:50 PM  JPMugaas
-{ Reworked the API.  There is now a separate API for the Inflate_ and
-{ InflateInit2_ functions as well as separate functions for DeflateInit_ and
-{ DeflateInit2_.  This was required for FTP.  The API also includes an optional
-{ output stream for the servers.
-}
-{
-{   Rev 1.0    2/12/2004 11:27:22 PM  JPMugaas
-{ New compressor based on ZLibEx.
+
+
+    Rev 1.9    3/5/2005 3:33:54 PM  JPMugaas
+  Fix for some compiler warnings having to do with TStream.Read being platform
+  specific.  This was fixed by changing the Compressor API to use TIdStreamVCL
+  instead of TStream.  I also made appropriate adjustments to other units for
+  this.
+
+
+    Rev 1.8    10/24/2004 2:40:28 PM  JPMugaas
+  Made a better fix for the problem with SmartFTP.  It turns out that we may
+  not be able to avoid a Z_BUF_ERROR in some cases.
+
+
+    Rev 1.7    10/24/2004 11:17:08 AM  JPMugaas
+  Reimplemented ZLIB Decompression in FTP better.  It now should work properly
+  at ftp://ftp.smartftp.com.
+
+
+    Rev 1.6    9/16/2004 3:24:04 AM  JPMugaas
+  TIdFTP now compresses to the IOHandler and decompresses from the IOHandler.
+
+  Noted some that the ZLib code is based was taken from ZLibEx.
+
+
+    Rev 1.4    9/11/2004 10:58:04 AM  JPMugaas
+  FTP now decompresses output directly to the IOHandler.
+
+
+    Rev 1.3    6/21/2004 12:10:52 PM  JPMugaas
+  Attempt to expand the ZLib support for Int64 support.
+
+
+    Rev 1.2    2/21/2004 3:32:58 PM  JPMugaas
+  Foxed for Unit rename.
+
+
+    Rev 1.1    2/14/2004 9:59:50 PM  JPMugaas
+  Reworked the API.  There is now a separate API for the Inflate_ and
+  InflateInit2_ functions as well as separate functions for DeflateInit_ and
+  DeflateInit2_.  This was required for FTP.  The API also includes an optional
+  output stream for the servers.
+
+
+    Rev 1.0    2/12/2004 11:27:22 PM  JPMugaas
+  New compressor based on ZLibEx.
 }
 unit IdCompressorZLibEx;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   Classes,

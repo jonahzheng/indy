@@ -14,24 +14,25 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.2    2/23/2005 6:34:30 PM  JPMugaas
-{ New property for displaying permissions ina GUI column.  Note that this
-{ should not be used like a CHMOD because permissions are different on
-{ different platforms - you have been warned.
-}
-{
-{   Rev 1.1    10/26/2004 11:21:16 PM  JPMugaas
-{ Updated refs.
-}
-{
-{   Rev 1.0    7/30/2004 8:03:42 AM  JPMugaas
-{ FTP List parser for the Tandem NonStop Guardian file-system.
+
+
+    Rev 1.2    2/23/2005 6:34:30 PM  JPMugaas
+  New property for displaying permissions ina GUI column.  Note that this
+  should not be used like a CHMOD because permissions are different on
+  different platforms - you have been warned.
+
+
+    Rev 1.1    10/26/2004 11:21:16 PM  JPMugaas
+  Updated refs.
+
+
+    Rev 1.0    7/30/2004 8:03:42 AM  JPMugaas
+  FTP List parser for the Tandem NonStop Guardian file-system.
 }
 unit IdFTPListParseTandemGuardian;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdFTPList, IdFTPListParseBase, IdFTPListTypes, IdObjs;

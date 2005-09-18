@@ -14,21 +14,21 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.3    1/21/2004 2:12:40 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.2    12/8/2002 07:26:30 PM  JPMugaas
-{ Added published host and port properties.
-}
-{
-{   Rev 1.1    12/6/2002 05:29:28 PM  JPMugaas
-{ Now decend from TIdTCPClientCustom instead of TIdTCPClient.
-}
-{
-{   Rev 1.0    11/14/2002 02:17:02 PM  JPMugaas
+
+
+    Rev 1.3    1/21/2004 2:12:40 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.2    12/8/2002 07:26:30 PM  JPMugaas
+  Added published host and port properties.
+
+
+    Rev 1.1    12/6/2002 05:29:28 PM  JPMugaas
+  Now decend from TIdTCPClientCustom instead of TIdTCPClient.
+
+
+    Rev 1.0    11/14/2002 02:17:02 PM  JPMugaas
 }
 unit IdDayTime;
 
@@ -45,6 +45,7 @@ unit IdDayTime;
   changed to drop control charactors and spaces from result to ease
   parsing}
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdAssignedNumbers,

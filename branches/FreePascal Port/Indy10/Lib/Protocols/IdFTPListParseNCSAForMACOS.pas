@@ -14,14 +14,15 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.0    11/28/2004 9:20:22 PM  JPMugaas
-{ Preliminary support for NCSA Telnet's FTP Server for MacIntosh.
+
+
+    Rev 1.0    11/28/2004 9:20:22 PM  JPMugaas
+  Preliminary support for NCSA Telnet's FTP Server for MacIntosh.
 }
 unit IdFTPListParseNCSAForMACOS;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses IdFTPList, IdFTPListParseBase,IdFTPListTypes, IdObjs;
 

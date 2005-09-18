@@ -14,46 +14,46 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.9    10/26/2004 10:10:58 PM  JPMugaas
-{ Updated refs.
-}
-{
-{   Rev 1.8    3/6/2004 2:53:30 PM  JPMugaas
-{ Cleaned up an if as per Bug #79.
-}
-{
-{   Rev 1.7    2004.02.03 5:43:42 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.6    2004.01.27 1:39:26 AM  czhower
-{ CharIsInSet bug fix
-}
-{
-{   Rev 1.5    1/22/2004 3:50:04 PM  SPerry
-{ fixed set problems (with CharIsInSet)
-}
-{
-{   Rev 1.4    1/22/2004 7:10:06 AM  JPMugaas
-{ Tried to fix AnsiSameText depreciation.
-}
-{
-{   Rev 1.3    10/5/2003 11:43:50 PM  GGrieve
-{ Use IsLeadChar
-}
-{
-{   Rev 1.2    10/4/2003 9:15:14 PM  GGrieve
-{ DotNet changes
-}
-{
-{   Rev 1.1    2/25/2003 12:56:20 PM  JPMugaas
-{ Updated with Hadi's fix for a bug .  If complete boolean expression i on, you
-{ may get an Index out of range error.
-}
-{
-{   Rev 1.0    11/13/2002 07:53:52 AM  JPMugaas
+
+
+    Rev 1.9    10/26/2004 10:10:58 PM  JPMugaas
+  Updated refs.
+
+
+    Rev 1.8    3/6/2004 2:53:30 PM  JPMugaas
+  Cleaned up an if as per Bug #79.
+
+
+    Rev 1.7    2004.02.03 5:43:42 PM  czhower
+  Name changes
+
+
+    Rev 1.6    2004.01.27 1:39:26 AM  czhower
+  CharIsInSet bug fix
+
+
+    Rev 1.5    1/22/2004 3:50:04 PM  SPerry
+  fixed set problems (with CharIsInSet)
+
+
+    Rev 1.4    1/22/2004 7:10:06 AM  JPMugaas
+  Tried to fix AnsiSameText depreciation.
+
+
+    Rev 1.3    10/5/2003 11:43:50 PM  GGrieve
+  Use IsLeadChar
+
+
+    Rev 1.2    10/4/2003 9:15:14 PM  GGrieve
+  DotNet changes
+
+
+    Rev 1.1    2/25/2003 12:56:20 PM  JPMugaas
+  Updated with Hadi's fix for a bug .  If complete boolean expression i on, you
+  may get an Index out of range error.
+
+
+    Rev 1.0    11/13/2002 07:53:52 AM  JPMugaas
 }
 unit IdHeaderList;
 
@@ -74,6 +74,7 @@ unit IdHeaderList;
 }
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdSys,

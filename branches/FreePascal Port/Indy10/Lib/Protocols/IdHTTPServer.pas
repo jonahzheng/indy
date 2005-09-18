@@ -14,11 +14,11 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.0    11/13/2002 07:54:30 AM  JPMugaas
-}
-{
+
+
+    Rev 1.0    11/13/2002 07:54:30 AM  JPMugaas
+
+
   Implementation of the HTTP server based on RFC 2616
 
   Copyright: (c) Chad Z. Hower and The Winshoes Working Group.
@@ -31,11 +31,12 @@
     - New event (TOnCreateSession) - The user program can use it create objects from its own
     descendant class of TIdHTTPSession. Thi s descendant class can be used to hold additional,
     spcific to the user program data.
-}
 
+}
 unit IdHTTPServer;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdCustomHTTPServer;
