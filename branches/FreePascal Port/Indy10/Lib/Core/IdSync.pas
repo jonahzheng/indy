@@ -74,6 +74,7 @@
 unit IdSync;
 
 interface
+{$i idcompilerdefines.inc}
 
 // Author: Chad Z. Hower - a.k.a. Kudzu
 
@@ -118,7 +119,7 @@ type
   public
     constructor Create(AMethod: TIdThreadMethod); reintroduce; virtual;
   end;
-  
+
 implementation
 uses IdSys;
 

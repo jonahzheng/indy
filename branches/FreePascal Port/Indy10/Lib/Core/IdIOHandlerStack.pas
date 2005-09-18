@@ -226,6 +226,7 @@
 unit IdIOHandlerStack;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdGlobal, IdSocketHandle, IdIOHandlerSocket, IdExceptionCore, IdStack, IdSys,

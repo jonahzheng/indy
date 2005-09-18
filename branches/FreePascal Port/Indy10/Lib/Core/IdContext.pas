@@ -76,6 +76,7 @@
 unit IdContext;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdObjs,
