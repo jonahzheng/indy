@@ -19,10 +19,9 @@
 unit IdSysWin32;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
-
-
   IdSysNativeVCL,
   SysUtils;
 

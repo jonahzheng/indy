@@ -19,6 +19,7 @@
 unit IdSysNativeVCL;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses IdSysVCL, SysUtils;
 

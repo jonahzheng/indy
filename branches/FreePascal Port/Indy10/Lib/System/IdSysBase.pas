@@ -19,12 +19,13 @@
 unit IdSysBase;
 
 interface
+{$i idcompilerdefines.inc}
 
 type
   TIdSysBase = class
   end;
 
-  
+
 implementation
 
 end.
