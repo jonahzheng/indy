@@ -113,7 +113,8 @@
 unit IdCmdTCPClient;
 
 interface
-
+{$I IdCompilerDefines.inc}
+//Put FPC into Delphi mode
 uses
   IdContext, IdGlobal, IdReply, IdThread, IdTCPClient, IdCommandHandlers, IdObjs;
 

@@ -63,9 +63,9 @@ unit IdIPMCastServer;
 }
 
 interface
-
+{$I IdCompilerDefines.inc}
+//Put FPC into Delphi mode
 uses
-  IdComponent,
   IdGlobal,
   IdIPMCastBase,
   IdSocketHandle;

@@ -81,7 +81,8 @@
 unit IdUDPServer;
 
 interface
-
+{$I IdCompilerDefines.inc}
+//Put FPC into Delphi mode
 uses
   IdComponent,
   IdException,

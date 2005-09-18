@@ -100,7 +100,7 @@ uses
 
 procedure TIdPropEdBinding.Edit;
 begin
-  inherited Edit;
+//  inherited Edit;
   with TIdPropEdBindingEntry.Create do
   try
     if PropCount > 0 then

@@ -43,7 +43,8 @@
    Rev 1.0    11/13/2002 07:55:22 AM  JPMugaas
 }
 unit IdIPMCastClient;
-
+{$I IdCompilerDefines.inc}
+//Put FPC into Delphi mode
 interface
 
 uses

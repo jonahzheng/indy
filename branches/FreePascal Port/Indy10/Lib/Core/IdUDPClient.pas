@@ -77,7 +77,8 @@
 unit IdUDPClient;
 
 interface
-
+{$I IdCompilerDefines.inc}
+//Put FPC into Delphi mode
 uses
   IdUDPBase,
   IdGlobal,

@@ -91,7 +91,8 @@
 unit IdThreadComponent;
 
 interface
-
+{$I IdCompilerDefines.inc}
+//Put FPC into Delphi mode
 uses
   IdBaseComponent, IdException, IdGlobal, IdSys, IdThread, IdObjs;
 

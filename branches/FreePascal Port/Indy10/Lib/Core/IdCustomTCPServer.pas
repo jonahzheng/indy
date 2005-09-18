@@ -315,7 +315,8 @@ Original Author and Maintainer:
 unit IdCustomTCPServer;
 
 interface
-
+{$I IdCompilerDefines.inc}
+//here to flip FPC into Delphi mode
 uses
   IdObjs, IdBaseComponent, 
   IdComponent,IdContext, IdGlobal, IdException,

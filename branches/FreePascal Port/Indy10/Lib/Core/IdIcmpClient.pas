@@ -11,47 +11,47 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
+
+
   $Log$
-}
-{
-{   Rev 1.8    2004-04-25 12:08:24  Mattias
-{ Fixed multithreading issue
-}
-{
-{   Rev 1.7    2004.02.03 4:16:42 PM  czhower
-{ For unit name changes.
-}
-{
-{   Rev 1.6    2/1/2004 4:53:30 PM  JPMugaas
-{ Removed Todo;
-}
-{
-{   Rev 1.5    2004.01.20 10:03:24 PM  czhower
-{ InitComponent
-}
-{
-{   Rev 1.4    2003.12.31 10:37:54 PM  czhower
-{ GetTickcount --> Ticks
-}
-{
-{   Rev 1.3    10/16/2003 11:06:14 PM  SPerry
-{ Moved ICMP_MIN to IdRawHeaders
-}
-{
-{   Rev 1.2    2003.10.11 5:48:04 PM  czhower
-{ -VCL fixes for servers
-{ -Chain suport for servers (Super core)
-{ -Scheduler upgrades
-{ -Full yarn support
-}
-{
-{   Rev 1.1    2003.09.30 1:22:56 PM  czhower
-{ Stack split for DotNet
-}
-{
-{   Rev 1.0    11/13/2002 08:44:30 AM  JPMugaas
+
+
+   Rev 1.8    2004-04-25 12:08:24  Mattias
+ Fixed multithreading issue
+
+
+   Rev 1.7    2004.02.03 4:16:42 PM  czhower
+ For unit name changes.
+
+
+   Rev 1.6    2/1/2004 4:53:30 PM  JPMugaas
+ Removed Todo;
+
+
+   Rev 1.5    2004.01.20 10:03:24 PM  czhower
+ InitComponent
+
+
+   Rev 1.4    2003.12.31 10:37:54 PM  czhower
+ GetTickcount --> Ticks
+
+
+   Rev 1.3    10/16/2003 11:06:14 PM  SPerry
+ Moved ICMP_MIN to IdRawHeaders
+
+
+   Rev 1.2    2003.10.11 5:48:04 PM  czhower
+ -VCL fixes for servers
+ -Chain suport for servers (Super core)
+ -Scheduler upgrades
+ -Full yarn support
+
+
+   Rev 1.1    2003.09.30 1:22:56 PM  czhower
+ Stack split for DotNet
+
+
+   Rev 1.0    11/13/2002 08:44:30 AM  JPMugaas
 }
 unit IdIcmpClient;
 {
@@ -73,6 +73,7 @@ consider revisiting this.
 
 interface
 {$I IdCompilerDefines.inc}
+//Put FPC into Delphi mode
 uses
   IdGlobal,
   IdObjs,

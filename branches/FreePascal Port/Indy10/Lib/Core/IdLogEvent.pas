@@ -29,7 +29,8 @@
 unit IdLogEvent;
 
 interface
-
+{$I IdCompilerDefines.inc}
+//Put FPC into Delphi mode
 uses
   IdLogBase, IdObjs;
 

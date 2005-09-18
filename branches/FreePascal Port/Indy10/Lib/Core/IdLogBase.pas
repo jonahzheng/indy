@@ -41,7 +41,8 @@
 unit IdLogBase;
 
 interface
-
+{$I IdCompilerDefines.inc}
+//Put FPC into Delphi mode
 uses
   IdIntercept, IdGlobal,  IdObjs;
 
