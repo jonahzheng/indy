@@ -205,6 +205,7 @@
   {$DEFINE SAMETEXT}
   {$DEFINE ALLOW_NAMED_THREADS}
   {$DEFINE NO_TMultiReadExclusiveWriteSynchronizer}
+   {$DEFINE FPC_REINTRODUCE_BUG}
    {$DEFINE FPC_CircularBug}
    {$DEFINE NoRedeclare}
    {$DEFINE ByteCompareSets}
