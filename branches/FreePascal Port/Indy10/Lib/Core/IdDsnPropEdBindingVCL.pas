@@ -593,7 +593,9 @@ begin
   else
   begin
     edtIPAddress.Text := '';
-    edtPort.ItemIndex := -2;
+    {$IFNDEF FPC}
+    edtPort.ItemIndex := -1; //-2;
+    {$ENDIF}
     edtPort.Text := '';
   end;
 
