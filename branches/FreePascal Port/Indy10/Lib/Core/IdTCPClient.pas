@@ -167,7 +167,7 @@
    Rev 1.0    11/13/2002 09:00:26 AM  JPMugaas
 }
 unit IdTCPClient;
-
+{$i idcompilerdefines.inc}
 interface
 
 uses

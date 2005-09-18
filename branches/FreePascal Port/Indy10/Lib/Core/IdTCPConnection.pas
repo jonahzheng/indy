@@ -309,6 +309,7 @@
 unit IdTCPConnection;
 
 interface
+{$i idcompilerdefines.inc}
 
 {
 2003-12-14 - Ciaran Costelloe
