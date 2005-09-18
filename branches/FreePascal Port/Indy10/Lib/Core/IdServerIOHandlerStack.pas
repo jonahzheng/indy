@@ -66,6 +66,7 @@
 unit IdServerIOHandlerStack;
 
 interface
+{$i idcompilerdefines.inc}
 
 Uses
   IdSocketHandle, IdGlobal, IdThread, IdServerIOHandler, IdStackConsts, IdIOHandler, IdScheduler,
@@ -95,4 +96,4 @@ begin
 end;
 
 end.
- 
+

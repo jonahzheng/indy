@@ -19,6 +19,7 @@
 unit IdStruct;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses IdGlobal;
 

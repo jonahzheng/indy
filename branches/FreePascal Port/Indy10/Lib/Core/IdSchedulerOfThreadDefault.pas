@@ -76,6 +76,7 @@
 unit IdSchedulerOfThreadDefault;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdThread, IdSchedulerOfThread, IdScheduler, IdYarn, IdContext;

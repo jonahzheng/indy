@@ -91,6 +91,7 @@
 unit IdServerIOHandlerSocket;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdSocketHandle, IdGlobal, IdThread, IdServerIOHandler, IdStackConsts, IdIOHandler, IdScheduler,
@@ -132,7 +133,7 @@ function TIdServerIOHandlerSocket.Accept(
 var
   LIOHandler: TIdIOHandlerSocket;
 begin
-  //using a custom scheduler, AYarn may be nil, so don't assert 
+  //using a custom scheduler, AYarn may be nil, so don't assert
   Assert(ASocket<>nil);
   Assert(AListenerThread<>nil);
 

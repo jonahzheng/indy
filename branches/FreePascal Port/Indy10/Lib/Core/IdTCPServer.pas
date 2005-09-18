@@ -22,6 +22,8 @@
 unit IdTCPServer;
 
 interface
+{$i idcompilerdefines.inc}
+
 uses IdCustomTCPServer;
 
 type

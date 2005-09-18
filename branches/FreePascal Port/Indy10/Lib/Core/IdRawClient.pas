@@ -21,6 +21,7 @@
 unit IdRawClient;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdGlobal,

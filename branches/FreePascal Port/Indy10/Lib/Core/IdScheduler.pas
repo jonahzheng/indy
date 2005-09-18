@@ -76,6 +76,7 @@
 unit IdScheduler;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdBaseComponent, IdSys, IdThread, IdTask, IdYarn, IdThreadSafe;
@@ -145,7 +146,7 @@ var
   i: Integer;
 begin
   Assert(FActiveYarns<>nil);
-  
+
   while True do begin
     // Must unlock each time to allow yarns that are temrinating to remove themselves from the list
     with FActiveYarns.LockList do try
