@@ -68,16 +68,25 @@ unit IdDsnPropEdBindingVCL;
 interface
  {$I IdCompilerDefines.inc}
 uses
-  IdObjs,
-  {$IFDEF LINUX}
-  Classes, IdSocketHandle, QActnList, QStdCtrls, QForms, QExtCtrls, QControls, QComCtrls, QGraphics, Qt, Types;
+
+{$ifdef clx}
+  QActnList, QStdCtrls, QForms, QExtCtrls, QControls, QComCtrls, QGraphics,  Qt,
   {$ELSE}
-  ActnList, Classes,  Controls,  Buttons,
-  ExtCtrls, Forms, Graphics, IdSocketHandle,
-
-  StdCtrls;
+  ActnList, StdCtrls, Buttons, ExtCtrls, Graphics, Controls, ComCtrls, Forms,
   {$ENDIF}
+{$ifdef Delphi6up}
+  Types
+{$endif}
 
+  {$IFDEF Windows}
+    Windows,
+ {$ENDIF}
+  {$IFDEF LCL}
+    LResources,
+ {$ENDIF}
+  IdObjs,
+  Classes,
+  IdSocketHandle;
 {
 Design Note:  It turns out that in DotNET, there are no services file functions and IdPorts
 does not work as expected in DotNET.  It is probably possible to read the services
