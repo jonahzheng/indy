@@ -68,9 +68,12 @@ Begin
             Begin
               If (length(t[i])>0) And (t[i][1] In ['{','}']) Then
                 Begin
-                  s := t[i];
-                  s[1] := ' ';
-                  t[i] := trimright(s);
+                  if (t[i][1]='}') or ((t[i][1]='{') and (pos(t[i],'}')=0)) then
+                    begin
+                      s := t[i];
+                      s[1] := ' ';
+                      t[i] := trimright(s);
+                    end;
                 End;
             End;
           If length(t[unitline-1])=0 Then
