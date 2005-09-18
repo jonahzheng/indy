@@ -19,6 +19,7 @@
 unit IdTraceRoute;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses IdICMPClient, IdRawBase, IdRawClient, IdThread;
 

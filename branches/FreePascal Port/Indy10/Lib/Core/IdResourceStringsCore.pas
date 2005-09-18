@@ -114,6 +114,7 @@
 unit IdResourceStringsCore;
 
 interface
+{$i idcompilerdefines.inc}
 
 resourcestring
   RSNoBindingsSpecified = 'No bindings specified.';
@@ -202,7 +203,7 @@ resourcestring
 
   RSTCPServerSchedulerAlreadyActive = 'Cannot change the scheduler while the server is Active.';
   RSUDPMustUseProxyOpen = 'You must use proxyOpen';
-  
+
 implementation
 
 end.

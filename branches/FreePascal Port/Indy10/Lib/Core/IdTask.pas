@@ -26,6 +26,7 @@
 unit IdTask;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdSys,
