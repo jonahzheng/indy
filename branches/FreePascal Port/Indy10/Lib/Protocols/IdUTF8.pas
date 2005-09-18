@@ -14,22 +14,22 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.1    2/29/2004 6:18:38 AM  JPMugaas
-{ More functions added for UTF8 support.  This still needs to be tested.
-}
-{
-{   Rev 1.0    2/29/2004 3:36:16 AM  JPMugaas
-{ Preliminary version of UTF8 encode and decode.  We may need this later on for
-{ some FTP work and for other protocol support.
+
+
+    Rev 1.1    2/29/2004 6:18:38 AM  JPMugaas
+  More functions added for UTF8 support.  This still needs to be tested.
+
+
+    Rev 1.0    2/29/2004 3:36:16 AM  JPMugaas
+  Preliminary version of UTF8 encode and decode.  We may need this later on for
+  some FTP work and for other protocol support.
 }
 unit IdUTF8;
 
 interface
+{$i idcompilerdefines.inc}
 uses IdGlobal, IdGlobalProtocols, SysUtils;
 
-{$I IdCompilerDefines.inc}
 {$IFDEF DOTNET}
 type
   UTF8String = string;

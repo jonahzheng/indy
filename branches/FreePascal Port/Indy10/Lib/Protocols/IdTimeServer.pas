@@ -14,46 +14,47 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.8    2/10/2005 2:24:42 PM  JPMugaas
-{ Minor Restructures for some new UnixTime Service components.
-}
-{
-{   Rev 1.7    12/2/2004 4:24:00 PM  JPMugaas
-{ Adjusted for changes in Core.
-}
-{
-{   Rev 1.6    2004.02.03 5:44:34 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.5    1/21/2004 4:20:58 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.4    2003.10.12 6:36:44 PM  czhower
-{ Now compiles.
-}
-{
-{   Rev 1.3    2/24/2003 10:37:04 PM  JPMugaas
-{ Should compile.  TODO:  Figure out what to do with TIdTime and the timeout
-{ feature.
-}
-{
-{   Rev 1.2    1/17/2003 07:11:08 PM  JPMugaas
-{ Now compiles under new framework.
-}
-{
-{   Rev 1.1    1/8/2003 05:54:00 PM  JPMugaas
-{ Switched stuff to IdContext.
-}
-{
-{   Rev 1.0    11/13/2002 08:03:20 AM  JPMugaas
+
+
+    Rev 1.8    2/10/2005 2:24:42 PM  JPMugaas
+  Minor Restructures for some new UnixTime Service components.
+
+
+    Rev 1.7    12/2/2004 4:24:00 PM  JPMugaas
+  Adjusted for changes in Core.
+
+
+    Rev 1.6    2004.02.03 5:44:34 PM  czhower
+  Name changes
+
+
+    Rev 1.5    1/21/2004 4:20:58 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.4    2003.10.12 6:36:44 PM  czhower
+  Now compiles.
+
+
+    Rev 1.3    2/24/2003 10:37:04 PM  JPMugaas
+  Should compile.  TODO:  Figure out what to do with TIdTime and the timeout
+  feature.
+
+
+    Rev 1.2    1/17/2003 07:11:08 PM  JPMugaas
+  Now compiles under new framework.
+
+
+    Rev 1.1    1/8/2003 05:54:00 PM  JPMugaas
+  Switched stuff to IdContext.
+
+
+    Rev 1.0    11/13/2002 08:03:20 AM  JPMugaas
 }
 unit IdTimeServer;
 
 interface
+{$i idcompilerdefines.inc}
 
 {
  2000-3-May    J. Peter Mugaas

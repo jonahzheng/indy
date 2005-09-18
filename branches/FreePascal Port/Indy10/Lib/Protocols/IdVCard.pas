@@ -14,37 +14,37 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.7    2004.10.27 9:17:52 AM  czhower
-{ For TIdStrings
-}
-{
-{   Rev 1.6    10/26/2004 10:54:16 PM  JPMugaas
-{ Updated refs.
-}
-{
-{   Rev 1.5    2004.02.08 2:43:32 PM  czhower
-{ Fixed compile error.
-}
-{
-{   Rev 1.4    2/7/2004 12:47:16 PM  JPMugaas
-{ Should work in DotNET and not touch the system settings at all.
-}
-{
-{   Rev 1.3    2004.02.03 5:44:42 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.2    1/21/2004 4:21:10 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.1    6/13/2003 08:19:52 AM  JPMugaas
-{ Should now compile with new codders.
-}
-{
-{   Rev 1.0    11/13/2002 08:04:32 AM  JPMugaas
+
+
+    Rev 1.7    2004.10.27 9:17:52 AM  czhower
+  For TIdStrings
+
+
+    Rev 1.6    10/26/2004 10:54:16 PM  JPMugaas
+  Updated refs.
+
+
+    Rev 1.5    2004.02.08 2:43:32 PM  czhower
+  Fixed compile error.
+
+
+    Rev 1.4    2/7/2004 12:47:16 PM  JPMugaas
+  Should work in DotNET and not touch the system settings at all.
+
+
+    Rev 1.3    2004.02.03 5:44:42 PM  czhower
+  Name changes
+
+
+    Rev 1.2    1/21/2004 4:21:10 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.1    6/13/2003 08:19:52 AM  JPMugaas
+  Should now compile with new codders.
+
+
+    Rev 1.0    11/13/2002 08:04:32 AM  JPMugaas
 }
 unit IdVCard;
 
@@ -70,6 +70,7 @@ unit IdVCard;
 }
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdBaseComponent,

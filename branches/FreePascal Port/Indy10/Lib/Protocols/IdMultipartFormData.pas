@@ -14,8 +14,8 @@
 }
 {
   $Log$
-}
-{
+
+
   Prior revision history:
 
   Rev 1.17    2/8/05 6:07:16 PM  RLebeau
@@ -87,8 +87,8 @@
   2001-Nov Doychin Bondzhev
     Now it descends from TStream and does not do buffering.
     Changes in the way the form parts are added to the stream.
-}
 
+}
 unit IdMultipartFormData;
 
 {
@@ -102,7 +102,7 @@ unit IdMultipartFormData;
 }
 
 interface
-{$I IdCompilerDefines.inc}
+{$i idcompilerdefines.inc}
 
 uses
   IdGlobal,

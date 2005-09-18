@@ -14,21 +14,21 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.3    10/26/2004 11:08:04 PM  JPMugaas
-{ Updated refs.
-}
-{
-{   Rev 1.2    2004.02.03 5:44:22 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.1    1/21/2004 4:03:36 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.0    11/13/2002 08:01:02 AM  JPMugaas
+
+
+    Rev 1.3    10/26/2004 11:08:04 PM  JPMugaas
+  Updated refs.
+
+
+    Rev 1.2    2004.02.03 5:44:22 PM  czhower
+  Name changes
+
+
+    Rev 1.1    1/21/2004 4:03:36 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.0    11/13/2002 08:01:02 AM  JPMugaas
 }
 unit IdSNMP;
 
@@ -55,11 +55,13 @@ The Synapse SNMP component was converted for use in INDY.
 |==============================================================================}
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   Classes,
     IdASN1Util,
     IdObjs,
+  IdGlobal,
   IdException,
   IdUDPBase,
   IdUDPClient;
@@ -96,7 +98,7 @@ type
     procedure SyncMIB;
   public
     Host : string;
-    Port : integer;
+    Port : TIdPort;
     Enterprise: string;
     GenTrap: integer;
     SpecTrap: integer;
@@ -156,7 +158,6 @@ type
 implementation
 
 uses
-  IdGlobal,
   IdSys,
   IdStack;
 

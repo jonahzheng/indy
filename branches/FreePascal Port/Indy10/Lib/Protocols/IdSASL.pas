@@ -14,23 +14,23 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.3    10/26/2004 10:55:32 PM  JPMugaas
-{ Updated refs.
-}
-{
-{   Rev 1.2    2004.02.03 5:44:18 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.1    1/21/2004 3:11:34 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.0    11/13/2002 08:00:06 AM  JPMugaas
-}
-{
+
+
+    Rev 1.3    10/26/2004 10:55:32 PM  JPMugaas
+  Updated refs.
+
+
+    Rev 1.2    2004.02.03 5:44:18 PM  czhower
+  Name changes
+
+
+    Rev 1.1    1/21/2004 3:11:34 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.0    11/13/2002 08:00:06 AM  JPMugaas
+
+
 
 SASL Base mechanism for Indy.
 See RFC 2222
@@ -49,12 +49,13 @@ But since they tie into the SASLList, its not restricted to message clients.
 Descendant classes will be responsible for implementing the SASL mechanism
 completely and holding any data required for authentication, unless descend
 from the UserPass mechanism and link to a UserPass provider.
-}
 
-{$BOOLEVAL OFF}
+
+ $BOOLEVAL OFF}
 unit IdSASL;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdBaseComponent,

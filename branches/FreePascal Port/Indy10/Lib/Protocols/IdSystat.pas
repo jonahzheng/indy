@@ -14,24 +14,24 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.4    10/26/2004 10:49:20 PM  JPMugaas
-{ Updated ref.
-}
-{
-{   Rev 1.3    1/21/2004 4:04:04 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.2    2/24/2003 10:29:46 PM  JPMugaas
-}
-{
-{   Rev 1.1    12/6/2002 05:30:38 PM  JPMugaas
-{ Now decend from TIdTCPClientCustom instead of TIdTCPClient.
-}
-{
-{   Rev 1.0    11/13/2002 08:02:24 AM  JPMugaas
+
+
+    Rev 1.4    10/26/2004 10:49:20 PM  JPMugaas
+  Updated ref.
+
+
+    Rev 1.3    1/21/2004 4:04:04 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.2    2/24/2003 10:29:46 PM  JPMugaas
+
+
+    Rev 1.1    12/6/2002 05:30:38 PM  JPMugaas
+  Now decend from TIdTCPClientCustom instead of TIdTCPClient.
+
+
+    Rev 1.0    11/13/2002 08:02:24 AM  JPMugaas
 }
 unit IdSystat;
 {*******************************************************}
@@ -49,6 +49,7 @@ unit IdSystat;
   -Original version}
 
 interface
+{$i idcompilerdefines.inc}
 uses
   IdAssignedNumbers,
   IdTCPConnection,

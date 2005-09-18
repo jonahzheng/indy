@@ -14,17 +14,17 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.2    1/21/2004 3:27:22 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.1    1/31/2003 02:32:14 PM  JPMugaas
-{ Should now compile.
-}
-{
-{   Rev 1.0    11/13/2002 08:00:02 AM  JPMugaas
+
+
+    Rev 1.2    1/21/2004 3:27:22 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.1    1/31/2003 02:32:14 PM  JPMugaas
+  Should now compile.
+
+
+    Rev 1.0    11/13/2002 08:00:02 AM  JPMugaas
 }
 unit IdRSHServer;
 
@@ -53,6 +53,7 @@ WARNING:
 
 }
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdAssignedNumbers, IdContext, IdRemoteCMDServer, IdTCPClient, IdTCPServer;

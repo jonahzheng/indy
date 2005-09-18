@@ -14,17 +14,17 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.2    1/21/2004 3:27:18 PM  JPMugaas
-{ InitComponent
-}
-{
+
+
+    Rev 1.2    1/21/2004 3:27:18 PM  JPMugaas
+  InitComponent
+
+
     Rev 1.1    4/4/2003 8:02:58 PM  BGooijen
   made host published
-}
-{
-{   Rev 1.0    11/13/2002 07:59:46 AM  JPMugaas
+
+
+    Rev 1.0    11/13/2002 07:59:46 AM  JPMugaas
 }
 unit IdRexec;
 
@@ -53,6 +53,7 @@ unit IdRexec;
 {*******************************************************)
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdAssignedNumbers,

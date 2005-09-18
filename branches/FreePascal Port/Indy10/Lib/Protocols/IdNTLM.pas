@@ -14,16 +14,16 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.1    6/29/04 12:51:10 PM  RLebeau
-{ Updatd SetupLanManagerPassword() to check the password length before
-{ referencing the password data
-}
-{
-{   Rev 1.0    11/13/2002 07:58:08 AM  JPMugaas
-}
-{
+
+
+    Rev 1.1    6/29/04 12:51:10 PM  RLebeau
+  Updatd SetupLanManagerPassword() to check the password length before
+  referencing the password data
+
+
+    Rev 1.0    11/13/2002 07:58:08 AM  JPMugaas
+
+
 
   Implementation of the NTLM authentication as specified in
   http://www.innovation.ch/java/ntlm.html with some fixes
@@ -42,6 +42,7 @@
 unit IdNTLM;
 
 interface
+{$i idcompilerdefines.inc}
 
 Uses
   IdSSLOpenSSLHeaders;

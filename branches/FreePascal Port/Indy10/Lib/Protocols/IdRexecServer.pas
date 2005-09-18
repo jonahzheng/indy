@@ -14,17 +14,17 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.2    1/21/2004 3:27:20 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.1    1/31/2003 02:32:10 PM  JPMugaas
-{ Should now compile.
-}
-{
-{   Rev 1.0    11/13/2002 07:59:50 AM  JPMugaas
+
+
+    Rev 1.2    1/21/2004 3:27:20 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.1    1/31/2003 02:32:10 PM  JPMugaas
+  Should now compile.
+
+
+    Rev 1.0    11/13/2002 07:59:50 AM  JPMugaas
 }
 unit IdRexecServer;
 
@@ -43,6 +43,7 @@ This is based on the IdRexec.pas unit and
 programming comments at http://www.abandoned.org/nemon/rexeclib.py}
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdAssignedNumbers, IdContext, IdRemoteCMDServer, IdTCPClient, IdTCPServer;

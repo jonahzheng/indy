@@ -14,32 +14,33 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.4    2004.02.03 5:45:42 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.3    1/25/2004 2:17:54 PM  JPMugaas
-{ Should work better.  Removed one GPF in S/Key.
-}
-{
-{   Rev 1.2    1/21/2004 4:03:18 PM  JPMugaas
-{ InitComponent
-}
-{
+
+
+    Rev 1.4    2004.02.03 5:45:42 PM  czhower
+  Name changes
+
+
+    Rev 1.3    1/25/2004 2:17:54 PM  JPMugaas
+  Should work better.  Removed one GPF in S/Key.
+
+
+    Rev 1.2    1/21/2004 4:03:18 PM  JPMugaas
+  InitComponent
+
+
     Rev 1.1    10/19/2003 5:57:20 PM  DSiders
   Added localization comments.
-}
-{
-{   Rev 1.0    5/10/2003 10:08:14 PM  JPMugaas
-{ SKEY SASL mechanism as defined in RFC 2222.  Note that this is obsolete and
-{ you should use RFC 2444 for new designs.  This is only provided for backwards
-{ compatibility.
+
+
+    Rev 1.0    5/10/2003 10:08:14 PM  JPMugaas
+  SKEY SASL mechanism as defined in RFC 2222.  Note that this is obsolete and
+  you should use RFC 2444 for new designs.  This is only provided for backwards
+  compatibility.
 }
 unit IdSASLSKey;
 
 interface
+{$i idcompilerdefines.inc}
 uses IdSASLUserPass, IdSASL;
 {
 S/KEY SASL mechanism based on RFC 2222.

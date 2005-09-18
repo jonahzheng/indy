@@ -14,15 +14,15 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.1    2004.02.03 5:44:18 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.0    11/13/2002 08:00:40 AM  JPMugaas
-}
-{
+
+
+    Rev 1.1    2004.02.03 5:44:18 PM  czhower
+  Name changes
+
+
+    Rev 1.0    11/13/2002 08:00:40 AM  JPMugaas
+
+
   Base class for any mechanism that needs a username/password.
   This links to a TIdUserPassProvider to allow application programmers
   to only set the username/password once, instead of having to set it for
@@ -31,6 +31,7 @@
 unit IdSASLUserPass;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdResourceStringsProtocols, IdSASL, IdUserPassProvider, IdObjs, IdBaseComponent,

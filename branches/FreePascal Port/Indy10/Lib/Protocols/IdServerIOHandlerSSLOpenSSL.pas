@@ -14,17 +14,18 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.1    2/6/2004 3:37:06 PM  JPMugaas
-{ Fixed a refernce that was outdated.
-}
-{
-{   Rev 1.0    11/13/2002 08:00:44 AM  JPMugaas
+
+
+    Rev 1.1    2/6/2004 3:37:06 PM  JPMugaas
+  Fixed a refernce that was outdated.
+
+
+    Rev 1.0    11/13/2002 08:00:44 AM  JPMugaas
 }
 unit IdServerIOHandlerSSLOpenSSL;
 
 interface
+{$i idcompilerdefines.inc}
 uses
   Classes,
   IdServerIOHandler,

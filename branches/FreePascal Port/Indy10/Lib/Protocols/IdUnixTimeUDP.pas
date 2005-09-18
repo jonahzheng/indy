@@ -14,14 +14,15 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.0    2/10/2005 2:26:38 PM  JPMugaas
-{ New UnixTime Service (port 519) components.
+
+
+    Rev 1.0    2/10/2005 2:26:38 PM  JPMugaas
+  New UnixTime Service (port 519) components.
 }
 unit IdUnixTimeUDP;
 
 interface
+{$i idcompilerdefines.inc}
 uses IdAssignedNumbers, IdTimeUDP, IdUDPClient;
 {
 This is based on a description at

@@ -14,12 +14,12 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.1    10/17/2003 6:24:58 PM  BGooijen
-{ Removed const 
-}
-{
+
+
+    Rev 1.1    10/17/2003 6:24:58 PM  BGooijen
+  Removed const
+
+
     Rev 1.0    3/22/2003 11:06:06 PM  BGooijen
   Initial check in.
   ServerIntercept to log data/status to an event.
@@ -27,6 +27,7 @@
 unit IdServerInterceptLogEvent;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdServerInterceptLogBase;

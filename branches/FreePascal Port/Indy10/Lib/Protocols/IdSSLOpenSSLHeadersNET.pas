@@ -14,42 +14,42 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.2    2/6/2004 4:09:56 PM  JPMugaas
-{ Fixed bug where loading failure was reversed and successful functions that
-{ were loaded were reported instead of ones that didn't load.  FIxed.
-}
-{
-{   Rev 1.1    2/6/2004 3:38:34 PM  JPMugaas
-{ Should compile in DotNET.  This still probably will not work though.
-}
-{
-{   Rev 1.0    2/5/2004 4:42:56 PM  JPMugaas
-{ Attempt to make a DotNET wrapper for OpenSSL.  It does NOT work so don't use
-{ it.  If you can fix it, great.
-}
-{
-{   Rev 1.5    10/16/03 11:16:44 PM  RLebeau
-{ Updated to better support C++Builder by adding an $EXTERNSYM define to
-{ 'time_t' so that it won't be included in the auto-generated HPP file.  The
-{ native time.h header file is used instead.
-}
-{
+
+
+    Rev 1.2    2/6/2004 4:09:56 PM  JPMugaas
+  Fixed bug where loading failure was reversed and successful functions that
+  were loaded were reported instead of ones that didn't load.  FIxed.
+
+
+    Rev 1.1    2/6/2004 3:38:34 PM  JPMugaas
+  Should compile in DotNET.  This still probably will not work though.
+
+
+    Rev 1.0    2/5/2004 4:42:56 PM  JPMugaas
+  Attempt to make a DotNET wrapper for OpenSSL.  It does NOT work so don't use
+  it.  If you can fix it, great.
+
+
+    Rev 1.5    10/16/03 11:16:44 PM  RLebeau
+  Updated to better support C++Builder by adding an $EXTERNSYM define to
+  'time_t' so that it won't be included in the auto-generated HPP file.  The
+  native time.h header file is used instead.
+
+
     Rev 1.4    10/17/2003 1:08:12 AM  DSiders
   Added localization comments.
-}
-{
-{   Rev 1.3    12/9/2002 12:48:42 PM  JPMugaas
-{ Fixed stupid compile error for the moment.  The Macros in err.h have to be
-{ sorted out later.
-}
-{
-{   Rev 1.1    12/8/2002 07:25:52 PM  JPMugaas
-{ Added published host and port properties.
-}
-{
-{   Rev 1.0    11/13/2002 08:01:32 AM  JPMugaas
+
+
+    Rev 1.3    12/9/2002 12:48:42 PM  JPMugaas
+  Fixed stupid compile error for the moment.  The Macros in err.h have to be
+  sorted out later.
+
+
+    Rev 1.1    12/8/2002 07:25:52 PM  JPMugaas
+  Added published host and port properties.
+
+
+    Rev 1.0    11/13/2002 08:01:32 AM  JPMugaas
 }
 unit IdSSLOpenSSLHeadersNET;
 {
@@ -58,6 +58,7 @@ unit IdSSLOpenSSLHeadersNET;
 }
 
 interface
+{$i idcompilerdefines.inc}
 uses
   IdGlobal,
   System.Text, System.Runtime.InteropServices, Windows;

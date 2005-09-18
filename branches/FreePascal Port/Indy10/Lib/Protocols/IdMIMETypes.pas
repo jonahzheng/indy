@@ -14,13 +14,13 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.1    2004.02.03 5:44:08 PM  czhower
-{ Name changes
-}
-{
-{   Rev 1.0    11/13/2002 07:57:36 AM  JPMugaas
+
+
+    Rev 1.1    2004.02.03 5:44:08 PM  czhower
+  Name changes
+
+
+    Rev 1.0    11/13/2002 07:57:36 AM  JPMugaas
 }
 unit IdMIMETypes;
 
@@ -34,6 +34,7 @@ unit IdMIMETypes;
 }
 
 interface
+{$i idcompilerdefines.inc}
 
 const
      MIMESplit = '/';    {Do not Localize}

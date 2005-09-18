@@ -14,9 +14,9 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.0    11/13/2002 08:03:48 AM  JPMugaas
+
+
+    Rev 1.0    11/13/2002 08:03:48 AM  JPMugaas
 }
 unit IdTunnelCommon;
 
@@ -56,6 +56,7 @@ unit IdTunnelCommon;
 *}
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   SysUtils, Classes, SyncObjs,

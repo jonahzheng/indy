@@ -14,17 +14,18 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.1    1/21/2004 4:03:14 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.0    11/13/2002 08:00:16 AM  JPMugaas
+
+
+    Rev 1.1    1/21/2004 4:03:14 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.0    11/13/2002 08:00:16 AM  JPMugaas
 }
 unit IdSASLExternal;
 
 interface
+{$i idcompilerdefines.inc}
 uses
   IdSASL, IdTCPConnection;
 

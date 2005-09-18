@@ -14,18 +14,18 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.2    2004.10.26 2:19:58 PM  czhower
-{ Resolved alias conflict.
-}
-{
-{   Rev 1.1    14/07/2004 21:37:26  CCostelloe
-{ Changed Get/SetMessage to Get/SetIdMessage to avoid conflict under C++ with
-{ Windows' GetMessage
-}
-{
-{   Rev 1.0    11/13/2002 07:57:28 AM  JPMugaas
+
+
+    Rev 1.2    2004.10.26 2:19:58 PM  czhower
+  Resolved alias conflict.
+
+
+    Rev 1.1    14/07/2004 21:37:26  CCostelloe
+  Changed Get/SetMessage to Get/SetIdMessage to avoid conflict under C++ with
+  Windows' GetMessage
+
+
+    Rev 1.0    11/13/2002 07:57:28 AM  JPMugaas
 }
 unit IdMessageCollection;
 
@@ -39,6 +39,7 @@ unit IdMessageCollection;
   Originally by Peter Mee.
 *}
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdMessage,

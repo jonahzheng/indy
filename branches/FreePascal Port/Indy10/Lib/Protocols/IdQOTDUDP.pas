@@ -14,17 +14,18 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.1    1/21/2004 3:27:14 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.0    11/13/2002 07:58:46 AM  JPMugaas
+
+
+    Rev 1.1    1/21/2004 3:27:14 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.0    11/13/2002 07:58:46 AM  JPMugaas
 }
 unit IdQOTDUDP;
 
 interface
+{$i idcompilerdefines.inc}
 uses IdAssignedNumbers, IdUDPBase, IdUDPClient;
 type
   TIdQOTDUDP = class(TIdUDPClient)

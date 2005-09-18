@@ -14,32 +14,33 @@
 }
 {
   $Log$
-}
-{
-{   Rev 1.5    12/2/2004 4:23:58 PM  JPMugaas
-{ Adjusted for changes in Core.
-}
-{
-{   Rev 1.4    1/21/2004 3:27:14 PM  JPMugaas
-{ InitComponent
-}
-{
-{   Rev 1.3    2/24/2003 09:29:30 PM  JPMugaas
-}
-{
-{   Rev 1.2    1/17/2003 07:10:48 PM  JPMugaas
-{ Now compiles under new framework.
-}
-{
-{   Rev 1.1    1/8/2003 05:53:46 PM  JPMugaas
-{ Switched stuff to IdContext.
-}
-{
-{   Rev 1.0    11/13/2002 07:58:40 AM  JPMugaas
+
+
+    Rev 1.5    12/2/2004 4:23:58 PM  JPMugaas
+  Adjusted for changes in Core.
+
+
+    Rev 1.4    1/21/2004 3:27:14 PM  JPMugaas
+  InitComponent
+
+
+    Rev 1.3    2/24/2003 09:29:30 PM  JPMugaas
+
+
+    Rev 1.2    1/17/2003 07:10:48 PM  JPMugaas
+  Now compiles under new framework.
+
+
+    Rev 1.1    1/8/2003 05:53:46 PM  JPMugaas
+  Switched stuff to IdContext.
+
+
+    Rev 1.0    11/13/2002 07:58:40 AM  JPMugaas
 }
 unit IdQotdServer;
 
 interface
+{$i idcompilerdefines.inc}
 
 {
 2000-May-15  J. Peter Mugaas
