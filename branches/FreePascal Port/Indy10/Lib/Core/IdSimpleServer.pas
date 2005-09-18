@@ -93,7 +93,7 @@
 unit IdSimpleServer;
 
 interface
-
+{$i idcompilerdefines.inc}
 uses
   IdException,
   IdGlobal,

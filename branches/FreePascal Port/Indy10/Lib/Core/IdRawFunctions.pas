@@ -44,6 +44,7 @@
 unit IdRawFunctions;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
    IdGlobal, IdRawHeaders, IdStack;
@@ -131,7 +132,7 @@ procedure IdRawBuildTcp(const ASourcePort, ADestPort: word;
 procedure IdRawBuildUdp(const ASourcePort, ADestPort: word;
   const APayload :TIdBytes;
   var VBuffer :TIdBytes);
-  
+
 implementation
  uses IdSys;
 
@@ -395,7 +396,7 @@ begin
 
   // attach original header
   IdRawBuildIp(0, AnOrigTos, AnOrigId, AnOrigFrag, AnOrigTtl, AnOrigProtocol,
-    AnOrigSource, AnOrigDest, ToBytes(AnOrigPayload), 
+    AnOrigSource, AnOrigDest, ToBytes(AnOrigPayload),
     VBuffer, Id_ICMP_UNREACH_HSIZE);
 
     // copy header
