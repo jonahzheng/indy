@@ -109,8 +109,14 @@ manner than what I described.
 }
 type
   TIdDsnPropEdBindingVCL = class(TForm)
+  {$IFDEF FPC}
+    btnOk: TBitBtn;
+    btnCancel: TBitBtn;
+  {$ELSE}
     btnOk: TButton;
     btnCancel: TButton;
+  {$ENDIF}
+
     lblBindings: TLabel;
     edtPort: TComboBox;
     rdoBindingType: TRadioGroup;
@@ -294,14 +300,18 @@ var i : Integer;
 begin
 
   inherited CreateNew(AOwner,0);
-  {$IFNDEF LINUX}
+  {$IFNDEF CLX}
   Borderstyle := bsDialog;
   {$ENDIF}
   BorderIcons := [biSystemMenu];
  // Width := 480;
  // Height := 252;
   ClientWidth  := 472;
+  {$IFDEF FPC}
+  ClientHeight := 230;
+  {$ELSE}
   ClientHeight := 225;
+  {$ENDIF}
   Constraints.MaxWidth := Width;
   Constraints.MaxHeight := Height;
   Constraints.MinWidth := Width;
@@ -321,8 +331,13 @@ begin
   edtPort := TComboBox.Create(Self);
 
   rdoBindingType := TRadioGroup.Create(Self);
+  {$IFDEF FPC}
+  btnOk := TBitBtn.Create(Self);
+  btnCancel := TBitBtn.Create(Self);
+  {$ELSE}
   btnOk := TButton.Create(Self);
   btnCancel := TButton.Create(Self);
+  {$ENDIF}
   with lblBindings do
   begin
     Name := 'lblBindings';  {do not localize}
@@ -456,28 +471,42 @@ begin
   begin
     Name := 'btnOk';  {do not localize}
     Parent := Self;
+    Anchors := [akRight, akBottom];
     Left := 306;
     Top := 193;
     Width := 75;
+    {$IFDEF FPC}
+    Height := 30;
+    Kind := bkOk;
+    {$ELSE}
     Height := 25;
-    Anchors := [akRight, akBottom];
+
     Caption := RSOk;
     Default := True;
     ModalResult := 1;
+    {$ENDIF}
     TabOrder := 0;
   end;
   with btnCancel do
   begin
     Name := 'btnCancel';  {do not localize}
     Parent := Self;
+    Anchors := [akRight, akBottom];
     Left := 386;
     Top := 193;
     Width := 75;
+    {$IFDEF FPC}
+    Height := 30;
+    Kind := bkCancel;
+    {$ELSE}
     Height := 25;
-    Anchors := [akRight, akBottom];
     Cancel := True;
     Caption := RSCancel;
     ModalResult := 2;
+    {$ENDIF}
+
+    Anchors := [akRight, akBottom];
+
     TabOrder := 1;
   end;
   FHandles := TIdSocketHandles.Create(nil);
