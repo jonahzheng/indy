@@ -69,6 +69,7 @@
 unit IdComponent;
 
 interface
+{$i idcompilerdefines.inc}
 
 uses
   IdBaseComponent, IdGlobal, IdResourceStrings,
