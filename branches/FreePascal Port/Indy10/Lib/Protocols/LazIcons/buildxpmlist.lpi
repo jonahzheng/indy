@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <ProjectOptions>
+    <PathDelim Value="\"/>
+    <Version Value="5"/>
+    <General>
+      <MainUnit Value="0"/>
+      <IconPath Value="./"/>
+      <TargetFileExt Value=".exe"/>
+      <ActiveEditorIndexAtStart Value="0"/>
+    </General>
+    <Units Count="2">
+      <Unit0>
+        <CursorPos X="93" Y="18"/>
+        <Filename Value="buildxpmlist.pas"/>
+        <IsPartOfProject Value="True"/>
+        <TopLine Value="14"/>
+        <UnitName Value="buildxpmlist"/>
+        <UsageCount Value="20"/>
+      </Unit0>
+      <Unit1>
+        <CursorPos X="12" Y="727"/>
+        <EditorIndex Value="0"/>
+        <Filename Value="W:\Source\Indy\Indy10FPC\Lib\Protocols\IdRegister.pas"/>
+        <Loaded Value="True"/>
+        <TopLine Value="714"/>
+        <UnitName Value="IdRegister"/>
+        <UsageCount Value="10"/>
+      </Unit1>
+    </Units>
+    <PublishOptions>
+      <Version Value="2"/>
+      <IgnoreBinaries Value="False"/>
+      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
+      <ExcludeFileFilter Value="*.(bak|ppu|ppw|o|so);*~;backup"/>
+    </PublishOptions>
+    <RunParams>
+      <local>
+        <FormatVersion Value="1"/>
+        <LaunchingApplication PathPlusParams="/usr/X11R6/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
+      </local>
+    </RunParams>
+    <JumpHistory Count="0" HistoryIndex="-1"/>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="5"/>
+    <PathDelim Value="\"/>
+    <CodeGeneration>
+      <Generate Value="Faster"/>
+    </CodeGeneration>
+    <Other>
+      <CompilerPath Value="$(CompPath)"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <BreakPoints Count="1">
+      <Item1>
+        <Source Value="W:\Source\Indy\Indy10FPC\Lib\System\IdStackWindows.pas"/>
+        <Line Value="687"/>
+      </Item1>
+    </BreakPoints>
+    <Watches Count="1">
+      <Item1>
+        <Expression Value="result"/>
+        <Enabled Value="False"/>
+      </Item1>
+    </Watches>
+  </Debugging>
+</CONFIG>
