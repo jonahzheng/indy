@@ -102,7 +102,20 @@ type
   TIdThreadMethod = TThreadMethod;
   TIdNotifyEvent = TNotifyEvent;
   TIdThreadList = TThreadList;
+  {$IFDEF FPC_REINTRODUCE_BUG}
+  TIdOwnedCollection = class(TCollection)
+  private
+    fOwner: TPersistent;
+
+  protected
+    function GetOwner: TPersistent; override;
+    constructor Create(AOwner: TPersistent; aItemClass: TCollectionItemClass);
+  public
+
+  end;
+  {$ELSE}
   TIdOwnedCollection = TOwnedCollection;
+  {$ENDIF}
   {$IFDEF NO_TMultiReadExclusiveWriteSynchronizer}
   TIdMultiReadExclusiveWriteSynchronizer = class(TObject)
   protected
@@ -236,7 +249,21 @@ begin
   FCrit.Leave;
 end;
 {$ENDIF}
-  
+
+{$IFDEF FPC}
+function TIdOwnedCollection.GetOwner: TPersistent;
+begin
+  Result := fOwner;
+end;
+
+constructor TIdOwnedCollection.Create(AOwner: TPersistent; aItemClass: TCollectionItemClass);
+begin
+  FOwner := AOwner;
+  inherited Create(AItemClass);
+end;
+
+{$ENDIF}
+
 end.
 
 

@@ -681,9 +681,11 @@ var
   i: integer;
   AHost: PHostEnt;
   PAdrPtr: PaPInAddr;
+  LHostName : AnsiString;
 begin
   FLocalAddresses.Clear ;
-  AHost := GetHostByName(PChar(HostName));
+  LHostName := HostName;
+  AHost := GetHostByName(PAnsiChar(LHostName));
   if AHost = nil then begin
     CheckForSocketError(SOCKET_ERROR);
   end else begin
