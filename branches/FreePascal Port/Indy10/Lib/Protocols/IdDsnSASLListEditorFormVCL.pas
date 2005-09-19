@@ -62,7 +62,7 @@ uses
   {$IFDEF Linux}
   QControls, QForms, QStdCtrls, QButtons, QExtCtrls, QActnList, QGraphics,
   {$ELSE}
-  Controls, Forms, StdCtrls, Buttons, ExtCtrls, ActnList, Graphics,
+  Controls, Forms, StdCtrls, Buttons,  ActnList, Graphics,
   {$ENDIF}
   Classes, IdSASLCollection;
 
@@ -73,8 +73,13 @@ type
     lbAssigned: TListBox;
     sbAdd: TSpeedButton;
     sbRemove: TSpeedButton;
-    Button1: TButton;
-    Button2: TButton;
+    {$IFDEF FPC}
+    BtnCancel: TBitBtn;
+    BtnOk: TBitBtn;
+    {$ELSE}
+    BtnCancel: TButton;
+    BtnOk: TButton;
+    {$ENDIF}
     Label1: TLabel;
     Label2: TLabel;
     sbUp: TSpeedButton;
@@ -108,7 +113,6 @@ type
 
 implementation
 uses
-   {$IFDEF WIN32}Windows,{$ENDIF}
   IdDsnCoreResourceStrings,
   IdResourceStrings, IdSASL, SysUtils;
 
@@ -212,7 +216,11 @@ begin
   BorderStyle := bsDialog;
   {$ENDIF}
   Caption := RSADlgSLCaption;
+  {$IFDEF FPC}
+  ClientHeight := 349;
+  {$ELSE}
   ClientHeight := 344;
+  {$ENDIF}
   ClientWidth := 452;
 
   Position := poScreenCenter;
@@ -256,8 +264,13 @@ begin
   sbDown := TSpeedButton.Create(Self);
   lbAvailable := TListBox.Create(Self);
   lbAssigned := TListBox.Create(Self);
-  Button1 := TButton.Create(Self);
-  Button2 := TButton.Create(Self);
+  {$IFDEF FPC}
+  BtnCancel := TBitBtn.Create(Self);
+  BtnOk := TBitBtn.Create(Self);
+  {$ELSE}
+  BtnCancel := TButton.Create(Self);
+  BtnOk := TButton.Create(Self);
+  {$ENDIF}
   SASLList := TIdSASLEntries.Create(Self);
   with sbAdd do
   begin
@@ -357,35 +370,44 @@ begin
     ItemHeight := 13;
     TabOrder := 1;
   end;
-  with Button1 do
+  with BtnCancel do
   begin
-    Name := 'Button1';  {do not localize}
+    Name := 'BtnCancel';  {do not localize}
 
     Left := 368;
     Top := 312;
     Width := 75;
+    {$IFDEF FPC}
+    Height := 30;
+    Kind := bkCancel;
+    {$ELSE}
     Height := 25;
 
     Cancel := True;
     Caption := RSCancel;
     ModalResult := 2;
-
+    {$ENDIF}
     Parent := Self;
 
   end;
-  with Button2 do
+  with BtnOk do
   begin
-    Name := 'Button2';  {do not localize}
+    Name := 'BtnOk';  {do not localize}
     Parent := Self;
 
     Left := 287;
     Top := 312;
     Width := 75;
+    {$IFDEF FPC}
+    Height := 30;
+    Kind := bkOk;
+    {$ELSE}
     Height := 25;
 
     Caption := RSOk;
     Default := True;
     ModalResult := 1;
+    {$ENDIF}
     TabOrder := 2;
 
     TabOrder := 3;
