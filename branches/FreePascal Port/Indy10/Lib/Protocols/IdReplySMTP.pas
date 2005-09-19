@@ -577,9 +577,9 @@ end;
 
 constructor TIdRepliesSMTP.Create(AOwner: TIdPersistent);
 begin
- {$IFNDEF FPC_REINTRODUCE_BUG}
+
   inherited Create(AOwner, TIdReplySMTP);
- {$ENDIF}
+
 end;
 
 { EIdSMTPReplyError }

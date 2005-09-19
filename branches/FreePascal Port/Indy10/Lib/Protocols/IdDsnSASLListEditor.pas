@@ -60,8 +60,13 @@ uses
      {$ENDIF}
   {$ELSE}
     {$IFDEF VCL6ORABOVE}
+          {$IFDEF FPC}
+      PropEdits,
+      ComponentEditors;
+      {$ELSE}
       DesignIntf, 
       DesignEditors;
+      {$ENDIF}
     {$ELSE}
        Dsgnintf;
     {$ENDIF}

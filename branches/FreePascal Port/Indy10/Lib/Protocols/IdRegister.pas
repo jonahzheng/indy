@@ -396,6 +396,9 @@ uses
 implementation
 
 uses
+  {$IFDEF FPC}
+  LResources,
+  {$ENDIF}
 //TODO:  IdBlockCipherIntercept,
   IdChargenServer,
   IdChargenUDPServer,
@@ -406,7 +409,9 @@ uses
   IdCoderXXE,
    {$IFDEF WIN32}
      {$IFNDEF DOTNET}
+        {$IFNDEF FPC}
      IdCompressorZLibEx,
+       {$ENDIF}
      {$ENDIF}
    {$ENDIF}
   {$IFNDEF DOTNET}
@@ -507,7 +512,10 @@ uses
   {$ENDIF}
 
   {$IFNDEF DOTNET}
+   {$IFNDEF FPC}
+    //something else may have to be done about OpenSSL
   IdSSLOpenSSL,
+    {$ENDIF}
   {$ENDIF}
   IdSysLog,
   IdSysLogMessage,
@@ -647,9 +655,9 @@ begin
    TIdUnixTimeUDPServer,
    TIdWhoIsServer
    ]);
-  RegisterComponents(RSRegIndyServers, [
-   TIdFTPServer
-   ]);
+//  RegisterComponents(RSRegIndyServers, [
+//   TIdFTPServer
+//   ]);
   RegisterComponents(RSRegIndyIntercepts, [
 //TODO:   TIdBlockCipherIntercept,
 //TODO:   TIdCompressionIntercept,
@@ -658,11 +666,14 @@ begin
    TIdServerInterceptLogFile
    ]);
 {$IFNDEF DOTNET}
+  {$IFNDEF FPC}
+  //TODO:  not sure what to do about OpenSSL support in Indy
   RegisterComponents(RSRegIndyIOHandlers, [
    {Open SSL should be supported in Kylix now}
    TIdServerIOHandlerSSLOpenSSL,
    TIdSSLIOHandlerSocketOpenSSL
    ]);
+  {$ENDIF}
 {$ENDIF}
   RegisterComponents(RSRegSASL, [
    TIdSASLAnonymous,
@@ -680,7 +691,9 @@ begin
    {$ENDIF}
    {$IFDEF WIN32}
      {$IFNDEF DOTNET}
+       {$IFNDEF FPC}
      TIdCompressorZLibEx,
+       {$ENDIF}
      {$ENDIF}
    {$ENDIF}
    TIdCookieManager,
@@ -711,10 +724,13 @@ begin
    TIdSysLogMessage,
    TIdUserManager,
    {$IFNDEF DOTNET}
-   TIdVCard,
+   TIdVCard
     {$ENDIF}
-   TIdMessage
    ]);
 end;
 
+{$IFDEF FPC}
+initialization
+  {$i IdRegister.lrs}
+{$ENDIF}
 end.

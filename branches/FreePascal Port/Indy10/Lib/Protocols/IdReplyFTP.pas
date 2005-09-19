@@ -243,9 +243,7 @@ end;
 
 constructor TIdRepliesFTP.Create(AOwner: TIdPersistent);
 begin
- {$IFNDEF FPC_REINTRODUCE_BUG}
   inherited Create(AOwner, TIdReplyFTP);
- {$ENDIF}
 end;
 
 end.
