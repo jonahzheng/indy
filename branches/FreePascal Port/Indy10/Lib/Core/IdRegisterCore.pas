@@ -204,10 +204,12 @@ uses
   {$R IconsDotNet\TIdIPMCastServer.bmp}
    {$R IconsDotNet\TIdSocksInfo.bmp}
 {$ELSE}
-  {$IFDEF Borland}
-    {$R IdCoreRegister.dcr}
-  {$ELSE}
-    {$R IdCoreRegisterCool.dcr}
+  {$IFNDEF FPC}
+    {$IFDEF Borland}
+      {$R IdCoreRegister.dcr}
+    {$ELSE}
+      {$R IdCoreRegisterCool.dcr}
+    {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 
