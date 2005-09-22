@@ -17,7 +17,8 @@
 }
 
 unit IdObjsVCL;
-
+{$I IdCompilerDefines.inc}
+//put this into Delphi mode in FPC
 interface
 
 uses
