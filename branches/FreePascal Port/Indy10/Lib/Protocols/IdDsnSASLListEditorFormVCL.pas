@@ -113,13 +113,18 @@ type
 
 implementation
 uses
+{$IFDEF FPC}
+  LResources,
+{$ENDIF}
   IdDsnCoreResourceStrings,
   IdResourceStrings, IdSASL, SysUtils;
 
 
 { TfrmSASLListEditorVCL }
 
+{$IFNDEF FPC}
 {$R IdSASLListEditorForm.RES}
+{$ENDIF}
 
 constructor TfrmSASLListEditorVCL.Create(AOwner: TComponent);
 begin
@@ -282,8 +287,13 @@ begin
     Width := 57;
     Height := 25;
     ShowHint := True;
+    {$IFDEF FPC}
+    Glyph.LoadFromLazarusResource('DIS_ARROWRIGHT');  {do not localize}
+    {$ELSE}
     Glyph.LoadFromResourceName(HInstance, 'ARROWRIGHT');  {do not localize}
     NumGlyphs := 2;
+    {$ENDIF}
+
   end;
   with sbRemove do
   begin
@@ -295,9 +305,12 @@ begin
     Width := 57;
     Height := 25;
     ShowHint := True;
-
+    {$IFDEF FPC}
+    Glyph.LoadFromLazarusResource('DIS_ARROWLEFT');  {do not localize}
+    {$ELSE}
     Glyph.LoadFromResourceName(HInstance, 'ARROWLEFT'); {do not localize}
     NumGlyphs := 2;
+    {$ENDIF}
   end;
   with Label1 do
   begin
@@ -329,8 +342,12 @@ begin
     Width := 23;
     Height := 22;
     ShowHint := True;
+     {$IFDEF FPC}
+    Glyph.LoadFromLazarusResource('DIS_ARROWUP');  {do not localize}
+    {$ELSE}
     Glyph.LoadFromResourceName(HInstance, 'ARROWUP'); {do not localize}
     NumGlyphs := 2;
+    {$ENDIF}
   end;
   with sbDown do
   begin
@@ -343,8 +360,12 @@ begin
     Height := 22;
 
     ShowHint := True;
+     {$IFDEF FPC}
+    Glyph.LoadFromLazarusResource('DIS_ARROWDOWN');  {do not localize}
+    {$ELSE}
     Glyph.LoadFromResourceName(HInstance, 'ARROWDOWN'); {do not localize}
     NumGlyphs := 2;
+    {$ENDIF}
   end;
   with lbAvailable do
   begin
@@ -430,9 +451,28 @@ begin
 end;
 
 procedure TfrmSASLListEditorVCL.actAddUpdate(Sender: TObject);
+var LEnabled : Boolean;
+//we do this in a round about way because we should update the glyph
+//with an enabled/disabled form so a user can see what is applicable
 begin
-  actAdd.Enabled := (lbAvailable.Items.Count <> 0) and
+   LEnabled := (lbAvailable.Items.Count <> 0) and
     (lbAvailable.ItemIndex <> -1);
+  {$IFDEF FPC}
+  if LEnabled <> actAdd.Enabled then
+  begin
+    if LEnabled then
+    begin
+       sbAdd.Glyph.LoadFromLazarusResource('ARROWRIGHT');  {do not localize}
+    end
+    else
+    begin
+       sbAdd.Glyph.LoadFromLazarusResource('DIS_ARROWRIGHT');  {do not localize}
+    end;
+  end;
+  {$ENDIF}
+
+  actAdd.Enabled := LEnabled;
+
 end;
 
 procedure TfrmSASLListEditorVCL.actMoveDownExecute(Sender: TObject);
@@ -448,9 +488,25 @@ begin
 end;
 
 procedure TfrmSASLListEditorVCL.actMoveDownUpdate(Sender: TObject);
+var LEnabled : Boolean;
 begin
-  actMoveDown.Enabled := (lbAssigned.Items.Count > 1) and
-    (lbAssigned.ItemIndex <> -1) and (lbAssigned.ItemIndex < (lbAssigned.Items.Count - 1));
+  LEnabled := (lbAssigned.Items.Count > 1) and
+    (lbAssigned.ItemIndex <> -1) and
+      (lbAssigned.ItemIndex < (lbAssigned.Items.Count - 1));
+  {$IFDEF FPC}
+  if LEnabled <> actMoveDown.Enabled then
+  begin
+    if LEnabled then
+    begin
+       sbDown.Glyph.LoadFromLazarusResource('ARROWDOWN');  {do not localize}
+    end
+    else
+    begin
+       sbDown.Glyph.LoadFromLazarusResource('DIS_ARROWDOWN');  {do not localize}
+    end;
+  end;
+  {$ENDIF}
+  actMoveDown.Enabled := LEnabled;
 end;
 
 procedure TfrmSASLListEditorVCL.actMoveUpExecute(Sender: TObject);
@@ -467,9 +523,27 @@ begin
 end;
 
 procedure TfrmSASLListEditorVCL.actMoveUpUpdate(Sender: TObject);
+
+var LEnabled : Boolean;
+//we do this in a round about way because we should update the glyph
+//with an enabled/disabled form so a user can see what is applicable
 begin
-  sbUp.Enabled := (lbAssigned.Items.Count > 1) and
+   LEnabled := (lbAssigned.Items.Count > 1) and
     (lbAssigned.ItemIndex > 0); // -1 not selected and 0 = top
+  {$IFDEF FPC}
+  if LEnabled <> actMoveUp.Enabled then
+  begin
+    if LEnabled then
+    begin
+       sbUp.Glyph.LoadFromLazarusResource('ARROWUP');  {do not localize}
+    end
+    else
+    begin
+       sbUp.Glyph.LoadFromLazarusResource('DIS_ARROWUP');  {do not localize}
+    end;
+  end;
+  {$ENDIF}
+  actMoveUp.Enabled := LEnabled;
 end;
 
 procedure TfrmSASLListEditorVCL.actRemoveExecute(Sender: TObject);
@@ -490,9 +564,24 @@ begin
 end;
 
 procedure TfrmSASLListEditorVCL.actRemoveUpdate(Sender: TObject);
+var LEnabled : Boolean;
 begin
-  actRemove.Enabled := (lbAssigned.Items.Count <> 0) and
+  LEnabled := (lbAssigned.Items.Count <> 0) and
     (lbAssigned.ItemIndex <> -1);
+  {$IFDEF FPC}
+  if LEnabled <> actRemove.Enabled then
+  begin
+    if LEnabled then
+    begin
+       sbRemove.Glyph.LoadFromLazarusResource('ARROWLEFT');  {do not localize}
+    end
+    else
+    begin
+       sbRemove.Glyph.LoadFromLazarusResource('DIS_ARROWLEFT');  {do not localize}
+    end;
+  end;
+  {$ENDIF}
+  actRemove.Enabled := LEnabled;
 end;
 
 function TfrmSASLListEditorVCL.Execute: Boolean;
@@ -500,4 +589,8 @@ begin
   Result := ShowModal = mrOk;
 end;
 
+{$IFDEF FPC}
+initialization
+  {$I IdSASLListEditorForm.lrs}
+{$ENDIF}
 end.
