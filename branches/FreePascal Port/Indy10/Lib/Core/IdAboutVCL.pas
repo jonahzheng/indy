@@ -134,12 +134,12 @@ begin
     {$IFDEF FPC}
 
    Picture.Bitmap.LoadFromLazarusResource('IndyCar');//this is XPM format
-   Picture.Bitmap.TransparentColor := Picture.Bitmap.Canvas.Pixels[0,0];
-   Picture.Bitmap.Transparent := True;
+
       {$ELSE}
     Picture.Bitmap.LoadFromResourceName(HInstance, 'INDYCAR');    {Do not Localize}
-    {$ENDIF}
     Transparent := True;
+      {$ENDIF}
+
   end;
   with FlblName do
   begin
