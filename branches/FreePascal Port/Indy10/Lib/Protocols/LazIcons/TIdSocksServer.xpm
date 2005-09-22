@@ -10,7 +10,7 @@ static char *Pixmap[] = {
 "06 c #008080",
 "07 c #C0C0C0",
 "08 c #808080",
-"09 c red",
+"09 c none",
 "10 c green",
 "11 c yellow",
 "12 c blue",
