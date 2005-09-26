@@ -382,9 +382,9 @@ uses
   IdUnixTimeUDPServer,
   IdUserAccounts,
   IdUserPassProvider,
-  {$IFNDEF DOTNET}
+  {.$IFNDEF DOTNET}
   IdVCard,
-  {$ENDIF}
+  {.$ENDIF}
 
   IdWhois,
   IdWhoIsServer;
@@ -726,9 +726,7 @@ begin
     {$ENDIF}
    TIdSysLogMessage,
    TIdUserManager,
-   {$IFNDEF DOTNET}
    TIdVCard
-    {$ENDIF}
    ]);
 end;
 
