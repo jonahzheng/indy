@@ -277,7 +277,7 @@ begin
 end;
 
 procedure TIdSocksInfo.MakeSocks4Request(AIOHandler: TIdIOHandler;
-  const AHost: string; const APort: Word; const ARequest : Byte);
+  const AHost: string; const APort: TIdPort; const ARequest : Byte);
 var
   LIpAddr: String;
   LTempPort : Word;
@@ -317,7 +317,7 @@ begin
 end;
 
 procedure TIdSocksInfo.MakeSocks4Connection(AIOHandler: TIdIOHandler;
-  const AHost: string; const APort: Word);
+  const AHost: string; const APort: TIdPort);
 var
   LResponse: TIdBytes;
 begin
@@ -332,7 +332,7 @@ begin
   end;
 end;
 
-procedure TIdSocksInfo.MakeSocks5Request(AIOHandler: TIdIOHandler; const AHost: string; const APort: Word; const ARequest : Byte; var VBuf : TIdBytes; var VLen : Integer);
+procedure TIdSocksInfo.MakeSocks5Request(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort; const ARequest : Byte; var VBuf : TIdBytes; var VLen : Integer);
 var LtempPort : Word;
   LIP : TIdIPAddress;
 begin
@@ -400,7 +400,7 @@ begin
   VLen := VLen + 2;
 end;
 
-procedure TIdSocksInfo.MakeSocks5Connection(AIOHandler: TIdIOHandler; const AHost: string; const APort: Word; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+procedure TIdSocksInfo.MakeSocks5Connection(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 var
   pos: Integer;
   LBuf: TIdBytes;
@@ -451,7 +451,7 @@ begin
   end;
 end;
 
-procedure TIdSocksInfo.MakeSocks4Bind(AIOHandler: TIdIOHandler; const AHost: string; const APort: Word);
+procedure TIdSocksInfo.MakeSocks4Bind(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort);
 var
   LResponse: TIdBytes;
   LClient: TIdTcpClient;
@@ -489,7 +489,7 @@ begin
   end;
 end;
 
-procedure TIdSocksInfo.MakeConnection(AIOHandler: TIdIOHandler; const AHost: string; const APort: Word; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
+procedure TIdSocksInfo.MakeConnection(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 begin
   case Version of
     svSocks4, svSocks4A: MakeSocks4Connection(AIOHandler, AHost, APort);
