@@ -44,7 +44,7 @@
 unit IdRawFunctions;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
    IdGlobal, IdRawHeaders, IdStack;
