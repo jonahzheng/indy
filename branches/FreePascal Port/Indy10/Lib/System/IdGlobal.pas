@@ -846,9 +846,15 @@ type
   //This is for IPv6 support when merged into the core
   TIdIPVersion = (Id_IPv4, Id_IPv6);
 
-  {$IFDEF LINUX}
+  {$IFDEF KYLIX}
   TIdPID = Integer;
   TIdThreadPriority = -20..19;
+  {$ENDIF}
+  {$IFDEF FPC}
+    {$IFDEF LINUX}
+    TIdPID = Integer;
+    TIdThreadPriority = TThreadPriority;
+    {$ENDIF}
   {$ENDIF}
   {$IFDEF MSWINDOWS}
   TIdPID = LongWord;
@@ -2390,7 +2396,7 @@ end;
 
 procedure SetThreadPriority(AThread: TIdNativeThread; const APriority: TIdThreadPriority; const APolicy: Integer = -MaxInt);
 begin
-  {$IFDEF LINUX}
+  {$IFDEF KYLIX}
   // Linux only allows root to adjust thread priorities, so we just ingnore this call in Linux?
   // actually, why not allow it if root
   // and also allow setting *down* threadpriority (anyone can do that)
@@ -2399,8 +2405,12 @@ begin
     setpriority(PRIO_PROCESS, 0, APriority);
   end;
   {$ENDIF}
-  {$IFDEF MSWINDOWS}
-  AThread.Priority := APriority;
+  {$IFDEF FPC}
+    AThread.Priority := APriority;
+  {$ELS}
+    {$IFDEF MSWINDOWS}
+    AThread.Priority := APriority;
+    {$ENDIF}
   {$ENDIF}
 end;
 
@@ -2465,7 +2475,7 @@ begin
     {$IfDEF DotNet}
     AStrings.AddObject(Copy(AData, LLastPos, MaxInt), TObject(LLastPos));
     {$else}
-    AStrings.AddObject(Copy(AData, LLastPos, MaxInt), Pointer(LLastPos));
+    AStrings.AddObject(Copy(AData, LLastPos, MaxInt), TObject(PtrInt(LLastPos)));
     {$endif}
   end;
 end;
