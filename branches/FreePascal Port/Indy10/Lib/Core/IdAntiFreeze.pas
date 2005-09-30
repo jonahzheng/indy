@@ -91,11 +91,14 @@ type
 implementation
 
 uses
-  {$IFDEF LINUX}
-  QForms,
+  {$IFNDEF DOTNET}
+    {$IFDEF CLX}
+    QForms,
+    {$ELSE}
+    Forms,
+    {$ENDIF}
   {$ENDIF}
   {$IFDEF MSWINDOWS}
-  Forms,
   Messages,
   Windows,
   {$ENDIF}
