@@ -160,7 +160,7 @@ Changes
 *)
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdException, IdBaseComponent, IdGlobal, IdScheduler, IdSys, IdObjs,

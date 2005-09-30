@@ -53,7 +53,7 @@
 unit IdServerIOHandler;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdSocketHandle, IdComponent, IdIOHandlerStack, IdStackConsts, IdIOHandler,

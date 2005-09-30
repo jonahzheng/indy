@@ -74,7 +74,7 @@
 unit IdSync;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 // Author: Chad Z. Hower - a.k.a. Kudzu
 
