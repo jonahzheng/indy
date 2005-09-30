@@ -160,7 +160,7 @@ const
   IdFromEnd         = TIdSeekOrigin(soEnd);
 
   fmCreate          = $FFFF;
-{$IFDEF LINUX}
+{$IFDEF KYLIX}
   fmOpenRead        = O_RDONLY;
   fmOpenWrite       = O_WRONLY;
   fmOpenReadWrite   = O_RDWR;
@@ -168,6 +168,19 @@ const
   fmShareExclusive  = $0010;
   fmShareDenyWrite  = $0020;
   fmShareDenyNone   = $0030;
+{$ENDIF}
+{$IFDEF FPC}
+//for FPC, we just wnt to expose what's in sysutils so that this code
+//ismore portable tan usual.  Remember that this can be used on systems
+//such as OS/2, MacOS, Mac OS/X, Novell Netare, and who knows what else.
+//We can't assume that this will be usd only on Unix systems.
+  fmOpenRead        = sysutils.fmOpenRead;
+  fmOpenWrite       = sysutils.fmOpenWrite;
+  fmOpenReadWrite   = sysutils.fmOpenReadWrite;
+
+  fmShareExclusive  = sysutils.fmShareExclusive;
+  fmShareDenyWrite  = sysutils.fmShareDenyWrite;
+  fmShareDenyNone   = sysutils.fmShareDenyNone;
 {$ENDIF}
 {$IFDEF MSWINDOWS}
   fmOpenRead        = $0000;
