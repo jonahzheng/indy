@@ -58,6 +58,9 @@ implementation
 {$ENDIF}
 uses
   {$IFDEF MSWINDOWS}ShellApi, {$ENDIF}
+  {$IFNDEF FPC}
+  Windows,
+  {$ENDIF}
   IdDsnCoreResourceStrings,
   IdGlobal,
   IdSys;
