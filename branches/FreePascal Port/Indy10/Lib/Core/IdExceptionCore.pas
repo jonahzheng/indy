@@ -196,9 +196,7 @@ type
   {IdMessage and things use this}
   EIdMessageException = class(EIdException);
 
-  { resolving hostnames }
-  EIdResolveError = class(EIdSocketError);
-  EIdReverseResolveError = class(EIdSocketError);
+
   //scheduler exception
   EIdSchedulerException = class(EIdException);
   EIdSchedulerMaxThreadsExceeded = class(EIdSchedulerException);
