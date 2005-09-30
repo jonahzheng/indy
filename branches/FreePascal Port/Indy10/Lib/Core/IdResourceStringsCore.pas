@@ -114,7 +114,7 @@
 unit IdResourceStringsCore;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 resourcestring
   RSNoBindingsSpecified = 'No bindings specified.';
@@ -158,8 +158,6 @@ resourcestring
   RSMaximumNumberOfCaptureLineExceeded = 'Maximum number of line allowed exceeded'; // S.G. 6/4/2004: IdIOHandler.DoCapture
 
 
-  RSResolveError = 'Error resolving host %s: %s (%d)'; { hostname, errorstring, errornumber }
-  RSReverseResolveError = 'Error resolving Address %s: %s (%d)'; { address, errorstring, errornumber }
   //scheduler
   RSchedMaxThreadEx = 'The maximum number of threads for this scheduler is exceeded.';
   //transparent proxy
