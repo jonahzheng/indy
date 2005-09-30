@@ -56,7 +56,7 @@ unit IdTunnelCommon;
 *}
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   SysUtils, Classes, SyncObjs,

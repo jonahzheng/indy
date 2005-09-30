@@ -27,7 +27,7 @@
 unit IdUTF8;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses IdGlobal, IdGlobalProtocols, SysUtils;
 
 {$IFDEF DOTNET}
