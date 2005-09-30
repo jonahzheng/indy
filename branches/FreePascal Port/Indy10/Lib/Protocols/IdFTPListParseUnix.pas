@@ -127,7 +127,7 @@
 unit IdFTPListParseUnix;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdFTPList, IdFTPListParseBase, IdFTPListTypes, IdObjs;

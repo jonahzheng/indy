@@ -46,7 +46,7 @@
 unit IdFingerServer;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 {
 2000-May-15  J. Peter Mugaas

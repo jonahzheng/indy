@@ -156,7 +156,7 @@ ContentTransfer := 'binhex40'.
 }
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdException,

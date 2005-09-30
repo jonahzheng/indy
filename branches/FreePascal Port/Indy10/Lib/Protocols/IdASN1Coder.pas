@@ -22,7 +22,7 @@
 unit IdASN1Coder;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   Classes,

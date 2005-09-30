@@ -37,7 +37,7 @@
 unit IdChargenServer;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 {
 2000-Apr-17 Kudzu

@@ -56,7 +56,7 @@
 unit IdDsnSASLListEditorFormVCL;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   {$IFDEF Linux}

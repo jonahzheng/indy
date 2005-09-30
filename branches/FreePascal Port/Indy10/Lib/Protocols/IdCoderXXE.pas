@@ -37,7 +37,7 @@
 unit IdCoderXXE;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdCoder00E, IdCoder3to4;

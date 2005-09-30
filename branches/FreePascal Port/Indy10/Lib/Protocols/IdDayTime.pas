@@ -45,7 +45,7 @@ unit IdDayTime;
   changed to drop control charactors and spaces from result to ease
   parsing}
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdAssignedNumbers,

@@ -21,7 +21,7 @@
 unit IdDsnResourceStrings;
 {This is only for resource strings that appear in the design-time editors in the main Indy package}
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 resourcestring
   {Binding Editor stuff}
   {

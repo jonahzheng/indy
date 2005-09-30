@@ -37,7 +37,7 @@
 unit IdAuthenticationManager;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 Uses
   IdAuthentication,

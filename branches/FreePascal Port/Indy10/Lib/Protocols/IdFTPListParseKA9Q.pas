@@ -49,7 +49,7 @@
 unit IdFTPListParseKA9Q;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses IdFTPList, IdFTPListParseBase, IdObjs;
 

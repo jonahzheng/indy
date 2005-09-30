@@ -88,7 +88,7 @@ Implementation status
 // TODO: Make this unit to implement compleatly [Netscape], [RFC2109] & [RFC2965]
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdGlobal, IdException, IdGlobalProtocols, IdObjs, IdSys;

@@ -120,7 +120,7 @@ unit IdCoderQuotedPrintable;
   Rewrote the Encoder according to the new design}
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdCoder,

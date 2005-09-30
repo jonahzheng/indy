@@ -207,7 +207,7 @@
 unit IdFTPCommon;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdObjs,

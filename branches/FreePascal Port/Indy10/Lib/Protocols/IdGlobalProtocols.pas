@@ -387,7 +387,7 @@
 unit IdGlobalProtocols;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses
   {$IFDEF MSWINDOWS}
   Windows,

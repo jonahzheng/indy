@@ -120,7 +120,7 @@
 unit IdCharsets;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 // once upon a time Indy had 3 different declarations of TIdCharSet
 // now all use this one. For reference, one of the more widely used

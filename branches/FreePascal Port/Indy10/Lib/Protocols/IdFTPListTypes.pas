@@ -54,7 +54,7 @@
 unit IdFTPListTypes;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdFTPList, IdSys, IdObjs;

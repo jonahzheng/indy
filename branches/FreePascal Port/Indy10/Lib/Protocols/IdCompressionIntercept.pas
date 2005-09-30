@@ -88,7 +88,7 @@ unit IdCompressionIntercept;
    this source file.
 }
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 
 uses

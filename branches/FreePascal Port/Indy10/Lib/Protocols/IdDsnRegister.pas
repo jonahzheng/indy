@@ -51,7 +51,7 @@ unit IdDsnRegister;
 
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   Classes,

@@ -37,7 +37,7 @@
 unit IdAttachmentFile;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdAttachment,

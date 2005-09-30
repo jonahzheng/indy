@@ -73,7 +73,7 @@ DIRECTORY_FORMAT=STANDARD does not need be supported because that is probably li
 If not, we'll deal with it given some data samples.
 }
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses IdObjs, IdFTPList, IdFTPListParseBase, IdFTPListTypes;
 
 type

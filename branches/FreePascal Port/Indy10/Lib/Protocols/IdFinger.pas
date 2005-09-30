@@ -61,7 +61,7 @@ unit IdFinger;
   -Added option for verbose output request from server - note that
    many do not support this.}
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdAssignedNumbers,

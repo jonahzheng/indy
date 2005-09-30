@@ -50,7 +50,7 @@ http://www.web-cache.com/Writings/Internet-Drafts/draft-luotonen-web-proxy-tunne
 }
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdCustomTransparentProxy, IdGlobal, IdIOHandler;

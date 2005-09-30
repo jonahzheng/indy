@@ -25,7 +25,7 @@
 unit IdDiscardUDPServer;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdAssignedNumbers, IdSocketHandle, IdUDPBase, IdUDPServer;

@@ -92,7 +92,7 @@ unit IdCoderHeader;
   - tiny fix for 8bit header encoding suggested by Andrew P.Rybin}
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdSys,

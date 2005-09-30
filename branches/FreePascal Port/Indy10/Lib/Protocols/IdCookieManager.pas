@@ -61,7 +61,7 @@ Details of implementation
 }
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdBaseComponent,

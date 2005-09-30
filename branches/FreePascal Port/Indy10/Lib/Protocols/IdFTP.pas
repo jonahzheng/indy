@@ -725,7 +725,7 @@ TODO: Chage the FTP demo to demonstrate the use of the new events and add proxy 
 }
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdAssignedNumbers, IdGlobal, IdCustomTransparentProxy, IdExceptionCore,

@@ -49,7 +49,7 @@
 unit IdGopherServer;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 {
 2000-Apr-29 Pete Mee

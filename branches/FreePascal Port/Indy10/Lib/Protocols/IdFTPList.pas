@@ -479,7 +479,7 @@ than Unix permissions so they belong in a different property.
 }
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdGlobal, IdObjs, IdException, IdFTPCommon, IdSys;

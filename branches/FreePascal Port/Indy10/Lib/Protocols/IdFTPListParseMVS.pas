@@ -52,7 +52,7 @@
 unit IdFTPListParseMVS;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses IdFTPList, IdFTPListParseBase, IdFTPListTypes, IdObjs;
 {
 This should work with IBM MVS, OS/390, and z/OS.

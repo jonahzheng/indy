@@ -25,7 +25,7 @@
 unit IdDayTimeUDP;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses IdAssignedNumbers, IdUDPBase, IdUDPClient;
 type
   TIdDayTimeUDP = class(TIdUDPClient)

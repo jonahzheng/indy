@@ -33,7 +33,7 @@
 unit IdEchoUDP;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses IdAssignedNumbers, IdUDPBase, IdUDPClient;
 type
   TIdEchoUDP = class(TIdUDPClient)

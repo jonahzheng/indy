@@ -46,7 +46,7 @@
 unit IdAuthenticationNTLM;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 Uses
   Classes, 

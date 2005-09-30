@@ -37,7 +37,7 @@
 unit IdDayTimeServer;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 {
 2000-Apr-22: J Peter Mugass

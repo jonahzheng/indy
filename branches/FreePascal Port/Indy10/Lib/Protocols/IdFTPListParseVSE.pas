@@ -46,7 +46,7 @@
 unit IdFTPListParseVSE;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdFTPCommon, 

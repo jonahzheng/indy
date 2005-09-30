@@ -153,7 +153,7 @@
 unit IdCoder3to4;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdCoder,

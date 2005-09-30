@@ -61,7 +61,7 @@
 unit IdDICTServer;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 {
 2000-15-May: J. Peter Mugaas - renamed events to have Id prefix

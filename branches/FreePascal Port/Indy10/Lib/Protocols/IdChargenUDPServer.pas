@@ -41,7 +41,7 @@ unit IdChargenUDPServer;
     Started this with code from Rune Moburg's UDP Chargen Server  
 }
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdAssignedNumbers, IdGlobal, IdSocketHandle, IdUDPBase, IdUDPServer;

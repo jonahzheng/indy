@@ -43,7 +43,7 @@ unit IdAuthenticationSSPI;
 {$DEFINE SET_ENCRYPT_IN_FT_WITH_GETPROCADDRESS_FUDGE}
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdAuthentication,

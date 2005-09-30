@@ -62,7 +62,7 @@
 unit IdHash;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdSys,

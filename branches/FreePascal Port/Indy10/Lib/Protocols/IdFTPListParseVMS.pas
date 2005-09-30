@@ -79,7 +79,7 @@ This parser works with VMS (OpenVMS) systems including UCX, MadGoat, Multinet,
 VMS TCPWare, plus some non-multinet systems.
 }
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdFTPList, IdFTPListParseBase, IdFTPListTypes, IdObjs;
