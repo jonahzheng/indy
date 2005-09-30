@@ -183,6 +183,9 @@ type
     //
     property LastError: Integer read FLastError;
   end;
+  { resolving hostnames }
+  EIdResolveError = class(EIdSocketError);
+  EIdReverseResolveError = class(EIdSocketError);
 
   TIdPacketInfo = class
   protected
