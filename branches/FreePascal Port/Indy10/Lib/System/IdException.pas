@@ -130,7 +130,7 @@ type
   EIdInvalidPortRange = class(EIdSocketHandleError);
   EIdCannotSetIPVersionWhenConnected = class(EIdSocketHandleError);
   EIdInvalidIPAddress = class(EIdSocketHandleError);
-
+  
 implementation
 
 { EIdException }
