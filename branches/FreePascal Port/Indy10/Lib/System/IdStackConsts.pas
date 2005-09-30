@@ -89,7 +89,31 @@ interface
 {This should be the only unit except OS Stack units that reference
 Winsock or lnxsock}
 uses
- {$IFDEF LINUX}
+ {$IFDEF FPC}
+ //TODO:  I'm not really sure how other platforms are supported with asockets header
+ //Do I use the sockets unit or do something totally different for each platform
+   {$IFNDEF MSWINDOWS}
+   sockets
+   {$ENDIF}
+   {$ifdef os2}
+   , pmwsock;
+   {$endif}
+   {$ifdef netware_clib}
+   , winsock;
+   {$endif}
+   {$ifdef netware_libc}
+   , winsock;
+   {$endif}
+   {$ifdef MacOS}
+   {$endif}
+   {$ifdef Unix}
+   , libc;
+   {$endif}
+
+
+
+ {$ENDIF}
+ {$IFDEF KYLIX}
   Libc;
  {$ENDIF}
  {$IFDEF MSWINDOWS}
@@ -101,7 +125,12 @@ uses
  {$ENDIF}
 
 type
-  TIdStackSocketHandle = {$IFDEF DOTNET} Socket; {$ELSE} TSocket; {$ENDIF}
+  TIdStackSocketHandle =
+    {$IFDEF DOTNET}
+      Socket;
+    {$ELSE}
+      TSocket;
+    {$ENDIF}
 
 var
   Id_SO_True: Integer = 1;
@@ -210,14 +239,19 @@ type
   
 const
   {$ifndef DOTNET}
-  Id_IPPROTO_GGP =  IPPROTO_GGP;
+   {$ifdef os2}
+  Id_IPPROTO_GGP =  IPPROTO_GGP; //OS/2 does something strange and we might wind up
+  //supporting it later for all we know.
+   {$else}
+  Id_IPPROTO_GGP = 3;// IPPROTO_GGP; may not be defined in some headers in FPC
+    {$endif}
   Id_IPPROTO_ICMP = IPPROTO_ICMP;
   Id_IPPROTO_ICMPV6 = IPPROTO_ICMPV6;
   Id_IPPROTO_IDP = IPPROTO_IDP;
   Id_IPPROTO_IGMP = IPPROTO_IGMP;
   Id_IPPROTO_IP = IPPROTO_IP;
   Id_IPPROTO_IPv6 = IPPROTO_IPV6;
-  Id_IPPROTO_ND = IPPROTO_ND;
+  Id_IPPROTO_ND = 77; //IPPROTO_ND; is not defined in some headers in FPC
   Id_IPPROTO_PUP = IPPROTO_PUP;
   Id_IPPROTO_RAW = IPPROTO_RAW;
   Id_IPPROTO_TCP = IPPROTO_TCP;
