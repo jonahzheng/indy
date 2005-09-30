@@ -54,7 +54,7 @@ TODO: Can also change it to detect several EOLs and non binary and use :Lines:x
 }
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdGlobal, IdIntercept, IdBaseComponent, IdObjs;
