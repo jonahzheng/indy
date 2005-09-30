@@ -134,7 +134,11 @@
 unit IdWinSock2;
 
 interface
+{$IFNDEF FPC}
+{$I '..\Inc\IdCompilerDefines.inc'}
+{$ELSE}
 {$I IdCompilerDefines.inc}
+{$ENDIF}
 {$ALIGN OFF}
 {$RANGECHECKS OFF}
 {$WRITEABLECONST OFF}
