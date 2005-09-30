@@ -58,7 +58,7 @@ unit IdSSLOpenSSLHeadersNET;
 }
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses
   IdGlobal,
   System.Text, System.Runtime.InteropServices, Windows;

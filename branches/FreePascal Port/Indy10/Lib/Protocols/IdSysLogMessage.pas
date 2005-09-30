@@ -66,7 +66,7 @@ unit IdSysLogMessage;
 //     restructured syslog classes
 //  08/09/01: Dev started
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdGlobal, IdGlobalProtocols, IdBaseComponent, IdObjs;

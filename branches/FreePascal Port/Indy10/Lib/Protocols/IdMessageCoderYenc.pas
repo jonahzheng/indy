@@ -78,7 +78,7 @@
 unit IdMessageCoderYenc;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdMessageCoder, IdMessage, IdExceptionCore, IdObjs, IdGlobal;

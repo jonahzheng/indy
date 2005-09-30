@@ -82,7 +82,7 @@
 unit IdMessageCoder;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdComponent,

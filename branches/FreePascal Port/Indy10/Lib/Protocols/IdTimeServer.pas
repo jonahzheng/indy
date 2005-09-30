@@ -54,7 +54,7 @@
 unit IdTimeServer;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 {
  2000-3-May    J. Peter Mugaas

@@ -39,7 +39,7 @@
 unit IdOSFileName;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses IdBaseComponent, IdFTPCommon;
 
 function FileNameUnixToVMS(const AUnixFileName : String) : String;

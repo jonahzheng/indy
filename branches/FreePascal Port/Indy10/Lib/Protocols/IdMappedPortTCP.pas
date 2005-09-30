@@ -136,7 +136,7 @@
 unit IdMappedPortTCP;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 {
 2001-12-xx - Andrew P.Rybin
   -new architecture

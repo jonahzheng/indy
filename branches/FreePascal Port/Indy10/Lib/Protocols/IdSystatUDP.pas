@@ -46,7 +46,7 @@ unit IdSystatUDP;
   -Original version}
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses IdAssignedNumbers, IdObjs, IdUDPBase, IdUDPClient;
 
 const DefIdSysUDPTimeout =  1000; //one second

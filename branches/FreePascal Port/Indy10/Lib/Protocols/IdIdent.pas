@@ -44,7 +44,7 @@
 unit IdIdent;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses IdAssignedNumbers, IdException, IdTCPClient;
 { 2001 - Feb 12 - J. Peter Mugaas
          started this client

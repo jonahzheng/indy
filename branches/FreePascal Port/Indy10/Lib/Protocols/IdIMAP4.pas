@@ -486,7 +486,7 @@ add the automatic stripping of double-quotes if passed in mailbox names,
 to avoid ending up with ""INBOX""
 }
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 {CC3: WARNING - if the following gives a "File not found" error on compilation,
 you need to add the path "C:\Program Files\Borland\Delphi7\Source\Indy" in

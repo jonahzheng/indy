@@ -42,7 +42,7 @@
 unit IdNTLM;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 Uses
   IdSSLOpenSSLHeaders;

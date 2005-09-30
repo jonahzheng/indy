@@ -43,7 +43,7 @@ unit IdRemoteCMDServer;
   started this unit with code from TIdRexecServer}
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdAssignedNumbers, IdContext,IdTCPClient, IdCustomTCPServer;

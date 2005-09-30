@@ -22,7 +22,7 @@
 unit IdHMACMD5;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdHash, IdHashMessageDigest, IdHMAC, IdGlobal, IdObjs, IdSys;

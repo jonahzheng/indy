@@ -54,7 +54,7 @@ in UDP Client.  This will probably require some changes to the Indy core units
 though.
 }
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses IdAssignedNumbers, IdSocketHandle, IdSysLogMessage, IdUDPBase, IdUDPClient;
 

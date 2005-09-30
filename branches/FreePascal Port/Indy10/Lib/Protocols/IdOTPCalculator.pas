@@ -61,7 +61,7 @@
 unit IdOTPCalculator;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 type
   TIdOTPCalculator = class

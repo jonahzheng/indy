@@ -31,7 +31,7 @@
 unit IdSASLUserPass;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdResourceStringsProtocols, IdSASL, IdUserPassProvider, IdObjs, IdBaseComponent,

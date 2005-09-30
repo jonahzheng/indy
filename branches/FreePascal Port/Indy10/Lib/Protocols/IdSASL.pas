@@ -55,7 +55,7 @@ from the UserPass mechanism and link to a UserPass provider.
 unit IdSASL;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdBaseComponent,

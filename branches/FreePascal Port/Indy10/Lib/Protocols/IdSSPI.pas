@@ -44,7 +44,7 @@ unit IdSSPI;
 {$MINENUMSIZE 4}
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   Windows;

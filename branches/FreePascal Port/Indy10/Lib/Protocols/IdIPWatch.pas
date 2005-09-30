@@ -68,7 +68,7 @@ Original Author: Dave Nosker - AfterWave Technologies (allbyte@jetlink.net)
 // just communications).
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdComponent, IdThread, IdObjs;

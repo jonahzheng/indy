@@ -61,7 +61,7 @@
 unit IdIrcServer;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 {
 2002-10-July: Sergio Perry

@@ -60,7 +60,7 @@ unit IdSystatServer;
 {2002-Aug-13  J. Peter Mugaas
   -Original version}
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses
   IdAssignedNumbers,
   IdContext,

@@ -40,7 +40,7 @@
 unit IdSASLSKey;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses IdSASLUserPass, IdSASL;
 {
 S/KEY SASL mechanism based on RFC 2222.

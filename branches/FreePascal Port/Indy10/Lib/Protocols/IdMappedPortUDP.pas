@@ -45,7 +45,7 @@
 unit IdMappedPortUDP;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 {
   - Syncronized with Indy standards by Gregor Ibic

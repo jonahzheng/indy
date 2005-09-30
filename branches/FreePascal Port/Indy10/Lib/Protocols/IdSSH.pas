@@ -27,7 +27,7 @@ this separate in case we have to treat SSH far differently than SSL.
 unit IdSSH;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses
   Classes,
   IdContainers,

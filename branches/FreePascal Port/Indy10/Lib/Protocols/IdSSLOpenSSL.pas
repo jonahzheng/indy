@@ -221,7 +221,7 @@ unit IdSSLOpenSSL;
 }
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 {$TYPEDADDRESS OFF}
 uses
   Classes,

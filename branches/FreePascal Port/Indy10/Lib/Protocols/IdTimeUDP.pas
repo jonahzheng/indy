@@ -49,7 +49,7 @@
 unit IdTimeUDP;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses IdAssignedNumbers, IdUDPBase, IdGlobalProtocols, IdUDPClient;
 

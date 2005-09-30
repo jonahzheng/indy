@@ -50,7 +50,7 @@
 unit IdHashSHA1;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdObjs,

@@ -29,7 +29,7 @@
 unit IdHostnameServer;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 {
 2000-May-18: J. Peter Mugaas
   -Ported to Indy

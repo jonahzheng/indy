@@ -56,7 +56,7 @@ unit IdSSLOpenSSLHeaders;
 }
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 // the following emit is a workaround to a name conflict
 // with Win32 API header files

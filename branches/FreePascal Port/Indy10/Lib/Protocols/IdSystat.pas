@@ -49,7 +49,7 @@ unit IdSystat;
   -Original version}
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses
   IdAssignedNumbers,
   IdTCPConnection,

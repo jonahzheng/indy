@@ -190,7 +190,7 @@
 unit IdResourceStringsProtocols;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 resourcestring
 

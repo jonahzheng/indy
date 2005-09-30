@@ -47,7 +47,7 @@
 unit IdMessageCoderQuotedPrintable;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 //Written by C Costelloe, 23rd September 2003
 

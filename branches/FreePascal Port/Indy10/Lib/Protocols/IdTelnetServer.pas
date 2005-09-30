@@ -73,7 +73,7 @@
 unit IdTelnetServer;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdObjs, IdSys, IdBaseComponent,

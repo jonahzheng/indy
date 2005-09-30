@@ -96,7 +96,7 @@
 unit IdMappedFTP;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdContext, IdAssignedNumbers, IdMappedPortTCP, IdStack, IdYarn,

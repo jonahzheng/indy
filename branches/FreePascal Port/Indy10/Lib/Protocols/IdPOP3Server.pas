@@ -163,7 +163,7 @@
 unit IdPOP3Server;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 {
  Indy POP3 Server

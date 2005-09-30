@@ -63,7 +63,7 @@ unit IdIdentServer;
         }
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses IdAssignedNumbers, IdContext, IdCustomTCPServer;
 
 const IdDefIdentQueryTimeOut = 60000; // 1 minute

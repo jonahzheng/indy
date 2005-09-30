@@ -192,7 +192,7 @@ unit IdMessageCoderMIME;
 // presized outputs when possible, or presize only and reposition if stream
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdMessageCoder,

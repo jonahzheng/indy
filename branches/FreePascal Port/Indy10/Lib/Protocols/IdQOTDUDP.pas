@@ -25,7 +25,7 @@
 unit IdQOTDUDP;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses IdAssignedNumbers, IdUDPBase, IdUDPClient;
 type
   TIdQOTDUDP = class(TIdUDPClient)

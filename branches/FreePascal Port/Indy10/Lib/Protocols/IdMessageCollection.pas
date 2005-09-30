@@ -39,7 +39,7 @@ unit IdMessageCollection;
   Originally by Peter Mee.
 *}
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdMessage,

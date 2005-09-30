@@ -43,7 +43,7 @@ This is based on the IdRexec.pas unit and
 programming comments at http://www.abandoned.org/nemon/rexeclib.py}
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdAssignedNumbers, IdContext, IdRemoteCMDServer, IdTCPClient, IdTCPServer;

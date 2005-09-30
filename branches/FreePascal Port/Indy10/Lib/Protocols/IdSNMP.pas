@@ -55,7 +55,7 @@ The Synapse SNMP component was converted for use in INDY.
 |==============================================================================}
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   Classes,

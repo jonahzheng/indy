@@ -211,7 +211,7 @@ unit IdIMAP4Server;
 }
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 {$IFDEF INDY100}
 

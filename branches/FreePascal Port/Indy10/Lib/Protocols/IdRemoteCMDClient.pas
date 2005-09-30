@@ -65,7 +65,7 @@ unit IdRemoteCMDClient;
 {*******************************************************)
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdException, IdSys, IdTCPClient;

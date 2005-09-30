@@ -138,7 +138,7 @@
 unit IdNNTPServer;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 {
 July 2002

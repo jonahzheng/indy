@@ -22,7 +22,7 @@
 unit IdHMACSHA1;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdHash, IdHashSHA1, IdHMAC, IdGlobal, IdObjs, IdSys;

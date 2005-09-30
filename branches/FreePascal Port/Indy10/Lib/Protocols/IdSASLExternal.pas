@@ -25,7 +25,7 @@
 unit IdSASLExternal;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 uses
   IdSASL, IdTCPConnection;
 
