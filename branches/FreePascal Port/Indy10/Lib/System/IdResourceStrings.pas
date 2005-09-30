@@ -110,6 +110,10 @@ resourcestring
   RSStreamNotEnoughBytes = 'Not enough bytes read from stream.';
   RSEndOfStream = 'End of stream: Class %s at %d';
 
+ //DNS Resolution error messages
+  RSResolveError = 'Error resolving host %s: %s (%d)'; { hostname, errorstring, errornumber }
+  RSReverseResolveError = 'Error resolving Address %s: %s (%d)'; { address, errorstring, errornumber }
+
 implementation
 
 end.
