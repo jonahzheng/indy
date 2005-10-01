@@ -99,10 +99,10 @@ uses
    , pmwsock;
    {$endif}
    {$ifdef netware_clib}
-   , winsock;
+   , winsock; //not sure if this is correct
    {$endif}
    {$ifdef netware_libc}
-   , winsock;
+   , winsock;  //not sure if this is correct
    {$endif}
    {$ifdef MacOS}
    {$endif}
