@@ -603,6 +603,7 @@ uses
   {$IFDEF LINUX}
   Libc,
   SysUtils,
+  Classes,
   {$ENDIF}
   {$IFDEF MSWINDOWS}
   Registry,
@@ -1411,32 +1412,70 @@ begin
     iQuote := 0 ;
   end ;
 end;
-
-{$IFDEF LINUX}
-//LEave in for IdAttachment
-function CopyFileTo(const Source, Destination: string): Boolean;
-var
-  SourceStream: TFileStream;
-begin
-  // -TODO: Change to use a Linux copy function
-  // There is no native Linux copy function (at least "cp" doesn't use one
-  // and I can't find one anywhere (Johannes Berg))
-  Result := IndyCopyFile(Source, Destination, True);
-end;
-{$ENDIF}
-{$IFDEF MSWINDOWS}
-function CopyFileTo(const Source, Destination: string): Boolean;
-begin
-  Result := CopyFile(PChar(Source), PChar(Destination), true);
-end;
-{$ENDIF}
 {$IFDEF DOTNET}
 function CopyFileTo(const Source, Destination: string): Boolean;
 begin
   System.IO.File.Copy(Source, Destination, true);
   result := true; // or you'll get an exception
 end;
+{$ELSE}
+  {$IFDEF MSWINDOWS}
+function CopyFileTo(const Source, Destination: string): Boolean;
+begin
+  Result := CopyFile(PChar(Source), PChar(Destination), true);
+end;
+  {$ELSE}
+//LEave in for IdAttachment
+function CopyFileTo(const Source, Destination: string): Boolean;
+//mostly from  http://delphi.about.com/od/fileio/a/untypedfiles.htm
+
+//note that I do use the I+ and I- directive.
+// decided not to use streams because some may not handle more than
+// 2GB'sand it would run counter to the intent of this, return false
+//on failure.
+
+//This is intended to be generic because it may run in many different
+//Operating systems
+var
+  SourceF, DestF : File;
+  NumRead, NumWritten: Word;
+  Buffer: array[1..2048] of Byte;
+begin
+  // -TODO: Change to use a Linux copy function
+  // There is no native Linux copy function (at least "cp" doesn't use one
+  // and I can't find one anywhere (Johannes Berg))
+  
+  Assign(SourceF,Source);
+  {$I-} //turn off IO checking - no exception
+  Reset(SourceF,1);
+  {$I+} //turn it back on
+  Result := IOResult <>0;
+  if not result then
+  begin
+    Exit;
+  end;
+  Assign(DestF,Destination);
+  {$I-} //turn off IO checking - no exception
+
+  Rewrite(DestF,1);
+  {$I+} //turn it back on
+  result := IOResult<>0;
+  if Result then
+  begin
+    repeat
+      BlockRead(SourceF, Buffer, SizeOf(Buffer), NumRead) ;
+      BlockWrite(DestF, Buffer, NumRead, NumWritten) ;
+    until (NumRead = 0) or (NumWritten <> NumRead) ;
+    Close(DestF);
+    Result := True;
+  end;
+  Close(SourceF);
+
+ // Result := IndyCopyFile(Source, Destination, True);
+end;
+  {$ENDIF}
 {$ENDIF}
+
 
 {$IFDEF MSWINDOWS}
 function TempPath: string;
@@ -1645,7 +1684,11 @@ begin
   if stat(PChar(AFileName), LRec) = 0 then
   begin
     LTime := LRec.st_mtime;
+    {$IFDEF KYLIX}
     gmtime_r(@LTime, LU);
+    {$ELE}
+    gmtime_r(LTime,LU);
+    {$ENDIF}
     Result := EncodeDate(LU.tm_year + 1900, LU.tm_mon + 1, LU.tm_mday) +
               EncodeTime(LU.tm_hour, LU.tm_min, LU.tm_sec, 0);
   end;

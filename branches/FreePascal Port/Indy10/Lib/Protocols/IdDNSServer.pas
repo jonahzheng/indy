@@ -4139,7 +4139,11 @@ begin
    repeat
       try
          BBinding.Port := 53;
+         {$IFDEF LINUX}
+         BBinding.AllocateSocket(LongInt(Id_SOCK_DGRAM));
+         {$ELSE}
          BBinding.AllocateSocket(Id_SOCK_DGRAM);
+         {$ENDIF}
          Binded := True;
       except
       end;

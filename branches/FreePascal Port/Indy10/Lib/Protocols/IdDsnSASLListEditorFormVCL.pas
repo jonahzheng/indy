@@ -59,7 +59,7 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  {$IFDEF Linux}
+  {$IFDEF CLX}
   QControls, QForms, QStdCtrls, QButtons, QExtCtrls, QActnList, QGraphics,
   {$ELSE}
   Controls, Forms, StdCtrls, Buttons,  ActnList, Graphics,
@@ -215,7 +215,7 @@ procedure TfrmSASLListEditorVCL.FormCreate;
 begin
   Left := 292;
   Top := 239;
-  {$IFDEF LINUX} // should be CLX, but I can't find CLX defined
+  {$IFDEF CLX} // should be CLX, but I can't find CLX defined
   BorderStyle := fbsDialog;
   {$ELSE}
   BorderStyle := bsDialog;
