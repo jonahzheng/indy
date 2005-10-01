@@ -218,7 +218,7 @@ begin
   end;
   if not FBinding.HandleAllocated then begin
 {$IFDEF LINUX}
-    FBinding.AllocateSocket(Integer(Id_SOCK_DGRAM));
+    FBinding.AllocateSocket(LongInt(Id_SOCK_DGRAM));
 {$ELSE}
     FBinding.AllocateSocket(Id_SOCK_DGRAM);
 {$ENDIF}

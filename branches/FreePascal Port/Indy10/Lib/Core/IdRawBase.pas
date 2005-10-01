@@ -174,7 +174,7 @@ begin
     if FIPVersion = Id_IPv4 then
     begin
 {$IFDEF LINUX}
-      FBinding.AllocateSocket(Integer(Id_SOCK_RAW), FProtocol);
+      FBinding.AllocateSocket(LongInt(Id_SOCK_RAW), FProtocol);
 {$ELSE}
       FBinding.AllocateSocket(Id_SOCK_RAW, FProtocol);
 {$ENDIF}
@@ -183,7 +183,7 @@ begin
     else
     begin
 {$IFDEF LINUX}
-      FBinding.AllocateSocket(Integer(Id_SOCK_RAW), FProtocolIPv6);
+      FBinding.AllocateSocket(LongInt(Id_SOCK_RAW), FProtocolIPv6);
 {$ELSE}
       FBinding.AllocateSocket(Id_SOCK_RAW, FProtocolIPv6);
 {$ENDIF}

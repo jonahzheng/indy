@@ -234,7 +234,7 @@ begin
     end;
     for i := 0 to Bindings.Count - 1 do begin
 {$IFDEF LINUX}
-      Bindings[i].AllocateSocket(Integer(Id_SOCK_DGRAM));
+      Bindings[i].AllocateSocket(LongInt(Id_SOCK_DGRAM));
 {$ELSE}
       Bindings[i].AllocateSocket(Id_SOCK_DGRAM);
 {$ENDIF}
