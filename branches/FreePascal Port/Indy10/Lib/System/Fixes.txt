@@ -15,3 +15,31 @@ I added a define for "NO_TMultiReadExclusiveWriteSynchronizer" in IFDEF FPC in I
 
 IdSys
   circular bug was worked around by IFDEF'ing out the EIdExceptionBase and then IFDEF'ing the declaration into IdException.
+
+I moved IdCompilerDefines.inc to an Inc folder.  FPC can do some strange things if there is more than one version of the same file.  I'm not sure how we can handle the special ../Inc folder in the Delphi .dpks.
+
+I made sure that that Units and inc files have proper capitilization.  This is important because Unix is case-sensitive with filenames.
+
+I made lrs files and xpm files for the Lazarus GUI.  The XPM is a special type of graphic that can be editted in Notepad (yes, really).  You use the makelrz program in the lazarus/tools folder to make the lrs that is included in the unit.  The .lrs file is technically an .inc file with source-code that creates the resource in the program (the class is defined in the LResource unit).  
+
+For all practical purposes, the LCL (Lazarus component library) and Delphi VCL are verry similar so you should not use IFDEF LINUX to determine if you should use QForms or Forms.  
+
+I had to make some modifications to the IdStackLinux so it can compile in FPC.  The code was so neglected, it might not have even compiled in Kylix with Indy 10.  We may need to make a separate TIdStack object just for Unix systems in FPC but I will let Marco deal with that one.  Some IFDEF's may also need to be changed to accomodate this but I feel that it might be worth doing.  We also may need to modify IdStackConsts and make TIdStack descendant classes for OS/2, Mac OS, Darwin OS/X, and maybe two for Novell Netware (there are actually two stack interfaces on those systems).
+
+I also had to change some pointer typecasts from Integer or Cardinal to PtrInt or PtrUInt.  You can NO longer assume that a pointer will be exactly four bytes.  
+
+Like Delphi, there is a TThreadPriority.  On Kylix, that's defined as a numerical value.
+
+Important - do not check in any .pas units with the same name as the .lpk files.  Lazarus automatically generates the .pas from the .lpk itself.  The LPK file is really an .XML file and I'm not sure how we can get a package manager to manage all of the units in it.  Units with a Register procedure are treated differently than units without a register procedure.
+
+Some things that have to be done are:
+
+1) Make sure that unit references to stack interfaces are correct for each platform FPC supports (even if it's only for cross compiling).
+2) IdStackLinux does not have a working ReceiveMessage function.  
+3) We may need to make some changes from IFDEF LINUX to IFDEF UNIX.  Likewise, we probably also need to change IFDEF MSWINDOWS to IFDEF WIN32 because there may be different API's in WinCE and support might need to be separate.
+4) Make a separate TIdStackUnix to use with the IFDEF UNIX under FPC.  TIdStackLinux should be kept for Kylix.  That's up to Marco's descretion.
+5) Make any separate stacks for any platforms that Indy will support.  Remember that FPC supports a number of platforms (even if it's only for cross-platform compiling) such as MacOS, Novell Netware, OS/2, and maybe other systems.  You may be surprised at how much demand there may actually be for Indy to support a lot of things.  Make appr
+opriate unit references.
+6) We need to test functionality and fix any bugs.  Sometimes FPC may not work the same way Delphi would.
+7) Make some type of ZLib support that can work on different platforms and different architectures.  Even if we can use .obj or .o files, we may need to redo the IdZLib header for different platforms and architectures.
+6) We need to see what our options are for SSL on different platforms.
