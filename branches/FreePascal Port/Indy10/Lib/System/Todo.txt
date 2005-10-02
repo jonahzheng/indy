@@ -1,0 +1,24 @@
+Some things that have to be done are:
+
+1) Make sure that unit references to stack interfaces are correct for each platform FPC supports (even if it's only for cross compiling).
+2) IdStackLinux does not have a working ReceiveMessage function.  
+3) We may need to make some changes from IFDEF LINUX to IFDEF UNIX.  Likewise, we probably also need to change IFDEF MSWINDOWS to IFDEF WIN32 because there may be different API's in WinCE and support might need to be separate.
+4) Make a separate TIdStackUnix to use with the IFDEF UNIX under FPC.  TIdStackLinux should be kept for Kylix.  That's up to Marco's descretion.
+5) Make any separate stacks for any platforms that Indy will support.  Remember that FPC supports a number of platforms (even if it's only for cross-platform compiling) such as MacOS, Novell Netware, OS/2, and maybe other systems.  You may be surprised at how much demand there may actually be for Indy to support a lot of things.  Make appr
+opriate unit references.
+6) We need to test functionality and fix any bugs.  Sometimes FPC may not work the same way Delphi would.
+7) Make some type of ZLib support that can work on different platforms and different architectures.  Even if we can use .obj or .o files, we may need to redo the IdZLib header for different platforms and architectures.
+8) We need to see what our options are for SSL on different platforms.
+9) We must be sure that we are reading and writing multibyte integer values as either Little Endian or BIg Endian.  Network byte order is big Endian.  See http://www.netrino.com/Publications/Glossary/Endianness.html for an explanation.  We always need to be clear what byte order is being sent and read.
+
+Marco van de Voort has written several papers that I find to be verry informative about FPC.
+
+Creating a portable Pascal codebase - http://www.stack.nl/~marcov/porting.pdf
+
+The new Unix RTL.
+www.stack.nl/~marcov/unixrtl.pdf
+
+Development Tutorial (a.k.a Build FAQ)
+http://www.stack.nl/~marcov/buildfaq.pdf
+
+Do not bother commenting or reviewing the code unless you have read those papers. 
