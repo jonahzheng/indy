@@ -59,9 +59,10 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  {$IFDEF CLX}
+  {$IFDEF WidgetKylix}
   QControls, QForms, QStdCtrls, QButtons, QExtCtrls, QActnList, QGraphics,
-  {$ELSE}
+  {$ENDIF}
+  {$IFDEF WidgetVCLLike}
   Controls, Forms, StdCtrls, Buttons,  ActnList, Graphics,
   {$ENDIF}
   Classes, IdSASLCollection;
@@ -73,7 +74,7 @@ type
     lbAssigned: TListBox;
     sbAdd: TSpeedButton;
     sbRemove: TSpeedButton;
-    {$IFDEF FPC}
+    {$IFDEF UseTBitBtn}
     BtnCancel: TBitBtn;
     BtnOk: TBitBtn;
     {$ELSE}
@@ -113,7 +114,7 @@ type
 
 implementation
 uses
-{$IFDEF FPC}
+{$IFDEF WidgetLCL}
   LResources,
 {$ENDIF}
   IdDsnCoreResourceStrings,
@@ -122,8 +123,13 @@ uses
 
 { TfrmSASLListEditorVCL }
 
-{$IFNDEF FPC}
-{$R IdSASLListEditorForm.RES}
+{$IFNDEF WidgetLCL}
+   {$IFDEF WIN32}
+   {$R IdSASLListEditorForm.RES}
+   {$ENDIF}
+   {$IFDEF KYLIX}
+   {$R IdSASLListEditorForm.RES}
+   {$ENDIF}
 {$ENDIF}
 
 constructor TfrmSASLListEditorVCL.Create(AOwner: TComponent);
@@ -215,13 +221,14 @@ procedure TfrmSASLListEditorVCL.FormCreate;
 begin
   Left := 292;
   Top := 239;
-  {$IFDEF CLX} // should be CLX, but I can't find CLX defined
+  {$IFDEF WidgetKylix}
   BorderStyle := fbsDialog;
-  {$ELSE}
+  {$ENDIF}
+  {$IFDEF WidgetVCLLike}
   BorderStyle := bsDialog;
   {$ENDIF}
   Caption := RSADlgSLCaption;
-  {$IFDEF FPC}
+  {$IFDEF UseTBitBtn}
   ClientHeight := 349;
   {$ELSE}
   ClientHeight := 344;
@@ -269,7 +276,7 @@ begin
   sbDown := TSpeedButton.Create(Self);
   lbAvailable := TListBox.Create(Self);
   lbAssigned := TListBox.Create(Self);
-  {$IFDEF FPC}
+  {$IFDEF UseTBitBtn}
   BtnCancel := TBitBtn.Create(Self);
   BtnOk := TBitBtn.Create(Self);
   {$ELSE}
@@ -287,11 +294,13 @@ begin
     Width := 57;
     Height := 25;
     ShowHint := True;
-    {$IFDEF FPC}
+    {$IFDEF WidgetLCL}
     Glyph.LoadFromLazarusResource('DIS_ARROWRIGHT');  {do not localize}
     {$ELSE}
-    Glyph.LoadFromResourceName(HInstance, 'ARROWRIGHT');  {do not localize}
-    NumGlyphs := 2;
+      {$IFDEF WidgetVCLLikeOrKylix}
+      Glyph.LoadFromResourceName(HInstance, 'ARROWRIGHT');  {do not localize}
+      NumGlyphs := 2;
+      {$ENDIF}
     {$ENDIF}
 
   end;
@@ -305,11 +314,13 @@ begin
     Width := 57;
     Height := 25;
     ShowHint := True;
-    {$IFDEF FPC}
+    {$IFDEF WidgetLCL}
     Glyph.LoadFromLazarusResource('DIS_ARROWLEFT');  {do not localize}
     {$ELSE}
+      {$IFDEF WidgetVCLLikeOrKylix}
     Glyph.LoadFromResourceName(HInstance, 'ARROWLEFT'); {do not localize}
     NumGlyphs := 2;
+      {$ENDIF}
     {$ENDIF}
   end;
   with Label1 do
@@ -342,11 +353,13 @@ begin
     Width := 23;
     Height := 22;
     ShowHint := True;
-     {$IFDEF FPC}
+     {$IFDEF WidgetLCL}
     Glyph.LoadFromLazarusResource('DIS_ARROWUP');  {do not localize}
     {$ELSE}
+      {$IFDEF WidgetVCLLikeOrKylix}
     Glyph.LoadFromResourceName(HInstance, 'ARROWUP'); {do not localize}
     NumGlyphs := 2;
+      {$ENDIF}
     {$ENDIF}
   end;
   with sbDown do
@@ -360,11 +373,13 @@ begin
     Height := 22;
 
     ShowHint := True;
-     {$IFDEF FPC}
+     {$IFDEF WidgetLCL}
     Glyph.LoadFromLazarusResource('DIS_ARROWDOWN');  {do not localize}
     {$ELSE}
+      {$IFDEF WidgetVCLLikeOrKylix}
     Glyph.LoadFromResourceName(HInstance, 'ARROWDOWN'); {do not localize}
     NumGlyphs := 2;
+      {$ENDIF}
     {$ENDIF}
   end;
   with lbAvailable do
@@ -398,7 +413,7 @@ begin
     Left := 368;
     Top := 312;
     Width := 75;
-    {$IFDEF FPC}
+    {$IFDEF WidgetLCL}
     Height := 30;
     Kind := bkCancel;
     {$ELSE}
@@ -419,7 +434,7 @@ begin
     Left := 287;
     Top := 312;
     Width := 75;
-    {$IFDEF FPC}
+    {$IFDEF WidgetLCL}
     Height := 30;
     Kind := bkOk;
     {$ELSE}
@@ -457,7 +472,7 @@ var LEnabled : Boolean;
 begin
    LEnabled := (lbAvailable.Items.Count <> 0) and
     (lbAvailable.ItemIndex <> -1);
-  {$IFDEF FPC}
+  {$IFDEF WidgetLCL}
   if LEnabled <> actAdd.Enabled then
   begin
     if LEnabled then
@@ -493,7 +508,7 @@ begin
   LEnabled := (lbAssigned.Items.Count > 1) and
     (lbAssigned.ItemIndex <> -1) and
       (lbAssigned.ItemIndex < (lbAssigned.Items.Count - 1));
-  {$IFDEF FPC}
+  {$IFDEF WidgetLCL}
   if LEnabled <> actMoveDown.Enabled then
   begin
     if LEnabled then
@@ -530,7 +545,7 @@ var LEnabled : Boolean;
 begin
    LEnabled := (lbAssigned.Items.Count > 1) and
     (lbAssigned.ItemIndex > 0); // -1 not selected and 0 = top
-  {$IFDEF FPC}
+  {$IFDEF WidgetLCL}
   if LEnabled <> actMoveUp.Enabled then
   begin
     if LEnabled then
@@ -568,7 +583,7 @@ var LEnabled : Boolean;
 begin
   LEnabled := (lbAssigned.Items.Count <> 0) and
     (lbAssigned.ItemIndex <> -1);
-  {$IFDEF FPC}
+  {$IFDEF WidgetLCL}
   if LEnabled <> actRemove.Enabled then
   begin
     if LEnabled then
@@ -589,7 +604,7 @@ begin
   Result := ShowModal = mrOk;
 end;
 
-{$IFDEF FPC}
+{$IFDEF WidgetLCL}
 initialization
   {$I IdSASLListEditorForm.lrs}
 {$ENDIF}
