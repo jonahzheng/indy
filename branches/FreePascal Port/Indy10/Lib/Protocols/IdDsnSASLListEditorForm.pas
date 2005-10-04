@@ -11,8 +11,8 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
+
+
   $Log$
 
 
@@ -59,29 +59,31 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  {$IFDEF DOTNET}
+  {$IFDEF WidgetWinforms}
   IdObjs,
   IdDsnSASLListEditorFormNET;
   {$R 'IdDsnSASLListEditorFormNET.TfrmSASLListEditor.resources' 'IdDsnSASLListEditorFormNET.resx'}
-  {$ELSE}
+  {$ENDIF}
+  {$IFDEF WidgetVCLLikeOrKylix}
   IdDsnSASLListEditorFormVCL;
   {$ENDIF}
 
 type
-  {$IFDEF DOTNET}
+  {$IFDEF WidgetWinforms}
   //we make a create here because I'm not sure how the Visual Designer for WinForms
   //we behave in a package.  I know it can act weird if something is renamed
   TfrmSASLListEditor = class(IdDsnSASLListEditorFormNET.TfrmSASLListEditor)
   public
     constructor Create(AOwner : TIdNativeComponent);
   end;
-  {$ELSE}
+  {$ENDIF}
+  {$IFDEF WidgetVCLLikeOrKylix}
   TfrmSASLListEditor = class(TfrmSASLListEditorVCL);
   {$ENDIF}
 
 implementation
 
-{$IFDEF DOTNET}
+{$IFDEF WidgetWinForms}
 constructor TfrmSASLListEditor.Create(AOwner : TIdNativeComponent);
 begin
   inherited Create;

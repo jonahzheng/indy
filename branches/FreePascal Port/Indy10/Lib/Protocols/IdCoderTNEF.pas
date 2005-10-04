@@ -11,26 +11,26 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
+
+
   $Log$
-}
-{
-{   Rev 1.3    16/01/2005 22:33:06  CCostelloe
-{ Minor update
-}
-{
-{   Rev 1.2    22/12/2004 23:09:52  CCostelloe
-{ Another intermediate check-in, this sorts out the compressed RTF message and
-{ (if it has one) the message .Body.
-}
-{
-{   Rev 1.1    18/12/2004 20:35:24  CCostelloe
-{ Intermediate check-in, lots more to be done.
-}
-{
-{   Rev 1.0    02/12/2004 22:56:26  CCostelloe
-{ Initial version
+
+
+    Rev 1.3    16/01/2005 22:33:06  CCostelloe
+  Minor update
+
+
+    Rev 1.2    22/12/2004 23:09:52  CCostelloe
+  Another intermediate check-in, this sorts out the compressed RTF message and
+  (if it has one) the message .Body.
+
+
+    Rev 1.1    18/12/2004 20:35:24  CCostelloe
+  Intermediate check-in, lots more to be done.
+
+
+    Rev 1.0    02/12/2004 22:56:26  CCostelloe
+  Initial version
 }
 unit IdCoderTNEF;
 

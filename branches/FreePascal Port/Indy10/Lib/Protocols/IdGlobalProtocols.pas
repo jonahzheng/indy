@@ -389,7 +389,7 @@ unit IdGlobalProtocols;
 interface
 {$i IdCompilerDefines.inc}
 uses
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   Windows,
   {$ENDIF}
   IdCharsets,
@@ -443,7 +443,7 @@ type
   PWord =^Word;
   {$ENDIF}
 
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   TIdWin32Type = (Win32s,
     WindowsNT40PreSP6Workstation, WindowsNT40PreSP6Server, WindowsNT40PreSP6AdvancedServer,
     WindowsNT40Workstation, WindowsNT40Server, WindowsNT40AdvancedServer,
@@ -554,7 +554,7 @@ type
   function TwoCharToWord(AChar1, AChar2: Char):Word;
   function UpCaseFirst(const AStr: string): string;
   function GetUniqueFileName(const APath, APrefix, AExt : String) : String;
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   function Win32Type : TIdWin32Type;
   {$ENDIF}
   procedure WordToTwoBytes(AWord : Word; ByteArray: TIdBytes; Index: integer);
@@ -571,7 +571,7 @@ type
   function RemoveHeaderEntry(AHeader, AEntry: string): string;
 
 var
-  {$IFDEF LINUX}
+  {$IFDEF UNIX}
   // For linux the user needs to set these variables to be accurate where used (mail, etc)
   GOffsetFromUTC: TIdDateTime = 0;
   GTimeZoneBias: TIdDateTime = 0;
@@ -600,12 +600,17 @@ const
 implementation
 
 uses
-  {$IFDEF LINUX}
+  {$IFDEF UNIX}
+    {$IFDEF KYLIX}
   Libc,
+    {$ENDIF}
+    {$IFDEF FPC}
+  libc,
+    {$ENDIF}
   SysUtils,
   Classes,
   {$ENDIF}
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   Registry,
   SysUtils,
   {$ENDIF}
@@ -739,7 +744,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 var
   ATempPath: string;
 {$ENDIF}
@@ -910,7 +915,7 @@ Note that JPM Open is under a different Open Source license model.
 
 It is available at http://www.wvnet.edu/~oma00215/jpm.html }
 
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 type
   TNTEditionType = (workstation, server, advancedserver);
 
@@ -1257,7 +1262,7 @@ begin
   end;
 end;
 
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
   {$IFNDEF VCL5ORABOVE}
   function CreateTRegistry: TRegistry;
   begin
@@ -1419,7 +1424,7 @@ begin
   result := true; // or you'll get an exception
 end;
 {$ELSE}
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
 function CopyFileTo(const Source, Destination: string): Boolean;
 begin
   Result := CopyFile(PChar(Source), PChar(Destination), true);
@@ -1477,7 +1482,7 @@ end;
 {$ENDIF}
 
 
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 function TempPath: string;
 var
 	i: integer;
@@ -1497,13 +1502,13 @@ var
 begin
   lPath := APath;
 
-  {$IFDEF LINUX}
+  {$IFDEF UNIX}
   lExt := '';
   {$ELSE}
   lExt := '.tmp';
   {$ENDIF}
 
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   if lPath = '' then
   begin
     lPath := ATempPath;
@@ -1526,7 +1531,7 @@ var
   LFQE : String;
   LFName: String;
 begin
-  {$IFDEF LINUX}
+  {$IFDEF UNIX}
 
   {
     man tempnam
@@ -1543,15 +1548,21 @@ begin
     p_dir in the function.
 
     If the caller passes an invalid path, the results are unpredicatable.
-  }
 
+   }
+   //TODO:  Figure out how to do this in FPC, the function seems to be missing.
   if APath = '' then
   begin
-    Result := tempnam(nil, 'Indy');
+    {$IFDEF KYLIX}
+    Result := libc.tempnam(nil, 'Indy');
+    {$ENDIF}
   end
+  
   else
   begin
-    Result := tempnam(PChar(APath), 'Indy');
+    {$IFDEF KYLIX}
+    Result := libc.tempnam(PChar(APath), 'Indy');
+    {$ENDIF}
   end;
 
   {$ELSE}
@@ -1655,7 +1666,7 @@ var LRec : TWin32FindData;
   LHandle : THandle;
    LTime : Integer;
  {$ENDIF}
- {$IFDEF LINUX}
+ {$IFDEF UNIX}
 var LRec : TStatBuf;
   LTime : Integer;
   LU : TUnixTime;
@@ -1680,7 +1691,7 @@ begin
     end;
   end;
   {$ENDIF}
-  {$IFDEF LINUX}
+  {$IFDEF UNIX}
   if stat(PChar(AFileName), LRec) = 0 then
   begin
     LTime := LRec.st_mtime;
@@ -1714,7 +1725,7 @@ begin
   Result := Sys.StrToInt64(Sys.Trim(AStr),0);
 end;
 
-{$IFDEF LINUX}
+{$IFDEF UNIX}
 function TimeZoneBias: TIdDateTime;
 begin
   //TODO: Fix TimeZoneBias for Linux to be automatic
@@ -1727,7 +1738,7 @@ begin
   Result := -Sys.OffsetFromUTC;
 end;
 {$ENDIF}
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 function TimeZoneBias: TIdDateTime;
 var
   ATimeZone: TTimeZoneInformation;
@@ -1781,7 +1792,7 @@ begin
   end;
 end;
 
-{$IFDEF LINUX}
+{$IFDEF UNIX}
 function SetLocalTime(Value: TIdDateTime): boolean;
 begin
   //TODO: Implement SetTime for Linux. This call is not critical.
@@ -1795,7 +1806,7 @@ begin
   result := False;
 end;
 {$ENDIF}
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 function SetLocalTime(Value: TIdDateTime): boolean;
 {I admit that this routine is a little more complicated than the one
 in Indy 8.0.  However, this routine does support Windows NT privillages
@@ -1989,13 +2000,13 @@ end;
 // Currently this function is not used
 (*
 procedure BuildMIMETypeMap(dest: TIdStringList);
-{$IFDEF LINUX}
+{$IFDEF UNIX}
 begin
   // TODO: implement BuildMIMETypeMap in Linux
   raise EIdException.Create('BuildMIMETypeMap not implemented yet.');    {Do not Localize}
 end;
 {$ENDIF}
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 var
   Reg: TRegistry;
   slSubKeys: TIdStringList;
@@ -2114,7 +2125,7 @@ end;
 
 { TIdMimeTable }
 
-{$IFDEF LINUX}
+{$IFDEF UNIX}
 procedure LoadMIME(const AFileName : String; AMIMEList : TIdStringList);
 var
   KeyList: TIdStringList;
@@ -2164,7 +2175,7 @@ end;
 {$ENDIF}
 
 procedure FillMimeTable(const AMIMEList : TIdStringList;const ALoadFromOS:Boolean=True);
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 var
   reg: TRegistry;
   KeyList: TIdStringList;
@@ -2341,9 +2352,11 @@ begin
     Add('.sgml=text/sgml');    {Do not Localize}
   end;
 
-  if not ALoadFromOS then Exit;
-
-  {$IFDEF MSWINDOWS}
+  if not ALoadFromOS then
+  begin
+    Exit;
+  end;
+  {$IFDEF WIN32}
   // Build the file type/MIME type map
   Reg := CreateTRegistry; try
     KeyList := TIdStringList.create;
@@ -2405,7 +2418,7 @@ Got me <shrug>.
     reg.free;
   end;
 {$ENDIF}
-{$IFDEF LINUX}
+{$IFDEF UNIX}
   {
     /etc/mime.types is not present in all Linux distributions.
 
@@ -2738,7 +2751,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF LINUX}
+{$IFDEF UNIX}
 function GetClockValue : Int64;
 var
   TheTms: tms;
@@ -2782,7 +2795,7 @@ asm
 end;
 {$ENDIF}
 
-{$IFDEF LINUX}
+{$IFDEF UNIX}
 function IndyComputerName: string;
 var
   LHost: array[1..255] of Char;
@@ -2796,7 +2809,7 @@ begin
   end;
 end;
 {$ENDIF}
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 function IndyComputerName: string;
 var
   i: LongWord;
@@ -2825,7 +2838,7 @@ begin
   {$ENDIF}
 end;
 
-{$IFDEF LINUX}
+{$IFDEF UNIX}
 function IdGetDefaultCharSet: TIdCharSet;
 begin
   Result := GIdDefaultCharSet;
@@ -2843,7 +2856,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 // Many defaults are set here when the choice is ambiguous. However for
 // IdMessage OnInitializeISO can be used by user to choose other.
 function IdGetDefaultCharSet: TIdCharSet;
@@ -2928,7 +2941,7 @@ begin
 end;
 
 initialization
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   ATempPath := TempPath;
   {$ENDIF}
 
