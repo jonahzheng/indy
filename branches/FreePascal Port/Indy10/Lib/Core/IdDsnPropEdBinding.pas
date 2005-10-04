@@ -67,18 +67,18 @@ unit IdDsnPropEdBinding;
 
 interface
  {$I IdCompilerDefines.inc}
-{$IFDEF DOTNET}
+{$IFDEF WidgetWinForms}
 {$R 'IdDsnPropEdBindingNET.TIdDsnPropEdBindingNET.resources' 'IdDsnPropEdBindingNET.resx'}
 {$ENDIF}
 uses
   IdObjs,
   IdSocketHandle,
-  {$IFDEF DOTNET}
+  {$IFDEF WidgetWinForms}
   IdDsnPropEdBindingNET;
-  {$ELSE}
+  {$ENDIF}
+  {$IFDEF WidgetVCLLikeOrKylix}
   IdDsnPropEdBindingVCL;
   {$ENDIF}
-
 
 {
 Design Note:  It turns out that in DotNET, there are no services file functions and IdPorts
@@ -101,9 +101,10 @@ TODO:  Maybe there might be a way to find the location in a more eligant
 manner than what I described.
 }
 type
-  {$IFDEF DOTNET}
-  TIdPropEdBindingEntry = TIdDsnPropEdBindingNET;
-  {$ELSE}
+  {$IFDEF WidgetWinForms}
+   TIdPropEdBindingEntry = TIdDsnPropEdBindingNET;
+  {$ENDIF}
+  {$IFDEF WidgetVCLLikeOrKylix}
   TIdPropEdBindingEntry = TIdDsnPropEdBindingVCL;
   {$ENDIF}
 
@@ -111,7 +112,7 @@ procedure FillHandleList(const AList: string; ADest: TIdSocketHandles);
 function GetListValues(const ASocketHandles : TIdSocketHandles) : String;
 
 implementation
-{$IFDEF DOTNET}
+{$IFDEF WidgetWinForms}
 procedure FillHandleList(const AList: string; ADest: TIdSocketHandles);
 begin
   IdDsnPropEdBindingNET.FillHandleList(AList,ADest);
@@ -121,7 +122,8 @@ function GetListValues(const ASocketHandles : TIdSocketHandles) : String;
 begin
   Result := IdDsnPropEdBindingNET.GetListValues(ASocketHandles);
 end;
-{$ELSE}
+{$ENDIF}
+{$IFDEF WidgetVCLLikeOrKylix}
 procedure FillHandleList(const AList: string; ADest: TIdSocketHandles);
 begin
    IdDsnPropEdBindingVCL.FillHandleList(AList,ADest);

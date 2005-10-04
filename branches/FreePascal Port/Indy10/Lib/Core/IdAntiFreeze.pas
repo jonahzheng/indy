@@ -70,11 +70,11 @@ to be statically compiled into the code}
 
 
 
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 {$HPPEMIT '#pragma link "IdAntiFreeze.obj"'}    {Do not Localize}
 {$ENDIF}
 
-{$IFDEF LINUX}
+{$IFDEF UNIX}
 {$HPPEMIT '#pragma link "IdAntiFreeze.o"'}    {Do not Localize}
 {$ENDIF}
 
@@ -91,23 +91,22 @@ type
 implementation
 
 uses
-  {$IFNDEF DOTNET}
-    {$IFDEF CLX}
+  {$IFDEF WidgetKylix}
     QForms,
-    {$ELSE}
-    Forms,
-    {$ENDIF}
   {$ENDIF}
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WidgetVCLLike}
+    Forms,
+  {$ENDIF}
+  {$IFDEF WIN32}
   Messages,
   Windows,
   {$ENDIF}
-  {$IFDEF DOTNET}
+  {$IFDEF WidgetWinForms}
   System.Windows.Forms,
   {$ENDIF}
   IdGlobal;
 
-{$IFDEF LINUX}
+{$IFDEF UNIX}
 procedure TIdAntiFreeze.Process;
 begin
   //TODO: Handle ApplicationHasPriority
@@ -115,7 +114,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 procedure TIdAntiFreeze.Process;
 var
   Msg: TMsg;
@@ -131,7 +130,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF DOTNET}
+{$IFDEF WidgetWinForms}
 procedure TIdAntiFreeze.Process;
 begin
   //TODO: Handle ApplicationHasPriority

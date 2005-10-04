@@ -3,19 +3,20 @@ unit IdAboutVCL;
 interface
 {$I IdCompilerDefines.inc}
 uses
-{$ifdef clx}
+{$ifdef WidgetKylix}
   QStdCtrls, QForms, QExtCtrls, QControls, QComCtrls, QGraphics,  Qt,
-  {$ELSE}
+{$endif}
+{$ifdef WidgetVCLLike}
    StdCtrls, Buttons, ExtCtrls, Graphics, Controls, ComCtrls, Forms,
   {$ENDIF}
 {$ifdef Delphi6up}
   types
 {$endif}
 
-  {$IFDEF Windows}
+  {$IFDEF WIN32}
     Windows,
  {$ENDIF}
-  {$IFDEF LCL}
+  {$IFDEF WidgetLCL}
     LResources,
  {$ENDIF}
   classes, sysutils;
@@ -29,7 +30,9 @@ type
     FlblVersion : TLabel;
     FlblPleaseVisitUs : TLabel;
     FlblURL : TLabel;
-    {$IFDEF FPC}
+   //for LCL, we use a TBitBtn to be consistant with some GUI interfaces
+  //and the Lazarus IDE.
+    {$IFDEF UseTBitBtn}
     FbbtnOk : TBitBtn;
     {$ELSE}
     FbbtnOk : TButton;
@@ -52,14 +55,22 @@ Procedure ShowAboutBox(const AProductName, AProductVersion : String);
 Procedure ShowDlg;
 
 implementation
-{$IFNDEF FPC}
-
-{$R IdAboutVCL.RES}
+{$IFNDEF WidgetLCL}
+  {$IFDEF WIN32}
+  {$R IdAboutVCL.RES}
+  {$ENDIF}
+  {$IFDEF KYLIX}
+  {$R IdAboutVCL.RES}
+  {$ENDIF}
 {$ENDIF}
 uses
-  {$IFDEF MSWINDOWS}ShellApi, {$ENDIF}
-  {$IFNDEF FPC}
+  {$IFDEF WIN32}ShellApi, {$ENDIF}
+  {$IFNDEF WidgetLCL}
+   //done this way because we reference HInstance in Delphi for loading
+   //resources.  Lazarus does something different.  
+    {$IFDEF WIN32} 
   Windows,
+    {$ENDIF}
   {$ENDIF}
   IdDsnCoreResourceStrings,
   IdGlobal,
@@ -85,9 +96,6 @@ end;
 { TfrmAbout }
 
 constructor TfrmAbout.Create(AOwner: TComponent);
-{$IFDEF FPC}
-var Bmp : TBitmap;
-{$ENDIF}
 begin
   inherited CreateNew(AOwner,0);
 
@@ -97,7 +105,7 @@ begin
   FlblVersion := TLabel.Create(Self);
   FlblPleaseVisitUs := TLabel.Create(Self);
   FlblURL := TLabel.Create(Self);
-  {$IFDEF LCL}
+  {$IFDEF UseTBitBtn}
   FbbtnOk := TBitBtn.Create(Self);
   {$ELSE}
   FbbtnOk := TButton.Create(Self);
@@ -119,7 +127,7 @@ begin
     Font.Name := 'Tahoma';
     Font.Style := [];
     Position := poScreenCenter;
-    {$IFNDEF FPC}
+    {$IFDEF WidgetVCL}
     Scaled := True;
     {$ENDIF}
     Self.Constraints.MinHeight := Height;
@@ -133,15 +141,16 @@ begin
     Top := 0;
     Width := 388;
     Height := 240;
-//    AutoSize := True;
-    {$IFDEF FPC}
+
+    {$IFDEF WidgetLCL}
 
    Picture.Bitmap.LoadFromLazarusResource('IndyCar');//this is XPM format
 
-      {$ELSE}
+    {$ENDIF}
+    {$IFDEF WidgetVCLLikeOrKylix}
     Picture.Bitmap.LoadFromResourceName(HInstance, 'INDYCAR');    {Do not Localize}
     Transparent := True;
-      {$ENDIF}
+    {$ENDIF}
 
   end;
   with FlblName do
@@ -155,17 +164,15 @@ begin
     Alignment := taCenter;
     AutoSize := False;
     Anchors := [akLeft, akTop, akRight];
-     {$IFNDEF FPC}
+    {$IFDEF WidgetVCL}
     Font.Charset := DEFAULT_CHARSET;
+    Transparent := True; 
     {$ENDIF}
     Font.Color := clBtnText;
     Font.Height := -16;
     Font.Name := 'Verdana';
     Font.Style := [fsBold];
     ParentFont := False;
-    {$IFNDEF FPC}
-    Transparent := True;
-    {$ENDIF}
     WordWrap := True;
 
   end;
@@ -179,17 +186,15 @@ begin
     Height := 40;
     Alignment := taCenter;
     AutoSize := False;
-    {$IFNDEF FPC}
+    {$IFDEF WidgetVCL}
     Font.Charset := DEFAULT_CHARSET;
+    Transparent := True;
     {$ENDIF}
     Font.Color := clBtnText;
     Font.Height := -15;
     Font.Name := 'Verdana';
     Font.Style := [fsBold];
     ParentFont := False;
-    {$IFNDEF FPC}
-    Transparent := True;
-    {$ENDIF}
     Anchors := [akLeft, akTop, akRight];
   end;
   with FlblCopyRight do
@@ -204,17 +209,15 @@ begin
     Anchors := [akLeft, akTop, akRight];
     AutoSize := False;
     Caption := RSAAboutBoxCopyright;
-    {$IFNDEF FPC}
+    {$IFDEF WidgetVCL}
     Font.Charset := DEFAULT_CHARSET;
+    Transparent := True;
     {$ENDIF}
     Font.Color := clBtnText;
     Font.Height := -13;
     Font.Name := 'Verdana';
     Font.Style := [fsBold];
     ParentFont := False;
-    {$IFNDEF FPC}
-    Transparent := True;
-    {$ENDIF}
     WordWrap := True;
   end;
 
@@ -229,10 +232,8 @@ begin
     Height := 23;
     Alignment := taCenter;
     AutoSize := False;
-        {$IFNDEF FPC}
+    {$IFDEF WidgetVCL}
     Font.Charset := DEFAULT_CHARSET;
-    {$ENDIF}
-    {$IFNDEF FPC}
     Transparent := True;
     {$ENDIF}
     Font.Height := -13;
@@ -251,17 +252,15 @@ begin
     Cursor := crHandPoint;
     Alignment := taCenter;
     AutoSize := False;
-    {$IFNDEF FPC}
+    {$IFDEF WidgetVCL}
     Font.Charset := DEFAULT_CHARSET;
+    Transparent := True;
     {$ENDIF}
     Font.Color := clBlue;
     Font.Height := -13;
     Font.Name := 'Verdana';
     Font.Style := [fsUnderline];
     ParentFont := False;
-    {$IFNDEF FPC}
-    Transparent := True;
-    {$ENDIF}
     OnClick := lblURLClick;
     Caption := RSAAboutBoxIndyWebsite;
     Anchors := [akLeft, akTop, akRight];
@@ -272,7 +271,7 @@ begin
     Name := 'bbtnOk';
 
     Left := 475;
-    {$IFDEF FPC}
+    {$IFDEF UseTBitBtn}
     Top := 297;
     {$ELSE}
       Top := 302;
@@ -281,16 +280,17 @@ begin
     Width := 75;
 
     Anchors := [akRight, akBottom];
-    {$IFDEF FPC}
+
+    {$IFDEF UseTBitBtn}
      Kind := bkOk;
-    {$ELSE}
+     {$ELSE}
     Cancel := True;
     Default := True;
     ModalResult := 1;
+    Caption := RSOk;
+    {$ENDIF}
 
-     Caption := RSOk;
-     {$ENDIF}
-     TabOrder := 0;
+    TabOrder := 0;
     Anchors := [akLeft, akTop, akRight];
     Parent := Self;
 
@@ -309,7 +309,7 @@ end;
 
 procedure TfrmAbout.lblURLClick(Sender: TObject);
 begin
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   ShellAPI.shellExecute(Handle,PChar('open'),PChar(FlblURL.Caption),nil,nil, 0);    {Do not Localize}
   FlblURL.Font.Color := clPurple;
   {$ENDIF}
@@ -348,7 +348,7 @@ begin
   Create(nil);
 end;
 
-{$IFDEF FPC}
+{$IFDEF WidgetLCL}
 initialization
   {$i IdAboutVCL.lrs}
 {$ENDIF}

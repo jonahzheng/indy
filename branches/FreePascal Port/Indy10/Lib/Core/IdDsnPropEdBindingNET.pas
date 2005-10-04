@@ -360,7 +360,7 @@ begin
   Self.Controls.Add(Self.lblBindings);
   Self.Controls.Add(Self.btnCancel);
   Self.Controls.Add(Self.btnOk);
-  Self.FormBorderStyle := System.Windows.Forms.FormBorderStyle.FixedDialog;
+  Self.FormBorderStyle := System.Windows.Forms.FormBorderStyle.Fixed3D;
   Self.MaximizeBox := False;
   Self.MaximumSize := System.Drawing.Size.Create(480, 225);
   Self.MinimizeBox := False;

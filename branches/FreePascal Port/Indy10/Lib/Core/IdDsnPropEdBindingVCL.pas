@@ -69,7 +69,7 @@ interface
  {$I IdCompilerDefines.inc}
 uses
 
-{$ifdef clx}
+{$ifdef WidgetKylix}
   QActnList, QStdCtrls, QForms, QExtCtrls, QControls, QComCtrls, QGraphics,  Qt,
   {$ELSE}
   ActnList, StdCtrls, Buttons, ExtCtrls, Graphics, Controls, ComCtrls, Forms,
@@ -109,7 +109,7 @@ manner than what I described.
 }
 type
   TIdDsnPropEdBindingVCL = class(TForm)
-  {$IFDEF FPC}
+  {$IFDEF UseTBitBtn}
     btnOk: TBitBtn;
     btnCancel: TBitBtn;
   {$ELSE}
@@ -300,14 +300,14 @@ var i : Integer;
 begin
 
   inherited CreateNew(AOwner,0);
-  {$IFNDEF CLX}
+  {$IFNDEF WidgetKylix}
   Borderstyle := bsDialog;
   {$ENDIF}
   BorderIcons := [biSystemMenu];
  // Width := 480;
  // Height := 252;
   ClientWidth  := 472;
-  {$IFDEF FPC}
+  {$IFDEF UseTBitBtn}
   ClientHeight := 230;
   {$ELSE}
   ClientHeight := 225;
@@ -331,7 +331,7 @@ begin
   edtPort := TComboBox.Create(Self);
 
   rdoBindingType := TRadioGroup.Create(Self);
-  {$IFDEF FPC}
+  {$IFDEF UseTBitBtn}
   btnOk := TBitBtn.Create(Self);
   btnCancel := TBitBtn.Create(Self);
   {$ELSE}
@@ -475,7 +475,7 @@ begin
     Left := 306;
     Top := 193;
     Width := 75;
-    {$IFDEF FPC}
+    {$IFDEF UseTBitBtn}
     Height := 30;
     Kind := bkOk;
     {$ELSE}
@@ -495,7 +495,7 @@ begin
     Left := 386;
     Top := 193;
     Width := 75;
-    {$IFDEF FPC}
+    {$IFDEF UseTBitBtn}
     Height := 30;
     Kind := bkCancel;
     {$ELSE}
@@ -536,7 +536,7 @@ begin
 
   AutoScroll := False;
   Caption := RSBindingFormCaption;
-  {$IFNDEF FPC}
+  {$IFDEF WidgetVCL}
   Scaled := False;
   {$ENDIF}
   Font.Color := clBtnText;
@@ -631,7 +631,8 @@ begin
   else
   begin
     edtIPAddress.Text := '';
-    {$IFNDEF FPC}
+    //in LCL, the line below caused an index out of range error.
+    {$IFDEF WidgetVCL}
     edtPort.ItemIndex := -1; //-2;
     {$ENDIF}
     edtPort.Text := '';
@@ -642,14 +643,14 @@ begin
   lblPort.Enabled := Assigned(FCurrentHandle);
   edtPort.Enabled := Assigned(FCurrentHandle);
   rdoBindingType.Enabled := Assigned(FCurrentHandle);
-  {$IFDEF LINUX}
+  {$IFDEF WidgetKylix}
   //WOrkaround for CLX quirk that might be Kylix 1
   for i := 0 to rdoBindingType.ControlCount -1 do
   begin
     rdoBindingType.Controls[i].Enabled := Assigned(FCurrentHandle);
   end;
   {$ENDIF}
-  {$IFNDEF LINUX}
+  {$IFDEF WidgetVCLLike}
   //The Win32 VCL does not change the control background to a greyed look
   //when controls are disabled.  This quirk is not present in CLX.
   if Assigned(FCurrentHandle) then

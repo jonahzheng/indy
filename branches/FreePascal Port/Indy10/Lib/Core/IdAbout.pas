@@ -3,9 +3,10 @@ unit IdAbout;
 interface
 {$I IdCompilerDefines.inc}
 uses
-  {$IFDEF DOTNET}
+  {$IFDEF WidgetWinForms}
   IdAboutDotNET;
-  {$ELSE}
+  {$ENDIF}
+  {$IFDEF WidgetVCLLikeOrKylix}
   IdAboutVCL;
   {$ENDIF}
 
@@ -13,7 +14,7 @@ Procedure ShowAboutBox(const AProductName, AProductVersion : String);
 Procedure ShowDlg;
 
 implementation
- {$IFDEF DOTNET}
+ {$IFDEF WidgetWinForms}
  //for some reason, the Winforms designer doesn't like this in the same unit
  //as the class it's for
  {$R 'IdAboutDotNET.TfrmAbout.resources' 'IdAboutDotNET.resx'}
