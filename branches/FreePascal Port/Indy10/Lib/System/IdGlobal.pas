@@ -1529,7 +1529,7 @@ end;
 
 procedure DebugOutput(const AText: string);
 begin
-  {$IFDEF LINUX}
+  {$IFDEF KYLIX}
   __write(stderr, AText, Length(AText));
   __write(stderr, EOL, Length(EOL));
   {$ENDIF}

@@ -374,8 +374,13 @@ var
 implementation
 
 uses
-  {$IFDEF LINUX}     IdStackLinux, {$ENDIF}
-  {$IFDEF MSWINDOWS} IdStackWindows, {$ENDIF}
+  //done this way so we can have a separate stack for FPC under Unix systems
+  {$IFDEF UNIX}
+    {$IFDEF KYLIX}   IdStackLinux,
+    {$ELSE}  IdStackLinux,
+    {$ENDIF}
+  {$ENDIF}
+  {$IFDEF WIN32} IdStackWindows, {$ENDIF}
   {$IFDEF DOTNET}    IdStackDotNet, {$ENDIF}
   IdResourceStrings;
 
@@ -830,9 +835,17 @@ begin
 end;
 
 initialization
+//done this way so we can have a separate stack just for FPC under Unix systems
   GStackClass :=
-   {$IFDEF LINUX}     TIdStackLinux;   {$ENDIF}
-   {$IFDEF MSWINDOWS} TIdStackWindows; {$ENDIF}
+   {$IFDEF UNIX}
+     {$IFDEF KYLIX}
+      TIdStackLinux;
+     {$ELSE}
+      TIdStackLinux;
+     {$ENDIF}
+   {$ENDIF}
+
+   {$IFDEF WIN32}  TIdStackWindows; {$ENDIF}
    {$IFDEF DOTNET}    TIdStackDotNet;  {$ENDIF}
   GStackCriticalSection := TIdCriticalSection.Create;
 finalization

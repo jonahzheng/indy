@@ -350,6 +350,10 @@ type
 
 var
   GServeFileProc: TIdServeFile = nil;
+  
+//for some reason, if GDBSDStack is in the same block as GServeFileProc then
+//FPC gives a type declaration error.
+var
   GBSDStack: TIdStackBSDBase = nil;
 
 const
@@ -358,8 +362,15 @@ const
 implementation
 
 uses
-  {$IFDEF LINUX}     IdStackLinux, {$ENDIF}
-  {$IFDEF MSWINDOWS} IdStackWindows, {$ENDIF}
+  //done this way so we can have a separate stack for the Unix systems in FPC
+  {$IFDEF UNIX}
+    {$IFDEF KYLIX}
+      IdStackLinux,
+    {$ELSE}
+      IdStackLinux,
+    {$ENDIF}
+  {$ENDIF}
+  {$IFDEF WIN32}   IdStackWindows, {$ENDIF}
   {$IFDEF DOTNET}    IdStackDotNet, {$ENDIF}
   IdResourceStrings;
 
