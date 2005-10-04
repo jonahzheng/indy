@@ -4,6 +4,7 @@
 // or DEFINE to use the 256 color Indy versions
 {DEFINE Borland}
 
+//Widget defines are for the design-time GUI and TIdAntiFreeze
 // S.G. 4/9/2002: IPv4/IPv6 general switch (for defaults only)
 {$DEFINE IdIPv4}
 
@@ -22,9 +23,12 @@
   {$DEFINE DELPHI4}
   {$DEFINE OPTIONALPARAMS}
   {$DEFINE MSWINDOWS}
+  {$DEFINE WIN32}
   {$define i386}
   {$define ENDIAN_LITTLE}
   {$define CPU32}
+  {$define WidgetVCLLike} // LCL included.
+  {$define WidgetVCL}
 {$ENDIF}
 
 // C++ Builder 4
@@ -34,9 +38,13 @@
   {$DEFINE CBUILDER4}
   {$DEFINE OPTIONALPARAMS}
   {$DEFINE MSWINDOWS}
+  {$DEFINE WIN32}
   {$define i386}
   {$define ENDIAN_LITTLE}
   {$define CPU32}
+  {$define WidgetVCLLike} // LCL included.
+  {$define WidgetVCL}
+  {$define WidgetVCLLikeOrKylix}
 {$ENDIF}
 
 // Delphi 5 & CBuilder 5
@@ -52,9 +60,13 @@
   {$DEFINE OPTIONALPARAMS}
   {$DEFINE SAMETEXT}
   {$DEFINE MSWINDOWS}
+  {$DEFINE WIN32}
   {$define i386}
-{$define ENDIAN_LITTLE}
-{$define CPU32}
+  {$define ENDIAN_LITTLE}
+  {$define CPU32}
+  {$define WidgetVCLLike} // LCL included.
+  {$define WidgetVCL}
+  {$define WidgetVCLLikeOrKylix}
 {$ENDIF}
 
 //Delphi 6
@@ -72,9 +84,14 @@
   {$DEFINE VCL6ORABOVE}
   {$DEFINE VCL60}
   {$DEFINE TFormatSettings}
+  {$DEFINE WIN32}
   {$define i386}
   {$define ENDIAN_LITTLE}
   {$define CPU32}
+  {$define WidgetVCLLike} // LCL included.
+  {$define WidgetVCL}
+  {$define VCL60plus}
+  {$define WidgetVCLLikeOrKylix}
 {$ENDIF}
 
 //Delphi 7
@@ -92,10 +109,15 @@
   {$DEFINE OPTIONALPARAMS}
   {$DEFINE SAMETEXT}
   {$DEFINE ALLOW_NAMED_THREADS}
+  {$DEFINE WIN32}
   {$DEFINE TFormatSettings}
   {$define i386}
   {$define ENDIAN_LITTLE}
   {$define CPU32}
+  {$define WidgetVCLLike} // LCL included.
+  {$define WidgetVCLLikeOrKylix}
+  {$define WidgetVCL}
+  {$define VCL60plus}
 {$ENDIF}
 
 //Delphi 8
@@ -114,6 +136,7 @@
   {$define i386}
   {$define ENDIAN_LITTLE}
   {$define CPU32}
+//Widget defines are omitted since D8 only supports NET
 {$ENDIF}
 
 //Delphi 9
@@ -133,6 +156,12 @@
   {$define i386}
   {$define ENDIAN_LITTLE}
   {$define CPU32}
+  {$ifndef CIL}
+    {$define WidgetVCLLike} // LCL included.
+    {$define WidgetVCLLikeOrKylix}
+    {$define WidgetVCL}
+    {$define VCL60plus}
+  {$endif}
 {$ENDIF}
 
 //Delphi 10
@@ -153,6 +182,12 @@
   {$define i386}
   {$define ENDIAN_LITTLE}
   {$define CPU32}
+  {$ifndef CIL}
+    {$define Wi dgetVCLLike} // LCL included.
+    {$define WidgetVCL}
+    {$define WidgetVCLLikeOrKylix}
+    {$define VCL60plus}
+  {$endif}
 {$ENDIF}
 
 //Delphi 11
@@ -175,6 +210,12 @@
   {$define i386}
   {$define ENDIAN_LITTLE}
   {$define CPU32}
+  {$ifndef CIL}
+    {$define WidgetVCLLike} // LCL included.
+    {$define WidgetVCLLikeOrKylix}
+    {$define WidgetVCL}
+    {$define VCL60plus}
+  {$endif}
 {$ENDIF}
 
 //Delphi.NET
@@ -189,6 +230,7 @@
   {$define i386}
   {$define ENDIAN_LITTLE}
   {$define CPU32}
+  {$define WidgetWinForms}
 {$ENDIF}
 
 // FPC (2+)
@@ -209,6 +251,13 @@
    {$DEFINE FPC_CircularBug}
    {$DEFINE NoRedeclare}
    {$DEFINE ByteCompareSets}
+  {$define WidgetVCLLike} // LCL included.
+  {$define WidgetVCLLikeOrKylix}
+  {$define UseTBitBtn} //use Bit Buttons instead of Buttons
+  {$define WidgetLCL}
+  //note that we may need further defines for widget types depending on
+  //what we do and what platforms we support in FPC.
+  //I'll let Marco think about that one.
 {$ENDIF}
 
 
@@ -223,21 +272,25 @@
   {$IFDEF CONDITIONALEXPRESSIONS}
     {$IF RTLVersion = 14.0}
       {$DEFINE KYLIX1}
+      {$DEFINE KYLIX}
       {$DEFINE KYLIX1ORABOVE}
     {$IFEND}
     {$IF RTLVersion = 14.2}
       {$DEFINE KYLIX2}
+      {$DEFINE KYLIX}
       {$DEFINE USEZLIBUNIT}
       {$DEFINE KYLIX1ORABOVE}
       {$DEFINE KYLIX2ORABOVE}
     {$IFEND}
     {$IF RTLVersion = 14.5}
       {$DEFINE KYLIX3}
+      {$DEFINE KYLIX}
       {$DEFINE USEZLIBUNIT}
       {$DEFINE KYLIX1ORABOVE}
       {$DEFINE KYLIX2ORABOVE}
       {$DEFINE KYLIX3ORABOVE}
     {$IFEND}
+    
   {$ENDIF}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL5ORABOVE}
@@ -248,5 +301,7 @@
   {$define i386}
   {$define ENDIAN_LITTLE}
   {$define CPU32}
+  {$define WidgetKylix}
+  {$define WidgetVCLLikeOrKylix}
 {$ENDIF}
 {$ENDIF}
