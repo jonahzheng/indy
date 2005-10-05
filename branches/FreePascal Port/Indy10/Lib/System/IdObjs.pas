@@ -160,7 +160,7 @@ const
   IdFromEnd         = TIdSeekOrigin(soEnd);
 
   fmCreate          = $FFFF;
-{$IFDEF KYLIX}
+  {$IFDEF KYLIX}
   fmOpenRead        = O_RDONLY;
   fmOpenWrite       = O_WRONLY;
   fmOpenReadWrite   = O_RDWR;
@@ -168,8 +168,8 @@ const
   fmShareExclusive  = $0010;
   fmShareDenyWrite  = $0020;
   fmShareDenyNone   = $0030;
-{$ENDIF}
-{$IFDEF FPC}
+  {$ENDIF}
+  {$IFDEF FPC}
 //for FPC, we just wnt to expose what's in sysutils so that this code
 //ismore portable tan usual.  Remember that this can be used on systems
 //such as OS/2, MacOS, Mac OS/X, Novell Netare, and who knows what else.
@@ -181,8 +181,8 @@ const
   fmShareExclusive  = sysutils.fmShareExclusive;
   fmShareDenyWrite  = sysutils.fmShareDenyWrite;
   fmShareDenyNone   = sysutils.fmShareDenyNone;
-{$ENDIF}
-{$IFDEF MSWINDOWS}
+  {$ELSE}
+     {$IFDEF WIN32}
   fmOpenRead        = $0000;
   fmOpenWrite       = $0001;
   fmOpenReadWrite   = $0002;
@@ -190,7 +190,8 @@ const
   fmShareExclusive  = $0010;
   fmShareDenyWrite  = $0020;
   fmShareDenyNone   = $0040;
-{$ENDIF}
+     {$ENDIF}
+  {$ENDIF}
 {$ENDIF}
 {$IFDEF DotNetDistro}
   tpIdLowest = tpIdNetLowest;
