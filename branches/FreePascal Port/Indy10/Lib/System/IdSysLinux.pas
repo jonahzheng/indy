@@ -19,6 +19,7 @@
 unit IdSysLinux;
 
 interface
+{$i IdCompilerDefines.inc}
 
 uses
   IdSysNativeVCL,
