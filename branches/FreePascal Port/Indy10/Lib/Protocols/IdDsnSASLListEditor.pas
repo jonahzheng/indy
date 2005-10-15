@@ -46,8 +46,8 @@
 unit IdDsnSASLListEditor;
 
 interface
-{$i IdCompilerDefines.inc}
-
+{$I IdCompilerDefines.inc}
+{$I IdDsgnCompilerDefines.inc}
 
 uses
   {$IFDEF VCL9ORABOVE}

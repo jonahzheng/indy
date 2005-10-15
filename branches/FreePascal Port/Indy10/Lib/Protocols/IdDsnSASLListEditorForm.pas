@@ -56,8 +56,8 @@
 unit IdDsnSASLListEditorForm;
 
 interface
-{$i IdCompilerDefines.inc}
-
+{$I IdCompilerDefines.inc}
+{$I IdDsgnCompilerDefines.inc}
 uses
   {$IFDEF WidgetWinforms}
   IdObjs,

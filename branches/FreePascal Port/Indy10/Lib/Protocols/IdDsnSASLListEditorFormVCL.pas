@@ -56,8 +56,8 @@
 unit IdDsnSASLListEditorFormVCL;
 
 interface
-{$i IdCompilerDefines.inc}
-
+{$I IdCompilerDefines.inc}
+{$I IdDsgnCompilerDefines.inc}
 uses
   {$IFDEF WidgetKylix}
   QControls, QForms, QStdCtrls, QButtons, QExtCtrls, QActnList, QGraphics,
