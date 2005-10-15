@@ -43,7 +43,7 @@ uses
     IdSysNativeVCL,
     IdSysWin32;
     {$ELSE}
-      {$IFDEF Linux}
+      {$IFDEF Unix} // Linux adds so little....
       IdSysLinux;
       {$ELSE}
         {$IFDEF DOTNET}
@@ -63,7 +63,7 @@ type
     {$IFDEF MSWindows}
   Sys = TIdSysWin32;
     {$ELSE}
-      {$IFDEF Linux}
+      {$IFDEF Unix} // linux unit current adds nothing
   Sys = TIdSysLinux;
       {$ELSE}
         {$IFDEF DOTNET}
