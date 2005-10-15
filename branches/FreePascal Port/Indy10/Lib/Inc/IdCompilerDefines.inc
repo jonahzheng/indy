@@ -204,6 +204,14 @@
 
 {$IFDEF FPC}
   {$MODE Delphi}
+  {$IFDEF UNIX}
+     {$IFDEF LINUX}
+        {$DEFINE USELIBC}       // linux can also usebaseunix
+     {$ELSE}
+        {$DEFINE USEBASEUNIX}
+     {$ENDIF}
+  {$ENDIF}
+  {$ENDIF}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL5ORABOVE}
   {$DEFINE VCL6ORABOVE}
@@ -228,6 +236,7 @@
 //and Kylix 1 does not have CompilerVersion defined at all.
 {$IFNDEF FPC}
 {$IFDEF LINUX}
+  {$DEFINE USELIBC}
   {$DEFINE UNIX}
   {$IFDEF CONDITIONALEXPRESSIONS}
     {$IF RTLVersion = 14.0}
