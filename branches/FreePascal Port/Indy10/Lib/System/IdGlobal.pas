@@ -1108,6 +1108,17 @@ function iif(ATest: Boolean; const ATrue: string; const AFalse: string = ''): st
 function iif(ATest: Boolean; const ATrue: Boolean; const AFalse: Boolean): Boolean; overload;
 function InMainThread: Boolean;
 function IPv6AddressToStr(const AValue: TIdIPv6Address): string;
+
+//Note that there is NO need for Big Endian byte order functions because
+//that's done through HostToNetwork byte order functions.
+function HostToLittleEndian(const AValue : Word) : Word; overload;
+function HostToLittleEndian(const AValue : Cardinal): Cardinal; overload;
+function HostToLittleEndian(const AValue : Integer): Integer; overload;
+
+function LittleEndianToHost(const AValue : Word) : Word; overload;
+function LittleEndianToHost(const AValue : Cardinal): Cardinal; overload;
+function LittleEndianToHost(const AValue : Integer): Integer; overload;
+
 procedure WriteMemoryStreamToStream(Src: TIdMemoryStream; Dest: TIdStream; Count: int64);
 {$IFNDEF DotNetExclude}
 function IsCurrentThread(AThread: TIdNativeThread): boolean;
@@ -1173,6 +1184,111 @@ var
   GIdPorts: TList;
 {$ENDIF}
 
+{Little Endian Byte order functions from:
+
+From: http://community.borland.com/article/0,1410,16854,00.html
+
+
+Big-endian and little-endian formated integers - by Borland Developer Support Staff
+
+Note that I will NOT do big Endian functions because the stacks can handle that
+with HostToNetwork and NetworkToHost functions.
+
+You should use these functions for writing data that sent and received in Little
+Endian Form.  Do NOT assume endianness of what's written.  It can work in unpredictable
+ways on other architectures.
+}
+function HostToLittleEndian(const AValue : Word) : Word;
+begin
+  {$ifdef DOTNET}
+  //I think that is Little ENdian but I'm not completely sure
+    Result := Avalue;
+  {$else}
+   {$ifdef ENDIAN_LITTLE}
+     result := AValue;
+   {$endif}
+   {$ifdef ENDIAN_BIG}
+   result := swap(AValue);
+   {$endif}
+  {$endif}
+end;
+
+function HostToLittleEndian(const AValue : Cardinal) : Cardinal;
+begin
+  {$ifdef DOTNET}
+  //I think that is Little ENdian but I'm not completely sure
+    Result := AValue;
+  {$else}
+   {$ifdef ENDIAN_LITTLE}
+     result := AValue;
+   {$endif}
+   {$ifdef ENDIAN_BIG}
+     result := swap(AValue shr 16) or
+           (longint(swap(AValue and $ffff)) shl 16);
+   {$endif}
+  {$endif}
+end;
+
+function HostToLittleEndian(const AValue : Integer) : Integer;
+begin
+  {$ifdef DOTNET}
+  //I think that is Little ENdian but I'm not completely sure
+    Result := Avalue;
+  {$else}
+   {$ifdef ENDIAN_LITTLE}
+     Result := AValue;
+   {$endif}
+   {$ifdef ENDIAN_BIG}
+     result := swap(AValue);
+   {$endif}
+  {$endif}
+end;
+
+function LittleEndianToHost(const AValue : Word) : Word;
+begin
+  {$ifdef DOTNET}
+  //I think that is Little ENdian but I'm not completely sure
+    Result := AValue;
+  {$else}
+   {$ifdef ENDIAN_LITTLE}
+     Result := AValue;
+   {$endif}
+   {$ifdef ENDIAN_BIG}
+    result := swap(AValue);
+   {$endif}
+  {$endif}
+end;
+
+function LittleEndianToHost(const AValue : Cardinal): Cardinal;
+begin
+  {$ifdef DOTNET}
+  //I think that is Little ENdian but I'm not completely sure
+    Result := AValue;
+  {$else}
+   {$ifdef ENDIAN_LITTLE}
+    Result := AValue;
+   {$endif}
+   {$ifdef ENDIAN_BIG}
+     result := swap(AValue shr 16) or
+           (longint(swap(AValue and $ffff)) shl 16);
+   {$endif}
+  {$endif}
+end;
+
+function LittleEndianToHost(const AValue : Integer): Integer;
+begin
+  {$ifdef DOTNET}
+  //I think that is Little ENdian but I'm not completely sure
+    Result := Avalue;
+  {$else}
+   {$ifdef ENDIAN_LITTLE}
+    Result := Avalue;
+   {$endif}
+   {$ifdef ENDIAN_BIG}
+     Result := Swap(AValue);
+   {$endif}
+  {$endif}
+end;
 
 procedure FillBytes(var VBytes : TIdBytes; const ACount : Integer; const AValue : Byte);
 begin
@@ -2407,7 +2523,7 @@ begin
   {$ENDIF}
   {$IFDEF FPC}
     AThread.Priority := APriority;
-  {$ELS}
+  {$ELSE}
     {$IFDEF MSWINDOWS}
     AThread.Priority := APriority;
     {$ENDIF}
