@@ -89,42 +89,42 @@ interface
 {This should be the only unit except OS Stack units that reference
 Winsock or lnxsock}
 uses
- {$IFDEF FPC}
+ {$IFDEF DotNet}
+  System.Net.Sockets;
+ {$ENDIF}
  //TODO:  I'm not really sure how other platforms are supported with asockets header
  //Do I use the sockets unit or do something totally different for each platform
-   {$IFNDEF MSWINDOWS}
-   sockets
-   {$ENDIF}
-   {$ifdef os2}
-   , pmwsock;
+   {$ifdef win32}
+   IdWship6, //for some constants that supplement IdWinsock
+   IdWinsock2;
+   {$endif}
+    {$ifdef os2}
+    pmwsock;
    {$endif}
    {$ifdef netware_clib}
-   , winsock; //not sure if this is correct
+    winsock; //not sure if this is correct
    {$endif}
    {$ifdef netware_libc}
-   , winsock;  //not sure if this is correct
+    winsock;  //not sure if this is correct
    {$endif}
    {$ifdef MacOS}
    {$endif}
    {$ifdef Unix}
-   , libc;
+     {$ifdef Kylix}
+     libc;
+     {$else}
+     libc;
+     //Maro may want to change the socket interface unit
+     //so we don't use the libc header.
+     {$endif}
    {$endif}
 
 
 
- {$ENDIF}
- {$IFDEF KYLIX}
-  Libc;
- {$ENDIF}
- {$IFDEF MSWINDOWS}
- IdWship6, //for some constants that supplement IdWinsock
-  IdWinsock2;
- {$ENDIF}
- {$IFDEF DotNet}   
-  System.Net.Sockets;
- {$ENDIF}
-
 type
+  {$IFDEF UNIIX}
+  TSocket =
+  {$ENDIF}
   TIdStackSocketHandle =
     {$IFDEF DOTNET}
       Socket;
@@ -151,7 +151,7 @@ const
      Id_IP_ADD_MEMBERSHIP =   System.Net.Sockets.SocketOptionName.AddMembership;
       Id_IP_DROP_MEMBERSHIP = System.Net.Sockets.SocketOptionName.DropMembership;
   {$ENDIF}
-  {$IFDEF LINUX}
+  {$IFDEF UNIX}
 
     Id_IPV6_UNICAST_HOPS = IPV6_UNICAST_HOPS;
     Id_IPV6_MULTICAST_IF = IPV6_MULTICAST_IF;

@@ -892,7 +892,7 @@ procedure TIdStackDotNet.WriteChecksum(s: TIdStackSocketHandle;
 begin
   if AIPVersion = Id_IPv4 then
   begin
-    CopyTIdWord(CalcCheckSum(VBuffer),VBuffer,AOffset);
+    CopyTIdWord(HostToLittleEndian(CalcCheckSum(VBuffer)),VBuffer,AOffset);
   end
   else
   begin

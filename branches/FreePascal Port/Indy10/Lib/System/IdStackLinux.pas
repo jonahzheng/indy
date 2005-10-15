@@ -1162,7 +1162,7 @@ procedure TIdStackLinux.WriteChecksum(s: TIdStackSocketHandle;
   const APort: TIdPort; const AIPVersion: TIdIPVersion);
 begin
   case AIPVersion of
-    Id_IPv4 : CopyTIdWord(CalcCheckSum(VBuffer),VBuffer,AOffset);
+    Id_IPv4 : CopyTIdWord(HostToLittleEndian(CalcCheckSum(VBuffer)),VBuffer,AOffset);
     Id_IPv6 : WriteChecksumIPv6(s,VBuffer, AOffset, AIP, APort);
   else
     IPVersionUnsupported;

@@ -377,7 +377,7 @@ uses
   //done this way so we can have a separate stack for FPC under Unix systems
   {$IFDEF UNIX}
     {$IFDEF KYLIX}   IdStackLinux,
-    {$ELSE}  IdStackLinux,
+    {$ELSE}  IdStackUnix,
     {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32} IdStackWindows, {$ENDIF}
@@ -841,7 +841,7 @@ initialization
      {$IFDEF KYLIX}
       TIdStackLinux;
      {$ELSE}
-      TIdStackLinux;
+      TIdStackUnix;
      {$ENDIF}
    {$ENDIF}
 
