@@ -67,6 +67,8 @@ unit IdDsnPropEdBinding;
 
 interface
  {$I IdCompilerDefines.inc}
+ {$I IdDsgnCompilerDefines.inc}
+ 
 {$IFDEF WidgetWinForms}
 {$R 'IdDsnPropEdBindingNET.TIdDsnPropEdBindingNET.resources' 'IdDsnPropEdBindingNET.resx'}
 {$ENDIF}

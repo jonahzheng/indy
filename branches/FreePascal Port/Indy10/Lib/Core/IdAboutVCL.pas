@@ -2,6 +2,7 @@ unit IdAboutVCL;
 
 interface
 {$I IdCompilerDefines.inc}
+{$I IdDsgnCompilerDefines.inc}
 uses
 {$ifdef WidgetKylix}
   QStdCtrls, QForms, QExtCtrls, QControls, QComCtrls, QGraphics,  Qt,

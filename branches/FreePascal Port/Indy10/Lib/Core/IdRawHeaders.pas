@@ -812,9 +812,9 @@ begin
   begin
     SetLength(VBytes,VIndex+4);
   end;
-  CopyTIdWord(Fs_w1,VBytes,VIndex);
+  CopyTIdWord(HostToLittleEndian(Fs_w1),VBytes,VIndex);
   inc(VIndex,2);
-  CopyTIdWord(Fs_w2,VBytes,VIndex);
+  CopyTIdWord(HostToLittleEndian(Fs_w2),VBytes,VIndex);
   inc(VIndex,2);
 end;
 
@@ -837,9 +837,9 @@ begin
   begin
     SetLength(VBytes,VIndex+4);
   end;
-  CopyTIdWord(Fid,VBytes,VIndex);
+  CopyTIdWord(HostToLittleEndian(Fid),VBytes,VIndex);
   inc(VIndex,2);
-  CopyTIdWord(seq,VBytes,VIndex);
+  CopyTIdWord(HostToLittleEndian(seq),VBytes,VIndex);
   inc(VIndex,2);
 end;
 
@@ -862,9 +862,9 @@ begin
   begin
     SetLength(VBytes,VIndex+4);
   end;
-  CopyTIdWord(Fpad,VBytes,VIndex);
+  CopyTIdWord(HostToLittleEndian(Fpad),VBytes,VIndex);
   inc(VIndex,2);
-  CopyTIdWord(Fmtu,VBytes,VIndex);
+  CopyTIdWord(HostToLittleEndian(Fmtu),VBytes,VIndex);
   inc(VIndex,2);
 end;
 
@@ -894,11 +894,11 @@ begin
   begin
     SetLength(VBytes,VIndex+12);
   end;
-  CopyTIdWord(Fotime,VBytes,VIndex);        // time message was sent, to calc roundtrip time
+  CopyTIdWord(HostToLittleEndian(Fotime),VBytes,VIndex);        // time message was sent, to calc roundtrip time
   inc(VIndex,4);
-  CopyTIdWord(  Frtime,VBytes,VIndex);
+  CopyTIdWord(HostToLittleEndian(Frtime),VBytes,VIndex);
   inc(VIndex,4);
-  CopyTIdWord(  Fttime,VBytes,VIndex);
+  CopyTIdWord(HostToLittleEndian(Fttime),VBytes,VIndex);
   inc(VIndex,4);
 end;
 
@@ -949,7 +949,7 @@ end;
 
 procedure TIdicmp_hun.Setgateway_s_w2(const Value: word);
 begin
-  CopyTIdWord(Value,FBuffer,2);
+  CopyTIdWord(HostToLittleEndian(Value),FBuffer,2);
 end;
 
 function TIdicmp_hun.Getgateway_s_b1: Byte;
@@ -1820,7 +1820,7 @@ begin
   Inc(VIndex);
   VBytes[VIndex] := FIcmp6_code;
   Inc(VIndex);
-  CopyTIdWord(Ficmp6_cksum,VBytes,VIndex);
+  CopyTIdWord(HostToLittleEndian(Ficmp6_cksum),VBytes,VIndex);
   Inc(VIndex,2);
 
   Fdata.WriteStruct(VBytes,VIndex);

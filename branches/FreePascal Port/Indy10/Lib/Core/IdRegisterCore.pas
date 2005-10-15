@@ -139,6 +139,7 @@ uses
 implementation
 
 {$I IdCompilerDefines.inc}
+{$I IdDsgnCompilerDefines.inc}
 
 uses
   {$IFDEF FPC}

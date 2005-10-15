@@ -2,6 +2,7 @@ unit IdAbout;
 
 interface
 {$I IdCompilerDefines.inc}
+{$I IdDsgnCompilerDefines.inc}
 uses
   {$IFDEF WidgetWinForms}
   IdAboutDotNET;

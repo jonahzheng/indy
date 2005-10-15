@@ -66,12 +66,16 @@
 unit IdDsnPropEdBindingVCL;
 
 interface
- {$I IdCompilerDefines.inc}
+
+{$I IdCompilerDefines.inc}
+{$I IdDsgnCompilerDefines.inc}
+
 uses
 
 {$ifdef WidgetKylix}
   QActnList, QStdCtrls, QForms, QExtCtrls, QControls, QComCtrls, QGraphics,  Qt,
-  {$ELSE}
+{$endif}
+{$ifdef WidgetVCLLike}
   ActnList, StdCtrls, Buttons, ExtCtrls, Graphics, Controls, ComCtrls, Forms,
   {$ENDIF}
 {$ifdef Delphi6up}
@@ -109,7 +113,7 @@ manner than what I described.
 }
 type
   TIdDsnPropEdBindingVCL = class(TForm)
-  {$IFDEF UseTBitBtn}
+   {$IFDEF UseTBitBtn}
     btnOk: TBitBtn;
     btnCancel: TBitBtn;
   {$ELSE}
@@ -332,7 +336,7 @@ begin
 
   rdoBindingType := TRadioGroup.Create(Self);
   {$IFDEF UseTBitBtn}
-  btnOk := TBitBtn.Create(Self);
+  FbbtnOk := TBitBtn.Create(Self);
   btnCancel := TBitBtn.Create(Self);
   {$ELSE}
   btnOk := TButton.Create(Self);

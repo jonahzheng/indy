@@ -556,7 +556,7 @@ begin
 
   // copy payload
 
-      CopyTIdWord(APayload,VBuffer, Id_IGMP_HSIZE);
+      CopyTIdWord(HostToLittleEndian(APayload),VBuffer, Id_IGMP_HSIZE);
 
 
     // copy header

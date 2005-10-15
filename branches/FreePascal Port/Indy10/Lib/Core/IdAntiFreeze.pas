@@ -59,7 +59,7 @@ Because it links to Forms:
 interface
 
 {$I IdCompilerDefines.inc}
-
+{$I IdDsgnCompilerDefines.inc}
 uses
   Classes,
   IdAntiFreezeBase,

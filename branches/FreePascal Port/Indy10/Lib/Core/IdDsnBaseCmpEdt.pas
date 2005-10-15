@@ -29,7 +29,7 @@
 unit IdDsnBaseCmpEdt;
 
 {$I IdCompilerDefines.inc}
-
+{$I IdDsgnCompilerDefines.inc}
 interface
 
 uses
