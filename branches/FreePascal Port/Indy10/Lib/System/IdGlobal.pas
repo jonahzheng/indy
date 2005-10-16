@@ -670,6 +670,9 @@ uses
   SyncObjs,
   Classes,
   {$ENDIF}
+  {$IFDEF UseBaseUnix}
+   BaseUnix, Unix, Sockets, UnixType,
+  {$ENDIF}
   IdException,
   IdSys, IdObjs;
 
@@ -810,7 +813,7 @@ type
   Short = System.Int16;
   {$ENDIF}
 
-  {$IFDEF LINUX}
+  {$IFDEF UNIX}
   Short = Smallint;  //Only needed for ToBytes(Short) and BytesToShort
   {$ENDIF}
   {$IFNDEF DOTNET}
@@ -851,8 +854,12 @@ type
   TIdThreadPriority = -20..19;
   {$ENDIF}
   {$IFDEF FPC}
-    {$IFDEF LINUX}
+    {$IFDEF UseLibc}
     TIdPID = Integer;
+    TIdThreadPriority = TThreadPriority;
+    {$ENDIF}
+    {$IFDEF UseBaseUnix}
+    TidPID = TPid;
     TIdThreadPriority = TThreadPriority;
     {$ENDIF}
   {$ENDIF}
@@ -940,7 +947,7 @@ type
   end;
 
 const
-  {$IFDEF Linux}
+  {$IFDEF UNIX}
   GOSType = otLinux;
   GPathDelim = '/'; {do not localize}
   INFINITE = LongWord($FFFFFFFF);     { Infinite timeout }
@@ -1175,7 +1182,7 @@ var
 implementation
 
 uses
-  {$IFDEF LINUX} Libc, {$ENDIF}
+  {$IFDEF UseLibc} Libc, {$ENDIF}
   IdResourceStrings,
   IdStream;
 
@@ -1675,8 +1682,11 @@ end;
 
 function CurrentProcessId: TIdPID;
 begin
-  {$IFDEF LINUX}
+  {$IFDEF UseLibC}
   Result := getpid;
+  {$ENDIF}
+  {$IFDEF UseBaseUnix}
+  Result := fpgetpid;
   {$ENDIF}
   {$IFDEF MSWINDOWS}
   Result := GetCurrentProcessID;
@@ -1747,8 +1757,8 @@ end;
 
 function GetThreadHandle(AThread: TIdNativeThread): THandle;
 begin
-  {$IFDEF LINUX}
-  Result := AThread.ThreadID;
+  {$IFDEF UNIX}
+  Result := AThread.ThreadID; // Works both in UseBaseUnix and UseLibc
   {$ENDIF}
   {$IFDEF MSWINDOWS}
   Result := AThread.Handle;
@@ -1758,12 +1768,17 @@ begin
   {$ENDIF}
 end;
 
-{$IFDEF LINUX}
+{$IFDEF Unix}
 function Ticks: Cardinal;
-var                          
+var
   tv: timeval;
 begin
+  {$IFDEF UseBaseUnix}
+   fpgettimeofday(@tv,nil);
+  {$ENDIF}
+  {$IFDEF UseLibc}
   gettimeofday(tv, nil);
+  {$endif}
   {$RANGECHECKS OFF}
   Result := int64(tv.tv_sec) * 1000 + tv.tv_usec div 1000;
   {
@@ -1829,7 +1844,7 @@ end;
 function ServicesFilePath: string;
 var sLocation: string;
 begin
-    {$IFDEF LINUX}
+    {$IFDEF Unix}
     sLocation := '/etc/';  // assume Berkeley standard placement   {do not localize}
     {$ENDIF}
     {$IFDEF MSWINDOWS}
@@ -2512,7 +2527,7 @@ end;
 
 procedure SetThreadPriority(AThread: TIdNativeThread; const APriority: TIdThreadPriority; const APolicy: Integer = -MaxInt);
 begin
-  {$IFDEF KYLIX}
+  {$IFDEF UseLibc}
   // Linux only allows root to adjust thread priorities, so we just ingnore this call in Linux?
   // actually, why not allow it if root
   // and also allow setting *down* threadpriority (anyone can do that)
@@ -2521,6 +2536,16 @@ begin
     setpriority(PRIO_PROCESS, 0, APriority);
   end;
   {$ENDIF}
+   {$IFDEF UseBaseUnix}
+  // Linux only allows root to adjust thread priorities, so we just ingnore this call in Linux?
+  // actually, why not allow it if root
+  // and also allow setting *down* threadpriority (anyone can do that)
+  // note that priority is called "niceness" and positive is lower priority
+  if (fpgetpriority(PRIO_PROCESS, 0) < cint(APriority)) or (fpgeteuid = 0) then begin
+    fpsetpriority(PRIO_PROCESS, 0, cint(APriority));
+  end;
+  {$ENDIF}
+
   {$IFDEF FPC}
     AThread.Priority := APriority;
   {$ELSE}
@@ -2531,7 +2556,8 @@ begin
 end;
 
 procedure Sleep(ATime: cardinal);
-{$IFDEF LINUX}
+// *nix: Is there are reason for not using nanosleep?
+{$IFDEF UseLibc}
 var
   LTime: TTimeVal;
 begin
@@ -2543,6 +2569,20 @@ begin
   Libc.Select(0, nil, nil, nil, @LTime);
 end;
 {$ENDIF}
+{$IFDEF UseBaseUnix}
+var
+  LTime: TTimeVal;
+begin
+  // what if the user just calls sleep? without doing anything...
+  // cannot use GStack.WSSelectRead(nil, ATime)
+  // since no readsocketlist exists to get the fdset
+
+  LTime.tv_sec := ATime div 1000;
+  LTime.tv_usec := (ATime mod 1000) * 1000;
+  fpSelect(0, nil, nil, nil, @LTime);
+end;
+{$ENDIF}
+
 {$IFDEF MSWINDOWS}
 begin
   Windows.Sleep(ATime);

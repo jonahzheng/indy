@@ -110,11 +110,11 @@ uses
    {$ifdef MacOS}
    {$endif}
    {$ifdef Unix}
-     {$ifdef Kylix}
+     {$ifdef UseLibc}
      libc;
      {$else}
-     libc;
-     //Maro may want to change the socket interface unit
+     Sockets,BaseUnix,Unix; // FPC "native" Unix units.
+     //Marco may want to change the socket interface unit
      //so we don't use the libc header.
      {$endif}
    {$endif}
@@ -122,8 +122,10 @@ uses
 
 
 type
-  {$IFDEF UNIIX}
-  TSocket =
+  {$IFDEF UseBaseUnix}
+   TSocket = cint;  // TSocket is afaik not POSIX, so we have to add it
+                    // (Socket() returns a C int according to opengroup)
+
   {$ENDIF}
   TIdStackSocketHandle =
     {$IFDEF DOTNET}
@@ -152,13 +154,19 @@ const
       Id_IP_DROP_MEMBERSHIP = System.Net.Sockets.SocketOptionName.DropMembership;
   {$ENDIF}
   {$IFDEF UNIX}
-
     Id_IPV6_UNICAST_HOPS = IPV6_UNICAST_HOPS;
     Id_IPV6_MULTICAST_IF = IPV6_MULTICAST_IF;
     Id_IPV6_MULTICAST_HOPS = IPV6_MULTICAST_HOPS;
     Id_IPV6_MULTICAST_LOOP = IPV6_MULTICAST_LOOP;
+    {$IFDEF LINUX}
+    // These are probably leftovers from a non-final IPV6 standard
+    // in Linux. They only seem to exist in Linux.
+    // Probably the JOIN_GROUP ones replaced these,
+    // but they have different numbers in Linux, and possibly
+    // also different behaviour?
     Id_IPV6_ADD_MEMBERSHIP = IPV6_ADD_MEMBERSHIP;
     Id_IPV6_DROP_MEMBERSHIP = IPV6_DROP_MEMBERSHIP;
+    {$ENDIF}
     Id_IPV6_PKTINFO = IPV6_PKTINFO;
     Id_IPV6_HOPLIMIT =  IPV6_HOPLIMIT;
     Id_IP_MULTICAST_TTL = IP_MULTICAST_TTL; // TODO integrate into IdStackConsts
@@ -181,7 +189,7 @@ const
     Id_IP_ADD_MEMBERSHIP = 12; // TODO integrate into IdStackConsts FIX ERROR in IdWinsock
     Id_IP_DROP_MEMBERSHIP = 13; // TODO integrate into IdStackConsts FIX ERROR in IdWinsock
   {$ENDIF}
-  
+
 
 (*
   There seems to be an error in the correct values of multicast values in IdWinsock
@@ -198,7 +206,7 @@ const
   ip_drop_membership  = 13; //* drop an IP group membership */
   ip_dontfragment     = 14; //* don't fragment IP datagrams */    {Do not Localize}
 *)
-  {$IFDEF LINUX}
+  {$IFDEF UNIX}
   TCP_NODELAY = 1;
   {$ENDIF}
 
@@ -211,6 +219,13 @@ const
   Id_PF_INET4 = ProtocolFamily.InterNetwork;
   Id_PF_INET6 = ProtocolFamily.InterNetworkV6;
   {$endif}
+
+  {$IFDEF UseBaseUnix}
+    // These constants are actually WinSock specific, not std TCP/IP
+    // FPC doesn't emulate WinSock.
+    INVALID_SOCKET = -1;
+    SOCKET_ERROR   = -1;
+  {$ENDIF}
 
   // Socket Type
 type
@@ -236,7 +251,7 @@ type
   TIdSocketProtocol     = {$IFDEF DotNet} ProtocolType; {$ELSE} Integer; {$ENDIF}
   TIdSocketOption       = {$IFDEF DotNet} SocketOptionName; {$ELSE} Integer; {$ENDIF}
   TIdSocketOptionLevel  = {$IFDEF DotNet} SocketOptionLevel; {$ELSE} Integer; {$ENDIF}
-  
+
 const
   {$ifndef DOTNET}
    {$ifdef os2}
@@ -381,7 +396,7 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
   Id_TCP_NODELAY = TCP_NODELAY;
   Id_INVALID_SOCKET = INVALID_SOCKET;
   Id_SOCKET_ERROR = SOCKET_ERROR;
-  
+
   Id_SOCKETOPTIONLEVEL_TCP = Id_IPPROTO_TCP; // BGO: rename to Id_SOL_TCP
   {$else}
   Id_TCP_NODELAY = SocketOptionName.NoDelay;
@@ -389,7 +404,7 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
   Id_SOCKETOPTIONLEVEL_TCP = SocketOptionLevel.TCP; // BGO: rename to Id_SOL_TCP
   {$endif}
   //
-  {$IFDEF LINUX}
+  {$IFDEF UseLibC}
   // Shutdown Options
   Id_SD_Recv = SHUT_RD;
   Id_SD_Send = SHUT_WR;
@@ -434,6 +449,52 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
   Id_WSAEHOSTDOWN = EHOSTDOWN;
   Id_WSAEHOSTUNREACH = EHOSTUNREACH;
   Id_WSAENOTEMPTY = ENOTEMPTY;
+  {$endif}
+  {$IFDEF UseBaseUnix}
+  // Shutdown Options
+  Id_SD_Recv = SHUT_RD;
+  Id_SD_Send = SHUT_WR;
+  Id_SD_Both = SHUT_RDWR;
+  //
+  Id_WSAEINTR = ESysEINTR;
+  Id_WSAEBADF = ESysEBADF;
+  Id_WSAEACCES = ESysEACCES;
+  Id_WSAEFAULT = ESysEFAULT;
+  Id_WSAEINVAL = ESysEINVAL;
+  Id_WSAEMFILE = ESysEMFILE;
+  Id_WSAEWOULDBLOCK = ESysEWOULDBLOCK;
+  Id_WSAEINPROGRESS = ESysEINPROGRESS;
+  Id_WSAEALREADY = ESysEALREADY;
+  Id_WSAENOTSOCK = ESysENOTSOCK;
+  Id_WSAEDESTADDRREQ = ESysEDESTADDRREQ;
+  Id_WSAEMSGSIZE = ESysEMSGSIZE;
+  Id_WSAEPROTOTYPE = ESysEPROTOTYPE;
+  Id_WSAENOPROTOOPT = ESysENOPROTOOPT;
+  Id_WSAEPROTONOSUPPORT = ESysEPROTONOSUPPORT;
+  Id_WSAESOCKTNOSUPPORT = ESysESOCKTNOSUPPORT;
+
+  Id_WSAEOPNOTSUPP = ESysEOPNOTSUPP;
+  Id_WSAEPFNOSUPPORT = ESysEPFNOSUPPORT;
+  Id_WSAEAFNOSUPPORT = ESysEAFNOSUPPORT;
+  Id_WSAEADDRINUSE = ESysEADDRINUSE;
+  Id_WSAEADDRNOTAVAIL = ESysEADDRNOTAVAIL;
+  Id_WSAENETDOWN = ESysENETDOWN;
+  Id_WSAENETUNREACH = ESysENETUNREACH;
+  Id_WSAENETRESET = ESysENETRESET;
+  Id_WSAECONNABORTED = ESysECONNABORTED;
+  Id_WSAECONNRESET = ESysECONNRESET;
+  Id_WSAENOBUFS = ESysENOBUFS;
+  Id_WSAEISCONN = ESysEISCONN;
+  Id_WSAENOTCONN = ESysENOTCONN;
+  Id_WSAESHUTDOWN = ESysESHUTDOWN;
+  Id_WSAETOOMANYREFS = ESysETOOMANYREFS;
+  Id_WSAETIMEDOUT = ESysETIMEDOUT;
+  Id_WSAECONNREFUSED = ESysECONNREFUSED;
+  Id_WSAELOOP = ESysELOOP;
+  Id_WSAENAMETOOLONG = ESysENAMETOOLONG;
+  Id_WSAEHOSTDOWN = ESysEHOSTDOWN;
+  Id_WSAEHOSTUNREACH = ESysEHOSTUNREACH;
+  Id_WSAENOTEMPTY = ESysENOTEMPTY;
   {$endif}
   {$ifdef MSWINDOWS}
   // Shutdown Options
@@ -691,7 +752,7 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
   Id_SD_Send = SocketShutdown.Send;
   Id_SD_Both = SocketShutdown.Both;
   {$endif}
-                       
+
 implementation
 
 end.
