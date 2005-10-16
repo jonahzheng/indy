@@ -71,7 +71,8 @@ interface
 
 uses
   Classes,
-  Libc,
+  sockets,
+  baseunix,
   IdStack,
   IdStackConsts,
   IdObjs,
@@ -79,7 +80,7 @@ uses
   IdStackBSDBase;
 
 type
-
+  Psockaddr = ^sockaddr;
   TIdSocketListUnix = class (TIdSocketList)
   protected
     FCount: integer;
@@ -212,18 +213,30 @@ type
 
 implementation
 uses
+  netdb,
+  unix,
   IdResourceStrings,
 //  IdResourceStringsCore,  //Needed for RSResolveError
   IdException,
 //  IdExceptionCore, //Needed for EIdBlockingNotSupported
   SysUtils;
 
-type
-  psockaddr_in6 = ^sockaddr_in6;
+//from: netdbh.inc, we can not include it with the I derrective and netdb.pas
+//does not expose it.
+const
+  EAI_SYSTEM = -(11);
+
+const
+  FD_SETSIZE = FD_MAXFDSET;
+  __FD_SETSIZE = FD_MAXFDSET;
 const
   Id_MSG_NOSIGNAL = MSG_NOSIGNAL;
-  Id_WSAEPIPE = EPIPE;
+  Id_WSAEPIPE = ESysEPIPE;
+  INADDR_ANY = 0;
 
+const
+  SOCKET_ERROR = -1;
+  
 constructor TIdStackUnix.Create;
 begin
   inherited Create;
@@ -241,23 +254,23 @@ end;
 
 procedure TIdStackUnix.SetLastError(Const AError : Integer);
 begin
-  __errno_location^ := AError;
+  errno := AError;
 end;
 
 function TIdStackUnix.Accept(ASocket: TIdStackSocketHandle;
  var VIP: string; var VPort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): TIdStackSocketHandle;
 var
-  LN: Cardinal;
+  LA : LongInt;
   LAddr: sockaddr_in6;
 begin
-  LN := SizeOf(LAddr);
-  Result := Libc.accept(ASocket, PSockAddr(@LAddr), @LN);
+  LA := SizeOf(LAddr);
+  Result := fpaccept(ASocket, @LAddr, @LN);  //calls prefixed by fp to avoid clashing with libc
   if Result <> SOCKET_ERROR then begin
     VIP := TranslateTInAddrToString(TIdIn6Addr(LAddr.sin6_addr), AIPVersion);
     VPort := NToHs(LAddr.sin6_port);
   end else begin
-    if GetLastError = EBADF then begin
-      SetLastError(EINTR);
+    if GetLastError = ESysEBADF then begin
+      SetLastError(ESysEINTR);
     end;
   end;
 end;
@@ -278,7 +291,7 @@ begin
           TranslateStringToTInAddr(AIP, LAddr.sin_addr, Id_IPv4);
         end;
         LAddr.sin_port := HToNs(APort);
-        CheckForSocketError(Libc.Bind(ASocket, LAddr, SizeOf(LAddr)));
+        CheckForSocketError(fpBind(ASocket, @LAddr, SizeOf(LAddr)));
       end;
     Id_IPv6: begin
         FillChar(LAddr6, SizeOf(LAddr6), 0);
@@ -287,7 +300,7 @@ begin
           TranslateStringToTInAddr(AIP, LAddr6.sin6_addr, Id_IPv6);
         end;
         LAddr6.sin6_port := HToNs(APort);
-        CheckForSocketError(Libc.Bind(ASocket, Psockaddr(@LAddr6)^, SizeOf(LAddr6)));
+        CheckForSocketError(fpBind(ASocket, Psockaddr(@LAddr6), SizeOf(LAddr6)));
       end;
     else begin
       IPVersionUnsupported;
@@ -297,7 +310,7 @@ end;
 
 function TIdStackUnix.WSCloseSocket(ASocket: TIdStackSocketHandle): Integer;
 begin
-  Result := Libc.__close(ASocket);
+  Result := fpclose(ASocket);
 end;
 
 procedure TIdStackUnix.Connect(const ASocket: TIdStackSocketHandle;
@@ -312,7 +325,7 @@ begin
       LAddr.sin_family := Id_PF_INET4;
       TranslateStringToTInAddr(AIP, LAddr.sin_addr, Id_IPv4);
       LAddr.sin_port := HToNs(APort);
-      CheckForSocketError(Libc.Connect(ASocket, LAddr, SizeOf(LAddr)));
+      CheckForSocketError(fpConnect(ASocket, @LAddr, SizeOf(LAddr)));
     end;
     Id_IPv6: begin
       LAddr6.sin6_flowinfo := 0;
@@ -320,7 +333,7 @@ begin
       LAddr6.sin6_family := Id_PF_INET6;
       TranslateStringToTInAddr(AIP, LAddr6.sin6_addr, Id_IPv6);
       LAddr6.sin6_port := HToNs(APort);
-      CheckForSocketError(Libc.Connect(ASocket, Psockaddr(@LAddr6)^, SizeOf(LAddr6)));
+      CheckForSocketError(fpConnect(ASocket, Psockaddr(@LAddr6), SizeOf(LAddr6)));
     end;
     else begin
       IPVersionUnsupported;
@@ -331,87 +344,68 @@ end;
 function TIdStackUnix.HostByName(const AHostName: string;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string;
 var
-  Lpa: pchar;
-  Lsa: TInAddr;
-  LHost: PHostEnt;
-// ipv6
-  LHints: TAddressInfo;
-  {$IFDEF KYLIX}
-  LAddrInfo: PPAddressInfo;
-  {$ELSE}
-  LAddrInfo: PAddrInfo;
-  {$ENDIF}
-  LRetVal: integer;
+  LI4 : array of THostAddr;
+  LI6 : array of THostAddr6;
+  LRetVal : Integer;
 begin
   case AIPVersion of
-    Id_IPv4: begin
-      LHost := Libc.GethostByName(PChar(AHostName));
-      if (LHost <> nil) then begin
-        Lpa := LHost^.h_addr_list^;
-        Lsa.S_un_b.s_b1 := Ord(Lpa[0]);
-        Lsa.S_un_b.s_b2 := Ord(Lpa[1]);
-        Lsa.S_un_b.s_b3 := Ord(Lpa[2]);
-        Lsa.S_un_b.s_b4 := Ord(Lpa[3]);
-        Result := TranslateTInAddrToString(Lsa, Id_IPv4);
-      end else begin
-        //RaiseSocketError(h_errno);
-        RaiseLastSocketError;
+    ID_IPv4 :
+    begin
+      LRetVal := ResolveName(HostName,LI4);
+      if LRetVal<>0 then begin
+        if LRetVal = EAI_SYSTEM  then begin
+          RaiseLastOSError;
+        end else begin
+      //    raise EIdResolveError.CreateFmt(RSResolveError, [ahostname, gai_strerror(LRetVal), LRetVal]);
+        end;
       end;
+      Result := TranslateTInAddrToString(LI4[0],ID_IPV4);
     end;
-    Id_IPv6: begin
-      FillChar(LHints,sizeof(LHints), 0);
-      LHints.ai_family := IdIPFamily[AIPVersion];
-      LHints.ai_socktype := Integer(SOCK_STREAM);
-      LAddrInfo:=nil;
-      LRetVal := getaddrinfo(pchar(AHostName), nil, @LHints, @LAddrInfo);
+    ID_IPv6 :
+    begin
+      LRetVal :=  ResolveName6(HostName,LI6);
       if LRetVal<>0 then begin
         if LRetVal = EAI_SYSTEM then begin
           RaiseLastOSError;
         end else begin
-          raise EIdResolveError.CreateFmt(RSResolveError, [ahostname, gai_strerror(LRetVal), LRetVal]);
+          raise EIdResolveError.CreateFmt(RSResolveError, [ahostname, LRetVal]);
         end;
-      end else begin
-        result := TranslateTInAddrToString(LAddrInfo^.ai_addr^.sin_zero, Id_IPv6);
-        freeaddrinfo(LAddrInfo);
       end;
+      Result := TranslateTInAddrToString(LI6[0],ID_IPV6);
     end;
-    else
-      Result := ''; // avoid warning
-      IPVersionUnsupported;
   end;
 end;
 
+
 function TIdStackUnix.ReadHostName: string;
 begin
-  SetLength(Result, 250);
-  GetHostName(PChar(Result), Length(Result));
-  Result := String(PChar(Result));
+  Result := GetHostName;
 end;
 
 procedure TIdStackUnix.Listen(ASocket: TIdStackSocketHandle; ABackLog: Integer);
 begin
-  CheckForSocketError(Libc.Listen(ASocket, ABacklog));
+  CheckForSocketError(fpListen(ASocket, ABacklog));
 end;
 
 function TIdStackUnix.WSRecv(ASocket: TIdStackSocketHandle; var ABuffer;
   const ABufferLength, AFlags: Integer): Integer;
 begin
   //IdStackWindows is just: Result := Recv(ASocket, ABuffer, ABufferLength, AFlags);
-  Result := Recv(ASocket, ABuffer, ABufferLength, AFlags or Id_MSG_NOSIGNAL);
+  Result := fpRecv(ASocket, @ABuffer, ABufferLength, AFlags or Id_MSG_NOSIGNAL);
 end;
 
 function TIdStackUnix.RecvFrom(const ASocket: TIdStackSocketHandle;
   var VBuffer; const ALength, AFlags: Integer; var VIP: string;
   var VPort: TIdPort; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION ): Integer;
 var
-  LiSize: Cardinal;
+  LiSize: tsocklen;
   LAddr6: sockaddr_in6;
 begin
   case AIPVersion of
     Id_IPv4,
     Id_IPv6: begin
       LiSize := SizeOf(LAddr6);
-      Result := Libc.RecvFrom(ASocket, VBuffer, ALength, AFlags or Id_MSG_NOSIGNAL, PSockAddr(@LAddr6), @LiSize);
+      Result := fpRecvFrom(ASocket, @VBuffer, ALength, AFlags or Id_MSG_NOSIGNAL, PSockAddr(@LAddr6), @LiSize);
       VIP := TranslateTInAddrToString(LAddr6.sin6_addr, AIPVersion);
       VPort := NToHs(LAddr6.sin6_port);
     end;
@@ -521,7 +515,7 @@ function TIdStackUnix.WSSend(ASocket: TIdStackSocketHandle;
 begin
   //CC: Should Id_MSG_NOSIGNAL be included?
   //  Result := Send(ASocket, ABuffer, ABufferLength, AFlags or Id_MSG_NOSIGNAL);
-  Result := CheckForSocketError(Libc.send(ASocket, ABuffer, ABufferLength, AFlags));
+  Result := CheckForSocketError(fpsend(ASocket, @ABuffer, ABufferLength, AFlags));
 end;
 
 procedure TIdStackUnix.WSSendTo(ASocket: TIdStackSocketHandle;
@@ -540,11 +534,7 @@ begin
           TranslateStringToTInAddr(AIP, sin6_addr, AIPVersion);
           sin6_port := HToNs(APort);
         end;
-        {$IFDEF KYLIX}
-        LBytesOut := Libc.SendTo(ASocket, ABuffer, ABufferLength, AFlags or Id_MSG_NOSIGNAL, Psockaddr(@LAddr6)^, SizeOf(LAddr6));
-        {$ELSE}
-                LBytesOut := Libc.SendTo(ASocket, ABuffer, ABufferLength, AFlags or Id_MSG_NOSIGNAL, Psockaddr(@LAddr6), SizeOf(LAddr6));
-        {$ENDIF}
+         LBytesOut := fpSendTo(ASocket, @ABuffer, ABufferLength, AFlags or Id_MSG_NOSIGNAL, Psockaddr(@LAddr6), SizeOf(LAddr6));
       end;
     else begin
       LBytesOut := 0; // avoid warning
@@ -565,14 +555,14 @@ end;
 procedure TIdStackUnix.SetSocketOption(ASocket: TIdStackSocketHandle;
   ALevel:TIdSocketProtocol; AOptName: TIdSocketOption; AOptVal: Integer);
 begin
-  CheckForSocketError(SetSockOpt(ASocket, ALevel, AOptName, PChar(@AOptVal), SizeOf(AOptVal)));
+  CheckForSocketError(fpSetSockOpt(ASocket, ALevel, AOptName, PChar(@AOptVal), SizeOf(AOptVal)));
 end;
 
 procedure TIdStackUnix.SetSocketOption(
   const ASocket: TIdStackSocketHandle; const Alevel, Aoptname: Integer;
   Aoptval: PChar; const Aoptlen: Integer);
 begin
-  CheckForSocketError( setsockopt(ASocket,ALevel,Aoptname,Aoptval,Aoptlen ));
+  CheckForSocketError( fpsetsockopt(ASocket,ALevel,Aoptname,Aoptval,Aoptlen ));
 end;
 
 function TIdStackUnix.WSGetLastError: Integer;
@@ -587,7 +577,7 @@ end;
 function TIdStackUnix.WSSocket(AFamily, AStruct, AProtocol: Integer;
      const AOverlapped: Boolean = False): TIdStackSocketHandle; 
 begin
-  Result := Libc.socket(AFamily, AStruct, AProtocol);
+  Result := socket(AFamily, AStruct, AProtocol);
 end;
 
 function TIdStackUnix.GetLocalAddresses: TIdStrings;
@@ -601,7 +591,18 @@ begin
 end;
 
 function TIdStackUnix.WSGetServByName(const AServiceName: string): TIdPort;
-var
+var LS : TServiceEntry;
+begin
+  if GetServiceByName(AServiceName,'',LS) then
+  begin
+    Result := LS.Port;
+  end
+  else
+  begin
+    raise EIdInvalidServiceName.CreateFmt(RSInvalidServiceName, [AServiceName]);
+  end;
+end;
+{var
   Lps: PServEnt;
 begin
   Lps := GetServByName(PChar(AServiceName), nil);
@@ -616,10 +617,24 @@ begin
       end;
     end;
   end;
-end;
+end;   }
 
 function TIdStackUnix.WSGetServByPort(const APortNumber: TIdPort): TIdStrings;
-var
+var LS : TServiceEntry;
+begin
+  Result := TIdStringList.Create;
+  try
+    if GetServiceByPort(APortNumber,'',LS) then
+    begin
+      Result.Add( LS.Name);
+    end
+    else
+    begin
+    end;
+  finally
+  end;
+end;
+{var
   Lps: PServEnt;
   Li: Integer;
   Lp: array of PChar;
@@ -640,7 +655,7 @@ begin
   except
     Result.Free;
   end;
-end;
+end; }
 
 function TIdStackUnix.HostToNetwork(AValue: Word): Word;
 begin
@@ -693,28 +708,26 @@ begin
 end;
 
 procedure TIdStackUnix.PopulateLocalAddresses;
-type
-  TaPInAddr = Array[0..250] of PInAddr;
-  PaPInAddr = ^TaPInAddr;
-var
-  Li: Integer;
-  LAHost: PHostEnt;
-  LPAdrPtr: PaPInAddr;
+var LI : array of THostAddr;
+  i : Integer;
+  LHostName : String;
 begin
+  LHOstName := GetHostName;
+  if LHostName='' then begin
+  begin
+    CheckForSocketError(SOCKET_ERROR);
+  end;
   // this won't get IPv6 addresses as I didn't find a way
   // to enumerate IPv6 addresses on a linux machine
   FLocalAddresses.Clear;
-  LAHost := GetHostByName(PChar(HostName));
-  if LAHost = nil then begin
-    CheckForSocketError(SOCKET_ERROR);
-  end else begin
-    LPAdrPtr := PAPInAddr(LAHost^.h_addr_list);
-    Li := 0;
-    while LPAdrPtr^[Li] <> nil do begin
-      FLocalAddresses.Add(TranslateTInAddrToString(LPAdrPtr^[Li]^, Id_IPv4));
-      Inc(Li);
+  if ResolveName(LHostName,LI) = 0 then
+  begin
+    for i := Low(LI) to High(LI) do
+    begin
+      FLocalAddresses.Add(TranslateTInAddrToString(LI[i],Id_IPv4));
     end;
   end;
+end;
 end;
 
 function TIdStackUnix.GetLocalAddress: string;
@@ -724,14 +737,33 @@ end;
 
 function TIdStackUnix.HostByAddress(const AAddress: string;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string;
-var
-{$IFDEF KYLIX}
-  LHints: TAddressInfo;
-  LAddrInfo: PAddressInfo;
-{$ELSE}
+var LI : Array of string;
+  LAddr4: THostAddr;
+  LAddr6: THostAddr6;
+begin
+  case AIPVersion of
+    Id_IPv4 :
+    begin
+      LAddr4 := StrToNetAddr(AAddress);
+      if ResolveAddress(LAddr4,LI)=-0 then
+      begin
+        Result := LI[0];
+      end;
+    end;
+    Id_IPv6 :
+    begin
+      LAddr6 := StrToNetAddr6(AAddress);
+      if ResolveAddress6(LAddr6,LI)=0 then
+      begin
+        Result := LI[0];
+      end;
+    end;
+  end;
+end;
+
+{var
   LHints: AddrInfo; //The T is no omission - that's what I found in the header
   LAddrInfo: PAddrInfo;
-{$ENDIF}
   LRetVal: integer;
 begin
   case AIPVersion of
@@ -778,6 +810,7 @@ variables for it:
     end;
   end;
 end;
+}
 
 function TIdStackUnix.WSShutdown(ASocket: TIdStackSocketHandle; AHow: Integer): Integer;
 begin
@@ -795,18 +828,20 @@ end;
 procedure TIdStackUnix.GetPeerName(ASocket: TIdStackSocketHandle;
  var VIP: string; var VPort: TIdPort);
 var
-  i: Cardinal;
+  i: tsocklen;
   LAddr6: sockaddr_in6;
+  LP :    PSockAddr;
 begin
   i := SizeOf(LAddr6);
-  CheckForSocketError(Libc.GetPeerName(ASocket, Psockaddr(@LAddr6)^, i));
+  CheckForSocketError(fpGetPeerName(ASocket, @LAddr6, @i));
   case LAddr6.sin6_family of
     Id_PF_INET4: begin
-      VIP := TranslateTInAddrToString(Psockaddr(@LAddr6)^.sin_addr, Id_IPv4);
-      VPort := Ntohs(Psockaddr(@LAddr6)^.sin_port);
+      LP := @LAddr6;
+      VIP := NetAddrToStr(LP^.sin_addr );
+      VPort := Ntohs(LP^.sin_port);
     end;
     Id_PF_INET6: begin
-      VIP := TranslateTInAddrToString(LAddr6.sin6_addr, Id_IPv6);
+      NetAddrToStr6(LAddr6.sin6_addr);
       VPort := Ntohs(LAddr6.sin6_port);
     end;
     else begin
@@ -818,11 +853,11 @@ end;
 procedure TIdStackUnix.GetSocketName(ASocket: TIdStackSocketHandle;
  var VIP: string; var VPort: TIdPort);
 var
-  i: Cardinal;
+  i: tsocklen;
   LAddr6: sockaddr_in6;
 begin
   i := SizeOf(LAddr6);
-  CheckForSocketError(GetSockName(ASocket, Psockaddr(@LAddr6)^, i));
+  CheckForSocketError(fpGetSockName(ASocket, @LAddr6, @i));
   case LAddr6.sin6_family of
     Id_PF_INET4: begin
       VIP := TranslateTInAddrToString(Psockaddr(@LAddr6)^.sin_addr, Id_IPv4);
@@ -839,8 +874,10 @@ begin
 end;
 
 procedure TIdStackUnix.WSGetSockOpt(ASocket: TIdStackSocketHandle; ALevel, AOptname: Integer; AOptval: PChar; var AOptlen: Integer);
+var LP : TSockLen;
 begin
-  CheckForSocketError(Libc.GetSockOpt(ASocket, ALevel, AOptname, AOptval, Cardinal(AOptlen)));
+  LP := AOptLen;
+  CheckForSocketError(fpGetSockOpt(ASocket, ALevel, AOptname, AOptval, @LP));
 end;
 
 procedure TIdStackUnix.GetSocketOption(ASocket: TIdStackSocketHandle;
@@ -863,11 +900,11 @@ procedure TIdSocketListUnix.Add(AHandle: TIdStackSocketHandle);
 begin
   lock;
   try
-    if not FD_ISSET(AHandle, FFDSet) then begin
-      if Count >= __FD_SETSIZE then begin
+    if not fpFD_ISSET(AHandle, FFDSet)=1 then begin
+      if Count >= FD_SETSIZE then begin
         raise EIdStackSetSizeExceeded.Create(RSSetSizeExceeded);
       end;
-      FD_SET(AHandle, FFDSet);
+      fpFD_SET(AHandle, FFDSet);
       Inc(FCount);
     end;
   finally
@@ -879,7 +916,7 @@ procedure TIdSocketListUnix.Clear;
 begin
   lock;
   try
-    FD_ZERO(FFDSet);
+    fpFD_ZERO(FFDSet);
     FCount := 0;
   finally
     Unlock;
@@ -890,7 +927,7 @@ function TIdSocketListUnix.Contains(
   AHandle: TIdStackSocketHandle): boolean;
 begin
   lock; try
-    Result := FD_ISSET(AHandle, FFDSet);
+    Result := fpFD_ISSET(AHandle, FFDSet)=1;
   finally Unlock; end;
 end;
 
@@ -907,11 +944,11 @@ var
   LTime: TTimeVal;
 begin
   if ATimeout = IdTimeoutInfinite then begin
-    Result := Libc.Select(MaxLongint, AReadSet, AWriteSet, AExceptSet, nil);
+    Result := fpSelect(MaxLongint, AReadSet, AWriteSet, AExceptSet, nil);
   end else begin
     LTime.tv_sec := ATimeout div 1000;
     LTime.tv_usec := (ATimeout mod 1000) * 1000;
-    Result := Libc.Select(MaxLongint, AReadSet, AWriteSet, AExceptSet, @LTime);
+    Result := fpSelect(MaxLongint, AReadSet, AWriteSet, AExceptSet, @LTime);
   end;
 end;
 
@@ -930,7 +967,7 @@ begin
   LIndex := 0;
   //? use FMaxHandle div x
   for i:= 0 to __FD_SETSIZE - 1 do begin
-    if FD_ISSET(i, FFDSet) then begin
+    if fpFD_ISSET(i, FFDSet)=1 then begin
       if LIndex = AIndex then begin
         Result := i;
         break;
@@ -945,9 +982,9 @@ procedure TIdSocketListUnix.Remove(AHandle: TIdStackSocketHandle);
 begin
   Lock;
   try
-    if FD_ISSET(AHandle, FFDSet) then begin
+    if fpFD_ISSET(AHandle, FFDSet)=1 then begin
       Dec(FCount);
-      FD_CLR(AHandle, FFDSet);
+      fpFD_CLR(AHandle, FFDSet);
     end;
   finally
     Unlock;
@@ -959,14 +996,15 @@ function TIdStackUnix.WSTranslateSocketErrorMsg(const AErr: Integer): string;
 begin
   //we override this function for the herr constants that
   //are returned by the DNS functions
-  case AErr of
-    Libc.HOST_NOT_FOUND: Result := RSStackHOST_NOT_FOUND;
-    Libc.TRY_AGAIN: Result := RSStackTRY_AGAIN;
-    Libc.NO_RECOVERY: Result := RSStackNO_RECOVERY;
-    Libc.NO_DATA: Result := RSStackNO_DATA;
+{  case AErr of
+    HOST_NOT_FOUND: Result := RSStackHOST_NOT_FOUND;
+    TRY_AGAIN: Result := RSStackTRY_AGAIN;
+    NO_RECOVERY: Result := RSStackNO_RECOVERY;
+    NO_DATA: Result := RSStackNO_DATA;
   else
     Result := inherited WSTranslateSocketErrorMsg(AErr);
-  end;
+  end;  }
+  //TODO: figure this out
 end;
 
 procedure TIdSocketListUnix.SetFDSet(var VSet: TFDSet);
@@ -1121,7 +1159,7 @@ var LLen : Cardinal;
   i : Integer;
 begin
   //TODO: Implement Kylix version of this, it is very Windows-specific.
-  Result := False;
+  Result := True;
 {
   Result := False;
   LLen:=0;
@@ -1168,6 +1206,9 @@ begin
     IPVersionUnsupported;
   end;
 end;
+{$WARNING TODO - fix this with a reference from IdStackConsts}
+const
+  IPV6_CHECKSUM = 26;
 
 procedure TIdStackUnix.WriteChecksumIPv6(s: TIdStackSocketHandle;
   var VBuffer: TIdBytes; const AOffset: Integer; const AIP: String;
@@ -1179,14 +1220,14 @@ begin
 //because it doesn't have the IPV6CHECKSUM socket option meaning we have
 //to querry the network interface in TIdStackWindows -- yuck!!
   LOffset := AOffset;
-  CheckForSocketError(setsockopt(s, IPPROTO_IPV6, IPV6_CHECKSUM, @Loffset, sizeof(Loffset)));
+  CheckForSocketError(fpsetsockopt(s, Id_IPPROTO_IPV6, IPV6_CHECKSUM, @Loffset, sizeof(Loffset)));
 end;
 
 function TIdStackUnix.IOControl(const s:  TIdStackSocketHandle; const cmd: cardinal; var arg: cardinal ): Integer;
 var LArg : PtrUInt;
 begin
   LArg := arg;
-  Result := ioctl(s,cmd,Pointer(LArg));
+  Result := fpioctl(s,cmd,Pointer(LArg));
 end;
 
 initialization
