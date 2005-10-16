@@ -159,13 +159,17 @@ const
     Id_IPV6_MULTICAST_HOPS = IPV6_MULTICAST_HOPS;
     Id_IPV6_MULTICAST_LOOP = IPV6_MULTICAST_LOOP;
     {$IFDEF LINUX}
-    // These are probably leftovers from a non-final IPV6 standard
-    // in Linux. They only seem to exist in Linux.
+    // These are probably leftovers from the non-final IPV6 KAME standard
+    // in Linux. They only seem to exist in Linux, others use
+    // the standarised versions.
     // Probably the JOIN_GROUP ones replaced these,
     // but they have different numbers in Linux, and possibly
     // also different behaviour?
     Id_IPV6_ADD_MEMBERSHIP = IPV6_ADD_MEMBERSHIP;
     Id_IPV6_DROP_MEMBERSHIP = IPV6_DROP_MEMBERSHIP;
+    {$ELSE}
+     Id_IPV6_ADD_MEMBERSHIP = IPV6_JOIN_GROUP;
+     Id_IPV6_DROP_MEMBERSHIP = IPV6_LEAVE_GROUP;
     {$ENDIF}
     Id_IPV6_PKTINFO = IPV6_PKTINFO;
     Id_IPV6_HOPLIMIT =  IPV6_HOPLIMIT;

@@ -350,7 +350,7 @@ type
 
 var
   GServeFileProc: TIdServeFile = nil;
-  
+
 //for some reason, if GDBSDStack is in the same block as GServeFileProc then
 //FPC gives a type declaration error.
 var
@@ -364,10 +364,10 @@ implementation
 uses
   //done this way so we can have a separate stack for the Unix systems in FPC
   {$IFDEF UNIX}
-    {$IFDEF KYLIX}
+    {$IFDEF UseLibc}
       IdStackLinux,
     {$ELSE}
-      IdStackLinux,
+      IdStackUnix,
     {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32}   IdStackWindows, {$ENDIF}
