@@ -838,10 +838,11 @@ initialization
 //done this way so we can have a separate stack just for FPC under Unix systems
   GStackClass :=
    {$IFDEF UNIX}
-     {$IFDEF KYLIX}
-      TIdStackLinux;
-     {$ELSE}
-      TIdStackUnix;
+     {$IFDEF UseLibc}
+     TIdStackLinux;
+     {$ENDIF}
+     {$IFDEF UseBaseUnix}
+     TIdStackUnix;
      {$ENDIF}
    {$ENDIF}
 
