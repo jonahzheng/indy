@@ -663,15 +663,24 @@ uses
   {$ELSE}
   // no DotNET
   {$ENDIF}
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   Windows,
   {$ENDIF}
   {$IFNDEF DotNetDistro}
   SyncObjs,
   Classes,
   {$ENDIF}
-  {$IFDEF UseBaseUnix}
-   BaseUnix, Unix, Sockets, UnixType,
+  {$IFDEF UNIX}
+    {$IFDEF KYLIX}
+      libc,
+    {$ELSE}
+      {$IFDEF USELIBC}
+      libc,
+      {$ENDIF}
+      {$IFDEF UseBaseUnix}
+    BaseUnix, Unix, Sockets, UnixType,
+      {$ENDIF}
+    {$ENDIF}
   {$ENDIF}
   IdException,
   IdSys, IdObjs;
@@ -856,24 +865,25 @@ type
   {$IFDEF FPC}
     {$IFDEF UseLibc}
     TIdPID = Integer;
-    TIdThreadPriority = TThreadPriority;
+    TIdThreadPriority = -20..19;
+  ///  TIdThreadPriority = TThreadPriority;
     {$ENDIF}
     {$IFDEF UseBaseUnix}
     TidPID = TPid;
     TIdThreadPriority = TThreadPriority;
     {$ENDIF}
   {$ENDIF}
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   TIdPID = LongWord;
   TIdThreadPriority = TThreadPriority;
   {$ENDIF}
   {$IFDEF DotNet}
   TIdPID = LongWord;
-  {$IFDEF DotNetDistro}
+    {$IFDEF DotNetDistro}
   TIdThreadPriority = System.Threading.ThreadPriority;
-  {$ELSE}
+    {$ELSE}
   TIdThreadPriority = TThreadPriority;
-  {$ENDIF}
+    {$ENDIF}
   {$ENDIF}
   {$IFNDEF NoRedeclare}
     {$IFDEF LINUX}
@@ -962,7 +972,7 @@ const
   tpTimeCritical = -20;
   {$ENDIF}
 
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   GOSType = otWindows;
   GPathDelim = '\'; {do not localize}
   Infinite = Windows.INFINITE; { redeclare here for use elsewhere without using Windows.pas }  // cls modified 1/23/2002
@@ -1182,7 +1192,7 @@ var
 implementation
 
 uses
-  {$IFDEF UseLibc} Libc, {$ENDIF}
+
   IdResourceStrings,
   IdStream;
 
@@ -1656,7 +1666,7 @@ begin
   __write(stderr, AText, Length(AText));
   __write(stderr, EOL, Length(EOL));
   {$ENDIF}
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   OutputDebugString(PChar(AText));
   {$ENDIF}
   {$IFDEF DotNet}
@@ -1688,7 +1698,7 @@ begin
   {$IFDEF UseBaseUnix}
   Result := fpgetpid;
   {$ENDIF}
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   Result := GetCurrentProcessID;
   {$ENDIF}
   {$IFDEF DotNet}
@@ -1760,7 +1770,7 @@ begin
   {$IFDEF UNIX}
   Result := AThread.ThreadID; // Works both in UseBaseUnix and UseLibc
   {$ENDIF}
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   Result := AThread.Handle;
   {$ENDIF}
   {$IFDEF DotNet}
@@ -1796,7 +1806,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF MSWindows}
+{$IFDEF WIN32}
 // S.G. 27/11/2002: Changed to use high-performance counters as per suggested
 // S.G. 27/11/2002: by David B. Ferguson (david.mcs@ns.sympatico.ca)
 function Ticks: Cardinal;
@@ -1847,7 +1857,7 @@ begin
     {$IFDEF Unix}
     sLocation := '/etc/';  // assume Berkeley standard placement   {do not localize}
     {$ENDIF}
-    {$IFDEF MSWINDOWS}
+    {$IFDEF WIN32}
     SetLength(sLocation, MAX_PATH);
     SetLength(sLocation, GetWindowsDirectory(pchar(sLocation), MAX_PATH));
     sLocation := Sys.IncludeTrailingPathDelimiter(sLocation);
@@ -2527,16 +2537,17 @@ end;
 
 procedure SetThreadPriority(AThread: TIdNativeThread; const APriority: TIdThreadPriority; const APolicy: Integer = -MaxInt);
 begin
-  {$IFDEF UseLibc}
-  // Linux only allows root to adjust thread priorities, so we just ingnore this call in Linux?
-  // actually, why not allow it if root
-  // and also allow setting *down* threadpriority (anyone can do that)
-  // note that priority is called "niceness" and positive is lower priority
-  if (getpriority(PRIO_PROCESS, 0) < APriority) or (geteuid = 0) then begin
-    setpriority(PRIO_PROCESS, 0, APriority);
-  end;
-  {$ENDIF}
-   {$IFDEF UseBaseUnix}
+  {$IFDEF UNIX}
+    {$IFDEF UseLibc}
+    // Linux only allows root to adjust thread priorities, so we just ingnore this call in Linux?
+    // actually, why not allow it if root
+    // and also allow setting *down* threadpriority (anyone can do that)
+    // note that priority is called "niceness" and positive is lower priority
+    if (getpriority(PRIO_PROCESS, 0) < APriority) or (geteuid = 0) then begin
+      setpriority(PRIO_PROCESS, 0, APriority);
+    end;
+    {$ENDIF}
+    {$IFDEF UseBaseUnix}
   // Linux only allows root to adjust thread priorities, so we just ingnore this call in Linux?
   // actually, why not allow it if root
   // and also allow setting *down* threadpriority (anyone can do that)
@@ -2544,14 +2555,10 @@ begin
   if (fpgetpriority(PRIO_PROCESS, 0) < cint(APriority)) or (fpgeteuid = 0) then begin
     fpsetpriority(PRIO_PROCESS, 0, cint(APriority));
   end;
-  {$ENDIF}
-
-  {$IFDEF FPC}
-    AThread.Priority := APriority;
-  {$ELSE}
-    {$IFDEF MSWINDOWS}
-    AThread.Priority := APriority;
     {$ENDIF}
+  {$ENDIF}
+  {$IFDEF WIN32}
+    AThread.Priority := APriority;
   {$ENDIF}
 end;
 
@@ -2583,7 +2590,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 begin
   Windows.Sleep(ATime);
 end;
@@ -2637,7 +2644,7 @@ begin
 end;
 
 procedure SetThreadName(const AName: string);
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
 {$IFDEF ALLOW_NAMED_THREADS}
 type
   TThreadNameInfo = record
@@ -2658,7 +2665,7 @@ begin
     System.Threading.Thread.CurrentThread.Name := AName;
   end;
 {$ENDIF}
-{$IFDEF MSWINDOWS}
+{$IFDEF WIN32}
   with LThreadNameInfo do begin
     RecType := $1000;
     Name := PChar(AName);
@@ -3370,7 +3377,7 @@ begin
   Result := System.String.Compare(S, 0, SubS, 0, Length(SubS), True) = 0;
   {$ELSE}
   LLen :=  Length(SubS);
-  {$IFDEF MSWINDOWS}
+  {$IFDEF WIN32}
   Result := (LLen <= Length(S)) and
     (CompareString(LOCALE_USER_DEFAULT, NORM_IGNORECASE,
       PChar(S), LLen, PChar(SubS), LLen) = CSTR_EQUAL);
