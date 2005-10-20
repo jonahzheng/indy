@@ -207,6 +207,7 @@
   {$IFDEF UNIX}
      {$IFDEF LINUX}
         {$DEFINE USELIBC}       // linux can also usebaseunix
+        {.$DEFINE USEBASEUNIX}
      {$ELSE}
         {$DEFINE USEBASEUNIX}
      {$ENDIF}
@@ -269,5 +270,6 @@
   {$define i386}
   {$define ENDIAN_LITTLE}
   {$define CPU32}
+  {$define IntThreadPriority} //it's an integer, not enum
 {$ENDIF}
 {$ENDIF}
