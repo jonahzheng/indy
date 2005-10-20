@@ -231,12 +231,8 @@ const
   __FD_SETSIZE = FD_MAXFDSET;
 const
   Id_MSG_NOSIGNAL = MSG_NOSIGNAL;
-  Id_WSAEPIPE = ESysEPIPE;
-  INADDR_ANY = 0;
+  ESysEPIPE = ESysEPIPE;
 
-const
-  SOCKET_ERROR = -1;
-  
 constructor TIdStackUnix.Create;
 begin
   inherited Create;
@@ -264,8 +260,10 @@ var
   LAddr: sockaddr_in6;
 begin
   LA := SizeOf(LAddr);
-  Result := fpaccept(ASocket, @LAddr, @LN);  //calls prefixed by fp to avoid clashing with libc
-  if Result <> SOCKET_ERROR then begin
+  Result := fpaccept(ASocket, @LAddr, @LN);
+  //calls prefixed by fp to avoid clashing with libc
+
+  if Result <> ID_SOCKET_ERROR then begin
     VIP := TranslateTInAddrToString(TIdIn6Addr(LAddr.sin6_addr), AIPVersion);
     VPort := NToHs(LAddr.sin6_port);
   end else begin
@@ -541,7 +539,7 @@ begin
       IPVersionUnsupported;
     end;
   end;
-  if LBytesOut = Id_SOCKET_ERROR then begin
+  if LBytesOut = -1 then begin
     if WSGetLastError() = Id_WSAEMSGSIZE then begin
       raise EIdPackageSizeTooBig.Create(RSPackageSizeTooBig);
     end else begin
@@ -569,7 +567,7 @@ function TIdStackUnix.WSGetLastError: Integer;
 begin
   //IdStackWindows just uses   result := WSAGetLastError;
   Result := GetLastError; //System.GetLastOSError; - FPC doesn't define it in System
-  if Result = Id_WSAEPIPE then begin
+  if Result = ESysEPIPE then begin
     Result := Id_WSAECONNRESET;
   end;
 end;
@@ -715,7 +713,7 @@ begin
   LHOstName := GetHostName;
   if LHostName='' then begin
   begin
-    CheckForSocketError(SOCKET_ERROR);
+    CheckForSocketError(Id_SOCKET_ERROR);
   end;
   // this won't get IPv6 addresses as I didn't find a way
   // to enumerate IPv6 addresses on a linux machine
@@ -996,15 +994,10 @@ function TIdStackUnix.WSTranslateSocketErrorMsg(const AErr: Integer): string;
 begin
   //we override this function for the herr constants that
   //are returned by the DNS functions
-{  case AErr of
-    HOST_NOT_FOUND: Result := RSStackHOST_NOT_FOUND;
-    TRY_AGAIN: Result := RSStackTRY_AGAIN;
-    NO_RECOVERY: Result := RSStackNO_RECOVERY;
-    NO_DATA: Result := RSStackNO_DATA;
-  else
+  //note that this is not really applicable because we are using some
+  //FPC functions that do direct DNS lookups without the standard Unix
+  //DNS functions.  It sounds odd but I think there's a good reason for it.
     Result := inherited WSTranslateSocketErrorMsg(AErr);
-  end;  }
-  //TODO: figure this out
 end;
 
 procedure TIdSocketListUnix.SetFDSet(var VSet: TFDSet);
@@ -1167,7 +1160,7 @@ begin
   GetMem(LPInfo,LLen);
   try
     LCount := Libc.WSAEnumProtocols(nil,LPInfo,LLen);
-    if LCount <> SOCKET_ERROR then begin
+    if LCount <> ID_SOCKET_ERROR then begin
       LPCurPtr := LPInfo;
       for i := 0 to LCount-1 do begin
         Result := (LPCurPtr^.iAddressFamily=PF_INET6);
@@ -1206,9 +1199,7 @@ begin
     IPVersionUnsupported;
   end;
 end;
-{$WARNING TODO - fix this with a reference from IdStackConsts}
-const
-  IPV6_CHECKSUM = 26;
+
 
 procedure TIdStackUnix.WriteChecksumIPv6(s: TIdStackSocketHandle;
   var VBuffer: TIdBytes; const AOffset: Integer; const AIP: String;
