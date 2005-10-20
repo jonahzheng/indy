@@ -336,7 +336,7 @@ begin
 
   rdoBindingType := TRadioGroup.Create(Self);
   {$IFDEF UseTBitBtn}
-  FbbtnOk := TBitBtn.Create(Self);
+  btnOk := TBitBtn.Create(Self);
   btnCancel := TBitBtn.Create(Self);
   {$ELSE}
   btnOk := TButton.Create(Self);
