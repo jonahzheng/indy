@@ -33,11 +33,11 @@ interface
 
 {$I IdCompilerDefines.inc}
 uses
-  IdObjs,
+
   IdGlobal;
 
 const
-  {$IFDEF Linux}
+  {$IFDEF UNIX}
   tpListener = tpIdNormal;
   {$ELSE}
   tpListener = tpIdHighest;
