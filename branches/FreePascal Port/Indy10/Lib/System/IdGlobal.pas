@@ -737,17 +737,62 @@ const
   IdOctalDigits: array [0..7] of AnsiChar = ('0','1','2','3','4','5','6','7'); {do not localize}
   HEXPREFIX = '0x';  {Do not translate}
 
-  //Portable Seek() arguments.  In general, use Position (possibly with Size)
-  //instead of Seek.
-//  {$IFDEF DotNet}
-//  IdFromBeginning = soBeginning;
-//  IdFromCurrent   = soCurrent;
-//  IdFromEnd       = soEnd;
-//  {$ELSE}
-//  IdFromBeginning = soFromBeginning;
-//  IdFromCurrent   = soFromCurrent;
-//  IdFromEnd       = soFromEnd;
-//  {$ENDIF}
+
+type
+ //thread and PID stuff
+ {$IFDEF DotNet}
+      TIdPID = LongWord;
+    {$IFDEF DotNetDistro}
+      TIdThreadPriority = System.Threading.ThreadPriority;
+    {$ELSE}
+      TIdThreadPriority = TThreadPriority;
+    {$ENDIF}
+ {$ENDIF}
+ {$IFDEF UNIX}
+    {$IFDEF USELIBC}
+      TIdPID = LongInt;
+      {$IFDEF IntThreadPriority}
+      TIdThreadPriority = -20..19;
+      {$ELSE}
+      TIdThreadPriority = TThreadPriority;
+      {$ENDIF}
+    {$ENDIF}
+    {$IFDEF UseBaseUnix}
+        TidPID = TPid;
+      TIdThreadPriority = TThreadPriority;
+    {$ENDIF}
+ {$ENDIF}
+ {$IFDEF WIN32}
+    TIdPID = LongWord;
+    TIdThreadPriority = TThreadPriority;
+ {$ENDIF}
+
+const
+  {$IFDEF DotNetDistro}
+  tpIdLowest = tpIdNetLowest;
+  tpIdBelowNormal = tpIdNetBelowNormal;
+  tpIdNormal = tpIdNetNormal;
+  tpIdAboveNormal = tpIdNetAboveNormal;
+  tpIdHighest = tpIdNetHighest;
+  {$ELSE}
+  {$IFDEF IntThreadPriority}
+  // approximate values, its finer grained on Linux
+  tpIdle = 19;
+  tpLowest = 12;
+  tpLower = 6;
+  tpNormal = 0;
+  tpHigher = -7;
+  tpHighest = -13;
+  tpTimeCritical = -20;
+  {$END}
+  {$ENDIF}
+  tpIdLowest = tpLowest;
+  tpIdBelowNormal = tpLower;
+  tpIdNormal = tpNormal;
+  tpIdAboveNormal = tpHigher;
+  tpIdHighest = tpHighest;
+  {$ENDIF}
+//end thread stuff
 
 type
   {$ifndef DotNET}
@@ -858,33 +903,6 @@ type
   //This is for IPv6 support when merged into the core
   TIdIPVersion = (Id_IPv4, Id_IPv6);
 
-  {$IFDEF KYLIX}
-  TIdPID = Integer;
-  TIdThreadPriority = -20..19;
-  {$ENDIF}
-  {$IFDEF FPC}
-    {$IFDEF UseLibc}
-    TIdPID = Integer;
-    TIdThreadPriority = -20..19;
-  ///  TIdThreadPriority = TThreadPriority;
-    {$ENDIF}
-    {$IFDEF UseBaseUnix}
-    TidPID = TPid;
-    TIdThreadPriority = TThreadPriority;
-    {$ENDIF}
-  {$ENDIF}
-  {$IFDEF WIN32}
-  TIdPID = LongWord;
-  TIdThreadPriority = TThreadPriority;
-  {$ENDIF}
-  {$IFDEF DotNet}
-  TIdPID = LongWord;
-    {$IFDEF DotNetDistro}
-  TIdThreadPriority = System.Threading.ThreadPriority;
-    {$ELSE}
-  TIdThreadPriority = TThreadPriority;
-    {$ENDIF}
-  {$ENDIF}
   {$IFNDEF NoRedeclare}
     {$IFDEF LINUX}
       {$IFNDEF VCL6ORABOVE}
@@ -962,14 +980,7 @@ const
   GPathDelim = '/'; {do not localize}
   INFINITE = LongWord($FFFFFFFF);     { Infinite timeout }
 
-  // approximate values, its finer grained on Linux
-  tpIdle = 19;
-  tpLowest = 12;
-  tpLower = 6;
-  tpNormal = 0;
-  tpHigher = -7;
-  tpHighest = -13;
-  tpTimeCritical = -20;
+
   {$ENDIF}
 
   {$IFDEF WIN32}
@@ -2538,7 +2549,8 @@ end;
 procedure SetThreadPriority(AThread: TIdNativeThread; const APriority: TIdThreadPriority; const APolicy: Integer = -MaxInt);
 begin
   {$IFDEF UNIX}
-    {$IFDEF UseLibc}
+    {$IFDEF USELIBC}
+      {$IFDEF IntThreadPriority}
     // Linux only allows root to adjust thread priorities, so we just ingnore this call in Linux?
     // actually, why not allow it if root
     // and also allow setting *down* threadpriority (anyone can do that)
@@ -2546,6 +2558,9 @@ begin
     if (getpriority(PRIO_PROCESS, 0) < APriority) or (geteuid = 0) then begin
       setpriority(PRIO_PROCESS, 0, APriority);
     end;
+      {$ELSE}
+      AThread.Priority := APriority;
+      {$ENDIF}
     {$ENDIF}
     {$IFDEF UseBaseUnix}
   // Linux only allows root to adjust thread priorities, so we just ingnore this call in Linux?
@@ -2557,6 +2572,7 @@ begin
   end;
     {$ENDIF}
   {$ENDIF}
+
   {$IFDEF WIN32}
     AThread.Priority := APriority;
   {$ENDIF}

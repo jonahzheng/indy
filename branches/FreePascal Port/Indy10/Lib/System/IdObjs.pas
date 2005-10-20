@@ -36,9 +36,11 @@ uses
   SyncObjs,
   {$ENDIF}
   SysUtils
-{$ENDIF};
+{$ENDIF}
+  ;
 
 type
+
 {$IFDEF DotNetDistro}
   TIdBaseObject = &Object;
   TIdPersistent = TIdNetPersistent;
@@ -194,34 +196,24 @@ const
   {$ENDIF}
 {$ENDIF}
 {$IFDEF DotNetDistro}
-  tpIdLowest = tpIdNetLowest;
-  tpIdBelowNormal = tpIdNetBelowNormal;
-  tpIdNormal = tpIdNetNormal;
-  tpIdAboveNormal = tpIdNetAboveNormal;
-  tpIdHighest = tpIdNetHighest;
+
   csLoading = IdObjsFCL.csLoading;
   csDesigning = IdObjsFCL.csDesigning;
   opRemove = IdObjsFCL.opRemove;
 {$ELSE}
-  tpIdLowest = tpLowest;
-  tpIdBelowNormal = tpLower;
-  tpIdNormal = tpNormal;
-  tpIdAboveNormal = tpHigher;
-  tpIdHighest = tpHighest;
+
   csLoading = Classes.csLoading;
   csDesigning = Classes.csDesigning;
   opRemove = Classes.opRemove;
 {$ENDIF}
+
   iddupIgnore = dupIgnore;
   iddupAccept = dupAccept;
   iddupError = dupError;
 
 
 implementation
-
-uses
-  IdGlobal;
-
+uses IdGlobal;
 {$IFDEF DotNetDistro}
 { TIdPersistentHelper }
 
