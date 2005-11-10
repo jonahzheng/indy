@@ -1,0 +1,6 @@
+-[R----F-]  1 raj           857 Feb 23  2000 !info!
+d[R----F-]  1 raj           512 Nov 30  2001 incoming
+d[R----F-]  1 raj           512 Mar 29  2000 novell
+d[R----F-]  1 raj           512 May 16  2000 windows
+d[R----F-]  1 raj           512 Mar 29  2000 dos
+d[R----F-]  1 wojteksu      512 Mar 06 11:20 grudziu

@@ -1,0 +1,4 @@
+-[R----F-]  1 raj        985227 Jun 06  1995 spedcmdr.arj
+-[R----F-]  1 raj           121 Jun 07  1995 index.txt
+-[R----F-]  1 raj            42 Aug 01  1995 !readme.ftp
+-[R----F-]  1 wojtek    19091219 May 16  2000 cc32e473.exe
