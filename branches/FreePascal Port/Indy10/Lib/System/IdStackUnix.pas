@@ -323,6 +323,7 @@ end;
 function TIdStackUnix.WSCloseSocket(ASocket: TIdStackSocketHandle): Integer;
 begin
   Result := fpclose(ASocket);
+  
 end;
 
 procedure TIdStackUnix.Connect(const ASocket: TIdStackSocketHandle;
@@ -929,103 +930,6 @@ begin
 end;
 
 
-{ TIdSocketListUnix }
-
-procedure TIdSocketListUnix.Add(AHandle: TIdStackSocketHandle);
-begin
-  lock;
-  try
-    if not fpFD_ISSET(AHandle, FFDSet)=1 then begin
-      if Count >= FD_SETSIZE then begin
-        raise EIdStackSetSizeExceeded.Create(RSSetSizeExceeded);
-      end;
-      fpFD_SET(AHandle, FFDSet);
-      Inc(FCount);
-    end;
-  finally
-    Unlock;
-  end;
-end;//
-
-procedure TIdSocketListUnix.Clear;
-begin
-  lock;
-  try
-    fpFD_ZERO(FFDSet);
-    FCount := 0;
-  finally
-    Unlock;
-  end;
-end;
-
-function TIdSocketListUnix.Contains(
-  AHandle: TIdStackSocketHandle): boolean;
-begin
-  lock; try
-    Result := fpFD_ISSET(AHandle, FFDSet)=1;
-  finally Unlock; end;
-end;
-
-function TIdSocketListUnix.Count: Integer;
-begin
-  lock; try
-    Result := FCount;
-  finally Unlock; end;
-end;//
-
-class function TIdSocketListUnix.FDSelect(AReadSet, AWriteSet,
-  AExceptSet: PFDSet; const ATimeout: Integer): integer;
-var
-  LTime: TTimeVal;
-begin
-  if ATimeout = IdTimeoutInfinite then begin
-    Result := fpSelect(MaxLongint, AReadSet, AWriteSet, AExceptSet, nil);
-  end else begin
-    LTime.tv_sec := ATimeout div 1000;
-    LTime.tv_usec := (ATimeout mod 1000) * 1000;
-    Result := fpSelect(MaxLongint, AReadSet, AWriteSet, AExceptSet, @LTime);
-  end;
-end;
-
-procedure TIdSocketListUnix.GetFDSet(var VSet: TFDSet);
-begin
-  Lock; try
-    VSet := FFDSet;
-  finally Unlock; end;
-end;
-
-function TIdSocketListUnix.GetItem(AIndex: Integer): TIdStackSocketHandle;
-var
-  LIndex, i: Integer;
-begin
-  Result := 0;
-  LIndex := 0;
-  //? use FMaxHandle div x
-  for i:= 0 to __FD_SETSIZE - 1 do begin
-    if fpFD_ISSET(i, FFDSet)=1 then begin
-      if LIndex = AIndex then begin
-        Result := i;
-        break;
-      end else begin
-        Inc(LIndex);
-      end;
-    end;
-  end;
-End;//
-
-procedure TIdSocketListUnix.Remove(AHandle: TIdStackSocketHandle);
-begin
-  Lock;
-  try
-    if fpFD_ISSET(AHandle, FFDSet)=1 then begin
-      Dec(FCount);
-      fpFD_CLR(AHandle, FFDSet);
-    end;
-  finally
-    Unlock;
-  end;
-end;//
-
 function TIdStackUnix.WSTranslateSocketErrorMsg(const AErr: Integer): string;
 begin
   //we override this function for the herr constants that
@@ -1037,79 +941,6 @@ begin
     Result := inherited WSTranslateSocketErrorMsg(AErr);
 end;
 
-procedure TIdSocketListUnix.SetFDSet(var VSet: TFDSet);
-begin
-  Lock; try
-    FFDSet := VSet;
-  finally Unlock; end;
-end;
-
-class function TIdSocketListUnix.Select(AReadList: TIdSocketList; AWriteList: TIdSocketList;
-      AExceptList: TIdSocketList; const ATimeout: Integer = IdTimeoutInfinite): Boolean;
-var
-  LReadSet: TFDSet;
-  LWriteSet: TFDSet;
-  LExceptSet: TFDSet;
-  LPReadSet: PFDSet;
-  LPWriteSet: PFDSet;
-  LPExceptSet: PFDSet;
-
-  procedure ReadSet(AList: TIdSocketList; var ASet: TFDSet; var APSet: PFDSet);
-  begin
-    if AList <> nil then begin
-      TIdSocketListUnix(AList).GetFDSet(ASet);
-      APSet := @ASet;
-    end else begin
-      APSet := nil;
-    end;
-  end;
-
-begin
-  ReadSet(AReadList, LReadSet, LPReadSet);
-  ReadSet(AWriteList, LWriteSet, LPWriteSet);
-  ReadSet(AExceptList, LExceptSet, LPExceptSet);
-  //
-  Result := FDSelect(LPReadSet, LPWriteSet, LPExceptSet, ATimeout) >0;
-  //
-  TIdSocketListUnix(AReadList).SetFDSet(LReadSet);
-  TIdSocketListUnix(AWriteList).SetFDSet(LWriteSet);
-  TIdSocketListUnix(AExceptList).SetFDSet(LExceptSet);
-end;
-
-function TIdSocketListUnix.SelectRead(const ATimeout: Integer): Boolean;
-var
-  LSet: TFDSet;
-begin
-  Lock; try
-    LSet := FFDSet;
-    // select() updates this structure on return,
-    // so we need to copy it each time we need it
-  finally
-    Unlock;
-  end;
-  Result := FDSelect(@LSet, nil, nil, ATimeout) > 0;
-end;
-
-function TIdSocketListUnix.SelectReadList(var VSocketList: TIdSocketList; const ATimeout: Integer = IdTimeoutInfinite): Boolean;
-var
-  LSet: TFDSet;
-begin
-  lock;
-  try
-    LSet := FFDSet;
-    // select() updates this structure on return,
-    // so we need to copy it each time we need it
-  finally
-    Unlock;
-  end;
-  Result := FDSelect(@LSet, nil, nil, ATimeout) > 0;
-  if Result then begin
-    if VSocketList = NIL then begin
-      VSocketList := TIdSocketList.CreateSocketList;
-    end;
-    TIdSocketListUnix(VSocketList).SetFDSet(LSet);
-  end;
-end;
 
 procedure TIdStackUnix.SetBlocking(ASocket: TIdStackSocketHandle;
   const ABlocking: Boolean);
@@ -1119,58 +950,6 @@ begin
   end;
 end;
 
-(*
-Why did I remove this again?
-
- 1) it sends SIGPIPE even if the socket is created with the no-sigpipe bit set
-    that could be solved by blocking sigpipe within this thread
-    This is probably a bug in the Linux kernel, but we could work around it
-    by blocking that signal for the time of sending the file (just get the
-    sigprocmask, see if pipe bit is set, if not set it and remove again after
-    sending the file)
-
-But the more serious reason is another one, which exists in Windows too:
- 2) I think that ServeFile is misdesigned:
-    ServeFile does not raise an exception if it didn't send all the bytes.
-    Now what happens if I have OnExecute assigned like this
-      AThread.Connection.ServeFile('...', True); // <-- true to send via kernel
-    is that it will return 0, but notice that in this case I didn't ask for the
-    result. Net effect is that the thread will loop in OnExecute even if the
-    socket is long gone. This doesn't fit Indy semantics at all, exceptions are
-    always raised if the remote end disconnects. Even if I would do
-      AThread.Connection.ServeFile('...', False);
-    then it would raise an exception.
-    I think this is a big flaw in the design of the ServeFile function.
-    Maybe GServeFile should only return the bytes sent, but then
-    TCPConnection.ServeFile() should raise an exception if GServeFile didn't
-    send all the bytes.
-
-JM Berg, 2002-09-09
-
-function ServeFile(ASocket: TIdStackSocketHandle; AFileName: string): cardinal;
-var
-  LFileHandle: integer;
-  offset: integer;
-  stat: _stat;
-begin
-  LFileHandle := open(PChar(AFileName), O_RDONLY);
-  try
-    offset := 0;
-    fstat(LFileHandle, stat);
-    Result := sendfile(ASocket, LFileHandle, offset, stat.st_size);
-//**    if Result = Cardinal(-1) then RaiseLastOSError;
-  finally libc.__close(LFileHandle); end;
-end;
-*)
-function TIdSocketListUnix.Clone: TIdSocketList;
-begin
-  Result := TIdSocketListUnix.Create;
-  Lock; try
-    TIdSocketListUnix(Result).SetFDSet(FFDSet);
-  finally
-    Unlock;
-  end;
-end;
 
 function TIdStackUnix.WouldBlock(const AResult: Integer): Boolean;
 begin
@@ -1257,6 +1036,235 @@ begin
   LArg := arg;
   Result := fpioctl(s,cmd,Pointer(LArg));
 end;
+(*
+Why did I remove this again?
+
+ 1) it sends SIGPIPE even if the socket is created with the no-sigpipe bit set
+    that could be solved by blocking sigpipe within this thread
+    This is probably a bug in the Linux kernel, but we could work around it
+    by blocking that signal for the time of sending the file (just get the
+    sigprocmask, see if pipe bit is set, if not set it and remove again after
+    sending the file)
+
+But the more serious reason is another one, which exists in Windows too:
+ 2) I think that ServeFile is misdesigned:
+    ServeFile does not raise an exception if it didn't send all the bytes.
+    Now what happens if I have OnExecute assigned like this
+      AThread.Connection.ServeFile('...', True); // <-- true to send via kernel
+    is that it will return 0, but notice that in this case I didn't ask for the
+    result. Net effect is that the thread will loop in OnExecute even if the
+    socket is long gone. This doesn't fit Indy semantics at all, exceptions are
+    always raised if the remote end disconnects. Even if I would do
+      AThread.Connection.ServeFile('...', False);
+    then it would raise an exception.
+    I think this is a big flaw in the design of the ServeFile function.
+    Maybe GServeFile should only return the bytes sent, but then
+    TCPConnection.ServeFile() should raise an exception if GServeFile didn't
+    send all the bytes.
+
+JM Berg, 2002-09-09
+
+function ServeFile(ASocket: TIdStackSocketHandle; AFileName: string): cardinal;
+var
+  LFileHandle: integer;
+  offset: integer;
+  stat: _stat;
+begin
+  LFileHandle := open(PChar(AFileName), O_RDONLY);
+  try
+    offset := 0;
+    fstat(LFileHandle, stat);
+    Result := sendfile(ASocket, LFileHandle, offset, stat.st_size);
+//**    if Result = Cardinal(-1) then RaiseLastOSError;
+  finally libc.__close(LFileHandle); end;
+end;
+*)
+
+{ TIdSocketListUnix }
+
+procedure TIdSocketListUnix.Add(AHandle: TIdStackSocketHandle);
+begin
+  lock;
+  try
+    if fpFD_ISSET(AHandle, FFDSet)=0 then begin
+      if Count >= FD_SETSIZE then begin
+        raise EIdStackSetSizeExceeded.Create(RSSetSizeExceeded);
+      end;
+      fpFD_SET(AHandle, FFDSet);
+
+      Inc(FCount);
+    end;
+  finally
+    Unlock;
+  end;
+end;//
+
+procedure TIdSocketListUnix.Clear;
+begin
+  lock;
+  try
+    fpFD_ZERO(FFDSet);
+    FCount := 0;
+  finally
+    Unlock;
+  end;
+end;
+
+function TIdSocketListUnix.Contains(
+  AHandle: TIdStackSocketHandle): boolean;
+begin
+  lock; try
+    Result := fpFD_ISSET(AHandle, FFDSet)>0;
+  finally Unlock; end;
+end;
+
+function TIdSocketListUnix.Count: Integer;
+begin
+  lock; try
+    Result := FCount;
+  finally Unlock; end;
+end;//
+
+class function TIdSocketListUnix.FDSelect(AReadSet, AWriteSet,
+  AExceptSet: PFDSet; const ATimeout: Integer): integer;
+var
+  LTime: TTimeVal;
+  Lerr : Integer;
+
+begin
+  if ATimeout = IdTimeoutInfinite then begin
+    Result := fpSelect(FD_SETSIZE, AReadSet, AWriteSet, AExceptSet, nil);
+  end else begin
+    LTime.tv_sec := ATimeout div 1000;
+    LTime.tv_usec := (ATimeout mod 1000) * 1000;
+    Result := fpSelect(FD_SETSIZE, AReadSet, AWriteSet, AExceptSet, @LTime);
+  end;
+end;
+
+procedure TIdSocketListUnix.GetFDSet(var VSet: TFDSet);
+begin
+  Lock; try
+    VSet := FFDSet;
+  finally Unlock; end;
+end;
+
+function TIdSocketListUnix.GetItem(AIndex: Integer): TIdStackSocketHandle;
+var
+  LIndex, i: Integer;
+begin
+  Result := 0;
+  LIndex := 0;
+  //? use FMaxHandle div x
+  for i:= 0 to __FD_SETSIZE - 1 do begin
+    if fpFD_ISSET(i, FFDSet)=1 then begin
+      if LIndex = AIndex then begin
+        Result := i;
+        break;
+      end else begin
+        Inc(LIndex);
+      end;
+    end;
+  end;
+End;//
+
+procedure TIdSocketListUnix.Remove(AHandle: TIdStackSocketHandle);
+begin
+  Lock;
+  try
+    if fpFD_ISSET(AHandle, FFDSet)=1 then begin
+      Dec(FCount);
+      fpFD_CLR(AHandle, FFDSet);
+    end;
+  finally
+    Unlock;
+  end;
+end;//
+
+procedure TIdSocketListUnix.SetFDSet(var VSet: TFDSet);
+begin
+  Lock; try
+    FFDSet := VSet;
+  finally Unlock; end;
+end;
+
+class function TIdSocketListUnix.Select(AReadList: TIdSocketList; AWriteList: TIdSocketList;
+      AExceptList: TIdSocketList; const ATimeout: Integer = IdTimeoutInfinite): Boolean;
+var
+  LReadSet: TFDSet;
+  LWriteSet: TFDSet;
+  LExceptSet: TFDSet;
+  LPReadSet: PFDSet;
+  LPWriteSet: PFDSet;
+  LPExceptSet: PFDSet;
+
+  procedure ReadSet(AList: TIdSocketList; var ASet: TFDSet; var APSet: PFDSet);
+  begin
+    if AList <> nil then begin
+      TIdSocketListUnix(AList).GetFDSet(ASet);
+      APSet := @ASet;
+    end else begin
+      APSet := nil;
+    end;
+  end;
+
+begin
+
+  ReadSet(AReadList, LReadSet, LPReadSet);
+  ReadSet(AWriteList, LWriteSet, LPWriteSet);
+  ReadSet(AExceptList, LExceptSet, LPExceptSet);
+  //
+  Result := FDSelect(LPReadSet, LPWriteSet, LPExceptSet, ATimeout) <>0;
+  //
+  TIdSocketListUnix(AReadList).SetFDSet(LReadSet);
+  TIdSocketListUnix(AWriteList).SetFDSet(LWriteSet);
+  TIdSocketListUnix(AExceptList).SetFDSet(LExceptSet);
+end;
+
+function TIdSocketListUnix.SelectRead(const ATimeout: Integer): Boolean;
+var
+  LSet: TFDSet;
+begin
+  Lock; try
+    LSet := FFDSet;
+    // select() updates this structure on return,
+    // so we need to copy it each time we need it
+  finally
+    Unlock;
+  end;
+  Result := FDSelect(@LSet, nil, nil, ATimeout) > 0;
+end;
+
+function TIdSocketListUnix.SelectReadList(var VSocketList: TIdSocketList; const ATimeout: Integer = IdTimeoutInfinite): Boolean;
+var
+  LSet: TFDSet;
+begin
+  lock;
+  try
+    LSet := FFDSet;
+    // select() updates this structure on return,
+    // so we need to copy it each time we need it
+  finally
+    Unlock;
+  end;
+  Result := FDSelect(@LSet, nil, nil, ATimeout) > 0;
+  if Result then begin
+    if VSocketList = NIL then begin
+      VSocketList := TIdSocketList.CreateSocketList;
+    end;
+    TIdSocketListUnix(VSocketList).SetFDSet(LSet);
+  end;
+end;
+
+function TIdSocketListUnix.Clone: TIdSocketList;
+begin
+  Result := TIdSocketListUnix.Create;
+  Lock; try
+    TIdSocketListUnix(Result).SetFDSet(FFDSet);
+  finally
+    Unlock;
+  end;
+end;
+
 
 initialization
   GSocketListClass := TIdSocketListUnix;
