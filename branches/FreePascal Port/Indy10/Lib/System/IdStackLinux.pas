@@ -11,62 +11,62 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
+
+
   $Log$
-}
-{
-{   Rev 1.7    10/26/2004 8:20:04 PM  JPMugaas
-{ Fixed some oversights with conversion.  OOPS!!!
-}
-{
-{   Rev 1.6    10/26/2004 8:12:32 PM  JPMugaas
-{ Now uses TIdStrings and TIdStringList for portability.
-}
-{
-{   Rev 1.5    12/06/2004 15:17:20  CCostelloe
-{ Restructured to correspond with IdStackWindows, now works.
-}
-{
-{   Rev 1.4    07/06/2004 21:31:02  CCostelloe
-{ Kylix 3 changes
-}
-{
-{   Rev 1.3    4/18/04 10:43:22 PM  RLebeau
-{ Fixed syntax error
-}
-{
-{   Rev 1.2    4/18/04 10:29:46 PM  RLebeau
-{ Renamed Int64Parts structure to TIdInt64Parts
-}
-{
-{   Rev 1.1    4/18/04 2:47:28 PM  RLebeau
-{ Conversion support for Int64 values
-{ 
-{ Removed WSHToNs(), WSNToHs(), WSHToNL(), and WSNToHL() methods, obsolete
-}
-{
-{   Rev 1.0    2004.02.03 3:14:48 PM  czhower
-{ Move and updates
-}
-{
-{   Rev 1.3    10/19/2003 5:35:14 PM  BGooijen
-{ SetSocketOption
-}
-{
-{   Rev 1.2    2003.10.01 9:11:24 PM  czhower
-{ .Net
-}
-{
-{   Rev 1.1    7/5/2003 07:25:50 PM  JPMugaas
-{ Added functions to the Linux stack which use the new TIdIPAddress record type
-{ for IP address parameters.  I also fixed a compile bug.
-}
-{
-{   Rev 1.0    11/13/2002 08:59:24 AM  JPMugaas
+
+
+   Rev 1.7    10/26/2004 8:20:04 PM  JPMugaas
+ Fixed some oversights with conversion.  OOPS!!!
+
+
+   Rev 1.6    10/26/2004 8:12:32 PM  JPMugaas
+ Now uses TIdStrings and TIdStringList for portability.
+
+
+   Rev 1.5    12/06/2004 15:17:20  CCostelloe
+ Restructured to correspond with IdStackWindows, now works.
+
+
+   Rev 1.4    07/06/2004 21:31:02  CCostelloe
+ Kylix 3 changes
+
+
+   Rev 1.3    4/18/04 10:43:22 PM  RLebeau
+ Fixed syntax error
+
+
+   Rev 1.2    4/18/04 10:29:46 PM  RLebeau
+ Renamed Int64Parts structure to TIdInt64Parts
+
+
+   Rev 1.1    4/18/04 2:47:28 PM  RLebeau
+ Conversion support for Int64 values
+
+ Removed WSHToNs(), WSNToHs(), WSHToNL(), and WSNToHL() methods, obsolete
+
+
+   Rev 1.0    2004.02.03 3:14:48 PM  czhower
+ Move and updates
+
+
+   Rev 1.3    10/19/2003 5:35:14 PM  BGooijen
+ SetSocketOption
+
+
+   Rev 1.2    2003.10.01 9:11:24 PM  czhower
+ .Net
+
+
+   Rev 1.1    7/5/2003 07:25:50 PM  JPMugaas
+ Added functions to the Linux stack which use the new TIdIPAddress record type
+ for IP address parameters.  I also fixed a compile bug.
+
+
+   Rev 1.0    11/13/2002 08:59:24 AM  JPMugaas
 }
 unit IdStackLinux;
-
+{$i IdCompilerDefines.inc}
 interface
 
 uses
@@ -79,7 +79,6 @@ uses
   IdStackBSDBase;
 
 type
-
   TIdSocketListLinux = class (TIdSocketList)
   protected
     FCount: integer;
@@ -213,9 +212,7 @@ type
 implementation
 uses
   IdResourceStrings,
-//  IdResourceStringsCore,  //Needed for RSResolveError
   IdException,
-//  IdExceptionCore, //Needed for EIdBlockingNotSupported
   SysUtils;
 
 type
@@ -304,7 +301,7 @@ procedure TIdStackLinux.Connect(const ASocket: TIdStackSocketHandle;
  const AIP: string; const APort: TIdPort;
  const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 var
-  LAddr: SockAddr;
+  LAddr: SockAddr_in;
   LAddr6: SockAddr_in6;
 begin
   case AIPVersion of
@@ -312,7 +309,7 @@ begin
       LAddr.sin_family := Id_PF_INET4;
       TranslateStringToTInAddr(AIP, LAddr.sin_addr, Id_IPv4);
       LAddr.sin_port := HToNs(APort);
-      CheckForSocketError(Libc.Connect(ASocket, LAddr, SizeOf(LAddr)));
+      CheckForSocketError(Libc.Connect(ASocket, @LAddr, SizeOf(LAddr)));
     end;
     Id_IPv6: begin
       LAddr6.sin6_flowinfo := 0;
@@ -320,7 +317,7 @@ begin
       LAddr6.sin6_family := Id_PF_INET6;
       TranslateStringToTInAddr(AIP, LAddr6.sin6_addr, Id_IPv6);
       LAddr6.sin6_port := HToNs(APort);
-      CheckForSocketError(Libc.Connect(ASocket, Psockaddr(@LAddr6)^, SizeOf(LAddr6)));
+      CheckForSocketError(Libc.Connect(ASocket, @LAddr6, SizeOf(LAddr6)));
     end;
     else begin
       IPVersionUnsupported;
@@ -857,6 +854,62 @@ begin
 end;
 
 
+function TIdStackLinux.WouldBlock(const AResult: Integer): Boolean;
+begin
+  //non-blocking does not exist in Linux, always indicate things will block
+  Result := True;
+end;
+
+function TIdStackLinux.SupportsIPv6:boolean;
+//In Windows, this does something else.  It checks the LSP's installed.
+begin
+  Result := CheckIPVersionSupport(Id_IPv6);
+end;
+
+
+function TIdStackLinux.CheckIPVersionSupport(
+  const AIPVersion: TIdIPVersion): boolean;
+var LTmpSocket:TIdStackSocketHandle;
+begin
+  LTmpSocket := WSSocket(IdIPFamily[AIPVersion], Integer(Id_SOCK_STREAM), Id_IPPROTO_IP );
+  result:=LTmpSocket<>Id_INVALID_SOCKET;
+  if LTmpSocket<>Id_INVALID_SOCKET then begin
+    WSCloseSocket(LTmpSocket);
+  end;
+end;
+
+procedure TIdStackLinux.WriteChecksum(s: TIdStackSocketHandle;
+  var VBuffer: TIdBytes; const AOffset: Integer; const AIP: String;
+  const APort: TIdPort; const AIPVersion: TIdIPVersion);
+begin
+  case AIPVersion of
+    Id_IPv4 : CopyTIdWord(HostToLittleEndian(CalcCheckSum(VBuffer)),VBuffer,AOffset);
+    Id_IPv6 : WriteChecksumIPv6(s,VBuffer, AOffset, AIP, APort);
+  else
+    IPVersionUnsupported;
+  end;
+end;
+
+procedure TIdStackLinux.WriteChecksumIPv6(s: TIdStackSocketHandle;
+  var VBuffer: TIdBytes; const AOffset: Integer; const AIP: String;
+  const APort: TIdPort);
+var LOffset : Integer;
+begin
+//we simply request that the kernal write the checksum when the data
+//is sent.  All of the parameters required are because Windows is bonked
+//because it doesn't have the IPV6CHECKSUM socket option meaning we have
+//to querry the network interface in TIdStackWindows -- yuck!!
+  LOffset := AOffset;
+  CheckForSocketError(setsockopt(s, IPPROTO_IPV6, IPV6_CHECKSUM, @Loffset, sizeof(Loffset)));
+end;
+
+function TIdStackLinux.IOControl(const s:  TIdStackSocketHandle; const cmd: cardinal; var arg: cardinal ): Integer;
+var LArg : PtrUInt;
+begin
+  LArg := arg;
+  Result := ioctl(s,cmd,Pointer(LArg));
+end;
+
 { TIdSocketListLinux }
 
 procedure TIdSocketListLinux.Add(AHandle: TIdStackSocketHandle);
@@ -907,11 +960,11 @@ var
   LTime: TTimeVal;
 begin
   if ATimeout = IdTimeoutInfinite then begin
-    Result := Libc.Select(MaxLongint, AReadSet, AWriteSet, AExceptSet, nil);
+    Result := Libc.Select(FD_SETSIZE, AReadSet, AWriteSet, AExceptSet, nil);
   end else begin
     LTime.tv_sec := ATimeout div 1000;
     LTime.tv_usec := (ATimeout mod 1000) * 1000;
-    Result := Libc.Select(MaxLongint, AReadSet, AWriteSet, AExceptSet, @LTime);
+    Result := Libc.Select(FD_SETSIZE, AReadSet, AWriteSet, AExceptSet, @LTime);
   end;
 end;
 
@@ -1102,91 +1155,6 @@ begin
   finally
     Unlock;
   end;
-end;
-
-function TIdStackLinux.WouldBlock(const AResult: Integer): Boolean;
-begin
-  //non-blocking does not exist in Linux, always indicate things will block
-  Result := True;
-end;
-
-function TIdStackLinux.SupportsIPv6:boolean;
-{
-based on
-http://groups.google.com/groups?q=Winsock2+Delphi+protocol&hl=en&lr=&ie=UTF-8&oe=utf-8&selm=3cebe697_2%40dnews&rnum=9
-}
-var LLen : Cardinal;
-  //LPInfo, LPCurPtr : LPWSAProtocol_Info;
-  LCount : Integer;
-  i : Integer;
-begin
-  //TODO: Implement Kylix version of this, it is very Windows-specific.
-  Result := False;
-{
-  Result := False;
-  LLen:=0;
-  Libc.WSAEnumProtocols(nil,nil,LLen);
-  GetMem(LPInfo,LLen);
-  try
-    LCount := Libc.WSAEnumProtocols(nil,LPInfo,LLen);
-    if LCount <> SOCKET_ERROR then begin
-      LPCurPtr := LPInfo;
-      for i := 0 to LCount-1 do begin
-        Result := (LPCurPtr^.iAddressFamily=PF_INET6);
-        if Result then begin
-          Break;
-        end;
-        Inc(LPCurPtr);
-      end;
-    end;
-  finally
-    FreeMem(LPInfo);
-  end;
-}
-end;
-
-
-function TIdStackLinux.CheckIPVersionSupport(
-  const AIPVersion: TIdIPVersion): boolean;
-var LTmpSocket:TIdStackSocketHandle;
-begin
-  LTmpSocket := WSSocket(IdIPFamily[AIPVersion], Integer(Id_SOCK_STREAM), Id_IPPROTO_IP );
-  result:=LTmpSocket<>Id_INVALID_SOCKET;
-  if LTmpSocket<>Id_INVALID_SOCKET then begin
-    WSCloseSocket(LTmpSocket);
-  end;
-end;
-
-procedure TIdStackLinux.WriteChecksum(s: TIdStackSocketHandle;
-  var VBuffer: TIdBytes; const AOffset: Integer; const AIP: String;
-  const APort: TIdPort; const AIPVersion: TIdIPVersion);
-begin
-  case AIPVersion of
-    Id_IPv4 : CopyTIdWord(HostToLittleEndian(CalcCheckSum(VBuffer)),VBuffer,AOffset);
-    Id_IPv6 : WriteChecksumIPv6(s,VBuffer, AOffset, AIP, APort);
-  else
-    IPVersionUnsupported;
-  end;
-end;
-
-procedure TIdStackLinux.WriteChecksumIPv6(s: TIdStackSocketHandle;
-  var VBuffer: TIdBytes; const AOffset: Integer; const AIP: String;
-  const APort: TIdPort);
-var LOffset : Integer;
-begin
-//we simply request that the kernal write the checksum when the data
-//is sent.  All of the parameters required are because Windows is bonked
-//because it doesn't have the IPV6CHECKSUM socket option meaning we have
-//to querry the network interface in TIdStackWindows -- yuck!!
-  LOffset := AOffset;
-  CheckForSocketError(setsockopt(s, IPPROTO_IPV6, IPV6_CHECKSUM, @Loffset, sizeof(Loffset)));
-end;
-
-function TIdStackLinux.IOControl(const s:  TIdStackSocketHandle; const cmd: cardinal; var arg: cardinal ): Integer;
-var LArg : PtrUInt;
-begin
-  LArg := arg;
-  Result := ioctl(s,cmd,Pointer(LArg));
 end;
 
 initialization
