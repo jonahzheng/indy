@@ -427,13 +427,13 @@ procedure ParseStatInfo(const AData : TIdBytes; VL : TIdFSPStatInfo; var VI : Ca
 var LC : Cardinal;
 begin
   //we don't parse the file type because there is some variation between CC_GET_DIR and CC_STAT
-  CopyBytesToHostCardinal(AData,VI,LC);
+  CopyBytesToHostLongWord(AData,VI,LC);
 
    VL.FModifiedDateGMT := UnixDateTimeToDelphiDateTime(LC);
    VL.FModifiedDate := VL.FModifiedDateGMT + Sys.OffSetFromUTC;
    VI := VI + 4;
 
-    CopyBytesToHostCardinal(AData,VI,LC);
+    CopyBytesToHostLongWord(AData,VI,LC);
    VL.Size :=  LC;
    VI := VI + 5;     //we want to skip over the type byte we processed earlier
  
@@ -715,7 +715,7 @@ servers do not wishes to be detected.
       begin
         if Length(LExtraBuf)>4 then
         begin
-          CopyBytesToHostCardinal(LExtraBuf,1,FServerMaxThruPut);
+          CopyBytesToHostLongWord(LExtraBuf,1,FServerMaxThruPut);
           if Length(LExtraBuf)>6 then
           begin
             CopyBytesToHostWord(LExtraBuf,5,FServerMaxPacketSize);
@@ -889,7 +889,7 @@ begin
     begin
       LUnixDate := DateTimeToUnix(AGMTTime);
       SetLength(LSendPacket.FExtraData,4);
-      CopyTIdNetworkCardinal(LUnixDate,LSendPacket.FExtraData,0);
+      CopyTIdNetworkLongWord(LUnixDate,LSendPacket.FExtraData,0);
     end;
     SendCmd(LSendPacket,LRecvPacket,LTmpBuf);
   finally
@@ -1214,7 +1214,7 @@ begin
 
   //6-7 are data length which was already processed
   //file position
-  FFilePosition := LBuf.ExtractToCardinal(8);
+  FFilePosition := LBuf.ExtractToLongWord(8);
   //extract data
   if FDataLen > 0 then
   begin

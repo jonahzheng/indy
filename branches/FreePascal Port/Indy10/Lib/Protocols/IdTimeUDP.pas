@@ -59,14 +59,14 @@ type
     FBaseDate: TDateTime;
     FRoundTripDelay: Cardinal;
     //
-    function GetDateTimeCard: Cardinal;
+    function GetDateTimeCard: LongWord;
     function GetDateTime: TDateTime;
     procedure InitComponent; override;
   public
     {This synchronizes the local clock with the Time Server}
     function SyncTime: Boolean;
     {This is the number of seconds since 12:00 AM, 1900 - Jan-1}
-    property DateTimeCard: Cardinal read GetDateTimeCard;
+    property DateTimeCard: LongWord read GetDateTimeCard;
     {This is the current time according to the server.  TimeZone and Time used
     to receive the data are accounted for}
     property DateTime: TDateTime read GetDateTime;
@@ -105,7 +105,7 @@ end;
 
 function TIdCustomTimeUDP.GetDateTime: TDateTime;
 var
-  BufCard: Cardinal;
+  BufCard: LongWord;
 begin
   BufCard := GetDateTimeCard;
   if BufCard <> 0 then begin
@@ -120,7 +120,7 @@ begin
   end;
 end;
 
-function TIdCustomTimeUDP.GetDateTimeCard: Cardinal;
+function TIdCustomTimeUDP.GetDateTimeCard: LongWord;
 var
   LTimeBeforeRetrieve: Cardinal;
   LBuffer : TIdBytes;
@@ -131,7 +131,7 @@ begin
   SetLength(LBuffer,4);
 
   ReceiveBuffer(LBuffer);
-  Result := BytesToCardinal(LBuffer);
+  Result := BytesToLongWord(LBuffer);
   Result := GStack.NetworkToHost(Result);
   {Theoritically, it should take about 1/2 of the time to receive the data
    but in practice, it could be any portion depending upon network conditions. This is also

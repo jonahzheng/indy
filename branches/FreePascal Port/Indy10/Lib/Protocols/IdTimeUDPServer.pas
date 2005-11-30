@@ -80,7 +80,7 @@ end;
 
 procedure TIdCustomTimeUDPServer.DoUDPRead(AData: TIdBytes; ABinding: TIdSocketHandle);
 var
-   LTime : Cardinal;
+   LTime : LongWord;
 begin
   inherited DoUDPRead(AData, ABinding);
 

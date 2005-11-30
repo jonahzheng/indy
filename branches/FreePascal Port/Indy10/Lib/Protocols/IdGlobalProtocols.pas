@@ -468,7 +468,7 @@ type
   function ABNFToText(const AText : String) : String;
   function BinStrToInt(const ABinary: String): Integer;
   function BreakApart(BaseString, BreakString: string; StringList: TIdStrings): TIdStrings;
-  function CardinalToFourChar(ACardinal : Cardinal): string;
+  function LongWordToFourChar(ACardinal : LongWord): string;
   function CharRange(const AMin, AMax : Char): String;
   Function CharToHex(const APrefix : String; const c : AnsiChar) : shortstring;
   procedure CommaSeparatedToStringList(AList: TIdStrings; const Value:string);
@@ -479,11 +479,11 @@ type
   (probably some other protocols).  They aren't aren't in IdGlobals because that
   doesn't refer to IdStack so you can't use GStack there.
   }
-  procedure CopyBytesToHostCardinal(const ASource : TIdBytes; const ASourceIndex: Integer;
-    var VDest : Cardinal);
+  procedure CopyBytesToHostLongWord(const ASource : TIdBytes; const ASourceIndex: Integer;
+    var VDest : LongWord);
   procedure CopyBytesToHostWord(const ASource : TIdBytes; const ASourceIndex: Integer;
     var VDest : Word);
-  procedure CopyTIdNetworkCardinal(const ASource: Cardinal;
+  procedure CopyTIdNetworkLongWord(const ASource: LongWord;
     var VDest: TIdBytes; const ADestIndex: Integer);
   procedure CopyTIdNetworkWord(const ASource: Word;
     var VDest: TIdBytes; const ADestIndex: Integer);
@@ -525,7 +525,7 @@ type
   function Max(AValueOne,AValueTwo: Integer): Integer;
   function MakeTempFilename(const APath: String = ''): string;
   procedure MoveChars(const ASource:ShortString;ASourceStart:integer;var ADest:ShortString;ADestStart, ALen:integer);
-   function OrdFourByteToCardinal(AByte1, AByte2, AByte3, AByte4 : Byte): Cardinal;
+   function OrdFourByteToLongWord(AByte1, AByte2, AByte3, AByte4 : Byte): LongWord;
 
 
   function ProcessPath(const ABasePath: String; const APath: String;
@@ -794,10 +794,10 @@ begin
   VDest := GStack.NetworkToHost(VDest);
 end;
 
-procedure CopyBytesToHostCardinal(const ASource : TIdBytes; const ASourceIndex: Integer;
+procedure CopyBytesToHostLongWord(const ASource : TIdBytes; const ASourceIndex: Integer;
   var VDest : Cardinal);
 begin
-  VDest := IdGlobal.BytesToCardinal(ASource, ASourceIndex);
+  VDest := IdGlobal.BytesToLongWord(ASource, ASourceIndex);
   VDest := GStack.NetworkToHost(VDest);
 end;
 
@@ -809,12 +809,12 @@ begin
   CopyTIdWord(LWord,VDest,ADestIndex);
 end;
 
-procedure CopyTIdNetworkCardinal(const ASource: Cardinal;
+procedure CopyTIdNetworkLongWord(const ASource: Cardinal;
     var VDest: TIdBytes; const ADestIndex: Integer);
 var LCard : Cardinal;
 begin
   LCard := GStack.HostToNetwork(ASource);
-  CopyTIdCardinal(LCard,VDest,ADestIndex);
+  CopyTIdLongWord(LCard,VDest,ADestIndex);
 end;
 
 // BGO: TODO: Move somewhere else
@@ -842,7 +842,7 @@ begin
   Result := APrefix + Result;
 end;
 
-function CardinalToFourChar(ACardinal : Cardinal): string;
+function LongWordToFourChar(ACardinal : LongWord): string;
 begin
   Result := BytesToString(ToBytes(ACardinal));
 end;
@@ -881,7 +881,7 @@ begin
   {$ENDIF}
 end;
 
-function OrdFourByteToCardinal(AByte1, AByte2, AByte3, AByte4 : Byte): Cardinal;
+function OrdFourByteToLongWord(AByte1, AByte2, AByte3, AByte4 : Byte): LongWord;
 var
   LCardinal: TIdBytes;
 begin
@@ -890,7 +890,7 @@ begin
   LCardinal[1] := AByte2;
   LCardinal[2] := AByte3;
   LCardinal[3] := AByte4;
-  Result := BytesToCardinal( LCardinal);
+  Result := BytesToLongWord( LCardinal);
 end;
 
 function TwoCharToWord(AChar1,AChar2: Char):Word;
@@ -1539,7 +1539,7 @@ begin
     BUGS
 
        The precise meaning of `appropriate' is undefined;  it  is
-       unspecified  how  accessibility  of  a directory is deter­
+       unspecified  how  accessibility  of  a directory is deterÂ­
        mined.  Never use this function. Use tmpfile(3) instead.
 
     Alternative is to use tmpfile, but this creates the temp file.

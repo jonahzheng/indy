@@ -399,57 +399,57 @@ begin
   if Length(AValue)>6 then
   begin
     //4-7
-    FRootDelay      := OrdFourByteToCardinal(AValue[4],AValue[5],AValue[6],AValue[7]);
+    FRootDelay      := OrdFourByteToLongWord(AValue[4],AValue[5],AValue[6],AValue[7]);
   end;
   if Length(AValue)>10 then
   begin
     //8-11
-    FRootDispersion := OrdFourByteToCardinal(AValue[8],AValue[9],AValue[10],AValue[11]);
+    FRootDispersion := OrdFourByteToLongWord(AValue[8],AValue[9],AValue[10],AValue[11]);
   end;
   if Length(AValue)>14 then
   begin
     //12-16
-    FRefID         := OrdFourByteToCardinal(AValue[12],AValue[13],AValue[14],AValue[15]);
+    FRefID         := OrdFourByteToLongWord(AValue[12],AValue[13],AValue[14],AValue[15]);
   end;
   if Length(AValue)>18 then
   begin
   //16-19
-    FRef1          := OrdFourByteToCardinal(AValue[16],AValue[17],AValue[18],AValue[19]);
+    FRef1          := OrdFourByteToLongWord(AValue[16],AValue[17],AValue[18],AValue[19]);
   end;
   if Length(AValue)>22 then
   begin
     //20-23
-    FRef2          := OrdFourByteToCardinal(AValue[20],AValue[21],AValue[22],AValue[23]);
+    FRef2          := OrdFourByteToLongWord(AValue[20],AValue[21],AValue[22],AValue[23]);
   end;
   if Length(AValue)>26 then
   begin
     //24-27
-    FOrg1          := OrdFourByteToCardinal(AValue[24],AValue[25],AValue[26],AValue[27]);
+    FOrg1          := OrdFourByteToLongWord(AValue[24],AValue[25],AValue[26],AValue[27]);
   end;
   if Length(AValue)>30 then
   begin
     //28-31
-    FOrg2          := OrdFourByteToCardinal(AValue[28],AValue[29],AValue[30],AValue[31]);
+    FOrg2          := OrdFourByteToLongWord(AValue[28],AValue[29],AValue[30],AValue[31]);
   end;
   if Length(AValue)>34 then
   begin
     //32-35
-    FRcv1          := OrdFourByteToCardinal(AValue[32],AValue[33],AValue[34],AValue[35]);
+    FRcv1          := OrdFourByteToLongWord(AValue[32],AValue[33],AValue[34],AValue[35]);
   end;
   if Length(AValue)>38 then
   begin
     //36-39
-    FRcv2          := OrdFourByteToCardinal(AValue[36],AValue[37],AValue[38],AValue[39]);
+    FRcv2          := OrdFourByteToLongWord(AValue[36],AValue[37],AValue[38],AValue[39]);
   end;
   if Length(AValue)>42 then
   begin
     //40-43
-    FXmit1         := OrdFourByteToCardinal(AValue[40],AValue[41],AValue[42],AValue[43]);
+    FXmit1         := OrdFourByteToLongWord(AValue[40],AValue[41],AValue[42],AValue[43]);
   end;
   if Length(AValue)>46 then
   begin
     //44-47
-    Xmit2         := OrdFourByteToCardinal(AValue[44],AValue[45],AValue[46],AValue[47]);
+    Xmit2         := OrdFourByteToLongWord(AValue[44],AValue[45],AValue[46],AValue[47]);
   end;
 end;
 
