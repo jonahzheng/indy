@@ -958,38 +958,9 @@ begin
 end;
 
 function TIdStackUnix.SupportsIPv6:boolean;
-{
-based on
-http://groups.google.com/groups?q=Winsock2+Delphi+protocol&hl=en&lr=&ie=UTF-8&oe=utf-8&selm=3cebe697_2%40dnews&rnum=9
-}
-var LLen : Cardinal;
-  //LPInfo, LPCurPtr : LPWSAProtocol_Info;
-  LCount : Integer;
-  i : Integer;
+//In Windows, this does something else.  It checks the LSP's installed.
 begin
-  //TODO: Implement Kylix version of this, it is very Windows-specific.
-  Result := True;
-{
-  Result := False;
-  LLen:=0;
-  Libc.WSAEnumProtocols(nil,nil,LLen);
-  GetMem(LPInfo,LLen);
-  try
-    LCount := Libc.WSAEnumProtocols(nil,LPInfo,LLen);
-    if LCount <> ID_SOCKET_ERROR then begin
-      LPCurPtr := LPInfo;
-      for i := 0 to LCount-1 do begin
-        Result := (LPCurPtr^.iAddressFamily=PF_INET6);
-        if Result then begin
-          Break;
-        end;
-        Inc(LPCurPtr);
-      end;
-    end;
-  finally
-    FreeMem(LPInfo);
-  end;
-}
+  Result := CheckIPVersionSupport(Id_IPv6);
 end;
 
 
