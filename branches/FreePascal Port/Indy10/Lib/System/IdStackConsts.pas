@@ -98,7 +98,7 @@ uses
    IdWship6, //for some constants that supplement IdWinsock
    IdWinsock2;
    {$endif}
-    {$ifdef os2}
+   {$ifdef os2}
     pmwsock;
    {$endif}
    {$ifdef netware_clib}
@@ -128,36 +128,31 @@ type
 
   {$ENDIF}
   TIdStackSocketHandle =
-    {$IFDEF DOTNET}
-      Socket;
-    {$ELSE}
-      TSocket;
-    {$ENDIF}
-
+  {$IFDEF DOTNET}
+     Socket;
+  {$ELSE}
+     TSocket;
+  {$ENDIF}
+  
 var
   Id_SO_True: Integer = 1;
   Id_SO_False: Integer = 0;
 
 const
   {$IFDEF DotNet}
-    Id_IPV6_UNICAST_HOPS = System.Net.Sockets.SocketOptionName.IpTimeToLive;
+  Id_IPV6_UNICAST_HOPS = System.Net.Sockets.SocketOptionName.IpTimeToLive;
 
-    Id_IPV6_MULTICAST_IF = System.Net.Sockets.SocketOptionName.MulticastInterface;
-    Id_IPV6_MULTICAST_HOPS = System.Net.Sockets.SocketOptionName.MulticastTimeToLive;
-    Id_IPV6_MULTICAST_LOOP = System.Net.Sockets.SocketOptionName.MulticastLoopback;
-    Id_IPV6_ADD_MEMBERSHIP = System.Net.Sockets.SocketOptionName.AddMembership;
-    Id_IPV6_DROP_MEMBERSHIP = System.Net.Sockets.SocketOptionName.DropMembership;
-    Id_IPV6_PKTINFO =         System.Net.Sockets.SocketOptionName.PacketInformation;
-     Id_IP_MULTICAST_TTL =    System.Net.Sockets.SocketOptionName.MulticastTimeToLive;
-     Id_IP_MULTICAST_LOOP =   System.Net.Sockets.SocketOptionName.MulticastLoopback;
-     Id_IP_ADD_MEMBERSHIP =   System.Net.Sockets.SocketOptionName.AddMembership;
-      Id_IP_DROP_MEMBERSHIP = System.Net.Sockets.SocketOptionName.DropMembership;
+  Id_IPV6_MULTICAST_IF = System.Net.Sockets.SocketOptionName.MulticastInterface;
+  Id_IPV6_MULTICAST_HOPS = System.Net.Sockets.SocketOptionName.MulticastTimeToLive;
+  Id_IPV6_MULTICAST_LOOP = System.Net.Sockets.SocketOptionName.MulticastLoopback;
+  Id_IPV6_ADD_MEMBERSHIP = System.Net.Sockets.SocketOptionName.AddMembership;
+  Id_IPV6_DROP_MEMBERSHIP = System.Net.Sockets.SocketOptionName.DropMembership;
+  Id_IPV6_PKTINFO =         System.Net.Sockets.SocketOptionName.PacketInformation;
+  Id_IP_MULTICAST_TTL =    System.Net.Sockets.SocketOptionName.MulticastTimeToLive;
+  Id_IP_MULTICAST_LOOP =   System.Net.Sockets.SocketOptionName.MulticastLoopback;
+  Id_IP_ADD_MEMBERSHIP =   System.Net.Sockets.SocketOptionName.AddMembership;
+  Id_IP_DROP_MEMBERSHIP = System.Net.Sockets.SocketOptionName.DropMembership;
   {$ENDIF}
-  {$IFDEF UNIX}
-
-   {$WARNING TODO - fix this with a reference from IdStackConsts}
-  IPV6_CHECKSUM = 7;
-   {$endif}
   {$IFDEF UNIX}
     Id_IPV6_UNICAST_HOPS = IPV6_UNICAST_HOPS;
     Id_IPV6_MULTICAST_IF = IPV6_MULTICAST_IF;
@@ -172,6 +167,7 @@ const
     // also different behaviour?
       {$ifndef Kylix}
         {$ifdef USEBASEUNIX}
+        
       //In Linux, the libc.pp header maps the old values to new ones,
       //probably for consistancy.  I'm doing this because we can't link
       //to Libc for Basic Unix stuff and some people may want to use this API
@@ -180,12 +176,18 @@ const
       IPV6_DROP_MEMBERSHIP = IPV6_LEAVE_GROUP;
         {$endif}
       {$endif}
+    {$endif}
+    Id_IP_ADD_MEMBERSHIP = IP_ADD_MEMBERSHIP;
+    Id_IP_DROP_MEMBERSHIP = IP_DROP_MEMBERSHIP;
+    Id_IPV6_PKTINFO = IPV6_PKTINFO;
+    Id_IPV6_HOPLIMIT =  IPV6_HOPLIMIT;
+    Id_IP_MULTICAST_TTL = IP_MULTICAST_TTL;
+    Id_IP_MULTICAST_LOOP = IP_MULTICAST_LOOP;
     Id_IPV6_ADD_MEMBERSHIP = IPV6_ADD_MEMBERSHIP;
     Id_IPV6_DROP_MEMBERSHIP = IPV6_DROP_MEMBERSHIP;
-    {$ELSE}
-     Id_IPV6_ADD_MEMBERSHIP = IPV6_JOIN_GROUP;
-     Id_IPV6_DROP_MEMBERSHIP = IPV6_LEAVE_GROUP;
-    {$ENDIF}
+  {$ELSE}
+    Id_IPV6_ADD_MEMBERSHIP = IPV6_JOIN_GROUP;
+    Id_IPV6_DROP_MEMBERSHIP = IPV6_LEAVE_GROUP;
     Id_IPV6_PKTINFO = IPV6_PKTINFO;
     Id_IPV6_HOPLIMIT =  IPV6_HOPLIMIT;
     Id_IP_MULTICAST_TTL = IP_MULTICAST_TTL; // TODO integrate into IdStackConsts
@@ -273,10 +275,10 @@ type
 
 const
   {$ifndef DOTNET}
-   {$ifdef os2}
+    {$ifdef os2}
   Id_IPPROTO_GGP =  IPPROTO_GGP; //OS/2 does something strange and we might wind up
   //supporting it later for all we know.
-   {$else}
+    {$else}
   Id_IPPROTO_GGP = 3;// IPPROTO_GGP; may not be defined in some headers in FPC
     {$endif}
   Id_IPPROTO_ICMP = IPPROTO_ICMP;
@@ -566,7 +568,7 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
 
 //Ripped from IdWinsock2 - don't use that in DotNET.
 
-    wsabaseerr              = 10000;
+  wsabaseerr              = 10000;
 
 // Windows Sockets definitions of regular Microsoft C error constants
 
