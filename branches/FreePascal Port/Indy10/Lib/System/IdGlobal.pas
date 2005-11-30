@@ -1021,11 +1021,11 @@ function ToBytes(
   const AEncoding: TIdEncoding = enANSI
   ): TIdBytes; overload;
 function ToBytes(const AValue: Char): TIdBytes; overload;
-function ToBytes(const AValue: Integer): TIdBytes; overload;
+function ToBytes(const AValue: LongInt): TIdBytes; overload;
 function ToBytes(const AValue: Short): TIdBytes; overload;
 function ToBytes(const AValue: Word): TIdBytes; overload;
 function ToBytes(const AValue: Byte): TIdBytes; overload;
-function ToBytes(const AValue: Cardinal): TIdBytes; overload;
+function ToBytes(const AValue: Longword): TIdBytes; overload;
 function ToBytes(const AValue: Int64): TIdBytes; overload;
 function ToBytes(const AValue: TIdBytes; const ASize: Integer): TIdBytes; overload;
 {$IFNDEF DotNet}
@@ -1037,11 +1037,11 @@ function RawToBytes(const AValue; const ASize: Integer): TIdBytes;
 // The following functions are faster but except that Bytes[] must have enough
 // space for at least SizeOf(AValue) bytes.
 procedure ToBytesF(var Bytes: TIdBytes; const AValue: Char); overload;
-procedure ToBytesF(var Bytes: TIdBytes; const AValue: Integer); overload;
+procedure ToBytesF(var Bytes: TIdBytes; const AValue: LongInt); overload;
 procedure ToBytesF(var Bytes: TIdBytes; const AValue: Short); overload;
 procedure ToBytesF(var Bytes: TIdBytes; const AValue: Word); overload;
 procedure ToBytesF(var Bytes: TIdBytes; const AValue: Byte); overload;
-procedure ToBytesF(var Bytes: TIdBytes; const AValue: Cardinal); overload;
+procedure ToBytesF(var Bytes: TIdBytes; const AValue: Longword); overload;
 procedure ToBytesF(var Bytes: TIdBytes; const AValue: Int64); overload;
 procedure ToBytesF(var Bytes: TIdBytes; const AValue: TIdBytes; const ASize: Integer); overload;
 {$IFNDEF DotNet}
@@ -1050,14 +1050,14 @@ procedure ToBytesF(var Bytes: TIdBytes; const AValue: TIdBytes; const ASize: Int
 procedure RawToBytesF(var Bytes: TIdBytes; const AValue; const ASize: Integer);
 {$ENDIF}
 
-function BytesToCardinal(const AValue: TIdBytes; const AIndex: Integer = 0): Cardinal;
+function BytesToLongWord(const AValue: TIdBytes; const AIndex: Integer = 0): Longword;
 function BytesToWord(const AValue: TIdBytes; const AIndex : Integer = 0): Word;
 
 function ToHex(const AValue: TIdBytes): AnsiString; overload;
 function ToHex(const AValue: array of LongWord): AnsiString; overload; // for IdHash
 function BytesToChar(const AValue: TIdBytes; const AIndex: Integer = 0): Char;
 function BytesToShort(const AValue: TIdBytes; const AIndex: Integer = 0): Short;
-function BytesToInteger(const AValue: TIdBytes; const AIndex: Integer = 0): Integer;
+function BytesToLongInt(const AValue: TIdBytes; const AIndex: Integer = 0): LongInt;
 function BytesToInt64(const AValue: TIdBytes; const AIndex: Integer = 0): Int64;
 function BytesToIPv6(const AValue: TIdBytes; const AIndex: Integer = 0): TIdIPv6Address;
 {$IFNDEF DotNet}
@@ -1096,7 +1096,7 @@ procedure CopyTIdWord(const ASource: Word;
 procedure CopyTIdLongWord(const ASource: LongWord;
     var VDest: TIdBytes; const ADestIndex: Integer);
 
-procedure CopyTIdCardinal(const ASource: Cardinal;
+procedure CopyTIdToLongInt(const ASource: Cardinal;
     var VDest: TIdBytes; const ADestIndex: Integer);
 
 procedure CopyTIdInt64(const ASource: Int64;
@@ -1287,7 +1287,7 @@ begin
   {$endif}
 end;
 
-function LittleEndianToHost(const AValue : Cardinal): Cardinal;
+function LittleEndianToHost(const AValue : Longword): Longword;
 begin
   {$ifdef DOTNET}
   //I think that is Little ENdian but I'm not completely sure
@@ -1630,7 +1630,7 @@ begin
   {$ENDIF}
 end;
 
-procedure CopyTIdCardinal(const ASource: Cardinal;
+procedure CopyTIdToLongInt(const ASource: Cardinal;
     var VDest: TIdBytes; const ADestIndex: Integer);
 {$IFDEF DotNet}
 var LCard : TIdBytes;
@@ -2067,7 +2067,7 @@ begin
 end;
 
 {$IFNDEF DotNet}
-function IPv4MakeCardInRange(const AInt: Int64; const A256Power: Integer): Cardinal;
+function IPv4MakeLongwordInRange(const AInt: Int64; const A256Power: Integer): Longword;
 //Note that this function is only for stripping off some extra bits
 //from an address that might appear in some spam E-Mails.
 begin
@@ -2158,7 +2158,7 @@ begin
       end
       else
       begin
-        Result :=  Result + IPv4MakeCardInRange (StrToInt64Def(LBuf,0), LParts);
+        Result :=  Result + IPv4MakeLongwordInRange (StrToInt64Def(LBuf,0), LParts);
       end;
     end
     else
@@ -2168,12 +2168,12 @@ begin
         if (LBuf[1]='0') and IsOctal(LBuf) then
         begin
           //this is octal
-          Result := Result + IPv4MakeCardInRange(OctalToInt64(LBuf),LParts);
+          Result := Result + IPv4MakeLongwordInRange(OctalToInt64(LBuf),LParts);
         end
         else
         begin
           //this must be a decimal
-          Result :=  Result + IPv4MakeCardInRange(StrToInt64Def(LBuf,0), LParts);
+          Result :=  Result + IPv4MakeLongwordInRange(StrToInt64Def(LBuf,0), LParts);
         end;
       end
       else
@@ -2907,7 +2907,7 @@ begin
   {$ENDIF}
 end;
 
-function ToBytes(const AValue: Integer): TIdBytes; overload;
+function ToBytes(const AValue: LongInt): TIdBytes; overload;
 begin
   {$IFDEF DotNet}
   Result := System.BitConverter.GetBytes(AValue);
@@ -2917,7 +2917,7 @@ begin
   {$ENDIF}
 end;
 
-function ToBytes(const AValue: Cardinal): TIdBytes; overload;
+function ToBytes(const AValue: Longword): TIdBytes; overload;
 begin
   {$IFDEF DotNet}
   Result := System.BitConverter.GetBytes(AValue);
@@ -2977,7 +2977,7 @@ begin
   {$ENDIF}
 end;
 
-procedure ToBytesF(var Bytes: TIdBytes; const AValue: Integer);
+procedure ToBytesF(var Bytes: TIdBytes; const AValue: LongInt);
 begin
   Assert(Length(Bytes) >= SizeOf(AValue));
   {$IFDEF DotNet}
@@ -3017,7 +3017,7 @@ begin
   {$ENDIF}
 end;
 
-procedure ToBytesF(var Bytes: TIdBytes; const AValue: Cardinal);
+procedure ToBytesF(var Bytes: TIdBytes; const AValue: LongWord);
 begin
   Assert(Length(Bytes) >= SizeOf(AValue));
   {$IFDEF DotNet}
@@ -3082,7 +3082,7 @@ begin
   {$ENDIF}
 end;
 
-function BytesToInteger(const AValue: TIdBytes; const AIndex: Integer = 0): Integer;
+function BytesToLongInt(const AValue: TIdBytes; const AIndex: Integer = 0): LongInt;
 begin
   Assert(Length(AValue) >= (SizeOf(Integer)+AIndex));
   {$IFDEF DotNet}
@@ -3138,7 +3138,7 @@ begin
   {$ENDIF}
 end;
 
-function BytesToCardinal(const AValue: TIdBytes; const AIndex: Integer = 0): Cardinal;
+function BytesToLongWord(const AValue: TIdBytes; const AIndex: Integer = 0): Cardinal;
 begin
   Assert(Length(AValue) >= (SizeOf(Cardinal)+AIndex));
   {$IFDEF DotNet}
