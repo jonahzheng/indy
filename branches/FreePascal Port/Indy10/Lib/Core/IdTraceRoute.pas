@@ -21,7 +21,7 @@ unit IdTraceRoute;
 interface
 {$i IdCompilerDefines.inc}
 
-uses IdICMPClient, IdRawBase, IdRawClient, IdThread;
+uses IdIcmpClient, IdRawBase, IdRawClient, IdThread;
 
 type
 

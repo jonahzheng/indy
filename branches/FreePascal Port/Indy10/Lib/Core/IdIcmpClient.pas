@@ -512,14 +512,14 @@ begin
         begin
           LActualSeqID := BytesToWord( FBufReceive,LIpHeaderLen+6);
           result :=  LActualSeqID = wSeqNo;//;picmp^.icmp_hun.echo.seq  = wSeqNo;
-          RTTime := GetTickDiff( BytesToCardinal( FBufReceive,LIpHeaderLen+8),Ticks); //picmp^.icmp_dun.ts.otime;
+          RTTime := GetTickDiff( BytesToLongWord( FBufReceive,LIpHeaderLen+8),Ticks); //picmp^.icmp_dun.ts.otime;
         end
         else
         begin
           // not an echo reply: the original IP frame is contained withing the DATA section of the packet
       //    pOriginalIP := PIdIPHdr(@picmp^.icmp_dun.data);
            LActualSeqID := BytesToWord( FBufReceive,LIpHeaderLen+6+8);//pOriginalICMP^.icmp_hun.echo.seq;
-           RTTime := GetTickDiff( BytesToCardinal( FBufReceive,LIpHeaderLen+8+8),Ticks); //pOriginalICMP^.icmp_dun.ts.otime;
+           RTTime := GetTickDiff( BytesToLongWord( FBufReceive,LIpHeaderLen+8+8),Ticks); //pOriginalICMP^.icmp_dun.ts.otime;
            result :=  LActualSeqID = wSeqNo;
 
           // move to offset
@@ -536,8 +536,8 @@ begin
         with AReplyStatus do begin
           BytesReceived := BytesRead;
 
-          FromIpAddress := IdGlobal.MakeDWordIntoIPv4Address ( GStack.NetworkToHOst( BytesToCardinal( FBufReceive,12)));
-          ToIpAddress   := IdGlobal.MakeDWordIntoIPv4Address ( GStack.NetworkToHOst( BytesToCardinal( FBufReceive,16)));
+          FromIpAddress := IdGlobal.MakeDWordIntoIPv4Address ( GStack.NetworkToHOst( BytesToLongWord( FBufReceive,12)));
+          ToIpAddress   := IdGlobal.MakeDWordIntoIPv4Address ( GStack.NetworkToHOst( BytesToLongWord( FBufReceive,16)));
           MsgType := FBufReceive[LIpHeaderLen]; //picmp^.icmp_type;
           SequenceId := LActualSeqID;
           MsRoundTripTime := RTTime;
@@ -677,7 +677,7 @@ begin
   //icmp_hun.echo.seq := wSeqNo;
   IdGlobal.CopyTIdWord(wSeqNo,FBufIcmp,6);
   // icmp_dun.ts.otime := Ticks; - not an official thing but for Indy internal use
-  IdGlobal.CopyTIdCardinal(Ticks, FBufIcmp,8);
+  IdGlobal.CopyTIdLongWord(Ticks, FBufIcmp,8);
   //data
   if Length(Buffer)>0 then
   begin
@@ -702,7 +702,7 @@ begin
     LIPv6.data.icmp6_un_data16[1] := wSeqNo;
     LIPv6.icmp6_cksum := 0;
     LIPv6.WriteStruct(FBufIcmp,LIdx);
-    IdGlobal.CopyTIdCardinal(Ticks, FBufIcmp,LIdx);
+    IdGlobal.CopyTIdLongWord(Ticks, FBufIcmp,LIdx);
     Inc(LIdx,4);
     if Length(Buffer)>0 then
     begin
@@ -757,7 +757,7 @@ begin
     LActualSeqID := LIcmp.data.icmp6_seq;
     Result := LActualSeqID = wSeqNo;
 
-    RTTime := Ticks - BytesToCardinal(FBufReceive, LIdx);
+    RTTime := Ticks - BytesToLongWord(FBufReceive, LIdx);
     if result then
     begin
 
