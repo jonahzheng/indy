@@ -4080,7 +4080,7 @@ begin
                  Inc(LIdx, SizeOf(Word));
                  CopyTIdWord(GStack.HostToNetwork(Word(Class_CHAOS)), lAnswer, LIdx);
                  Inc(LIdx, SizeOf(Word));
-                 CopyTIdCardinal(GStack.HostToNetwork(Cardinal(86400)), lAnswer, LIdx); {do not localize}
+                 CopyTIdLongWord(GStack.HostToNetwork(Cardinal(86400)), lAnswer, LIdx); {do not localize}
                  Inc(LIdx, SizeOf(Cardinal));
                  CopyTIdWord(GStack.HostToNetwork(Word(Length(RRData))), lAnswer, LIdx);
                  Inc(LIdx, SizeOf(Word));

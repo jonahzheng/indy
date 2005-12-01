@@ -285,7 +285,7 @@ type
     FRecType: TQueryRecordTypes;
     FRecClass: word;
     FName: string;
-    FTTL: cardinal;
+    FTTL: LongWord;
     FRDataLength: Integer;
     FRData: TIdBytes;
     FSection: TResultSection;
@@ -297,7 +297,7 @@ type
     property RecType: TQueryRecordTypes read FRecType;
     property RecClass: word read FRecClass;
     property Name: string read FName;
-    property TTL: cardinal read FTTL;
+    property TTL: LongWord read FTTL;
     property RDataLength: Integer read FRDataLength;
     property RData: TIdBytes read FRData;
     property Section:TResultSection read FSection;
@@ -397,25 +397,25 @@ type
 
   TSOARecord = class(TResultRecord)
   protected
-    FSerial: cardinal;
-    FMinimumTTL: Cardinal;
-    FRefresh: Cardinal;
-    FRetry: Cardinal;
+    FSerial: LongWord;
+    FMinimumTTL: LongWord;
+    FRefresh: LongWord;
+    FRetry: LongWord;
     FMNAME: string;
     FRNAME: string;
-    FExpire: Cardinal;
+    FExpire: LongWord;
   public
     procedure Parse(CompleteMessage: TIdBytes; APos: Integer); override;
     procedure Assign(Source: TIdPersistent); override;
 
     property Primary: string read FMNAME;
     property ResponsiblePerson: string read FRNAME;
-    property Serial: cardinal read FSerial;
-    property Refresh: Cardinal read FRefresh;
-    property Retry: Cardinal read FRetry;
-    property Expire: Cardinal read FExpire;
+    property Serial: LongWord read FSerial;
+    property Refresh: LongWord read FRefresh;
+    property Retry: LongWord read FRetry;
+    property Expire: LongWord read FExpire;
 
-    property MinimumTTL: Cardinal read FMinimumTTL;
+    property MinimumTTL: LongWord read FMinimumTTL;
   end;
 
   TNAMERecord = class(TResultRecord)
@@ -639,7 +639,7 @@ begin
   inherited Parse(CompleteMessage, APos);
   if Length(RData) > 0 then
   begin
-    FIPAddress := MakeDWordIntoIPv4Address( GStack.NetworkToHost( OrdFourByteToCardinal(RData[0], RData[1], RData[2], RData[3])));
+    FIPAddress := MakeDWordIntoIPv4Address( GStack.NetworkToHost( OrdFourByteToLongWord(RData[0], RData[1], RData[2], RData[3])));
 //    FIPAddress := Format('%d.%d.%d.%d',[RData[0], RData[1], RData[2], RData[3]]);  {Do not Localize}
   end;
 end;
@@ -672,7 +672,7 @@ function TQueryResult.Add(Answer: TIdBytes; var APos: Integer): TResultRecord;
 var
   RRName: String;
   RR_type, RR_Class: word;
-  RR_TTL: Cardinal;
+  RR_TTL: LongWord;
   RD_Length: word;
   RData: TIdBytes;
 begin
@@ -680,7 +680,7 @@ begin
   RRName := DNSStrToDomain(Answer, APos);
   RR_Type := GStack.NetworkToHost( TwoByteToWord(Answer[APos], Answer[APos + 1]));
   RR_Class := GStack.NetworkToHost(TwoByteToWord(Answer[APos + 2], Answer[APos + 3]));
-  RR_TTL := GStack.NetworkToHost( OrdFourByteToCardinal(Answer[APos + 4], Answer[APos + 5], Answer[APos + 6], Answer[APos + 7]));
+  RR_TTL := GStack.NetworkToHost( OrdFourByteToLongWord(Answer[APos + 4], Answer[APos + 5], Answer[APos + 6], Answer[APos + 7]));
   RD_Length := GStack.NetworkToHost(TwoByteToWord(Answer[APos + 8], Answer[APos + 9]));
   RData := Copy(Answer, APos + 10, RD_Length);
   // remove what we have read from the buffer
@@ -962,15 +962,15 @@ begin
   inherited Parse(CompleteMessage, APos);
   FMNAME := (Collection as TQueryResult).DNSStrToDomain(CompleteMessage, APos);
   FRNAME := (Collection as TQueryResult).DNSStrToDomain(CompleteMessage, APos);
-  FSerial := GStack.NetworkToHost( OrdFourByteToCardinal(CompleteMessage[APos], CompleteMessage[APos + 1], CompleteMessage[APos + 2], CompleteMessage[APos + 3]));
+  FSerial := GStack.NetworkToHost( OrdFourByteToLongWord(CompleteMessage[APos], CompleteMessage[APos + 1], CompleteMessage[APos + 2], CompleteMessage[APos + 3]));
   inc(Apos, 4);
-  FRefresh := GStack.NetworkToHost( OrdFourByteToCardinal(CompleteMessage[APos], CompleteMessage[APos + 1], CompleteMessage[APos + 2], CompleteMessage[APos + 3]));
+  FRefresh := GStack.NetworkToHost( OrdFourByteToLongWord(CompleteMessage[APos], CompleteMessage[APos + 1], CompleteMessage[APos + 2], CompleteMessage[APos + 3]));
   inc(Apos, 4);
-  FRetry := GStack.NetworkToHost( OrdFourByteToCardinal(CompleteMessage[APos], CompleteMessage[APos + 1], CompleteMessage[APos + 2], CompleteMessage[APos + 3]));
+  FRetry := GStack.NetworkToHost( OrdFourByteToLongWord(CompleteMessage[APos], CompleteMessage[APos + 1], CompleteMessage[APos + 2], CompleteMessage[APos + 3]));
   inc(Apos, 4);
-  FExpire := GStack.NetworkToHost( OrdFourByteToCardinal(CompleteMessage[APos], CompleteMessage[APos + 1], CompleteMessage[APos + 2], CompleteMessage[APos + 3]));
+  FExpire := GStack.NetworkToHost( OrdFourByteToLongWord(CompleteMessage[APos], CompleteMessage[APos + 1], CompleteMessage[APos + 2], CompleteMessage[APos + 3]));
   inc(Apos, 4);
-  FMinimumTTL := GStack.NetworkToHost( OrdFourByteToCardinal(CompleteMessage[APos], CompleteMessage[APos + 1], CompleteMessage[APos + 2], CompleteMessage[APos + 3]));
+  FMinimumTTL := GStack.NetworkToHost( OrdFourByteToLongWord(CompleteMessage[APos], CompleteMessage[APos + 1], CompleteMessage[APos + 2], CompleteMessage[APos + 3]));
 end;
 
 { TWKSRecord }
@@ -995,7 +995,7 @@ end;
 procedure TWKSRecord.Parse(CompleteMessage: TIdBytes; APos: Integer);
 begin
   inherited Parse(CompleteMessage, APos);
-  FIPAddress := MakeDWordIntoIPv4Address( GStack.NetworkToHost( OrdFourByteToCardinal(RData[0], RData[1], RData[2], RData[3])));
+  FIPAddress := MakeDWordIntoIPv4Address( GStack.NetworkToHost( OrdFourByteToLongWord(RData[0], RData[1], RData[2], RData[3])));
     //Format('%d.%d.%d.%d',[Word(RData[0]), Word(RData[1]), Word(RData[2]), Word(RData[3])]);   {Do not Localize}
   FProtocol := Word(Rdata[4]);
   //TODO: This is really inefficient - just slice off the first 5 bytes instead. This code is old
