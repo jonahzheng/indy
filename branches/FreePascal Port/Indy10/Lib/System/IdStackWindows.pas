@@ -1197,7 +1197,7 @@ begin
   LIdx := LIdx+SizeOf(LDest);
   //use a word so you don't wind up using the wrong network byte order function
   LC := Length(VBuffer);
-  CopyTIdCardinal(GStack.HostToNetwork(LC),LTmp,LIdx);
+  CopyTIdLongWord(GStack.HostToNetwork(LC),LTmp,LIdx);
   Inc(LIdx,4);
   //36
   //zero the next three bytes
