@@ -406,7 +406,7 @@ type
       );
     function ExtractToByte(const AIndex : Integer) : Byte;
     function ExtractToWord(const AIndex : Integer) : Word;
-    function ExtractToCardinal(const AIndex : Integer) : Cardinal;
+    function ExtractToLongword(const AIndex : Integer) : Longword;
     function ExtractToInt64(const AIndex : Integer) : Int64;
     function ExtractToIPv6(const AIndex : Integer) : TIdIPv6Address;
     function IndexOf(
@@ -454,7 +454,7 @@ type
       AByteCount: Integer = 0
       ); overload;
     procedure Write(const AValue : Int64; const ADestIndex : Integer=-1); overload;
-    procedure Write(const AValue : Cardinal; const ADestIndex : Integer=-1); overload;
+    procedure Write(const AValue : Longword; const ADestIndex : Integer=-1); overload;
     procedure Write(const AValue : Word; const ADestIndex : Integer=-1); overload;
     procedure Write(const AValue : Byte; const ADestIndex : Integer=-1); overload;
     procedure Write(const AValue : TIdIPv6Address; const ADestIndex : Integer=-1); overload;
@@ -828,7 +828,7 @@ begin
 end;
 
 
-function TIdBuffer.ExtractToCardinal(const AIndex: Integer): Cardinal;
+function TIdBuffer.ExtractToLongword(const AIndex: Integer): Longword;
 var LIndex : Integer;
 begin
   if AIndex < 0 then
@@ -839,7 +839,7 @@ begin
   begin
     LIndex := AIndex;
   end;
-  Result := IdGlobal.BytesToCardinal(FBytes,LIndex);
+  Result := IdGlobal.BytesToLongWord(FBytes,LIndex);
   Result := GStack.NetworkToHost(Result);
   if AIndex<0 then
   begin
@@ -971,7 +971,7 @@ begin
   end;
 end;
 
-procedure TIdBuffer.Write(const AValue: Cardinal;
+procedure TIdBuffer.Write(const AValue: LongWord;
   const ADestIndex: Integer);
 var LVal : Cardinal;
   LIndex : Integer;
@@ -986,7 +986,7 @@ begin
     LIndex := ADestIndex;
   end;
   LVal := GStack.HostToNetwork(AValue);
-  CopyTIdCardinal(LVal,FBytes,LIndex);
+  CopyTIdLongWord(LVal,FBytes,LIndex);
   if LIndex>=FSize then
   begin
     FSize := LIndex +4;
