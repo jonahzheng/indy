@@ -82,6 +82,7 @@ uses
 
 implementation
 uses
+
   IdComponent,
   IdGlobal,
   IdDICT,
@@ -100,10 +101,7 @@ uses
 
 procedure Register;
 begin
-  RegisterPropertyEditor(TypeInfo(TIdSASLEntries),TIdSMTP, '',TIdPropEdSASL);
-  RegisterPropertyEditor(TypeInfo(TIdSASLEntries),TIdIMAP4, '',TIdPropEdSASL);
-  RegisterPropertyEditor(TypeInfo(TIdSASLEntries),TIdPOP3, '',TIdPropEdSASL);
-  RegisterPropertyEditor(TypeInfo(TIdSASLEntries),TIdDICT, '',TIdPropEdSASL);
+  RegisterPropertyEditor(TypeInfo(TIdSASLEntries),nil, '',TIdPropEdSASL);
 end;
 
 end.
