@@ -14,9 +14,7 @@ uses
   types
 {$endif}
 
-  {$IFDEF WIN32}
-    Windows,
- {$ENDIF}
+
   {$IFDEF WidgetLCL}
     LResources,
  {$ENDIF}
