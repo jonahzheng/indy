@@ -918,7 +918,7 @@ var LTmp : TIdBytes;
 begin
   LTmp := ToBytes(arg);
   s.IOControl(cmd, ToBytes(arg), LTmp);
-  arg := BytesToCardinal(LTmp);
+  arg := BytesToLongWord(LTmp);
   Result := 0;
 end;
 
