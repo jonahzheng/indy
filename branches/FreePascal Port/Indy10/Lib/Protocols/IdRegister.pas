@@ -553,10 +553,14 @@ uses
   {$ENDIF}
 {$ENDIF}
 
+{$IFDEF FPC}
+resourcestring
+  RSProt = ' Protocols ';
+{$ENDIF}
 procedure Register;
 begin
-  RegisterComponents(RSRegIndyClients, [
-   //
+  {$IFNDEF FPC}
+   RegisterComponents(RSRegIndyClients, [
 
    TIdDayTime,
    TIdDayTimeUDP,
@@ -728,6 +732,153 @@ begin
    TIdUserManager,
    TIdVCard
    ]);
+   {$ELSE}
+   //FreePascal Lazarus Registration
+
+  RegisterComponents(RSRegIndyClients+ RSProt+'(a-m)', [
+   //
+   TIdDayTime,
+   TIdDayTimeUDP,
+   TIdDICT,
+   TIdDNSResolver,
+   TIdEcho,
+   TIdEchoUDP,
+   TIdFinger,
+   TIdFSP,
+   TIdFTP,
+   TIdGopher,
+   TIdHTTP,
+   TIdIdent,
+   TIdIMAP4,
+   TIdIRC,
+   TIdLPR]);
+ RegisterComponents(RSRegIndyClients+RSProt+ '(n-z)', [
+   TIdNNTP,
+   TIdPOP3,
+   TIdQOTD,
+   TIdQOTDUDP,
+   TIdRexec,
+   TIdRSH,
+   TIdSMTP,
+   TIdSMTPRelay,
+   TIdSNMP,
+   TIdSNPP,
+   TIdSNTP,
+   TIdSysLog,
+   TIdSystat,
+   TIdSystatUDP,
+   TIdTelnet,
+   TIdTime,
+   TIdTimeUDP,
+   TIdTrivialFTP,
+   TIdUnixTime,
+   TIdUnixTimeUDP,
+   TIdWhois]);
+
+  RegisterComponents(RSRegIndyServers+RSProt+ '(a-m)', [
+   TIdChargenServer,
+   TIdChargenUDPServer,
+   TIdDayTimeServer,
+   TIdDayTimeUDPServer,
+   TIdDICTServer,
+   TIdDISCARDServer,
+   TIdDiscardUDPServer,
+   TIdDNSServer,
+   TIdECHOServer,
+   TIdEchoUDPServer,
+   TIdFingerServer,
+   TIdFTPServer,
+   TIdGopherServer,
+   TIdHTTPProxyServer,
+   TIdHTTPServer,
+   TIdIdentServer,
+   TIdIMAP4Server,
+   TIdIRCServer,
+   TIdMappedFTP,
+   TIdMappedPOP3,
+   TIdMappedPortTCP,
+   TIdMappedPortUDP,
+   TIdMappedTelnet]);
+   RegisterComponents(RSRegIndyServers+RSProt+ '(n-z)', [
+   TIdNNTPServer,
+   TIdPOP3Server,
+   TIdQOTDServer,
+   TIdQotdUDPServer,
+   TIdRexecServer,
+   TIdRSHServer,
+   TIdSMTPServer,
+   TIdSocksServer,
+   TIdSyslogServer,
+   TIdSystatServer,
+   TIdSystatUDPServer,
+   TIdTelnetServer,
+   TIdTimeServer,
+   TIdTimeUDPServer,
+   TIdTrivialFTPServer,
+   //TODO:  TIdTunnelMaster,
+   //TODO: TIdTunnelSlave,
+   TIdUnixTimeServer,
+   TIdUnixTimeUDPServer,
+   TIdWhoIsServer]);
+//  RegisterComponents(RSRegIndyServers, [
+//   TIdFTPServer
+//   ]);
+  RegisterComponents(RSRegIndyIntercepts+RSProt, [
+//TODO:   TIdBlockCipherIntercept,
+//TODO:   TIdCompressionIntercept,
+//TODO:   TIdServerCompressionIntercept,
+   TIdServerInterceptLogEvent,
+   TIdServerInterceptLogFile
+   ]);
+  RegisterComponents(RSRegSASL+RSProt, [
+   TIdSASLAnonymous,
+   TIdSASLCRAMMD5,
+   TIdSASLExternal,
+   TIdSASLLogin,
+   TIdSASLOTP,
+   TIdSASLPlain,
+   TIdSASLSKey,
+   TIdUserPassProvider
+   ]);
+  RegisterComponents(RSRegIndyMisc+RSProt, [
+   TIdConnectThroughHttpProxy,
+   {$IFDEF WIN32}
+     {$IFNDEF DOTNET}
+       {$IFNDEF FPC}
+     TIdCompressorZLibEx,
+       {$ENDIF}
+     {$ENDIF}
+   {$ENDIF}
+   TIdCookieManager,
+   TIdEncoderMIME,
+   TIdEncoderUUE,
+   TIdEncoderXXE,
+   TIdEncoderQuotedPrintable,
+{$IFNDEF DOTNET}
+   TIdDateTimeStamp,
+{$ENDIF}
+   TIdDecoderMIME,
+   TIdDecoderUUE,
+   TIdDecoderXXE,
+   TIdDecoderQuotedPrintable,
+   TIdIPWatch,
+   TIdIPAddrMon,
+//   TIdHL7,
+   TIdMailBox,
+   TIdMessage,
+   TIdMessageDecoderMIME,
+   TIdMessageEncoderMIME,
+   {$IFNDEF DOTNET}
+   TIdMessageDecoderYenc,
+   TIdMessageEncoderYenc,
+
+   TIdNetworkCalculator,
+    {$ENDIF}
+   TIdSysLogMessage,
+   TIdUserManager,
+   TIdVCard
+   ]);
+   {$ENDIF}
 end;
 
 {$IFDEF FPC}
