@@ -178,6 +178,10 @@ uses
   IdTCPServer,
   IdTCPClient;
 
+{$IFDEF FPC}
+resourcestring
+  CoreSuffix = ' - Core';
+{$ENDIF}
 {$IFDEF DOTNET}
   {$R IconsDotNet\TIdAntiFreeze.bmp}
   {$R IconsDotNet\TIdCmdTCPClient.bmp}
@@ -216,7 +220,7 @@ uses
 
 procedure Register;
 begin
-  RegisterClassAlias(TIdTCPClient, 'TCPClient');
+  {$ifndef fpc}
   RegisterComponents(RSRegIndyClients, [
    TIdTCPClient
    ,TIdUDPClient
@@ -254,6 +258,48 @@ begin
    TIdSchedulerOfThreadPool,
    TIdThreadComponent
   ]);
+  {$else}
+  //This is a tempoary workaround for components not fitting on the palette
+  //in Lazarus.  Unlike Delphi, Lazarus still does not have the ability to
+  //scroll through a palette page.
+  RegisterComponents(RSRegIndyClients+CoreSuffix, [
+   TIdTCPClient
+   ,TIdUDPClient
+   ,TIdCmdTCPClient
+   ,TIdIPMCastClient
+   {$IFNDEF DOTNET}
+   ,TIdIcmpClient
+   {$ENDIF}
+  ]);
+  RegisterComponents(RSRegIndyServers+CoreSuffix, [
+   TIdUDPServer,
+   TIdCmdTCPServer,
+   TIdSimpleServer,
+   TIdTCPServer,
+   TIdIPMCastServer
+  ]);
+  RegisterComponents(RSRegIndyIOHandlers+CoreSuffix,[
+   TIdIOHandlerStack
+   ,TIdIOHandlerStream
+   ,TIdServerIOHandlerStack
+  ]);
+  RegisterComponents(RSRegIndyIntercepts+CoreSuffix, [
+   TIdConnectionIntercept
+   ,TIdInterceptSimLog
+   ,TIdInterceptThrottler
+   ,TIdLogDebug
+   ,TIdLogEvent
+   ,TIdLogFile
+   ,TIdLogStream
+  ]);
+  RegisterComponents(RSRegIndyMisc+CoreSuffix, [
+   TIdSocksInfo,
+   TIdAntiFreeze,
+   TIdSchedulerOfThreadDefault,
+   TIdSchedulerOfThreadPool,
+   TIdThreadComponent
+  ]);
+  {$ENDIF}
 end;
 
 {$IFDEF FPC}
