@@ -556,6 +556,9 @@ uses
 {$IFDEF FPC}
 resourcestring
   RSProt = ' Protocols ';
+  RSMappedPort = ' Mapped Port';
+  RSEncoder = ' Encoder';
+  RSDecoder = ' Decoder';
 {$ENDIF}
 procedure Register;
 begin
@@ -793,12 +796,8 @@ begin
    TIdHTTPServer,
    TIdIdentServer,
    TIdIMAP4Server,
-   TIdIRCServer,
-   TIdMappedFTP,
-   TIdMappedPOP3,
-   TIdMappedPortTCP,
-   TIdMappedPortUDP,
-   TIdMappedTelnet]);
+   TIdIRCServer]);
+
    RegisterComponents(RSRegIndyServers+RSProt+ '(n-z)', [
    TIdNNTPServer,
    TIdPOP3Server,
@@ -823,6 +822,12 @@ begin
 //  RegisterComponents(RSRegIndyServers, [
 //   TIdFTPServer
 //   ]);
+   RegisterComponents(RSRegIndyServers+RSMappedPort,[
+   TIdMappedFTP,
+   TIdMappedPOP3,
+   TIdMappedPortTCP,
+   TIdMappedPortUDP,
+   TIdMappedTelnet]);
   RegisterComponents(RSRegIndyIntercepts+RSProt, [
 //TODO:   TIdBlockCipherIntercept,
 //TODO:   TIdCompressionIntercept,
@@ -850,33 +855,41 @@ begin
      {$ENDIF}
    {$ENDIF}
    TIdCookieManager,
-   TIdEncoderMIME,
-   TIdEncoderUUE,
-   TIdEncoderXXE,
-   TIdEncoderQuotedPrintable,
+
+
 {$IFNDEF DOTNET}
    TIdDateTimeStamp,
 {$ENDIF}
-   TIdDecoderMIME,
-   TIdDecoderUUE,
-   TIdDecoderXXE,
-   TIdDecoderQuotedPrintable,
+
    TIdIPWatch,
    TIdIPAddrMon,
 //   TIdHL7,
    TIdMailBox,
    TIdMessage,
-   TIdMessageDecoderMIME,
-   TIdMessageEncoderMIME,
    {$IFNDEF DOTNET}
-   TIdMessageDecoderYenc,
-   TIdMessageEncoderYenc,
-
    TIdNetworkCalculator,
     {$ENDIF}
    TIdSysLogMessage,
    TIdUserManager,
    TIdVCard
+   ]);
+   //  RSEncoder = ' Encoder';
+   // RSDecoder = ' Decoder';
+   RegisterComponents(RSRegIndyMisc+RSProt + RSEncoder, [
+      TIdEncoderMIME,
+   TIdEncoderUUE,
+   TIdEncoderXXE,
+   TIdEncoderQuotedPrintable,
+   TIdMessageEncoderMIME,
+   TIdMessageEncoderYenc
+   ]);
+   RegisterComponents(RSRegIndyMisc+RSProt + RSDecoder, [
+   TIdDecoderMIME,
+   TIdDecoderUUE,
+   TIdDecoderXXE,
+   TIdDecoderQuotedPrintable,
+    TIdMessageDecoderMIME,
+    TIdMessageDecoderYenc
    ]);
    {$ENDIF}
 end;
