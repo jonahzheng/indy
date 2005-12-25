@@ -3,11 +3,12 @@
   <Package Version="2">
     <Name Value="dclindyprotocolslaz"/>
     <Author Value="Chad Z. Hower (Kudzu) and the Indy Pit Crew - http://www.indyproject.org/"/>
+    <AutoUpdate Value="OnRebuildingAll"/>
     <CompilerOptions>
       <Version Value="5"/>
       <SearchPaths>
         <IncludeFiles Value="../Inc/"/>
-        <OtherUnitFiles Value="../System/lib/$(TargetCPU)-$(TargetOS)/"/>
+        <OtherUnitFiles Value="../System/lib/$(TargetCPU)-$(TargetOS)/;../Core/lib/$(TargetCPU)-$(TargetOS)/;../Protocols/lib/$(TargetCPU)-$(TargetOS)/;../Inc/"/>
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/"/>
         <SrcPath Value="../System/;../Core/;../Protocols/"/>
       </SearchPaths>
