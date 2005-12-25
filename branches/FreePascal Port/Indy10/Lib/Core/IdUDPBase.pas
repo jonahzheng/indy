@@ -131,7 +131,7 @@ type
     procedure SetPort(const AValue : TIdPort); virtual;
 
     property Host: string read GetHost write SetHost;
-    property Port: Integer read GetPort write SetPort;
+    property Port: TIdPort read GetPort write SetPort;
   public
     destructor Destroy; override;
     //
