@@ -76,7 +76,7 @@ uses
   QActnList, QStdCtrls, QForms, QExtCtrls, QControls, QComCtrls, QGraphics,  Qt,
 {$endif}
 {$ifdef WidgetVCLLike}
-  ActnList, StdCtrls, Buttons, ExtCtrls, Graphics, Controls, ComCtrls, Forms,
+  ActnList, StdCtrls, Buttons, ExtCtrls, Graphics, Controls, ComCtrls, Forms, Dialogs,
   {$ENDIF}
 {$ifdef Delphi6up}
   Types
@@ -147,6 +147,7 @@ type
     procedure SetIPv6Addresses(const Value: TIdStrings);
     procedure UpdateBindingList;
   protected
+    FInUpdateRoutine : Boolean;
     FHandles : TIdSocketHandles;
     FDefaultPort : Integer;
     FIPv4Addresses : TIdStrings;
@@ -549,6 +550,7 @@ begin
   Font.Style := [];
   Position := poScreenCenter;
   PixelsPerInch := 96;
+  FInUpdateRoutine := False;
   UpdateEditControls;
 end;
 
@@ -593,6 +595,7 @@ end;
 
 procedure TIdDsnPropEdBindingVCL.btnBindingsNewExecute(Sender: TObject);
 begin
+  DebugOutput('FHandles.Add');
   FCurrentHandle := FHandles.Add;
   FCurrentHandle.IP := IPv4Wildcard;
   FCurrentHandle.Port := FDefaultPort;
@@ -806,6 +809,13 @@ var
   selected: integer;
   s: string;
 begin
+//in Lazarus, for some odd reason, if you have more than one binding,
+//the routine is called while the items are updated
+  if FInUpdateRoutine then
+  begin
+    Exit;
+  end;
+  FInUpdateRoutine := True;
   selected := lbBindings.ItemIndex;
   lbBindings.Items.BeginUpdate;
   try
@@ -817,6 +827,7 @@ begin
         end;
       end;
     end else begin
+
       lbBindings.Items.Clear;
       for i := 0 to FHandles.Count-1 do begin
         lbBindings.Items.Add(GetDisplayString(FHandles[i].IP, FHandles[i].Port,FHandles[i].IPVersion));
@@ -829,6 +840,7 @@ begin
     end else begin
       lbBindings.ItemIndex := Min(selected, lbBindings.Items.Count-1);
     end;
+    FInUpdateRoutine := False;
   end;
 end;
 
