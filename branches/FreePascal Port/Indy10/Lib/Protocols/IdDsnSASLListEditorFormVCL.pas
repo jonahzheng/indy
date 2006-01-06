@@ -606,6 +606,6 @@ end;
 
 {$IFDEF WidgetLCL}
 initialization
-  {$I IdSASLListEditorFormVCL.lrs}
+  {$I IdDsnSASLListEditorFormVCL.lrs}
 {$ENDIF}
 end.
