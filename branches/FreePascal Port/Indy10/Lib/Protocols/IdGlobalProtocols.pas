@@ -1,4 +1,4 @@
-{
+﻿{
   $Project$
   $Workfile$
   $Revision$
@@ -605,7 +605,14 @@ uses
   Libc,
     {$ENDIF}
     {$IFDEF FPC}
-  libc,
+     {$IFDEF UseLibC}
+       libc,
+     {$endif}
+     {$ifdef UseBaseUnix}
+       BaseUnix,
+       Unix,
+       DateUtils,
+     {$endif}
     {$ENDIF}
   SysUtils,
   Classes,
@@ -1667,9 +1674,15 @@ var LRec : TWin32FindData;
    LTime : Integer;
  {$ENDIF}
  {$IFDEF UNIX}
-var LRec : TStatBuf;
+var 
   LTime : Integer;
-  LU : TUnixTime;
+  {$IFDEF UseLibc}
+   LRec : TStatBuf;
+   LU : TUnixTime;
+  {$ELSE}
+   LRec : TStat;
+   LU : time_t;
+  {$endif}
  {$ENDIF}
 begin
   Result := -1;
@@ -1692,16 +1705,17 @@ begin
   end;
   {$ENDIF}
   {$IFDEF UNIX}
-  if stat(PChar(AFileName), LRec) = 0 then
+  if {$ifdef UseLibc}stat{$else}fpstat{$endif}(PChar(AFileName), LRec) = 0 then
   begin
     LTime := LRec.st_mtime;
-    {$IFDEF KYLIX}
+    {$IFDEF UseLibc}
     gmtime_r(@LTime, LU);
-    {$ELE}
-    gmtime_r(LTime,LU);
-    {$ENDIF}
     Result := EncodeDate(LU.tm_year + 1900, LU.tm_mon + 1, LU.tm_mday) +
               EncodeTime(LU.tm_hour, LU.tm_min, LU.tm_sec, 0);
+
+    {$ELSE}
+      Result:=UnixToDateTime(LTime);
+    {$ENDIF}
   end;
   {$ENDIF}
 end;
@@ -2757,7 +2771,7 @@ var
   TheTms: tms;
 begin
   //Is the following correct?
-  Result := Libc.Times(TheTms);
+  Result := {$ifdef UseBaseUnix}fptimes{$else}Libc.Times{$endif}(TheTms);
 end;
 {$ENDIF}
 
@@ -2802,11 +2816,15 @@ var
   i: LongWord;
 begin
   //TODO: No need for LHost at all? Prob can use just Result
+  {$IFDEF UseLibc}
   if GetHostname(@LHost[1], 255) <> -1 then begin
     i := IndyPos(#0, LHost);
     SetLength(Result, i - 1);
     Move(LHost, Result[1], i - 1);
   end;
+  {$else}
+     Result:=Unix.GetHostName;
+  {$endif}
 end;
 {$ENDIF}
 {$IFDEF WIN32}
@@ -2950,5 +2968,6 @@ initialization
   SetLength(IndyTrueBoolStrs, 1);
   IndyTrueBoolStrs[Low(IndyTrueBoolStrs)] := 'TRUE';    {Do not Localize}
 end.
+
 
 
