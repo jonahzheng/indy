@@ -176,6 +176,10 @@ const
       IPV6_DROP_MEMBERSHIP = IPV6_LEAVE_GROUP;
         {$endif}
       {$endif}
+    {$else}
+      IPV6_ADD_MEMBERSHIP = IPV6_JOIN_GROUP;
+      IPV6_DROP_MEMBERSHIP = IPV6_LEAVE_GROUP;
+      IPV6_CHECKSUM = 26;
     {$endif}
     Id_IP_ADD_MEMBERSHIP = IP_ADD_MEMBERSHIP;
     Id_IP_DROP_MEMBERSHIP = IP_DROP_MEMBERSHIP;
@@ -768,3 +772,4 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
 implementation
 
 end.
+
