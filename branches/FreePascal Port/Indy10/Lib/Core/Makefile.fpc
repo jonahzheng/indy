@@ -1,0 +1,89 @@
+#   Makefile.fpc for indycorefpc 10.2.0.1
+
+[package]
+name=indycorefpc
+version=10.2.0.1
+
+[compiler]
+includedir=../Inc
+unittargetdir=lib/$(CPU_TARGET)-$(OS_TARGET)
+unitdir=../System/lib/$(CPU_TARGET)-$(OS_TARGET) 
+options=-gl
+
+[target]
+units=indycorefpc
+implicitunits=IdAssignedNumbers \
+  IdBuffer \
+  IdCmdTCPClient \
+  IdCmdTCPServer \
+  IdCommandHandlers \
+  IdContext \
+  IdCustomTCPServer \
+  IdCustomTransparentProxy \
+  IdExceptionCore \
+  IdGlobalCore \
+  IdIOHandler \
+  IdIOHandlerSocket \
+  IdIOHandlerStack \
+  IdIOHandlerStream \
+  IdIPAddress \
+  IdIPMCastBase \
+  IdIPMCastClient \
+  IdIPMCastServer \
+  IdIcmpClient \
+  IdIntercept \
+  IdInterceptSimLog \
+  IdInterceptThrottler \
+  IdLogBase \
+  IdLogDebug \
+  IdLogEvent \
+  IdLogFile \
+  IdLogStream \
+  IdRawBase \
+  IdRawClient \
+  IdRawFunctions \
+  IdRawHeaders \
+  IdReply \
+  IdReplyRFC \
+  IdResourceStringsCore \
+  IdScheduler \
+  IdSchedulerOfThread \
+  IdSchedulerOfThreadDefault \
+  IdSchedulerOfThreadPool \
+  IdServerIOHandler \
+  IdServerIOHandlerSocket \
+  IdServerIOHandlerStack \
+  IdSimpleServer \
+  IdSocketHandle \
+  IdSocks \
+  IdSync \
+  IdTCPClient \
+  IdTCPConnection \
+  IdTCPServer \
+  IdTCPStream \
+  IdTask \
+  IdThread \
+  IdThreadComponent \
+  IdThreadSafe \
+  IdTraceRoute \
+  IdUDPBase \
+  IdUDPClient \
+  IdUDPServer \
+  IdYarn
+
+[clean]
+files=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) \
+      $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) \
+      $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) \
+      $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
+
+[requires]
+packages=indysystemfpc
+packagedir=../System/lib/$(CPU_TARGET)-$(OS_TARGET)
+[rules]
+.PHONY: cleartarget all
+
+cleartarget:
+        -$(DEL) $(COMPILER_UNITTARGETDIR)/indycorefpc$(PPUEXT)
+
+all: cleartarget $(COMPILER_UNITTARGETDIR) indycorefpc$(PPUEXT)
