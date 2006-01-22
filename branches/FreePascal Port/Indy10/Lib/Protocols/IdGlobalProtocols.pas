@@ -1709,7 +1709,7 @@ begin
   begin
     LTime := LRec.st_mtime;
     {$IFDEF UseLibc}
-    gmtime_r(@LTime, LU);
+    gmtime_r(LTime, LU);
     Result := EncodeDate(LU.tm_year + 1900, LU.tm_mon + 1, LU.tm_mday) +
               EncodeTime(LU.tm_hour, LU.tm_min, LU.tm_sec, 0);
 
