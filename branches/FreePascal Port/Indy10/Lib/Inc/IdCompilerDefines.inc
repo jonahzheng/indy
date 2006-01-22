@@ -206,8 +206,12 @@
   {$MODE Delphi}
   {$IFDEF UNIX}
      {$IFDEF LINUX}
-        {$DEFINE USELIBC}       // linux can also usebaseunix
-        {.$DEFINE USEBASEUNIX}
+     //In Linux, you can either use USELIBC or USEBASEUNIX.
+     //If you choose USELIBC, you need to modify the Makefile.fpc in
+     //in the System folder and generate the Makefile (preferably with the
+     //complete source tree.
+        {.$DEFINE USELIBC}
+        {$DEFINE USEBASEUNIX}
      {$ELSE}
         {$DEFINE USEBASEUNIX}
      {$ENDIF}
