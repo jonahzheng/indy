@@ -3,6 +3,8 @@
 [package]
 name=indycorefpc
 version=10.2.0.1
+main=indy
+
 
 [compiler]
 includedir=../Inc
@@ -12,6 +14,8 @@ options=-gl
 
 [target]
 units=indycorefpc
+rsts=IdResourceStringsCore.rst
+
 implicitunits=IdAssignedNumbers \
   IdBuffer \
   IdCmdTCPClient \
