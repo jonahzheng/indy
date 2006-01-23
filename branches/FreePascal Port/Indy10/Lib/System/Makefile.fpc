@@ -12,6 +12,7 @@ options=-gl
 
 [target]
 units=indysystemfpc
+rsts=IdResourceStrings
 implicitunits=IdAntiFreezeBase \
   IdBaseComponent \
   IdComponent \

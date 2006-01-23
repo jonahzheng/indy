@@ -12,6 +12,7 @@ options=-gl
 
 [target]
 units=indyprotocolsfpc
+rsts=IdResourceStringsProtocols
 implicitunits=IdASN1Util \
   IdAllFTPListParsers \
   IdAttachment \
