@@ -178,10 +178,7 @@ uses
   IdTCPServer,
   IdTCPClient;
 
-{$IFDEF FPC}
-resourcestring
-  CoreSuffix = ' - Core';
-{$ENDIF}
+
 {$IFDEF DOTNET}
   {$R IconsDotNet\TIdAntiFreeze.bmp}
   {$R IconsDotNet\TIdCmdTCPClient.bmp}

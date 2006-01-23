@@ -47,6 +47,8 @@ and NOT any design-time packages.  This is to prevent design-time resource strin
 from being linked into the Run-Time only package.
 }
 interface
+{$I IdCompilerDefines.inc}
+{$I IdDsgnCompilerDefines.inc}
 
 const
   IndyPitCrew = 'Kudzu (Chad Z. Hower)'#13#10
@@ -123,6 +125,9 @@ resourcestring
   RSRegIndyIntercepts = 'Indy Intercepts';
   RSRegIndyIOHandlers = 'Indy I/O Handlers';
   RSRegIndyMisc = 'Indy Misc';
+{$IFDEF FPC}
+  CoreSuffix = ' - Core';
+{$ENDIF}
 
 implementation
 
