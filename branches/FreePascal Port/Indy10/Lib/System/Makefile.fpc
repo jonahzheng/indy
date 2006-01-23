@@ -3,6 +3,8 @@
 [package]
 name=indysystemfpc
 version=10.2.0.1
+main=indy
+
 
 [compiler]
 includedir=../Inc
