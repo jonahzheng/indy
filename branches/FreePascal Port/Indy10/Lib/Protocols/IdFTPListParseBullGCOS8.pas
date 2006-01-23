@@ -11,8 +11,8 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
+
+
   $Log$
 
 
@@ -80,12 +80,12 @@ var LData : String;
 begin
   Result := False;
   if AListing.Count > 0 then
-  {
-  d rwx rwx ---           0 02/25/98           ftptest2      catalog1
-  - rwx rwx ---        1280 05/06/98 10:12:10  uid           testbcd
-  12345678901234567890123456789012345678901234567890123456789012345678901234567890
-           1         2         3         4         5         6         7         8
-  }
+
+//  d rwx rwx ---           0 02/25/98           ftptest2      catalog1
+//  - rwx rwx ---        1280 05/06/98 10:12:10  uid           testbcd
+//  12345678901234567890123456789012345678901234567890123456789012345678901234567890
+//           1         2         3         4         5         6         7         8
+
   begin
     LData := AListing[0];
     Result := (Length(LData)>59) and

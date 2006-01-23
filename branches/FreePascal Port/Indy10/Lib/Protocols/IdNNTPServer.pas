@@ -11,8 +11,8 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
+
+
   $Log$
 
 
@@ -379,9 +379,6 @@ uses
   IdReply,
   IdReplyRFC,
   IdSSL;
-
-resourcestring
-  RSNNTPSvrImplicitTLSRequiresSSL='Implicit NNTP requires that IOHandler be set to a TIdSSLIOHandlerSocketBase.';
 
 Const
   AuthTypes: array [1..2] of string = ('USER', 'PASS'); {Do not localize}

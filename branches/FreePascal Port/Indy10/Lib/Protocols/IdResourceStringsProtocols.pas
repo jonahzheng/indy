@@ -11,8 +11,8 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-}
-{
+
+
   $Log$
 
 
@@ -419,7 +419,8 @@ resourcestring
   RSQueryPackReceivedTooSmall = 'Received Packet is too small. %d';
   RSQueryInvalidIpV6 = 'Invalid IP V6 Address. %s';
 
-
+  RSQueryMustProvideSOARecord = 'You have to provide a TIdRR_SOA object with Serial number and Name to progress IXFR. %d';
+ 
   { LPD Client Logging event strings }
   RSLPDDataFileSaved = 'Data file saved to %s';
   RSLPDControlFileSaved = 'Control file save to %s';
@@ -551,7 +552,7 @@ resourcestring
   RSNTTPArticleRetrievedRequestTextSeparately = ' article retrieved - request text separately';
   RSNTTPNotInNewsgroup = 'Not currently in newsgroup';
   RSNNTPExtSupported = 'Extensions supported:';
-  
+
   //IdNNTPServer reply messages
   RSNTTPReplyHelpTextFollows = 'help text follows';
    RSNTTPReplyDebugOutput =  'debug output';
@@ -958,6 +959,8 @@ resourcestring
   RSIMAP4SvrNotPermittedWithTLS = 'Command not permitted when TLS active';
   RSIMAP4SvrImplicitTLSRequiresSSL = 'Implicit IMAP4 requires that IOHandler be set to a TIdServerIOHandlerSSLBase.';
 
+  //FTP Filesystem extraction
+  RSFTPFSysErrMsg = 'Permission Denied';
 implementation
 
 end.
