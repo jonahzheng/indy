@@ -425,6 +425,7 @@ type
   TIdHTTPOnHeadersAvailable = procedure(Sender: TObject; AHeaders: TIdHeaderList; var VContinue: Boolean) of object;
   TIdOnSelectAuthorization = procedure(Sender: TObject; var AuthenticationClass: TIdAuthenticationClass; AuthInfo: TIdHeaderList) of object;
   TIdOnAuthorization = procedure(Sender: TObject; Authentication: TIdAuthentication; var Handled: Boolean) of object;
+  TIdOnBeforeSetCookies = procedure(Sender: TObject; var VCookieString : string) of object; {FLX 16/01/2006}
   // TIdProxyOnAuthorization = procedure(Sender: TObject; Authentication: TIdAuthentication; var Handled: boolean) of object;
 
 const
@@ -497,6 +498,9 @@ type
   end;
 
   TIdCustomHTTP = class(TIdTCPClientCustom)
+  private
+    FOnBeforeSetCookies: TIdOnBeforeSetCookies;
+    procedure SetOnBeforeSetCookies(const Value: TIdOnBeforeSetCookies);
   protected
     {Retries counter for WWW authorization}
     FAuthRetries: Integer;
@@ -624,6 +628,7 @@ type
     property OnProxyAuthorization: TIdOnAuthorization read FOnProxyAuthorization write FOnProxyAuthorization;
     // Cookie stuff
     property CookieManager: TIdCookieManager read FCookieManager write SetCookieManager;
+    Property OnBeforeSetCookies : TIdOnBeforeSetCookies read FOnBeforeSetCookies write SetOnBeforeSetCookies;
     //
     property AuthenticationManager: TIdAuthenticationManager read FAuthenticationManager write SetAuthenticationManager;
   end;
@@ -659,6 +664,7 @@ type
     // property AuthenticationManager: TIdAuthenticationManager read FAuthenticationManager write SetAuthenticationManager;
     // ZLib compression library object for use with deflate and gzip encoding
     property Compressor;
+    property OnBeforeSetCookies;
   end;
 
   EIdUnknownProtocol = class(EIdException);
@@ -884,15 +890,25 @@ begin
   end;
 end;
 
+
+{FLX 02/02/2006}
 procedure TIdCustomHTTP.SetCookies(AURL: TIdURI; ARequest: TIdHTTPRequest);
 var
   S: string;
 begin
-  if Assigned(FCookieManager) then begin
+  if Assigned(FCookieManager) then
+  begin
     // Send secure cookies only if we have Secured connection
     S := FCookieManager.GenerateCookieList(AURL, (IOHandler is TIdSSLIOHandlerSocketBase));
-    if Length(S) > 0 then begin
-      ARequest.RawHeaders.Values['Cookie'] := S;  {do not localize}
+
+    if assigned(FOnBeforeSetCookies) then
+    begin
+         FOnBeforeSetCookies(self , S);
+    end;
+
+    if Length(S) > 0 then
+    begin
+      ARequest.RawHeaders.Values['Cookie'] := S;
     end;
   end;
 end;
@@ -2095,6 +2111,12 @@ begin
       Disconnect;
     end;
   end;
+end;
+
+procedure TIdCustomHTTP.SetOnBeforeSetCookies(
+  const Value: TIdOnBeforeSetCookies);
+begin
+  FOnBeforeSetCookies := Value;
 end;
 
 end.
