@@ -107,6 +107,7 @@ Type
     function GetCookie(Index: Integer): TIdNetscapeCookie;
   public
     property Cookies[Index: Integer]: TIdNetscapeCookie read GetCookie;
+    function IndexByPathAndName(Const APath, AName : string) : integer; {FLX 02/02/2006}
   end;
 
   {
@@ -245,7 +246,7 @@ Type
 implementation
 
 uses
-  IdAssignedNumbers;
+  IdAssignedNumbers , SysUtils;
   
 { base functions used for construction of Cookie text }
 
@@ -278,6 +279,21 @@ end;
 function TIdCookieList.GetCookie(Index: Integer): TIdNetscapeCookie;
 begin
   result := TIdNetscapeCookie(Objects[Index]);
+end;
+
+{FLX 02/02/2006}
+function TIdCookieList.IndexByPathAndName(Const APath, AName : string) : integer;
+var i : integer;
+begin
+   result := -1;
+   for i := Count - 1 downto 0 do
+   begin
+     if (AnsiSametext(Cookies[i].Path, APath)) and (AnsiSameText(Cookies[i].CookieName , AName)) then
+     begin
+        result := i;
+        exit;
+     end;
+   end;
 end;
 
 { TIdNetscapeCookie }
@@ -682,25 +698,35 @@ end;
 procedure TIdCookies.AddCookie(ACookie: TIdCookieRFC2109);
 Var
   LList: TIdCookieList;
-  j: Integer;
+  j , k: Integer;
+  LCookiesByDomain : TIdCookieList;
+  LCookieList : TIdCookieList; //FLX
 begin
-  with LockCookieListByDomain(caReadWrite) do try
-    if IndexOf(ACookie.Domain) = -1 then
+  LCookiesByDomain := LockCookieListByDomain(caReadWrite);
+
+  with LCookiesByDomain do try
+    if IndexOf(ACookie.Domain + ACookie.path) = -1 then  //FLX
     begin
       LList := TIdCookieList.Create;
-      AddObject(ACookie.Domain, LList);
+      AddObject(ACookie.Domain + ACookie.path , LList);  //FLX
     end;
 
-    j := TIdStringList(Objects[IndexOf(ACookie.Domain)]).IndexOf(ACookie.CookieName);
+    //LCookieList : Liste des cookies pour le domaine du cookie
+    LCookieList := TIdCookieList(Objects[IndexOf(ACookie.Domain + ACookie.path)]); //FLX
 
-    if j = -1 then
+    //recherche pour voir si un cookie existe pour ce nom
+    j := LCookieList.IndexOf(ACookie.CookieName);
+
+    //S'il n'y a pas de cookie pour ce nom et ce chemin, on l'ajoute à cette liste de cookie pour ce domaine
+    if (j = -1) then
     begin
-      TIdStringList(Objects[IndexOf(ACookie.Domain)]).AddObject(ACookie.CookieName, ACookie);
+      LCookieList.AddObject(ACookie.CookieName, ACookie);
     end
-    else begin
-      TIdCookieRFC2109(TIdStringList(Objects[IndexOf(ACookie.Domain)]).Objects[j]).Assign(ACookie);
-      ACookie.Collection := nil;
-      ACookie.Free;
+    else
+    begin
+        TIdCookieRFC2109(LCookieList.Objects[j]).Assign(ACookie);  //FLX
+        ACookie.Collection := nil;
+        ACookie.Free;
     end;
   finally
     UnlockCookieListByDomain(caReadWrite);
