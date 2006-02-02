@@ -97,6 +97,7 @@ Type
     function GenerateCookieList(URL: TIdURI; SecureConnection: Boolean = false): String;
     //
     property CookieCollection: TIdCookies read FCookieCollection;
+    procedure DestroyCookieList;{FLX 02/02/2006}
   published
     property OnCreate: TOnCreateEvent read FOnCreate write FOnCreate;
     property OnDestroy: TOnDestroyEvent read FOnDestroy write FOnDestroy;
@@ -106,7 +107,7 @@ Type
 implementation
 
 uses
-  IdGlobal, IdGlobalProtocols;
+  IdGlobal, IdGlobalProtocols , SySutils;
 
 { TIdCookieManager }
 
@@ -118,6 +119,7 @@ begin
   inherited Destroy;
 end;
 
+{FLX 16/01/2006}
 function TIdCookieManager.GenerateCookieList(URL: TIdURI; SecureConnection: Boolean = false): String;
 Var
   S: String;
@@ -126,19 +128,25 @@ Var
   LResultList: TIdCookieList;
   LCookiesByDomain: TIdCookieList;
 begin
+
+
   CleanupCookieList;
+
   S := '';    {Do not Localize}
   LCookiesByDomain := FCookieCollection.LockCookieListByDomain(caRead);
   try
     if LCookiesByDomain.Count > 0 then
     begin
       LResultList := TIdCookieList.Create;
+     // LResultList.Duplicates := dupAccept;
+      LResultList.Sorted := true;
 
       try
         // Search for cookies for this domain
         for i := 0 to LCookiesByDomain.Count - 1 do
         begin
-          if IndyPos(LCookiesByDomain[i], URL.Host) > 0 then
+          if IndyPos(Uppercase(LCookiesByDomain[i]), Uppercase(URL.Host + URL.path)) > 0 then {FLX}
+
           begin
             LCookieList := LCookiesByDomain.Objects[i] as TIdCookieList;
 
@@ -284,6 +292,34 @@ begin
   inherited InitComponent;
   FCookieCollection := TIdCookies.Create(self);
   DoOnCreate;
+end;
+
+{FLX 02/02/2006}
+procedure TIdCookieManager.DestroyCookieList;
+Var
+  i, j: Integer;
+  LCookieList: TIdCookieList;
+  LCookiesByDomain: TIdCookieList;
+begin
+  LCookiesByDomain := FCookieCollection.LockCookieListByDomain(caReadWrite);
+  try
+    if LCookiesByDomain.Count > 0 then
+    begin
+      for i := 0 to LCookiesByDomain.Count - 1 do
+      begin
+        LCookieList := LCookiesByDomain.Objects[i] as TIdCookieList;
+
+        for j := LCookieList.Count - 1 downto 0 do
+        begin
+          LCookieList.Cookies[j].Free;
+          if LCookieList.count - 1 >= j then
+             LCookieList.Delete(j);
+        end;
+      end;
+    end;
+  finally
+    FCookieCollection.UnlockCookieListByDomain(caReadWrite);
+  end;
 end;
 
 end.
