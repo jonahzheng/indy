@@ -233,6 +233,11 @@ files=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) \
 [requires]
 packages=indysystemfpc,indycorefpc
 packagedir=../System/lib/$(CPU_TARGET)-$(OS_TARGET)/:../Core/lib/$(CPU_TARGET)-$(OS_TARGET)/
+
+#[install]
+[shared]	
+build=n
+
 [rules]
 .PHONY: cleartarget all
 

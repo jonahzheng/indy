@@ -84,6 +84,9 @@ files=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) \
 [requires]
 packages=indysystemfpc
 packagedir=../System/lib/$(CPU_TARGET)-$(OS_TARGET)
+#[install]
+[shared]	
+build=n
 [rules]
 .PHONY: cleartarget all
 
