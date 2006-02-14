@@ -8,6 +8,7 @@ rm -rf $HOME/indy 2> /dev/null
 rmdir $HOME/indy 2> /dev/null
 echo "Cleaning /mnt/hgfs"
 ./cleanindy.sh /mnt/hgfs
+mkdir $HOME/indy
 echo "Copying Indy to $HOME/indy
 cp -rpf /mnt/hgfs/indy/* $HOME/indy
 
