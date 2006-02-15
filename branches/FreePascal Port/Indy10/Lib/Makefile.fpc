@@ -1,23 +1,12 @@
 [package]
-
 name=indy
-
 version=10.2.0.1
-
-
 [target]
-
 dirs=System Core Protocols
-
-
 [install]
-
 fpcpackage=y
+[shared]
+build=n
 
 
-[dist]
-
-destdir=$(BASEDIR)/dist
-
-[compiler]
 
