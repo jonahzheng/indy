@@ -75,11 +75,6 @@ implicitunits=IdAssignedNumbers \
   IdUDPServer \
   IdYarn
 
-[clean]
-files=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) \
-      $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) \
-      $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) \
-      $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
 
 [requires]
 packages=indysystemfpc fcl
@@ -92,11 +87,3 @@ buildunit=indycorefpc
 
 [shared]	
 build=n
-
-[rules]
-.PHONY: cleartarget all
-
-cleartarget:
-        -$(DEL) $(COMPILER_UNITTARGETDIR)/indycorefpc$(PPUEXT)
-
-all: cleartarget $(COMPILER_UNITTARGETDIR) indycorefpc$(PPUEXT)

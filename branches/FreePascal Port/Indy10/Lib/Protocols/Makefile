@@ -241,9 +241,6 @@ endif
 ifeq ($(FULL_TARGET),i386-win32)
 override TARGET_RSTS+=IdResourceStringsProtocols
 endif
-ifeq ($(FULL_TARGET),i386-win32)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
 override INSTALL_BUILDUNIT=indyprotocolsfpc
 override INSTALL_FPCPACKAGE=y
 override INSTALL_FPCSUBDIR=packages/extra
@@ -1497,6 +1494,7 @@ endif
 fpc_makefile_sub2: $(addsuffix _makefile_dirs,$(TARGET_DIRS) $(TARGET_EXAMPLEDIRS))
 fpc_makefile_dirs: fpc_makefile_sub1 fpc_makefile_sub2
 fpc_makefiles: fpc_makefile fpc_makefile_dirs
+all: fpc_all
 debug: fpc_debug
 smart: fpc_smart
 release: fpc_release
@@ -1516,11 +1514,7 @@ distclean: fpc_distclean
 cleanall: fpc_cleanall
 info: fpc_info
 makefiles: fpc_makefiles
-.PHONY: debug smart release units examples shared install sourceinstall exampleinstall distinstall zipinstall zipsourceinstall zipexampleinstall zipdistinstall clean distclean cleanall info makefiles
+.PHONY: all debug smart release units examples shared install sourceinstall exampleinstall distinstall zipinstall zipsourceinstall zipexampleinstall zipdistinstall clean distclean cleanall info makefiles
 ifneq ($(wildcard fpcmake.loc),)
 include fpcmake.loc
 endif
-.PHONY: cleartarget all
-cleartarget:
-	-$(DEL) $(COMPILER_UNITTARGETDIR)/indyprotocolsfpc$(PPUEXT)
-all: cleartarget $(COMPILER_UNITTARGETDIR) indyprotocolsfpc$(PPUEXT)
