@@ -52,7 +52,9 @@ uses
   IdGlobal,
   IdHash;
 
-Type PByteArray = pchar;
+Type
+  TByteArray = array of byte; 
+  PByteArray = ^TByteArray;
 
 type
   TIdHashAdler32 = class(TIdHash32)
@@ -87,22 +89,22 @@ begin
       k := NMAX;
     dec(len, k);
     while (k >= 16) do begin
-      inc(s1, buf[0]); inc(s2, s1);     //   loop unrolled 16 times
-      inc(s1, buf[1]); inc(s2, s1);     //
-      inc(s1, buf[2]); inc(s2, s1);     //
-      inc(s1, buf[3]); inc(s2, s1);     //
-      inc(s1, buf[4]); inc(s2, s1);     //
-      inc(s1, buf[5]); inc(s2, s1);     //
-      inc(s1, buf[6]); inc(s2, s1);     //
-      inc(s1, buf[7]); inc(s2, s1);     //
-      inc(s1, buf[8]); inc(s2, s1);     //
-      inc(s1, buf[9]); inc(s2, s1);     //
-      inc(s1, buf[10]); inc(s2, s1);    //
-      inc(s1, buf[11]); inc(s2, s1);    //
-      inc(s1, buf[12]); inc(s2, s1);    //
-      inc(s1, buf[13]); inc(s2, s1);    //
-      inc(s1, buf[14]); inc(s2, s1);    //
-      inc(s1, buf[15]); inc(s2, s1);    //   loop unrolled 16 times
+      inc(s1, buf^[0]); inc(s2, s1);     //   loop unrolled 16 times
+      inc(s1, buf^[1]); inc(s2, s1);     //
+      inc(s1, buf^[2]); inc(s2, s1);     //
+      inc(s1, buf^[3]); inc(s2, s1);     //
+      inc(s1, buf^[4]); inc(s2, s1);     //
+      inc(s1, buf^[5]); inc(s2, s1);     //
+      inc(s1, buf^[6]); inc(s2, s1);     //
+      inc(s1, buf^[7]); inc(s2, s1);     //
+      inc(s1, buf^[8]); inc(s2, s1);     //
+      inc(s1, buf^[9]); inc(s2, s1);     //
+      inc(s1, buf^[10]); inc(s2, s1);    //
+      inc(s1, buf^[11]); inc(s2, s1);    //
+      inc(s1, buf^[12]); inc(s2, s1);    //
+      inc(s1, buf^[13]); inc(s2, s1);    //
+      inc(s1, buf^[14]); inc(s2, s1);    //
+      inc(s1, buf^[15]); inc(s2, s1);    //   loop unrolled 16 times
       buf:=@buf[16];
       dec(k, 16);
     end;
