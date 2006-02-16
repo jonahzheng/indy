@@ -232,61 +232,6 @@ PACKAGESDIR:=$(wildcard $(FPCDIR) $(FPCDIR)/packages/base $(FPCDIR)/packages/ext
 override PACKAGE_NAME=indy
 override PACKAGE_VERSION=10.2.0.1
 PACKAGEDIR_MAIN:=$(firstword $(subst /Makefile.fpc,,$(strip $(wildcard $(addsuffix /indy/Makefile.fpc,$(PACKAGESDIR))))))
-ifeq ($(OS_TARGET),amiga)
-endif
-ifeq ($(OS_TARGET),atari)
-endif
-ifeq ($(OS_TARGET),beos)
-endif
-ifeq ($(OS_TARGET),darwin)
-endif
-ifeq ($(OS_TARGET),emx)
-endif
-ifeq ($(OS_TARGET),freebsd)
-PLATUNITS=IdStackUnix IdStackBSDBase
-endif
-ifeq ($(OS_TARGET),go32v1)
-endif
-ifeq ($(OS_TARGET),go32v2)
-endif
-ifeq ($(OS_TARGET),linux)
-PLATUNITS=IdStackUnix IdStackBSDBase IdSysLinux
-endif
-ifeq ($(OS_TARGET),macos)
-endif
-ifeq ($(OS_TARGET),morphos)
-endif
-ifeq ($(OS_TARGET),netbsd)
-PLATUNITS=IdStackUnix IdStackBSDBase
-endif
-ifeq ($(OS_TARGET),netware)
-endif
-ifeq ($(OS_TARGET),netwlibc)
-endif
-ifeq ($(OS_TARGET),openbsd)
-PLATUNITS=IdStackUnix IdStackBSDBase
-endif
-ifeq ($(OS_TARGET),os2)
-endif
-ifeq ($(OS_TARGET),palmos)
-endif
-ifeq ($(OS_TARGET),qnx)
-endif
-ifeq ($(OS_TARGET),solaris)
-PLATUNITS=IdStackUnix IdStackBSDBase
-endif
-ifeq ($(OS_TARGET),watcom)
-endif
-ifeq ($(OS_TARGET),win32)
-PLATUNITS=IdStackBSDBase IdStackWindows IdWinsock2 IdWship6 IdSysWin32
-endif
-ifeq ($(OS_TARGET),win64)
-PLATUNITS=IdStackBSDBase IdStackWindows IdWinsock2 IdWship6 IdSysWin32
-endif
-ifeq ($(OS_TARGET),wince)
-endif
-ifeq ($(OS_TARGET),wdosx)
-endif
 ifeq ($(FULL_TARGET),i386-linux)
 override TARGET_UNITS+=indysystemfpc
 endif
@@ -405,121 +350,121 @@ ifeq ($(FULL_TARGET),powerpc64-linux)
 override TARGET_UNITS+=indysystemfpc
 endif
 ifeq ($(FULL_TARGET),i386-linux)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),i386-go32v2)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),i386-win32)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackBSDBase IdStackWindows IdWinsock2 IdWship6 IdSysWin32
 endif
 ifeq ($(FULL_TARGET),i386-os2)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),i386-freebsd)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),i386-beos)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),i386-netbsd)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),i386-solaris)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),i386-qnx)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),i386-netware)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),i386-openbsd)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),i386-wdosx)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),i386-darwin)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),i386-emx)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),i386-watcom)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),i386-netwlibc)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),i386-wince)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),m68k-linux)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),m68k-freebsd)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),m68k-netbsd)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),m68k-amiga)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),m68k-atari)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),m68k-openbsd)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),m68k-palmos)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),powerpc-linux)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),powerpc-netbsd)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),powerpc-macos)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),powerpc-darwin)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),powerpc-morphos)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),sparc-linux)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),sparc-netbsd)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),sparc-solaris)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),x86_64-linux)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),x86_64-freebsd)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),x86_64-win64)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackBSDBase IdStackWindows IdWinsock2 IdWship6 IdSysWin32
 endif
 ifeq ($(FULL_TARGET),arm-linux)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),arm-palmos)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),arm-wince)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),powerpc64-linux)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL $(PLATUNITS)
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),i386-linux)
 override TARGET_RSTS+=IdResourceStrings
@@ -637,126 +582,10 @@ override TARGET_RSTS+=IdResourceStrings
 endif
 ifeq ($(FULL_TARGET),powerpc64-linux)
 override TARGET_RSTS+=IdResourceStrings
-endif
-ifeq ($(FULL_TARGET),i386-linux)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-go32v2)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-win32)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-os2)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-freebsd)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-beos)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-netbsd)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-solaris)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-qnx)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-netware)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-openbsd)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-wdosx)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-darwin)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-emx)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-watcom)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-netwlibc)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),i386-wince)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),m68k-linux)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),m68k-freebsd)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),m68k-netbsd)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),m68k-amiga)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),m68k-atari)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),m68k-openbsd)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),m68k-palmos)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),powerpc-linux)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),powerpc-netbsd)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),powerpc-macos)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),powerpc-darwin)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),powerpc-morphos)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),sparc-linux)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),sparc-netbsd)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),sparc-solaris)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),x86_64-linux)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),x86_64-freebsd)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),x86_64-win64)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),arm-linux)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),arm-palmos)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),arm-wince)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-endif
-ifeq ($(FULL_TARGET),powerpc64-linux)
-override CLEAN_FILES+=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
 endif
 override INSTALL_BUILDUNIT=indysystemfpc
 override INSTALL_FPCPACKAGE=y
+override INSTALL_FPCSUBDIR=packages/extra
 ifeq ($(FULL_TARGET),i386-linux)
 override COMPILER_OPTIONS+=-gl
 endif
@@ -3275,6 +3104,7 @@ endif
 fpc_makefile_sub2: $(addsuffix _makefile_dirs,$(TARGET_DIRS) $(TARGET_EXAMPLEDIRS))
 fpc_makefile_dirs: fpc_makefile_sub1 fpc_makefile_sub2
 fpc_makefiles: fpc_makefile fpc_makefile_dirs
+all: fpc_all
 debug: fpc_debug
 smart: fpc_smart
 release: fpc_release
@@ -3294,11 +3124,7 @@ distclean: fpc_distclean
 cleanall: fpc_cleanall
 info: fpc_info
 makefiles: fpc_makefiles
-.PHONY: debug smart release units examples shared install sourceinstall exampleinstall distinstall zipinstall zipsourceinstall zipexampleinstall zipdistinstall clean distclean cleanall info makefiles
+.PHONY: all debug smart release units examples shared install sourceinstall exampleinstall distinstall zipinstall zipsourceinstall zipexampleinstall zipdistinstall clean distclean cleanall info makefiles
 ifneq ($(wildcard fpcmake.loc),)
 include fpcmake.loc
 endif
-.PHONY: cleartarget all
-cleartarget:
-	-$(DEL) $(COMPILER_UNITTARGETDIR)/indysystemfpc$(PPUEXT)
-all: cleartarget $(COMPILER_UNITTARGETDIR) indysystemfpc$(PPUEXT)
