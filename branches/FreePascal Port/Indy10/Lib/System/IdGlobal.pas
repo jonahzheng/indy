@@ -742,6 +742,7 @@ type
  //thread and PID stuff
  {$IFDEF DotNet}
       TIdPID = LongWord;
+      TidThreadId = LongWord;
     {$IFDEF DotNetDistro}
       TIdThreadPriority = System.Threading.ThreadPriority;
     {$ELSE}
@@ -751,6 +752,7 @@ type
  {$IFDEF UNIX}
     {$IFDEF USELIBC}
       TIdPID = LongInt;
+      TidThreadId = LongInt;
       {$IFDEF IntThreadPriority}
       TIdThreadPriority = -20..19;
       {$ELSE}
@@ -758,12 +760,14 @@ type
       {$ENDIF}
     {$ENDIF}
     {$IFDEF UseBaseUnix}
-        TidPID = TPid;
+      TidPID = TPid;
+      TidThreadId = TThreadId;
       TIdThreadPriority = TThreadPriority;
     {$ENDIF}
  {$ENDIF}
  {$IFDEF WIN32}
     TIdPID = LongWord;
+    TidThreadId = LongWord;
     TIdThreadPriority = TThreadPriority;
  {$ENDIF}
 
@@ -1123,8 +1127,8 @@ function FetchCaseInsensitive(var AInput: string; const ADelim: string = IdFetch
 
 procedure FillBytes(var VBytes : TIdBytes; const ACount : Integer; const AValue : Byte);
 
-function CurrentThreadId: TIdPID;
-function GetThreadHandle(AThread: TIdNativeThread): THandle;
+function CurrentThreadId: TIdThreadId;
+function GetThreadHandle(AThread: TIdNativeThread): TIdThreadId;
 //GetTickDiff required because GetTickCount will wrap
 function GetTickDiff(const AOldTickCount, ANewTickCount: Cardinal): Cardinal; //IdICMP uses it
 procedure IdDelete(var s: string; AOffset, ACount: Integer);
@@ -1686,7 +1690,7 @@ begin
   {$ENDIF}
 end;
 
-function CurrentThreadId: TIdPID;
+function CurrentThreadId: TidThreadid;
 begin
 {$IFDEF DotNet}
   // SG: I'm not sure if this return the handle of the dotnet thread or the handle of the application domain itself (or even if there is a difference)
@@ -1777,7 +1781,7 @@ begin
   end;
 end;
 
-function GetThreadHandle(AThread: TIdNativeThread): THandle;
+function GetThreadHandle(AThread: TIdNativeThread): TIdThreadId;
 begin
   {$IFDEF UNIX}
   Result := AThread.ThreadID; // Works both in UseBaseUnix and UseLibc
