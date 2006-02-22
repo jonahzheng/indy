@@ -1560,18 +1560,24 @@ begin
    //TODO:  Figure out how to do this in FPC, the function seems to be missing.
   if APath = '' then
   begin
-    {$IFDEF KYLIX}
+    {$IFDEF UseLibC}
     Result := libc.tempnam(nil, 'Indy');
+    {$ENDIF}
+    {$IFDEF UseBaseUnix} // FPC has wrapper function in SysUtils
+			 // This might be an addition to a later 2.0 version
+       Result:=GetTempFileName('','Indy');
     {$ENDIF}
   end
   
   else
   begin
-    {$IFDEF KYLIX}
+    {$IFDEF UseLibC}
     Result := libc.tempnam(PChar(APath), 'Indy');
     {$ENDIF}
+    {$IFDEF UseBaseUnix}
+       Result:=GetTempFileName(APath,'Indy');
+    {$ENDIF}
   end;
-
   {$ELSE}
 
   LFQE := AExt;
@@ -2782,26 +2788,36 @@ begin
 end;
 {$ENDIF}
 
-// Arg1=EAX, Arg2=DL
+{$UNDEF DONTHAVENATIVEX86}
 {$IFDEF DOTNET}
+  {$DEFINE DONTHAVENATIVEX86}
+{$ENDIF}
+{$IFDEF FPC}
+  {$IFNDEF i386}
+     {$DEFINE  DONTHAVENATIVEX86}
+  {$ENDIF}
+{$ENDIF}
+
+{$IFDEF  DONTHAVENATIVEX86}
 function ROL(AVal: LongWord; AShift: Byte): LongWord;
 begin
    Result := (AVal shl AShift) or (AVal shr (32 - AShift));
 end;
+
+function ROR(AVal: LongWord; AShift: Byte): LongWord;
+begin
+   Result := (AVal shr AShift) or (AVal shl (32 - AShift)) ;
+end;
+
 {$ELSE}
+
+// Arg1=EAX, Arg2=DL
 function ROL(AVal: LongWord; AShift: Byte): LongWord;
 asm
   mov  cl, dl
   rol  eax, cl
 end;
-{$ENDIF}
 
-{$IFDEF DOTNET}
-function ROR(AVal: LongWord; AShift: Byte): LongWord;
-begin
-   Result := (AVal shr AShift) or (AVal shl (32 - AShift)) ;
-end;
-{$ELSE}
 function ROR(AVal: LongWord; AShift: Byte): LongWord;
 asm
   mov  cl, dl
