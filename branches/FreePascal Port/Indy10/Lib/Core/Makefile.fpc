@@ -77,7 +77,7 @@ implicitunits=IdAssignedNumbers \
 
 
 [requires]
-packages=indysystemfpc fcl
+packages=indysystemfpc
 packagedir=../System/lib/$(CPU_TARGET)-$(OS_TARGET)
 
 [install]
