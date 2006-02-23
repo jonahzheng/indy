@@ -226,7 +226,7 @@ implicitunits=IdASN1Util \
 
 
 [requires]
-packages=indysystemfpc,indycorefpc
+packages=indycorefpc
 packagedir=../System/lib/$(CPU_TARGET)-$(OS_TARGET)/:../Core/lib/$(CPU_TARGET)-$(OS_TARGET)/
 
 [install]

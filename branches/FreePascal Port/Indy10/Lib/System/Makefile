@@ -374,7 +374,7 @@ ifeq ($(FULL_TARGET),i386-solaris)
 override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),i386-qnx)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
 endif
 ifeq ($(FULL_TARGET),i386-netware)
 override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
