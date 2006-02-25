@@ -26,7 +26,6 @@ uses
   System.IO,
   {$ENDIF}
   {$IFDEF DELPHI5}
-  FileCtrl,
   {$ENDIF}
   IdSysBase,
   SysUtils;
@@ -49,7 +48,7 @@ type
 
     class function Now : TDateTime;  
     class function FormatDateTime(const Format: string; ADateTime: TDateTime): string; 
-    class function Format(const AFormat: string; const AArgs: array of const): string;
+    class function Format(const Format: string; const Args: array of const): string;
 
     class function FileDateToDateTime(FileDate: Integer): TDateTime;
     class function CompareStr(const S1, S2: string): Integer;
@@ -186,8 +185,8 @@ begin
   Result := SysUtils.FileExists(FileName);
 end;
 
-class function TIdSysVCL.Format(const AFormat: string;
-  const AArgs: array of const): string;
+class function TIdSysVCL.Format(const Format: string;
+  const Args: array of const): string;
 begin
   {$IFNDEF TFormatSettings}
   //Is there a way to get delphi5 to use locale in format? something like:
@@ -196,10 +195,11 @@ begin
   //  Application.UpdateFormatSettings := False; //needed?
   //  format()
   //  set locale back to prior
-  Result := SysUtils.Format(AFormat,AArgs);
+  Result := SysUtils.Format(Format,Args);
   {$ELSE}
-  Result := SysUtils.Format(AFormat,AArgs,GetEnglishSetting);
+  Result := SysUtils.Format(Format,Args,GetEnglishSetting);
   {$ENDIF}
+
 end;
 
 class procedure TIdSysVCL.FreeAndNil(var Obj);
@@ -209,19 +209,19 @@ end;
 
 class function TIdSysVCL.IncludeTrailingPathDelimiter(const S: string): string;
 begin
-  {$IFDEF DELPHI5}
-  Result := SysUtils.IncludeTrailingBackslash(S);
-  {$ELSE}
+  {$IFDEF VCL6ORABOVE}
   Result := SysUtils.IncludeTrailingPathDelimiter(S);
+  {$ELSE}
+  Result := SysUtils.IncludeTrailingBackslash(S);
   {$ENDIF}
 end;
 
 class function TIdSysVCL.ExcludeTrailingPathDelimiter(const S: string): string;
 begin
-  {$IFDEF DELPHI5}
-  Result := SysUtils.ExcludeTrailingBackslash(S);
-  {$ELSE}
+  {$IFDEF VCL6ORABOVE}
   Result := SysUtils.ExcludeTrailingPathDelimiter(S);
+  {$ELSE}
+  Result := SysUtils.ExcludeTrailingBackslash(S);
   {$ENDIF}
 end;
 
@@ -258,22 +258,21 @@ end;
 
 class procedure TIdSysVCL.RaiseLastOSError;
 begin
-  {$IFDEF DELPHI5}
-  SysUtils.RaiseLastWin32Error;
-  {$ELSE}
+  {$IFDEF VCL6ORABOVE}
   SysUtils.RaiseLastOSError;
+  {$ELSE}
+  SysUtils.RaiseLastWin32Error;
   {$ENDIF}
 end;
 
-class function TIdSysVCL.StringReplace(const S: String; const OldPattern,
-  NewPattern: array of string): string;
+class function TIdSysVCL.StringReplace(const S: String; const OldPattern, NewPattern: array of string): string;
 var
   i : Integer;
 begin
-  Result:=s;
+  Result := s;
   for i := Low(OldPattern) to High(OldPattern) do
   begin
-    Result := SysUtils.StringReplace(Result,OldPattern[i],NewPattern[i],[rfReplaceAll]);
+    Result := SysUtils.StringReplace(Result, OldPattern[i], NewPattern[i], [rfReplaceAll]);
   end;
 end;
 
@@ -297,7 +296,7 @@ end;
 class function TIdSysVCL.StrToInt(const S: string;
   Default: Integer): Integer;
 begin
-  Result := SysUtils.StrToIntDef(Trim(S),Default);
+  Result := SysUtils.StrToIntDef(Trim(S), Default);
 end;
 
 class function TIdSysVCL.Trim(const S: string): string;
@@ -416,11 +415,16 @@ begin
 end;
 
 class function TIdSysVCL.DirectoryExists(const Directory: string): Boolean;
+{$IFNDEF VCL6ORABOVE}
+var Code: Integer;
+{$ENDIF}
 begin
-  {$IFDEF DELPHI5}
-  Result := FileCtrl.DirectoryExists(Directory);
-  {$ELSE}
+  {$IFDEF VCL6ORABOVE}
   Result := SysUtils.DirectoryExists(Directory);
+  {$ELSE}
+  // RLebeau 2/16/2006: Removed dependency on the FileCtrl unit
+  Code := GetFileAttributes(PChar(Directory));
+  Result := (Code <> -1) and (FILE_ATTRIBUTE_DIRECTORY and Code <> 0);
   {$ENDIF}
 end;
 

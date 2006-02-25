@@ -16,161 +16,161 @@
   $Log$
 }
 {
-   Rev 1.8    10/26/2004 8:20:04 PM  JPMugaas
- Fixed some oversights with conversion.  OOPS!!!
+{   Rev 1.8    10/26/2004 8:20:04 PM  JPMugaas
+{ Fixed some oversights with conversion.  OOPS!!!
 }
 {
-   Rev 1.7    07/06/2004 21:31:24  CCostelloe
- Kylix 3 changes
+{   Rev 1.7    07/06/2004 21:31:24  CCostelloe
+{ Kylix 3 changes
 }
 {
-   Rev 1.6    4/18/04 10:43:24 PM  RLebeau
- Fixed syntax error
+{   Rev 1.6    4/18/04 10:43:24 PM  RLebeau
+{ Fixed syntax error
 }
 {
-   Rev 1.5    4/18/04 10:29:58 PM  RLebeau
- Renamed Int64Parts structure to TIdInt64Parts
+{   Rev 1.5    4/18/04 10:29:58 PM  RLebeau
+{ Renamed Int64Parts structure to TIdInt64Parts
 }
 {
-   Rev 1.4    4/18/04 2:47:46 PM  RLebeau
- Conversion support for Int64 values
+{   Rev 1.4    4/18/04 2:47:46 PM  RLebeau
+{ Conversion support for Int64 values
 }
 {
-   Rev 1.3    2004.03.07 11:45:28 AM  czhower
- Flushbuffer fix + other minor ones found
+{   Rev 1.3    2004.03.07 11:45:28 AM  czhower
+{ Flushbuffer fix + other minor ones found
 }
 {
-   Rev 1.2    3/6/2004 5:16:34 PM  JPMugaas
- Bug 67 fixes.  Do not write to const values.
+{   Rev 1.2    3/6/2004 5:16:34 PM  JPMugaas
+{ Bug 67 fixes.  Do not write to const values.
 }
 {
-   Rev 1.1    3/6/2004 4:23:52 PM  JPMugaas
- Error #62 fix.  This seems to work in my tests.
+{   Rev 1.1    3/6/2004 4:23:52 PM  JPMugaas
+{ Error #62 fix.  This seems to work in my tests.
 }
 {
-   Rev 1.0    2004.02.03 3:14:48 PM  czhower
- Move and updates
+{   Rev 1.0    2004.02.03 3:14:48 PM  czhower
+{ Move and updates
 }
 {
-   Rev 1.33    2/1/2004 6:10:56 PM  JPMugaas
- GetSockOpt.
+{   Rev 1.33    2/1/2004 6:10:56 PM  JPMugaas
+{ GetSockOpt.
 }
 {
-   Rev 1.32    2/1/2004 3:28:36 AM  JPMugaas
- Changed WSGetLocalAddress to GetLocalAddress and moved into IdStack since
- that will work the same in the DotNET as elsewhere.  This is required to
- reenable IPWatch.
+{   Rev 1.32    2/1/2004 3:28:36 AM  JPMugaas
+{ Changed WSGetLocalAddress to GetLocalAddress and moved into IdStack since
+{ that will work the same in the DotNET as elsewhere.  This is required to
+{ reenable IPWatch.
 }
 {
-   Rev 1.31    1/31/2004 1:12:48 PM  JPMugaas
- Minor stack changes required as DotNET does support getting all IP addresses
- just like the other stacks.
+{   Rev 1.31    1/31/2004 1:12:48 PM  JPMugaas
+{ Minor stack changes required as DotNET does support getting all IP addresses
+{ just like the other stacks.
 }
 {
-   Rev 1.30    12/4/2003 3:14:52 PM  BGooijen
- Added HostByAddress
+{   Rev 1.30    12/4/2003 3:14:52 PM  BGooijen
+{ Added HostByAddress
 }
 {
-   Rev 1.29    1/3/2004 12:38:56 AM  BGooijen
- Added function SupportsIPv6
+{   Rev 1.29    1/3/2004 12:38:56 AM  BGooijen
+{ Added function SupportsIPv6
 }
 {
-   Rev 1.28    12/31/2003 9:52:02 PM  BGooijen
- Added IPv6 support
+{   Rev 1.28    12/31/2003 9:52:02 PM  BGooijen
+{ Added IPv6 support
 }
 {
-   Rev 1.27    10/26/2003 05:33:14 PM  JPMugaas
- LocalAddresses should work.
+{   Rev 1.27    10/26/2003 05:33:14 PM  JPMugaas
+{ LocalAddresses should work.
 }
 {
-   Rev 1.26    10/26/2003 5:04:28 PM  BGooijen
- UDP Server and Client
+{   Rev 1.26    10/26/2003 5:04:28 PM  BGooijen
+{ UDP Server and Client
 }
 {
-   Rev 1.25    10/26/2003 09:10:26 AM  JPMugaas
- Calls necessary for IPMulticasting.
+{   Rev 1.25    10/26/2003 09:10:26 AM  JPMugaas
+{ Calls necessary for IPMulticasting.
 }
 {
-   Rev 1.24    10/22/2003 04:40:52 PM  JPMugaas
- Should compile with some restored functionality.  Still not finished.
+{   Rev 1.24    10/22/2003 04:40:52 PM  JPMugaas
+{ Should compile with some restored functionality.  Still not finished.
 }
 {
-   Rev 1.23    10/21/2003 11:04:20 PM  BGooijen
- Fixed name collision
+{   Rev 1.23    10/21/2003 11:04:20 PM  BGooijen
+{ Fixed name collision
 }
 {
-   Rev 1.22    10/21/2003 01:20:02 PM  JPMugaas
- Restore GWindowsStack because it was needed by SuperCore.
+{   Rev 1.22    10/21/2003 01:20:02 PM  JPMugaas
+{ Restore GWindowsStack because it was needed by SuperCore.
 }
 {
-   Rev 1.21    10/21/2003 06:24:28 AM  JPMugaas
- BSD Stack now have a global variable for refercing by platform specific
- things.  Removed corresponding var from Windows stack.
+{   Rev 1.21    10/21/2003 06:24:28 AM  JPMugaas
+{ BSD Stack now have a global variable for refercing by platform specific
+{ things.  Removed corresponding var from Windows stack.
 }
 {
-   Rev 1.20    10/19/2003 5:21:32 PM  BGooijen
- SetSocketOption
+{   Rev 1.20    10/19/2003 5:21:32 PM  BGooijen
+{ SetSocketOption
 }
 {
-   Rev 1.19    2003.10.11 5:51:16 PM  czhower
- -VCL fixes for servers
- -Chain suport for servers (Super core)
- -Scheduler upgrades
- -Full yarn support
+{   Rev 1.19    2003.10.11 5:51:16 PM  czhower
+{ -VCL fixes for servers
+{ -Chain suport for servers (Super core)
+{ -Scheduler upgrades
+{ -Full yarn support
 }
 {
-   Rev 1.18    2003.10.02 8:01:08 PM  czhower
- .Net
+{   Rev 1.18    2003.10.02 8:01:08 PM  czhower
+{ .Net
 }
 {
-   Rev 1.17    2003.10.02 12:44:44 PM  czhower
- Fix for Bind, Connect
+{   Rev 1.17    2003.10.02 12:44:44 PM  czhower
+{ Fix for Bind, Connect
 }
 {
-   Rev 1.16    2003.10.02 10:16:32 AM  czhower
- .Net
+{   Rev 1.16    2003.10.02 10:16:32 AM  czhower
+{ .Net
 }
 {
-   Rev 1.15    2003.10.01 9:11:26 PM  czhower
- .Net
+{   Rev 1.15    2003.10.01 9:11:26 PM  czhower
+{ .Net
 }
 {
-   Rev 1.14    2003.10.01 12:30:08 PM  czhower
- .Net
+{   Rev 1.14    2003.10.01 12:30:08 PM  czhower
+{ .Net
 }
 {
-   Rev 1.12    10/1/2003 12:14:12 AM  BGooijen
- DotNet: removing CheckForSocketError
+{   Rev 1.12    10/1/2003 12:14:12 AM  BGooijen
+{ DotNet: removing CheckForSocketError
 }
 {
-   Rev 1.11    2003.10.01 1:12:40 AM  czhower
- .Net
+{   Rev 1.11    2003.10.01 1:12:40 AM  czhower
+{ .Net
 }
 {
-   Rev 1.10    2003.09.30 1:23:04 PM  czhower
- Stack split for DotNet
+{   Rev 1.10    2003.09.30 1:23:04 PM  czhower
+{ Stack split for DotNet
 }
 {
-   Rev 1.9    9/8/2003 02:13:10 PM  JPMugaas
- SupportsIP6 function added for determining if IPv6 is installed on a system.
+{   Rev 1.9    9/8/2003 02:13:10 PM  JPMugaas
+{ SupportsIP6 function added for determining if IPv6 is installed on a system.
 }
 {
-   Rev 1.8    2003.07.14 1:57:24 PM  czhower
- -First set of IOCP fixes.
- -Fixed a threadsafe problem with the stack class.
-
-
-   Rev 1.7    7/1/2003 05:20:44 PM  JPMugaas
- Minor optimizations.  Illiminated some unnecessary string operations.
-
-
-   Rev 1.5    7/1/2003 03:39:58 PM  JPMugaas
- Started numeric IP function API calls for more efficiency.
+{   Rev 1.8    2003.07.14 1:57:24 PM  czhower
+{ -First set of IOCP fixes.
+{ -Fixed a threadsafe problem with the stack class.
 }
 {
-   Rev 1.4    7/1/2003 12:46:06 AM  JPMugaas
- Preliminary stack functions taking an IP address numerical structure instead
- of a string.
+{   Rev 1.7    7/1/2003 05:20:44 PM  JPMugaas
+{ Minor optimizations.  Illiminated some unnecessary string operations.
+}
+{
+{   Rev 1.5    7/1/2003 03:39:58 PM  JPMugaas
+{ Started numeric IP function API calls for more efficiency.
+}
+{
+{   Rev 1.4    7/1/2003 12:46:06 AM  JPMugaas
+{ Preliminary stack functions taking an IP address numerical structure instead
+{ of a string.
 }
 {
     Rev 1.3    5/19/2003 6:00:28 PM  BGooijen
@@ -181,10 +181,10 @@
     Rev 1.2    5/10/2003 4:01:28 PM  BGooijen
 }
 {
-   Rev 1.1    2003.05.09 10:59:28 PM  czhower
+{   Rev 1.1    2003.05.09 10:59:28 PM  czhower
 }
 {
-   Rev 1.0    11/13/2002 08:59:38 AM  JPMugaas
+{   Rev 1.0    11/13/2002 08:59:38 AM  JPMugaas
 }
 unit IdStackWindows;
 
@@ -337,13 +337,15 @@ var
   GStarted: Boolean = False;
 
 constructor TIdStackWindows.Create;
-var
-  LData: TWSAData;
 begin
   inherited Create;
   if not GStarted then begin
-    if WSAStartup($202, LData) = SOCKET_ERROR then begin
-      raise EIdStackInitializationFailed.Create(RSWinsockInitializationError);
+    try
+      InitializeWinSock;
+    except
+      on E: Exception do begin
+        raise EIdStackInitializationFailed.Create(E.Message);
+      end;
     end;
     GStarted := True;
   end;
@@ -593,7 +595,7 @@ begin
     Result := Ntohs(ps^.s_port);
   end else begin
     try
-      Result := Sys.StrToInt(AServiceName) and $FFFF;
+      Result := Sys.StrToInt(AServiceName);
     except
       on EConvertError do begin
         raise EIdInvalidServiceName.CreateFmt(RSInvalidServiceName, [AServiceName]);
@@ -706,22 +708,23 @@ end;
 
 { TIdStackVersionWinsock }
 
-function ServeFile(ASocket: TIdStackSocketHandle; AFileName: string): cardinal;
+function ServeFile(ASocket: TIdStackSocketHandle; AFileName: string): Cardinal;
 var
   LFileHandle: THandle;
 begin
-  result := 0;
-  LFileHandle := CreateFile(PChar(AFileName), GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING
-   , FILE_ATTRIBUTE_NORMAL or FILE_FLAG_SEQUENTIAL_SCAN, 0); try
+  Result := 0;
+  LFileHandle := CreateFile(PChar(AFileName), GENERIC_READ, FILE_SHARE_READ, nil,
+    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL or FILE_FLAG_SEQUENTIAL_SCAN, 0);
+  try
     if TransmitFile(ASocket, LFileHandle, 0, 0, nil, nil, 0) then begin
-      result := getFileSize(LFileHandle, nil);
+      Result := GetFileSize(LFileHandle, nil);
     end;
   finally CloseHandle(LFileHandle); end;
 end;
 
 function TIdStackWindows.WSShutdown(ASocket: TIdStackSocketHandle; AHow: Integer): Integer;
 begin
-  result := Shutdown(ASocket, AHow);
+  Result := Shutdown(ASocket, AHow);
 end;
 
 procedure TIdStackWindows.GetSocketName(ASocket: TIdStackSocketHandle;
@@ -1121,22 +1124,19 @@ var
   Bytes : Cardinal;
 
 begin
-  if not IdIPv6Available then
-  begin
-    raise EIdIPv6Unavailable.Create(RSIPv6Unavailable);
-  end;
+  EIdIPv6Unavailable.IfFalse(IdIPv6Available, RSIPv6Unavailable);
   //make our LAddrInfo structure
   FillChar(LAddr6, SizeOf(LAddr6), 0);
   LAddr6.sin6_family := AF_INET6;
   TranslateStringToTInAddr(AIP, LAddr6.sin6_addr, Id_IPv6);
-  Move(LAddr6.sin6_addr, VDest,SizeOf(in6_addr));
+  Move(LAddr6.sin6_addr, VDest, SizeOf(in6_addr));
   LAddr6.sin6_port := HToNs(APort);
   LPLocalIP := PSockAddr_in6(@Llocalif);
   // Find out which local interface for the destination
   CheckForSocketError( WSAIoctl(ASocket, SIO_ROUTING_INTERFACE_QUERY,
-    @LAddr6, Cardinal(SizeOf(TSockAddrIn6) ), @Llocalif,
-    Cardinal(sizeof(Llocalif)), @bytes, nil, nil));
-  Move( LPLocalIP^.sin6_addr ,VSource,SizeOf(in6_addr));
+    @LAddr6, Cardinal(SizeOf(TSockAddrIn6)), @Llocalif,
+    Cardinal(SizeOf(Llocalif)), @Bytes, nil, nil));
+  Move( LPLocalIP^.sin6_addr, VSource, SizeOf(in6_addr));
 end;
 
 procedure TIdStackWindows.WriteChecksum(s: TIdStackSocketHandle;
@@ -1186,23 +1186,23 @@ var
 }
 begin
 
-  GWindowsStack.WSQuerryIPv6Route(s,AIP,APort,LSource,LDest);
-  SetLength(LTmp,Length(VBuffer)+40);
+  GWindowsStack.WSQuerryIPv6Route(s, AIP, APort, LSource, LDest);
+  SetLength(LTmp, Length(VBuffer)+40);
 
   //16
-   Move(LSource,LTmp[0],SizeOf(LSource));
+  Move(LSource, LTmp[0], SizeOf(LSource));
   LIdx := SizeOf(LSource);
   //32
-  Move(LDest,LTmp[LIdx],SizeOf(LDest));
-  LIdx := LIdx+SizeOf(LDest);
+  Move(LDest, LTmp[LIdx], SizeOf(LDest));
+  Inc(LIdx, SizeOf(LDest));
   //use a word so you don't wind up using the wrong network byte order function
   LC := Length(VBuffer);
   CopyTIdLongWord(GStack.HostToNetwork(LC),LTmp,LIdx);
   Inc(LIdx,4);
   //36
   //zero the next three bytes
-  FillChar(LTmp[LIdx],3,0);
-  Inc(LIdx,3);
+  FillChar(LTmp[LIdx], 3, 0);
+  Inc(LIdx, 3);
   //next header (protocol type determines it
   LTmp[LIdx] := Id_IPPROTO_ICMPV6; // Id_IPPROTO_ICMP6;
   Inc(LIdx);
@@ -1210,22 +1210,17 @@ begin
   VBuffer[2] := 0;
   VBuffer[3] := 0;
   //combine the two
-  CopyTIdBytes(VBuffer,0,LTmp,LIdx,Length(VBuffer));
+  CopyTIdBytes(VBuffer, 0, LTmp, LIdx, Length(VBuffer));
   LW := CalcCheckSum(LTmp);
 
   CopyTIdWord(HostToLittleEndian(LW),VBuffer,AOffset);
 end;
 
 function TIdStackWindows.ReceiveMsg(ASocket: TIdStackSocketHandle; var VBuffer : TIdBytes;
-  APkt: TIdPacketInfo;
-  const AIPVersion: TIdIPVersion): Cardinal;
-{$IFNDEF NoRedeclare}
-type
-  PByte = ^Byte;
-{$endif}
+  APkt: TIdPacketInfo; const AIPVersion: TIdIPVersion): Cardinal;
 var
   LIP : String;
-  LPort : TIdPort;
+  LPort : Integer;
   LSize: Cardinal;
   LAddr4: TSockAddrIn;
   LAddr6: TSockAddrIn6;
@@ -1233,23 +1228,22 @@ var
   LMsgBuf : TWSABUF;
   LControl : TIdBytes;
   LCurCmsg : LPWSACMSGHDR;   //for iterating through the control buffer
-  LCurPt : Pin_pktinfo;
-  LCurPt6 : Pin6_pktinfo;
-  LByte : PByte;
+  LCurPt : PInPktInfo;
+  LCurPt6 : PIn6PktInfo;
   LDummy, LDummy2 : Cardinal;
 begin
   //This runs only on WIndowsXP or later
- if (Win32MajorVersion>4) and (Win32MinorVersion > 0) then
- begin
-   //we call the macro twice because we specified two possible structures.
-   //Id_IPV6_HOPLIMIT and Id_IPV6_PKTINFO
-   LSize := WSA_CMSG_LEN(WSA_CMSG_LEN(Length(VBuffer)));
-   SetLength( LControl,LSize);
+  if (Sys.Win32MajorVersion > 4) and (Sys.Win32MinorVersion > 0) then
+  begin
+    //we call the macro twice because we specified two possible structures.
+    //Id_IPV6_HOPLIMIT and Id_IPV6_PKTINFO
+    LSize := WSA_CMSG_LEN(WSA_CMSG_LEN(Length(VBuffer)));
+    SetLength(LControl, LSize);
 
     LMsgBuf.len := Length(VBuffer); // Length(VMsgData);
     LMsgBuf.buf := @VBuffer[0]; // @VMsgData[0];
 
-    FillChar(LMsg,SizeOf(LMsg),0);
+    FillChar(LMsg, SizeOf(LMsg), 0);
 
     LMsg.lpBuffers := @LMsgBuf;
     LMsg.dwBufferCount := 1;
@@ -1257,26 +1251,27 @@ begin
     LMsg.Control.Len := LSize;
     LMsg.Control.buf := @LControl[0];
 
-
     case AIPVersion of
-      Id_IPv4: begin
-        LMsg.name :=  @LAddr4;
-        LMsg.namelen := SizeOf(LAddr4);
+      Id_IPv4:
+        begin
+          LMsg.name :=  @LAddr4;
+          LMsg.namelen := SizeOf(LAddr4);
 
-        GWindowsStack.CheckForSocketError(WSARecvMsg(ASocket,@LMsg,Result,nil,nil));
-        APkt.SourceIP :=  TranslateTInAddrToString(LAddr4.sin_addr,Id_IPv4);
+          GWindowsStack.CheckForSocketError(WSARecvMsg(ASocket,@LMsg,Result,nil,nil));
+          APkt.SourceIP := TranslateTInAddrToString(LAddr4.sin_addr, Id_IPv4);
 
-        APkt.SourcePort := NToHs(LAddr4.sin_port);
-      end;
-      Id_IPv6: begin
-        LMsg.name := PSOCKADDR( @LAddr6);
-        LMsg.namelen := SizeOf(LAddr6);
+          APkt.SourcePort := NToHs(LAddr4.sin_port);
+        end;
+      Id_IPv6:
+        begin
+          LMsg.name := PSOCKADDR(@LAddr6);
+          LMsg.namelen := SizeOf(LAddr6);
 
-        CheckForSocketError( IdWinsock2.WSARecvMsg(ASocket,@LMsg,Result,@LDummy,LPwsaoverlapped_COMPLETION_ROUTINE(@LDummy2)));
-        APkt.SourceIP := TranslateTInAddrToString(LAddr6.sin6_addr, Id_IPv6);
+          CheckForSocketError(WSARecvMsg(ASocket, @LMsg, Result, @LDummy, LPWSAOVERLAPPED_COMPLETION_ROUTINE(@LDummy2)));
+          APkt.SourceIP := TranslateTInAddrToString(LAddr6.sin6_addr, Id_IPv6);
 
-        APkt.SourcePort := NToHs(LAddr6.sin6_port);
-      end;
+          APkt.SourcePort := NToHs(LAddr6.sin6_port);
+        end;
       else begin
         Result := 0; // avoid warning
         IPVersionUnsupported;
@@ -1284,9 +1279,8 @@ begin
     end;
     LCurCmsg := nil;
     repeat
-      LCurCmsg := WSA_CMSG_NXTHDR(@LMsg,LCurCmsg);
-      if LCurCmsg=nil then
-      begin
+      LCurCmsg := WSA_CMSG_NXTHDR(@LMsg, LCurCmsg);
+      if LCurCmsg = nil then begin
         break;
       end;
       case LCurCmsg^.cmsg_type of
@@ -1295,41 +1289,38 @@ begin
         begin
           if AIPVersion = Id_IPv4 then
           begin
-            LCurPt := WSA_CMSG_DATA(LCurCmsg);
-            APkt.DestIP := GWindowsStack.TranslateTInAddrToString(LCurPt^.ipi_addr,Id_IPv4);
+            LCurPt := PInPktInfo(WSA_CMSG_DATA(LCurCmsg));
+            APkt.DestIP := GWindowsStack.TranslateTInAddrToString(LCurPt^.ipi_addr, Id_IPv4);
             APkt.DestIF := LCurPt^.ipi_ifindex;
           end;
           if AIPVersion = Id_IPv6 then
           begin
-            LCurPt6 := WSA_CMSG_DATA(LCurCmsg);
-            APkt.DestIP := GWindowsStack.TranslateTInAddrToString(LCurPt6^.ipi6_addr,Id_IPv6);
+            LCurPt6 := PIn6PktInfo(WSA_CMSG_DATA(LCurCmsg));
+            APkt.DestIP := GWindowsStack.TranslateTInAddrToString(LCurPt6^.ipi6_addr, Id_IPv6);
             APkt.DestIF := LCurPt6^.ipi6_ifindex;
           end;
         end;
         Id_IPV6_HOPLIMIT :
         begin
-          LByte :=  PByte(WSA_CMSG_DATA(LCurCmsg));
-          APkt.TTL := LByte^;
+          APkt.TTL := WSA_CMSG_DATA(LCurCmsg)^;
         end;
       end;
     until False;
-  end
-  else
+  end else
   begin
-    Result :=  RecvFrom(ASocket, VBuffer, Length(VBuffer), 0, LIP, LPort,
-     AIPVersion);
-     APkt.SourceIP := LIP;
-     APkt.SourcePort := LPort;
+    Result := RecvFrom(ASocket, VBuffer, Length(VBuffer), 0, LIP, LPort, AIPVersion);
+    APkt.SourceIP := LIP;
+    APkt.SourcePort := LPort;
   end;
 end;
 
-function TIdStackWindows.CheckIPVersionSupport(
-  const AIPVersion: TIdIPVersion): boolean;
-var LTmpSocket:TIdStackSocketHandle;
+function TIdStackWindows.CheckIPVersionSupport(const AIPVersion: TIdIPVersion): Boolean;
+var
+  LTmpSocket: TIdStackSocketHandle;
 begin
-  LTmpSocket := WSSocket(IdIPFamily[AIPVersion], Id_SOCK_STREAM, Id_IPPROTO_IP );
-  result:=LTmpSocket<>Id_INVALID_SOCKET;
-  if LTmpSocket<>Id_INVALID_SOCKET then begin
+  LTmpSocket := WSSocket(IdIPFamily[AIPVersion], Id_SOCK_STREAM, Id_IPPROTO_IP);
+  Result := LTmpSocket <> Id_INVALID_SOCKET;
+  if Result then begin
     WSCloseSocket(LTmpSocket);
   end;
 end;
@@ -1342,6 +1333,6 @@ initialization
   end;
 finalization
   if GStarted then begin
-    WSACleanup;
+    UninitializeWinSock;
   end;
 end.
