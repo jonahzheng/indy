@@ -11,14 +11,15 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-
-
- $Log$
-
-
-   Rev 1.69    12/2/2004 9:26:42 PM  JPMugaas
- Bug fix.
 }
+{
+  $Log$
+}
+{
+  Rev 1.69    12/2/2004 9:26:42 PM  JPMugaas
+  Bug fix.
+}
+
 unit IdTCPServer;
 
 interface
@@ -31,12 +32,12 @@ type
   TIdTCPServer = class(TIdCustomTCPServer)
   protected
      procedure CheckOkToBeActive;  override;
-  public
   published
     property OnExecute;
   end;
 
 implementation
+
 uses IdResourceStringsCore;
 
 { TIdTCPServer }
@@ -44,12 +45,7 @@ uses IdResourceStringsCore;
 procedure TIdTCPServer.CheckOkToBeActive;
 begin
   inherited CheckOkToBeActive;
-
-  if not Assigned( FOnExecute) then
-  begin
-    raise EIdTCPNoOnExecute.Create(RSNoOnExecute);
-  end;
-
+  EIdTCPNoOnExecute.IfFalse(Assigned(FOnExecute), RSNoOnExecute);
 end;
 
 end.

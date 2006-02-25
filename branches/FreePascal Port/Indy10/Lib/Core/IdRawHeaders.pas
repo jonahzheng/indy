@@ -11,29 +11,29 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-
-
- $Log$
-
-
-   Rev 1.3    2/8/2004 12:59:40 PM  JPMugaas
- Start on DotNET port.
-
-
-   Rev 1.2    10/16/2003 11:05:38 PM  SPerry
- Reorganization
-
-
-   Rev 1.1    2003.09.30 1:23:02 PM  czhower
- Stack split for DotNet
-
-
-   Rev 1.0    11/13/2002 08:45:44 AM  JPMugaas
 }
+{
+  $Log$
+}
+{
+  Rev 1.3    2/8/2004 12:59:40 PM  JPMugaas
+  Start on DotNET port.
+
+  Rev 1.2    10/16/2003 11:05:38 PM  SPerry
+  Reorganization
+
+  Rev 1.1    2003.09.30 1:23:02 PM  czhower
+  Stack split for DotNet
+
+  Rev 1.0    11/13/2002 08:45:44 AM  JPMugaas
+}
+
 unit IdRawHeaders;
 
 interface
+
 {$I IdCompilerDefines.inc}
+
 {$IFNDEF DOTNET}
 uses
 //  IdStackBSDBase;

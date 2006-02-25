@@ -11,33 +11,29 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-
-
- $Log$
-
-
-   Rev 1.5    2004.02.03 4:17:14 PM  czhower
- For unit name changes.
-
-
-   Rev 1.4    2004.01.20 10:03:28 PM  czhower
- InitComponent
-
-
-   Rev 1.3    2003.10.17 6:15:54 PM  czhower
- Upgrades
-
-
-   Rev 1.2    2003.10.14 1:27:08 PM  czhower
- Uupdates + Intercept support
-
-
-   Rev 1.1    6/16/2003 10:39:02 AM  EHill
- Done: Expose Open/Close as public in TIdLogBase
-
-
-   Rev 1.0    11/13/2002 07:55:58 AM  JPMugaas
 }
+{
+  $Log$
+}
+{
+  Rev 1.5    2004.02.03 4:17:14 PM  czhower
+  For unit name changes.
+
+  Rev 1.4    2004.01.20 10:03:28 PM  czhower
+  InitComponent
+
+  Rev 1.3    2003.10.17 6:15:54 PM  czhower
+  Upgrades
+
+  Rev 1.2    2003.10.14 1:27:08 PM  czhower
+  Uupdates + Intercept support
+
+  Rev 1.1    6/16/2003 10:39:02 AM  EHill
+  Done: Expose Open/Close as public in TIdLogBase
+
+  Rev 1.0    11/13/2002 07:55:58 AM  JPMugaas
+}
+
 unit IdLogBase;
 
 interface
