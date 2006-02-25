@@ -71,6 +71,8 @@ unit IdBaseComponent;
 
 interface
 
+{$I IdCompilerDefines.inc}
+
 uses
   {$IFDEF DotNet}
   {$DEFINE IdDEBUG}

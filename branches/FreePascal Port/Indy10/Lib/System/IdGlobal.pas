@@ -895,7 +895,7 @@ function ToBytes(const AValue: Word): TIdBytes; overload;
 function ToBytes(const AValue: Byte): TIdBytes; overload;
 function ToBytes(const AValue: Longword): TIdBytes; overload;
 function ToBytes(const AValue: Int64): TIdBytes; overload;
-function ToBytes(const AValue: TIdBytes; const ASize: Integer): TIdBytes; overload;
+function ToBytes(const AValue: TIdBytes; const ASize: Integer; const AIndex: Integer = 0): TIdBytes; overload;
 {$IFNDEF DotNet}
 // RLebeau - not using the same "ToBytes" naming convention for RawToBytes()
 // in order to prevent ambiquious errors with ToBytes(TIdBytes) above
@@ -911,7 +911,7 @@ procedure ToBytesF(var Bytes: TIdBytes; const AValue: Word); overload;
 procedure ToBytesF(var Bytes: TIdBytes; const AValue: Byte); overload;
 procedure ToBytesF(var Bytes: TIdBytes; const AValue: Longword); overload;
 procedure ToBytesF(var Bytes: TIdBytes; const AValue: Int64); overload;
-procedure ToBytesF(var Bytes: TIdBytes; const AValue: TIdBytes; const ASize: Integer); overload;
+procedure ToBytesF(var Bytes: TIdBytes; const AValue: TIdBytes; const ASize: Integer; const AIndex: Integer = 0); overload;
 {$IFNDEF DotNet}
 // RLebeau - not using the same "ToBytesF" naming convention for RawToBytesF()
 // in order to prevent ambiquious errors with ToBytesF(TIdBytes) above
@@ -2779,7 +2779,7 @@ begin
     Result := Min(ABuffer.Size - ABuffer.Position, ALength);
   end;
 end;
-
+ 
 function ToBytes(const AValue: string; const ALength: Integer = -1;
   const AEncoding: TIdEncoding = enANSI): TIdBytes; overload;
 var
