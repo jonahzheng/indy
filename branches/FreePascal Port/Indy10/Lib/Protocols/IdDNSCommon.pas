@@ -14,6 +14,7 @@
 }
 {
   $Log$
+unit IdDNSCommon;
 
 
     Rev 1.29    1/31/2005 9:02:44 PM  JPMugaas

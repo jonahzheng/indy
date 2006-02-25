@@ -14,45 +14,45 @@
 }
 {
   $Log$
-
-
-    Rev 1.10    2/22/2004 12:04:00 AM  JPMugaas
-  Updated for file rename.
-
-
-    Rev 1.9    2/12/2004 11:28:04 PM  JPMugaas
-  Modified compression intercept to use the ZLibEx unit.
-
-
-    Rev 1.8    2004.02.09 9:56:00 PM  czhower
-  Fixed for lib changes.
-
-
-    Rev 1.7    5/12/2003 12:31:00 AM  GGrieve
-  Get compiling again with DotNet Changes
-
-
-    Rev 1.6    10/12/2003 1:49:26 PM  BGooijen
-  Changed comment of last checkin
-
-
-    Rev 1.5    10/12/2003 1:43:24 PM  BGooijen
-  Changed IdCompilerDefines.inc to Core\IdCompilerDefines.inc
-
-
+}
+{
+{   Rev 1.10    2/22/2004 12:04:00 AM  JPMugaas
+{ Updated for file rename.
+}
+{
+{   Rev 1.9    2/12/2004 11:28:04 PM  JPMugaas
+{ Modified compression intercept to use the ZLibEx unit.
+}
+{
+{   Rev 1.8    2004.02.09 9:56:00 PM  czhower
+{ Fixed for lib changes.
+}
+{
+{   Rev 1.7    5/12/2003 12:31:00 AM  GGrieve
+{ Get compiling again with DotNet Changes
+}
+{
+{   Rev 1.6    10/12/2003 1:49:26 PM  BGooijen
+{ Changed comment of last checkin
+}
+{
+{   Rev 1.5    10/12/2003 1:43:24 PM  BGooijen
+{ Changed IdCompilerDefines.inc to Core\IdCompilerDefines.inc
+}
+{
     Rev 1.3    6/27/2003 2:38:04 PM  BGooijen
   Fixed bug where last part was not compressed/send
-
-
+}
+{
     Rev 1.2    4/10/2003 4:12:42 PM  BGooijen
   Added TIdServerCompressionIntercept
-
-
+}
+{
     Rev 1.1    4/3/2003 2:55:48 PM  BGooijen
   Now calls DeinitCompressors on disconnect
-
-
-    Rev 1.0    11/14/2002 02:15:50 PM  JPMugaas
+}
+{
+{   Rev 1.0    11/14/2002 02:15:50 PM  JPMugaas
 }
 unit IdCompressionIntercept;
 
@@ -88,8 +88,8 @@ unit IdCompressionIntercept;
    this source file.
 }
 interface
-{$i IdCompilerDefines.inc}
 
+{$I IdCompilerDefines.inc}
 
 uses
   Classes,

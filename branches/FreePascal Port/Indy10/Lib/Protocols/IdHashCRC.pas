@@ -14,27 +14,24 @@
 }
 {
   $Log$
-
-
-    Rev 1.4    28.09.2004 21:37:20  Andreas Hausladen
+}
+{
+  Rev 1.4    28.09.2004 21:37:20  Andreas Hausladen
   Added Typecast to surpress Delphi 5 compiler warning
 
-
-    Rev 1.3    2004.02.03 5:44:48 PM  czhower
+  Rev 1.3    2004.02.03 5:44:48 PM  czhower
   Name changes
 
-
-    Rev 1.2    24/01/2004 19:20:52  CCostelloe
+  Rev 1.2    24/01/2004 19:20:52  CCostelloe
   Cleaned up warnings
 
-
-    Rev 1.1    2003-10-16 11:06:28  HHellström
+  Rev 1.1    2003-10-16 11:06:28  HHellström
   Fixed for dotNET
 
-
-    Rev 1.0    11/13/2002 08:30:40 AM  JPMugaas
+  Rev 1.0    11/13/2002 08:30:40 AM  JPMugaas
   Initial import from FTP VC.
 }
+
 unit IdHashCRC;
 
 interface
@@ -50,7 +47,6 @@ type
     function HashValue( AStream: TIdStream ) : Word; override;
     procedure HashStart(var VRunningHash : Word); override;
     procedure HashByte(var VRunningHash : Word; const AByte : Byte); override;
-
   end;
 
   TIdHashCRC32 = class( TIdHash32 )
@@ -59,7 +55,6 @@ type
     function HashValue( AStream: TIdStream; const ABeginPos: Cardinal{=0}; const AEndPos : Cardinal{=0} ) : LongWord;overload;
     procedure HashStart(var VRunningHash : LongWord); override;
     procedure HashByte(var VRunningHash : LongWord; const AByte : Byte); override;
-
   end;
 
 implementation
@@ -203,7 +198,6 @@ end;
 procedure TIdHashCRC32.HashByte(var VRunningHash: LongWord; const AByte: Byte);
 begin
   VRunningHash := ( ( VRunningHash shr 8 ) and $00FFFFFF ) xor CRC32Table[( VRunningHash xor AByte ) and $FF];
-
 end;
 
 procedure TIdHashCRC32.HashStart(var VRunningHash: LongWord);

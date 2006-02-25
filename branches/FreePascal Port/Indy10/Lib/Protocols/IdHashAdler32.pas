@@ -14,34 +14,31 @@
 }
 {
   $Log$
-
-
-    Rev 1.0    11/13/2002 08:30:30 AM  JPMugaas
-  Initial import from FTP VC.
-
- *****************************************************************************
- *                              IdHashAdler32.pas                            *
- *****************************************************************************
-
- *===========================================================================*
- * DESCRIPTION                                                               *
- *****************************************************************************
- * PROJECT    : Indy 10                                                      *
- * AUTHOR     : Bas Gooijen                                                  *
- * MAINTAINER : Bas Gooijen                                                  *
- *...........................................................................*
- * DESCRIPTION                                                               *
- *                                                                           *
- * Implementation of the Adler 32 hash algoritm                              *
- * Adler 32 is almost as reliable as CRC32, but faster                       *
- *                                                                           *
- *...........................................................................*
- * HISTORY                                                                   *
- *     DATE    VERSION  AUTHOR      REASONS                                  *
- *                                                                           *
- * 17/10/2002    1.0   Bas Gooijen  Initial start                            *
- *****************************************************************************
 }
+{
+  Rev 1.0    11/13/2002 08:30:30 AM  JPMugaas
+  Initial import from FTP VC.
+}
+
+{*===========================================================================*}
+{* DESCRIPTION                                                               *}
+{*****************************************************************************}
+{* PROJECT    : Indy 10                                                      *}
+{* AUTHOR     : Bas Gooijen                                                  *}
+{* MAINTAINER : Bas Gooijen                                                  *}
+{*...........................................................................*}
+{* DESCRIPTION                                                               *}
+{*                                                                           *}
+{* Implementation of the Adler 32 hash algoritm                              *}
+{* Adler 32 is almost as reliable as CRC32, but faster                       *}
+{*                                                                           *}
+{*...........................................................................*}
+{* HISTORY                                                                   *}
+{*     DATE    VERSION  AUTHOR      REASONS                                  *}
+{*                                                                           *}
+{* 17/10/2002    1.0   Bas Gooijen  Initial start                            *}
+{*****************************************************************************}
+
 unit IdHashAdler32;
 
 interface
@@ -52,7 +49,7 @@ uses
   IdGlobal,
   IdHash;
 
-Type
+type
   TByteArray = array of byte; 
   PByteArray = ^TByteArray;
 

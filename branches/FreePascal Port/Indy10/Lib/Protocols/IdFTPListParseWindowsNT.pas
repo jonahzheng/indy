@@ -14,19 +14,17 @@
 }
 {
   $Log$
-
-
-    Rev 1.11    2/16/2005 7:26:52 AM  JPMugaas
+}
+{
+  Rev 1.11    2/16/2005 7:26:52 AM  JPMugaas
   Should handle Microsoft IIS on Windows XP Professional if the
   FtpDirBrowseShowLongDate metadata is enabled.  That causes digit years to be
   outputted instead of two digit years.
 
-
-    Rev 1.10    10/26/2004 10:03:22 PM  JPMugaas
+  Rev 1.10    10/26/2004 10:03:22 PM  JPMugaas
   Updated refs.
 
-
-    Rev 1.9    9/7/2004 10:01:12 AM  JPMugaas
+  Rev 1.9    9/7/2004 10:01:12 AM  JPMugaas
   FIxed problem parsing:
 
   drwx------ 1 user group              0 Sep 07 09:20 xxx
@@ -39,43 +37,35 @@
   similar doesn't happen there with "-" in Unix listings causing false
   WindowsNT detection.
 
-
-    Rev 1.8    6/5/2004 3:02:10 PM  JPMugaas
+  Rev 1.8    6/5/2004 3:02:10 PM  JPMugaas
   Indicates SizeAvail = False for a directory.  That is the standard MS-DOS
   Format.
 
-
-    Rev 1.7    4/20/2004 4:01:14 PM  JPMugaas
+  Rev 1.7    4/20/2004 4:01:14 PM  JPMugaas
   Fix for nasty typecasting error.  The wrong create was being called.
 
-
-    Rev 1.6    4/19/2004 5:05:16 PM  JPMugaas
+  Rev 1.6    4/19/2004 5:05:16 PM  JPMugaas
   Class rework Kudzu wanted.
 
-
-    Rev 1.5    2004.02.03 5:45:16 PM  czhower
+  Rev 1.5    2004.02.03 5:45:16 PM  czhower
   Name changes
 
-
-    Rev 1.4    1/22/2004 4:56:12 PM  SPerry
+  Rev 1.4    1/22/2004 4:56:12 PM  SPerry
   fixed set problems
 
-
-    Rev 1.3    1/22/2004 7:20:54 AM  JPMugaas
+  Rev 1.3    1/22/2004 7:20:54 AM  JPMugaas
   System.Delete changed to IdDelete so the code can work in NET.
 
-
-    Rev 1.2    10/19/2003 3:48:16 PM  DSiders
+  Rev 1.2    10/19/2003 3:48:16 PM  DSiders
   Added localization comments.
 
-
-    Rev 1.1    9/27/2003 10:45:50 PM  JPMugaas
+  Rev 1.1    9/27/2003 10:45:50 PM  JPMugaas
   Added support for an alternative date format.
 
-
-    Rev 1.0    2/19/2003 02:01:54 AM  JPMugaas
+  Rev 1.0    2/19/2003 02:01:54 AM  JPMugaas
   Individual parsing objects for the new framework.
 }
+
 unit IdFTPListParseWindowsNT;
 
 interface
@@ -85,20 +75,20 @@ uses
   IdFTPList, IdFTPListParseBase, IdObjs;
 
 {
-Note:
+  Note:
+  This parser comes from the code in Indy 9.0's MS-DOS parser.
+  It has been renamed Windows NT here because that is more accurate than
+  the old name.
 
-This parser comes from the code in Indy 9.0's MS-DOS parser.
+  This is really the standard Microsoft IIS FTP Service format.  We have
+  tested this parser with Windows NT 4.0, Windows 2000, and Windows XP.
 
-It has been renamed Windows NT here because that is more accurate than
-the old name.
-
-This is really the standard Microsoft IIS FTP Service format.  We have
-tested this parser with Windows NT 4.0, Windows 2000, and Windows XP.
-
-This parser also handles recursive dir lists.
+  This parser also handles recursive dir lists.
 }
+
 type
   TIdWindowsNTFTPListItem = class(TIdFTPListItem);
+
   TIdFTPLPWindowsNT = class(TIdFTPListBase)
   protected
     class function MakeNewItem(AOwner : TIdFTPListItems)  : TIdFTPListItem; override;

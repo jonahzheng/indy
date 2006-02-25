@@ -1,3 +1,4 @@
+unit IdDNSResolver;
 {
   $Project$
   $Workfile$
@@ -194,7 +195,6 @@
 
   TODO : Add structure of IDHEADER IN FIGURE
 }
-unit IdDNSResolver;
 
 interface
 {$i IdCompilerDefines.inc}

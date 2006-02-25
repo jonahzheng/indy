@@ -14,45 +14,36 @@
 }
 {
   $Log$
-
-
-    Rev 1.5    10/26/2004 10:59:30 PM  JPMugaas
+}
+{
+  Rev 1.5    10/26/2004 10:59:30 PM  JPMugaas
   Updated ref.
 
-
-    Rev 1.4    2004.02.03 5:44:52 PM  czhower
+  Rev 1.4    2004.02.03 5:44:52 PM  czhower
   Name changes
 
-
-    Rev 1.3    10/5/2003 5:01:34 PM  GGrieve
+  Rev 1.3    10/5/2003 5:01:34 PM  GGrieve
   fix to compile Under DotNet
 
-
-    Rev 1.2    10/4/2003 9:09:28 PM  GGrieve
+  Rev 1.2    10/4/2003 9:09:28 PM  GGrieve
   DotNet fixes
 
-
-    Rev 1.1    10/3/2003 11:40:38 PM  GGrieve
+  Rev 1.1    10/3/2003 11:40:38 PM  GGrieve
   move InfyGetHostName here
 
-
-    Rev 1.0    11/14/2002 02:12:52 PM  JPMugaas
-
-
- Implementation of the Basic authentication as specified in
-  RFC 2616
-
-  Copyright: (c) Chad Z. Hower and The Winshoes Working Group.
-
-  Author: Doychin Bondzhev (doychin@dsoft-bg.com)
-
-  Modified:
+  Rev 1.0    11/14/2002 02:12:52 PM  JPMugaas
 
   2001-Sep-11 : DSiders
     Corrected spelling for EIdAlreadyRegisteredAuthenticationMethod
-
 }
+
 unit IdAuthentication;
+
+{
+  Implementation of the Basic authentication as specified in RFC 2616
+  Copyright: (c) Chad Z. Hower and The Winshoes Working Group.
+  Author: Doychin Bondzhev (doychin@dsoft-bg.com)
+}
 
 interface
 {$i IdCompilerDefines.inc}
@@ -64,8 +55,7 @@ uses
   IdSys,
   IdObjs;
 
-Type
-
+type
   TIdAuthenticationSchemes = (asBasic, asDigest, asNTLM, asUnknown);
   TIdAuthSchemeSet = set of TIdAuthenticationSchemes;
 
@@ -129,10 +119,10 @@ Type
 
 implementation
 
-Uses
+uses
   IdCoderMIME, IdResourceStringsProtocols;
 
-Type
+type
   TAuthListObject = class(TIdBaseObject)
     Auth: TIdAuthenticationClass;
   end;
@@ -141,7 +131,7 @@ Var
   AuthList: TIdStringList = nil;
 
 procedure RegisterAuthenticationMethod(MethodName: String; AuthClass: TIdAuthenticationClass);
-Var
+var
   LAuthItem: TAuthListObject;
 begin
   if not Assigned(AuthList) then begin
@@ -151,7 +141,12 @@ begin
   if AuthList.IndexOf(MethodName) < 0 then begin
     LAuthItem := TAuthListObject.Create;
     LAuthItem.Auth := AuthClass;
-    AuthList.AddObject(MethodName, LAuthItem);
+    try
+      AuthList.AddObject(MethodName, LAuthItem);
+    except
+      Sys.FreeAndNil(LAuthItem);
+      raise;
+    end;
   end
   else begin
     raise EIdAlreadyRegisteredAuthenticationMethod.Create(Sys.Format(RSHTTPAuthAlreadyRegistered,
@@ -270,8 +265,7 @@ end;
 function TIdBasicAuthentication.Authentication: String;
 begin
   with TIdEncoderMIME.Create do try
-    result := 'Basic ' {do not localize}
-      + Encode(Username + ':' + Password);  {do not localize}
+    Result := 'Basic ' + Encode(Username + ':' + Password); {do not localize}
   finally Free; end;
 end;
 

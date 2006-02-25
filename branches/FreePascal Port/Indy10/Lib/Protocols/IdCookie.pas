@@ -14,78 +14,74 @@
 }
 {
   $Log$
-
-
-    Rev 1.6    2004.10.27 9:17:46 AM  czhower
+}
+{
+  Rev 1.6    2004.10.27 9:17:46 AM  czhower
   For TIdStrings
 
-
-    Rev 1.5    10/26/2004 11:08:08 PM  JPMugaas
+  Rev 1.5    10/26/2004 11:08:08 PM  JPMugaas
   Updated refs.
 
-
-    Rev 1.4    13.04.2004 12:56:44  ARybin
+  Rev 1.4    13.04.2004 12:56:44  ARybin
   M$ IE behavior
 
-
-    Rev 1.3    2004.02.03 5:45:00 PM  czhower
+  Rev 1.3    2004.02.03 5:45:00 PM  czhower
   Name changes
 
-
-    Rev 1.2    2004.01.22 6:09:02 PM  czhower
+  Rev 1.2    2004.01.22 6:09:02 PM  czhower
   IdCriticalSection
 
-
-    Rev 1.1    1/22/2004 7:09:58 AM  JPMugaas
+  Rev 1.1    1/22/2004 7:09:58 AM  JPMugaas
   Tried to fix AnsiSameText depreciation.
 
+  Rev 1.0    11/14/2002 02:16:20 PM  JPMugaas
 
-    Rev 1.0    11/14/2002 02:16:20 PM  JPMugaas
+  Mar-31-2001 Doychin Bondzhev
+  - Changes in the class heirarchy to implement Netscape specification[Netscape],
+      RFC 2109[RFC2109] & 2965[RFC2965]
+
+  Feb-2001 Doychin Bondzhev
+  - Initial release
 }
+
 unit IdCookie;
 
 {
   Implementation of the HTTP State Management Mechanism as specified in RFC 2109, 2965.
-
   Author: Doychin Bondzhev (doychin@dsoft-bg.com)
   Copyright: (c) Chad Z. Hower and The Indy Team.
 
-Details of implementation
--------------------------
-Mar-31-2001 Doychin Bondzhev
- - Chages in the class heirarchy to implement Netscape specification[Netscape], RFC 2109[RFC2109] & 2965[RFC2965]
-    TIdNetscapeCookie - The base code used in all cookies. It implments cookies as proposed by Netscape
-    TIdCookieRFC2109 - The RFC 2109 implmentation. Not used too much.
-    TIdCookieRFC2965 - The RFC 2965 implmentation. Not used yet or at least I don't know any HTTP server that supports   
-      this specification.
-    TIdServerCooke - Used in the HTTP server compoenent.
+  TIdNetscapeCookie - The base code used in all cookies. It implments cookies
+  as proposed by Netscape
 
-Feb-2001 Doychin Bondzhev
- - Initial release
+  TIdCookieRFC2109 - The RFC 2109 implmentation. Not used too much.
 
-REFERENCES
--------------------
- [Netscape] "Persistent Client State -- HTTP Cookies", available at
+  TIdCookieRFC2965 - The RFC 2965 implmentation. Not used yet or at least I don't
+    know any HTTP server that supports this specification.
+
+  TIdServerCooke - Used in the HTTP server compoenent.
+
+  REFERENCES
+  -------------------
+  [Netscape] "Persistent Client State -- HTTP Cookies", available at
             <http://www.netscape.com/newsref/std/cookie_spec.html>,
             undated.
 
- [RFC2109]  Kristol, D. and L. Montulli, "HTTP State Management
+  [RFC2109]  Kristol, D. and L. Montulli, "HTTP State Management
             Mechanism", RFC 2109, February 1997.
 
- [RFC2965]  Kristol, D. and L. Montulli, "HTTP State Management
+  [RFC2965]  Kristol, D. and L. Montulli, "HTTP State Management
             Mechanism", RFC 2965, October 2000.
 
+  Implementation status
+  --------------------------
 
-Implementation status
---------------------------
-
- [Netscape] - 100%
- [RFC2109]  - 100% (there is still some code to write and debugging)
- [RFC2965]  -  70% (client and server cookie generation is not ready)
-
+  [Netscape] - 100%
+  [RFC2109]  - 100% (there is still some code to write and debugging)
+  [RFC2965]  -  70% (client and server cookie generation is not ready)
 }
 
-// TODO: Make this unit to implement compleatly [Netscape], [RFC2109] & [RFC2965]
+// TODO: Make this unit to implement completely [Netscape], [RFC2109] & [RFC2965]
 
 interface
 {$i IdCompilerDefines.inc}
@@ -107,7 +103,6 @@ Type
     function GetCookie(Index: Integer): TIdNetscapeCookie;
   public
     property Cookies[Index: Integer]: TIdNetscapeCookie read GetCookie;
-    function IndexByPathAndName(Const APath, AName : string) : integer; {FLX 02/02/2006}
   end;
 
   {
@@ -246,7 +241,7 @@ Type
 implementation
 
 uses
-  IdAssignedNumbers , SysUtils;
+  IdAssignedNumbers;
   
 { base functions used for construction of Cookie text }
 
@@ -279,21 +274,6 @@ end;
 function TIdCookieList.GetCookie(Index: Integer): TIdNetscapeCookie;
 begin
   result := TIdNetscapeCookie(Objects[Index]);
-end;
-
-{FLX 02/02/2006}
-function TIdCookieList.IndexByPathAndName(Const APath, AName : string) : integer;
-var i : integer;
-begin
-   result := -1;
-   for i := Count - 1 downto 0 do
-   begin
-     if (AnsiSametext(Cookies[i].Path, APath)) and (AnsiSameText(Cookies[i].CookieName , AName)) then
-     begin
-        result := i;
-        exit;
-     end;
-   end;
 end;
 
 { TIdNetscapeCookie }
@@ -698,35 +678,25 @@ end;
 procedure TIdCookies.AddCookie(ACookie: TIdCookieRFC2109);
 Var
   LList: TIdCookieList;
-  j , k: Integer;
-  LCookiesByDomain : TIdCookieList;
-  LCookieList : TIdCookieList; //FLX
+  j: Integer;
 begin
-  LCookiesByDomain := LockCookieListByDomain(caReadWrite);
-
-  with LCookiesByDomain do try
-    if IndexOf(ACookie.Domain + ACookie.path) = -1 then  //FLX
+  with LockCookieListByDomain(caReadWrite) do try
+    if IndexOf(ACookie.Domain) = -1 then
     begin
       LList := TIdCookieList.Create;
-      AddObject(ACookie.Domain + ACookie.path , LList);  //FLX
+      AddObject(ACookie.Domain, LList);
     end;
 
-    //LCookieList : Liste des cookies pour le domaine du cookie
-    LCookieList := TIdCookieList(Objects[IndexOf(ACookie.Domain + ACookie.path)]); //FLX
+    j := TIdStringList(Objects[IndexOf(ACookie.Domain)]).IndexOf(ACookie.CookieName);
 
-    //recherche pour voir si un cookie existe pour ce nom
-    j := LCookieList.IndexOf(ACookie.CookieName);
-
-    //S'il n'y a pas de cookie pour ce nom et ce chemin, on l'ajoute à cette liste de cookie pour ce domaine
-    if (j = -1) then
+    if j = -1 then
     begin
-      LCookieList.AddObject(ACookie.CookieName, ACookie);
+      TIdStringList(Objects[IndexOf(ACookie.Domain)]).AddObject(ACookie.CookieName, ACookie);
     end
-    else
-    begin
-        TIdCookieRFC2109(LCookieList.Objects[j]).Assign(ACookie);  //FLX
-        ACookie.Collection := nil;
-        ACookie.Free;
+    else begin
+      TIdCookieRFC2109(TIdStringList(Objects[IndexOf(ACookie.Domain)]).Objects[j]).Assign(ACookie);
+      ACookie.Collection := nil;
+      ACookie.Free;
     end;
   finally
     UnlockCookieListByDomain(caReadWrite);

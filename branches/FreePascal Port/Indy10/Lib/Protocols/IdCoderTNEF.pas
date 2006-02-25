@@ -11,26 +11,26 @@
 
   Copyright:
    (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
-
-
+}
+{
   $Log$
-
-
-    Rev 1.3    16/01/2005 22:33:06  CCostelloe
-  Minor update
-
-
-    Rev 1.2    22/12/2004 23:09:52  CCostelloe
-  Another intermediate check-in, this sorts out the compressed RTF message and
-  (if it has one) the message .Body.
-
-
-    Rev 1.1    18/12/2004 20:35:24  CCostelloe
-  Intermediate check-in, lots more to be done.
-
-
-    Rev 1.0    02/12/2004 22:56:26  CCostelloe
-  Initial version
+}
+{
+{   Rev 1.3    16/01/2005 22:33:06  CCostelloe
+{ Minor update
+}
+{
+{   Rev 1.2    22/12/2004 23:09:52  CCostelloe
+{ Another intermediate check-in, this sorts out the compressed RTF message and
+{ (if it has one) the message .Body.
+}
+{
+{   Rev 1.1    18/12/2004 20:35:24  CCostelloe
+{ Intermediate check-in, lots more to be done.
+}
+{
+{   Rev 1.0    02/12/2004 22:56:26  CCostelloe
+{ Initial version
 }
 unit IdCoderTNEF;
 
@@ -1494,22 +1494,14 @@ function TIdCoderTNEF.IsFilenameTnef(AFilename: string): Boolean;
 var
     i: integer;
 begin
-    Result := True;
-    AFilename := Sys.LowerCase(AFilename);
-    if AFilename = 'winmail.dat' then begin
-        Exit;
+    if TextIsSame(AFilename, 'winmail.dat') then begin
+        Result := True;
+    end
+    else if TextStartsWith(AFilename, 'att') and TextEndsWith(AFilename, '.dat') then begin
+        Result := Sys.StrToInt(Copy(AFilename, 4, Length(AFilename)-7), -1) > -1;
+    end else begin
+        Result := False;
     end;
-    if ( (Copy(AFilename, 1, 3) = 'att')
-      and (Copy(AFilename, Length(AFilename)-3, MAXINT) = '.dat') ) then begin
-        for i := 4 to (Length(AFilename)-4) do begin
-            if ( (Ord(AFilename[i]) < 48) or (Ord(AFilename[i]) > 57) ) then begin
-                Result := False;
-                Exit;
-            end;
-        end;
-        Exit;
-    end;
-    Result := False;
 end;
 
 function TIdCoderTNEF.GetMultipleUnicodeOrString8String(AType: Word): WideString;
@@ -1949,8 +1941,8 @@ function  TIdCoderTNEF.GetMapiBinaryAsEmailName(AType: Word; AText: string): str
 begin
     Result := GetMapiBinaryAsString(AType, AText);
     //If it starts SMTP: then remove SMTP:, but leave anything else (e.g. FAX:)
-    if Sys.UpperCase(Copy(Result, 1, 5)) = 'SMTP:' then begin  {Do not localize}
-        Result := Copy(Result, 6, MAXINT);
+    if TextStartsWith(Result, 'SMTP:') then begin  {Do not localize}
+        Result := Sys.Trim(Copy(Result, 6, MaxInt));
     end;
     Result := Sys.LowerCase(Result);
 end;

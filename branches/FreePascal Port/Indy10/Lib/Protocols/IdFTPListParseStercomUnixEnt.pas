@@ -14,33 +14,30 @@
 }
 {
   $Log$
-
-
-    Rev 1.4    10/26/2004 9:55:58 PM  JPMugaas
+}
+{
+  Rev 1.4    10/26/2004 9:55:58 PM  JPMugaas
   Updated refs.
 
-
-    Rev 1.3    7/31/2004 6:55:06 AM  JPMugaas
+  Rev 1.3    7/31/2004 6:55:06 AM  JPMugaas
   New properties.
 
-
-    Rev 1.2    4/19/2004 5:06:12 PM  JPMugaas
+  Rev 1.2    4/19/2004 5:06:12 PM  JPMugaas
   Class rework Kudzu wanted.
 
-
-    Rev 1.1    10/19/2003 3:36:20 PM  DSiders
+  Rev 1.1    10/19/2003 3:36:20 PM  DSiders
   Added localization comments.
 
-
-    Rev 1.0    10/1/2003 12:55:22 AM  JPMugaas
+  Rev 1.0    10/1/2003 12:55:22 AM  JPMugaas
   New FTP list parsers.
 }
+
 unit IdFTPListParseStercomUnixEnt;
 
 interface
 {$i IdCompilerDefines.inc}
-
-uses IdFTPList, IdFTPListParseBase, IdFTPListTypes, IdObjs;
+uses
+  IdFTPList, IdFTPListParseBase, IdFTPListTypes, IdObjs;
 
 type
   TIdSterCommEntUxFTPListItem = class(TIdOwnerFTPListItem)

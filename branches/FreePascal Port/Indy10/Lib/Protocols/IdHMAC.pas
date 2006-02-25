@@ -14,11 +14,12 @@
 }
 {
   $Log$
-
-
+}
+{
   HMAC specification on the NIST website
   http://csrc.nist.gov/publications/fips/fips198/fips-198a.pdf
 }
+
 unit IdHMAC;
 
 interface

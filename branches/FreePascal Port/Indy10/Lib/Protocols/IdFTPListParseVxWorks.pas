@@ -14,39 +14,37 @@
 }
 {
   $Log$
-
-
-    Rev 1.4    10/26/2004 10:03:22 PM  JPMugaas
+}
+{
+  Rev 1.4    10/26/2004 10:03:22 PM  JPMugaas
   Updated refs.
 
-
-    Rev 1.3    4/19/2004 5:06:08 PM  JPMugaas
+  Rev 1.3    4/19/2004 5:06:08 PM  JPMugaas
   Class rework Kudzu wanted.
 
-
-    Rev 1.2    2004.02.03 5:45:40 PM  czhower
+  Rev 1.2    2004.02.03 5:45:40 PM  czhower
   Name changes
 
-
-    Rev 1.1    10/19/2003 3:48:16 PM  DSiders
+  Rev 1.1    10/19/2003 3:48:16 PM  DSiders
   Added localization comments.
 
-
-    Rev 1.0    4/7/2003 04:10:34 PM  JPMugaas
+  Rev 1.0    4/7/2003 04:10:34 PM  JPMugaas
   Renamed IdFTPListParseVsWorks.  The s was a typo.
 
-
-    Rev 1.0    2/19/2003 05:49:54 PM  JPMugaas
+  Rev 1.0    2/19/2003 05:49:54 PM  JPMugaas
   Parsers ported from old framework.
 }
+
 unit IdFTPListParseVxWorks;
 
 interface
 {$i IdCompilerDefines.inc}
-uses IdFTPList, IdFTPListParseBase, IdObjs;
+uses
+  IdFTPList, IdFTPListParseBase, IdObjs;
 
 type
   TIdVxWorksFTPListItem = class(TIdFTPListItem);
+
   TIdFTPLPVxWorks = class(TIdFTPListBaseHeader)
   protected
     class function MakeNewItem(AOwner : TIdFTPListItems)  : TIdFTPListItem; override;
