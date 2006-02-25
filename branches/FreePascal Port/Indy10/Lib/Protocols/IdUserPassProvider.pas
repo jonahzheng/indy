@@ -14,11 +14,11 @@
 }
 {
   $Log$
-
-
-    Rev 1.0    11/13/2002 08:04:28 AM  JPMugaas
-
-
+}
+{
+   Rev 1.0    11/13/2002 08:04:28 AM  JPMugaas
+}
+{
   This component holds a username/password combination.
   It is used by SASL or other components in order to
   simplify application programming - the programmer will only have to
@@ -60,4 +60,4 @@ begin
 end;
 
 end.
- 
+

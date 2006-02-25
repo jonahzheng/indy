@@ -14,50 +14,45 @@
 }
 {
   $Log$
-
-
-    Rev 1.4    3/4/2005 2:31:04 PM  JPMugaas
+}
+{
+  Rev 1.4    3/4/2005 2:31:04 PM  JPMugaas
   Fixed some compiler warnings.
 
-
-    Rev 1.3    24/01/2004 19:29:12  CCostelloe
+  Rev 1.3    24/01/2004 19:29:12  CCostelloe
   Cleaned up warnings
 
-
-    Rev 1.2    10/17/2003 12:55:00 AM  DSiders
+  Rev 1.2    10/17/2003 12:55:00 AM  DSiders
   Added localization comments.
 
-
-    Rev 1.1    5/28/2003 9:12:06 PM  BGooijen
+  Rev 1.1    5/28/2003 9:12:06 PM  BGooijen
   ReverseIndian -> ReverseEndian
 
+  Rev 1.0    11/13/2002 07:58:14 AM  JPMugaas
+}
 
-    Rev 1.0    11/13/2002 07:58:14 AM  JPMugaas
+{ IdOTPCalculator.pas }
 
- *****************************************************************************
- *                              IdOTPCalculator.pas                          *
- *****************************************************************************
+{*===========================================================================*}
+{* DESCRIPTION                                                               *}
+{*****************************************************************************}
+{* PROJECT    : Indy 10                                                      *}
+{* AUTHOR     : Bas Gooijen (bas_gooijen@yahoo.com)                          *}
+{* MAINTAINER : Bas Gooijen                                                  *}
+{*...........................................................................*}
+{* DESCRIPTION                                                               *}
+{*  OTP password generator                                                   *}
+{*                                                                           *}
+{*   Implemented according to:                                               *}
+{*   http://www.faqs.org/rfcs/rfc1760.html                                   *}
+{*   http://www.faqs.org/rfcs/rfc2289.html                                   *}
+{*...........................................................................*}
+{* HISTORY                                                                   *}
+{*     DATE    VERSION  AUTHOR      REASONS                                  *}
+{*                                                                           *}
+{* 01/11/2002    1.0   Bas Gooijen  Initial start                            *}
+{*****************************************************************************}
 
- *===========================================================================*
- * DESCRIPTION                                                               *
- *****************************************************************************
- * PROJECT    : Indy 10                                                      *
- * AUTHOR     : Bas Gooijen (bas_gooijen@yahoo.com)                          *
- * MAINTAINER : Bas Gooijen                                                  *
- *...........................................................................*
- * DESCRIPTION                                                               *
- *  OTP password generator                                                   *
- *                                                                           *
- *   Implemented according to:                                               *
- *   http://www.faqs.org/rfcs/rfc1760.html                                   *
- *   http://www.faqs.org/rfcs/rfc2289.html                                   *
- *...........................................................................*
- * HISTORY                                                                   *
- *     DATE    VERSION  AUTHOR      REASONS                                  *
- *                                                                           *
- * 01/11/2002    1.0   Bas Gooijen  Initial start                            *
- *****************************************************************************
- }
 unit IdOTPCalculator;
 
 interface

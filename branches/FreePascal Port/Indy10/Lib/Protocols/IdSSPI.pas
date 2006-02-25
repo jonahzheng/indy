@@ -14,30 +14,23 @@
 }
 {
   $Log$
-
-
-    Rev 1.1    13.1.2004 ã. 17:26:00  DBondzhev
+}
+{
+  Rev 1.1    13.1.2004 17:26:00  DBondzhev
   Added Domain property
 
-
-    Rev 1.0    11/13/2002 08:01:52 AM  JPMugaas
-
- *******************************************************
-
-        SSPI interface and objects Unit
-
-        Copyright (c) 1999-2001, Eventree Systems
-
-        Translator: Eventree Systems
-
-        this unit contains translation of:
-         Security.h,
-         sspi.h,
-         secext.h,
-         rpcdce.h (some of)
-
- *******************************************************
+  Rev 1.0    11/13/2002 08:01:52 AM  JPMugaas
 }
+
+{
+  SSPI interface and objects Unit
+  Copyright (c) 1999-2001, Eventree Systems
+  Translator: Eventree Systems
+
+  this unit contains translation of:
+  Security.h, sspi.h, secext.h, rpcdce.h (some of)
+}
+
 unit IdSSPI;
 
 {$ALIGN ON}

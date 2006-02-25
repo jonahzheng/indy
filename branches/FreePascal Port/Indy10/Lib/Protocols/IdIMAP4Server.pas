@@ -14,8 +14,8 @@
 }
 {
   $Log$
-
-
+}
+{
   Prior revision history
 
   Rev 1.31    2/9/2005 11:44:20 AM  JPMugaas
@@ -131,8 +131,8 @@
 
   1999-Aug-26 - Ray Malone
     Started unit
-
 }
+
 unit IdIMAP4Server;
 
 {
@@ -569,7 +569,7 @@ begin
   FUseDefaultMechanismsForUnassignedCommands := True;
   if FRootPath = '' then begin
 {$IFDEF LINUX}
-    FRootPath := GPathDelim+'var'+GPathDelim+'imapmail'; {Do not Localize}
+    FRootPath := GPathDelim+'var'+PathDelim+'imapmail'; {Do not Localize}
 {$ELSE}
     FRootPath := GPathDelim+'imapmail'; {Do not Localize}
 {$ENDIF}

@@ -14,22 +14,20 @@
 }
 {
   $Log$
-
-
-    Rev 1.3    10/26/2004 11:08:04 PM  JPMugaas
+}
+{
+  Rev 1.3    10/26/2004 11:08:04 PM  JPMugaas
   Updated refs.
 
-
-    Rev 1.2    2004.02.03 5:44:22 PM  czhower
+  Rev 1.2    2004.02.03 5:44:22 PM  czhower
   Name changes
 
-
-    Rev 1.1    1/21/2004 4:03:36 PM  JPMugaas
+  Rev 1.1    1/21/2004 4:03:36 PM  JPMugaas
   InitComponent
 
-
-    Rev 1.0    11/13/2002 08:01:02 AM  JPMugaas
+  Rev 1.0    11/13/2002 08:01:02 AM  JPMugaas
 }
+
 unit IdSNMP;
 
 {

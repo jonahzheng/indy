@@ -14,47 +14,39 @@
 }
 {
   $Log$
-
-
-    Rev 1.9    2/8/05 6:48:30 PM  RLebeau
+}
+{
+  Rev 1.9    2/8/05 6:48:30 PM  RLebeau
   Misc. tweaks
 
-
-    Rev 1.8    24/10/2004 21:26:14  ANeillans
+  Rev 1.8    24/10/2004 21:26:14  ANeillans
   RCPTList can be set
 
-
-    Rev 1.7    9/15/2004 5:02:06 PM  DSiders
+  Rev 1.7    9/15/2004 5:02:06 PM  DSiders
   Added localization comments.
 
-
-    Rev 1.6    31/08/2004 20:21:34  ANeillans
+  Rev 1.6    31/08/2004 20:21:34  ANeillans
   Bug fix -- format problem.
 
-
-    Rev 1.5    08/08/2004 21:03:10  ANeillans
+  Rev 1.5    08/08/2004 21:03:10  ANeillans
   Continuing....
 
-
-    Rev 1.4    02/08/2004 21:14:28  ANeillans
+  Rev 1.4    02/08/2004 21:14:28  ANeillans
   Auth working
 
-
-    Rev 1.3    01/08/2004 13:02:16  ANeillans
+  Rev 1.3    01/08/2004 13:02:16  ANeillans
   Development.
 
-
-    Rev 1.2    01/08/2004 09:50:26  ANeillans
+  Rev 1.2    01/08/2004 09:50:26  ANeillans
   Continued development.
 
-
-    Rev 1.1    7/28/2004 8:26:46 AM  JPMugaas
+  Rev 1.1    7/28/2004 8:26:46 AM  JPMugaas
   Further work on the SMTP Server.  Not tested yet.
 
-
-    Rev 1.0    7/27/2004 5:14:38 PM  JPMugaas
+  Rev 1.0    7/27/2004 5:14:38 PM  JPMugaas
   Start on TIdSMTPServer rewrite.
 }
+
 unit IdSMTPServer;
 
 interface
@@ -917,6 +909,7 @@ begin
     LContext.PipeLining := False;
     LStream := TIdMemoryStream.Create;
     try
+      // RLebeau: TODO - do not even create the stream if the OnMsgReceive event is not assigned
       AMsg := TIdMemoryStream.Create;
       try
         LAction := dOk;
@@ -963,7 +956,8 @@ begin
           WriteStringToStream(AMsg, LReceivedString + EOL);
         end;
         AMsg.CopyFrom(LStream, 0); // Copy the contents that was captured to the new stream.
-        if Assigned(OnMsgReceive) then begin
+        AMsg.Position := 0; // RLebeau: CopyFrom() does not reset the Position
+        if Assigned(FOnMsgReceive) then begin
           FOnMsgReceive(LContext, AMsg, LAction);
         end;
       finally

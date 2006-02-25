@@ -14,67 +14,57 @@
 }
 {
   $Log$
-
-
-    Rev 1.7    27.08.2004 22:04:00  Andreas Hausladen
+}
+{
+  Rev 1.7    27.08.2004 22:04:00  Andreas Hausladen
   speed optimization ("const" for string parameters)
 
-
-    Rev 1.6    2004.05.20 1:39:16 PM  czhower
+  Rev 1.6    2004.05.20 1:39:16 PM  czhower
   Last of the IdStream updates
 
-
-    Rev 1.5    2004.05.20 11:37:00 AM  czhower
+  Rev 1.5    2004.05.20 11:37:00 AM  czhower
   IdStreamVCL
 
-
-    Rev 1.4    2004.05.20 11:13:06 AM  czhower
+  Rev 1.4    2004.05.20 11:13:06 AM  czhower
   More IdStream conversions
 
-
-    Rev 1.3    2004.05.19 3:06:44 PM  czhower
+  Rev 1.3    2004.05.19 3:06:44 PM  czhower
   IdStream / .NET fix
 
-
-    Rev 1.2    2004.02.03 5:44:06 PM  czhower
+  Rev 1.2    2004.02.03 5:44:06 PM  czhower
   Name changes
 
-
-    Rev 1.1    5/9/2003 2:14:42 PM  BGooijen
+  Rev 1.1    5/9/2003 2:14:42 PM  BGooijen
   Streams are now buffered, speed is now about 75 times as fast as before
 
-
-    Rev 1.0    11/13/2002 07:57:22 AM  JPMugaas
-
- *****************************************************************************
- *                              IdMessageCoderYenc.pas                       *
- *****************************************************************************
-
- *===========================================================================*
- * DESCRIPTION                                                               *
- *****************************************************************************
- * PROJECT    : Indy 10                                                      *
- * AUTHOR     : Bas Gooijen (bas_gooijen@yahoo.com)                          *
- * MAINTAINER : Bas Gooijen                                                  *
- *...........................................................................*
- * DESCRIPTION                                                               *
- *  yEnc messagepart encoder/decoded                                         *
- *                                                                           *
- * QUICK NOTES:                                                              *
- *   MULTIPART-MESSAGES ARE _NOT_ SUPPORTED                                  *
- *   THIS CODE IS ALPHA                                                      *
- *                                                                           *
- *   implemented according to version 1.3                                    *
- *   http://www.easynews.com/yenc/yenc-draft.1.3.txt                         *
- *   http://www.easynews.com/yenc/yEnc-Notes3.txt                            *
- *   http://www.yenc.org/develop.htm                                         *
- *...........................................................................*
- * HISTORY                                                                   *
- *     DATE    VERSION  AUTHOR      REASONS                                  *
- *                                                                           *
- * 07/07/2002    1.0   Bas Gooijen  Initial start                            *
- *****************************************************************************
+  Rev 1.0    11/13/2002 07:57:22 AM  JPMugaas
 }
+
+{*===========================================================================*}
+{* DESCRIPTION                                                               *}
+{*****************************************************************************}
+{* PROJECT    : Indy 10                                                      *}
+{* AUTHOR     : Bas Gooijen (bas_gooijen@yahoo.com)                          *}
+{* MAINTAINER : Bas Gooijen                                                  *}
+{*...........................................................................*}
+{* DESCRIPTION                                                               *}
+{*  yEnc messagepart encoder/decoded                                         *}
+{*                                                                           *}
+{* QUICK NOTES:                                                              *}
+{*   MULTIPART-MESSAGES ARE _NOT_ SUPPORTED                                  *}
+{*   THIS CODE IS ALPHA                                                      *}
+{*                                                                           *}
+{*   implemented according to version 1.3                                    *}
+{*   http://www.easynews.com/yenc/yenc-draft.1.3.txt                         *}
+{*   http://www.easynews.com/yenc/yEnc-Notes3.txt                            *}
+{*   http://www.yenc.org/develop.htm                                         *}
+{*...........................................................................*}
+{* HISTORY                                                                   *}
+{*     DATE    VERSION  AUTHOR      REASONS                                  *}
+{*                                                                           *}
+{* 07/07/2002    1.0   Bas Gooijen  Initial start                            *}
+{*****************************************************************************}
+
 unit IdMessageCoderYenc;
 
 interface

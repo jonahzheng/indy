@@ -14,19 +14,19 @@
 }
 {
   $Log$
-
-
-//----------------------------------------------------------------------------//
+}
+{
   2003-11-Jul:
     Original author: Sergio Perry
+    Matthew Elzer - bug fixes & modifications
+}
 
+unit IdIRC;
+
+{
   Based on TIRCClient component by Steve Williams (stevewilliams@kromestudios.com)
   ported to Indy by Daaron Dwyer (ddwyer@ncic.com)
-
-  Matthew Elzer - bug fixes & modifications
-//----------------------------------------------------------------------------//
 }
-unit IdIRC;
 
 interface
 {$i IdCompilerDefines.inc}
@@ -38,15 +38,12 @@ uses
 type
   TIdIRC = class;
 
-//============================================================================//
-
   TIdIRCUserMode = (amAway, amInvisible, amWallops, amRestricted, amOperator,
     amLocalOperator, amReceiveServerNotices);
   TIdIRCUserModes = set of TIdIRCUserMode;
   TIdIRCStat = (stServerConnectionsList, stCommandUsageCount, stOperatorList,
     stUpTime);
 
-//============================================================================//
   { Events }
 
   { -WELCOME- }
@@ -426,8 +423,6 @@ type
     property Port default IdPORT_IRC;
   end;
 
-//============================================================================//
-
 const
   // ChannelModeChars: array [0..7] of Char = ('p', 's', 'i', 't', 'n', 'm', 'l', 'k'); {do not localize}
   IdIRCUserModeChars: array [0..6] of char = ('a', 'i', 'w', 'r', 'o', 'O', 's'); {do not localize}
@@ -444,15 +439,12 @@ const
     'SEND', 'CHAT', 'RESUME', 'ACCEPT'  {do not localize}
   );
 
-//============================================================================//
-
 implementation
 
 uses
   IdGlobalProtocols, IdResourceStringsProtocols, IdSSL,
   IdStack, IdBaseComponent, IdSys;
 
-//============================================================================//
 { TIdIRCReplies }
 
 constructor TIdIRCReplies.Create;
@@ -472,7 +464,6 @@ begin
   end;
 end;
 
-//============================================================================//
 { TIdIRC }
 
 procedure TIdIRC.InitComponent;
@@ -519,8 +510,6 @@ begin
   end;
 end;
 
-//============================================================================//
-
 procedure TIdIRC.Connect;
 begin
   // I doubt that there is explicit SSL support in the IRC protocol
@@ -538,7 +527,7 @@ begin
 
     SetNickname(FNickname);
     SetUsername(FUsername);
-  except              
+  except
     on E: EIdSocketError do begin
       raise EComponentError.Create(RSIRCCannotConnect);
     end;
@@ -563,8 +552,6 @@ begin
     IOHandler.WriteLn(ALine + EOL);
   end;
 end;
-
-//============================================================================//
 
 procedure TIdIRC.AssignIRCClientCommands;
 begin
@@ -813,8 +800,6 @@ begin
   end;
 end;
 
-//============================================================================//
-
 { Command handlers }
 
 procedure TIdIRC.DoBeforeCmd(ASender: TIdCommandHandlers; var AData: string;
@@ -892,8 +877,6 @@ begin
       end;
   end;
 end;
-
-//============================================================================//
 
 procedure TIdIRC.CommandPRIVMSG(ASender: TIdCommand);
 var
@@ -1303,8 +1286,6 @@ begin
     OnOp(ASender.Context, FSenderNick, FSenderHost, ASender.Params[0]);
   end;
 end;
-
-//============================================================================//
 
 procedure TIdIRC.ParseCTCPQuery(CTCPQuery, AChannel: String);
 var
