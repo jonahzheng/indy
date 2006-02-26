@@ -18,6 +18,7 @@
 
 // Delphi 4
 {$IFDEF VER120}
+   {$define win32_or_win64}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL40}
   {$DEFINE DELPHI4}
@@ -31,6 +32,7 @@
 
 // C++ Builder 4
 {$IFDEF VER125}
+   {$define win32_or_win64}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL40}
   {$DEFINE CBUILDER4}
@@ -44,6 +46,7 @@
 
 // Delphi 5 & CBuilder 5
 {$IFDEF VER130}
+   {$define win32_or_win64}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL5ORABOVE}
   {$DEFINE VCL5}
@@ -63,6 +66,7 @@
 
 //Delphi 6
 {$IFDEF VER140}
+   {$define win32_or_win64}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL5ORABOVE}
   {$IFDEF BCB}
@@ -84,6 +88,7 @@
 
 //Delphi 7
 {$IFDEF VER150}
+   {$define win32_or_win64}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL5ORABOVE}
   {$DEFINE VCL6ORABOVE}
@@ -125,6 +130,7 @@
 
 //Delphi 9
 {$IFDEF VER170}
+   {$define win32_or_win64}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL5ORABOVE}
   {$DEFINE VCL6ORABOVE}
@@ -144,6 +150,7 @@
 
 //Delphi 10
 {$IFDEF VER180}
+   {$define win32_or_win64}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL5ORABOVE}
   {$DEFINE VCL6ORABOVE}
@@ -165,6 +172,7 @@
 
 //Delphi 11
 {$IFDEF VER190}
+   {$define win32_or_win64}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL5ORABOVE}
   {$DEFINE VCL6ORABOVE}
@@ -216,6 +224,14 @@
         {$DEFINE USEBASEUNIX}
      {$ENDIF}
   {$ENDIF}
+  {$IF defined(win32) or defined(win64)}
+    {$define win32_or_win64}
+  {$ifend}
+  //so we can use IdWinsock2 in WinCE, maybe in other places in Indy as well -CYA
+  {$IFDEF WINCE}
+    {$DEFINE UNICODE}
+    {$define win32_or_win64_or_winCE}
+  {$ENDIF}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL5ORABOVE}
   {$DEFINE VCL6ORABOVE}
@@ -239,41 +255,49 @@
 // $ IF's are evaluated before $ IFDEF's
 //and Kylix 1 does not have CompilerVersion defined at all.
 {$IFNDEF FPC}
-{$IFDEF LINUX}
-  {$DEFINE USELIBC}
-  {$DEFINE UNIX}
-  {$IFDEF CONDITIONALEXPRESSIONS}
-    {$IF RTLVersion = 14.0}
-      {$DEFINE KYLIX1}
-      {$DEFINE KYLIX}
-      {$DEFINE KYLIX1ORABOVE}
-    {$IFEND}
-    {$IF RTLVersion = 14.2}
-      {$DEFINE KYLIX2}
-      {$DEFINE KYLIX}
-      {$DEFINE USEZLIBUNIT}
-      {$DEFINE KYLIX1ORABOVE}
-      {$DEFINE KYLIX2ORABOVE}
-    {$IFEND}
-    {$IF RTLVersion = 14.5}
-      {$DEFINE KYLIX3}
-      {$DEFINE KYLIX}
-      {$DEFINE USEZLIBUNIT}
-      {$DEFINE KYLIX1ORABOVE}
-      {$DEFINE KYLIX2ORABOVE}
-      {$DEFINE KYLIX3ORABOVE}
-    {$IFEND}
+  {$IFDEF LINUX}
+    {$DEFINE USELIBC}
+    {$DEFINE UNIX}
+    {$IFDEF CONDITIONALEXPRESSIONS}
+      {$IF RTLVersion = 14.0}
+        {$DEFINE KYLIX1}
+        {$DEFINE KYLIX}
+        {$DEFINE KYLIX1ORABOVE}
+      {$IFEND}
+      {$IF RTLVersion = 14.2}
+        {$DEFINE KYLIX2}
+        {$DEFINE KYLIX}
+        {$DEFINE USEZLIBUNIT}
+        {$DEFINE KYLIX1ORABOVE}
+        {$DEFINE KYLIX2ORABOVE}
+      {$IFEND}
+      {$IF RTLVersion = 14.5}
+        {$DEFINE KYLIX3}
+        {$DEFINE KYLIX}
+        {$DEFINE USEZLIBUNIT}
+        {$DEFINE KYLIX1ORABOVE}
+        {$DEFINE KYLIX2ORABOVE}
+        {$DEFINE KYLIX3ORABOVE}
+      {$IFEND}
     
+    {$ENDIF}
+    {$IFDEF WIN32}
+
+
+      {$DEFINE VCL4ORABOVE}
+      {$DEFINE VCL5ORABOVE}
+      {$DEFINE OPTIONALPARAMS}
+      {$DEFINE SAMETEXT}
+      {$DEFINE VCL6ORABOVE}
+      {$DEFINE VCL60}
+      {$define i386}
+      {$define ENDIAN_LITTLE}
+      {$define CPU32}
+      {$define IntThreadPriority} //it's an integer, not enum
+    {$ENDIF}
   {$ENDIF}
-  {$DEFINE VCL4ORABOVE}
-  {$DEFINE VCL5ORABOVE}
-  {$DEFINE OPTIONALPARAMS}
-  {$DEFINE SAMETEXT}
-  {$DEFINE VCL6ORABOVE}
-  {$DEFINE VCL60}
-  {$define i386}
-  {$define ENDIAN_LITTLE}
-  {$define CPU32}
-  {$define IntThreadPriority} //it's an integer, not enum
 {$ENDIF}
-{$ENDIF}
+
+{$ifdef win32_or_win64}
+   {$define win32_or_win64_or_winCE}
+{$endif}
