@@ -80,7 +80,7 @@ uses
  {$ENDIF}
  //TODO:  I'm not really sure how other platforms are supported with asockets header
  //Do I use the sockets unit or do something totally different for each platform
-   {$ifdef win32}
+   {$ifdef win32_or_win64_or_winCE}
    IdWship6, //for some constants that supplement IdWinsock
    IdWinsock2;
    {$endif}
@@ -176,7 +176,7 @@ const
     Id_IPV6_ADD_MEMBERSHIP = IPV6_ADD_MEMBERSHIP;
     Id_IPV6_DROP_MEMBERSHIP = IPV6_DROP_MEMBERSHIP;
   {$ENDIF}
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
     Id_IPV6_HDRINCL = IPV6_HDRINCL;
     Id_IPV6_UNICAST_HOPS = IPV6_UNICAST_HOPS;
     Id_IPV6_MULTICAST_IF = IPV6_MULTICAST_IF;
@@ -498,7 +498,7 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
   Id_WSAEHOSTUNREACH = ESysEHOSTUNREACH;
   Id_WSAENOTEMPTY = ESysENOTEMPTY;
   {$endif}
-  {$ifdef WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   // Shutdown Options
   Id_SD_Recv = 0;
   Id_SD_Send = 1;

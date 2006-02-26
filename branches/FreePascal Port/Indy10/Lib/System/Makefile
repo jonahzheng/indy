@@ -398,7 +398,7 @@ ifeq ($(FULL_TARGET),i386-netwlibc)
 override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),i386-wince)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackBSDBase IdStackWindows IdWinsock2 IdWship6 IdSysWin32
 endif
 ifeq ($(FULL_TARGET),m68k-linux)
 override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux
@@ -461,7 +461,7 @@ ifeq ($(FULL_TARGET),arm-palmos)
 override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
 endif
 ifeq ($(FULL_TARGET),arm-wince)
-override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL
+override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackBSDBase IdStackWindows IdWinsock2 IdWship6 IdSysWin32
 endif
 ifeq ($(FULL_TARGET),powerpc64-linux)
 override TARGET_IMPLICITUNITS+=IdAntiFreezeBase IdBaseComponent IdComponent IdException IdGlobal IdObjs IdObjsBase IdObjsVCL IdResourceStrings IdStack IdStackConsts IdStream IdStreamVCL IdStruct IdSys IdSysBase IdSysNativeVCL IdSysVCL  IdStackUnix IdStackBSDBase IdSysLinux

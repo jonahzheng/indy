@@ -322,7 +322,7 @@ unit IdGlobalProtocols;
 interface
 {$i IdCompilerDefines.inc}
 uses
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   Windows,
   {$ENDIF}
   IdCharsets,
@@ -375,7 +375,7 @@ type
   PWord =^Word;
   {$ENDIF}
 
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   TIdWin32Type = (Win32s,
     WindowsNT40PreSP6Workstation, WindowsNT40PreSP6Server, WindowsNT40PreSP6AdvancedServer,
     WindowsNT40Workstation, WindowsNT40Server, WindowsNT40AdvancedServer,
@@ -486,7 +486,7 @@ type
   function TwoCharToWord(AChar1, AChar2: Char):Word;
   function UpCaseFirst(const AStr: string): string;
   function GetUniqueFileName(const APath, APrefix, AExt : String) : String;
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   function Win32Type : TIdWin32Type;
   {$ENDIF}
   procedure WordToTwoBytes(AWord : Word; ByteArray: TIdBytes; Index: integer);
@@ -549,7 +549,7 @@ uses
   SysUtils,
   Classes,
   {$ENDIF}
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   Registry,
   SysUtils,
   {$ENDIF}
@@ -683,7 +683,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 var
   ATempPath: string;
 {$ENDIF}
@@ -854,7 +854,7 @@ Note that JPM Open is under a different Open Source license model.
 
 It is available at http://www.wvnet.edu/~oma00215/jpm.html }
 
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 type
   TNTEditionType = (workstation, server, advancedserver);
 
@@ -1201,7 +1201,7 @@ begin
   end;
 end;
 
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
   {$IFNDEF VCL5ORABOVE}
   function CreateTRegistry: TRegistry;
   begin
@@ -1363,7 +1363,7 @@ begin
   result := true; // or you'll get an exception
 end;
 {$ELSE}
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
 function CopyFileTo(const Source, Destination: string): Boolean;
 begin
   Result := CopyFile(PChar(Source), PChar(Destination), true);
@@ -1421,7 +1421,7 @@ end;
 {$ENDIF}
 
 
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 function TempPath: string;
 var
 	i: integer;
@@ -1447,7 +1447,7 @@ begin
   lExt := '.tmp';
   {$ENDIF}
 
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   if lPath = '' then
   begin
     lPath := ATempPath;
@@ -1605,7 +1605,7 @@ begin
 end;
 
 function GetGMTDateByName(const AFileName : String) : TIdDateTime;
- {$IFDEF WIN32}
+ {$ifdef win32_or_win64_or_winCE}
 var LRec : TWin32FindData;
   LHandle : THandle;
    LTime : Integer;
@@ -1629,7 +1629,7 @@ begin
     Result := System.IO.File.GetLastWriteTimeUtc(AFileName).ToOADate;
   end;
   {$ENDIF}
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   LHandle := FindFirstFile(PChar(AFileName), LRec);
   if LHandle <> INVALID_HANDLE_VALUE then
   begin
@@ -1689,7 +1689,7 @@ begin
   Result := -Sys.OffsetFromUTC;
 end;
 {$ENDIF}
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 function TimeZoneBias: TIdDateTime;
 var
   ATimeZone: TTimeZoneInformation;
@@ -1757,7 +1757,7 @@ begin
   result := False;
 end;
 {$ENDIF}
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 function SetLocalTime(Value: TIdDateTime): boolean;
 {I admit that this routine is a little more complicated than the one
 in Indy 8.0.  However, this routine does support Windows NT privillages
@@ -1957,7 +1957,7 @@ begin
   raise EIdException.Create('BuildMIMETypeMap not implemented yet.');    {Do not Localize}
 end;
 {$ENDIF}
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 var
   Reg: TRegistry;
   slSubKeys: TIdStringList;
@@ -2126,7 +2126,7 @@ end;
 {$ENDIF}
 
 procedure FillMimeTable(const AMIMEList : TIdStringList;const ALoadFromOS:Boolean=True);
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 var
   reg: TRegistry;
   KeyList: TIdStringList;
@@ -2301,7 +2301,7 @@ begin
 
   if not ALoadFromOS then Exit;
 
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   // Build the file type/MIME type map
   Reg := CreateTRegistry; try
     KeyList := TIdStringList.create;
@@ -2665,7 +2665,7 @@ begin
   end;
 end;
 
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 function GetClockValue : Int64;
 var LFTime : TFileTime;
 type
@@ -2754,7 +2754,7 @@ begin
   {$endif}
 end;
 {$ENDIF}
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 function IndyComputerName: string;
 var
   i: LongWord;
@@ -2801,7 +2801,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 // Many defaults are set here when the choice is ambiguous. However for
 // IdMessage OnInitializeISO can be used by user to choose other.
 function IdGetDefaultCharSet: TIdCharSet;
@@ -2886,7 +2886,7 @@ begin
 end;
 
 initialization
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   ATempPath := TempPath;
   {$ENDIF}
 

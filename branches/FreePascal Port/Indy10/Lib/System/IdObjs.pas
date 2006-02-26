@@ -184,7 +184,7 @@ const
   fmShareDenyWrite  = sysutils.fmShareDenyWrite;
   fmShareDenyNone   = sysutils.fmShareDenyNone;
   {$ELSE}
-     {$IFDEF WIN32}
+    {$ifdef win32_or_win64_or_winCE}
   fmOpenRead        = $0000;
   fmOpenWrite       = $0001;
   fmOpenReadWrite   = $0002;

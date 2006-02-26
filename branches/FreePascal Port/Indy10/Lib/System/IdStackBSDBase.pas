@@ -331,7 +331,7 @@ uses
       IdStackUnix,
     {$ENDIF}
   {$ENDIF}
-  {$IFDEF WIN32}   IdStackWindows, {$ENDIF}
+   {$ifdef win32_or_win64_or_winCE}   IdStackWindows, {$ENDIF}
   {$IFDEF DOTNET}    IdStackDotNet, {$ENDIF}
   IdResourceStrings;
 

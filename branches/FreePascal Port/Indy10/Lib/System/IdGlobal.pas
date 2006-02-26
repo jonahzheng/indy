@@ -521,7 +521,7 @@ uses
   {$ELSE}
   // no DotNET
   {$ENDIF}
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   Windows,
   {$ENDIF}
   {$IFNDEF DotNetDistro}
@@ -623,7 +623,7 @@ type
       TIdThreadPriority = TThreadPriority;
     {$ENDIF}
  {$ENDIF}
- {$IFDEF WIN32}
+ {$ifdef win32_or_win64_or_winCE}
     TIdPID = LongWord;
     TidThreadId = LongWord;
     TIdThreadPriority = TThreadPriority;
@@ -847,7 +847,7 @@ const
 
   {$ENDIF}
 
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   GOSType = otWindows;
   GPathDelim = '\'; {do not localize}
   Infinite = Windows.INFINITE; { redeclare here for use elsewhere without using Windows.pas }  // cls modified 1/23/2002
@@ -1587,7 +1587,7 @@ begin
   __write(stderr, AText, Length(AText));
   __write(stderr, EOL, Length(EOL));
   {$ENDIF}
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   OutputDebugString(PChar(AText));
   {$ENDIF}
   {$IFDEF DotNet}
@@ -1619,7 +1619,7 @@ begin
   {$IFDEF UseBaseUnix}
   Result := fpgetpid;
   {$ENDIF}
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   Result := GetCurrentProcessID;
   {$ENDIF}
   {$IFDEF DotNet}
@@ -1691,7 +1691,7 @@ begin
   {$IFDEF UNIX}
   Result := AThread.ThreadID; // Works both in UseBaseUnix and UseLibc
   {$ENDIF}
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
   Result := AThread.Handle;
   {$ENDIF}
   {$IFDEF DotNet}
@@ -1727,7 +1727,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 // S.G. 27/11/2002: Changed to use high-performance counters as per suggested
 // S.G. 27/11/2002: by David B. Ferguson (david.mcs@ns.sympatico.ca)
 function Ticks: Cardinal;
@@ -2463,7 +2463,7 @@ begin
     {$ENDIF}
   {$ENDIF}
 
-  {$IFDEF WIN32}
+  {$ifdef win32_or_win64_or_winCE}
     AThread.Priority := APriority;
   {$ENDIF}
 end;
@@ -2496,7 +2496,7 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 begin
   Windows.Sleep(ATime);
 end;
@@ -2550,7 +2550,7 @@ begin
 end;
 
 procedure SetThreadName(const AName: string);
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
 {$IFDEF ALLOW_NAMED_THREADS}
 type
   TThreadNameInfo = record
@@ -2571,7 +2571,7 @@ begin
     System.Threading.Thread.CurrentThread.Name := AName;
   end;
 {$ENDIF}
-{$IFDEF WIN32}
+{$ifdef win32_or_win64_or_winCE}
   with LThreadNameInfo do begin
     RecType := $1000;
     Name := PChar(AName);
@@ -3354,7 +3354,7 @@ begin
   {$ELSE}
   Result := LLen <= Length(S);
   if Result then begin
-    {$IFDEF MSWINDOWS}
+    {$IFDEF win32_or_win64}
     Result := CompareString(LOCALE_USER_DEFAULT, NORM_IGNORECASE, PChar(S), LLen, PChar(SubS), LLen) = 2;
     {$ELSE}
     Result := Sys.AnsiCompareText(Copy(S, 1, LLen), SubS) = 0;
