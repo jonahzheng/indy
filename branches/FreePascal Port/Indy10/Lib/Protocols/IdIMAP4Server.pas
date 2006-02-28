@@ -568,7 +568,7 @@ begin
   FSaferMode := False;
   FUseDefaultMechanismsForUnassignedCommands := True;
   if FRootPath = '' then begin
-{$IFDEF LINUX}
+{$IFDEF UNIX}
     FRootPath := GPathDelim+'var'+PathDelim+'imapmail'; {Do not Localize}
 {$ELSE}
     FRootPath := GPathDelim+'imapmail'; {Do not Localize}
