@@ -569,7 +569,7 @@ begin
   FUseDefaultMechanismsForUnassignedCommands := True;
   if FRootPath = '' then begin
 {$IFDEF UNIX}
-    FRootPath := GPathDelim+'var'+PathDelim+'imapmail'; {Do not Localize}
+    FRootPath := GPathDelim+'var'+GPathDelim+'imapmail'; {Do not Localize}
 {$ELSE}
     FRootPath := GPathDelim+'imapmail'; {Do not Localize}
 {$ENDIF}
