@@ -26,6 +26,10 @@ Sun Solaris
 Remember that the success of this effort depends upon you and what you 
 contribute.
 
+                                    License
+
+Read the COPYING file located in this distribution.
+
                            Installation Instructions
 
 In the fpc directory, there is a Makefile. Run "make all". If you are using 
@@ -40,8 +44,8 @@ Lazarus. Just open, compile, and install the indylaz.lpk file located in the
 lazarus directory.
 
 You probably should read the Development Tutorial (aka Build FAQ) at 
-http://www.indyproject.org/sockets/fpc/www.stack.nl/~marcov/buildfaq.pdf for 
-more information about the FreePascal build process.
+http://www.stack.nl/~marcov/buildfaq.pdf for more information about the 
+FreePascal build process.
 
                                   Known Issues
 
