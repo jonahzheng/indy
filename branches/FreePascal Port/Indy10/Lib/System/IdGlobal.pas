@@ -985,12 +985,12 @@ procedure CopyTIdString(const ASource: String;
 function CharPosInSet(const AString: string; const ACharPos: Integer; const ASet: String): Integer;
 function CharIsInSet(const AString: string; const ACharPos: Integer; const ASet:  String): Boolean;
 
-function CharIsInEOF(const AString: string; ACharPos: Integer): Boolean;
+function CharIsInEOL(const AString: string; ACharPos: Integer): Boolean;
 
 function ByteIndex(const AByte: Byte; const ABytes: TIdBytes; const AStartIndex: Integer = 0): Integer;
 function ByteIdxInSet(const ABytes: TIdBytes; const AIndex: Integer; const ASet: TIdBytes): Integer;
 function ByteIsInSet(const ABytes: TIdBytes; const AIndex: Integer; const ASet: TIdBytes): Boolean;
-function ByteIsInEOF(const ABytes: TIdBytes; const AIndex: Integer): Boolean;
+function ByteIsInEOL(const ABytes: TIdBytes; const AIndex: Integer): Boolean;
 
 function CurrentProcessId: TIdPID;
 procedure DebugOutput(const AText: string);
@@ -3429,7 +3429,7 @@ begin
   Result := CharPosInSet(AString, ACharPos, ASet) > 0;
 end;
 
-function CharIsInEOF(const AString: string; ACharPos: Integer): Boolean;
+function CharIsInEOL(const AString: string; ACharPos: Integer): Boolean;
 begin
   Result := CharIsInSet(AString, ACharPos, EOL);
 end;
@@ -3462,7 +3462,7 @@ begin
   Result := ByteIdxInSet(ABytes, AIndex, ASet) > -1;
 end;
 
-function ByteIsInEOF(const ABytes: TIdBytes; const AIndex: Integer): Boolean;
+function ByteIsInEOL(const ABytes: TIdBytes; const AIndex: Integer): Boolean;
 var
   LSet: TIdBytes;
 begin

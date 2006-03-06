@@ -53,7 +53,7 @@ type
     class function FileDateToDateTime(FileDate: Integer): TDateTime;
     class function CompareStr(const S1, S2: string): Integer;
     class function AddMSecToTime(const ADateTime : TDateTime; const AMSec : Integer):TDateTime;
-    class function CompareDate(const D1, D2 : TDateTime) : Integer; 
+    class function CompareDate(const D1, D2 : TDateTime) : Integer;
     class function SameText(const S1, S2 : String) : Boolean;
     class procedure FreeAndNil(var Obj);  
     class function LeadBytes: TAnsiCharSet; 
@@ -411,7 +411,15 @@ end;
 
 class function TIdSysVCL.FileAge(const FileName: string): TDateTime;
 begin
+  {$IFDEF VCL10ORABOVE}
+  //single-parameter fileage is deprecated in d2006 and above
+  if not SysUtils.FileAge(FileName,Result) then
+    begin
+    Result:=0;
+    end;
+  {$ELSE}
   Result := SysUtils.FileDateToDateTime( SysUtils.FileAge(FileName));
+  {$ENDIF}
 end;
 
 class function TIdSysVCL.DirectoryExists(const Directory: string): Boolean;
