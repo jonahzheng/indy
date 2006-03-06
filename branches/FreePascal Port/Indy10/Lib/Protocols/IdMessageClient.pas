@@ -968,7 +968,7 @@ var
           IOHandler.Write(LData);
         end;
       end;
-      if (LData <> '') and not CharIsInEOF(LData, Length(LData)) then begin
+      if (LData <> '') and not CharIsInEOL(LData, Length(LData)) then begin
         { The last line has no line break, add it to get a blank line when
           WriteTextPart returns. This should not happen because quoted-printable
           does not remove the EOL. }
