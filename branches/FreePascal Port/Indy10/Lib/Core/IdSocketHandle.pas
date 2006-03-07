@@ -185,7 +185,7 @@ type
     constructor Create(ACollection: TIdCollection); override;
     destructor Destroy; override;
 //    procedure GetSockOpt(level, optname: Integer; optval: PChar; optlen: Integer);
-    procedure Listen(const anQueueCount: integer = 5);
+    procedure Listen(const AQueueCount: Integer = 5);
     function Readable(AMSec: Integer = IdTimeoutDefault): boolean;
     function Receive(var VBuffer: TIdBytes): Integer;
     function RecvFrom(var ABuffer : TIdBytes; var VIP: string;
@@ -346,9 +346,9 @@ begin
   FOverLapped := AValue;
 end;
 
-procedure TIdSocketHandle.Listen(const anQueueCount: integer);
+procedure TIdSocketHandle.Listen(const AQueueCount: Integer = 5);
 begin
-  GStack.Listen(Handle, anQueueCount);
+  GStack.Listen(Handle, AQueueCount);
 end;
 
 function TIdSocketHandle.Accept(ASocket: TIdStackSocketHandle): Boolean;
@@ -383,26 +383,27 @@ function TIdSocketHandle.Readable(AMSec: Integer = IdTimeoutDefault): Boolean;
 
   function CheckIsReadable(AMSec: Integer): Boolean;
   begin
-    if HandleAllocated then begin
-      Result := Select(AMSec);
-    end else begin
-      raise EIdConnClosedGracefully.Create(RSConnectionClosedGracefully);
-    end;
+    EIdConnClosedGracefully.IfFalse(HandleAllocated, RSConnectionClosedGracefully);
+    Result := Select(AMSec);
   end;
 
 begin
+  if AMSec = IdTimeoutDefault then begin
+    AMSec := IdTimeoutInfinite;
+  end;
   if TIdAntiFreezeBase.ShouldUse then begin
     if AMSec = IdTimeoutInfinite then begin
       repeat
         Result := CheckIsReadable(GAntiFreeze.IdleTimeOut);
       until Result;
       Exit;
-    end else if AMSec > GAntiFreeze.IdleTimeOut then begin
-      Result := CheckIsReadable(AMSec - GAntiFreeze.IdleTimeOut);
+    end;
+    while AMSec > GAntiFreeze.IdleTimeOut do begin
+      Result := CheckIsReadable(GAntiFreeze.IdleTimeOut);
       if Result then begin
         Exit;
       end;
-      AMSec := GAntiFreeze.IdleTimeOut;
+      Dec(AMSec, GAntiFreeze.IdleTimeOut);
     end;
   end;
   Result := CheckIsReadable(AMSec);
