@@ -994,6 +994,7 @@ type
     property Password;
     property TransferType: TIdFTPTransferType read FTransferType write SetTransferType default Id_TIdFTP_TransferType;
     property TransferTimeout: Integer read FTransferTimeout write FTransferTimeout default IdDefTimeout;
+    property ListenTimeout : Integer read FListenTimeout write FListenTimeout default DEF_Id_FTP_ListenTimeout;
     property Username;
     property Port default IDPORT_FTP;
     property UseExtensionDataPort : Boolean read FUseExtensionDataPort write SetUseExtensionDataPort default DEF_Id_TIdFTP_UseExtendedData;
@@ -1127,6 +1128,7 @@ begin
   FTryNATFastTrack := Id_TIdFTP_UseNATFastTrack;
   FTransferType := Id_TIdFTP_TransferType;
   FTransferTimeout := IdDefTimeout;
+  FListenTimeout := DEF_Id_FTP_ListenTimeout;
   FLoginMsg := TIdReplyFTP.Create(NIL);
   FListResult := TIdStringList.Create;
   FLangsSupported := TIdStringList.Create;
@@ -1273,13 +1275,13 @@ end;
 
 function TIdFTP.ResumeSupported: Boolean;
 begin
-  if FResumeTested then result := FCanResume
-  else begin
-    FResumeTested := true;
+  if not FResumeTested then
+  begin
+    FResumeTested := True;
     FCanResume := Quote('REST 1') = 350;   {do not localize}
-    result := FCanResume;
     Quote('REST 0');  {do not localize}
   end;
+  Result := FCanResume
 end;
 
 procedure TIdFTP.Get(const ASourceFile: string; ADest: TIdStream; AResume: Boolean = False);
@@ -1292,28 +1294,25 @@ begin
   InternalGet('RETR ' + ASourceFile, ADest, AResume);
 end;
 
-procedure TIdFTP.Get(const ASourceFile, ADestFile: string; const ACanOverwrite: boolean = False;
-  AResume: Boolean = false);
+procedure TIdFTP.Get(const ASourceFile, ADestFile: string; const ACanOverwrite: Boolean = False;
+  AResume: Boolean = False);
 var
   LDestStream: TIdStream;
 begin
-
   AResume := AResume and CanResume;
   if ACanOverwrite and (not AResume) then begin
     Sys.DeleteFile(ADestFile);
     LDestStream := TFileCreateStream.Create(ADestFile);
-  end else begin
-    if (not ACanOverwrite) and AResume then begin
-      LDestStream := TAppendFileStream.Create(ADestFile);
-    end else begin
-      if Sys.FileExists(ADestFile) then begin
-        raise EIdFTPFileAlreadyExists.Create(RSDestinationFileAlreadyExists);
-      end else begin
-        LDestStream := TFileCreateStream.Create(ADestFile);
-      end;
-    end;
+  end
+  else if (not ACanOverwrite) and AResume then begin
+    LDestStream := TAppendFileStream.Create(ADestFile);
+  end
+  else if not Sys.FileExists(ADestFile) then begin
+    LDestStream := TFileCreateStream.Create(ADestFile);
+  end
+  else begin
+    raise EIdFTPFileAlreadyExists.Create(RSDestinationFileAlreadyExists);
   end;
-
   try
     Get(ASourceFile, LDestStream, AResume);
   finally
@@ -1414,7 +1413,7 @@ const
   AcceptableAbortReplies : array [0..8] of smallint =
     (225, 226, 250, 426, 450,451,425,550,552);
   //GlobalScape Secure FTP Server returns a 552 for an aborted file
-
+  
 procedure TIdFTP.FinalizeDataOperation;
 var LResponse : SmallInt;
 begin
@@ -1435,7 +1434,7 @@ This is a bug fix for servers will do something like this:
 [6] Mon 06Jun05 13:34:28 - (000007) 221 Goodbye!
 [5] Mon 06Jun05 13:34:28 - (000007) Closing connection for user TEST (00:01:08 connected)
   }
-  if  (Self.LastCmdResult.NumericCode div 100)>2 then
+  if (Self.LastCmdResult.NumericCode div 100) > 2 then
   begin
     DoStatus(ftpAborted, [RSFTPStatusAbortTransfer]);
     Exit;
@@ -1444,7 +1443,6 @@ This is a bug fix for servers will do something like this:
   // 226 = download successful, 225 = Abort successful}
   if FAbortFlag.Value then
   begin
-
     LResponse := GetResponse(AcceptableAbortReplies);
 //Expiremental -
     if PosInSmallIntArray(LResponse,AbortedReplies)>-1 then begin
@@ -1472,21 +1470,17 @@ This is a bug fix for servers will do something like this:
 //
     if LResponse = 226 then
     begin
-      if IOHandler.Readable(10) then
-      begin
+      if IOHandler.Readable(10) then begin
         GetResponse(AbortedReplies);
       end;
     end;
     DoStatus(ftpAborted, [RSFTPStatusAbortTransfer]);
 //end expiriemental section
-  end
-  else
-  begin
+  end else begin
     //ftp.marist.edu returns 250
     GetResponse([226, 225,250]);
   end;
 end;
-
 
 procedure TIdFTP.InternalPut(const ACommand: string; ASource: TIdStream; AFromBeginning: Boolean = true);
 var
@@ -1524,17 +1518,17 @@ begin
         try
           Self.GetResponse([110, 125, 150]);
           try
-            if  FUsingSFTP and (FDataPortProtection = ftpdpsPrivate) then begin
-               TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).Passthrough := False;
+            if FUsingSFTP and (FDataPortProtection = ftpdpsPrivate) then begin
+              TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).Passthrough := False;
             end;
-            if FCurrentTransferMode<>dmDeflate then begin
+            if FCurrentTransferMode <> dmDeflate then begin
               if AFromBeginning then begin
-                FDataChannel.IOHandler.Write(ASource,0, false);  // from beginning
+                FDataChannel.IOHandler.Write(ASource, 0, False);  // from beginning
               end else begin
-                FDataChannel.IOHandler.Write(ASource,-1, false); // from current position
+                FDataChannel.IOHandler.Write(ASource, -1, False); // from current position
               end;
             end else begin
-              FCompressor.CompressFTPToIO(ASource,FDataChannel.IOHandler,FZLibCompressionLevel,FZLibWindowBits,FZLibMemLevel, FZLibStratagy);
+              FCompressor.CompressFTPToIO(ASource, FDataChannel.IOHandler, FZLibCompressionLevel, FZLibWindowBits, FZLibMemLevel, FZLibStratagy);
             end;
           except
             on E: EIdSocketError do
@@ -1574,33 +1568,28 @@ begin
         end;
         Self.SendCmd(ACommand, [125, 150]);
 
-        LPortSv.Listen;
+        LPortSv.Listen(ListenTimeout);
         if FUsingSFTP and (FDataPortProtection = ftpdpsPrivate) then begin
           TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).PassThrough := False;
         end;
 
-        if FCurrentTransferMode<>dmDeflate then begin
+        if FCurrentTransferMode <> dmDeflate then begin
           if AFromBeginning then begin
-            FDataChannel.IOHandler.Write(ASource,0, false);  // from beginning
+            FDataChannel.IOHandler.Write(ASource, 0, False);  // from beginning
           end else begin
-            FDataChannel.IOHandler.Write(ASource,-1, false); // from current position
+            FDataChannel.IOHandler.Write(ASource, -1, False); // from current position
           end;
         end else begin
-          FCompressor.CompressFTPToIO(ASource,FDataChannel.IOHandler,FZLibCompressionLevel,FZLibWindowBits,FZLibMemLevel, FZLibStratagy);
+          FCompressor.CompressFTPToIO(ASource, FDataChannel.IOHandler, FZLibCompressionLevel, FZLibWindowBits, FZLibMemLevel, FZLibStratagy);
         end;
       finally
-         FinalizeDataOperation;
+        FinalizeDataOperation;
       end;
     end;
   except
     //Note that you are likely to get an exception you abort a transfer
     //hopefully, this will make things work better.
-    on E: EIdConnClosedGracefully do
-    begin
-      if not (E is EIdConnClosedGracefully) then
-      begin
-        raise;
-      end;
+    on E: EIdConnClosedGracefully do begin
     end;
   end;
 
@@ -1698,7 +1687,7 @@ begin
         end;
         SendCmd(ACommand, [125, 150, 154]); //APR: Ericsson Switch FTP);
 
-        LPortSv.Listen;
+        LPortSv.Listen(ListenTimeout);
         if FUsingSFTP and (FDataPortProtection = ftpdpsPrivate) then begin
           TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).PassThrough := False;
         end;
@@ -1861,7 +1850,7 @@ end;
 
 procedure TIdFTP.StoreUnique(const ASource: TIdStream);
 begin
-  InternalPut('STOU', ASource);  {Do not localize}
+    InternalPut('STOU', ASource);  {Do not localize}
 end;
 
 procedure TIdFTP.StoreUnique(const ASourceFile: string);
@@ -3021,11 +3010,10 @@ begin
     begin
       repeat
         LWord := Sys.Trim(Fetch(LBuf,';'));
-        if (PosInStrArray(LWord,TLS_AUTH_NAMES)>-1) then
-        begin
+        if PosInStrArray(LWord, TLS_AUTH_NAMES) > -1 then begin
           Result := 'AUTH ' + LWord;  {do not localize}
         end;
-      until (LBuf='') or (Result ='');
+      until (LBuf = '') or (Result = '');
       Break;
     end;
   end;
@@ -3827,7 +3815,7 @@ begin
   begin
     ALocalFile.Position := AStartPoint;
   end;
-
+  
   LByteCount := (ALocalFile.Size - AStartPoint);
   if (LByteCount > AByteCount) and (AByteCount >0) then
   begin
