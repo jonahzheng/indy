@@ -124,14 +124,15 @@ var
   stdErr : TIdSimpleServer;
   thr : TIdStdErrThread;
 
-      procedure SendAuthentication(APort : Integer);
-      begin
-           // Send authentication and commands
-        IOHandler.Write(Sys.IntToStr( APort )+#0);  //stdErr Port Number - none for this session
-        IOHandler.Write(AParam1 + #0);
-        IOHandler.Write(AParam2 + #0);
-        IOHandler.Write(ACommand + #0);
-      end;
+  procedure SendAuthentication(APort : Integer);
+  begin
+    // Send authentication and commands
+    IOHandler.Write(Sys.IntToStr(APort)+#0);  //stdErr Port Number - none for this session
+    IOHandler.Write(AParam1 + #0);
+    IOHandler.Write(AParam2 + #0);
+    IOHandler.Write(ACommand + #0);
+  end;
+
 begin
   IOHandler := TIdIOHandlerStack.Create(nil);
   Result := '';    {Do not Localize}
@@ -142,7 +143,7 @@ begin
     TIdIOHandlerSocket(IOHandler).BoundPortMin := 0;
     TIdIOHandlerSocket(IOHandler).BoundPortMax := 0;
   end;
-  {For RSH, we have to set the port the client to connect.  I don't
+  {For RSH, we have to set the port the client to connect.  I don't    
    think it is required to this in Rexec.}
    Connect; try
     if FUseStdError then begin
@@ -211,9 +212,8 @@ end;
 
 procedure TIdStdErrThread.Run;
 begin
-  if FStdErr.Listen then begin
-    FOutput := FStdErr.IOHandler.AllData;
-  end;
+  FStdErr.Listen;
+  FOutput := FStdErr.IOHandler.AllData;
 end;
 
 end.
