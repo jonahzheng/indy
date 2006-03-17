@@ -661,6 +661,7 @@ const
     DEF_Id_TIdFTP_UseMIS = False;
     DEF_Id_FTP_UseCCC = False;
     DEF_Id_FTP_AUTH_CMD = tAuto;
+  DEF_Id_FTP_ListenTimeout = 10000; // ten seconds
       {
 Soem firewalls don't handle control connections properly during long data transfers.
 They will timeout the control connection because it's idle and making it worse is that they
@@ -742,6 +743,7 @@ type
     FSystemDesc: string;
     FTransferType: TIdFTPTransferType;
     FTransferTimeout : Integer;
+    FListenTimeout : Integer;
     FDataChannel: TIdTCPConnection;
     FDirectoryListing: TIdFTPListItems;
     FDirFormat : String;
@@ -788,7 +790,7 @@ type
 
     //we probably need an Abort flag so we know when an abort is sent.
     //It turns out that one server will send a 550 or 451 error followed by an
-    //ABOR successfull
+    //ABOR successfull 
     FAbortFlag : TIdThreadSafeBoolean;
 
 	  FAccount: string;
@@ -881,6 +883,7 @@ type
     //
     // holger: .NET compatibility change
     property IPVersion;
+    //
   public
 
     function IsExtSupported(const ACmd : String):Boolean;
@@ -1056,7 +1059,7 @@ uses
   IdComponent, IdResourceStringsCore, IdIOHandlerStack, IdResourceStringsProtocols,
   IdSSL, IdGlobalProtocols, IdHash, IdHashCRC, IdHashSHA1, IdHashMessageDigest,
   IdStack, IdSimpleServer,
-   IdOTPCalculator;
+  IdOTPCalculator;
 
 function CleanDirName(const APWDReply: string): string;
 begin
