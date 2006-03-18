@@ -106,6 +106,7 @@ type
   EIdClosedSocket = class(EIdException);
   EIdResponseError = class(EIdException);
   EIdReadTimeout = class(EIdException);
+  EIdAcceptTimeout = class(EIdException);
   EIdReadLnMaxLineLengthExceeded = class(EIdException);
 
   // TIdTCPConnection exceptions
