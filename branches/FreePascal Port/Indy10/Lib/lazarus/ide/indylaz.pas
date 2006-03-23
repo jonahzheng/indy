@@ -1,28 +1,33 @@
-{ This file was automatically created by Lazarus. Do not edit!
-This source is only used to compile and install the package.
- }
-
-unit IndyLaz; 
-
+unit indylaz;
 interface
 
 uses
-  IdAbout, IdAboutVCL, IdAntiFreeze, IdCoreDsnRegister, IdDsnBaseCmpEdt, 
-    IdDsnCoreResourceStrings, IdDsnPropEdBinding, IdDsnPropEdBindingVCL, 
-    IdDsnRegister, IdDsnResourceStrings, IdDsnSASLListEditor, 
-    IdDsnSASLListEditorForm, IdDsnSASLListEditorFormVCL, IdRegister, 
-    IdRegisterCore, LazarusPackageIntf; 
+  IdAbout,
+  IdAboutVCL,
+  IdAntiFreeze,
+  IdCoreDsnRegister,
+  IdDsnBaseCmpEdt,
+  IdDsnCoreResourceStrings,
+  IdDsnPropEdBinding,
+  IdDsnPropEdBindingVCL,
+  IdDsnRegister,
+  IdDsnResourceStrings,
+  IdDsnSASLListEditor,
+  IdDsnSASLListEditorForm,
+  IdDsnSASLListEditorFormVCL,
+  IdRegister,
+  IdRegisterCore;
 
 implementation
 
-procedure Register; 
+procedure Register;
 begin
-  RegisterUnit('IdCoreDsnRegister', @IdCoreDsnRegister.Register); 
-  RegisterUnit('IdDsnRegister', @IdDsnRegister.Register); 
-  RegisterUnit('IdRegister', @IdRegister.Register); 
-  RegisterUnit('IdRegisterCore', @IdRegisterCore.Register); 
-end; 
+  RegisterUnit('IdCoreDsnRegister', @IdCoreDsnRegister.Register);
+  RegisterUnit('IdDsnRegister', @IdDsnRegister.Register);
+  RegisterUnit('IdRegister', @IdRegister.Register);
+  RegisterUnit('IdRegisterCore', @IdRegisterCore.Register);
+end;
 
 initialization
-  RegisterPackage('IndyLaz', @Register); 
+  RegisterPackage('indylaz', @Register);
 end.
