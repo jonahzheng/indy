@@ -32,7 +32,13 @@ Read the COPYING file located in this distribution.
 
                            Installation Instructions
 
-In the fpc directory, there is a Makefile. Run "make all". If you are using 
+If you have a RPM-based distribution (such as Fedora or Mandravia) and you 
+install FreePascal as root, use the makeindyrpm.sh script to build the indy 
+rpm. Then install the indy-fpc and indy-fpc-src RPM's that you created.
+
+Otherwise, do the following:
+
+Change directory to "fpc" and run "make all". If you are using 
 Windows, you must use the GNU BinUtils Make program that is included in most 
 FreePascal distributions.
  
