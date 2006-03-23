@@ -2,7 +2,7 @@
 <CONFIG>
   <Package Version="2">
     <PathDelim Value="\"/>
-    <Name Value="IndyLaz"/>
+    <Name Value="indylaz"/>
     <Author Value="Chad Z. Hower (Kudzu) and the Indy Pit Crew - http://www.indyproject.org/"/>
     <CompilerOptions>
       <Version Value="5"/>
