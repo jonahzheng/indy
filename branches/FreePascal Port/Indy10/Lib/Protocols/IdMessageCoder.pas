@@ -342,7 +342,7 @@ procedure TIdMessageEncoder.Encode(const AFilename: string; ADest: TIdStream);
 var
   LSrcStream: TIdStream;
 begin
-  LSrcStream := TReadFileExclusiveStream.Create(AFileName); try
+  LSrcStream := TIdReadFileExclusiveStream.Create(AFileName); try
     Encode(LSrcStream, ADest);
   finally Sys.FreeAndNil(LSrcStream); end;
 end;

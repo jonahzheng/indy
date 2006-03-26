@@ -287,9 +287,9 @@ end;
 
 procedure TIdTrivialFTP.Put(const LocalFile, ServerFile: String);
 var
-  fs: TReadFileExclusiveStream;
+  fs: TIdReadFileExclusiveStream;
 begin
-  fs := TReadFileExclusiveStream.Create(LocalFile);
+  fs := TIdReadFileExclusiveStream.Create(LocalFile);
   try
     Put(fs, ServerFile);
   finally

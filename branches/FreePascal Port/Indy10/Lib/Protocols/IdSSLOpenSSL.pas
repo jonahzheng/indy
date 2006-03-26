@@ -318,7 +318,7 @@ type
   end;
 
   TIdSSLSocket = class(TObject)
-  private
+  protected
     fParent: TObject;
     fPeerCert: TIdX509;
     fSSL: PSSL;
@@ -343,10 +343,11 @@ type
   end;
 
   TIdSSLIOHandlerSocketOpenSSL = class(TIdSSLIOHandlerSocketBase)
-  private
+  protected
     fSSLContext: TIdSSLContext;
     fxSSLOptions: TIdSSLOptions;
     fSSLSocket: TIdSSLSocket;
+    fRecvBuffer: TIdBuffer;
     //fPeerCert: TIdX509;
     fOnStatusInfo: TCallbackEvent;
     fOnGetPassword: TPasswordEvent;
@@ -356,8 +357,6 @@ type
     // function GetPeerCert: TIdX509;
     //procedure CreateSSLContext(axMode: TIdSSLMode);
     //
-
-  protected
     procedure SetPassThrough(const Value: Boolean); override;
     procedure DoBeforeConnect(ASender: TIdSSLIOHandlerSocketOpenSSL); virtual;
     procedure DoStatusInfo(Msg: String); virtual;
@@ -401,16 +400,16 @@ type
   end;
 
   TIdServerIOHandlerSSLOpenSSL = class(TIdServerIOHandlerSSLBase)
-  private
+  protected
     fxSSLOptions: TIdSSLOptions;
+    fSSLContext: TIdSSLContext;
     fOnStatusInfo: TCallbackEvent;
     fOnGetPassword: TPasswordEvent;
     fOnVerifyPeer: TVerifyPeerEvent;
-
+    //
     //procedure CreateSSLContext(axMode: TIdSSLMode);
     //procedure CreateSSLContext;
-  protected
-    fSSLContext: TIdSSLContext;
+    //
     procedure DoStatusInfo(Msg: String); virtual;
     procedure DoGetPassword(var Password: String); virtual;
     function DoVerifyPeer(Certificate: TIdX509; AOk: Boolean): Boolean; virtual;
@@ -443,7 +442,7 @@ type
   end;
 
   TIdX509Name = class(TObject)
-  private
+  protected
     fX509Name: PX509_NAME;
     function CertInOneLine: String;
     function GetHash: TULong;
@@ -480,7 +479,7 @@ type
   end;
 
   TIdSSLCipher = class(TObject)
-  private
+  protected
     FSSLSocket: TIdSSLSocket;
     function GetDescription: String;
     function GetName: String;
@@ -1087,10 +1086,12 @@ begin
   fxSSLOptions := TIdSSLOptions.Create;
   fSSLLayerClosed := True;
   fSSLContext := nil;
+  fRecvBuffer := TIdBuffer.Create;
 end;
 
 destructor TIdSSLIOHandlerSocketOpenSSL.Destroy;
 begin
+  Sys.FreeAndNil(fRecvBuffer);
   Sys.FreeAndNil(fSSLSocket);
   if not IsPeer then begin
   //we do not destroy these in IsPeer equals true
@@ -1131,15 +1132,20 @@ end;
 procedure TIdSSLIOHandlerSocketOpenSSL.Close;
 begin
   Sys.FreeAndNil(fSSLSocket);
+
+  //if close is being called from destroy then this buffer is already freed
+  if fRecvBuffer<>nil then fRecvBuffer.Clear;
+
   if not IsPeer then begin
     Sys.FreeAndNil(fSSLContext);
   end;
-
   inherited Close;
 end;
 
 procedure TIdSSLIOHandlerSocketOpenSSL.Open;
 begin
+  FOpened := False;
+  fRecvBuffer.Clear;
   inherited Open;
 end;
 

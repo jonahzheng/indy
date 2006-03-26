@@ -769,7 +769,7 @@ begin
     end;
   end;
   for LN := 0 to MessageParts.Count-1 do begin
-    {Change any encodings we don't kSys.Now to base64 for MIME and UUE for PlainText...}
+    {Change any encodings we don't know to base64 for MIME and UUE for PlainText...}
     LEncoding := MessageParts[LN].ContentTransfer;
     if LEncoding <> '' then begin
       if Encoding = meMIME then begin
@@ -1115,10 +1115,10 @@ end;
 
 procedure TIdMessage.LoadFromFile(const AFileName: string; const AHeadersOnly: Boolean = False);
 var
-  LStream: TReadFileExclusiveStream;
+  LStream: TIdReadFileExclusiveStream;
 begin
   EIdMessageCannotLoad.IfFalse(Sys.FileExists(AFilename), Sys.Format(RSIdMessageCannotLoad, [AFilename]));
-  LStream := TReadFileExclusiveStream.Create(AFilename); try
+  LStream := TIdReadFileExclusiveStream.Create(AFilename); try
     LoadFromStream(LStream, AHeadersOnly);
   finally Sys.FreeAndNil(LStream); end;
 end;

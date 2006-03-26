@@ -461,9 +461,8 @@ type
     //may be used by some descendent classes
     property ModifiedDateGMT : TIdDateTime read FModifiedDateGMT write FModifiedDateGMT;
   public
-    procedure Assign(Source: TIdPersistent); override;
     constructor Create(AOwner: TIdCollection); override;
-    destructor Destroy; override;
+    procedure Assign(Source: TIdPersistent); override;
 
     property Data: string read FData write FData;
 
@@ -502,7 +501,9 @@ type
   end;
 
 implementation
-Uses IdContainers, IdResourceStrings, IdStrings;
+
+uses
+  IdContainers, IdResourceStrings, IdStrings;
 
 { TFTPListItem }
 
@@ -520,16 +521,19 @@ begin
 end;
 
 procedure TIdFTPListItem.Assign(Source: TIdPersistent);
-Var
-  Item: TIdFTPListItem;
 begin
-  Item := TIdFTPListItem(Source);
-  Data := Item.Data;
-  ItemType := Item.ItemType;
-
-  Size := Item.Size;
-  ModifiedDate := Item.ModifiedDate;
-  FileName := Item.FileName;
+  if Source is TIdFTPListItem then begin
+    with Source as TIdFTPListItem do
+    begin
+      Self.Data := Data;
+      Self.ItemType := ItemType;
+      Self.Size := Size;
+      Self.ModifiedDate := ModifiedDate;
+      Self.FileName := FileName;
+    end;
+  end else begin
+    inherited Assign(Source);
+  end;
 end;
 
 { TFTPList }
@@ -553,12 +557,15 @@ function TIdFTPListItems.IndexOf(AItem: TIdFTPListItem): Integer;
 Var
   i: Integer;
 begin
-  result := -1;
   for i := 0 to Count - 1 do
-    if AItem = Items[i] then begin
-      result := i;
-      break;
+  begin
+    if AItem = Items[i] then
+    begin
+      Result := i;
+      Exit;
     end;
+  end;
+  Result := -1;
 end;
 
 procedure TIdFTPListItems.SetItems(AIndex: Integer; const Value: TIdFTPListItem);
@@ -568,48 +575,38 @@ end;
 
 procedure TIdFTPListItems.SetDirectoryName(const AValue: string);
 begin
-  if not TextIsSame(FDirectoryName, AValue) then begin
+  if not TextIsSame(FDirectoryName, AValue) then begin       
     FDirectoryName := AValue;
     Clear;
   end;
 end;
 
 procedure TIdFTPListItem.SetFileName(const AValue: String);
-var i : Integer;
-    LLowerCase : Boolean;
-const LLowCase = 'abcdefghijklmnpqrstuvwxyz';   {do not localize}
+var
+  i : Integer;
+  LDoLowerCase : Boolean;
+const
+  LLowCase = 'abcdefghijklmnpqrstuvwxyz';   {do not localize}
 begin
-
-  if (FLocalFileName = '') or (Sys.UpperCase(FFileName) = Sys.UpperCase(FLocalFileName)) then
-  begin
+  if (FLocalFileName = '') or TextIsSame(FFileName, FLocalFileName) then begin
     //we do things this way because some file systems use all capital letters or are
     //case insensivite.  The Unix file is case sensitive and Unix users tend to
     //prefer lower case filenames.  We do not want to force lowercase if a file
-    //has both uppercase and lowercase because the uppercase letters are rpobably intentional
-    LLowerCase := True;
-    for i := 1 to Length(AValue) do
-    begin
-      if CharIsInSet(AValue, i, LLowCase) then
-      begin
-        LLowerCase := False;
+    //has both uppercase and lowercase because the uppercase letters are probably intentional
+    LDoLowerCase := True;
+    for i := 1 to Length(AValue) do begin
+      if CharIsInSet(AValue, i, LLowCase) then begin
+        LDoLowerCase := False;
         Break;
       end;
     end;
-    if LLowerCase then
-    begin
+    if LDoLowerCase then begin
       FLocalFileName := Sys.LowerCase(AValue);
-    end
-    else
-    begin
+    end else begin
       FLocalFileName := AValue;
     end;
   end;
-   FFileName := AValue;
-end;
-
-destructor TIdFTPListItem.Destroy;
-begin
-  inherited Destroy;
+  FFileName := AValue;
 end;
 
 end.

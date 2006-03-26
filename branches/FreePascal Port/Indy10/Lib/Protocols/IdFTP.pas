@@ -563,21 +563,21 @@
       and also explained at http://www.southrivertech.com/support/titanftp/webhelp/titanftp.htm
 
   2002-10-24 - J. Peter Mugaas
-    - now supports RFC 2640 - FTP Internalization
+  - now supports RFC 2640 - FTP Internalization
 
-  2002-09-18
-    _ added AFromBeginning parameter to InternalPut to correctly honor the AAppend parameter of Put
+2002-09-18
+  _ added AFromBeginning parameter to InternalPut to correctly honor the AAppend parameter of Put
 
-  2002-09-05 - J. Peter Mugaas
-    - now complies with RFC 2389 - Feature negotiation mechanism for the File Transfer Protocol
-    - now complies with RFC 2428 - FTP Extensions for IPv6 and NATs
+2002-09-05 - J. Peter Mugaas
+  - now complies with RFC 2389 - Feature negotiation mechanism for the File Transfer Protocol
+  - now complies with RFC 2428 - FTP Extensions for IPv6 and NATs
 
-  2002-08-27 - Andrew P.Rybin
-    - proxy support fix (non-standard ftp port's)
+2002-08-27 - Andrew P.Rybin
+  - proxy support fix (non-standard ftp port's)
 
-  2002-01-xx - Andrew P.Rybin
-    - Proxy support, OnAfterGet (ex:decrypt, set srv timestamp)
-    - J.Peter Mugaas: not readonly ProxySettings
+2002-01-xx - Andrew P.Rybin
+  - Proxy support, OnAfterGet (ex:decrypt, set srv timestamp)
+  - J.Peter Mugaas: not readonly ProxySettings
 
   A Neillans - 10/17/2001
     Merged changes submitted by Andrew P.Rybin
@@ -597,7 +597,7 @@
     New onFTPStatus event
     New Quote method for executing commands not implemented by the compoent
 
-  -CleanDir contributed by Amedeo Lanza
+-CleanDir contributed by Amedeo Lanza
 }
 
 unit IdFTP;
@@ -654,21 +654,21 @@ type
   TAuthCmd = (tAuto, tAuthTLS, tAuthSSL, tAuthTLSC, tAuthTLSP);
 
 const
-    Id_TIdFTP_DataPortProtection = ftpdpsClear;
-    DEF_Id_TIdFTP_Implicit = False;
-    DEF_Id_FTP_UseExtendedDataPort = False;
-    DEF_Id_TIdFTP_UseExtendedData = False;
-    DEF_Id_TIdFTP_UseMIS = False;
-    DEF_Id_FTP_UseCCC = False;
-    DEF_Id_FTP_AUTH_CMD = tAuto;
+  Id_TIdFTP_DataPortProtection = ftpdpsClear;
+  DEF_Id_TIdFTP_Implicit = False;
+  DEF_Id_FTP_UseExtendedDataPort = False;
+  DEF_Id_TIdFTP_UseExtendedData = False;
+  DEF_Id_TIdFTP_UseMIS = False;
+  DEF_Id_FTP_UseCCC = False;
+  DEF_Id_FTP_AUTH_CMD = tAuto;
   DEF_Id_FTP_ListenTimeout = 10000; // ten seconds
-      {
+  {
 Soem firewalls don't handle control connections properly during long data transfers.
 They will timeout the control connection because it's idle and making it worse is that they
 will chop off a connection instead of closing it causing TIdFTP to wait forever for nothing.
 
   }
-    DEF_Id_FTP_READTIMEOUT = 60000; //one minute
+  DEF_Id_FTP_READTIMEOUT = 60000; //one minute
 
 type
 
@@ -885,7 +885,6 @@ type
     property IPVersion;
     //
   public
-
     function IsExtSupported(const ACmd : String):Boolean;
     procedure ExtractFeatFacts(const ACmd : String; AResults : TIdStrings);
     //this function transparantly handles OTP based on the Last command response
@@ -1066,6 +1065,7 @@ begin
   Result := APWDReply;
   Delete(result, 1, IndyPos('"', result)); // Remove first doublequote                             {do not localize}
   Result := Copy(result, 1, IndyPos('"', result) - 1); // Remove anything from second doublequote  {do not localize}                               // to end of line
+  // TODO: handle embedded quotation marks.  RFC 959 allows them to be present
 end;
 
 function TIdFTP.IsValidOTPString(const AResponse:string):boolean;
@@ -1305,13 +1305,13 @@ begin
   AResume := AResume and CanResume;
   if ACanOverwrite and (not AResume) then begin
     Sys.DeleteFile(ADestFile);
-    LDestStream := TFileCreateStream.Create(ADestFile);
+    LDestStream := TIdFileCreateStream.Create(ADestFile);
   end
   else if (not ACanOverwrite) and AResume then begin
-    LDestStream := TAppendFileStream.Create(ADestFile);
+    LDestStream := TIdAppendFileStream.Create(ADestFile);
   end
   else if not Sys.FileExists(ADestFile) then begin
-    LDestStream := TFileCreateStream.Create(ADestFile);
+    LDestStream := TIdFileCreateStream.Create(ADestFile);
   end
   else begin
     raise EIdFTPFileAlreadyExists.Create(RSDestinationFileAlreadyExists);
@@ -1860,7 +1860,7 @@ procedure TIdFTP.StoreUnique(const ASourceFile: string);
 var
   LSourceStream: TIdStream;
 begin
-  LSourceStream := TReadFileNonExclusiveStream.Create(ASourceFile); try
+  LSourceStream := TIdReadFileExclusiveStream.Create(ASourceFile); try
     StoreUnique(LSourceStream);
   finally Sys.FreeAndNil(LSourceStream); end;
 end;
@@ -3784,8 +3784,8 @@ begin
   if LRemoteFileName = '' then begin
     LRemoteFileName := Sys.ExtractFileName(ARemoteFile);
   end;
-  LLocalStream := TReadFileNonExclusiveStream.Create(ALocalFile); try
-    Result := VerifyFile(LLocalStream,LRemoteFileName, AStartPoint, AByteCount);
+  LLocalStream := TIdReadFileExclusiveStream.Create(ALocalFile); try
+    Result := VerifyFile(LLocalStream, LRemoteFileName, AStartPoint, AByteCount);
   finally Sys.FreeAndNil(LLocalStream); end;
 end;
 
@@ -3941,7 +3941,7 @@ begin
              end;
            end;
       end;
-    end;
+  end;
     if SendCMD(LCMD) = 250 then
     begin
        LRemoteCRC := Sys.UpperCase( Sys.Trim(LastCmdResult.Text.Text));
