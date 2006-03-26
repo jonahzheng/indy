@@ -1,88 +1,97 @@
 { $HDR$}
-{**********************************************************************}
-{ Unit archived using Team Coherence                                   }
-{ Team Coherence is Copyright 2002 by Quality Software Components      }
-{                                                                      }
-{ For further information / comments, visit our WEB site at            }
-{ http://www.TeamCoherence.com                                         }
-{**********************************************************************}
-{}
-{ $Log:  56400: IdWinsock2.pas 
+  $Project$
+  $Workfile$
+  $Revision$
+  $DateUTC$
+  $Id$
 
-    Rev 1.0    2004.02.03 3:14:50 PM  czhower
+  This file is part of the Indy (Internet Direct) project, and is offered
+  under the dual-licensing agreement described on the Indy website.
+  (http://www.indyproject.org/)
+
+  Copyright:
+   (c) 1993-2005, Chad Z. Hower and the Indy Pit Crew. All rights reserved.
+}
+{
+  $Log$
+}
+{
+  Log:  56400: IdWinsock2.pas
+
+  Rev 1.0    2004.02.03 3:14:50 PM  czhower
   Move and updates
 
 
-    Rev 1.15    1/3/2004 12:41:48 AM  BGooijen
+  Rev 1.15    1/3/2004 12:41:48 AM  BGooijen
   Fixed WSAEnumProtocols
 
 
-    Rev 1.14    10/15/2003 1:20:48 PM  DSiders
+  Rev 1.14    10/15/2003 1:20:48 PM  DSiders
   Added localization comments.
 
 
-    Rev 1.13    2003.10.01 11:16:38 AM  czhower
+  Rev 1.13    2003.10.01 11:16:38 AM  czhower
   .Net
 
 
-    Rev 1.12    9/24/2003 09:18:24 AM  JPMugaas
+  Rev 1.12    9/24/2003 09:18:24 AM  JPMugaas
   Fixed an AV that happened when a stack call was made.
 
 
-    Rev 1.11    24/9/2003 3:11:34 PM  SGrobety
+  Rev 1.11    24/9/2003 3:11:34 PM  SGrobety
   First wave of fixes for compiling in dotnet. Still not functional, needed to
   unlock to fix critical failure in Delphi code
 
 
-    Rev 1.10    9/22/2003 11:20:14 PM  EHill
+  Rev 1.10    9/22/2003 11:20:14 PM  EHill
   Removed assembly code and replaced with defined API stubs.
- 
- 
-    Rev 1.9    7/7/2003 12:55:10 PM  BGooijen
+
+
+  Rev 1.9    7/7/2003 12:55:10 PM  BGooijen
   Fixed ServiceQueryTransmitFile, and made it public
 
 
-    Rev 1.8    2003.05.09 10:59:30 PM  czhower
+  Rev 1.8    2003.05.09 10:59:30 PM  czhower
 
 
-    Rev 1.7    4/19/2003 10:28:24 PM  BGooijen
+  Rev 1.7    4/19/2003 10:28:24 PM  BGooijen
   some functions were linked to the wrong dll
 
 
-    Rev 1.6    4/19/2003 11:14:40 AM  JPMugaas
+  Rev 1.6    4/19/2003 11:14:40 AM  JPMugaas
   Made some tentitive wrapper functions for some things that should be called
   from the Service Provider.  Fixed WSARecvMsg.
 
 
-    Rev 1.5    4/19/2003 02:29:26 AM  JPMugaas
+  Rev 1.5    4/19/2003 02:29:26 AM  JPMugaas
   Added TransmitPackets API function call.  Note that this is only supported in
   Windows XP or later.
 
 
-    Rev 1.4    4/19/2003 12:22:58 AM  BGooijen
+  Rev 1.4    4/19/2003 12:22:58 AM  BGooijen
   fixed: ConnectEx DisconnectEx WSARecvMsg
 
 
-    Rev 1.3    4/18/2003 12:00:58 AM  JPMugaas
+  Rev 1.3    4/18/2003 12:00:58 AM  JPMugaas
   added
-   ConnectEx
-   DisconnectEx
-   WSARecvMsg
- 
+  ConnectEx
+  DisconnectEx
+  WSARecvMsg
+
   Changed header procedure type names to be consistant with the old
- IdWinsock.pas in Indy 8.0 and with the rest of the unit.
+  IdWinsock.pas in Indy 8.0 and with the rest of the unit.
 
 
-    Rev 1.2    3/22/2003 10:01:26 PM  JPMugaas
+  Rev 1.2    3/22/2003 10:01:26 PM  JPMugaas
   WSACreateEvent couldn't load because of a space.
 
 
-    Rev 1.1    3/22/2003 09:46:54 PM  JPMugaas
- It turns out that we really do not need the TGUID defination in the header at
- all.  It's defined in D4, D5, D6, and D7.
+  Rev 1.1    3/22/2003 09:46:54 PM  JPMugaas
+  It turns out that we really do not need the TGUID defination in the header at
+  all.  It's defined in D4, D5, D6, and D7.
 
 
-   Rev 1.0    11/13/2002 09:02:54 AM  JPMugaas
+  Rev 1.0    11/13/2002 09:02:54 AM  JPMugaas
 }
 //-------------------------------------------------------------
 //
