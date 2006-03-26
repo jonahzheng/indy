@@ -666,19 +666,19 @@ type
   {$endif}
   TIdEncoding = (enDefault, enANSI, enUTF8);
 
-  TAppendFileStream = class(TIdFileStream)
+  TIdAppendFileStream = class(TIdFileStream)
   public
     constructor Create(const AFile : String);
   end;
-  TReadFileExclusiveStream = class(TIdFileStream)
+  TIdReadFileExclusiveStream = class(TIdFileStream)
   public
     constructor Create(const AFile : String);
   end;
-  TReadFileNonExclusiveStream = class(TIdFileStream)
+  TIdReadFileNonExclusiveStream = class(TIdFileStream)
   public
     constructor Create(const AFile : String);
   end;
-  TFileCreateStream = class(TIdFileStream)
+  TIdFileCreateStream = class(TIdFileStream)
   public
     constructor Create(const AFile : String);
   end;
@@ -1000,6 +1000,7 @@ function Fetch(var AInput: string; const ADelim: string = IdFetchDelimDefault;
 function FetchCaseInsensitive(var AInput: string; const ADelim: string = IdFetchDelimDefault;
     const ADelete: Boolean = IdFetchDeleteDefault): string;
 
+// TODO: add an index parameter
 procedure FillBytes(var VBytes : TIdBytes; const ACount : Integer; const AValue : Byte);
 
 function CurrentThreadId: TIdThreadId;
@@ -1215,12 +1216,12 @@ begin
   {$ENDIF}
 end;
 
-constructor TFileCreateStream.Create(const AFile : String);
+constructor TIdFileCreateStream.Create(const AFile : String);
 begin
   inherited Create(AFile, fmCreate);
 end;
 
-constructor TAppendFileStream.Create(const AFile : String);
+constructor TIdAppendFileStream.Create(const AFile : String);
 var
   LFlags: Word;
 begin
@@ -1235,12 +1236,12 @@ begin
   end;
 end;
 
-constructor TReadFileNonExclusiveStream.Create(const AFile : String);
+constructor TIdReadFileNonExclusiveStream.Create(const AFile : String);
 begin
   inherited Create(AFile, fmOpenRead or fmOpenRead or fmShareDenyNone);
 end;
 
-constructor TReadFileExclusiveStream.Create(const AFile : String);
+constructor TIdReadFileExclusiveStream.Create(const AFile : String);
 begin
   inherited Create(AFile, fmOpenRead or fmShareDenyWrite);
 end;
@@ -1275,7 +1276,7 @@ var
   i: Integer;
 begin
   for i := 0 to Length(ABytes) -1 do begin
-    if IsASCIILDH(ABytes[i]) then
+    if not IsASCIILDH(ABytes[i]) then
     begin
       Result := False;
       Exit;
@@ -1435,7 +1436,7 @@ var
   LBuf: string;
 begin
   LBuf :=  Sys.Trim(AIPAddress);
-  Result := ByteToOctal( Sys.StrToInt(Fetch(LBuf, '.', True), 0));
+  Result := ByteToOctal(Sys.StrToInt(Fetch(LBuf, '.', True), 0));
   for i := 0 to 2 do begin
     Result := Result + '.' + ByteToOctal(Sys.StrToInt(Fetch(LBuf, '.', True), 0));
   end;
@@ -1453,6 +1454,7 @@ begin
   Move(ASource[ASourceIndex], VDest[ADestIndex], ALength);
   {$ENDIF}
 end;
+
 procedure CopyTIdChar(const ASource: Char; var VDest: TIdBytes; const ADestIndex: Integer);
 {$IFDEF DotNet}
 var
@@ -1736,13 +1738,11 @@ var
 begin
   if Windows.QueryPerformanceFrequency(freq) then begin
     if Windows.QueryPerformanceCounter(nTime) then begin
-      Result := Trunc((nTime / Freq) * 1000) and High(Cardinal)
-    end else begin
-      Result := Windows.GetTickCount;
+      Result := Trunc((nTime / Freq) * 1000) and High(Cardinal);
+      Exit;
     end;
-  end else begin
-    Result:= Windows.GetTickCount;
   end;
+  Result := Windows.GetTickCount;
 end;
 {$ENDIF}
 
@@ -1969,8 +1969,7 @@ var
   E: Integer;
 begin
   Val(S, Result, E);
-  if E <> 0 then
-  begin
+  if E <> 0 then begin
     Result := Default;
   end;
 end;
@@ -2748,7 +2747,7 @@ end;
 
 procedure ToDo;
 begin
-  raise EIdException.Create('To do item undone.'); {do not localize}
+  EIdException.Toss('To do item undone.'); {do not localize}
 end;
 
 function IndyLength(const ABuffer: String; const ALength: Integer = -1; const AIndex: Integer = 1): Integer;
