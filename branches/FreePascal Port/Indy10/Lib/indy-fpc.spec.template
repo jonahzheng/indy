@@ -76,7 +76,7 @@ mkdir -p %{_Build_LibDebugDir}
 mkdir -p %{_Build_FPCLibPrefix}
 mkdir -p %{_Build_IndyLibPrefix}
 mkdir -p %{_Build_IndyDocsDir}
-#mkdir -p #{_Build_IndyExamplesDir)
+mkdir -p %{_Build_IndyExamplesDir)
 install -D -m 644 README %{_Build_IndyDocsDir}/README
 install -D -m 644 COPYING %{_Build_IndyDocsDir}/COPYING
 install -D -m 644 COPYING.modifiedBSD %{_Build_IndyDocsDir}/COPYING.modifiedBSD
