@@ -25,3 +25,6 @@ echo "$FPCSRCRPMVER"
         -e 's/^%define _FPC_SRC_RPM_Ver .*/%define _FPC_SRC_RPM_Ver '"$FPCSRCRPMVER/" \
     > indy-fpc.spec
 rpmbuild -ba indy-fpc.spec
+.spec
+echo "Building indy-fpc.spec"
+rpmbuild -ba indy-fpc.spec > /dev/null
