@@ -176,6 +176,8 @@ uses
   IdSNPP,
   IdSNTP,
   IdSSL,
+  IdSSLOpenSSL,
+  IdSSLOpenSSLHeaders,
   IdServerInterceptLogBase,
   IdServerInterceptLogEvent,
   IdServerInterceptLogFile,
@@ -211,5 +213,6 @@ uses
   IdZLibCompressorBase;
 
 implementation
+
 
 end.

@@ -190,6 +190,8 @@ implicitunits=IdASN1Util \
   IdSNPP \
   IdSNTP \
   IdSSL \
+  IdSSLOpenSSL \
+  IdSSLOpenSSLHeaders \
   IdServerInterceptLogBase \
   IdServerInterceptLogEvent \
   IdServerInterceptLogFile \
