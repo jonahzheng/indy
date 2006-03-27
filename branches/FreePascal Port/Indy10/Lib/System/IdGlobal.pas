@@ -1941,6 +1941,13 @@ begin
   end;
 end;
 
+function IsAlphaNumeric(const AChar : Char) : Boolean;
+begin
+  Result := ((AChar >= '0') and (AChar <= '9')) or {Do not Localize}
+            ((AChar >= 'a') and (AChar <= 'z')) or
+            ((AChar >= 'A') and (AChar <= 'Z'));
+end;
+
 {$HINTS OFF}
 function IsNumeric(const AString: string): Boolean;
 var
