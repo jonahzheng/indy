@@ -1076,10 +1076,6 @@ begin
     //we need to wait until the SendCmd routine catches the Abort
     //request so you don't get an AV in a worker thread.
   until not FAbortFlag.Value;
-    begin
-      Break;
-    end;
-  until False;
 end;
 
 { TIdFSPPacket }
@@ -1122,7 +1118,7 @@ begin
   CopyTIdWord(LW, Result, 6);
   // position
   LC := GStack.HostToNetwork(FFilePosition);
-  CopyTIdCardinal(LC, Result, 8);
+  CopyTIdLongWord(LC, Result, 8);
   //end of header section
 
   //data section
@@ -1185,7 +1181,7 @@ begin
   FSequence := BytesToWord(AData, 4);
   FSequence := GStack.NetworkToHost(FSequence);
   //file position
-  FFilePosition := BytesToCardinal(AData, 8);
+  FFilePosition := BytesToLongWord(AData, 8);
   FFilePosition := GStack.NetworkToHost(FFilePosition);
 
   //extract data

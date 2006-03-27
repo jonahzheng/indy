@@ -1846,7 +1846,7 @@ begin
   if LDestFileName = '' then begin
    LDestFileName := Sys.ExtractFileName(ASourceFile);
   end;
-  LSourceStream := TReadFileNonExclusiveStream.Create(ASourceFile); try
+  LSourceStream := TIdReadFileNonExclusiveStream.Create(ASourceFile); try
     Put(LSourceStream, LDestFileName, AAppend);
   finally Sys.FreeAndNil(LSourceStream); end;
 end;

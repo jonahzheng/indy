@@ -1328,6 +1328,8 @@ begin
 end;
 
 function TIdMessageClient.ReceiveHeader(AMsg: TIdMessage; const AAltTerm: string = ''): string;
+var
+  LMsgEnd: Boolean;
 begin
   BeginWork(wmRead); try
     repeat

@@ -3886,7 +3886,7 @@ begin
                 bCreatedStream := False;
                 if ADestStream = nil then begin
                     {User wants to write it to a file...}
-                    ADestStream := TFileCreateStream.Create(ADestFileNameAndPath);
+                    ADestStream := TIdFileCreateStream.Create(ADestFileNameAndPath);
                     bCreatedStream := True;
                 end;
                 if TextIsSame(AContentTransferEncoding, 'base64') then begin  {Do not Localize}
