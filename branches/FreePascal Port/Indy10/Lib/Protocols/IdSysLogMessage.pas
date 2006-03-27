@@ -409,7 +409,7 @@ begin
 end;
 { TIdSysLogMessage }
 
-procedure TIdSysLogMessage.assign(Source: TIdPersistent);
+procedure TIdSysLogMessage.Assign(Source: TIdPersistent);
 var
   ms : TIdSysLogMessage;
 begin
@@ -517,7 +517,7 @@ end;
 procedure TIdSysLogMessage.ReadMSG(var StartPos: Integer);
 begin
   FMessage := Copy(FRawMessage, StartPos, Length(FRawMessage));
-  Msg.text := FMessage;
+  Msg.Text := FMessage;
 end;
 
 procedure TIdSysLogMessage.ReadPRI(var StartPos: Integer);
@@ -727,7 +727,6 @@ end;
 { TIdSysLogMsgPart }
 
 procedure TIdSysLogMsgPart.Assign(Source: TIdPersistent);
-var m : TIdSysLogMsgPart;
 begin
   if Source is TIdSysLogMsgPart then begin
     {This sets about everything here}
