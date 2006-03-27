@@ -3285,18 +3285,26 @@ uses
   IdObjs,
   IdSys,
   IdGlobal,  //needed for Sys symbol
-  {$IFDEF LINUX}
-  libc, DynLibs // better add DynLibs only for fpc
-  {$ELSE}
+  {$IFDEF KYLIX}
+  libc;
+  {$ENDIF}
+  {$IFDEF FPC}
+    {$IFDEF USELIBC}
+    libc,
+    {$ENDIF}
+  DynLibs // better add DynLibs only for fpc
+  {$ENDIF}
+  {$ifdef win32_or_win64_or_winCE}
   Windows
   {$ENDIF};
 
 const
-  {$IFDEF LINUX}
+  {$IFDEF UNIX}
  // SSL_Indy_DLL_name    = 'libindy_ssl.so'; {Do not localize}
   SSL_DLL_name         = 'libssl.so'; {Do not localize}
   SSLCLIB_DLL_name      = 'libcrypto.so'; {Do not localize}
-  {$ELSE}
+  {$ENDIF}
+  {$ifdef win32_or_win64_or_winCE}
   SSL_DLL_name         = 'ssleay32.dll';  {Do not localize}
   SSLCLIB_DLL_name   = 'libeay32.dll';  {Do not localize}
   {$ENDIF}
@@ -4995,13 +5003,44 @@ begin
   Assert(FFailedFunctionLoadList<>nil);
 
   FFailedFunctionLoadList.Clear;
-  {$IFDEF LINUX}
+  {$IFDEF USELIBC}
   // Workaround that is required under Linux (changed RTLD_GLOBAL with RTLD_LAZY Note: also work with LoadLibrary())
-  if hIdCrypto = 0 then hIdCrypto := HMODULE(dlopen(SSLCLIB_DLL_name, RTLD_LAZY)); 
-  If hIdSSL = 0 Then hIdSSL := HMODULE(dlopen(SSL_DLL_name, RTLD_LAZY));
+
+  if hIdCrypto = 0 then
+  begin
+    hIdCrypto := HMODULE(dlopen(SSLCLIB_DLL_name, RTLD_LAZY));
+  end;
+  If hIdSSL = 0 Then
+  begin
+    hIdSSL := HMODULE(dlopen(SSL_DLL_name, RTLD_LAZY));
+  end;
   {$ELSE}
-  if hIdCrypto = 0 then hIdCrypto := LoadLibrary(SSLCLIB_DLL_name);
-  If hIdSSL = 0 Then hIdSSL := LoadLibrary(SSL_DLL_name) else exit;
+    {$IFDEF FPC}
+  if hIdCrypto = 0 then
+  begin
+   hIdCrypto := HMODULE(LoadLibrary(SSLCLIB_DLL_name));
+  end;
+  If hIdSSL = 0 Then
+  begin
+    hIdSSL := HMODULE(LoadLibrary(SSL_DLL_name));
+  end;
+    {$ENDIF}
+  {$ENDIF}
+  {$ifndef FPC}
+    {$IFDEF WIN32}
+  if hIdCrypto = 0 then
+  begin
+      hIdCrypto := LoadLibrary(SSLCLIB_DLL_name);
+  end;
+  If hIdSSL = 0 Then
+  begin
+      hIdSSL := LoadLibrary(SSL_DLL_name)
+  end
+  else
+  begin
+    exit;
+  end;
+    {$ENDIF}
   {$ENDIF}
   @IdSslCtxSetCipherList := LoadFunction(fn_SSL_CTX_set_cipher_list);
   @IdSslCtxNew := LoadFunction(fn_SSL_CTX_new);
@@ -5073,7 +5112,7 @@ begin
   @IdSslX509ExtensionFree := LoadFunctionCLib(fn_X509_EXTENSION_free);
   @IdSslX509AddExt := LoadFunctionCLib(fn_X509_add_ext);
 
-  {$IFNDEF LINUX}
+  {$IFNDEF UNIX}
   @IdSslRandScreen := LoadFunctionCLib(fn_RAND_screen);
   {$ENDIF}
   
