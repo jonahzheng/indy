@@ -210,7 +210,8 @@ uses
   IdSocks,
   IdScheduler,
   IdSys,
-  IdYarn;
+  IdYarn,
+  IdBuffer;
 
 type
   TIdX509 = class;

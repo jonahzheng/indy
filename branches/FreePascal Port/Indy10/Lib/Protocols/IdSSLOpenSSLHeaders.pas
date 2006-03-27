@@ -1923,6 +1923,7 @@ Const
   OPENSSL_SSL_MAX_MASTER_KEY_LENGTH = 48;
   OPENSSL_SSL_MAX_SID_CTX_LENGTH = 32;
   OPENSSL_SSL_MAX_SSL_SESSION_ID_LENGTH = 32;
+  OPENSSL_SSL_MAX_KRB5_PRINCIPAL_LENGTH = 256;
   OPENSSL_SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER = $00000002;
   OPENSSL_SSL_MODE_ENABLE_PARTIAL_WRITE = $00000001;
   OPENSSL_SSL_NOTHING = 1;
@@ -3285,14 +3286,14 @@ uses
   IdSys,
   IdGlobal,  //needed for Sys symbol
   {$IFDEF LINUX}
-  libc
+  libc, DynLibs // better add DynLibs only for fpc
   {$ELSE}
   Windows
   {$ENDIF};
 
 const
   {$IFDEF LINUX}
-  SSL_Indy_DLL_name    = 'libindy_ssl.so'; {Do not localize}
+ // SSL_Indy_DLL_name    = 'libindy_ssl.so'; {Do not localize}
   SSL_DLL_name         = 'libssl.so'; {Do not localize}
   SSLCLIB_DLL_name      = 'libcrypto.so'; {Do not localize}
   {$ELSE}
@@ -4947,6 +4948,7 @@ const
   fn_fclose = 'mi_fclose';  {Do not localize}
 
   //GREGOR
+   
   fn_RAND_screen = 'RAND_screen';  {Do not localize}
 
   //experimental
@@ -4965,7 +4967,9 @@ const
 function LoadFunction(const FceName:String):Pointer;
 begin
   Result := GetProcAddress(hIdSSL, PChar(FceName));
-  if (Result = nil) then FFailedFunctionLoadList.Add(FceName);  {Do not localize}
+
+  if (Result = nil) then FFailedFunctionLoadList.Add(FceName);
+;  {Do not localize}
 end;
 
 function LoadFunctionCLib(const FceName:String):Pointer;
@@ -4991,16 +4995,14 @@ begin
   Assert(FFailedFunctionLoadList<>nil);
 
   FFailedFunctionLoadList.Clear;
-
   {$IFDEF LINUX}
-  // Workaround that is required under Linux
-  if hIdCrypto = 0 then hIdCrypto := HMODULE(dlopen(SSLCLIB_DLL_name, RTLD_GLOBAL));
-  If hIdSSL = 0 Then hIdSSL := HMODULE(dlopen(SSL_DLL_name, RTLD_GLOBAL));
+  // Workaround that is required under Linux (changed RTLD_GLOBAL with RTLD_LAZY Note: also work with LoadLibrary())
+  if hIdCrypto = 0 then hIdCrypto := HMODULE(dlopen(SSLCLIB_DLL_name, RTLD_LAZY)); 
+  If hIdSSL = 0 Then hIdSSL := HMODULE(dlopen(SSL_DLL_name, RTLD_LAZY));
   {$ELSE}
   if hIdCrypto = 0 then hIdCrypto := LoadLibrary(SSLCLIB_DLL_name);
   If hIdSSL = 0 Then hIdSSL := LoadLibrary(SSL_DLL_name) else exit;
   {$ENDIF}
-
   @IdSslCtxSetCipherList := LoadFunction(fn_SSL_CTX_set_cipher_list);
   @IdSslCtxNew := LoadFunction(fn_SSL_CTX_new);
   @IdSslCtxFree := LoadFunction(fn_SSL_CTX_free);
@@ -5071,8 +5073,10 @@ begin
   @IdSslX509ExtensionFree := LoadFunctionCLib(fn_X509_EXTENSION_free);
   @IdSslX509AddExt := LoadFunctionCLib(fn_X509_add_ext);
 
+  {$IFNDEF LINUX}
   @IdSslRandScreen := LoadFunctionCLib(fn_RAND_screen);
-
+  {$ENDIF}
+  
   // 3DES
   @iddes_set_odd_parity := LoadFunctionCLib(fn_des_set_odd_parity);
   @iddes_set_key := LoadFunctionCLib(fn_des_set_key);
