@@ -235,7 +235,7 @@ begin
 
   if BytesRead = 0 then begin
     // Timed out
-    AReplyStatus.MsRoundTripTime :=  Ticks - FStartTime;
+    AReplyStatus.MsRoundTripTime := GetTickDiff(FStartTime, Ticks);
     if Self.IPVersion = Id_IPv4 then
     begin
       AReplyStatus.BytesReceived   := 0;
@@ -262,14 +262,14 @@ begin
     {$IFNDEF DOTNET}
     if Self.IPVersion = Id_IPv4 then
     begin
-      Result := DecodeIPv4Packet(BytesRead,AReplyStatus);
+      Result := DecodeIPv4Packet(BytesRead, AReplyStatus);
     end
     else
     begin
-      Result := DecodeIPv6Packet(BytesRead,AReplyStatus);
+      Result := DecodeIPv6Packet(BytesRead, AReplyStatus);
     end;
     {$ELSE}
-     Result := DecodeIPv4Packet(BytesRead,AReplyStatus);
+     Result := DecodeIPv4Packet(BytesRead, AReplyStatus);
     {$ENDIF}
   end;
 
@@ -296,7 +296,7 @@ begin
     end
     else
     begin
-      FReplyStatus.MsRoundTripTime := Ticks - FStartTime;
+      FReplyStatus.MsRoundTripTime := GetTickDiff(FStartTime, Ticks);
       FReplyStatus.Msg := RSICMPTimeout;
       // We caught a response that wasn't meant for this thread - so we must
       // make sure we don't report it as such in case we time out after this
@@ -309,7 +309,6 @@ begin
         FReplyStatus.SequenceId      := wSeqNo;
         FReplyStatus.TimeToLive      := 0;
         FReplyStatus.ReplyStatusType := rsTimeOut;
-
       end
       else
       begin
@@ -351,9 +350,9 @@ begin
   inherited Destroy;
 end;
 
-function TIdCustomIcmpClient.DecodeIPv4Packet(BytesRead: Cardinal;
-  var AReplyStatus: TReplyStatus): boolean;
-var LIPHeaderLen:Cardinal;
+function TIdCustomIcmpClient.DecodeIPv4Packet(BytesRead: Cardinal; var AReplyStatus: TReplyStatus): boolean;
+var
+  LIPHeaderLen:Cardinal;
   RTTime: Cardinal;
   LActualSeqID: word;
   LIdx : Integer;

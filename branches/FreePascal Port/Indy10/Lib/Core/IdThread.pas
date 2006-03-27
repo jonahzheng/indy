@@ -416,11 +416,9 @@ begin
   // Delphi 5 and below don't do that, which results in a TIdThread instance
   // with an invalid handle in it.
   // Therefore we raise the exceptions manually on D5 and below
-  {$IFNDEF DOTNET}
   if (ThreadID = 0) then begin
     Sys.RaiseLastOSError;
   end;
-  {$ENDIF}
   {$ENDIF}
   // Last, so we only do this if successful
   GThreadCount.Increment;
