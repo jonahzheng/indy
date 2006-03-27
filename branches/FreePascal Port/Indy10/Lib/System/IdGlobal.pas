@@ -1043,6 +1043,7 @@ function IsASCIILDH(const AByte: Byte): Boolean; overload;
 function IsASCIILDH(const ABytes: TIdBytes): Boolean; overload;
 function IsHexidecimal(AChar: Char): Boolean; overload;
 function IsHexidecimal(const AString: string): Boolean; overload;
+function IsAlphaNumeric(const AChar : Char) : Boolean;
 function IsNumeric(AChar: Char): Boolean; overload;
 function IsNumeric(const AString: string): Boolean; overload;
 function IsOctal(AChar: Char): Boolean; overload;
