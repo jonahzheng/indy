@@ -24,7 +24,7 @@
 Summary:   Indy.Sockets (FreePascal Version)
 Name:      %{_IndyBaseName}-fpc
 Version:   10.2.0.1
-Release:   2
+Release:   4
 #the Indy name is hardcoded because we will probably have other package sets in that file.
 Source0:   http://www.indyproject.org/sockets/fpc/indy-%{version}.tar.gz
 BuildRequires:  fpc
@@ -47,7 +47,7 @@ Group:     Development/Libraries
 Requires:  fpc-src = %{_FPC_SRC_RPM_Ver}
 %description src
 The indy-src package contains the sources of Indy, for documentation or
-automatical-code generation purposes.
+automatically-code generation purposes.
 
 # disable the debuginfo package
 %define debug_package %{nil}
@@ -76,19 +76,36 @@ mkdir -p %{_Build_LibDebugDir}
 mkdir -p %{_Build_FPCLibPrefix}
 mkdir -p %{_Build_IndyLibPrefix}
 mkdir -p %{_Build_IndyDocsDir}
-mkdir -p %{_Build_IndyExamplesDir)
+mkdir -p %{_Build_IndyExamplesDir}
 install -D -m 644 README %{_Build_IndyDocsDir}/README
 install -D -m 644 COPYING %{_Build_IndyDocsDir}/COPYING
 install -D -m 644 COPYING.modifiedBSD %{_Build_IndyDocsDir}/COPYING.modifiedBSD
 install -D -m 644 COPYING.MPL %{_Build_IndyDocsDir}/COPYING.MPL
 cd fpc
-INSTALLOPTS="INSTALL_PREFIX=%{_Build_FPCLibPrefix} \
+if  [ -z "$FPCDIR" ]; then
+  FPCDIR=/usr/lib/fpc/${_FPC_Version}
+  if [ ! -d "$FPCDIR" ]; then
+    FPCDIR=/usr/local/lib/fpc/${_FPC_Version}
+  fi
+  export FPCDIR
+  INSTALLOPTS="INSTALL_PREFIX=%{_Build_FPCLibPrefix} \
                 INSTALL_LIBDIR=%{_Build_LibDir} \
                 INSTALL_BASEDIR=%{_Build_FPCLibPrefix} \
                 INSTALL_DOCDIR=%{_Build_IndyDocsDir} \
                 INSTASLL_BINDIR=%{_Build_BinDir} \
                 INSTALL_EXAMPLEDIR=%{_Build_IndyExamplesDir}"
-make install ${INSTALLOPTS}
+  make install ${INSTALLOPTS}
+  FPCDIR=
+  export FPCDIR
+else
+  INSTALLOPTS="INSTALL_PREFIX=%{_Build_FPCLibPrefix} \
+                INSTALL_LIBDIR=%{_Build_LibDir} \
+                INSTALL_BASEDIR=%{_Build_FPCLibPrefix} \
+                INSTALL_DOCDIR=%{_Build_IndyDocsDir} \
+                INSTASLL_BINDIR=%{_Build_BinDir} \
+                INSTALL_EXAMPLEDIR=%{_Build_IndyExamplesDir}"
+  make install ${INSTALLOPTS}  
+fi
 # The source-files:
 mkdir -p %{_Build_IndyFPCSRCDir}
 cp -a fpcsrc/* %{_Build_IndyFPCSRCDir}
@@ -109,15 +126,18 @@ rm -rf %{buildroot}
 %{_datadir}/fpcsrc
 
 %changelog
+* Tue Mar 28 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu> 10.2.0.1-2
+- Many spec fixes.
+- Now temporarily sets the FPCDIR before Make install to prevent rtl not found errors.
 * Wed Mar 22 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu> 10.2.0.1-2
-- made a -src package for consistancy with Lazarus FPC packages.
+- made a -src package for consistency with Lazarus FPC packages.
 - renamed rpm set to "indy-fpc" so we make separate RPM sets for Lazarus design-time code and 
   maybe other packages than marked RPM "indy" as obsolete.
 - Removed hack for obtaining the FPC version. It was not always working as expected.
 - Made requirement for a specific FreePascal compiler version to prevent
   any problems with unit version mismatches.
 - moved doc files from /usr/share/doc/indy-[ver] to /usr/share/doc/fpc-[fpcver]/indy to
-  be consistant with other packages.
+  be consistent with other packages.
 * Mon Mar 15 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu> 10.2.0.1-2
 - now uses a URL for source
 - tarrball names now include a "version" number
