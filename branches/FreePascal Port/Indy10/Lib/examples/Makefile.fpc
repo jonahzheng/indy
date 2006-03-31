@@ -1,0 +1,15 @@
+[target]
+dirs=httpget
+programs=httpget
+
+[install]
+fpcpackage=y
+
+[require]
+packages=indy
+
+[compiler]
+options=-gl
+
+[default]
+
