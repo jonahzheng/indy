@@ -5,11 +5,14 @@ programs=httpget
 packages=indy
 packagedir=../../:../System/lib/$(CPU_TARGET)-$(OS_TARGET)/: \
   ../Core/lib/$(CPU_TARGET)-$(OS_TARGET)/: \
-../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET)/
+  ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET)/
+
 [compiler]
 unitdir=../../:../../System/lib/$(CPU_TARGET)-$(OS_TARGET)/: \
-  ../../Core/lib/$(CPU_TARGET)-$(OS_TARGET)/ \
-  :../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET)/:../../lib/$(CPU_TARGET)-$(OS_TARGET)/
+  ../../Core/lib/$(CPU_TARGET)-$(OS_TARGET)/ : \
+  ../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET)/: \
+  ../../lib/$(CPU_TARGET)-$(OS_TARGET)/
 options=-gl
+
 [install]
 fpcpackage=y
