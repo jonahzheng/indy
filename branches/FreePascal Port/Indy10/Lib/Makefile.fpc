@@ -6,6 +6,7 @@ packages=fcl
 fpcsubdir=packages/extra
 [target]
 dirs=System Core Protocols
+
 exampledirs=examples
 [install]
 fpcpackage=y
