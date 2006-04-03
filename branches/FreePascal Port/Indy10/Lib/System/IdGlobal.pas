@@ -969,7 +969,7 @@ procedure CopyTIdWord(const ASource: Word;
 procedure CopyTIdLongWord(const ASource: LongWord;
     var VDest: TIdBytes; const ADestIndex: Integer);
 
-procedure CopyTIdLongInt(const ASource: Cardinal;
+procedure CopyTIdLongInt(const ASource: LongInt;
     var VDest: TIdBytes; const ADestIndex: Integer);
 
 procedure CopyTIdInt64(const ASource: Int64;
@@ -1500,7 +1500,7 @@ begin
 end;
 
 procedure CopyTIdLongWord(const ASource: LongWord;
-    var VDest: TIdBytes; const ADestIndex: Integer);
+    var VDest: TIdBytes; const ADestIndex: LongInt);
 {$IFDEF DotNet}
 var LCard : TIdBytes;
 {$ENDIF}
@@ -1513,21 +1513,23 @@ begin
   {$ENDIF}
 end;
 
-procedure CopyTIdLongWord(const ASource: LongWord; var VDest: TIdBytes; const ADestIndex: Integer);
-{$IFDEF DOTNET}
+procedure CopyTIdLongInt(const ASource: LongInt;
+    var VDest: TIdBytes; const ADestIndex: Integer);
+{$IFDEF DotNet}
 var
   LWord : TIdBytes;
 {$ENDIF}
 begin
-  {$IFDEF DOTNET}
+  {$IFDEF DotNet}
   LWord := System.BitConverter.GetBytes(ASource);
-  System.array.Copy(LWord, 0, VDest, ADestIndex, SizeOf(LongWord));
+  System.array.Copy(LWord, 0, VDest, ADestIndex, SizeOf(Int64));
   {$ELSE}
-  PLongWord(@VDest[ADestIndex])^ := ASource;
+  PLongInt(@VDest[ADestIndex])^ := ASource;
   {$ENDIF}
 end;
 
-procedure CopyTIdInt64(const ASource: Int64; var VDest: TIdBytes; const ADestIndex: Integer);
+procedure CopyTIdInt64(const ASource: Int64;
+    var VDest: TIdBytes; const ADestIndex: Integer);
 {$IFDEF DotNet}
 var
   LWord : TIdBytes;
