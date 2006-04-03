@@ -40,7 +40,7 @@ interface
 {$I IdCompilerDefines.inc}
 //Put FPC into Delphi mode
 uses
-  IdIntercept, IdGlobal,  IdObjs;
+  IdIntercept, IdGlobal, IdSocketHandle, IdObjs, IdBaseComponent;
 
 type
   TIdLogBase = class(TIdConnectionIntercept)
@@ -51,9 +51,9 @@ type
     FStreamedActive: Boolean;
     //
     procedure InitComponent; override;
-    procedure LogStatus(AText: string); virtual; abstract;
-    procedure LogReceivedData(AText: string; AData: string); virtual; abstract;
-    procedure LogSentData(AText: string; AData: string); virtual; abstract;
+    procedure LogStatus(const AText: string); virtual; abstract;
+    procedure LogReceivedData(const AText, AData: string); virtual; abstract;
+    procedure LogSentData(const AText, AData: string); virtual; abstract;
     procedure SetActive(AValue: Boolean); virtual;
     procedure Loaded; override;
     function ReplaceCR(const AString : String) : String;

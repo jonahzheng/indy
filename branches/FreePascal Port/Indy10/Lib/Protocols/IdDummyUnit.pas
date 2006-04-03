@@ -44,6 +44,6 @@ uses
 
 implementation
 
-{de-de-de-de, that's all folks.}
+{ de-de-de-de, that's all folks. }
 
 end.

@@ -782,7 +782,7 @@ function TIdSysLogMsgPart.GetText: String;
 begin
   Result := Process + PIDToStr(PID) + Content;
   if (not PIDAvailable) and (Result = ':') then begin   {Do not Localize}
-    Result := '';    {Do not Localize}
+      Result := '';    {Do not Localize}
   end;
 end;
 

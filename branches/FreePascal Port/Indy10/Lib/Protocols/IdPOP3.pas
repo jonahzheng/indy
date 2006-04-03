@@ -61,7 +61,7 @@
   Rev 1.26    22/12/2003 00:45:12  CCostelloe
   .NET fixes
 
-  Rev 1.25    10/19/2003 5:42:36 PM  DSiders
+    Rev 1.25    10/19/2003 5:42:36 PM  DSiders
   Added localization comments.
 
   Rev 1.24    10/11/2003 7:14:34 PM  BGooijen
@@ -198,7 +198,9 @@ uses
   IdMessage,
   IdMessageClient,
   IdReply,
-  IdSASL, IdSASLCollection, IdSys,
+  IdSASL,
+  IdSASLCollection,
+  IdSys,
   IdObjs,
   IdBaseComponent,
   IdUserPassProvider;
@@ -215,7 +217,7 @@ type
   protected
     FAuthType : TIdPOP3AuthenticationType;
     FAutoLogin: Boolean;
-    FAPOPToken : String;
+    FAPOPToken : String; 
     FHasAPOP: Boolean;
     FHasCAPA: Boolean;
     FSASLMechanisms : TIdSASLEntries;
@@ -452,13 +454,16 @@ function TIdPOP3.RetrieveMsgSize(const MsgNum: Integer): Integer;
 var
   s: string;
 begin
+  Result := -1;
   // Returns the size of the message. if an error ocurrs, returns -1.
   SendCmd('LIST ' + Sys.IntToStr(MsgNum), ST_OK);    {Do not Localize}
-  // RL - ignore the message number, grab just the octets,
-  // and ignore everything else that may be present
   s := LastCmdResult.Text[0];
-  Fetch(s);
-  Result := Sys.StrToInt(Fetch(s), -1);
+  if Length(s) > 0 then begin
+    // RL - ignore the message number, grab just the octets,
+    // and ignore everything else that may be present
+    Fetch(s);
+    Result := Sys.StrToInt(Fetch(s), -1);
+  end;
 end;
 
 function TIdPOP3.UIDL(const ADest: TIdStrings; const AMsgNum: Integer = -1): Boolean;
@@ -546,6 +551,7 @@ var
 begin
   FHasAPOP := False;
   FHasCAPA := False;
+  FAPOPToken := '';
 
   if UseTLS in ExplicitTLSVals then begin
     // TLS only enabled later in this case!
@@ -569,7 +575,7 @@ begin
       end;
   end;
 
-  inherited;
+  inherited Connect;
   GetResponse(ST_OK);
 
   // the initial greeting text is needed to determine APOP availability
@@ -587,7 +593,7 @@ begin
     S := ''; //no time-stamp    {Do not Localize}
   end;
   FAPOPToken := S;
-  FHasAPOP := (Length(S) > 0);
+  FHasAPOP := (Length(FAPOPToken) > 0);
   CAPA;
   if FAutoLogin then begin
     Login;

@@ -552,7 +552,7 @@ const
   //by the package builder.
   {$I IdVers.inc}
 
-  {$IFNDEF DotNet}
+  {$IFNDEF DOTNET}
   HoursPerDay   = 24;
   MinsPerHour   = 60;
   SecsPerMin    = 60;
@@ -562,7 +562,7 @@ const
   MSecsPerDay   = SecsPerDay * MSecsPerSec;
   {$ENDIF}
 
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   // Timeout.Infinite is -1 which violates Cardinal which VCL uses for parameter
   // so we are just setting it to this as a hard coded constant until
   // the synchro classes and other are all ported directly to portable classes
@@ -683,7 +683,7 @@ type
     constructor Create(const AFile : String);
   end;
 
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   // dotNET implementation
   TWaitResult = (wrSignaled, wrTimeout, wrAbandoned, wrError);
 
@@ -726,7 +726,7 @@ type
   TIdCriticalSection = class(TCriticalSection)
   end;
 
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Short = System.Int16;
   {$ENDIF}
 
@@ -800,7 +800,7 @@ type
   TIdExtList=class(TIdList);
   {$ENDIF}
 
-  {$IFNDEF DotNet}
+  {$IFNDEF DOTNET}
 //  TSeekOrigin = word;
   {$ENDIF}
   // TIdBaseStream is defined here to allow TIdMultiPartFormData to be defined
@@ -983,8 +983,7 @@ procedure CopyTIdString(const ASource: String;
 
 // Need to change prob not to use this set
 function CharPosInSet(const AString: string; const ACharPos: Integer; const ASet: String): Integer;
-function CharIsInSet(const AString: string; const ACharPos: Integer; const ASet:  String): Boolean;
-
+function CharIsInSet(const AString: string; const ACharPos: Integer; const ASet: String): Boolean;
 function CharIsInEOL(const AString: string; ACharPos: Integer): Boolean;
 
 function ByteIndex(const AByte: Byte; const ABytes: TIdBytes; const AStartIndex: Integer = 0): Integer;
@@ -1009,7 +1008,7 @@ function GetThreadHandle(AThread: TIdNativeThread): TIdThreadId;
 function GetTickDiff(const AOldTickCount, ANewTickCount: Cardinal): Cardinal; //IdICMP uses it
 procedure IdDelete(var s: string; AOffset, ACount: Integer);
 procedure IdInsert(const Source: string; var S: string; Index: Integer);
-{$IFNDEF DotNet}
+{$IFNDEF DOTNET}
 function IdPorts: TList;
 {$ENDIF}
 function iif(ATest: Boolean; const ATrue: Integer; const AFalse: Integer): Integer; overload;
@@ -1037,16 +1036,19 @@ function IPv4ToDWord(const AIPAddress: string; var VErr: Boolean): Cardinal; ove
 function IPv4ToHex(const AIPAddress: string; const ASDotted: Boolean = False): string;
 function IPv4ToOctal(const AIPAddress: string): string;
 function IPv6ToIdIPv6Address(const AIPAddress: String): TIdIPv6Address;
+function IsAlpha(const AChar: Char): Boolean; overload;
+function IsAlpha(const AString: String): Boolean; overload;
+function IsAlphaNumeric(const AChar: Char): Boolean; overload;
+function IsAlphaNumeric(const AString: String): Boolean; overload;
 function IsASCII(const AByte: Byte): Boolean; overload;
 function IsASCII(const ABytes: TIdBytes): Boolean; overload;
 function IsASCIILDH(const AByte: Byte): Boolean; overload;
 function IsASCIILDH(const ABytes: TIdBytes): Boolean; overload;
-function IsHexidecimal(AChar: Char): Boolean; overload;
+function IsHexidecimal(const AChar: Char): Boolean; overload;
 function IsHexidecimal(const AString: string): Boolean; overload;
-function IsAlphaNumeric(const AChar : Char) : Boolean;
-function IsNumeric(AChar: Char): Boolean; overload;
+function IsNumeric(const AChar: Char): Boolean; overload;
 function IsNumeric(const AString: string): Boolean; overload;
-function IsOctal(AChar: Char): Boolean; overload;
+function IsOctal(const AChar: Char): Boolean; overload;
 function IsOctal(const AString: string): Boolean; overload;
 function MakeCanonicalIPv4Address(const AAddr: string): string;
 function MakeCanonicalIPv6Address(const AAddr: string): string;
@@ -1089,7 +1091,7 @@ uses
   IdResourceStrings,
   IdStream;
 
-{$IFNDEF DotNet}
+{$IFNDEF DOTNET}
 var
   GIdPorts: TList;
 {$ENDIF}
@@ -1372,24 +1374,23 @@ end;
 {$IFNDEF DotNet}
 function ToHex(const AValue: array of LongWord): AnsiString;
 var
+{$IFNDEF DOTNET}
   P: PChar;
+{$ENDIF}
   i: Integer;
 begin
+{$IFNDEF DOTNET}
   P := PChar(@AValue);
   SetString(Result, nil, Length(AValue)*4*2);//40
   for i := 0 to Length(AValue)*4-1 do begin
     Result[i*2+1] := IdHexDigits[Ord(P[i]) shr 4];
     Result[i*2+2] := IdHexDigits[Ord(P[i]) and $F];
   end;//for
-end;
 {$ELSE}
-function ToHex(const AValue: array of LongWord): AnsiString;
-var
-  i: Integer;
-begin
   for i := 0 to Length(AValue)-1 do begin
     Result := Result + ToHex(ToBytes(AValue[i]));
   end;//for
+{$ENDIF}
 end;
 {$ENDIF}
 
@@ -1512,17 +1513,17 @@ begin
   {$ENDIF}
 end;
 
-procedure CopyTIdLongInt(const ASource: Cardinal;
-    var VDest: TIdBytes; const ADestIndex: Integer);
-{$IFDEF DotNet}
-var LCard : TIdBytes;
+procedure CopyTIdLongWord(const ASource: LongWord; var VDest: TIdBytes; const ADestIndex: Integer);
+{$IFDEF DOTNET}
+var
+  LWord : TIdBytes;
 {$ENDIF}
 begin
-  {$IFDEF DotNet}
-  LCard := System.BitConverter.GetBytes(ASource);
-  System.array.Copy(LCard, 0, VDest, ADestIndex, SizeOf(LongInt));
+  {$IFDEF DOTNET}
+  LWord := System.BitConverter.GetBytes(ASource);
+  System.array.Copy(LWord, 0, VDest, ADestIndex, SizeOf(LongWord));
   {$ELSE}
-  PLongInt(@VDest[ADestIndex])^ := ASource;
+  PLongWord(@VDest[ADestIndex])^ := ASource;
   {$ENDIF}
 end;
 
@@ -1569,15 +1570,15 @@ procedure CopyTIdString(const ASource: String; var VDest: TIdBytes;
   const ADestIndex: Integer; const ALength: Integer = -1);
 var
   LLength: Integer;
-{$IFDEF DotNet}
+{$IFDEF DOTNET}
   LStr : TIdBytes;
 {$ENDIF}
 begin
   LLength := IndyLength(ASource, ALength);
   if LLength > 0 then begin
-    {$IFDEF DotNet}
+    {$IFDEF DOTNET}
     LStr := ToBytes(ASource, LLength);
-    System.array.Copy(LStr, 0, VDest, ADestIndex, LLength);
+    System.array.Copy(LStr, 0, VDest, ADestIndex, Length(LStr));
     {$ELSE}
     Move(ASource[1], VDest[ADestIndex], LLength);
     {$ENDIF}
@@ -1594,7 +1595,7 @@ begin
   OutputDebugString(PChar(AText));
   {$ENDIF}
   {$IFDEF DotNet}
-   System.Diagnostics.Debug.WriteLine(AText);
+  System.Diagnostics.Debug.WriteLine(AText);
   {$ENDIF}
 end;
 
@@ -1607,7 +1608,6 @@ begin
   // TODO: find if there is something like the following instead:
   // System.Diagnostics.Thread.GetCurrentThread.ID
   // System.Threading.Thread.CurrentThread.ID
-
 {$ELSE}
   // TODO: is GetCurrentThreadId() available on Linux?
   Result := GetCurrentThreadID;
@@ -1766,11 +1766,11 @@ end;
 function GetTickDiff(const AOldTickCount, ANewTickCount: Cardinal): Cardinal;
 begin
   {This is just in case the TickCount rolled back to zero}
-    if ANewTickCount >= AOldTickCount then begin
-      Result := ANewTickCount - AOldTickCount;
-    end else begin
-      Result := High(Cardinal) - AOldTickCount + ANewTickCount;
-    end;
+  if ANewTickCount >= AOldTickCount then begin
+    Result := ANewTickCount - AOldTickCount;
+  end else begin
+    Result := High(Cardinal) - AOldTickCount + ANewTickCount;
+  end;
 end;
 
 function ServicesFilePath: string;
@@ -1868,7 +1868,7 @@ end;
 
 function InMainThread: Boolean;
 begin
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Result := System.Threading.Thread.CurrentThread = MainThread;
   {$ELSE}
   Result := GetCurrentThreadID = MainThreadID;
@@ -1900,7 +1900,49 @@ begin
   Result := Result + Sys.IntToStr(ADWord and $FF);
 end;
 
-function IsOctal(AChar: Char): Boolean; overload;
+function IsAlpha(const AChar: Char): Boolean;
+begin
+  // Do not use IsCharAlpha or IsCharAlphaNumeric - they are Win32 routines
+  Result := ((AChar >= 'a') and (AChar <= 'z')) or ((AChar >= 'A') and (AChar <= 'Z')); {Do not Localize}
+end;
+
+function IsAlpha(const AString: String): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  if AString <> '' then begin
+    for i := 1 to Length(AString) do begin
+      if not IsAlpha(AString[i]) then begin
+        Exit;
+      end;
+    end;
+    Result := True;
+  end;
+end;
+
+function IsAlphaNumeric(const AChar: Char): Boolean;
+begin
+  // Do not use IsCharAlpha or IsCharAlphaNumeric - they are Win32 routines
+  Result := IsAlpha(AChar) or IsNumeric(AChar);
+end;
+
+function IsAlphaNumeric(const AString: String): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  if AString <> '' then begin
+    for i := 1 to Length(AString) do begin
+      if not IsAlphaNumeric(AString[i]) then begin
+        Exit;
+      end;
+    end;
+    Result := True;
+  end;
+end;
+
+function IsOctal(const AChar: Char): Boolean; overload;
 begin
   Result := (AChar >= '0') and (AChar <= '7') {Do not Localize}
 end;
@@ -1920,7 +1962,7 @@ begin
   end;
 end;
 
-function IsHexidecimal(AChar: Char): Boolean; overload;
+function IsHexidecimal(const AChar: Char): Boolean; overload;
 begin
   Result := ((AChar >= '0') and (AChar <= '9')) {Do not Localize}
    or ((AChar >= 'A') and (AChar <= 'F')) {Do not Localize}
@@ -1942,13 +1984,6 @@ begin
   end;
 end;
 
-function IsAlphaNumeric(const AChar : Char) : Boolean;
-begin
-  Result := ((AChar >= '0') and (AChar <= '9')) or {Do not Localize}
-            ((AChar >= 'a') and (AChar <= 'z')) or
-            ((AChar >= 'A') and (AChar <= 'Z'));
-end;
-
 {$HINTS OFF}
 function IsNumeric(const AString: string): Boolean;
 var
@@ -1960,7 +1995,7 @@ begin
 end;
 {$HINTS ON}
 
-function IsNumeric(AChar: Char): Boolean;
+function IsNumeric(const AChar: Char): Boolean;
 begin
   // Do not use IsCharAlpha or IsCharAlphaNumeric - they are Win32 routines
   Result := (AChar >= '0') and (AChar <= '9'); {Do not Localize}
@@ -2106,7 +2141,7 @@ var
   LErr: Boolean;
   LIP: Cardinal;
 begin
-  LIP := IPv4ToDWord(AAddr,LErr);
+  LIP := IPv4ToDWord(AAddr, LErr);
   if LErr then begin
     Result := '';
   end else begin
@@ -2270,16 +2305,13 @@ begin
   end;
 end;
 
-function Max(const AValueOne,AValueTwo: Int64): Int64;
+function Max(const AValueOne, AValueTwo: Int64): Int64;
 begin
-  if AValueOne < AValueTwo then
-  begin
-    Result := AValueTwo
-  end //if AValueOne < AValueTwo then
-  else
-  begin
+  if AValueOne < AValueTwo then begin
+    Result := AValueTwo;
+  end else begin
     Result := AValueOne;
-  end; //else..if AValueOne < AValueTwo then
+  end;
 end;
 
 function Max(const AValueOne,AValueTwo: LongInt): LongInt;
@@ -2363,7 +2395,7 @@ begin
 end;
 
 function PosIdx(const ASubStr, AStr: AnsiString; AStartPos: Cardinal): Cardinal;
-{$IFDEF DotNet}
+{$IFDEF DOTNET}
 begin
   if AStartPos = 0 then begin
     AStartPos := 1;
@@ -2436,10 +2468,10 @@ begin
   Result := Pos(Substr, S);
 end;
 
-{$IFNDEF DotNet}
+{$IFNDEF DOTNET}
 function AnsiPos(const Substr, S: string): Integer;
 begin
-  Result := Sys.AnsiPos(Substr,S);
+  Result := Sys.AnsiPos(Substr, S);
 end;
 {$ENDIF}
 
@@ -2538,11 +2570,11 @@ begin
   while I > 0 do begin
     LLeft := Copy(AData, LLastPos, I - LLastPos); //'abc d' len:=i(=4)-1    {Do not Localize}
     if LLeft <> '' then begin    {Do not Localize}
-      {$IfDEF DotNet}
+      {$IFDEF DOTNET}
       AStrings.AddObject(LLeft, TObject(LLastPos));
-      {$else}
+      {$ELSE}
       AStrings.AddObject(LLeft, Pointer(LLastPos));
-      {$endif}
+      {$ENDIF}
     end;
     LLastPos := I + LDelim; //first char after Delim
     i := PosIdx(ADelim, AData, LLastPos);
@@ -2572,7 +2604,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF ALLOW_NAMED_THREADS}
-{$IFDEF DotNet}
+{$IFDEF DOTNET}
   // cannot rename a previously-named thread
   if System.Threading.Thread.CurrentThread.Name = nil then begin
     System.Threading.Thread.CurrentThread.Name := AName;
@@ -2613,8 +2645,9 @@ Begin
 
   LLeadingSpaceCnt := 0;
   if LData <> '' then begin //if Not WhiteStr
-    while AData[LLeadingSpaceCnt + 1] <= #32 do
+    while AData[LLeadingSpaceCnt + 1] <= #32 do begin
       Inc(LLeadingSpaceCnt);
+    end;
   end
   else begin
     Exit;
@@ -2622,7 +2655,7 @@ Begin
 
   i := Pos(ADelim, LData);
   while I > 0 do begin
-    LLeft:= Copy(LData, LLastPos, I - LLastPos); //'abc d' len:=i(=4)-1    {Do not Localize}
+    LLeft := Copy(LData, LLastPos, I - LLastPos); //'abc d' len:=i(=4)-1    {Do not Localize}
     if LLeft > '' then begin    {Do not Localize}
       AStrings.AddObject(Sys.Trim(LLeft), TObject(LLastPos + LLeadingSpaceCnt));
     end;
@@ -2640,43 +2673,47 @@ end;
 
 { TEvent }
 
-constructor TEvent.Create(EventAttributes: IntPtr; ManualReset,
-  InitialState: Boolean; const Name: string);
+constructor TEvent.Create(EventAttributes: IntPtr; ManualReset, InitialState: Boolean; const Name: string);
 begin
   inherited Create;
   // Name not used
-  if ManualReset then
-    FEvent := ManualResetEvent.Create(InitialState)
-  else
+  if ManualReset then begin
+    FEvent := ManualResetEvent.Create(InitialState);
+  end else begin
     FEvent := AutoResetEvent.Create(InitialState);
+  end;
 end;
 
 constructor TEvent.Create;
 begin
-  Create(nil, True, False, '');
+  Create(nil, True, False, '');    {Do not Localize}
 end;
 
 destructor TEvent.Destroy;
 begin
-  FEvent.Close;
-  FEvent.Free;
+  if Assigned(FEvent) then begin
+    FEvent.Close;
+  end;
+  Sys.FreeAndNil(FEvent);
   inherited Destroy;
 end;
 
 procedure TEvent.SetEvent;
 begin
-  if (FEvent is ManualResetEvent) then
-    ManualResetEvent(FEvent).&Set
-  else
+  if FEvent is ManualResetEvent then begin
+    ManualResetEvent(FEvent).&Set;
+  end else begin
     AutoResetEvent(FEvent).&Set;
+  end;
 end;
 
 procedure TEvent.ResetEvent;
 begin
-  if (FEvent is ManualResetEvent) then
-    ManualResetEvent(FEvent).Reset
-  else
+  if FEvent is ManualResetEvent then begin
+    ManualResetEvent(FEvent).Reset;
+  end else begin
     AutoResetEvent(FEvent).Reset;
+  end;
 end;
 
 function TEvent.WaitFor(Timeout: LongWord): TWaitResult;
@@ -2684,15 +2721,16 @@ var
   Passed: Boolean;
 begin
   try
-    if Timeout = INFINITE then
-      Passed := FEvent.WaitOne
-    else
+    if Timeout = INFINITE then begin
+      Passed := FEvent.WaitOne;
+    end else begin
       Passed := FEvent.WaitOne(Timeout, True);
-
-    if Passed then
-      Result := wrSignaled
-    else
+    end;
+    if Passed then begin
+      Result := wrSignaled;
+    end else begin
       Result := wrTimeout;
+    end;
   except
     Result := wrError;
   end;
@@ -2744,12 +2782,12 @@ end;
 {$IFNDEF VCL6ORABOVE}
 procedure TIdExtList.Assign(AList: TList);
 var
-  a: Integer;
+  I: Integer;
 begin
   Clear;
   Capacity := AList.Capacity;
-  for a := 0 to AList.Count - 1 do
-    Add(AList.Items[a]);
+  for I := 0 to AList.Count - 1 do
+    Add(AList.Items[I]);
 end;
 {$ENDIF}
 
@@ -2757,6 +2795,12 @@ procedure ToDo;
 begin
   EIdException.Toss('To do item undone.'); {do not localize}
 end;
+
+// RLebeau: the following three functions are utility functions
+// that determine the usable amount of data in various buffer types.
+// There are many operations in Indy that allow the user to specify
+// data sizes, or to have Indy calculate it.  So these functions
+// help reduce code duplication.
 
 function IndyLength(const ABuffer: String; const ALength: Integer = -1; const AIndex: Integer = 1): Integer;
 begin
@@ -2786,7 +2830,7 @@ begin
     Result := Min(ABuffer.Size - ABuffer.Position, ALength);
   end;
 end;
- 
+
 function ToBytes(const AValue: string; const ALength: Integer = -1;
   const AEncoding: TIdEncoding = enANSI): TIdBytes; overload;
 var
@@ -2807,6 +2851,7 @@ begin
     Encoder.GetBytes(AValue, 0, LLength, Result, 0);
     {$ELSE}
     // For now we just ignore encodings in VCL
+    // TODO: support UTF-8
     SetLength(Result, LLength);
     Move(AValue[1], Result[0], LLength);
     {$ENDIF}
@@ -2816,17 +2861,19 @@ begin
 end;
 
 function ToBytes(const AValue: Char): TIdBytes; overload;
-{$IFDEF DotNet}
+{$IFDEF DOTNET}
 var
   LChars: array[0..1] of Char;
 {$ENDIF}
 begin
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   LChars[0] := AValue;
   LChars[1] := 0;
   SetLength(Result, 1);
   System.array.Copy(System.Text.Encoding.ASCII.GetBytes(LChars), 0, Result, 0, 1);
   {$ELSE}
+  // For now we just ignore encodings in VCL
+  // TODO: support UTF-8
   SetLength(Result, SizeOf(Byte));
   Result[0] := Byte(AValue);
   {$ENDIF}
@@ -2834,7 +2881,7 @@ end;
 
 function ToBytes(const AValue: Int64): TIdBytes; overload;
 begin
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Result := System.BitConverter.GetBytes(AValue);
   {$ELSE}
   SetLength(Result, SizeOf(Int64));
@@ -2874,7 +2921,7 @@ end;
 
 function ToBytes(const AValue: Word): TIdBytes; overload;
 begin
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Result := System.BitConverter.GetBytes(AValue);
   {$ELSE}
   SetLength(Result, SizeOf(Word));
@@ -2894,7 +2941,7 @@ begin
   CopyTIdBytes(AValue, AIndex, Result, 0, ASize);
 end;
 
-{$IFNDEF DotNet}
+{$IFNDEF DOTNET}
 function RawToBytes(const AValue; const ASize: Integer): TIdBytes;
 begin
   SetLength(Result, ASize);
@@ -2954,7 +3001,7 @@ begin
   CopyTIdBytes(AValue, AIndex, Bytes, 0, ASize);
 end;
 
-{$IFNDEF DotNet}
+{$IFNDEF DOTNET}
 procedure RawToBytesF(var Bytes: TIdBytes; const AValue; const ASize: Integer);
 begin
   Assert(Length(Bytes) >= ASize);
@@ -2986,6 +3033,8 @@ begin
 
   Result := System.BitConverter.ToChar(LBytes, AIndex);
   {$ELSE}
+  // For now we just ignore encodings in VCL
+  // TODO: support UTF-8
   Result := Char(AValue[AIndex]);
   {$ENDIF}
 end;
@@ -3003,7 +3052,7 @@ end;
 function BytesToInt64(const AValue: TIdBytes; const AIndex: Integer = 0): Int64;
 begin
   Assert(Length(AValue) >= (AIndex+SizeOf(Int64)));
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Result := System.BitConverter.ToInt64(AValue, AIndex);
   {$ELSE}
   Result := PInt64(@AValue[AIndex])^;
@@ -3013,7 +3062,7 @@ end;
 function BytesToWord(const AValue: TIdBytes; const AIndex: Integer = 0): Word;
 begin
   Assert(Length(AValue) >= (AIndex+SizeOf(Word)));
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Result := System.BitConverter.ToUInt16(AValue, AIndex);
   {$ELSE}
   Result := PWord(@AValue[AIndex])^;
@@ -3023,21 +3072,30 @@ end;
 function BytesToShort(const AValue: TIdBytes; const AIndex: Integer = 0): Short;
 begin
   Assert(Length(AValue) >= (AIndex+SizeOf(Short)));
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Result := System.BitConverter.ToInt16(AValue, AIndex);
   {$ELSE}
   Result := PSmallInt(@AValue[AIndex])^;
   {$ENDIF}
 end;
 
+function BytesToIPv4Str(const AValue: TIdBytes; const AIndex: Integer = 0): String;
+begin
+  Assert(Length(AValue) >= (AIndex+4));
+  Result := Sys.IntToStr(Ord(AValue[AIndex])) + '.' +
+           Sys.IntToStr(Ord(AValue[AIndex+1])) + '.' +
+           Sys.IntToStr(Ord(AValue[AIndex+2])) + '.' +
+           Sys.IntToStr(Ord(AValue[AIndex+3]));
+end;
+
 function BytesToIPv6(const AValue: TIdBytes; const AIndex: Integer = 0): TIdIPv6Address;
-{$IFDEF DotNet}
+{$IFDEF DOTNET}
 var
   i: Integer;
 {$ENDIF}
 begin
   Assert(Length(AValue) >= (AIndex+16));
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   for i := 0 to 7 do begin
     Result[i] := TwoByteToWord(AValue[(i*2)+AIndex], AValue[(i*2)+1+AIndex]);
   end;
@@ -3062,7 +3120,7 @@ begin
     EIdRangeException.IfNotInRange(AStartIndex, 0, Length(AValue) - 1, 'Index out of bounds.'); {do not localize}
   end;
   AMaxCount := Min(Length(AValue) - AStartIndex, AMaxCount);
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   // For .NET we need to convert from a single byte char per stream into a double byte per char
   // string.
   // TODO: support UTF8 input
@@ -3070,6 +3128,7 @@ begin
   {$ELSE}
   // For VCL we just do a byte to byte copy with no translation. VCL uses ANSI or MBCS.
   // With MBCS we still map 1:1
+  // TODO: support UTF-8
   SetLength(Result, AMaxCount);
   if AMaxCount > 0 then begin
     Move(AValue[AStartIndex], Result[1], AMaxCount);
@@ -3077,7 +3136,7 @@ begin
   {$ENDIF}
 end;
 
-{$IFNDEF DotNet}
+{$IFNDEF DOTNET}
 procedure BytesToRaw(const AValue: TIdBytes; var VBuffer; const ASize: Integer);
 begin
   Assert(Length(AValue) >= ASize);
@@ -3136,7 +3195,7 @@ end;
 //    function IdWrite(const Buffer: TIdByteArray; Offset, Count: Longint): Longint; virtual; abstract;
 //    function IdSeek(const Offset: Int64; Origin: TIdSeekOrigin): Int64; virtual; abstract;
 
-{$IFDEF DotNet}
+{$IFDEF DOTNET}
 function TIdBaseStream.Read(var VBuffer: array of Byte; AOffset, ACount: Longint): Longint;
 var
   LBytes: TIdBytes;
@@ -3344,7 +3403,7 @@ end;
 
 function TextIsSame(const A1, A2: string): Boolean;
 begin
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Result := A1.Compare(A1, A2, True) = 0;
   {$ELSE}
   Result := Sys.AnsiCompareText(A1, A2) = 0;
@@ -3356,7 +3415,7 @@ var
   LLen: Integer;
 begin
   LLen := Length(SubS);
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Result := System.String.Compare(S, 0, SubS, 0, LLen, True) = 0;
   {$ELSE}
   Result := LLen <= Length(S);
@@ -3378,7 +3437,7 @@ var
 {$ENDIF}
 begin
   LLen := Length(SubS);
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Result := System.String.Compare(S, Length(S)-LLen, SubS, 0, LLen, True) = 0;
   {$ELSE}
   Result := LLen <= Length(S);
@@ -3396,7 +3455,7 @@ end;
 
 function IndyLowerCase(const A1: string): string;
 begin
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Result := A1.ToLower;
   {$ELSE}
   Result := Sys.AnsiLowerCase(A1);
@@ -3405,7 +3464,7 @@ end;
 
 function IndyUpperCase(const A1: string): string;
 begin
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Result := A1.ToUpper;
   {$ELSE}
   Result := Sys.AnsiUpperCase(A1);
@@ -3414,7 +3473,7 @@ end;
 
 function IndyCompareStr(const A1: string; const A2: string): Integer;
 begin
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   Result := Sys.CompareStr(A1, A2);
   {$ELSE}
   Result := Sys.AnsiCompareStr(A1, A2);
@@ -3538,7 +3597,7 @@ begin
   if AMaxLineLength < 0 then begin
     AMaxLineLength := MaxInt;
   end;//if
-  LCrEncountered := FALSE;
+  LCrEncountered := False;
   Result := '';
   { we store the stream size for the whole routine to prevent
   so do not incur a performance penalty with TStream.Size.  It has
@@ -3557,14 +3616,12 @@ begin
       LResultLen := Length(Result);
       if (LResultLen + LStringLen) > AMaxLineLength then begin
         LStringLen := AMaxLineLength - LResultLen;
-        LCrEncountered := TRUE;
-        Dec(LStrmPos,LBufSize);
-        Inc(LStrmPos,LStringLen);
-      end; //if
+        LCrEncountered := True;
+        Dec(LStrmPos, LBufSize);
+        Inc(LStrmPos, LStringLen);
+      end;
       Result := Result + BytesToString(LBuf, 0, LStringLen);
-      //SetLength(Result, LResultLen + LStringLen);
-      //Move(LBuf[0], PChar(Result)[LResultLen], LStringLen);
-    end;//while
+    end;
     AStream.Position := LStrmPos;
   end else begin
     EIdEndOfStream.IfTrue(AExceptionIfEOF, Sys.Format(RSEndOfStream, ['', LStrmPos]));
@@ -3573,7 +3630,7 @@ end;
 
 initialization
   // AnsiPos does not handle strings with #0 and is also very slow compared to Pos
-  {$IFDEF DotNet}
+  {$IFDEF DOTNET}
   IndyPos := SBPos;
   {$ELSE}
   if Sys.LeadBytes = [] then begin
@@ -3584,7 +3641,7 @@ initialization
   {$ENDIF}
 
 finalization
-  {$IFNDEF DotNet}
+  {$IFNDEF DOTNET}
   Sys.FreeAndNil(GIdPorts);
   {$ENDIF}
 
