@@ -3,15 +3,14 @@ programs=httpget
 
 [require]
 packages=indy
-packagedir=../../:../System/lib/$(CPU_TARGET)-$(OS_TARGET)/: \
-  ../Core/lib/$(CPU_TARGET)-$(OS_TARGET)/: \
-  ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET)/
+packagedir=../../
 
 [compiler]
-unitdir=../../:../../System/lib/$(CPU_TARGET)-$(OS_TARGET)/: \
-  ../../Core/lib/$(CPU_TARGET)-$(OS_TARGET)/ : \
-  ../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET)/: \
-  ../../lib/$(CPU_TARGET)-$(OS_TARGET)/
+unittargetdir=units/$(CPU_TARGET)-$(OS_TARGET)
+unitdir=../../System/lib/$(CPU_TARGET)-$(OS_TARGET) \
+        ../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) \
+        ../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) \
+        ../../
 options=-gl
 
 [install]
