@@ -23,10 +23,10 @@
 Summary:   Indy.Sockets (FreePascal Version)
 Name:      %{_IndyBaseName}-fpc
 Version:   10.2.0.1
-Release:   6
+Release:   7
 #the Indy name is hardcoded because we will probably have other package sets in that file.
-Source0:   http://www.indyproject.org/sockets/fpc/indy-%{version}.tar.gz
-BuildRequires:  fpc
+Source0:   http://www.indyproject.org/sockets/fpc/indy-%{version}.tar.bz2
+BuildRequires:  fpc = %{_FPC_RPM_Ver}
 Obsoletes: indy
 Requires:  fpc = %{_FPC_RPM_Ver}
 License:   BSD style or MPL
@@ -126,6 +126,8 @@ rm -rf %{buildroot}
 %{_datadir}/fpcsrc
 
 %changelog
+* Mon Apr 3 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu>
+- changed the .gz file to a bz2 form to be consistant with other RPM's in many distributions.
 * Thu Mar 30 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu> 10.2.0.1-6
 - moved fpcsrc files to /usr/share/fpsrc from /usr/share/docs/fpcsrc
 - fpcsrc RPM now includes all of the Makefiles.
