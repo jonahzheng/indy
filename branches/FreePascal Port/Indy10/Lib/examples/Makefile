@@ -346,123 +346,6 @@ endif
 ifeq ($(FULL_TARGET),powerpc64-linux)
 override TARGET_DIRS+=httpget
 endif
-ifeq ($(FULL_TARGET),i386-linux)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-go32v2)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-win32)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-os2)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-freebsd)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-beos)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-netbsd)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-solaris)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-qnx)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-netware)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-openbsd)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-wdosx)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-darwin)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-emx)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-watcom)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-netwlibc)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),i386-wince)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),m68k-linux)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),m68k-freebsd)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),m68k-netbsd)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),m68k-amiga)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),m68k-atari)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),m68k-openbsd)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),m68k-palmos)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),powerpc-linux)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),powerpc-netbsd)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),powerpc-macos)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),powerpc-darwin)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),powerpc-morphos)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),sparc-linux)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),sparc-netbsd)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),sparc-solaris)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),x86_64-linux)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),x86_64-freebsd)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),x86_64-win64)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),arm-linux)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),arm-palmos)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),arm-wince)
-override TARGET_PROGRAMS+=httpget
-endif
-ifeq ($(FULL_TARGET),powerpc64-linux)
-override TARGET_PROGRAMS+=httpget
-endif
 override INSTALL_FPCPACKAGE=y
 ifeq ($(FULL_TARGET),i386-linux)
 override COMPILER_OPTIONS+=-gl
@@ -582,121 +465,121 @@ ifeq ($(FULL_TARGET),powerpc64-linux)
 override COMPILER_OPTIONS+=-gl
 endif
 ifeq ($(FULL_TARGET),i386-linux)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-go32v2)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-win32)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-os2)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-freebsd)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-beos)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-netbsd)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-solaris)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-qnx)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-netware)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-openbsd)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-wdosx)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-darwin)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-emx)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-watcom)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-netwlibc)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-wince)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),m68k-linux)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),m68k-freebsd)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),m68k-netbsd)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),m68k-amiga)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),m68k-atari)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),m68k-openbsd)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),m68k-palmos)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),powerpc-linux)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),powerpc-netbsd)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),powerpc-macos)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),powerpc-darwin)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),powerpc-morphos)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),sparc-linux)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),sparc-netbsd)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),sparc-solaris)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),x86_64-linux)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),x86_64-freebsd)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),x86_64-win64)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),arm-linux)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),arm-palmos)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),arm-wince)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),powerpc64-linux)
-override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET) ../Core/lib/$(CPU_TARGET)-$(OS_TARGET) ../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) ..
+override COMPILER_UNITDIR+=../System/lib/$(CPU_TARGET)-$(OS_TARGET):../Core/lib/$(CPU_TARGET)-$(OS_TARGET):../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET):..
 endif
 ifeq ($(FULL_TARGET),i386-linux)
 override COMPILER_UNITTARGETDIR+=units/$(CPU_TARGET)-$(OS_TARGET)
@@ -1583,9 +1466,8 @@ else
 TAROPT=vz
 TAREXT=.tar.gz
 endif
-override REQUIRE_PACKAGES=rtl indy
+override REQUIRE_PACKAGES=indy
 ifeq ($(FULL_TARGET),i386-linux)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1602,7 +1484,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),i386-go32v2)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -1611,7 +1492,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),i386-win32)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1626,7 +1506,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),i386-os2)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1635,7 +1514,6 @@ REQUIRE_PACKAGES_INDY=1
 REQUIRE_PACKAGES_PASJPEG=1
 endif
 ifeq ($(FULL_TARGET),i386-freebsd)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1652,7 +1530,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),i386-beos)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -1661,7 +1538,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),i386-netbsd)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1677,7 +1553,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),i386-solaris)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1688,7 +1563,6 @@ REQUIRE_PACKAGES_INDY=1
 REQUIRE_PACKAGES_PASJPEG=1
 endif
 ifeq ($(FULL_TARGET),i386-qnx)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -1697,7 +1571,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),i386-netware)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -1706,7 +1579,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),i386-openbsd)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1722,7 +1594,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),i386-wdosx)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -1731,7 +1602,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),i386-darwin)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1748,7 +1618,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),i386-emx)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1757,7 +1626,6 @@ REQUIRE_PACKAGES_INDY=1
 REQUIRE_PACKAGES_PASJPEG=1
 endif
 ifeq ($(FULL_TARGET),i386-watcom)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -1766,7 +1634,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),i386-netwlibc)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -1775,7 +1642,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),i386-wince)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1787,7 +1653,6 @@ REQUIRE_PACKAGES_POSTGRES=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),m68k-linux)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1804,7 +1669,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),m68k-freebsd)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1821,7 +1685,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),m68k-netbsd)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1837,7 +1700,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),m68k-amiga)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -1846,7 +1708,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),m68k-atari)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -1855,7 +1716,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),m68k-openbsd)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1871,7 +1731,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),m68k-palmos)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -1880,7 +1739,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),powerpc-linux)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1897,7 +1755,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),powerpc-netbsd)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1913,7 +1770,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),powerpc-macos)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -1922,7 +1778,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),powerpc-darwin)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1939,7 +1794,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),powerpc-morphos)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -1948,7 +1802,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),sparc-linux)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1965,7 +1818,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),sparc-netbsd)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1981,7 +1833,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),sparc-solaris)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -1992,7 +1843,6 @@ REQUIRE_PACKAGES_INDY=1
 REQUIRE_PACKAGES_PASJPEG=1
 endif
 ifeq ($(FULL_TARGET),x86_64-linux)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -2009,7 +1859,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),x86_64-freebsd)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -2026,7 +1875,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),x86_64-win64)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -2035,7 +1883,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),arm-linux)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -2052,7 +1899,6 @@ REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),arm-palmos)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_FCL=1
@@ -2061,7 +1907,6 @@ REQUIRE_PACKAGES_PASJPEG=1
 REQUIRE_PACKAGES_NETDB=1
 endif
 ifeq ($(FULL_TARGET),arm-wince)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -2073,7 +1918,6 @@ REQUIRE_PACKAGES_POSTGRES=1
 REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(FULL_TARGET),powerpc64-linux)
-REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_HASH=1
 REQUIRE_PACKAGES_PASZLIB=1
 REQUIRE_PACKAGES_NETDB=1
@@ -2088,32 +1932,6 @@ REQUIRE_PACKAGES_MYSQL=1
 REQUIRE_PACKAGES_ODBC=1
 REQUIRE_PACKAGES_ORACLE=1
 REQUIRE_PACKAGES_SQLITE=1
-endif
-ifdef REQUIRE_PACKAGES_RTL
-PACKAGEDIR_RTL:=$(firstword $(subst /Makefile.fpc,,$(strip $(wildcard $(addsuffix /rtl/Makefile.fpc,$(PACKAGESDIR))))))
-ifneq ($(PACKAGEDIR_RTL),)
-ifneq ($(wildcard $(PACKAGEDIR_RTL)/units/$(TARGETSUFFIX)),)
-UNITDIR_RTL=$(PACKAGEDIR_RTL)/units/$(TARGETSUFFIX)
-else
-UNITDIR_RTL=$(PACKAGEDIR_RTL)
-endif
-ifdef CHECKDEPEND
-$(PACKAGEDIR_RTL)/$(FPCMADE):
-	$(MAKE) -C $(PACKAGEDIR_RTL) $(FPCMADE)
-override ALLDEPENDENCIES+=$(PACKAGEDIR_RTL)/$(FPCMADE)
-endif
-else
-PACKAGEDIR_RTL=
-UNITDIR_RTL:=$(subst /Package.fpc,,$(strip $(wildcard $(addsuffix /rtl/Package.fpc,$(UNITSDIR)))))
-ifneq ($(UNITDIR_RTL),)
-UNITDIR_RTL:=$(firstword $(UNITDIR_RTL))
-else
-UNITDIR_RTL=
-endif
-endif
-ifdef UNITDIR_RTL
-override COMPILER_UNITDIR+=$(UNITDIR_RTL)
-endif
 endif
 ifdef REQUIRE_PACKAGES_HASH
 PACKAGEDIR_HASH:=$(firstword $(subst /Makefile.fpc,,$(strip $(wildcard $(addsuffix /hash/Makefile.fpc,$(PACKAGESDIR))))))
@@ -2624,169 +2442,9 @@ ifeq ($(FULL_SOURCE),$(FULL_TARGET))
 EXECPPAS:=@$(PPAS)
 endif
 endif
-.PHONY: fpc_exes
-ifndef CROSSINSTALL
-ifneq ($(TARGET_PROGRAMS),)
-override EXEFILES=$(addsuffix $(EXEEXT),$(TARGET_PROGRAMS))
-override EXEOFILES:=$(addsuffix $(OEXT),$(TARGET_PROGRAMS)) $(addprefix $(STATICLIBPREFIX),$(addsuffix $(STATICLIBEXT),$(TARGET_PROGRAMS)))
-override ALLTARGET+=fpc_exes
-override INSTALLEXEFILES+=$(EXEFILES)
-override CLEANEXEFILES+=$(EXEFILES) $(EXEOFILES)
-ifeq ($(OS_TARGET),os2)
-override CLEANEXEFILES+=$(addsuffix $(AOUTEXT),$(TARGET_PROGRAMS))
-endif
-ifeq ($(OS_TARGET),emx)
-override CLEANEXEFILES+=$(addsuffix $(AOUTEXT),$(TARGET_PROGRAMS))
-endif
-endif
-endif
-fpc_exes: $(COMPILER_TARGETDIR) $(COMPILER_UNITTARGETDIR) $(EXEFILES)
 ifdef TARGET_RSTS
 override RSTFILES=$(addsuffix $(RSTEXT),$(TARGET_RSTS))
 override CLEANRSTFILES+=$(RSTFILES)
-endif
-.PHONY: fpc_all fpc_smart fpc_debug fpc_release fpc_shared
-$(FPCMADE): $(ALLDEPENDENCIES) $(ALLTARGET)
-	@$(ECHOREDIR) Compiled > $(FPCMADE)
-fpc_all: $(FPCMADE)
-fpc_smart:
-	$(MAKE) all LINKSMART=1 CREATESMART=1
-fpc_debug:
-	$(MAKE) all DEBUG=1
-fpc_release:
-	$(MAKE) all RELEASE=1
-.SUFFIXES: $(EXEEXT) $(PPUEXT) $(OEXT) .pas .lpr .dpr .pp .rc .res
-$(COMPILER_UNITTARGETDIR):
-	$(MKDIRTREE) $(COMPILER_UNITTARGETDIR)
-$(COMPILER_TARGETDIR):
-	$(MKDIRTREE) $(COMPILER_TARGETDIR)
-%$(PPUEXT): %.pp
-	$(COMPILER) $<
-	$(EXECPPAS)
-%$(PPUEXT): %.pas
-	$(COMPILER) $<
-	$(EXECPPAS)
-%$(EXEEXT): %.pp
-	$(COMPILER) $<
-	$(EXECPPAS)
-%$(EXEEXT): %.pas
-	$(COMPILER) $<
-	$(EXECPPAS)
-%$(EXEEXT): %.lpr
-	$(COMPILER) $<
-	$(EXECPPAS)
-%$(EXEEXT): %.dpr
-	$(COMPILER) $<
-	$(EXECPPAS)
-%.res: %.rc
-	windres -i $< -o $@
-vpath %.pp $(COMPILER_SOURCEDIR) $(COMPILER_INCLUDEDIR)
-vpath %.pas $(COMPILER_SOURCEDIR) $(COMPILER_INCLUDEDIR)
-vpath %.lpr $(COMPILER_SOURCEDIR) $(COMPILER_INCLUDEDIR)
-vpath %.dpr $(COMPILER_SOURCEDIR) $(COMPILER_INCLUDEDIR)
-vpath %$(OEXT) $(COMPILER_UNITTARGETDIR)
-vpath %$(PPUEXT) $(COMPILER_UNITTARGETDIR)
-.PHONY: fpc_shared
-override INSTALLTARGET+=fpc_shared_install
-ifndef SHARED_LIBVERSION
-SHARED_LIBVERSION=$(FPC_VERSION)
-endif
-ifndef SHARED_LIBNAME
-SHARED_LIBNAME=$(PACKAGE_NAME)
-endif
-ifndef SHARED_FULLNAME
-SHARED_FULLNAME=$(SHAREDLIBPREFIX)$(SHARED_LIBNAME)-$(SHARED_LIBVERSION)$(SHAREDLIBEXT)
-endif
-ifndef SHARED_LIBUNITS
-SHARED_LIBUNITS:=$(TARGET_UNITS) $(TARGET_IMPLICITUNITS)
-override SHARED_LIBUNITS:=$(filter-out $(INSTALL_BUILDUNIT),$(SHARED_LIBUNITS))
-endif
-fpc_shared:
-ifdef HASSHAREDLIB
-	$(MAKE) all CREATESHARED=1 LINKSHARED=1 CREATESMART=1
-ifneq ($(SHARED_BUILD),n)
-	$(PPUMOVE) -q $(SHARED_LIBUNITS) -i$(COMPILER_UNITTARGETDIR) -o$(SHARED_FULLNAME) -d$(COMPILER_UNITTARGETDIR)
-endif
-else
-	@$(ECHO) Shared Libraries not supported
-endif
-fpc_shared_install:
-ifneq ($(SHARED_BUILD),n)
-ifneq ($(SHARED_LIBUNITS),)
-ifneq ($(wildcard $(COMPILER_UNITTARGETDIR)/$(SHARED_FULLNAME)),)
-	$(INSTALL) $(COMPILER_UNITTARGETDIR)/$(SHARED_FULLNAME) $(INSTALL_SHAREDDIR)
-endif
-endif
-endif
-.PHONY: fpc_install fpc_sourceinstall fpc_exampleinstall
-ifdef INSTALL_UNITS
-override INSTALLPPUFILES+=$(addsuffix $(PPUEXT),$(INSTALL_UNITS))
-endif
-ifdef INSTALL_BUILDUNIT
-override INSTALLPPUFILES:=$(filter-out $(INSTALL_BUILDUNIT)$(PPUEXT),$(INSTALLPPUFILES))
-endif
-ifdef INSTALLPPUFILES
-override INSTALLPPULINKFILES:=$(subst $(PPUEXT),$(OEXT),$(INSTALLPPUFILES)) $(addprefix $(STATICLIBPREFIX),$(subst $(PPUEXT),$(STATICLIBEXT),$(INSTALLPPUFILES)))
-ifneq ($(UNITTARGETDIRPREFIX),)
-override INSTALLPPUFILES:=$(addprefix $(UNITTARGETDIRPREFIX),$(notdir $(INSTALLPPUFILES)))
-override INSTALLPPULINKFILES:=$(wildcard $(addprefix $(UNITTARGETDIRPREFIX),$(notdir $(INSTALLPPULINKFILES))))
-endif
-override INSTALL_CREATEPACKAGEFPC=1
-endif
-ifdef INSTALLEXEFILES
-ifneq ($(TARGETDIRPREFIX),)
-override INSTALLEXEFILES:=$(addprefix $(TARGETDIRPREFIX),$(notdir $(INSTALLEXEFILES)))
-endif
-endif
-fpc_install: all $(INSTALLTARGET)
-ifdef INSTALLEXEFILES
-	$(MKDIR) $(INSTALL_BINDIR)
-ifdef UPXPROG
-	-$(UPXPROG) $(INSTALLEXEFILES)
-endif
-	$(INSTALLEXE) $(INSTALLEXEFILES) $(INSTALL_BINDIR)
-endif
-ifdef INSTALL_CREATEPACKAGEFPC
-ifdef FPCMAKE
-ifdef PACKAGE_VERSION
-ifneq ($(wildcard Makefile.fpc),)
-	$(FPCMAKE) -p -T$(CPU_TARGET)-$(OS_TARGET) Makefile.fpc
-	$(MKDIR) $(INSTALL_UNITDIR)
-	$(INSTALL) Package.fpc $(INSTALL_UNITDIR)
-endif
-endif
-endif
-endif
-ifdef INSTALLPPUFILES
-	$(MKDIR) $(INSTALL_UNITDIR)
-	$(INSTALL) $(INSTALLPPUFILES) $(INSTALL_UNITDIR)
-ifneq ($(INSTALLPPULINKFILES),)
-	$(INSTALL) $(INSTALLPPULINKFILES) $(INSTALL_UNITDIR)
-endif
-ifneq ($(wildcard $(LIB_FULLNAME)),)
-	$(MKDIR) $(INSTALL_LIBDIR)
-	$(INSTALL) $(LIB_FULLNAME) $(INSTALL_LIBDIR)
-ifdef inUnix
-	ln -sf $(LIB_FULLNAME) $(INSTALL_LIBDIR)/$(LIB_NAME)
-endif
-endif
-endif
-ifdef INSTALL_FILES
-	$(MKDIR) $(INSTALL_DATADIR)
-	$(INSTALL) $(INSTALL_FILES) $(INSTALL_DATADIR)
-endif
-fpc_sourceinstall: distclean
-	$(MKDIR) $(INSTALL_SOURCEDIR)
-	$(COPYTREE) $(BASEDIR)/* $(INSTALL_SOURCEDIR)
-fpc_exampleinstall: $(addsuffix _distclean,$(TARGET_EXAMPLEDIRS))
-ifdef HASEXAMPLES
-	$(MKDIR) $(INSTALL_EXAMPLEDIR)
-endif
-ifdef EXAMPLESOURCEFILES
-	$(COPY) $(EXAMPLESOURCEFILES) $(INSTALL_EXAMPLEDIR)
-endif
-ifdef TARGET_EXAMPLEDIRS
-	$(COPYTREE) $(addsuffix /*,$(TARGET_EXAMPLEDIRS)) $(INSTALL_EXAMPLEDIR)
 endif
 .PHONY: fpc_clean fpc_cleanall fpc_distclean
 ifdef EXEFILES
@@ -3123,24 +2781,24 @@ httpget:
 	$(MAKE) -C httpget all
 .PHONY: httpget_all httpget_debug httpget_smart httpget_release httpget_units httpget_examples httpget_shared httpget_install httpget_sourceinstall httpget_exampleinstall httpget_distinstall httpget_zipinstall httpget_zipsourceinstall httpget_zipexampleinstall httpget_zipdistinstall httpget_clean httpget_distclean httpget_cleanall httpget_info httpget_makefiles httpget
 endif
-all: fpc_all $(addsuffix _all,$(TARGET_DIRS))
-debug: fpc_debug
-smart: fpc_smart
-release: fpc_release
-units: fpc_units $(addsuffix _units,$(TARGET_DIRS))
+all: $(addsuffix _all,$(TARGET_DIRS))
+debug: $(addsuffix _debug,$(TARGET_DIRS))
+smart: $(addsuffix _smart,$(TARGET_DIRS))
+release: $(addsuffix _release,$(TARGET_DIRS))
+units: $(addsuffix _units,$(TARGET_DIRS))
 examples: $(addsuffix _examples,$(TARGET_DIRS))
-shared: fpc_shared
-install: fpc_install $(addsuffix _install,$(TARGET_DIRS))
-sourceinstall: fpc_sourceinstall $(addsuffix _sourceinstall,$(TARGET_DIRS))
-exampleinstall: fpc_exampleinstall $(addsuffix _exampleinstall,$(TARGET_DIRS))
+shared: $(addsuffix _shared,$(TARGET_DIRS))
+install: $(addsuffix _install,$(TARGET_DIRS))
+sourceinstall: $(addsuffix _sourceinstall,$(TARGET_DIRS))
+exampleinstall: $(addsuffix _exampleinstall,$(TARGET_DIRS))
 distinstall: $(addsuffix _distinstall,$(TARGET_DIRS))
 zipinstall: $(addsuffix _zipinstall,$(TARGET_DIRS))
 zipsourceinstall: $(addsuffix _zipsourceinstall,$(TARGET_DIRS))
 zipexampleinstall: $(addsuffix _zipexampleinstall,$(TARGET_DIRS))
 zipdistinstall: $(addsuffix _zipdistinstall,$(TARGET_DIRS))
-clean: fpc_clean $(addsuffix _clean,$(TARGET_DIRS))
-distclean: fpc_distclean $(addsuffix _distclean,$(TARGET_DIRS))
-cleanall: fpc_cleanall $(addsuffix _cleanall,$(TARGET_DIRS))
+clean: $(addsuffix _clean,$(TARGET_DIRS))
+distclean: $(addsuffix _distclean,$(TARGET_DIRS))
+cleanall: $(addsuffix _cleanall,$(TARGET_DIRS))
 info: fpc_info
 makefiles: fpc_makefiles $(addsuffix _makefiles,$(TARGET_DIRS))
 .PHONY: all debug smart release units examples shared install sourceinstall exampleinstall distinstall zipinstall zipsourceinstall zipexampleinstall zipdistinstall clean distclean cleanall info makefiles
