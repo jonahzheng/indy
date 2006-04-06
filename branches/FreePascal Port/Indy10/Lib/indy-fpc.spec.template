@@ -64,8 +64,12 @@ cp -a System fpcsrc
 cp -a Core fpcsrc
 cp -a Protocols fpcsrc
 cp Make* fpcsrc
+echo "%{_Build_IndyDocsDir}"
+echo "%_Build_IndyExamplesDir}"
+cp -a examples fpcsrc
+
 #the binaries
-make all
+make all examples
 
 %install
 rm -rf %{buildroot}
@@ -79,32 +83,38 @@ mkdir -p %{_Build_IndyDocsDir}
 mkdir -p %{_Build_IndyExamplesDir}
 install -D -m 644 README %{_Build_IndyDocsDir}/README
 install -D -m 644 COPYING %{_Build_IndyDocsDir}/COPYING
-install -D -m 644 COPYING.modifiedBSD %{_Build_IndyDocsDir}/COPYING.modifiedBSD
+install -D -m 644 COPYING.modifiedBSD \
+  %{_Build_IndyDocsDir}/COPYING.modifiedBSD
 install -D -m 644 COPYING.MPL %{_Build_IndyDocsDir}/COPYING.MPL
 cd fpc
+  INSTALLOPTS="INSTALL_PREFIX=%{_Build_FPCLibPrefix} \
+                INSTALL_LIBDIR=%{_Build_LibDir} \
+                INSTALL_BASEDIR=%{_Build_FPCLibPrefix} \
+                INSTALL_DOCDIR=%{_Build_IndyDocsDir} \
+                INSTALL_BINDIR=%{_Build_BinDir} \
+                INSTALL_EXAMPLEDIR=%{_Build_IndyExamplesDir}"
+SETFPCDIR=0
+#Note that you have to use the FPCDIR environment variable 
+#for fpcmake -p T[target] so that it doesn't fail saying
+#rtl not found.
 if  [ -z "$FPCDIR" ]; then
   FPCDIR=/usr/lib/fpc/${_FPC_Version}
   if [ ! -d "$FPCDIR" ]; then
     FPCDIR=/usr/local/lib/fpc/${_FPC_Version}
-  fi
+  fi 
   export FPCDIR
-  INSTALLOPTS="INSTALL_PREFIX=%{_Build_FPCLibPrefix} \
-                INSTALL_LIBDIR=%{_Build_LibDir} \
-                INSTALL_BASEDIR=%{_Build_FPCLibPrefix} \
-                INSTALL_DOCDIR=%{_Build_IndyDocsDir} \
-                INSTASLL_BINDIR=%{_Build_BinDir} \
-                INSTALL_EXAMPLEDIR=%{_Build_IndyExamplesDir}"
-  make install ${INSTALLOPTS}
+  SETFPCDIR=1
+fi
+echo "Indy example dir:"
+echo %{_Build_IndyExamplesDir}
+make install ${INSTALLOPTS}
+make examples_install ${INSTALLOPTS}  
+if [$SETFPCDIR=1]; then
   FPCDIR=
   export FPCDIR
 else
-  INSTALLOPTS="INSTALL_PREFIX=%{_Build_FPCLibPrefix} \
-                INSTALL_LIBDIR=%{_Build_LibDir} \
-                INSTALL_BASEDIR=%{_Build_FPCLibPrefix} \
-                INSTALL_DOCDIR=%{_Build_IndyDocsDir} \
-                INSTASLL_BINDIR=%{_Build_BinDir} \
-                INSTALL_EXAMPLEDIR=%{_Build_IndyExamplesDir}"
   make install ${INSTALLOPTS}  
+  make examples_install ${INSTALLOPTS} 
 fi
 # The source-files:
 mkdir -p %{_Build_IndyFPCSRCDir}
@@ -120,14 +130,18 @@ rm -rf %{buildroot}
 %doc %{_IndyDocsDir}/COPYING 
 %doc %{_IndyDocsDir}/COPYING.modifiedBSD 
 %doc %{_IndyDocsDir}/COPYING.MPL
+%doc %{_IndyExamplesDir}/*
 
 %files src
 %defattr(-,root,root,-)
 %{_datadir}/fpcsrc
 
 %changelog
+* Thu Apr 3 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu>
+- spec file clean-ups
 * Mon Apr 3 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu>
 - changed the .gz file to a bz2 form to be consistant with other RPM's in many distributions.
+- added first example program.
 * Thu Mar 30 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu> 10.2.0.1-6
 - moved fpcsrc files to /usr/share/fpsrc from /usr/share/docs/fpcsrc
 - fpcsrc RPM now includes all of the Makefiles.

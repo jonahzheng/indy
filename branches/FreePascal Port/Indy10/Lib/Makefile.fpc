@@ -10,6 +10,7 @@ dirs=System Core Protocols
 exampledirs=examples
 [install]
 fpcpackage=y
+examplesubdir=indy
 [shared]
 build=n
 
