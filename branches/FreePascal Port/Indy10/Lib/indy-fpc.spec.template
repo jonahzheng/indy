@@ -69,7 +69,7 @@ echo "%_Build_IndyExamplesDir}"
 cp -a examples fpcsrc
 
 #the binaries
-make all examples
+make all
 
 %install
 rm -rf %{buildroot}
@@ -107,21 +107,17 @@ if  [ -z "$FPCDIR" ]; then
 fi
 echo "Indy example dir:"
 echo %{_Build_IndyExamplesDir}
-make install ${INSTALLOPTS}
-make examples_install ${INSTALLOPTS}  
-if [$SETFPCDIR=1]; then
+make distinstall ${INSTALLOPTS} 
+if [ $SETFPCDIR = '1' ]; then
   FPCDIR=
   export FPCDIR
-else
-  make install ${INSTALLOPTS}  
-  make examples_install ${INSTALLOPTS} 
 fi
 # The source-files:
 mkdir -p %{_Build_IndyFPCSRCDir}
 cp -a fpcsrc/* %{_Build_IndyFPCSRCDir}
 
-%clean
-rm -rf %{buildroot}
+#%clean
+#rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
