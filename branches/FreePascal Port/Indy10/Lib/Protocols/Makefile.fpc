@@ -5,7 +5,6 @@ name=indyprotocolsfpc
 version=10.2.0.1
 main=indy
 
-
 [compiler]
 includedir=../Inc
 unittargetdir=lib/$(CPU_TARGET)-$(OS_TARGET)
@@ -16,6 +15,29 @@ options=-gl
 [target]
 units=indyprotocolsfpc
 rsts=IdResourceStringsProtocols
+rsts_amiga=
+rsts_atari=
+rsts_beos=
+rsts_darwin=IdZLibConst
+rsts_emx=
+rsts_freebsd=IdZLibConst
+rsts_go32v1=
+rsts_go32v2=
+rsts_linux=IdZLibConst
+rsts_macos=
+rsts_morphos=
+rsts_netbsd=IdZLibConst
+rsts_netware=
+rsts_netwlibc=
+rsts_openbsd=IdZLibConst
+rsts_os2=
+rsts_palmos=
+rsts_qnx=IdZLibConst
+rsts_solaris=IdZLibConst
+rsts_watcom=
+rsts_win32=IdZLibConst
+rsts_win64=IdZLibConst
+rsts_wince=IdZLibConst
 implicitunits=IdASN1Util \
   IdAllFTPListParsers \
   IdAttachment \
@@ -190,8 +212,6 @@ implicitunits=IdASN1Util \
   IdSNPP \
   IdSNTP \
   IdSSL \
-  IdSSLOpenSSL \
-  IdSSLOpenSSLHeaders \
   IdServerInterceptLogBase \
   IdServerInterceptLogEvent \
   IdServerInterceptLogFile \
@@ -223,9 +243,51 @@ implicitunits=IdASN1Util \
   IdUserPassProvider \
   IdVCard \
   IdWhoIsServer \
-  IdWhois \
-  IdZLibCompressorBase
+  IdWhois
 
+units_amiga=
+units_atari=
+units_beos=
+units_darwin=IdSSLOpenSSLHeaders IdSSLOpenSSL \
+             IdCompressionIntercept IdCompressorZLib \
+             IdZLib IdZLibConst
+units_emx=
+units_freebsd=IdSSLOpenSSLHeaders IdSSLOpenSSL \
+              IdCompressionIntercept IdCompressorZLib \
+              IdZLib IdZLibConst
+units_go32v1=
+units_go32v2=
+units_linux=IdSSLOpenSSLHeaders IdSSLOpenSSL \
+            IdCompressionIntercept IdCompressorZLib \
+            IdZLib IdZLibConst
+units_macos=
+units_morphos=
+units_netbsd=IdSSLOpenSSLHeaders IdSSLOpenSSL \
+             IdCompressionIntercept IdCompressorZLib \
+             IdZLib IdZLibConst
+units_netware=
+units_netwlibc=
+units_openbsd=IdSSLOpenSSLHeaders IdSSLOpenSSL \
+              IdCompressionIntercept IdCompressorZLib \
+              IdZLib IdZLibConst
+units_os2=
+units_palmos=
+units_qnx=IdSSLOpenSSLHeaders IdSSLOpenSSL \
+          IdCompressionIntercept IdCompressorZLib \
+          IdZLib IdZLibConst
+units_solaris=IdCompressionIntercept IdCompressorZLib \
+              IdZLib IdZLibConst
+units_watcom=
+units_win32=IdSSLOpenSSLHeaders IdSSLOpenSSL \
+            IdCompressionIntercept IdCompressorZLib \
+            IdZLib IdZLibConst
+units_win64=IdSSLOpenSSLHeaders IdSSLOpenSSL \
+            IdCompressionIntercept IdCompressorZLib \
+            IdZLib IdZLibConst
+units_wince=IdSSLOpenSSLHeaders IdSSLOpenSSL \
+            IdCompressionIntercept IdCompressorZLib \
+            IdZLib IdZLibConst
+units_wdosx=
 
 [requires]
 packages=indycorefpc

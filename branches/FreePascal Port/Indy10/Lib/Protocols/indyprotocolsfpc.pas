@@ -176,8 +176,6 @@ uses
   IdSNPP,
   IdSNTP,
   IdSSL,
-  IdSSLOpenSSL,
-  IdSSLOpenSSLHeaders,
   IdServerInterceptLogBase,
   IdServerInterceptLogEvent,
   IdServerInterceptLogFile,
@@ -209,8 +207,7 @@ uses
   IdUserPassProvider,
   IdVCard,
   IdWhoIsServer,
-  IdWhois,
-  IdZLibCompressorBase;
+  IdWhois;
 
 implementation
 
