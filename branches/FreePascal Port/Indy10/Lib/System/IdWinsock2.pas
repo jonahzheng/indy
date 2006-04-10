@@ -1,4 +1,4 @@
-{ $HDR$}
+{ $HDR$
   $Project$
   $Workfile$
   $Revision$
