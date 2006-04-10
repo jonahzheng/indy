@@ -3284,18 +3284,18 @@ implementation
 uses
   IdObjs,
   IdSys,
-  IdGlobal,  //needed for Sys symbol
+  IdGlobal  //needed for Sys symbol
   {$IFDEF KYLIX}
-  libc;
+  , libc;
   {$ENDIF}
   {$IFDEF FPC}
     {$IFDEF USELIBC}
-    libc,
+    , libc
     {$ENDIF}
-  DynLibs // better add DynLibs only for fpc
+    , DynLibs // better add DynLibs only for fpc
   {$ENDIF}
   {$ifdef win32_or_win64_or_winCE}
-  Windows
+  , Windows
   {$ENDIF};
 
 const

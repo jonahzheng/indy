@@ -65,7 +65,7 @@ uses
   IdIOHandler,
   IdObjs,
   IdZLibCompressorBase,
-  IdZLib;
+  IdZLibHeaders;
 
 type
   TIdCompressorZLibEx = class(TIdZLibCompressorBase)
@@ -95,7 +95,7 @@ type
 
 implementation
 uses
-  IdComponent, IdResourceStringsProtocols, IdGlobal, IdGlobalProtocols;
+  IdComponent, IdResourceStringsProtocols, IdGlobal, IdGlobalProtocols, IdZLib;
 
 const
   bufferSize = 32768;
@@ -290,17 +290,17 @@ procedure TIdCompressorZLibEx.CompressStream(AInStream,AOutStream : TIdStream;
   const AWindowBits, AMemLevel, AStrategy: Integer);
 
 begin
-  IdZLib.CompressStream(AInStream,AOutStream,ALevel,AWindowBits,AMemLevel,AStrategy);
+  IdZLib.IndyCompressStream(AInStream,AOutStream,ALevel,AWindowBits,AMemLevel,AStrategy);
 end;
 
 procedure TIdCompressorZLibEx.DecompressStream(AInStream, AOutStream : TIdStream; const AWindowBits : Integer);
 begin
-  IdZLib.DeCompressStream(AInStream,AOutStream, AWindowBits);
+  IdZLib.IndyDeCompressStream(AInStream,AOutStream, AWindowBits);
 end;    
 
 procedure TIdCompressorZLibEx.DeflateStream(AInStream, AOutStream : TIdStream; const ALevel : TIdCompressionLevel=0);
 begin
-  IdZLib.CompressStream(AInStream,AOutStream,ALevel);
+  IdZLib.IndyCompressStream(AInStream,AOutStream,ALevel);
 end;
 
 procedure TIdCompressorZLibEx.InflateStream(AInStream, AOutStream : TIdStream);

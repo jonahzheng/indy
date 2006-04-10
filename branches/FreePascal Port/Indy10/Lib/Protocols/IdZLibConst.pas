@@ -11,10 +11,15 @@ unit IdZLibConst;
 
 interface
 {$i IdCompilerDefines.inc}
+{$IFDEF WIN32}
+  {$define STATICLOAD}
+{$ENDIF}
 resourcestring
  sTargetBufferTooSmall = 'ZLib error: target buffer may be too small';
  sInvalidStreamOp = 'Invalid stream operation';
-
+{$IFNDEF STATICLOAD} 
+RSZLibCallError = 'Error on call to ZLib library function %s';
+{$ENDIF}
 implementation
 
 end.
