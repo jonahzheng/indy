@@ -11,6 +11,7 @@ uses
   IdHTTPHeaderInfo,    //for HTTP request and response info.
   IdHTTP,
   IdSSLOpenSSL,
+  IdCompressorZLib,
   IdURI,
   SysUtils;
 
@@ -38,6 +39,10 @@ Response: http://www.indyproject.org/index.html
     begin
       LURI.URI := AURI;
       Result := LURI.Document;
+    end;
+    if Result = '' then
+    begin
+      Result := 'index.html';
     end;
   finally
     FreeAndNil(LURI);
@@ -68,11 +73,14 @@ var
   i : Integer;
   LHE : EIdHTTPProtocolException;
   LFName : String;
+  LC : TIdCompressorZLib;
 begin
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create;
+  LC := TIdCompressorZLib.Create;
   try
     LHTTP := TIdHTTP.Create;
     try
+      LHTTP.Compressor := LC;
       //set to false if you want this to simply raise an exception on redirects
       LHTTP.HandleRedirects := True;
 {
@@ -119,6 +127,7 @@ Mozilla/4.0 (compatible; MyProgram)
     FreeAndNil(LStr);
   finally
     FreeAndNil(LIO);
+    FreeAndNil(LC);
   end;
 end;
 
