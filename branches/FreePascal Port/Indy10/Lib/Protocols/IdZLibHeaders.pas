@@ -16,8 +16,10 @@ different platforms in one file.
 
 interface
 {$i IdCompilerDefines.inc}
+{$IFNDEF FPC}
 {$IFDEF WIN32}
   {$define STATICLOAD}
+{$ENDIF}
 {$ENDIF}
 {$IFNDEF STATICLOAD}
 uses
@@ -420,6 +422,10 @@ const
   {$ENDIF}
   {$ifdef netware}  {zlib.nlm comes with netware6}
    libzlib='zlib';
+  {$ENDIF}
+  {$IFDEF WIN32}
+  //Note that this is the official ZLIB1 .DLL from the http://www.zlib.net/
+  libzlib='zlib1.dll'; 
   {$ENDIF}
   
 constructor EIdZLibStubError.Build(const ATitle : String; AError : DWORD);
