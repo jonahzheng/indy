@@ -245,48 +245,53 @@ implicitunits=IdASN1Util \
   IdWhoIsServer \
   IdWhois
 
+implicitunits_amiga=
 units_amiga=
+implicitunits_atari=
 units_atari=
+implicitunits_beos=
 units_beos=
-units_darwin=IdSSLOpenSSLHeaders IdSSLOpenSSL \
-             IdCompressionIntercept IdCompressorZLib \
-             IdZLib IdZLibConst
+implicitunits_darwin=IdSSLOpenSSLHeaders IdZLib IdZLibConst IdZLibHeaders
+units_darwin=IdSSLOpenSSL IdCompressionIntercept IdCompressorZLib
+implicitunits_emx=
 units_emx=
-units_freebsd=IdSSLOpenSSLHeaders IdSSLOpenSSL \
-              IdCompressionIntercept IdCompressorZLib \
-              IdZLib IdZLibConst
+implicitunits_freebsd=IdSSLOpenSSLHeaders IdZLib IdZLibConst IdZLibHeaders
+units_freebsd=IdSSLOpenSSL IdCompressionIntercept IdCompressorZLib
+implicitunits_go32v1=
 units_go32v1=
+implicitunits_go32v2=
 units_go32v2=
-units_linux=IdSSLOpenSSLHeaders IdSSLOpenSSL \
-            IdCompressionIntercept IdCompressorZLib \
-            IdZLib IdZLibConst
+implicitunits_linux=IdSSLOpenSSLHeaders IdZLib IdZLibConst IdZLibHeaders
+units_linux=IdSSLOpenSSL IdCompressionIntercept IdCompressorZLib
+implicitunits_macos=
 units_macos=
+implicitunits_morphos=
 units_morphos=
-units_netbsd=IdSSLOpenSSLHeaders IdSSLOpenSSL \
-             IdCompressionIntercept IdCompressorZLib \
-             IdZLib IdZLibConst
-units_netware=
+implicitunits_netbsd=IdSSLOpenSSLHeaders IdZLib IdZLibConst IdZLibHeaders
+units_netbsd=IdSSLOpenSSL IdCompressionIntercept IdCompressorZLib
+implicitunits_netware=IdZLib IdZLibConst IdZLibHeaders
+units_netware=IdCompressionIntercept IdCompressorZLib
+implicitunits_netwlibc=
 units_netwlibc=
-units_openbsd=IdSSLOpenSSLHeaders IdSSLOpenSSL \
-              IdCompressionIntercept IdCompressorZLib \
-              IdZLib IdZLibConst
+implicitunits_openbsd=IdSSLOpenSSLHeaders IdZLib IdZLibConst IdZLibHeaders
+units_openbsd=IdSSLOpenSSL IdCompressionIntercept IdCompressorZLib
+implicitunits_os2=
 units_os2=
+implicitunits_palmos=
 units_palmos=
-units_qnx=IdSSLOpenSSLHeaders IdSSLOpenSSL \
-          IdCompressionIntercept IdCompressorZLib \
-          IdZLib IdZLibConst
-units_solaris=IdCompressionIntercept IdCompressorZLib \
-              IdZLib IdZLibConst
+implicitunits_qnx=IdSSLOpenSSLHeaders IdZLib IdZLibConst IdZLibHeaders
+units_qnx=IdSSLOpenSSL IdCompressionIntercept IdCompressorZLib
+implicitunits_solaris=IdSSLOpenSSLHeaders IdZLib IdZLibConst IdZLibHeaders
+units_solaris=IdSSLOpenSSL IdCompressionIntercept IdCompressorZLib
+implicitunits_watcom=
 units_watcom=
-units_win32=IdSSLOpenSSLHeaders IdSSLOpenSSL \
-            IdCompressionIntercept IdCompressorZLib \
-            IdZLib IdZLibConst
-units_win64=IdSSLOpenSSLHeaders IdSSLOpenSSL \
-            IdCompressionIntercept IdCompressorZLib \
-            IdZLib IdZLibConst
-units_wince=IdSSLOpenSSLHeaders IdSSLOpenSSL \
-            IdCompressionIntercept IdCompressorZLib \
-            IdZLib IdZLibConst
+implicitunits_win32=IdSSLOpenSSLHeaders IdZLib IdZLibConst IdZLibHeaders
+units_win32=IdSSLOpenSSL IdCompressionIntercept IdCompressorZLib
+implicitunits_win64=IdSSLOpenSSLHeaders IdZLib IdZLibConst IdZLibHeaders
+units_win64=IdSSLOpenSSL IdCompressionIntercept IdCompressorZLib
+implicitunits_wince=IdSSLOpenSSLHeaders IdZLib IdZLibConst IdZLibHeaders
+units_wince=IdSSLOpenSSL IdCompressionIntercept IdCompressorZLib
+implicitunits_wdosx=
 units_wdosx=
 
 [requires]
