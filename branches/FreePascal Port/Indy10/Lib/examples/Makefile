@@ -230,239 +230,239 @@ UNITSDIR:=$(wildcard $(FPCDIR)/units/$(OS_TARGET))
 endif
 PACKAGESDIR:=$(wildcard $(FPCDIR) $(FPCDIR)/packages/base $(FPCDIR)/packages/extra)
 ifeq ($(FULL_TARGET),i386-linux)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-go32v2)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-win32)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-os2)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-freebsd)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-beos)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-netbsd)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-solaris)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-qnx)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-netware)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-openbsd)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-wdosx)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-darwin)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-emx)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-watcom)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-netwlibc)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),i386-wince)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),m68k-linux)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),m68k-freebsd)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),m68k-netbsd)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),m68k-amiga)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),m68k-atari)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),m68k-openbsd)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),m68k-palmos)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),powerpc-linux)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),powerpc-netbsd)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),powerpc-macos)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),powerpc-darwin)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),powerpc-morphos)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),sparc-linux)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),sparc-netbsd)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),sparc-solaris)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),x86_64-linux)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),x86_64-freebsd)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),x86_64-win64)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),arm-linux)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),arm-palmos)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),arm-wince)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 ifeq ($(FULL_TARGET),powerpc64-linux)
-override TARGET_DIRS+=httpget
+override TARGET_DIRS+=httpget elizaweb
 endif
 override INSTALL_FPCPACKAGE=y
 ifeq ($(FULL_TARGET),i386-linux)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-go32v2)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-win32)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-os2)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-freebsd)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-beos)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-netbsd)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-solaris)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-qnx)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-netware)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-openbsd)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-wdosx)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-darwin)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-emx)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-watcom)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-netwlibc)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-wince)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-linux)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-freebsd)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-netbsd)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-amiga)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-atari)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-openbsd)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-palmos)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),powerpc-linux)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),powerpc-netbsd)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),powerpc-macos)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),powerpc-darwin)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),powerpc-morphos)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),sparc-linux)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),sparc-netbsd)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),sparc-solaris)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),x86_64-linux)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),x86_64-freebsd)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),x86_64-win64)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),arm-linux)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),arm-palmos)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),arm-wince)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),powerpc64-linux)
-override COMPILER_OPTIONS+=-gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-gl -Fu../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-linux)
 override COMPILER_UNITTARGETDIR+=units/$(CPU_TARGET)-$(OS_TARGET)
@@ -2504,120 +2504,159 @@ fpc_makefile_dirs: fpc_makefile_sub1 fpc_makefile_sub2
 fpc_makefiles: fpc_makefile fpc_makefile_dirs
 ifeq ($(FULL_TARGET),i386-linux)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-go32v2)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-win32)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-os2)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-freebsd)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-beos)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-netbsd)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-solaris)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-qnx)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-netware)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-openbsd)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-wdosx)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-darwin)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-emx)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-watcom)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-netwlibc)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),i386-wince)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),m68k-linux)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),m68k-freebsd)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),m68k-netbsd)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),m68k-amiga)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),m68k-atari)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),m68k-openbsd)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),m68k-palmos)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),powerpc-linux)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),powerpc-netbsd)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),powerpc-macos)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),powerpc-darwin)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),powerpc-morphos)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),sparc-linux)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),sparc-netbsd)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),sparc-solaris)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),x86_64-linux)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),x86_64-freebsd)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),x86_64-win64)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),arm-linux)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),arm-palmos)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),arm-wince)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifeq ($(FULL_TARGET),powerpc64-linux)
 TARGET_DIRS_HTTPGET=1
+TARGET_DIRS_ELIZAWEB=1
 endif
 ifdef TARGET_DIRS_HTTPGET
 httpget_all:
@@ -2663,6 +2702,51 @@ httpget_makefiles:
 httpget:
 	$(MAKE) -C httpget all
 .PHONY: httpget_all httpget_debug httpget_smart httpget_release httpget_units httpget_examples httpget_shared httpget_install httpget_sourceinstall httpget_exampleinstall httpget_distinstall httpget_zipinstall httpget_zipsourceinstall httpget_zipexampleinstall httpget_zipdistinstall httpget_clean httpget_distclean httpget_cleanall httpget_info httpget_makefiles httpget
+endif
+ifdef TARGET_DIRS_ELIZAWEB
+elizaweb_all:
+	$(MAKE) -C elizaweb all
+elizaweb_debug:
+	$(MAKE) -C elizaweb debug
+elizaweb_smart:
+	$(MAKE) -C elizaweb smart
+elizaweb_release:
+	$(MAKE) -C elizaweb release
+elizaweb_units:
+	$(MAKE) -C elizaweb units
+elizaweb_examples:
+	$(MAKE) -C elizaweb examples
+elizaweb_shared:
+	$(MAKE) -C elizaweb shared
+elizaweb_install:
+	$(MAKE) -C elizaweb install
+elizaweb_sourceinstall:
+	$(MAKE) -C elizaweb sourceinstall
+elizaweb_exampleinstall:
+	$(MAKE) -C elizaweb exampleinstall
+elizaweb_distinstall:
+	$(MAKE) -C elizaweb distinstall
+elizaweb_zipinstall:
+	$(MAKE) -C elizaweb zipinstall
+elizaweb_zipsourceinstall:
+	$(MAKE) -C elizaweb zipsourceinstall
+elizaweb_zipexampleinstall:
+	$(MAKE) -C elizaweb zipexampleinstall
+elizaweb_zipdistinstall:
+	$(MAKE) -C elizaweb zipdistinstall
+elizaweb_clean:
+	$(MAKE) -C elizaweb clean
+elizaweb_distclean:
+	$(MAKE) -C elizaweb distclean
+elizaweb_cleanall:
+	$(MAKE) -C elizaweb cleanall
+elizaweb_info:
+	$(MAKE) -C elizaweb info
+elizaweb_makefiles:
+	$(MAKE) -C elizaweb makefiles
+elizaweb:
+	$(MAKE) -C elizaweb all
+.PHONY: elizaweb_all elizaweb_debug elizaweb_smart elizaweb_release elizaweb_units elizaweb_examples elizaweb_shared elizaweb_install elizaweb_sourceinstall elizaweb_exampleinstall elizaweb_distinstall elizaweb_zipinstall elizaweb_zipsourceinstall elizaweb_zipexampleinstall elizaweb_zipdistinstall elizaweb_clean elizaweb_distclean elizaweb_cleanall elizaweb_info elizaweb_makefiles elizaweb
 endif
 all: $(addsuffix _all,$(TARGET_DIRS))
 debug: $(addsuffix _debug,$(TARGET_DIRS))
