@@ -16,15 +16,15 @@ Linux
 FreeBSD
 Mac OS/X (Darwin)
 
-Currently, we aim to at least support the following systems on all 
-architectures they support. 
+Currently, we would like to support the following systems.
 
 Win64
 WinCE
 Sun Solaris
 
 Remember that the success of this effort depends upon you and what you 
-contribute.
+contribute. Most of this is being done by people who choose to volunteer their 
+limited time.
 
                                     License
 
@@ -33,8 +33,12 @@ Read the COPYING file located in this distribution.
                            Installation Instructions
 
 If you have a RPM-based distribution (such as Fedora or Mandravia) and you 
-install FreePascal as root, use the makeindyrpm.sh script to build the indy 
-rpm. Then install the indy-fpc and indy-fpc-src RPM's that you created.
+install FreePascal as root, we recommend using the Indy RPM. As a user, setup 
+your user account to build RPM's with the advice from 
+http://www.rpm.org/hintskinks/buildtree/ and then use the makeindyrpm.sh script 
+to build the Indy RPM's. Then install the indy-fpc and indy-fpc-src RPM's that 
+you created. We do NOT distribute precompiled Indy RPM binaries. We do permit 
+others to build RPM's for distribution.
 
 Otherwise, do the following:
 
@@ -62,7 +66,9 @@ have some constants defined and Indy uses those constants.
 The ElizaWeb demo may terminate after serving one page with the error, 
 "Exception=A thread cannot destroy itself except by setting FreeOnTerminate and 
 leaving" in Unix operating systems. The current snapshot versions of FPC have a 
-fix for this problem and this issue.
+fix for this problem and this issue. Note that this demo will probably be 
+rewritten so it does NOT depend upon GUI elements or other Lazarus features. 
+This rewrite should also help facilitate testing Indy on various platforms.
 
 In IdStackLinux and IdStackUnix, we need a working TIdStackLinux.ReceiveMsg and 
 TIdStackUnix.ReceiveMsg that uses the standard Posix recvmsg system call. This 
@@ -95,9 +101,49 @@ libc-based stack backend, you have to modify the Makefile.fpc and then
 rebuilding the Makefile with fpcmake. We do not recommend using libc because 
 that is not being used in some Linux architectures.
 
+                                  ZLib Support
+
+Indy is capable of using ZLib for compression capabilities using the ZLib 
+library (http://www.zlib.net/). If you are using TIdCompressorZLib or 
+TIdCompressionIntercept, your program will require ZLib. On most Unix-systems, 
+ZLib is usually installed because a lot of things depend on it. 
+
+On Windows, there is no standard ZLib installed by default. For Windows, you 
+should install the official ZLIB1.DLL from the http://www.zlib.net website in 
+the same directory as your program because there's several .DLL's with the same 
+name and various versions may be floating around. The ZLIB1.DLL you use must 
+use the cdecl conventions. We eventually hope to get ZLib statically linked 
+into the Indy libraries like we do with Borland Delphi versions.
+
+We strongly urge you to use ZLib 1.2.3. Indy might work with some older 
+versions of ZLIB but do not rely on that. Indy uses the relatively new 
+functions; inflateBackInit_, inflateBackEnd, and inflateBack and we may use 
+other new functions as time goes on. The newest ZLib version also fixes bugs 
+including some security issues.
+
+The Indy library itself has no direct dependencies on ZLib and you could use it 
+with ZLib because the ZLib shared library is dynamically loaded.
+
+                                OpenSSL Support
+
+Indy is capable of using OpenSSL for some encryption functions such as NTLM and 
+SSL. If you are using the IdAuthenticationNTLM unit, 
+TIdSSLIOHandlerSocketOpenSSL or TIdServerIOHandlerSSLOpenSSL, your program will 
+require the OpenSSL libraries.
+
+On many Unix systems, OpenSSL is installed by default but on a few, you may 
+have to install it yourself. On Windows, you can use the standard .DLL's from 
+http://www.openssl.org/related/binaries.html.
+
+Note that some jurisdictions regulate the use and export of strong cryptography 
+while others may prohibit the use of strong cryptography but other nations may 
+have no restriction at all. If you have any questions about using or exporting 
+SSL, ask your lawyer.  We can NOT give you legal advise.
+
                                  Contacting Us
 
 Do not contact us wanting help for your project or any support. Only report 
 specific errors, improvements, and contributions as well as any success you 
 have with your particular operating system/architecture combination. E-Mail J. 
-Peter Mugaas at oma00215@mail.wvnet.edu.
+Peter Mugaas at oma00215@mail.wvnet.edu. Remember that I and all Indy 
+developers are volunteers who give their time without any compensation.
