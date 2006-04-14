@@ -464,239 +464,239 @@ ifeq ($(FULL_TARGET),powerpc64-linux)
 override TARGET_IMPLICITUNITS+=ezBillClinton ezEliza ezEngine ezIFM ezMSTechSupport ezpersonality
 endif
 ifeq ($(FULL_TARGET),i386-linux)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-go32v2)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-win32)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-os2)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-freebsd)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-beos)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-netbsd)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-solaris)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-qnx)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-netware)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-openbsd)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-wdosx)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-darwin)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-emx)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-watcom)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-netwlibc)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),i386-wince)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),m68k-linux)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),m68k-freebsd)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),m68k-netbsd)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),m68k-amiga)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),m68k-atari)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),m68k-openbsd)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),m68k-palmos)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),powerpc-linux)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),powerpc-netbsd)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),powerpc-macos)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),powerpc-darwin)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),powerpc-morphos)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),sparc-linux)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),sparc-netbsd)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),sparc-solaris)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),x86_64-linux)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),x86_64-freebsd)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),x86_64-win64)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),arm-linux)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),arm-palmos)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),arm-wince)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 ifeq ($(FULL_TARGET),powerpc64-linux)
-override INSTALL_FILES+=HTML\eliza.html HTML\Eliza.jpg HTML\index.html HTML\logo.jpg
+override INSTALL_FILES+=HTML/eliza.html HTML/Eliza.jpg HTML/index.html HTML/logo.jpg
 endif
 override INSTALL_FPCPACKAGE=y
 ifeq ($(FULL_TARGET),i386-linux)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-go32v2)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-win32)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-os2)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-freebsd)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-beos)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-netbsd)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-solaris)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-qnx)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-netware)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-openbsd)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-wdosx)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-darwin)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-emx)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-watcom)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-netwlibc)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-wince)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-linux)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-freebsd)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-netbsd)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-amiga)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-atari)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-openbsd)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),m68k-palmos)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),powerpc-linux)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),powerpc-netbsd)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),powerpc-macos)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),powerpc-darwin)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),powerpc-morphos)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),sparc-linux)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),sparc-netbsd)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),sparc-solaris)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),x86_64-linux)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),x86_64-freebsd)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),x86_64-win64)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),arm-linux)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),arm-palmos)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),arm-wince)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),powerpc64-linux)
-override COMPILER_OPTIONS+=-dUseCThreads -gl -gd -gc -ct -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
+override COMPILER_OPTIONS+=-dUseCThreads -gl -Fu../../System/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Core/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../Protocols/lib/$(CPU_TARGET)-$(OS_TARGET) -Fu../../lib/$(CPU_TARGET)-$(OS_TARGET)
 endif
 ifeq ($(FULL_TARGET),i386-linux)
 override COMPILER_UNITTARGETDIR+=units/$(CPU_TARGET)-$(OS_TARGET)
