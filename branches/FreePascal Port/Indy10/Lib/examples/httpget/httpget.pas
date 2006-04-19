@@ -2,16 +2,26 @@ program httpget;
 
 {$mode objfpc}{$H+}
 
+{$IFDEF UNIX}
+  {$define usezlib}
+  {$define useopenssl}
+{$ENDIF}
 uses
   {$IFDEF UNIX}{$IFDEF UseCThreads}
   cthreads,
   {$ENDIF}{$ENDIF}
+  {$define usezlib}
+  IdCompressorZLib,  //for deflate and gzip content encoding
+  {$endif}
+  IdAuthenticationDigest, //MD5-Digest authentication
+  {$define useopenssl}
+  IdSSLOpenSSL,  //ssl
+  IdAuthenticationNTLM, //NTLM - uses OpenSSL libraries
+  {$endif}
   Classes
   { add your units here },
   IdHTTPHeaderInfo,    //for HTTP request and response info.
   IdHTTP,
-  IdSSLOpenSSL,
-  IdCompressorZLib,
   IdURI,
   SysUtils;
 
@@ -67,7 +77,9 @@ end;
 
 procedure HTTPGetFile(const AURL : String; const AVerbose : Boolean);
 var
+  {$ifdef useopenssl}
   LIO : TIdSSLIOHandlerSocketOpenSSL;
+  {$endif}
   LHTTP : TIdHTTP;
   LStr : TMemoryStream;
   i : Integer;
@@ -75,8 +87,12 @@ var
   LFName : String;
   LC : TIdCompressorZLib;
 begin
+  {$ifdef useopenssl}
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create;
+  {$endif}
+  {$ifdef  usezlib}
   LC := TIdCompressorZLib.Create;
+  {$endif}
   try
     LHTTP := TIdHTTP.Create;
     try
@@ -126,8 +142,12 @@ Mozilla/4.0 (compatible; MyProgram)
     FreeAndNil(LHTTP);
     FreeAndNil(LStr);
   finally
+    {$ifdef useopenssl}
     FreeAndNil(LIO);
+    {$endif}
+    {$ifdef  usezlib}
     FreeAndNil(LC);
+    {$endif}
   end;
 end;
 
