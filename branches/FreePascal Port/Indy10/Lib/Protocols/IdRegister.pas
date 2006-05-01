@@ -182,6 +182,16 @@ interface
 uses
   Classes;
 
+
+{$IFDEF WIN32}
+  {$DEFINE USEZLIB}
+  {$DEFINE USEOPENSSL}
+{$ENDIF}
+{$IFDEF UNIX}
+  {$DEFINE USEZLIB}
+  {$DEFINE USEOPENSSL}
+{$ENDIF}
+
 // Procs
   procedure Register;
 
@@ -199,13 +209,10 @@ uses
   IdCoderQuotedPrintable,
   IdCoderUUE,
   IdCoderXXE,
-   {$IFDEF WIN32}
-     {$IFNDEF DOTNET}
-        {$IFNDEF FPC}
-     IdCompressorZLibEx,
-       {$ENDIF}
-     {$ENDIF}
-   {$ENDIF}
+  {$IFDEF USEZLIB}
+  IdCompressorZLib,
+  IdCompressionIntercept,
+  {$ENDIF}
   {$IFNDEF DOTNET}
   IdConnectThroughHttpProxy,
   {$ENDIF}
@@ -303,11 +310,9 @@ uses
   IdSocksServer,
   {$ENDIF}
 
-  {$IFNDEF DOTNET}
-   {$IFNDEF FPC}
+  {$IFDEF USEOPENSSL}
     //something else may have to be done about OpenSSL
   IdSSLOpenSSL,
-    {$ENDIF}
   {$ENDIF}
   IdSysLog,
   IdSysLogMessage,
@@ -627,16 +632,13 @@ begin
    TIdServerInterceptLogEvent,
    TIdServerInterceptLogFile
    ]);
-{$IFNDEF DOTNET}
-  {$IFNDEF FPC}
-  //TODO:  not sure what to do about OpenSSL support in Indy
+
+  {$IFDEF USEOPENSSL}
   RegisterComponents(RSRegIndyIOHandlers, [
-   {Open SSL should be supported in Kylix now}
    TIdServerIOHandlerSSLOpenSSL,
    TIdSSLIOHandlerSocketOpenSSL
    ]);
   {$ENDIF}
-{$ENDIF}
   RegisterComponents(RSRegSASL, [
    TIdSASLAnonymous,
    TIdSASLCRAMMD5,
@@ -799,12 +801,9 @@ begin
    ]);
   RegisterComponents(RSRegIndyMisc+RSProt, [
    TIdConnectThroughHttpProxy,
-   {$IFDEF WIN32}
-     {$IFNDEF DOTNET}
-       {$IFNDEF FPC}
-     TIdCompressorZLibEx,
-       {$ENDIF}
-     {$ENDIF}
+   {$IFDEF USEZLIB}
+     TIdCompressorZLib,
+     TIdCompressionIntercept,
    {$ENDIF}
    TIdCookieManager,
 
