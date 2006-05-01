@@ -207,7 +207,8 @@ uses
   IdUserPassProvider,
   IdVCard,
   IdWhoIsServer,
-  IdWhois;
+  IdWhois,
+  IdZLibCompressorBase;
 
 implementation
 
