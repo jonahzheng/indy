@@ -296,7 +296,6 @@ uses
   IdSASL_CRAM_MD5,
   IdServerInterceptLogEvent,
   IdServerInterceptLogFile,
-  IdServerIOHandler,
   IdSMTP,
   {$IFNDEF DOTNET}
   IdSMTPRelay,
@@ -626,6 +625,9 @@ begin
 //   TIdFTPServer
 //   ]);
   RegisterComponents(RSRegIndyIntercepts, [
+   {$IFDEF USEZLIB}
+     TIdCompressionIntercept,
+   {$ENDIF}
 //TODO:   TIdBlockCipherIntercept,
 //TODO:   TIdCompressionIntercept,
 //TODO:   TIdServerCompressionIntercept,
@@ -653,13 +655,8 @@ begin
   {$IFNDEF DOTNET}
    TIdConnectThroughHttpProxy,
    {$ENDIF}
-   {$IFDEF WIN32}
-     {$IFNDEF DOTNET}
-       {$IFNDEF FPC}
+
      TIdCompressorZLibEx,
-       {$ENDIF}
-     {$ENDIF}
-   {$ENDIF}
    TIdCookieManager,
    TIdEncoderMIME,
    TIdEncoderUUE,
@@ -783,6 +780,9 @@ begin
    TIdMappedPortUDP,
    TIdMappedTelnet]);
   RegisterComponents(RSRegIndyIntercepts+RSProt, [
+   {$IFDEF USEZLIB}
+    TIdCompressionIntercept,
+   {$ENDIF}
 //TODO:   TIdBlockCipherIntercept,
 //TODO:   TIdCompressionIntercept,
 //TODO:   TIdServerCompressionIntercept,
@@ -799,11 +799,17 @@ begin
    TIdSASLSKey,
    TIdUserPassProvider
    ]);
+  {$IFDEF USEOPENSSL}
+  RegisterComponents(RSRegIndyIOHandlers+RSProt, [
+   TIdServerIOHandlerSSLOpenSSL,
+   TIdSSLIOHandlerSocketOpenSSL
+   ]);
+  {$ENDIF}
+
   RegisterComponents(RSRegIndyMisc+RSProt, [
    TIdConnectThroughHttpProxy,
    {$IFDEF USEZLIB}
      TIdCompressorZLib,
-     TIdCompressionIntercept,
    {$ENDIF}
    TIdCookieManager,
 
