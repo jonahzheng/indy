@@ -709,6 +709,7 @@ end;
 
 { TIdStackVersionWinsock }
 
+{$IFNDEF WINCE}
 function ServeFile(ASocket: TIdStackSocketHandle; AFileName: string): Cardinal;
 var
   LFileHandle: THandle;
@@ -722,6 +723,7 @@ begin
     end;
   finally CloseHandle(LFileHandle); end;
 end;
+{$ENDIF}
 
 function TIdStackWindows.WSShutdown(ASocket: TIdStackSocketHandle; AHow: Integer): Integer;
 begin
@@ -1329,9 +1331,11 @@ end;
 initialization
   GSocketListClass := TIdSocketListWindows;
   // Check if we are running under windows NT
+  {$IFNDEF WINCE}
   if (Sys.Win32Platform = VER_PLATFORM_WIN32_NT) then begin
     GServeFileProc := ServeFile;
   end;
+  {$ENDIF}
 finalization
   if GStarted then begin
     UninitializeWinSock;

@@ -39,7 +39,7 @@ uses
   {$ELSE}
     SysUtils,  //SysUtils has to be here for non-Dot NET stuff
 
-    {$IFDEF MSWindows}
+    {$IFDEF win32_or_win64_or_winCE}
     IdSysNativeVCL,
     IdSysWin32;
     {$ELSE}
@@ -60,7 +60,7 @@ type
   {$IFDEF DotNetDistro}
   Sys = class(TIdSysNet);
   {$ELSE}
-    {$IFDEF MSWindows}
+    {$IFDEF win32_or_win64_or_winCE}
   Sys = TIdSysWin32;
     {$ELSE}
       {$IFDEF Unix} // linux unit current adds nothing

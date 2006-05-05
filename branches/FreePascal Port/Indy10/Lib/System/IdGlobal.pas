@@ -1594,7 +1594,11 @@ begin
   __write(stderr, EOL, Length(EOL));
   {$ENDIF}
   {$ifdef win32_or_win64_or_winCE}
+    {$IFDEF WINCE}
+  OutputDebugString(PWideChar(AText));
+    {$ELSE}
   OutputDebugString(PChar(AText));
+    {$ENDIF}
   {$ENDIF}
   {$IFDEF DotNet}
   System.Diagnostics.Debug.WriteLine(AText);
@@ -1737,14 +1741,29 @@ end;
 // S.G. 27/11/2002: by David B. Ferguson (david.mcs@ns.sympatico.ca)
 function Ticks: Cardinal;
 var
-  nTime, freq: Int64;
+  nTime, freq: 
+{$IFDEF WINCE}
+   LARGE_INTEGER;
+{$ELSE}
+   Int64;
+{$ENDIF}
+
 begin
+{$IFDEF WINCE}
+  if Windows.QueryPerformanceFrequency(@freq) then begin
+    if Windows.QueryPerformanceCounter(@nTime) then begin
+      Result := Trunc((nTime.QuadPart / Freq.QuadPart) * 1000) and High(Cardinal);
+      Exit;
+    end;
+  end;
+{$ELSE}
   if Windows.QueryPerformanceFrequency(freq) then begin
     if Windows.QueryPerformanceCounter(nTime) then begin
       Result := Trunc((nTime / Freq) * 1000) and High(Cardinal);
       Exit;
     end;
   end;
+{$ENDIF}
   Result := Windows.GetTickCount;
 end;
 {$ENDIF}

@@ -52,7 +52,11 @@ var
   iBias: Integer;
   tmez: TTimeZoneInformation;
 begin
+  {$IFDEF WINCE}
+  Case GetTimeZoneInformation(@tmez) of
+  {$ELSE}
   Case GetTimeZoneInformation(tmez) of
+  {$ENDIF}
     TIME_ZONE_ID_INVALID:
     begin
       raise EIdFailedToRetreiveTimeZoneInfo.Create(RSFailedTimeZoneInfo);
@@ -81,23 +85,39 @@ end;
 
 class function TIdSysWin32.Win32MinorVersion: Integer;
 begin
+  {$IFDEF WINCE}
+  Result := SysUtils.WinCEMinorVersion;
+  {$ELSE}
   Result := SysUtils.Win32MinorVersion;
+  {$ENDIF}
 end;
 
 class function TIdSysWin32.Win32BuildNumber: Integer;
 begin
+ {$IFDEF WINCE}
+  Result := SysUtils.WinCEBuildNumber and $FFFF;
+  {$ELSE}
 //  for this, you need to strip off some junk to do comparisons
    Result := SysUtils.Win32BuildNumber and $FFFF;
+   {$ENDIF}
 end;
 
 class function TIdSysWin32.Win32Platform: Integer;
 begin
+ {$IFDEF WINCE}
+  Result := SysUtils.WinCEPlatform;
+  {$ELSE}
   Result := SysUtils.Win32Platform;
+  {$ENDIF}
 end;
 
 class function TIdSysWin32.Win32MajorVersion: Integer;
 begin
+ {$IFDEF WINCE}
+  Result := SysUtils.WinCEMajorVersion;
+  {$ELSE}
   Result := SysUtils.Win32MajorVersion;
+  {$ENDIF}
 end;
 
 end.

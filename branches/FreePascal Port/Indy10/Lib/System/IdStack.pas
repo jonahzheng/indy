@@ -813,7 +813,7 @@ initialization
      {$ENDIF}
    {$ENDIF}
 
-   {$IFDEF WIN32}  TIdStackWindows; {$ENDIF}
+   {$IFDEF win32_or_win64_or_winCE}  TIdStackWindows; {$ENDIF}
    {$IFDEF DOTNET}    TIdStackDotNet;  {$ENDIF}
   GStackCriticalSection := TIdCriticalSection.Create;
 finalization
