@@ -1454,12 +1454,13 @@ type
 
 //  WinSock 2 extension -- WSAPROTOCOL_INFO structure
 
-{$IFNDEF VER130}
+{$IFNDEF FPC}
+  {$IFNDEF VER130}
   PGUID = ^TGUID;
-{$ENDIF}
+  {$ENDIF}
   {$EXTERNALSYM LPGUID}
   LPGUID = PGUID;
-
+{$ENDIF}
 //  WinSock 2 extension -- WSAPROTOCOL_INFO manifest constants
 const
   {$EXTERNALSYM MAX_PROTOCOL_CHAIN}
@@ -1689,10 +1690,12 @@ const
   {$EXTERNALSYM TH_TAPI}
   TH_TAPI   = $00000002;
 
+//ifdef out for FPC to prevent type reideclaration warnings.
+
 type
 //  Manifest constants and type definitions related to name resolution and
 //  registration (RNR) API
-
+{$IFNDEF FPC}
   {$EXTERNALSYM BLOB}
   BLOB = packed record
     cbSize : {$IFDEF CIL}ULONG{$ELSE}U_LONG{$ENDIF};
@@ -1700,9 +1703,9 @@ type
   end;
   TBLOB = BLOB;
   PBLOB = ^TBLOB;
+{$ENDIF}
   {$EXTERNALSYM LPBLOB}
   LPBLOB = PBLOB;
-
 //  Service Install Flags
 
 const
@@ -5267,11 +5270,11 @@ type
     test: WSACMSGHDR;
   end;
 var
-  Alignment: DWORD;
+  Alignment: PtrUInt;
   Tmp: ^TempRec;
 begin
   Tmp := nil;
-  Alignment := DWORD(@(Tmp^.test));
+  Alignment := PtrUInt(@(Tmp^.test));
   Result := (length + (Alignment-1)) and not (Alignment-1);
 end;
 
@@ -5294,17 +5297,17 @@ begin
   if cmsg = nil then begin
     Result := WSA_CMSG_FIRSTHDR(msg);
   end else begin
-    if (Longint(cmsg) + WSA_CMSGHDR_ALIGN(cmsg^.cmsg_len) + SizeOf(WSACMSGHDR)) > (Longint(msg^.Control.buf) + msg^.Control.len) then begin
+    if (PtrInt(cmsg) + WSA_CMSGHDR_ALIGN(cmsg^.cmsg_len) + SizeOf(WSACMSGHDR)) > (PtrInt(msg^.Control.buf) + msg^.Control.len) then begin
       Result := nil;
     end else begin
-      Result := LPWSACMSGHDR(Longint(cmsg) + WSA_CMSGHDR_ALIGN(cmsg^.cmsg_len));
+      Result := LPWSACMSGHDR(PtrInt(cmsg) + WSA_CMSGHDR_ALIGN(cmsg^.cmsg_len));
     end;
   end;
 end;
 
 function WSA_CMSG_DATA(cmsg: LPWSACMSGHDR): PByte;
 begin
-  Result := PByte(Longint(cmsg) + WSA_CMSGDATA_ALIGN(SizeOf(WSACMSGHDR)));
+  Result := PByte(PtrInt(cmsg) + WSA_CMSGDATA_ALIGN(SizeOf(WSACMSGHDR)));
 end;
 
 function WSA_CMSG_SPACE(length: DWORD): DWORD;
