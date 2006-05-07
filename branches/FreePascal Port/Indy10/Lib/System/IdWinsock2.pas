@@ -1454,7 +1454,7 @@ type
 
 //  WinSock 2 extension -- WSAPROTOCOL_INFO structure
 
-{$IFNDEF FPC}
+{$IFNDEF NoRedeclare}
   {$IFNDEF VER130}
   PGUID = ^TGUID;
   {$ENDIF}
@@ -1695,7 +1695,7 @@ const
 type
 //  Manifest constants and type definitions related to name resolution and
 //  registration (RNR) API
-{$IFNDEF FPC}
+{$IFNDEF NoRedeclare}
   {$EXTERNALSYM BLOB}
   BLOB = packed record
     cbSize : {$IFDEF CIL}ULONG{$ELSE}U_LONG{$ENDIF};

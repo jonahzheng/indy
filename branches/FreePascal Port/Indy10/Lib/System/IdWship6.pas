@@ -118,6 +118,7 @@ const
 function gaiErrorToWsaError(const gaiError:integer):integer;
 
 type
+  {$IFNDEF NoRedeclare}
   Paddrinfo = ^Taddrinfo;
   PPaddrinfo = ^Paddrinfo;
   Taddrinfo = packed record
@@ -130,6 +131,7 @@ type
     ai_addr: psockaddr;
     ai_next: paddrinfo;
   end;
+  {$ENDIF}
 ///* Argument structure for IPV6_JOIN_GROUP and IPV6_LEAVE_GROUP */
   Pipv6_mreq = ^Tipv6_mreq;
   Tipv6_mreq = packed record
@@ -238,7 +240,10 @@ begin
         end;
       end;
     end;
-    if not IdIPv6Available then CloseLibrary;
+    if not IdIPv6Available then 
+    begin
+      CloseLibrary;
+    end;
   end;
 end;
 
