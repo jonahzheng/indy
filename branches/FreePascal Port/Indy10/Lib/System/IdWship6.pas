@@ -120,7 +120,9 @@ function gaiErrorToWsaError(const gaiError:integer):integer;
 type
   {$IFNDEF NoRedeclare}
   Paddrinfo = ^Taddrinfo;
+  {$ENDIF}
   PPaddrinfo = ^Paddrinfo;
+  {$IFNDEF NoRedeclare}
   Taddrinfo = packed record
     ai_flags: integer;
     ai_family: integer;
