@@ -2181,7 +2181,7 @@ type
 type
 {$IFDEF INCL_WINSOCK_API_TYPEDEFS}
   {$EXTERNALSYM LPFN_WSASTARTUP}
-  LPFN_WSASTARTUP = function(const wVersionRequired: WORD; var WSData: TWSAData): Integer; stdcall;
+  LPFN_WSASTARTUP = function(const wVersionRequired: WORD; out WSData: TWSAData): Integer; stdcall;
   {$EXTERNALSYM LPFN_WSACLEANUP}
   LPFN_WSACLEANUP = function: Integer; stdcall;
   {$EXTERNALSYM LPFN_ACCEPT}
@@ -4283,7 +4283,7 @@ begin
   end;
 end;
 
-function Stub_WSAStartup(const wVersionRequired: word; var WSData: TWSAData): Integer; stdcall;
+function Stub_WSAStartup(const wVersionRequired: word; out WSData: TWSAData): Integer; stdcall;
 begin
   FixupStub(hWinSockDll, 'WSAStartup', @WSAStartup); {Do not Localize}
   Result := WSAStartup(wVersionRequired, WSData);

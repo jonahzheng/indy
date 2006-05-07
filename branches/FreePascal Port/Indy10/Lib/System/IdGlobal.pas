@@ -1032,7 +1032,7 @@ procedure WriteMemoryStreamToStream(Src: TIdMemoryStream; Dest: TIdStream; Count
 function IsCurrentThread(AThread: TIdNativeThread): boolean;
 {$ENDIF}
 function IPv4ToDWord(const AIPAddress: string): Cardinal; overload;
-function IPv4ToDWord(const AIPAddress: string; var VErr: Boolean): Cardinal; overload;
+function IPv4ToDWord(const AIPAddress: string; out VErr: Boolean): Cardinal; overload;
 function IPv4ToHex(const AIPAddress: string; const ASDotted: Boolean = False): string;
 function IPv4ToOctal(const AIPAddress: string): string;
 function IPv6ToIdIPv6Address(const AIPAddress: String): TIdIPv6Address;
@@ -2065,7 +2065,7 @@ begin
 end;
 
 {$IFDEF DotNet}
-function IPv4ToDWord(const AIPAddress: string; var VErr: Boolean): Cardinal; overload;
+function IPv4ToDWord(const AIPAddress: string; out VErr: Boolean): Cardinal; overload;
 var
   AIPaddr: IPAddress;
 begin
@@ -2086,7 +2086,7 @@ begin
   end;
 end;
 {$ELSE}
-function IPv4ToDWord(const AIPAddress: string; var VErr: Boolean): Cardinal; overload;
+function IPv4ToDWord(const AIPAddress: string; out VErr: Boolean): Cardinal; overload;
 var
   LBuf, LBuf2: string;
   L256Power: Integer;

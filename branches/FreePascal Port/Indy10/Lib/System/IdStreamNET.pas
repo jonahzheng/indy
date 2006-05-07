@@ -28,7 +28,7 @@ type
   public
     class function ReadBytes(
           AStream: TIdStream;
-          var VBytes: TIdBytes;
+          out VBytes: TIdBytes;
           ACount: Integer = -1;
           AOffset: Integer = 0): Integer; static;
     class procedure Write(
