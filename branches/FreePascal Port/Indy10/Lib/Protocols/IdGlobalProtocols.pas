@@ -419,9 +419,12 @@ type
     var VDest: TIdBytes; const ADestIndex: Integer);
   procedure CopyTIdNetworkWord(const ASource: Word;
     var VDest: TIdBytes; const ADestIndex: Integer);
-
-
+  //Wince only has WideString functions so this might as well be a widestring.
+  {$ifdef Wince}
+  function CopyFileTo(const Source, Destination: WideString): Boolean;
+  {$Eelse}
   function CopyFileTo(const Source, Destination: string): Boolean;
+  {$endif}
   function DomainName(const AHost: String): String;
   function EnsureMsgIDBrackets(const AMsgID: String): String;
   function FileSizeByName(const AFilename: string): Int64;
@@ -836,7 +839,7 @@ Note that JPM Open is under a different Open Source license model.
 
 It is available at http://www.wvnet.edu/~oma00215/jpm.html }
 
-{$ifdef win32_or_win64_or_winCE}
+{$ifdef win32_or_win64}
 type
   TNTEditionType = (workstation, server, advancedserver);
 
@@ -1346,10 +1349,17 @@ begin
 end;
 {$ELSE}
   {$ifdef win32_or_win64_or_winCE}
+    {$ifdef wince}
+function CopyFileTo(const Source, Destination: WideString): Boolean;
+begin
+  Result := CopyFile(PWideChar(Source), PWideChar(Destination), true);
+end;
+    {$else}
 function CopyFileTo(const Source, Destination: string): Boolean;
 begin
   Result := CopyFile(PChar(Source), PChar(Destination), true);
 end;
+    {$endif}
   {$ELSE}
 //LEave in for IdAttachment
 function CopyFileTo(const Source, Destination: string): Boolean;
@@ -1404,12 +1414,20 @@ end;
 
 
 {$ifdef win32_or_win64_or_winCE}
+{$ifdef wince}
+function TempPath: WideString;
+{$else}
 function TempPath: string;
+{$endif}
 var
 	i: integer;
 begin
   SetLength(Result, MAX_PATH);
+  {$ifdef wince}
+  i := GetTempPath(Length(Result), PWideChar(Result));
+  {$else}
   i := GetTempPath(Length(Result), PChar(Result));
+  {$endif}
   SetLength(Result, i);
   Result := Sys.IncludeTrailingPathDelimiter(Result);
 end;
@@ -1460,7 +1478,7 @@ begin
     BUGS
 
        The precise meaning of `appropriate' is undefined;  it  is
-       unspecified  how  accessibility  of  a directory is deterÂ­
+       unspecified  how  accessibility  of  a directory is deter­
        mined.  Never use this function. Use tmpfile(3) instead.
 
     Alternative is to use tmpfile, but this creates the temp file.
@@ -1600,7 +1618,11 @@ begin
   end;
   {$ENDIF}
   {$ifdef win32_or_win64_or_winCE}
-  LHandle := FindFirstFile(PChar(AFileName), LRec);
+  {$IFDEF WINCE}
+    LHandle := FindFirstFile(PWideChar(AFileName), LRec);
+  {$ELSE}
+    LHandle := FindFirstFile(PChar(AFileName), LRec);
+  {$ENDIF}
   if LHandle <> INVALID_HANDLE_VALUE then
   begin
     Windows.FindClose(LHandle);
@@ -1664,7 +1686,11 @@ function TimeZoneBias: TIdDateTime;
 var
   ATimeZone: TTimeZoneInformation;
 begin
+  {$IFNDEF WINCE}
   case GetTimeZoneInformation(ATimeZone) of
+  {$ELSE}
+  case GetTimeZoneInformation(@ATimeZone) of
+  {$ENDIF}
     TIME_ZONE_ID_DAYLIGHT:
       Result := ATimeZone.Bias + ATimeZone.DaylightBias;
     TIME_ZONE_ID_STANDARD:
@@ -1737,10 +1763,13 @@ Original author Kerry G. Neighbour with modifications and testing
 from J. Peter Mugaas}
 var
    dSysTime: TSystemTime;
+   dpSysTime: PSystemTime;
    buffer: DWord;
    tkp, tpko: TTokenPrivileges;
    hToken: THandle;
 begin
+  dpSysTime := @dSysTime;
+  {$IFNDEF WINCE}
   Result := False;
   if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then
   begin
@@ -1757,8 +1786,10 @@ begin
       exit;
     end;
   end;
-  DateTimeToSystemTime(Value, dSysTime);
+  {$ENDIF}
+  DateTimeToSystemTime(Value, dSysTime^);
   Result := Windows.SetLocalTime(dSysTime);
+  {$IFNDEF WINCE}
   {Undo the Process Privillage change we had done for the set time
   and close the handle that was allocated}
   if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then
@@ -1766,6 +1797,7 @@ begin
     Windows.AdjustTokenPrivileges(hToken, False, tpko, SizeOf(tpko), tkp, Buffer);
     Windows.CloseHandle(hToken);
   end;
+  {$ENDIF}
 end;
 {$ENDIF}
 
@@ -2688,9 +2720,12 @@ type
    1 : (Long : Int64);
  end;
 begin
+  {$IFDEF WINCE}
+  {$ELSE}
   Windows.GetSystemTimeAsFileTime(LFTime);
   TLong64Rec(Result).Low := LFTime.dwLowDateTime;
   TLong64Rec(Result).High := LFTime.dwHighDateTime;
+  {$ENDIF}
 end;
 {$ENDIF}
 
@@ -2771,11 +2806,15 @@ function IndyComputerName: string;
 var
   i: LongWord;
 begin
+  {$IFDEF WINCE}
+  {$WARNING To Do - find some way to get the Computer Name.}
+  {$ELSE}
   SetLength(Result, MAX_COMPUTERNAME_LENGTH + 1);
   i := Length(Result);
   if GetComputerName(@Result[1], i) then begin
     SetLength(Result, i);
   end;
+  {$ENDIF}
 end;
 {$ENDIF}
 {$IFDEF DOTNET}
