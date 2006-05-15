@@ -340,6 +340,12 @@ const
     ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'); {do not localize}
 
 type
+  //WinceCE only has WideString functions for files.
+  {$IFDEF WINCE}
+  TIdFileName = WideString;
+  {$ELSE}
+  TIdFileName = String;
+  {$ENDIF}
   TIdReadLnFunction = function: string of object;
   TStringEvent = procedure(ASender: TIdNativeComponent; const AString: String);
 
@@ -420,14 +426,10 @@ type
   procedure CopyTIdNetworkWord(const ASource: Word;
     var VDest: TIdBytes; const ADestIndex: Integer);
   //Wince only has WideString functions so this might as well be a widestring.
-  {$ifdef Wince}
-  function CopyFileTo(const Source, Destination: WideString): Boolean;
-  {$Eelse}
-  function CopyFileTo(const Source, Destination: string): Boolean;
-  {$endif}
+  function CopyFileTo(const Source, Destination: TIdFileName): Boolean;
   function DomainName(const AHost: String): String;
   function EnsureMsgIDBrackets(const AMsgID: String): String;
-  function FileSizeByName(const AFilename: string): Int64;
+  function FileSizeByName(const AFilename: TIdFileName): Int64;
 
   //MLIST FTP DateTime conversion functions
   function FTPMLSToGMTDateTime(const ATimeStamp : String):TIdDateTime;
@@ -437,9 +439,9 @@ type
   function FTPLocalDateTimeToMLS(const ATimeStamp : TIdDateTime; const AIncludeMSecs : Boolean=True): String;
 
   function GetClockValue : Int64;
-  function GetMIMETypeFromFile(const AFile: String): string;
-  function GetMIMEDefaultFileExt(const MIMEType: string): string;
-  function GetGMTDateByName(const AFileName : String) : TIdDateTime;
+  function GetMIMETypeFromFile(const AFile: TIdFileName): string;
+  function GetMIMEDefaultFileExt(const MIMEType: string): TIdFileName;
+  function GetGMTDateByName(const AFileName : TIdFileName) : TIdDateTime;
   function GmtOffsetStrToDateTime(S: string): TIdDateTime;
   function GMTToLocalDateTime(S: string): TIdDateTime;
   function IdGetDefaultCharSet : TIdCharSet;
@@ -490,7 +492,7 @@ type
   function UpCaseFirst(const AStr: string): string;
   function UpCaseFirstWord(const AStr: string): string;
   function GetUniqueFileName(const APath, APrefix, AExt : String) : String;
-  {$ifdef win32_or_win64_or_winCE}
+  {$ifdef win32_or_win64}
   function Win32Type : TIdWin32Type;
   {$ENDIF}
   procedure WordToTwoBytes(AWord : Word; ByteArray: TIdBytes; Index: integer);
@@ -1576,7 +1578,7 @@ begin
 end;
 
 // OS-independant version
-function FileSizeByName(const AFilename: string): Int64;
+function FileSizeByName(const AFilename: TIdFileName): Int64;
 //Leave in for HTTP Server
 {$IFDEF DOTNET}
 var
@@ -1593,7 +1595,26 @@ begin
   {$ENDIF}
 end;
 
-function GetGMTDateByName(const AFileName : String) : TIdDateTime;
+{$IFDEF WINCE}
+function GetGMTDateByName(const AFileName : TIdFileName) : TIdDateTime;
+var LRec : TWin32FindData;
+  LHandle : THandle;
+   LTime : TSystemTime;
+begin
+
+  LHandle := Windows.FindFirstFile(@AFileName, LRec);
+  if LHandle <> INVALID_HANDLE_VALUE then
+  begin
+    Windows.FindClose(LHandle);
+    if (LRec.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY) = 0 then
+    begin
+      FileTimeToSystemTime(@LRec,@LTime);
+      Result := SystemTimeToDateTime(LTime);
+    end;
+  end;
+end;
+{$ELSE}
+function GetGMTDateByName(const AFileName : TIdFileName) : TIdDateTime;
  {$ifdef win32_or_win64_or_winCE}
 var LRec : TWin32FindData;
   LHandle : THandle;
@@ -1617,12 +1638,8 @@ begin
     Result := System.IO.File.GetLastWriteTimeUtc(AFileName).ToOADate;
   end;
   {$ENDIF}
-  {$ifdef win32_or_win64_or_winCE}
-  {$IFDEF WINCE}
-    LHandle := FindFirstFile(PWideChar(AFileName), LRec);
-  {$ELSE}
-    LHandle := FindFirstFile(PChar(AFileName), LRec);
-  {$ENDIF}
+  {$ifdef win32_or_win64}
+  LHandle := FindFirstFile(PChar(AFileName), LRec);
   if LHandle <> INVALID_HANDLE_VALUE then
   begin
     Windows.FindClose(LHandle);
@@ -1648,6 +1665,7 @@ begin
   end;
   {$ENDIF}
 end;
+{$ENDIF}
 
 function RightStr(const AStr: String; const Len: Integer): String;
 var
@@ -1763,12 +1781,10 @@ Original author Kerry G. Neighbour with modifications and testing
 from J. Peter Mugaas}
 var
    dSysTime: TSystemTime;
-   dpSysTime: PSystemTime;
    buffer: DWord;
    tkp, tpko: TTokenPrivileges;
    hToken: THandle;
 begin
-  dpSysTime := @dSysTime;
   {$IFNDEF WINCE}
   Result := False;
   if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then
@@ -1787,8 +1803,8 @@ begin
     end;
   end;
   {$ENDIF}
-  DateTimeToSystemTime(Value, dSysTime^);
-  Result := Windows.SetLocalTime(dSysTime);
+  DateTimeToSystemTime(Value, dSysTime);
+  Result := Windows.SetLocalTime(@dSysTime);
   {$IFNDEF WINCE}
   {Undo the Process Privillage change we had done for the set time
   and close the handle that was allocated}
@@ -2004,7 +2020,7 @@ end;
 {$ENDIF}
 *)
 
-function GetMIMETypeFromFile(const AFile: String): string;
+function GetMIMETypeFromFile(const AFile: TIdFileName): string;
 var
   MIMEMap: TIdMIMETable;
 begin
@@ -2016,7 +2032,7 @@ begin
   end;
 end;
 
-function GetMIMEDefaultFileExt(const MIMEType: string): string;
+function GetMIMEDefaultFileExt(const MIMEType: string): TIdFileName;
 var
   MIMEMap: TIdMIMETable;
 begin
