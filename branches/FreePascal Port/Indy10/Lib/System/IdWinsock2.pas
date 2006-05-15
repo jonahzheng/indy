@@ -141,7 +141,9 @@ interface
 {$ALIGN OFF}
 {$RANGECHECKS OFF}
 {$WRITEABLECONST OFF}
-
+{$IFDEF WINCE}
+  {$DEFINE UNDER_CE}
+{$ENDIF}
 uses
   IdException, SysUtils, Windows;
 
@@ -160,8 +162,13 @@ type
 
 const
   WINSOCK_VERSION = $0202;
+  {$IFDEF UNDER_CE}
+  WINSOCK2_DLL = 'ws2.dll'; {Do not Localize}
+  {$ELSE}
   WINSOCK2_DLL = 'WS2_32.DLL';   {Do not Localize}
   MSWSOCK_DLL = 'MSWSOCK.DLL';   {Do not Localize}
+  {$ENDIF}
+  
 
 {$DEFINE WS2_DLL_FUNC_VARS}
 {$DEFINE INCL_WINSOCK_API_PROTOTYPES}
@@ -178,8 +185,7 @@ type
   u_long  = DWORD;
 // The new type to be used in all instances which refer to sockets.
   {$EXTERNALSYM TSocket}
-  TSocket = u_int;
-
+  TSocket = PtrUInt;
   {$EXTERNALSYM WSAEVENT}
   WSAEVENT = THandle;
   PWSAEVENT = ^WSAEVENT;
@@ -331,7 +337,7 @@ type
   servent = packed record
     s_name: PChar;                 // official service name
     s_aliases: ^PChar;             // alias list
-{$IFDEF _WIN64}
+{$IFDEF WIN64}
     s_proto: PChar;                // protocol to use
     s_port: Smallint;              // port #
 {$ELSE}
@@ -656,16 +662,26 @@ const
   AF_UNKNOWN1     = 20;              // somebody is using this!
   {$EXTERNALSYM AF_BAN}
   AF_BAN          = 21;              // banyan
+{$IFDEF UNDER_CE}
+  {$EXTERNALSYM AF_IRDA}
+  AF_IRDA         = 22;              // irdA
+{$ELSE}
   {$EXTERNALSYM AF_ATM}
   AF_ATM          = 22;              // native ATM Services
+{$ENDIF}
   {$EXTERNALSYM AF_INET6}
   AF_INET6        = 23;              // internetwork Version 6
   {$EXTERNALSYM AF_CLUSTER}
   AF_CLUSTER      = 24;              // microsoft Wolfpack
   {$EXTERNALSYM AF_12844}
   AF_12844        = 25;              // ieeE 1284.4 WG AF
+{$IFDEF UNDER_CE}
+  {$EXTERNALSYM AF_ATM}
+  AF_ATM          = 26;              // native ATM Services
+{$ELSE}
   {$EXTERNALSYM AF_IRDA}
   AF_IRDA         = 26;              // irdA
+{$ENDIF}
   {$EXTERNALSYM AF_NETDES}
   AF_NETDES       = 28;              // network Designers OSI & gateway enabled protocols
   {$EXTERNALSYM AF_TCNPROCESS}
@@ -1050,6 +1066,9 @@ const
   {$EXTERNALSYM WSAEREFUSED}
   WSAEREFUSED             = WSABASEERR+112;
 
+{$IFDEF UNDER_CE}
+  WSAEDUPLICATE_NAME      = WSABASEERR+900;
+{$ENDIF}
 
 { Error return codes from gethostbyname() and gethostbyaddr()
   (when using the resolver). Note that these errors are
@@ -1269,7 +1288,7 @@ type
   WSADATA = packed record
     wVersion       : Word;
     wHighVersion   : Word;
-{$IFDEF _WIN64}
+{$IFDEF WIN64}
     iMaxSockets    : Word;
     iMaxUdpDg      : Word;
     lpVendorInfo   : PChar;
@@ -1397,7 +1416,7 @@ type
   LPWSANETWORKEVENTS = PWSANetworkEvents;
 
 //TransmitFile types used for the TransmitFile API function in WinNT/2000/XP
-{$IFNDEF WINCE}
+{$IFNDEF UNDER_CE}
   {$EXTERNALSYM TRANSMIT_FILE_BUFFERS}
   TRANSMIT_FILE_BUFFERS = record
       Head: Pointer;
@@ -1990,7 +2009,7 @@ const
   RESULT_IS_DELETED       = $0040;
 
   {$EXTERNALSYM MAX_NATURAL_ALIGNMENT}
-  {$IFDEF _WIN64}
+  {$IF DEFINED(WIN64) or DEFINED(alpha)}
   MAX_NATURAL_ALIGNMENT   = SizeOf(Int64);
   {$ELSE}
   MAX_NATURAL_ALIGNMENT   = SizeOf(DWORD);
@@ -2244,6 +2263,11 @@ type
   LPFN_GETHOSTBYNAME = function(name: PChar): PHostEnt; stdcall;
   {$EXTERNALSYM LPFN_GETHOSTNAME}
   LPFN_GETHOSTNAME = function(name: PChar; len: Integer): Integer; stdcall;
+{$IFDEF UNDER_CE}
+  // WinCE specific for setting the host name
+  {$EXTERNALSYM LPFN_SETHOSTNAME} 
+  LPFN_SETHOSTNAME = function(pName : PChar; len : Integer) : Integer; stdcall;
+{$ENDIF}
   {$EXTERNALSYM LPFN_GETSERVBYPORT}
   LPFN_GETSERVBYPORT = function(const port: Integer; const proto: PChar): PServEnt; stdcall;
   {$EXTERNALSYM LPFN_GETSERVBYNAME}
@@ -2257,7 +2281,7 @@ type
 
   {$EXTERNALSYM LPFN_WSAGETLASTERROR}
   LPFN_WSAGETLASTERROR = function: Integer; stdcall;
-{$IFNDEF WINCE}
+{$IFNDEF UNDER_CE}
   {$EXTERNALSYM LPFN_WSAISBLOCKING}
   LPFN_WSAISBLOCKING = function: BOOL; stdcall;
   {$EXTERNALSYM LPFN_WSAUNHOOKBLOCKINGHOOK}
@@ -2293,12 +2317,12 @@ type
   {$EXTERNALSYM LPFN_WSAGETOVERLAPPEDRESULT}
   {$EXTERNALSYM LPFN_WSAIOCTL}
   {$EXTERNALSYM LPFN_WSARECVFROM}
-{$IFNDEF WINCE}
+{$IFNDEF UNDER_CE}
   {$EXTERNALSYM LPFN_TRANSMITFILE}
   {$EXTERNALSYM LPFN_ACCEPTEX}
 {$ENDIF}
   {$IFDEF CIL}
-  LPFN_WSAACCEPT = function(const s : TSocket; addr : PSOCKADDR; var addrlen : Integer; lpfnCondition : LPCONDITIONPROC; const dwCallbackData : DWORD): TSocket; stdcall;
+  LPFN_WSAACCEPT = function(const s : TSocket; out addr : PSOCKADDR; var addrlen : Integer; lpfnCondition : LPCONDITIONPROC; const dwCallbackData : DWORD): TSocket; stdcall;
   LPFN_WSAENUMPROTOCOLSA = function(var lpiProtocols : Integer; lpProtocolBuffer : LPWSAPROTOCOL_INFOA; var lpdwBufferLength : DWORD) : Integer; stdcall;
   LPFN_WSAENUMPROTOCOLSW = function(var lpiProtocols : Integer; lpProtocolBuffer : LPWSAPROTOCOL_INFOW; var lpdwBufferLength : DWORD) : Integer; stdcall;
   LPFN_WSAGETOVERLAPPEDRESULT = function(const s : TSocket; var AOverlapped: WSAOVERLAPPED; var lpcbTransfer : DWORD; fWait : BOOL; var lpdwFlags : DWORD) : WordBool; stdcall;
@@ -2307,7 +2331,7 @@ type
 //    lpcbBytesReturned : LPDWORD; AOverlapped: Pointer; lpCompletionRoutine : LPWSAOVERLAPPED_COMPLETION_ROUTINE ) : Integer; stdcall;
   LPFN_WSARECVFROM = function(const s : TSocket; lpBuffers : LPWSABUF; dwBufferCount : DWORD; var lpNumberOfBytesRecvd : DWORD; var lpFlags : DWORD;
     lpFrom : PSOCKADDR; var lpFromlen : Integer; var AOverlapped: WSAOVERLAPPED; lpCompletionRoutine : LPWSAOVERLAPPED_COMPLETION_ROUTINE): Integer; stdcall;
-   {$IFNDEF WINCE}
+   {$IFNDEF UNDER_CE}
   LPFN_TRANSMITFILE = function(hSocket: TSocket; hFile: THandle; nNumberOfBytesToWrite, nNumberOfBytesPerSend: DWORD;
     var lpOverlapped: Overlapped; lpTransmitBuffers: LPTRANSMIT_FILE_BUFFERS; dwReserved: DWORD): BOOL; stdcall;
 
@@ -2325,7 +2349,7 @@ type
     lpcbBytesReturned : LPDWORD; AOverlapped: Pointer; lpCompletionRoutine : LPWSAOVERLAPPED_COMPLETION_ROUTINE) : Integer; stdcall;
   LPFN_WSARECVFROM = function(const s : TSocket; lpBuffers : LPWSABUF; dwBufferCount : DWORD; var lpNumberOfBytesRecvd : DWORD; var lpFlags : DWORD;
     lpFrom : PSOCKADDR; lpFromlen : PInteger; AOverlapped: Pointer; lpCompletionRoutine : LPWSAOVERLAPPED_COMPLETION_ROUTINE): Integer; stdcall;
-{$IFNDEF WINCE} 
+{$IFNDEF UNDER_CE} 
   LPFN_TRANSMITFILE = function(hSocket: TSocket; hFile: THandle; nNumberOfBytesToWrite, nNumberOfBytesPerSend: DWORD;
     lpOverlapped: POverlapped; lpTransmitBuffers: LPTRANSMIT_FILE_BUFFERS; dwReserved: DWORD): BOOL; stdcall;
   LPFN_ACCEPTEX = function(sListenSocket, sAcceptSocket: TSocket;
@@ -2535,7 +2559,7 @@ type
   LPFN_WSAPROVIDERCONFIGCHANGE = function(var lpNotificationHandle : THandle; lpOverlapped : LPWSAOVERLAPPED; lpCompletionRoutine : LPWSAOVERLAPPED_COMPLETION_ROUTINE) : Integer; stdcall;
 
   //microsoft specific extension
-{$IFNDEF WINCE}
+{$IFNDEF UNDER_CE}
   {$EXTERNALSYM LPFN_GETACCEPTEXSOCKADDRS}
   LPFN_GETACCEPTEXSOCKADDRS = procedure(lpOutputBuffer: Pointer;
     dwReceiveDataLength, dwLocalAddressLength, dwRemoteAddressLength: DWORD;
@@ -2622,6 +2646,10 @@ var
   gethostbyname : LPFN_GETHOSTBYNAME = nil;
   {$EXTERNALSYM gethostname}
   gethostname : LPFN_GETHOSTNAME = nil;
+  {$IFDEF UNDER_CE}
+  {$EXTERNALSYM sethostname}
+  sethostname : LPFN_SETHOSTNAME = nil;
+  {$ENDIF}
   {$EXTERNALSYM getservbyport}
   getservbyport : LPFN_GETSERVBYPORT = nil;
   {$EXTERNALSYM getservbyname}
@@ -2634,7 +2662,7 @@ var
   WSASetLastError : LPFN_WSASETLASTERROR = nil;
   {$EXTERNALSYM WSAGetLastError}
   WSAGetLastError : LPFN_WSAGETLASTERROR = nil;
-{$IFNDEF WINCE}
+{$IFNDEF UNDER_CE}
   {$EXTERNALSYM WSAIsblocking}
   WSAIsBlocking : LPFN_WSAISBLOCKING = nil;
   {$EXTERNALSYM WSAUnhookBlockingHook}
@@ -2786,7 +2814,7 @@ var
   WSASetService : LPFN_WSASETSERVICE = nil;
   {$EXTERNALSYM WSAProviderConfigChange}
   WSAProviderConfigChange : LPFN_WSAPROVIDERCONFIGCHANGE = nil;
-{$IFNDEF WINCE}
+{$IFNDEF UNDER_CE}
   {$EXTERNALSYM TransmitFile}
   TransmitFile : LPFN_TRANSMITFILE = nil;
   {$EXTERNALSYM AcceptEx}
@@ -4216,6 +4244,7 @@ begin
   end;
 end;
 
+{$IFNDEF UNDER_CE}
 procedure LoadMSWSock;
 begin
   if hMSWSockDll = 0 then begin
@@ -4225,14 +4254,17 @@ begin
     end;
   end;
 end;
+{$ENDIF}
 
 procedure UninitializeWinSock;
 begin
+{$IFNDEF UNDER_CE}
   if hMSWSockDll <> 0 then
   begin
     FreeLibrary(hMSWSockDll);
     hMSWSockDll := 0;
   end;
+{$ENDIF}
   if hWinSockDll <> 0 then
   begin
     WSACleanup;
@@ -4261,7 +4293,7 @@ begin
   end;
   //WinCE does not have functions that take ASCII strings, you have to 
   //use Unicode versions)
-  {$IFDEF WINCE}
+  {$IFDEF UNDER_CE}
   VStub := Windows.GetProcAddress(hDll, PWideChar(AName));
   {$ELSE}
   VStub := Windows.GetProcAddress(hDll, PChar(AName));
@@ -4295,7 +4327,7 @@ begin
   Result := WSACleanup;
 end;
 
-function Stub_accept(const s: TSocket; addr: PSockAddr; addrlen: PInteger): TSocket; stdcall;
+function Stub_accept(const s : TSocket; addr: PSockAddr; addrlen: PInteger): TSocket; stdcall;
 begin
   FixupStub(hWinSockDll, 'accept', @accept); {Do not Localize}
   Result := accept(s, addr, addrlen);
@@ -4445,6 +4477,14 @@ begin
   Result := gethostbyname(name);
 end;
 
+{$IFDEF UNDER_CE}
+function Stub_sethostname(pName : PChar; cName : Integer) : Integer; stdcall;
+begin
+  FixupStub(hWinSockDll, 'sethostname', @sethostname); {Do not Localize}
+  Result := sethostname(pName, cName);  
+end;
+{$ENDIF}
+
 function Stub_gethostname(name: PChar; len: Integer): Integer; stdcall;
 begin
   FixupStub(hWinSockDll, 'gethostname', @gethostname); {Do not Localize}
@@ -4487,7 +4527,7 @@ begin
   Result := WSAGetLastError;
 end;
 
-{$IFNDEF WINCE}
+{$IFNDEF UNDER_CE}
 function Stub_WSAIsBlocking: BOOL; stdcall;
 begin
   FixupStub(hWinSockDll, 'WSAIsBlocking', @WSAIsBlocking); {Do not Localize}
@@ -4992,7 +5032,7 @@ begin
   Result := WSAProviderConfigChange(lpNotificationHandle, AOverlapped, lpCompletionRoutine);
 end;
 
-{$IFNDEF WINCE}
+{$IFNDEF UNDER_CE}
 function Stub_TransmitFile(hSocket: TSocket; hFile: THandle; nNumberOfBytesToWrite: DWORD;
   nNumberOfBytesPerSend: DWORD; lpOverlapped: POverlapped;
   lpTransmitBuffers: LPTRANSMIT_FILE_BUFFERS; dwReserved: DWORD): BOOL; stdcall;
@@ -5096,13 +5136,16 @@ begin
   gethostbyaddr                    := Stub_gethostbyaddr;
   gethostbyname                    := Stub_gethostbyname;
   gethostname                      := Stub_gethostname;
+  {$IFDEF UNDER_CE}
+  sethostname                      := Stub_sethostname;
+  {$ENDIF}
   getservbyport                    := Stub_getservbyport;
   getservbyname                    := Stub_getservbyname;
   getprotobynumber                 := Stub_getprotobynumber;
   getprotobyname                   := Stub_getprotobyname;
   WSASetLastError                  := Stub_WSASetLastError;
   WSAGetLastError                  := Stub_WSAGetLastError;  
-  {$IFNDEF WINCE}
+  {$IFNDEF UNDER_CE}
   WSAIsBlocking                    := Stub_WSAIsBlocking;
   WSAUnhookBlockingHook            := Stub_WSAUnhookBlockingHook;
   WSASetBlockingHook               := Stub_WSASetBlockingHook;
@@ -5179,7 +5222,7 @@ begin
   WSASetServiceW                   := Stub_WSASetServiceW;
   WSASetService                    := Stub_WSASetService;
   WSAProviderConfigChange          := Stub_WSAProviderConfigChange;
-{$IFNDEF WINCE}
+{$IFNDEF UNDER_CE}
   TransmitFile                     := Stub_TransmitFile;
   AcceptEx                         := Stub_AcceptEx;
   //GetAcceptExSockaddrs           := Stub_GetAcceptExSockaddrs;
