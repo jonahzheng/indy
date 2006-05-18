@@ -6,17 +6,21 @@ program httpget;
   {$define usezlib}
   {$define useopenssl}
 {$ENDIF}
+{$IFDEF WIN32}
+  {$define usezlib}
+  {$define useopenssl}
+{$ENDIF}
 uses
   {$IFDEF UNIX}{$IFDEF UseCThreads}
   cthreads,
   {$ENDIF}{$ENDIF}
-  {$define usezlib}
-  IdCompressorZLib,  //for deflate and gzip content encoding
+  {$ifdef usezlib}
+    IdCompressorZLib,  //for deflate and gzip content encoding
   {$endif}
   IdAuthenticationDigest, //MD5-Digest authentication
-  {$define useopenssl}
-  IdSSLOpenSSL,  //ssl
-  IdAuthenticationNTLM, //NTLM - uses OpenSSL libraries
+  {$ifdef useopenssl}
+    IdSSLOpenSSL,  //ssl
+    IdAuthenticationNTLM, //NTLM - uses OpenSSL libraries
   {$endif}
   Classes
   { add your units here },
@@ -85,7 +89,9 @@ var
   i : Integer;
   LHE : EIdHTTPProtocolException;
   LFName : String;
-  LC : TIdCompressorZLib;
+ {$ifdef usezlib}
+    LC : TIdCompressorZLib;
+ {$endif}
 begin
   {$ifdef useopenssl}
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create;
@@ -96,7 +102,9 @@ begin
   try
     LHTTP := TIdHTTP.Create;
     try
+      {$ifdef useopenssl}
       LHTTP.Compressor := LC;
+      {$endif}
       //set to false if you want this to simply raise an exception on redirects
       LHTTP.HandleRedirects := True;
 {
@@ -110,7 +118,9 @@ Mozilla/4.0 (compatible; MyProgram)
 }
       LHTTP.Request.UserAgent := 'Mozilla/4.0 (compatible; httpget)';
       LStr := TMemoryStream.Create;
+      {$ifdef useopenssl}
       LHTTP.IOHandler := LIO;
+      {$endif}
       LHTTP.Get(AURL,LStr);      
       if AVerbose then
       begin
