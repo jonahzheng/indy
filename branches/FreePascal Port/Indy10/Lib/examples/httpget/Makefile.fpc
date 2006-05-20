@@ -1,6 +1,6 @@
 [target]
 programs=httpget
-
+implicitunits=httpprothandler ftpprothandler prothandler
 [require]
 packages=indy
 packagedir=../../
