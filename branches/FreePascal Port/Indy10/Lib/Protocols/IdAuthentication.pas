@@ -113,9 +113,9 @@ type
   EIdAlreadyRegisteredAuthenticationMethod = class(EIdException);
 
   { Support functions }
-  procedure RegisterAuthenticationMethod(MethodName: String; AuthClass: TIdAuthenticationClass);
-  procedure UnregisterAuthenticationMethod(MethodName: String);
-  function FindAuthClass(AuthName: String): TIdAuthenticationClass;
+  procedure RegisterAuthenticationMethod(const MethodName: String; const AuthClass: TIdAuthenticationClass);
+  procedure UnregisterAuthenticationMethod(const MethodName: String);
+  function FindAuthClass(const AuthName: String): TIdAuthenticationClass;
 
 implementation
 
@@ -127,10 +127,10 @@ type
     Auth: TIdAuthenticationClass;
   end;
 
-Var
+var
   AuthList: TIdStringList = nil;
 
-procedure RegisterAuthenticationMethod(MethodName: String; AuthClass: TIdAuthenticationClass);
+procedure RegisterAuthenticationMethod(const MethodName: String; const AuthClass: TIdAuthenticationClass);
 var
   LAuthItem: TAuthListObject;
 begin
@@ -154,7 +154,7 @@ begin
   end;
 end;
 
-procedure UnregisterAuthenticationMethod(MethodName: String);
+procedure UnregisterAuthenticationMethod(const MethodName: String);
 Var
   i: Integer;
 begin
@@ -167,7 +167,7 @@ begin
   end;
 end;
 
-function FindAuthClass(AuthName: String): TIdAuthenticationClass;
+function FindAuthClass(const AuthName: String): TIdAuthenticationClass;
 begin
   if AuthList.IndexOf(AuthName) = -1 then
     result := nil

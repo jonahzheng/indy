@@ -216,7 +216,7 @@
   Rev 1.60    2003.10.18 12:42:04 PM  czhower
   Intercept.Disconnect is now called
 
-  Rev 1.59    10/15/2003 7:39:28 PM  DSiders
+    Rev 1.59    10/15/2003 7:39:28 PM  DSiders
   Added a formatted resource string for the exception raised in
   TIdIOHandler.MakeIOHandler.
 
@@ -307,13 +307,13 @@
   Rev 1.30    2003.07.10 4:34:56 PM  czhower
   Fixed AV, added some new comments
 
-  Rev 1.29    7/1/2003 5:50:44 PM  BGooijen
+    Rev 1.29    7/1/2003 5:50:44 PM  BGooijen
   Fixed ReadStream
 
-  Rev 1.28    6/30/2003 10:26:08 AM  BGooijen
+    Rev 1.28    6/30/2003 10:26:08 AM  BGooijen
   forgot to remove some code regarding to TIdBuffer.Find
 
-  Rev 1.27    6/29/2003 10:56:26 PM  BGooijen
+    Rev 1.27    6/29/2003 10:56:26 PM  BGooijen
   Removed .Memory from the buffer, and added some extra methods
 
   Rev 1.26    2003.06.25 4:30:00 PM  czhower
@@ -325,10 +325,10 @@
   Rev 1.24    23/6/2003 06:46:52  GGrieve
   allow block on checkForData
 
-  Rev 1.23    6/4/2003 1:07:08 AM  BGooijen
+    Rev 1.23    6/4/2003 1:07:08 AM  BGooijen
   changed comment
 
-  Rev 1.22    6/3/2003 10:40:34 PM  BGooijen
+    Rev 1.22    6/3/2003 10:40:34 PM  BGooijen
   FRecvBuffer bug fixed, it was freed, but never recreated, resulting in an AV
 
   Rev 1.21    2003.06.03 6:28:04 PM  czhower
@@ -678,6 +678,8 @@ var
 { TIdIOHandler }
 
 procedure TIdIOHandler.Close;
+//do not do FInputBuffer.Clear; here.
+//it breaks reading when remote connection does a disconnect 
 begin
   try
     if Intercept <> nil then begin
@@ -685,7 +687,6 @@ begin
     end;
   finally
     FOpened := False;
-    FInputBuffer.Clear;
     WriteBufferClear;
   end;
 end;
@@ -1173,7 +1174,8 @@ begin
         end;
         SetLength(LBuffer, LBufSize);
         Write(LBuffer);
-        DoWork(wmWrite, LBufSize);
+        // RLebeau: DoWork() is called in TIdIOHandlerStack.WriteDirect()
+        //DoWork(wmWrite, LBufSize);
         Dec(ASize, LBufSize);
       end;
     finally
@@ -1193,13 +1195,9 @@ begin
   }
 end;
 
-procedure TIdIOHandler.ReadBytes(
-  var VBuffer: TIdBytes;
-  AByteCount: Integer;
-  AAppend: Boolean = True);
+procedure TIdIOHandler.ReadBytes(var VBuffer: TIdBytes; AByteCount: Integer; AAppend: Boolean = True);
 begin
   Assert(FInputBuffer<>nil);
-
   if AByteCount > 0 then begin
     // Read from stack until we have enough data
     while FInputBuffer.Size < AByteCount do begin
@@ -1461,7 +1459,7 @@ var
   LChar: Char;
   LTmp: string;
 begin
-  if AMaxLineLength = -1 then begin
+  if AMaxLineLength < 0 then begin
     AMaxLineLength := MaxLineLength;
   end;
   Result := '';

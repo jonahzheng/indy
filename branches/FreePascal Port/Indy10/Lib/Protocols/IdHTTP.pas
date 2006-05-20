@@ -454,7 +454,7 @@ type
     FAuthProxyRetries: Integer;
     FCookieManager: TIdCookieManager;
     FCompressor : TIdZLibCompressorBase;
-    FFreeOnDestroy: Boolean;
+    FFreeCookieManager: Boolean;
     {Max retries for authorization}
     FMaxAuthRetries: Integer;
     FMaxHeaderLines: integer;
@@ -646,6 +646,7 @@ begin
   Sys.FreeAndNil(FHTTPProto);
   Sys.FreeAndNil(FURI);
   Sys.FreeAndNil(FProxyParameters);
+  SetCookieManager(nil);
   inherited Destroy;
 end;
 
@@ -901,16 +902,14 @@ begin
     end;
     if TextIsSame(URL.Protocol, 'HTTPS') then begin  {do not localize}
       // Just check can we do SSL
-      if (not Assigned(IOHandler)) or (not (IOHandler is TIdSSLIOHandlerSocketBase)) then begin
+      if not (IOHandler is TIdSSLIOHandlerSocketBase) then begin
         raise EIdIOHandlerPropInvalid.Create(RSIOHandlerPropInvalid);
       end;
       TIdSSLIOHandlerSocketBase(IOHandler).PassThrough := False;
       Result := ctSSL;
     end else begin
-      if Assigned(IOHandler) then begin
-        if (IOHandler is TIdSSLIOHandlerSocketBase) then begin
-          TIdSSLIOHandlerSocketBase(IOHandler).PassThrough := True;
-        end;
+      if IOHandler is TIdSSLIOHandlerSocketBase then begin
+        TIdSSLIOHandlerSocketBase(IOHandler).PassThrough := True;
       end;
       Result := ctNormal;
     end;
@@ -1258,7 +1257,7 @@ begin
     if not Assigned(FCookieManager) and AllowCookies then
     begin
       CookieManager := TIdCookieManager.Create(Self);
-      FFreeOnDestroy := true;
+      FFreeCookieManager := True;
     end;
 
     if Assigned(FCookieManager) then
@@ -1300,16 +1299,15 @@ procedure TIdCustomHTTP.SetCookieManager(ACookieManager: TIdCookieManager);
 begin
   if Assigned(FCookieManager) then
   begin
-    if FFreeOnDestroy then begin
+    if FFreeCookieManager then begin
       Sys.FreeAndNil(FCookieManager);
     end;
   end;
 
   FCookieManager := ACookieManager;
-  FFreeOnDestroy := false;
+  FFreeCookieManager := False;
 
-  if Assigned(FCookieManager) then
-  begin
+  if Assigned(FCookieManager) then begin
     FCookieManager.FreeNotification(Self);
   end;
 end;
@@ -1324,22 +1322,25 @@ begin
   if not Assigned(ARequest.Authentication) then
   begin
     // Find wich Authentication method is supported from us.
+    Auth := nil;
+
     for i := 0 to AResponse.WWWAuthenticate.Count - 1 do
     begin
       S := AResponse.WWWAuthenticate[i];
       Auth := FindAuthClass(Fetch(S));
-      if Auth <> nil then
-        break;
+      if Assigned(Auth) then begin
+        Break;
+      end;
     end;
 
-    if Auth = nil then begin
-      result := false;
-      exit;
+    if not Assigned(Auth) then begin
+      Result := False;
+      Exit;
     end;
 
     if Assigned(FOnSelectAuthorization) then
     begin
-      OnSelectAuthorization(self, Auth, AResponse.WWWAuthenticate);
+      OnSelectAuthorization(Self, Auth, AResponse.WWWAuthenticate);
     end;
 
     ARequest.Authentication := Auth.Create;
@@ -1414,22 +1415,20 @@ begin
   if not Assigned(ProxyParams.Authentication) then
   begin
     // Find which Authentication method is supported from us.
-    i := 0;
-    while i < AResponse.ProxyAuthenticate.Count do
+    Auth := nil;
+    for i := 0 to AResponse.ProxyAuthenticate.Count-1 do
     begin
       S := AResponse.ProxyAuthenticate[i];
-      try
-        Auth := FindAuthClass(Fetch(S));
-        break;
-      except
+      Auth := FindAuthClass(Fetch(S));
+      if Assigned(Auth) then begin
+        Break;
       end;
-      inc(i);
     end;
 
-    if i = AResponse.ProxyAuthenticate.Count then
+    if not Assigned(Auth) then
     begin
-      result := false;
-      exit;
+      Result := False;
+      Exit;
     end;
 
     if Assigned(FOnSelectProxyAuthorization) then
@@ -1455,51 +1454,50 @@ begin
   end;
   }
 
-  if Result then
+  if not Result then
   begin
-    with ProxyParams.Authentication do
-    begin
-      Username := ProxyParams.ProxyUsername;
-      Password := ProxyParams.ProxyPassword;
-
-      AuthParams := AResponse.ProxyAuthenticate;
-    end;
-
-    result := false;
-
-    repeat
-      case ProxyParams.Authentication.Next of
-        wnAskTheProgram: // Ask the user porgram to supply us with authorization information
-          begin
-            if Assigned(OnProxyAuthorization) then
-            begin
-              ProxyParams.Authentication.Username := ProxyParams.ProxyUsername;
-              ProxyParams.Authentication.Password := ProxyParams.ProxyPassword;
-
-              OnProxyAuthorization(self, ProxyParams.Authentication, result);
-
-              if result then begin
-                ProxyParams.ProxyUsername := ProxyParams.Authentication.Username;
-                ProxyParams.ProxyPassword := ProxyParams.Authentication.Password;
-              end
-              else begin
-                break;
-              end;
-            end;
-          end;
-        wnDoRequest:
-          begin
-            result := true;
-            break;
-          end;
-        wnFail:
-          begin
-            result := False;
-            Break;
-          end;
-      end;
-    until false;
+    Exit;
   end;
+
+  with ProxyParams.Authentication do
+  begin
+    Username := ProxyParams.ProxyUsername;
+    Password := ProxyParams.ProxyPassword;
+    AuthParams := AResponse.ProxyAuthenticate;
+  end;
+
+  Result := False;
+
+  repeat
+    case ProxyParams.Authentication.Next of
+      wnAskTheProgram: // Ask the user porgram to supply us with authorization information
+        begin
+          if Assigned(OnProxyAuthorization) then
+          begin
+            ProxyParams.Authentication.Username := ProxyParams.ProxyUsername;
+            ProxyParams.Authentication.Password := ProxyParams.ProxyPassword;
+
+            OnProxyAuthorization(Self, ProxyParams.Authentication, Result);
+            if not Result then begin
+              Break;
+            end;
+
+            ProxyParams.ProxyUsername := ProxyParams.Authentication.Username;
+            ProxyParams.ProxyPassword := ProxyParams.Authentication.Password;
+          end;
+        end;
+      wnDoRequest:
+        begin
+          Result := True;
+          Break;
+        end;
+      wnFail:
+        begin
+          Result := False;
+          Break;
+        end;
+    end;
+  until False;
 end;
 
 function TIdCustomHTTP.GetResponseCode: Integer;
@@ -1949,7 +1947,7 @@ begin
   FAuthRetries := 0;
   FAuthProxyRetries := 0;
   AllowCookies := true;
-  FFreeOnDestroy := false;
+  FFreeCookieManager := False;
   FOptions := [hoForceEncodeParams];
 
   FRedirectMax := Id_TIdHTTP_RedirectMax;
@@ -1965,10 +1963,7 @@ begin
   FMaxHeaderLines := Id_TIdHTTP_MaxHeaderLines;
 end;
 
-function TIdCustomHTTP.Get(
-  AURL: string;
-  AIgnoreReplies: array of SmallInt
-  ): string;
+function TIdCustomHTTP.Get(AURL: string; AIgnoreReplies: array of SmallInt): string;
 var
   LStream: TIdMemoryStream;
 begin

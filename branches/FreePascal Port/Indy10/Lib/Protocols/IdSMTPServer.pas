@@ -127,7 +127,7 @@ type
     function CreateGreeting: TIdReply; override;
     function CreateReplyUnknownCommand: TIdReply; override;
     //
-    function DoAuthLogin(ASender: TIdCommand; const Login:string): Boolean;
+    function DoAuthLogin(ASender: TIdCommand; const Login: string): Boolean;
     //command handlers
     procedure CommandNOOP(ASender: TIdCommand);
     procedure CommandQUIT(ASender: TIdCommand);
@@ -176,15 +176,16 @@ type
     procedure MailSubmitTransactionFailed(ASender: TIdCommand);
     procedure MailSubmitLocalProcessingError(ASender: TIdCommand);
     procedure MailSubmitSystemFull(ASender: TIdCommand);
-    procedure SetEnhReply(AReply: TIdReply;
-      const ANumericCode: Integer; const AEnhReply, AText: String;
-      const IsEHLO: Boolean);
+    procedure SetEnhReply(AReply: TIdReply; const ANumericCode: Integer;
+      const AEnhReply, AText: String; const IsEHLO: Boolean);
     //  overrides for SMTP
     function GetReplyClass: TIdReplyClass; override;
     function GetRepliesClass: TIdRepliesClass; override;
     procedure InitComponent; override;
     procedure DoReplyUnknownCommand(AContext: TIdContext; ALine: string); override;
     procedure InitializeCommandHandlers; override;
+    //
+    procedure DoReset(AContext: TIdSMTPServerContext; AIsTLSReset: Boolean = False);
   published
     //events
     property OnMsgReceive : TOnMsgReceive read FOnMsgReceive write FOnMsgReceive;
@@ -199,7 +200,7 @@ type
     property UseTLS;
   end;
 
-  TIdSMTPState = (idSMTPNone,idSMTPHelo,idSMTPMail,idSMTPRcpt,idSMTPData);
+  TIdSMTPState = (idSMTPNone, idSMTPHelo, idSMTPMail, idSMTPRcpt, idSMTPData);
 
   TIdSMTPServerContext = class(TIdContext)
   protected
@@ -214,16 +215,15 @@ type
     FLoggedIn: Boolean;
     FPipeLining : Boolean;
     FFinalStage : Boolean;
-    function GetUsingTLS:boolean;
+    function GetUsingTLS: Boolean;
     procedure SetPipeLining(const AValue : Boolean);
   public
-    constructor Create(
-      AConnection: TIdTCPConnection;
-      AYarn: TIdYarn;
-      AList: TIdThreadList = nil
-      ); override;
+    constructor Create(AConnection: TIdTCPConnection; AYarn: TIdYarn; AList: TIdThreadList = nil); override;
     destructor Destroy; override;
+    //
     procedure CheckPipeLine;
+    procedure Reset(AIsTLSReset: Boolean = False); virtual;
+    //
     property SMTPState: TIdSMTPState read FSMTPState write FSMTPState;
     property From: string read FFrom write FFrom;
     property RCPTList: TIdEMailAddressList read FRCPTList write FRCPTList;
@@ -234,8 +234,8 @@ type
     property Password: string read FPassword write FPassword;
     property LoggedIn: Boolean read FLoggedIn write FLoggedIn;
     property FinalStage: Boolean read FFinalStage write FFinalStage;
-    property UsingTLS:boolean read GetUsingTLS;
-    property PipeLining : Boolean read FPipeLining write SetPipeLining;
+    property UsingTLS: Boolean read GetUsingTLS;
+    property PipeLining: Boolean read FPipeLining write SetPipeLining;
     //
   end;
 
@@ -312,13 +312,13 @@ begin
   end;
   ASender.Reply.Text.Add('ENHANCEDSTATUSCODES'); {do not localize}
   ASender.Reply.Text.Add('PIPELINING'); {do not localize}
-  if FUseTLS in ExplicitTLSVals then begin
+  if (FUseTLS in ExplicitTLSVals) and (not LContext.UsingTLS) then begin
     ASender.Reply.Text.Add('STARTTLS');    {Do not Localize}
   end;
+  DoReset(LContext);
   LContext.EHLO := True;
   LContext.SMTPState := idSMTPHelo;
   LContext.HeloString := ASender.UnparsedParams;
-  LContext.SMTPState := idSMTPHelo;
 end;
 
 procedure TIdSMTPServer.DoReplyUnknownCommand(AContext: TIdContext;
@@ -349,9 +349,11 @@ begin
 end;
 
 procedure TIdSMTPServer.InitializeCommandHandlers;
-var LCmd : TIdCommandHandler;
+var
+  LCmd : TIdCommandHandler;
 begin
-  inherited;
+  inherited InitializeCommandHandlers;
+
   LCmd := CommandHandlers.Add;
   LCmd.Command := 'EHLO';  {do not localize}
   LCmd.OnCommand := CommandEHLO;
@@ -419,8 +421,7 @@ begin
   LCmd := CommandHandlers.Add;
   // STARTTLS <CRLF>
   LCmd.Command := 'STARTTLS';    {Do not Localize}
-  SetEnhReply(LCmd.NormalReply, 220, Id_EHR_GENERIC_OK, RSSMTPSvrReadyForTLS,
-      False);
+  SetEnhReply(LCmd.NormalReply, 220, Id_EHR_GENERIC_OK, RSSMTPSvrReadyForTLS, False);
   LCmd.OnCommand := CommandStartTLS;
 end;
 
@@ -433,30 +434,27 @@ end;
 procedure TIdSMTPServer.CommandAUTH(ASender: TIdCommand);
 var
   Login: string;
+  LContext: TIdSMTPServerContext;
 begin
+  LContext := TIdSMTPServerContext(ASender.Context);
   //Note you can not use PIPELINING with AUTH
-  TIdSMTPServerContext(ASender.Context).PipeLining := False;
-  if TIdSMTPServerContext(ASender.Context).EHLO then // Only available with EHLO
-  begin
-    if not ((FUseTLS=utUseRequireTLS) and not TIdSMTPServerContext(ASender.Context).UsingTLS) then
-    begin
-      if Assigned( FOnUserLogin  ) then
-      begin
-        if Length(ASender.UnparsedParams) > 0 then
-        begin
-          Login := ASender.UnparsedParams;
-          DoAuthLogin(ASender, Login)
-        end
-        else
-        begin
-          CmdSyntaxError(ASender);
-        end;
-      end;
-    end
-    else
-    begin
-      MustUseTLS(ASender);
-    end;
+  LContext.PipeLining := False;
+  if not LContext.EHLO then begin // Only available with EHLO
+    BadSequenceError(ASender);
+    Exit;
+  end;
+  if (FUseTLS = utUseRequireTLS) and (not LContext.UsingTLS) then begin
+    MustUseTLS(ASender);
+    Exit;
+  end;
+  if not Assigned(FOnUserLogin) then begin
+    AuthFailed(ASender);
+    Exit;
+  end;
+  if Length(ASender.UnparsedParams) > 0 then begin
+    DoAuthLogin(ASender, ASender.UnparsedParams);
+  end else begin
+    CmdSyntaxError(ASender);
   end;
 end;
 
@@ -471,17 +469,16 @@ begin
   end;
   if Length(ASender.UnparsedParams) > 0 then begin
     ASender.Reply.SetReply(250, Sys.Format(RSSMTPSvrHello, [ASender.UnparsedParams]));
+    DoReset(LContext);
     LContext.HELO := True;
     LContext.SMTPState := idSMTPHelo;
     LContext.HeloString := ASender.UnparsedParams;
   end else begin
     ASender.Reply.SetReply(501, RSSMTPSvrParmErr);
   end;
-  LContext.PipeLining := False;
 end;
 
-function TIdSMTPServer.DoAuthLogin(ASender: TIdCommand;
-  const Login: string): Boolean;
+function TIdSMTPServer.DoAuthLogin(ASender: TIdCommand; const Login: string): Boolean;
 var
   S: string;
   LUsername, LPassword: string;
@@ -701,7 +698,7 @@ begin
     //reset all information
     LContext.From := '';    {Do not Localize}
     LContext.RCPTList.Clear;
-    if TextIsSame(Copy(ASender.UnparsedParams, 1, 5), 'FROM:') then begin   {Do not Localize}
+    if TextStartsWith(ASender.UnparsedParams, 'FROM:') then begin   {Do not Localize}
       EMailAddress := TIdEMailAddressItem.Create(nil);
       try
         EMailAddress.Text := Sys.Trim(Copy(ASender.UnparsedParams, 6, MaxInt));
@@ -722,7 +719,7 @@ begin
           end;
         end;
       finally
-       Sys.FreeAndNil(EMailAddress);
+        Sys.FreeAndNil(EMailAddress);
       end;
     end else begin
       InvalidSyntax(ASender);
@@ -748,12 +745,12 @@ var
 begin
   LForward := '';
   LContext := TIdSMTPServerContext(ASender.Context);
-  if (LContext.SMTPState <> idSMTPMail) and (LContext.SMTPState <> idSMTPRcpt) then begin
+  if not (LContext.SMTPState in [idSMTPMail, idSMTPRcpt]) then begin
     BadSequenceError(ASender);
     Exit;
   end;
   if LContext.HELO or LContext.EHLO then begin
-    if TextIsSame(Copy(ASender.UnparsedParams, 1, 3), 'TO:') then begin   {Do not Localize}
+    if TextStartsWith(ASender.UnparsedParams, 'TO:') then begin   {Do not Localize}
       LAction :=  rRelayDenied;
       //do not change this in the OnRcptTo event unless one of the following
       //things is TRUE:
@@ -816,26 +813,22 @@ end;
 
 procedure TIdSMTPServer.CommandSTARTTLS(ASender: TIdCommand);
 var
-  LIO : TIdSSLIOHandlerSocketBase;
   LContext : TIdSMTPServerContext;
 begin
   LContext := TIdSMTPServerContext(ASender.Context);
+  if not LContext.EHLO then begin
+    BadSequenceError(ASender);
+    Exit;
+  end;
   if FUseTLS in ExplicitTLSVals then begin
     if LContext.UsingTLS then begin // we are already using TLS
       BadSequenceError(ASender);
       Exit;
     end;
-    SetEnhReply(ASender.Reply, 220, Id_EHR_GENERIC_OK, RSSMTPSvrReadyForTLS,
-      LContext.EHLO);
-    LContext.PipeLining := False;
-    LIO := TIdSSLIOHandlerSocketBase(LContext.Connection.IOHandler);
-    LIO.PassThrough := False;
-    LContext.SMTPState := idSMTPNone; // to reset the state
-    LContext.HELO := False;           //
-    LContext.EHLO := False;           //
-    LContext.Username := '';        //
-    LContext.Password := '';         //
-    LContext.LoggedIn := False;       //
+    SetEnhReply(ASender.Reply, 220, Id_EHR_GENERIC_OK, RSSMTPSvrReadyForTLS, LContext.EHLO);
+    ASender.SendReply;
+    TIdSSLIOHandlerSocketBase(LContext.Connection.IOHandler).PassThrough := False;
+    DoReset(LContext, True);
   end else begin
     CmdSyntaxError(ASender);
     LContext.PipeLining := False;
@@ -856,21 +849,8 @@ begin
 end;
 
 procedure TIdSMTPServer.CommandRSET(ASender: TIdCommand);
-var
-  LContext : TIdSMTPServerContext;
 begin
-  LContext := TIdSMTPServerContext(ASender.Context);
-  LContext.RCPTList.Clear;
-  LContext.From := '';    {Do not Localize}
-  if LContext.Ehlo or LContext.Helo then begin
-    LContext.SMTPState := idSMTPHelo;
-  end else begin
-    LContext.SMTPState := idSMTPNone;
-  end;
-  LContext.CheckPipeLine;
-  if Assigned(FOnReset) then begin
-    FOnReset(LContext);
-  end;
+  DoReset(TIdSMTPServerContext(ASender.Context));
 end;
 
 procedure TIdSMTPServer.CommandDATA(ASender: TIdCommand);
@@ -1010,6 +990,14 @@ begin
   LContext.PipeLining := False;
 end;
 
+procedure TIdSMTPServer.DoReset(AContext: TIdSMTPServerContext; AIsTLSReset: Boolean = False);
+begin
+  AContext.Reset(AIsTLSReset);
+  if Assigned(FOnReset) then begin
+    FOnReset(AContext);
+  end;
+end;
+
 { TIdSMTPServerContext }
 
 procedure TIdSMTPServerContext.CheckPipeLine;
@@ -1046,6 +1034,25 @@ begin
   if Result then begin
     Result := not TIdSSLIOHandlerSocketBase(Connection.IOHandler).PassThrough;
   end;
+end;
+
+procedure TIdSMTPServerContext.Reset(AIsTLSReset: Boolean = False);
+begin
+  if (not AIsTLSReset) and (FEHLO or FHELO) then begin
+    FSMTPState := idSMTPHelo;
+  end else begin
+    FSMTPState := idSMTPNone;
+    FEHLO := False;
+    FHELO := False;
+  end;
+  FFrom := '';
+  FHeloString := '';
+  FRCPTList.Clear;
+  FUsername := '';
+  FPassword := '';
+  FLoggedIn := False;
+  FFinalStage := False;
+  CheckPipeLine;
 end;
 
 procedure TIdSMTPServerContext.SetPipeLining(const AValue: Boolean);

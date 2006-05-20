@@ -356,12 +356,13 @@ begin
 end;
 
 function TIdSMTPEnhancedCode.IsValidReplyCode(const AText: String): Boolean;
-var LBuf, LValidPart : String;
+var
+  LTmp, LBuf, LValidPart : String;
 begin
   Result := (Sys.Trim(AText) = '');
   if not Result then begin
-    LBuf := AText;
-    LBuf := Fetch(LBuf);
+    LTmp := AText;
+    LBuf := Fetch(LTmp);
     //class
     LValidPart := Fetch(LBuf,PARTSEP);
     if CharIsInSet(LValidPart, 1, ValidClassChars) then begin
@@ -391,12 +392,12 @@ end;
 
 procedure TIdSMTPEnhancedCode.SetReplyAsStr(const AText: String);
 var
-  LBuf: string;
+  LTmp, LBuf: string;
   LValidPart: string;
 begin
   EIdSMTPReplyInvalidReplyString.IfFalse(IsValidReplyCode(AText), RSSMTPReplyInvalidReplyStr);
-  LBuf := AText;
-  LBuf := Fetch(LBuf);
+  LTmp := AText;
+  LBuf := Fetch(LTmp);
   if LBuf <> '' then begin
     //class
     LValidPart := Fetch(LBuf, PARTSEP);

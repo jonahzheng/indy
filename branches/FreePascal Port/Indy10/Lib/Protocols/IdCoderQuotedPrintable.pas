@@ -251,7 +251,6 @@ const
   SafeChars = [#33..#60, #62..#126];
   HalfSafeChars = [#32, TAB];
   // Rule #2, #3
-
 var
   st: TIdStringList;
   CurrentLine: shortstring;
@@ -270,17 +269,11 @@ var
       Inc(CurrentPos, SLen);
     end;
 
-    Procedure NewLine(const AtPos: integer);
+    Procedure NewLine;
     begin
-      if AtPos = CurrentPos then begin
-        WriteToString('=');  {Do not Localize}
-        st.Add(Copy(CurrentLine, 1, CurrentPos-1));
-        CurrentPos := 1;
-      end else begin
-        st.Add(Copy(CurrentLine, 1, AtPos-1)+'='); { Do not Localize }
-        CurrentPos := CurrentPos-AtPos+1;
-        MoveChars(CurrentLine, AtPos, CurrentLine, 1, CurrentPos-1);
-      end;
+      WriteToString('=');  {Do not Localize}
+      st.Add(Copy(CurrentLine, 1, CurrentPos-1));
+      CurrentPos := 1;
     end;
 
     Procedure FinishLine;
@@ -291,7 +284,6 @@ var
 
 var
   i: integer;
-  PossibleBreakPos: integer;
   SourceLen: integer;
 begin
   st := TIdStringList.Create;
@@ -300,13 +292,9 @@ begin
     //ie while not eof
     while (ASrcStream.Position < ASrcStream.Size) do begin
       SourceLine := ReadLnFromStream(ASrcStream, -1, False);
-      PossibleBreakPos := 1;
       CurrentPos := 1;
       SourceLen := length(SourceLine);
       for i := 1 to SourceLen do begin
-        if CurrentPos < 72 then begin
-          PossibleBreakPos := CurrentPos;
-        end;
         if not (SourceLine[i] in SafeChars) then begin
           if (SourceLine[i] in HalfSafeChars) then begin
             if i = SourceLen then begin
@@ -324,9 +312,8 @@ begin
             WriteToString(SourceLine[i]);
           end;
         end;
-        if CurrentPos > 74 then begin
-          NewLine(PossibleBreakPos);
-          PossibleBreakPos := 1;
+        if CurrentPos > 70 then begin
+          NewLine;
         end;
       end;
       FinishLine;
