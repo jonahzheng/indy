@@ -85,6 +85,7 @@ begin
 
     LF.Host := AURL.Host;
     LF.Username := AURL.Username;
+    LF.IPVersion := AURL.IPVersion;
     if LF.Username = '' then
     begin
       LF.Username := 'anonymous';
