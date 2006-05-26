@@ -138,11 +138,12 @@ unit IdWinSock2;
 interface
 
 {$I IdCompilerDefines.inc}
-{$ALIGN OFF}
-{$RANGECHECKS OFF}
-{$WRITEABLECONST OFF}
 {$IFDEF WINCE}
   {$DEFINE UNDER_CE}
+{$ELSE}
+ {$ALIGN OFF}
+ {$RANGECHECKS OFF}
+ {$WRITEABLECONST OFF}
 {$ENDIF}
 uses
   IdException, SysUtils, Windows;
@@ -1285,7 +1286,7 @@ const
 
 type
   {$EXTERNALSYM WSADATA}
-  WSADATA = packed record
+  WSADATA = record
     wVersion       : Word;
     wHighVersion   : Word;
 {$IFDEF WIN64}
@@ -4231,7 +4232,7 @@ begin
   if hWinSockDll = 0 then begin
     hWinSockDll := Windows.LoadLibrary(WINSOCK2_DLL);
     if hWinSockDll <> 0 then begin
-      LError := WSAStartup($202, LData);
+      LError := WSAStartup($0202, LData);
       if LError = 0 then begin
         Exit;
       end;
@@ -4287,6 +4288,9 @@ begin
 end;
 
 procedure FixupStub(hDll: THandle; const AName: string; var VStub: Pointer);
+  {$IFDEF UNDER_CE}
+  var wsAName: WideString;
+  {$ENDIF}
 begin
   if hDll = 0 then begin
     EIdWinsockStubError.Build(Format(RSWinsockCallError, [AName]), WSANOTINITIALISED);
@@ -4294,7 +4298,8 @@ begin
   //WinCE does not have functions that take ASCII strings, you have to 
   //use Unicode versions)
   {$IFDEF UNDER_CE}
-  VStub := Windows.GetProcAddress(hDll, PWideChar(AName));
+  wsAName:=AName;
+  VStub := Windows.GetProcAddress(hDll, PWideChar(wsAName));
   {$ELSE}
   VStub := Windows.GetProcAddress(hDll, PChar(AName));
   {$ENDIF}

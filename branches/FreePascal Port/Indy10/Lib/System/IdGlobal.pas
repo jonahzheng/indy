@@ -1588,6 +1588,10 @@ begin
 end;
 
 procedure DebugOutput(const AText: string);
+  {$IFDEF WINCE}
+  var
+   wsAText: WideString;
+  {$ENDIF}
 begin
   {$IFDEF KYLIX}
   __write(stderr, AText, Length(AText));
@@ -1595,7 +1599,8 @@ begin
   {$ENDIF}
   {$ifdef win32_or_win64_or_winCE}
     {$IFDEF WINCE}
-  OutputDebugString(PWideChar(AText));
+  wsAText:=AText;
+  OutputDebugString(PWideChar(wsAText));
     {$ELSE}
   OutputDebugString(PChar(AText));
     {$ENDIF}
