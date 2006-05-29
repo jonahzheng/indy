@@ -138,11 +138,9 @@ unit IdWinSock2;
 interface
 
 {$I IdCompilerDefines.inc}
-{$IFDEF WINCE}
-  {$DEFINE UNDER_CE}
-{$ELSE}
+{$RANGECHECKS OFF}
+{$IFNDEF WINCE}
  {$ALIGN OFF}
- {$RANGECHECKS OFF}
  {$WRITEABLECONST OFF}
 {$ENDIF}
 uses
@@ -4287,22 +4285,22 @@ begin
   end;
 end;
 
+{$IFNDEF UNICODE}
 procedure FixupStub(hDll: THandle; const AName: string; var VStub: Pointer);
-  {$IFDEF UNDER_CE}
-  var wsAName: WideString;
-  {$ENDIF}
+{$ELSE UNICODE}
+procedure FixupStub(hDll: THandle; const AName: WideString; var VStub: Pointer);
+{$ENDIF UNICODE}
 begin
   if hDll = 0 then begin
     EIdWinsockStubError.Build(Format(RSWinsockCallError, [AName]), WSANOTINITIALISED);
   end;
   //WinCE does not have functions that take ASCII strings, you have to 
   //use Unicode versions)
-  {$IFDEF UNDER_CE}
-  wsAName:=AName;
-  VStub := Windows.GetProcAddress(hDll, PWideChar(wsAName));
-  {$ELSE}
+  {$IFNDEF UNICODE}
   VStub := Windows.GetProcAddress(hDll, PChar(AName));
-  {$ENDIF}
+  {$ELSE UNICODE}
+  VStub := Windows.GetProcAddress(hDll, PWideChar(AName));
+  {$ENDIF UNICODE}
   if VStub = nil then begin
     EIdWinsockStubError.Build(Format(RSWinsockCallError, [AName]), 10022);
   end;
