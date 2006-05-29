@@ -229,6 +229,7 @@
   {$ifend}
   //so we can use IdWinsock2 in WinCE, maybe in other places in Indy as well -CYA
   {$IF defined(wince)} 
+    {$DEFINE UNICODE} //CE is UNICODE ONLY
     {$define win32_or_win64_or_winCE}
   {$ENDIF}
   {$DEFINE VCL4ORABOVE}
