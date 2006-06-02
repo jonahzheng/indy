@@ -34,7 +34,7 @@ interface
 
 {$I IdCompilerDefines.inc}
 
-uses IdWinSock2;
+uses IdWinsock2;
 
 const
   Wship6_dll =   'Wship6.dll';    {do not localize}

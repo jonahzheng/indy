@@ -19,7 +19,7 @@
 unit IdSysWin32;
 
 interface
-{$i idcompilerdefines.inc}
+{$i IdCompilerDefines.inc}
 
 uses
   IdSysNativeVCL,
