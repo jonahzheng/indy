@@ -249,7 +249,7 @@ type
   {$NODEFINE PFDSet}
   PFDSet = ^TFDSet;
   {$NODEFINE TFDSet}
-  TFDSet = packed record
+  TFDSet = record
     fd_count: u_int;
     fd_array: array[0..FD_SETSIZE-1] of TSocket;
   end;
@@ -308,7 +308,7 @@ const
 //  returned in network order (suitable for use in system calls).
 type
   {$EXTERNALSYM hostent}
-  hostent = packed record
+  hostent = record
     h_name: PChar;                 // official name of host
     h_aliases: ^PChar;             // alias list
     h_addrtype: Smallint;          // host address type
@@ -323,7 +323,7 @@ type
 //  It is assumed here that a network number
 //  fits in 32 bits.
   {$EXTERNALSYM netent}
-  netent = packed record
+  netent = record
     n_name: PChar;                 // official name of net
     n_aliases: ^PChar;             // alias list
     n_addrtype: Smallint;          // net address type
@@ -333,7 +333,7 @@ type
   PNetEnt = ^TNetEnt;
 
   {$EXTERNALSYM servent}
-  servent = packed record
+  servent = record
     s_name: PChar;                 // official service name
     s_aliases: ^PChar;             // alias list
 {$IFDEF WIN64}
@@ -348,7 +348,7 @@ type
   PServEnt = ^TServEnt;
 
   {$EXTERNALSYM protoent}
-  protoent = packed record
+  protoent = record
     p_name: PChar;                 // official protocol name
     p_aliases: ^PChar;             // alias list
     p_proto: Smallint;             // protocol #
@@ -761,17 +761,17 @@ const
 
 type
   {$NODEFINE SunB}
-  SunB = packed record
+  SunB = record
     s_b1, s_b2, s_b3, s_b4: u_char;
   end;
 
   {$NODEFINE SunW}
-  SunW = packed record
+  SunW = record
     s_w1, s_w2: u_short;
   end;
 
   {$EXTERNALSYM in_addr}
-  in_addr = packed record
+  in_addr = record
     case integer of
       0: (S_un_b: SunB);
       1: (S_un_w: SunW);
@@ -783,7 +783,7 @@ type
   // Structure used by kernel to store most addresses.
 
   {$EXTERNALSYM sockaddr_in}
-  sockaddr_in = packed record
+  sockaddr_in = record
     case Integer of
       0: (sin_family : u_short;
           sin_port   : u_short;
@@ -804,7 +804,7 @@ type
   LPSOCKADDR   = PSOCKADDR;
 
   {$EXTERNALSYM SOCKADDR_STORAGE}
-  SOCKADDR_STORAGE = packed record
+  SOCKADDR_STORAGE = record
     ss_family: short;                            // Address family.
     __ss_pad1: array[0.._SS_PAD1SIZE-1] of Char; // 6 byte pad, this is to make
                                                  // implementation specific pad up to
@@ -825,7 +825,7 @@ type
 
   // Structure used by kernel to pass protocol information in raw sockets.
   {$EXTERNALSYM sockproto}
-  sockproto = packed record
+  sockproto = record
     sp_family   : u_short;
     sp_protocol : u_short;
   end;
@@ -834,7 +834,7 @@ type
 
 // Structure used for manipulating linger option.
   {$EXTERNALSYM linger}
-  linger = packed record
+  linger = record
     l_onoff: u_short;
     l_linger: u_short;
   end;
@@ -1318,7 +1318,7 @@ type
 
 
   {$EXTERNALSYM WSABUF}
-  WSABUF = packed record
+  WSABUF = record
     len: u_long;{ the length of the buffer }
     buf: PChar; { the pointer to the buffer }
   end;
@@ -1332,7 +1332,7 @@ type
   TServiceType = SERVICETYPE;
 
   {$EXTERNALSYM FLOWSPEC}
-  FLOWSPEC = packed record
+  FLOWSPEC = record
     TokenRate,               // In Bytes/sec
     TokenBucketSize,         // In Bytes
     PeakBandwidth,           // In Bytes/sec
@@ -1348,7 +1348,7 @@ type
   LPFLOWSPEC = PFLOWSPEC;
 
   {$EXTERNALSYM QOS}
-  QOS = packed record
+  QOS = record
     SendingFlowspec: TFlowSpec; { the flow spec for data sending }
     ReceivingFlowspec: TFlowSpec; { the flow spec for data receiving }
     ProviderSpecific: TWSABuf; { additional provider specific stuff }
@@ -1715,7 +1715,7 @@ type
 //  registration (RNR) API
 {$IFNDEF NoRedeclare}
   {$EXTERNALSYM BLOB}
-  BLOB = packed record
+  BLOB = record
     cbSize : {$IFDEF CIL}ULONG{$ELSE}U_LONG{$ENDIF};
     pBlobData : PBYTE;
   end;
@@ -1840,7 +1840,7 @@ const
 // SockAddr Information
 type
   {$EXTERNALSYM SOCKET_ADDRESS}
-  SOCKET_ADDRESS = packed record
+  SOCKET_ADDRESS = record
     lpSockaddr : PSOCKADDR;
     iSockaddrLength : Integer;
   end;
@@ -1850,7 +1850,7 @@ type
 
 // CSAddr Information
   {$EXTERNALSYM CSADDR_INFO}
-  CSADDR_INFO = packed record
+  CSADDR_INFO = record
     LocalAddr,
     RemoteAddr : TSocket_Address;
     iSocketType,
@@ -1864,7 +1864,7 @@ type
 
 // Address list returned via WSAIoctl( SIO_ADDRESS_LIST_QUERY )
   {$EXTERNALSYM SOCKET_ADDRESS_LIST}
-  SOCKET_ADDRESS_LIST = packed record
+  SOCKET_ADDRESS_LIST = record
     iAddressCount : Integer;
     Address       : Array [0..0] of TSocket_Address;
   end;
@@ -1903,7 +1903,7 @@ type
   LPWSAVERSION = PWSAVERSION;
 
   {$EXTERNALSYM WSAQUERYSETA}
-  WSAQUERYSETA = packed record
+  WSAQUERYSETA = record
     dwSize                  : DWORD;
     lpszServiceInstanceName : PChar;
     lpServiceClassId        : PGUID;
@@ -1927,7 +1927,7 @@ type
   LPWSAQUERYSETA = PWSAQUERYSETA;
 
   {$EXTERNALSYM WSAQUERYSETW}
-  WSAQUERYSETW = packed record
+  WSAQUERYSETW = record
     dwSize                  : DWORD;
     lpszServiceInstanceName : PWideChar;
     lpServiceClassId        : PGUID;
@@ -2032,7 +2032,7 @@ type
 
 { Service Installation/Removal Data Types. }
   {$EXTERNALSYM WSANSCLASSINFOA}
-  WSANSCLASSINFOA = packed record
+  WSANSCLASSINFOA = record
     lpszName    : PChar;
     dwNameSpace : DWORD;
     dwValueType : DWORD;
@@ -2046,7 +2046,7 @@ type
   LPWSANSCLASSINFOA = PWSANSCLASSINFOA;
 
   {$EXTERNALSYM WSANSCLASSINFOW}
-  WSANSCLASSINFOW = packed record
+  WSANSCLASSINFOW = record
     lpszName    : PWideChar;
     dwNameSpace : DWORD;
     dwValueType : DWORD;
@@ -2075,7 +2075,7 @@ type
 {$ENDIF // UNICODE}
 
   {$EXTERNALSYM WSASERVICECLASSINFOA}
-  WSASERVICECLASSINFOA = packed record
+  WSASERVICECLASSINFOA = record
     lpServiceClassId     : PGUID;
     lpszServiceClassName : PChar;
     dwCount              : DWORD;
@@ -2088,7 +2088,7 @@ type
   LPWSASERVICECLASSINFOA = PWSASERVICECLASSINFOA;
 
   {$EXTERNALSYM WSASERVICECLASSINFOW}
-  WSASERVICECLASSINFOW = packed record
+  WSASERVICECLASSINFOW = record
     lpServiceClassId     : PGUID;
     lpszServiceClassName : PWideChar;
     dwCount              : DWORD;
@@ -2116,7 +2116,7 @@ type
 {$ENDIF}
 
   {$EXTERNALSYM WSANAMESPACE_INFOA}
-  WSANAMESPACE_INFOA = packed record
+  WSANAMESPACE_INFOA = record
     NSProviderId   : TGUID;
     dwNameSpace    : DWORD;
     fActive        : DWORD{Bool};
@@ -2130,7 +2130,7 @@ type
   LPWSANAMESPACE_INFOA = PWSANAMESPACE_INFOA;
 
   {$EXTERNALSYM WSANAMESPACE_INFOW}
-  WSANAMESPACE_INFOW = packed record
+  WSANAMESPACE_INFOW = record
     NSProviderId   : TGUID;
     dwNameSpace    : DWORD;
     fActive        : DWORD{Bool};
@@ -2159,7 +2159,7 @@ type
 {$ENDIF}
 
   {$EXTERNALSYM WSAMSG}
-  WSAMSG = packed record
+  WSAMSG = record
     name : PSOCKADDR;  ///* Remote address */
     namelen : Integer; ///* Remote address length *
     lpBuffers : LPWSABUF;  //  /* Data buffer array */
@@ -2174,7 +2174,7 @@ type
   LPWSAMSG = PWSAMSG;
 
   {$EXTERNALSYM WSACMSGHDR}
-  WSACMSGHDR = packed record
+  WSACMSGHDR = record
     cmsg_len: Integer;
     cmsg_level: Integer;
     cmsg_type: Integer;
@@ -2896,7 +2896,7 @@ var
 type
 // Argument structure for IP_ADD_MEMBERSHIP and IP_DROP_MEMBERSHIP
   {$EXTERNALSYM ip_mreq}
-  ip_mreq = packed record
+  ip_mreq = record
     imr_multiaddr : TInAddr; // IP multicast address of group
     imr_interface : TInAddr; // local IP address of interface
   end;
@@ -2904,7 +2904,7 @@ type
 // Argument structure for IP_ADD_SOURCE_MEMBERSHIP, IP_DROP_SOURCE_MEMBERSHIP,
 // IP_BLOCK_SOURCE, and IP_UNBLOCK_SOURCE
   {$EXTERNALSYM ip_mreq_source}
-  ip_mreq_source = packed record
+  ip_mreq_source = record
     imr_multiaddr: TInAddr;     // IP multicast address of group
     imr_sourceaddr: TInAddr;    // IP address of source
     imr_interface: TInAddr;     // local IP address of interface
@@ -2912,7 +2912,7 @@ type
 
 // Argument structure for SIO_{GET,SET}_MULTICAST_FILTER
   {$EXTERNALSYM ip_msfilter}
-  ip_msfilter = packed record
+  ip_msfilter = record
     imsf_multiaddr: TInAddr;    // IP multicast address of group
     imsf_interface: TInAddr;    // local IP address of interface
     imsf_fmode: u_long;         // filter mode - INCLUDE or EXCLUDE
@@ -3014,7 +3014,7 @@ const
 // IPv6 definitions
 type
   {$EXTERNALSYM IN6_ADDR}
-  IN6_ADDR = packed record
+  IN6_ADDR = record
     case Integer of
       0: (s6_addr: array[0..15] of u_char);
       1: (word: array[0..7] of u_short);
@@ -3028,14 +3028,14 @@ type
 
   // Argument structure for IPV6_JOIN_GROUP and IPV6_LEAVE_GROUP
   {$EXTERNALSYM ipv6_mreq}
-  ipv6_mreq = packed record
+  ipv6_mreq = record
     ipv6mr_multiaddr: TIn6Addr; // IPv6 multicast address
     ipv6mr_interface: u_int; // Interface index
   end;
 
   // Old IPv6 socket address structure (retained for sockaddr_gen definition below)
   {$EXTERNALSYM sockaddr_in6_old}
-  sockaddr_in6_old = packed record
+  sockaddr_in6_old = record
     sin6_family   : Smallint;         // AF_INET6
     sin6_port     : u_short;          // Transport level port number
     sin6_flowinfo : u_long;           // IPv6 flow information
@@ -3044,7 +3044,7 @@ type
 
 // IPv6 socket address structure, RFC 2553
   {$EXTERNALSYM SOCKADDR_IN6}
-  SOCKADDR_IN6 = packed record
+  SOCKADDR_IN6 = record
     sin6_family   : Smallint;         // AF_INET6
     sin6_port     : u_short;          // Transport level port number
     sin6_flowinfo : u_long;           // IPv6 flow information
@@ -3059,7 +3059,7 @@ type
   LPSOCKADDR_IN6 = PSOCKADDR_IN6;
 
   {$EXTERNALSYM sockaddr_gen}
-  sockaddr_gen = packed record
+  sockaddr_gen = record
     case Integer of
       1 : ( Address : TSockAddr; );
       2 : ( AddressIn : TSockAddrIn; );
@@ -3069,7 +3069,7 @@ type
 
 // Structure to keep interface specific information
   {$EXTERNALSYM INTERFACE_INFO}
-  INTERFACE_INFO = packed record
+  INTERFACE_INFO = record
     iiFlags            : u_long;       // Interface flags
     iiAddress          : TSockAddrGen; // Interface address
     iiBroadcastAddress : TSockAddrGen; // Broadcast address
@@ -3083,7 +3083,7 @@ type
 
 // New structure that does not have dependency on the address size
   {$EXTERNALSYM INTERFACE_INFO_EX}
-  INTERFACE_INFO_EX = packed record
+  INTERFACE_INFO_EX = record
     iiFlags            : u_long;          // Interface flags
     iiAddress          : TSocket_Address; // Interface address
     iiBroadcastAddress : TSocket_Address; // Broadcast address
@@ -3156,7 +3156,7 @@ const
 type
 // structure for IP_PKTINFO option
   {$EXTERNALSYM IN_PKTINFO}
-  IN_PKTINFO = packed record
+  IN_PKTINFO = record
     ipi_addr    : TInAddr;  // destination IPv4 address
     ipi_ifindex : UINT;    // received interface index
   end;
@@ -3165,7 +3165,7 @@ type
 
 // structure for IPV6_PKTINFO option
   {$EXTERNALSYM IN6_PKTINFO}
-  IN6_PKTINFO = packed record
+  IN6_PKTINFO = record
     ipi6_addr       : TIn6Addr; // destination IPv6 address
     ipi6_ifindex    : UINT;     // received interface index
   end;
@@ -3207,7 +3207,7 @@ const
 type
   PAddrInfo = ^ADDRINFO;
   {$EXTERNALSYM ADDRINFO}
-  ADDRINFO = packed record
+  ADDRINFO = record
     ai_flags        : Integer;      // AI_PASSIVE, AI_CANONNAME, AI_NUMERICHOST
     ai_family       : Integer;      // PF_xxx
     ai_socktype     : Integer;      // SOCK_xxx
@@ -3273,7 +3273,7 @@ var
 // This is the structure of the SOCKADDR structure for IPX and SPX.
 type
   {$EXTERNALSYM SOCKADDR_IPX}
-  SOCKADDR_IPX = packed record
+  SOCKADDR_IPX = record
     sa_family : u_short;
     sa_netnum : Array [0..3] of Char;
     sa_nodenum : Array [0..5] of Char;
@@ -3384,7 +3384,7 @@ const
 
 type
   {$EXTERNALSYM IPX_ADDRESS_DATA}
-  IPX_ADDRESS_DATA = packed record
+  IPX_ADDRESS_DATA = record
     adapternum : Integer;                 // input: 0-based adapter number
     netnum     : Array [0..3] of Byte;    // output: IPX network number
     nodenum    : Array [0..5] of Byte;    // output: IPX node address
@@ -3409,7 +3409,7 @@ const
 
 type
   {$EXTERNALSYM IPX_NETNUM_DATA}
-  IPX_NETNUM_DATA = packed record
+  IPX_NETNUM_DATA = record
     netnum   : Array [0..3] of Byte;  // input: IPX network number
     hopcount : Word;                  // output: hop count to this network, in machine order
     netdelay : Word;                  // output: tick count to this network, in machine order
@@ -3440,7 +3440,7 @@ const
 
 type
   {$EXTERNALSYM IPX_SPXCONNSTATUS_DATA}
-  IPX_SPXCONNSTATUS_DATA = packed record
+  IPX_SPXCONNSTATUS_DATA = record
     ConnectionState         : Byte;
     WatchDogActive          : Byte;
     LocalConnectionId       : Word;
@@ -3552,7 +3552,7 @@ const
 
 type
   {$EXTERNALSYM SOCKADDR_NB}
-  SOCKADDR_NB = packed record
+  SOCKADDR_NB = record
     snb_family : Smallint;
     snb_type   : u_short;
     snb_name   : array[0..NETBIOS_NAME_LENGTH-1] of Char;
@@ -3630,7 +3630,7 @@ const
 
 type
   {$EXTERNALSYM ATM_ADDRESS}
-  ATM_ADDRESS = packed record
+  ATM_ADDRESS = record
     AddressType : DWORD;                        // E.164 or NSAP-style ATM Endsystem Address
     NumofDigits : DWORD;                        // number of digits;
     Addr : Array[0..ATM_ADDR_SIZE-1] of Byte; // IA5 digits for E164, BCD encoding for NSAP
@@ -3690,7 +3690,7 @@ const
 
 type
   {$EXTERNALSYM ATM_BLLI}
-  ATM_BLLI = packed record
+  ATM_BLLI = record
     // Identifies the layer-two protocol.
     // Corresponds to the User information layer 2 protocol field in the B-LLI information element.
     // A value of SAP_FIELD_ABSENT indicates that this field is not used, and a value of SAP_FIELD_ANY means wildcard.
@@ -3732,7 +3732,7 @@ const
 
 type
   {$EXTERNALSYM ATM_BHLI}
-  ATM_BHLI = packed record
+  ATM_BHLI = record
     // Identifies the high layer information type field in the B-LLI information element.
     // Note that the type BHLI_HighLayerProfile has been eliminated in UNI 3.1.
     // A value of SAP_FIELD_ABSENT indicates that B-HLI is not present, and a value of SAP_FIELD_ANY means wildcard.
@@ -3755,7 +3755,7 @@ type
 // To open a socket for native ATM services, parameters in socket should contain
 // AF_ATM, SOCK_RAW, and ATMPROTO_AAL5 or ATMPROTO_AALUSER, respectively.
   {$EXTERNALSYM SOCKADDR_ATM}
-  SOCKADDR_ATM = packed record
+  SOCKADDR_ATM = record
     // Identifies the address family, which is AF_ATM in this case.
     satm_family : u_short;
     // Identifies the ATM address that could be either in E.164 or NSAP-style ATM End Systems Address format.
@@ -3822,7 +3822,7 @@ const
 
 type
   {$EXTERNALSYM AAL5_PARAMETERS}
-  AAL5_PARAMETERS = packed record
+  AAL5_PARAMETERS = record
     ForwardMaxCPCSSDUSize  : ULONG;
     BackwardMaxCPCSSDUSize : ULONG;
     Mode     : Byte; // only available in UNI 3.0
@@ -3830,12 +3830,12 @@ type
   end;
 
   {$EXTERNALSYM AALUSER_PARAMETERS}
-  AALUSER_PARAMETERS = packed record
+  AALUSER_PARAMETERS = record
     UserDefined : ULONG;
   end;
 
   {$EXTERNALSYM AAL_PARAMETERS_IE}
-  AAL_PARAMETERS_IE = packed record
+  AAL_PARAMETERS_IE = record
     AALType : AAL_TYPE;
     case Byte of
       0: ( AAL5Parameters    : AAL5_PARAMETERS );
@@ -3843,7 +3843,7 @@ type
   end;
 
   {$EXTERNALSYM ATM_TD}
-  ATM_TD = packed record
+  ATM_TD = record
     PeakCellRate_CLP0         : ULONG;
     PeakCellRate_CLP01        : ULONG;
     SustainableCellRate_CLP0  : ULONG;
@@ -3854,7 +3854,7 @@ type
   end;
 
   {$EXTERNALSYM ATM_TRAFFIC_DESCRIPTOR_IE}
-  ATM_TRAFFIC_DESCRIPTOR_IE = packed record
+  ATM_TRAFFIC_DESCRIPTOR_IE = record
     Forward    : ATM_TD;
     Backward   : ATM_TD;
     BestEffort : LongBool;
@@ -3899,7 +3899,7 @@ const
 
 type
   {$EXTERNALSYM ATM_BROADBAND_BEARER_CAPABILITY_IE}
-  ATM_BROADBAND_BEARER_CAPABILITY_IE = packed record
+  ATM_BROADBAND_BEARER_CAPABILITY_IE = record
     BearerClass : Byte;
     TrafficType : Byte;
     TimingRequirements        : Byte;
@@ -4153,7 +4153,7 @@ const
 
 type
   {$EXTERNALSYM ATM_QOS_CLASS_IE}
-  ATM_QOS_CLASS_IE = packed record
+  ATM_QOS_CLASS_IE = record
     QOSClassForward  : Byte;
     QOSClassBackward : Byte;
   end;
@@ -4190,7 +4190,7 @@ const
 // ATM Connection Identifier
 type
   {$EXTERNALSYM ATM_CONNECTION_ID}
-  ATM_CONNECTION_ID = packed record
+  ATM_CONNECTION_ID = record
     DeviceNumber : DWORD;
     VPI          : DWORD;
     VCI          : DWORD;
@@ -4198,7 +4198,7 @@ type
 
 // Input buffer format for SIO_ASSOCIATE_PVC
   {$EXTERNALSYM ATM_PVC_PARAMS}
-  ATM_PVC_PARAMS = packed record
+  ATM_PVC_PARAMS = record
     PvcConnectionId : ATM_CONNECTION_ID;
     PvcQos          : QOS;
   end;
