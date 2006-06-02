@@ -63,6 +63,7 @@ implicitunits_win32=IdStackBSDBase IdStackWindows IdWinsock2 IdWship6 IdSysWin32
 implicitunits_win64=IdStackBSDBase IdStackWindows IdWinsock2 IdWship6 IdSysWin32
 implicitunits_wince=IdStackBSDBase IdStackWindows IdWinsock2 IdWship6 IdSysWin32
 implicitunits_wdosx=
+implicitunits_gba=
 
 [install]
 fpcpackage=y
