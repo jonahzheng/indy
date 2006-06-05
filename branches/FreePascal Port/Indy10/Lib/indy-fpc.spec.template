@@ -22,12 +22,11 @@
 
 Summary:   Indy.Sockets (FreePascal Version)
 Name:      %{_IndyBaseName}-fpc
-Version:   10.2.0.1
-Release:   7
+Version:   _
+Release:   _
 #the Indy name is hardcoded because we will probably have other package sets in that file.
 Source0:   http://www.indyproject.org/sockets/fpc/indy-%{version}.tar.bz2
 BuildRequires:  fpc = %{_FPC_RPM_Ver}
-Obsoletes: indy
 Requires:  fpc = %{_FPC_RPM_Ver}
 License:   BSD style or MPL
 BuildRoot: %{_tmppath}/%{name}-%{version}
@@ -56,24 +55,28 @@ automatically-code generation purposes.
 %setup -q -c
 
 %build
-cd %{_IndyBaseName}-%{version}/fpc
 # The source-files:
-mkdir -p fpcsrc
-cp -a Inc/* fpcsrc
-cp -a System/* fpcsrc
-cp -a Core/* fpcsrc
-cp -a Protocols/* fpcsrc
-cp Make* fpcsrc
-echo "%{_Build_IndyDocsDir}"
-echo "%_Build_IndyExamplesDir}"
-cp -a examples fpcsrc
+mkdir fpcsrc
+pwd
+cd fpc
+cp -a *.pas ../fpcsrc
+cp -a *.inc ../fpcsrc
+cp -a *.obj ../fpcsrc
+cp -a Makefile* ../fpcsrc
+cp -a examples ../fpcsrc
 
 #the binaries
 make all
 
 %install
-rm -rf %{buildroot}
-cd %{_IndyBaseName}-%{version}
+#rm -rf %{buildroot}
+#cd %{_IndyBaseName}-%{version}
+# The source-files:
+cd fpcsrc
+mkdir -p %{_Build_IndyFPCSRCDir}
+cp -r ./* %{_Build_IndyFPCSRCDir}
+#binaries
+cd ../fpc
 mkdir -p %{_Build_BinDir}
 mkdir -p %{_Build_LibDir}
 mkdir -p %{_Build_LibDebugDir}
@@ -81,18 +84,18 @@ mkdir -p %{_Build_FPCLibPrefix}
 mkdir -p %{_Build_IndyLibPrefix}
 mkdir -p %{_Build_IndyDocsDir}
 mkdir -p %{_Build_IndyExamplesDir}
-install -D -m 644 README %{_Build_IndyDocsDir}/README
-install -D -m 644 COPYING %{_Build_IndyDocsDir}/COPYING
-install -D -m 644 COPYING.modifiedBSD \
+install -D -m 644 ../README %{_Build_IndyDocsDir}/README
+install -D -m 644 ../COPYING %{_Build_IndyDocsDir}/COPYING
+install -D -m 644 ../COPYING.modifiedBSD \
   %{_Build_IndyDocsDir}/COPYING.modifiedBSD
-install -D -m 644 COPYING.MPL %{_Build_IndyDocsDir}/COPYING.MPL
-cd fpc
-  INSTALLOPTS="INSTALL_PREFIX=%{_Build_FPCLibPrefix} \
-                INSTALL_LIBDIR=%{_Build_LibDir} \
-                INSTALL_BASEDIR=%{_Build_FPCLibPrefix} \
-                INSTALL_DOCDIR=%{_Build_IndyDocsDir} \
-                INSTALL_BINDIR=%{_Build_BinDir} \
-                INSTALL_EXAMPLEDIR=%{_Build_IndyExamplesDir}"
+install -D -m 644 ../COPYING.MPL %{_Build_IndyDocsDir}/COPYING.MPL
+
+INSTALLOPTS="INSTALL_PREFIX=%{_Build_FPCLibPrefix} \
+             NSTALL_LIBDIR=%{_Build_LibDir} \
+             INSTALL_BASEDIR=%{_Build_FPCLibPrefix} \
+             INSTALL_DOCDIR=%{_Build_IndyDocsDir} \
+             INSTALL_BINDIR=%{_Build_BinDir} \
+             INSTALL_EXAMPLEDIR=%{_Build_IndyExamplesDir}"
 SETFPCDIR=0
 #Note that you have to use the FPCDIR environment variable 
 #for fpcmake -p T[target] so that it doesn't fail saying
@@ -105,19 +108,14 @@ if  [ -z "$FPCDIR" ]; then
   export FPCDIR
   SETFPCDIR=1
 fi
-echo "Indy example dir:"
-echo %{_Build_IndyExamplesDir}
 make distinstall ${INSTALLOPTS} 
 if [ $SETFPCDIR = '1' ]; then
   FPCDIR=
   export FPCDIR
 fi
-# The source-files:
-mkdir -p %{_Build_IndyFPCSRCDir}
-cp -a fpcsrc/* %{_Build_IndyFPCSRCDir}
 
-#%clean
-#rm -rf %{buildroot}
+%clean
+rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
@@ -133,11 +131,15 @@ cp -a fpcsrc/* %{_Build_IndyFPCSRCDir}
 %{_datadir}/fpcsrc/*
 
 %changelog
+* Sun Jun 4 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu> 10.2.0.1-8
+- adjusted for indy source-code files being in dir in distribution
+- removed hard-coded version numbers and release numbers.  They only need to be updated in
+  akeindyrpm.sh script
 * Fri May 26 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu>
 - indy-fpcsrc files now placed in a single dir so it works with Lazarus CodeTools.
-* Thu Apr 3 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu>
+* Thu Apr 3 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu> 10.2.0.1-7
 - spec file clean-ups
-* Mon Apr 3 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu>
+* Mon Apr 3 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu> 
 - changed the .gz file to a bz2 form to be consistant with other RPM's in many distributions.
 - added first example program.
 * Thu Mar 30 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu> 10.2.0.1-6
@@ -163,5 +165,5 @@ cp -a fpcsrc/* %{_Build_IndyFPCSRCDir}
 - tarrball names now include a "version" number
 - changelog to keep rpmlint happy
 - spec file clean ups.
-* Wed Mar 8 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu> 10.2.0.1-1 
+* Wed Mar 8 2006 J. Peter Mugaas <oma00215@mail.wvnet.edu> 10.2.0.1-1 cd ../fpc
 - initial spec file 
