@@ -1414,26 +1414,24 @@ end;
   {$ENDIF}
 {$ENDIF}
 
-
-{$ifdef win32_or_win64_or_winCE}
-{$ifdef wince}
-function TempPath: WideString;
-{$else}
-function TempPath: string;
-{$endif}
-var
-	i: integer;
-begin
-  SetLength(Result, MAX_PATH);
-  {$ifdef wince}
-  i := GetTempPath(Length(Result), PWideChar(Result));
-  {$else}
-  i := GetTempPath(Length(Result), PChar(Result));
+{$IFDEF DOTNET} 
+function TempPath: WideString; 
+begin 
+  Result := Sys.IncludeTrailingPathDelimiter(System.IO.GetTempPath); 
+end; 
+{$ELSE} 
+   {$ifdef win32_or_win64_or_winCE}
+function TempPath: {$IFDEF UNICODE}WideString{$ELSE}String{$ENDIF}; 
+var 
+  i: Integer; 
+  LBuf: array[0..MAX_PATH] of {$IFDEF UNICODE}WideChar{$ELSE}Char{$ENDIF}; 
+begin 
+  i := GetTempPath(MAX_PATH, LBuf); 
+  SetString(Result, LBuf, i); 
+  Result := Sys.IncludeTrailingPathDelimiter(Result); 
+end; 
   {$endif}
-  SetLength(Result, i);
-  Result := Sys.IncludeTrailingPathDelimiter(Result);
-end;
-{$ENDIF}
+{$ENDIF} 
 
 function MakeTempFilename(const APath: String = ''): string;
 var
