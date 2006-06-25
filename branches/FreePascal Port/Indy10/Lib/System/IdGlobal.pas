@@ -2636,7 +2636,7 @@ begin
     System.Threading.Thread.CurrentThread.Name := AName;
   end;
 {$ENDIF}
-{$ifdef win32_or_win64_or_winCE}
+{$ifdef win32_or_win64}
   with LThreadNameInfo do begin
     RecType := $1000;
     Name := PChar(AName);
