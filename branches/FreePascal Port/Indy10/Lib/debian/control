@@ -1,0 +1,17 @@
+Source: indy-fpc
+Section: devel
+Priority: optional
+Maintainer: J. Peter Mugaas <oma00215@mail.wvnet.edu>
+Build-Depends: fp-compiler, fp-units-rtl, fp-units-net, fp-units-fcl, fp-utils, debhelper (>= 4.0.0)
+Standards-Version: 3.6.2
+
+Package: indy-fpc
+Architecture: any
+Depends: fp-compiler, fp-units-rtl, fp-units-net, fp-units-fcl, fp-utils, ${shlibs:Depends}, ${misc:Depends}
+Description: Indy Sockets for FreePascal
+ Indy.Sockets is an open source socket library that supports clients, servers,
+ TCP, UDP, raw sockets, as well as over 100 higher level protocols such as
+ SMTP, POP3, NNTP, HTTP, and many more. Indy.Sockets is available for C#, C++,
+ Delphi, Visual Basic.NET, any .NET language, and Kylix. This version is for
+ FreePascal.
+

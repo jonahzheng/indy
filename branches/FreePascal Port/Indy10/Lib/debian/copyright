@@ -1,0 +1,25 @@
+This package was debianized by J. Peter Mugaas <oma00215@mail.wvnet.edu> on
+Mon, 17 Jul 2006 23:39:33 -0400.
+
+It was downloaded from http://www.indyproject.org/sockets/fpc/
+
+Copyright Holder: Chad Z. Hower (Kudzu) and the Indy Pit Crew <webmaster@indyproject.org>
+
+License:
+
+Indy is dual licensed. You can review which license better suits your needs,
+and use that license. You can even change your mind later if you have
+previously chosen one.
+
+Licenses
+
+Indy Modified BSD License - The Indy Modified BSD license is a very no nonsense
+license that allows you to do almost anything you want with Indy, provided you
+provide proper attribution. License are included in the COPYING.modifiedBSD
+file.
+
+Indy MPL (Mozilla Public License) License - To make it easier and consistent
+for JEDI users, we also offer an MPL license v1.1. License Details are
+available at http://www.mozilla.org/MPL/MPL-1.1.html and are included in the
+COPYING.MPL file.
+
