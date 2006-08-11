@@ -57,18 +57,28 @@ You probably should read the Development Tutorial (aka Build FAQ) at
 http://www.stack.nl/~marcov/buildfaq.pdf for more information about the 
 FreePascal build process.
 
+In your programs, you should have the following in your main program file:
+ 
+  {$IFDEF UNIX}{$IFDEF UseCThreads}
+  cthreads, 
+  {$ENDIF}{$ENDIF}
+
+defined as the first entry in your uses clause. Then when compiling, use the 
+"-dUseCThreads" parameter. This is important on Unix systems because Indy uses 
+multithreading in most servers and in some client components.
+
                                   Known Issues
 
-In Linux, this code requires that you have at least FreePascal 2.0.2 or the 
-current development snapshots. Earlier versions of the FreePascal RTL did not 
-have some constants defined and Indy uses those constants.
+In Linux, this code requires that you have FreePascal 2.0.3 snapshots 
+(ftp://ftp.freepascal.org/pub/fpc/snapshot/v20/i386-linux/fpc-2.0.3.i386-linux.tar.gz)
+or the current development snapshots. Earlier versions of the FreePascal RTL 
+do not have some constants defined and Indy uses those constants. Patches for 
+this were submitted in October 2005.
 
 The ElizaWeb demo may terminate after serving one page with the error, 
 "Exception=A thread cannot destroy itself except by setting FreeOnTerminate and 
 leaving" in Unix operating systems. The current snapshot versions of FPC have a 
-fix for this problem and this issue. Note that this demo will probably be 
-rewritten so it does NOT depend upon GUI elements or other Lazarus features. 
-This rewrite should also help facilitate testing Indy on various platforms.
+fix for this problem.
 
 In IdStackLinux and IdStackUnix, we need a working TIdStackLinux.ReceiveMsg and 
 TIdStackUnix.ReceiveMsg that uses the standard Posix recvmsg system call. This 
@@ -142,8 +152,10 @@ SSL, ask your lawyer.  We can NOT give you legal advise.
 
                                  Contacting Us
 
-Do not contact us wanting help for your project or any support. Only report 
-specific errors, improvements, and contributions as well as any success you 
-have with your particular operating system/architecture combination. E-Mail J. 
-Peter Mugaas at oma00215@mail.wvnet.edu. Remember that I and all Indy 
-developers are volunteers who give their time without any compensation.
+For peer support, you may use the 
+news://news.atozed.com/atozedsoftware.indy.fpc newsgroup. Do not E-Mail us if 
+you need help with your program or using Indy. Only E-Mail us if you have 
+specific improvements, code contributions, or wish to report success with some 
+particular target operating systems. Remember that all Indy developers 
+are volunteers who give their time without any compensation.
+
