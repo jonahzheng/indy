@@ -1,14 +1,20 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 # Sample debian/rules that uses debhelper.
+#
 # This file was originally written by Joey Hess and Craig Small.
 # As a special exception, when this file is copied by dh-make into a
 # dh-make output file, you may use that output file without restriction.
 # This special exception was added by Craig Small in version 0.37 of dh-make.
+#
+# Modified to make a template file for a multi-binary package with separated
+# build-arch and build-indep targets  by Bill Allombert 2001
 
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
+# This has to be exported to make some magic below work.
+export DH_OPTIONS
 
 
 
@@ -16,8 +22,10 @@ CFLAGS = -Wall -g
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0
+	OPT+= -O0
 else
 	CFLAGS += -O2
+	OPT+= -O2
 endif
 
 FPCVER=$(shell fpc -iV)
@@ -27,62 +35,91 @@ FPCUnitArcDir=%{FPCUnitDir}/%{CPU_TARGET}-%{_os}
 #macros for install file placement
 BUILDDIR=$(CURDIR)/debian/indy-fpc/
 BUILDINSTPREFIX=$(BUILDDIR)/usr/lib/fpc/${FPCVER}
+BUILDINDYSRCDIR=$(CURDIR)/debian/indy-fpc-src/
+BUILDINDYSRCINSTALLPREFIX=${BUILDINDYSRCDIR}/usr/share/fpcsrc/packages/extra/indy
+
+
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
 
 	touch configure-stamp
+	dh_install 
 
+#Architecture 
+build: build-arch build-indep
 
-build: build-stamp
+build-arch: build-arch-stamp
+build-arch-stamp: configure-stamp 
 
-build-stamp: configure-stamp 
-	dh_testdir
+	# Add here commands to compile the arch part of the package.
+	$(MAKE) 
+	touch build-arch-stamp
 
-	# Add here commands to compile the package.
-	$(MAKE)
-	#docbook-to-man debian/indy-fpc.sgml > indy-fpc.1
+build-indep: build-indep-stamp
+build-indep-stamp: configure-stamp 
 
-	touch build-stamp
+	# Add here commands to compile the indep part of the package.
+	dh_install *.pas indy-fpc-src
+	dh_install Makefile* indy-fpc-src
+	dh_install examples indy-fpc-src
+	#$(MAKE) doc
+	touch build-indep-stamp
 
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp configure-stamp
+	rm -f build-arch-stamp build-indep-stamp #CONFIGURE-STAMP#
 
 	# Add here commands to clean up after the build process.
 	-$(MAKE) clean
 
 	dh_clean 
+	dh_clean ${BUILDINDYSRCINSTALLPREFIX}/*.pas ${BUILDINDYSRCINSTALLPREFIX}/Makefile*
 
-install: build
+install: install-indep install-arch
+install-indep:
 	dh_testdir
 	dh_testroot
-	dh_clean -k 
-	dh_installdirs
+	dh_clean -k -i 
+	
+	#dh_installdirs -i
 
-	# Add here commands to install the package into debian/indy-fpc.
+	# Add here commands to install the indep part of the package into
+	# debian/<package>-doc.
+	#INSTALLDOC#
+	mkdir -p ${BUILDINDYSRCINSTALLPREFIX}
+	cp -r ${CURDIR}/*.pas ${BUILDINDYSRCINSTALLPREFIX} 
+	cp -r ${CURDIR}/Makefile* ${BUILDINDYSRCINSTALLPREFIX} 
+	cp -r ${CURDIR}/examples ${BUILDINDYSRCINSTALLPREFIX}
+	dh_install -i
+
+install-arch:
+	dh_testdir
+	dh_testroot
+	dh_clean -k -s 
+	dh_installdirs -s
+
+	# Add here commands to install the arch part of the package into 
+	# debian/tmp.
 	FPCVER={fpc}
 	$(MAKE) install INSTALL_BASEDIR=${BUILDINSTPREFIX}
 #	$(MAKE) install DESTDIR=$(CURDIR)/debian/indy-fpc
-
-
-# Build architecture-independent files here.
-binary-indep: build install
-# We have nothing to do by default.
-
-# Build architecture-dependent files here.
-binary-arch: build install
+#
+	dh_install -s
+# Must not depend on anything. This is to be called by
+# binary-arch/binary-indep
+# in another 'make' thread.
+binary-common:
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs 
 	dh_installdocs
 	dh_installexamples
-#	dh_install
 #	dh_installmenu
 #	dh_installdebconf	
-#	dh_installlogrotate
+#	dh_installlogrotate	
 #	dh_installemacsen
 #	dh_installpam
 #	dh_installmime
@@ -92,16 +129,23 @@ binary-arch: build install
 	dh_installman
 	dh_link
 	dh_strip
-	dh_compress
+	dh_compress 
 	dh_fixperms
 #	dh_perl
 #	dh_python
-#	dh_makeshlibs
+	dh_makeshlibs
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
+# Build architecture independant packages using the common target.
+binary-indep: build-indep install-indep
+	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
 
-binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install configure
+# Build architecture dependant packages using the common target.
+binary-arch: build-arch install-arch
+	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
+
+binary: binary-arch binary-indep
+.PHONY: build clean binary-indep binary-arch binary install install-indep install-arch configure
