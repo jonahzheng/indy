@@ -40,6 +40,10 @@ to build the Indy RPM's. Then install the indy-fpc and indy-fpc-src RPM's that
 you created. We do NOT distribute precompiled Indy RPM binaries. We do permit 
 others to build RPM's for distribution.
 
+If you have a Debian-based Linux distribution and you have installed Free 
+Pascal as a Debian package, you can make .deb packages with "dpkg-buildpackag 
+-rfakeroot" and than install them with "dpkg -install indy*.deb".
+
 Otherwise, do the following:
 
 Change directory to "fpc" and run "make all". If you are using 
