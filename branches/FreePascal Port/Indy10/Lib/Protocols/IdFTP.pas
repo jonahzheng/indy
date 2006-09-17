@@ -170,10 +170,10 @@
   Rev 1.95    8/2/04 5:56:16 PM  RLebeau
   Tweaks to TIdFTP.InitDataChannel()
 
-  Rev 1.94    7/30/2004 1:55:04 AM  DSiders
+    Rev 1.94    7/30/2004 1:55:04 AM  DSiders
   Corrected DoOnRetrievedDir naming.
 
-  Rev 1.93    7/30/2004 12:36:32 AM  DSiders
+    Rev 1.93    7/30/2004 12:36:32 AM  DSiders
   Corrected spelling in OnRetrievedDir, DoOnRetrievedDir declarations.
 
   Rev 1.92    7/29/2004 2:15:28 AM  JPMugaas
@@ -211,7 +211,7 @@
   Rev 1.88    7/23/04 7:09:50 PM  RLebeau
   Bug fix for TFileStream access rights in Get()
 
-  Rev 1.87    7/18/2004 3:00:12 PM  DSiders
+    Rev 1.87    7/18/2004 3:00:12 PM  DSiders
   Added localization comments.
 
   Rev 1.86    7/16/2004 4:28:40 AM  JPMugaas
@@ -220,7 +220,7 @@
   Rev 1.85    7/13/04 6:48:14 PM  RLebeau
   Added support for new DataPort and DataPortMin/Max properties
 
-  Rev 1.84    7/6/2004 4:51:46 PM  DSiders
+    Rev 1.84    7/6/2004 4:51:46 PM  DSiders
   Corrected spelling of Challenge in properties, methods, types.
 
   Rev 1.83    7/3/2004 3:15:50 AM  JPMugaas
@@ -250,7 +250,7 @@
   Rev 1.77    6/14/2004 8:34:52 AM  JPMugaas
   Fix for AV on Put with Passive := True.
 
-  Rev 1.76    6/11/2004 9:34:12 AM  DSiders
+    Rev 1.76    6/11/2004 9:34:12 AM  DSiders
   Added "Do not Localize" comments.
 
   Rev 1.75    2004.05.20 11:37:16 AM  czhower
@@ -611,13 +611,10 @@ interface
 
 uses
   IdAssignedNumbers, IdGlobal, IdCustomTransparentProxy, IdExceptionCore,
-  IdExplicitTLSClientServerBase, IdFTPCommon, IdFTPList, IdFTPListParseBase, IdException,
-  IdIOHandler, IdIOHandlerSocket,
-  IdReplyFTP, IdBaseComponent,
-  IdReplyRFC,
-  IdReply,
-  IdSocketHandle, IdSys,
-  IdTCPConnection, IdTCPClient, IdThread, IdThreadSafe, IdObjs, IdZLibCompressorBase;
+  IdExplicitTLSClientServerBase, IdFTPCommon, IdFTPList, IdFTPListParseBase,
+  IdException, IdIOHandler, IdIOHandlerSocket, IdReplyFTP, IdBaseComponent,
+  IdReplyRFC, IdReply, IdSocketHandle, IdSys, IdTCPConnection, IdTCPClient,
+  IdThreadSafe, IdObjs, IdZLibCompressorBase;
 
 type
   //APR 011216:
@@ -1083,8 +1080,8 @@ begin
   FLoginMsg := TIdReplyFTP.Create(NIL);
   FListResult := TIdStringList.Create;
   FLangsSupported := TIdStringList.Create;
-  FCanResume := false;
-  FResumeTested := false;
+  FCanResume := False;
+  FResumeTested := False;
   FProxySettings:= TIdFtpProxySettings.Create; //APR
   FClientInfo := TIdFTPClientIdentifier.Create;
   FTZInfo := TIdFTPTZInfo.Create;
@@ -1099,7 +1096,7 @@ begin
   FZLibMemLevel := DEF_ZLIB_MEM_LEVEL;
   FZLibStratagy := DEF_ZLIB_STRATAGY; // - default
   //
-  FAbortFlag := TIdThreadSafeBOolean.Create;
+  FAbortFlag := TIdThreadSafeBoolean.Create;
   FAbortFlag.Value := False;
   {
 Soem firewalls don't handle control connections properly during long data transfers.
@@ -1177,12 +1174,9 @@ begin
       end;
       if IsSiteZONESupported then
       begin
-        if not FCanUseMLS then
-        begin
-          if SendCmd('SITE ZONE') = 210 then {do not localize}
-          begin
-            if LastCmdResult.Text.Count > 0 then
-            begin
+        if not FCanUseMLS then begin
+          if SendCmd('SITE ZONE') = 210 then begin {do not localize}
+            if LastCmdResult.Text.Count > 0 then begin
               LBuf := LastCmdResult.Text[0];
               //remove UTC from reply string "UTC-300"
               IdDelete(LBuf, 1, 3);
@@ -1231,7 +1225,7 @@ begin
     FCanResume := Quote('REST 1') = 350;   {do not localize}
     Quote('REST 0');  {do not localize}
   end;
-  Result := FCanResume
+  Result := FCanResume;
 end;
 
 procedure TIdFTP.Get(const ASourceFile: string; ADest: TIdStream; AResume: Boolean = False);
@@ -1240,7 +1234,8 @@ begin
   //where SSCN is ignored.
   ClearSSCN;
   AResume := AResume and CanResume;
-  ADest.Position := 0;
+  // RLebeau 7/26/06: do not do this! It breaks the ability to resume files
+  // ADest.Position := 0;
   InternalGet('RETR ' + ASourceFile, ADest, AResume);
 end;
 
@@ -1457,7 +1452,7 @@ begin
         LPasvCl.Host := LIP;
         LPasvCl.Port := LPort;
         if Assigned(FOnDataChannelCreate) then begin
-          OnDataChannelCreate(self,FDataChannel);
+          OnDataChannelCreate(Self, FDataChannel);
         end;
         LPasvCl.Connect;
         try
@@ -1739,17 +1734,16 @@ begin
     //Now SocksInfo are multi-thread safe
     FDataChannel.IOHandler.ConnectTimeout := IOHandler.ConnectTimeout;
   end;
-  if (FDataChannel.IOHandler is TIdIOHandlerSocket) and (IOHandler is TIdIOHandlerSocket) then
+  if Assigned(FDataChannel.Socket) and Assigned(Socket) then
   begin
-    TIdIOHandlerSocket(FDataChannel.IOHandler).TransparentProxy := TIdIOHandlerSocket(IOHandler).TransparentProxy;
-    TIdIOHandlerSocket(FDataChannel.IOHandler).IPVersion := TIdIOHandlerSocket(IOHandler).IPVersion;
+    FDataChannel.Socket.TransparentProxy := Socket.TransparentProxy;
+    FDataChannel.Socket.IPVersion := Socket.IPVersion;
   end;
   FDataChannel.IOHandler.ReadTimeout := FTransferTimeout;
   FDataChannel.IOHandler.SendBufferSize := IOHandler.SendBufferSize;
   FDataChannel.IOHandler.RecvBufferSize := IOHandler.RecvBufferSize;
-  FDataChannel.OnWork := OnWork;
-  FDataChannel.OnWorkBegin := OnWorkBegin;
-  FDataChannel.OnWorkEnd := OnWorkEnd;
+  FDataChannel.IOHandler.LargeStream := True;
+  FDataChannel.WorkTarget := Self;
 end;
 
 procedure TIdFTP.Put(const ASource: TIdStream; const ADestFile: string; const AAppend: Boolean = False);
@@ -1923,11 +1917,11 @@ function TIdFTP.Size(const AFileName: String): Int64;
 var
   SizeStr: String;
 begin
-  result := -1;
+  Result := -1;
   if SendCmd('SIZE ' + AFileName) = 213 then begin  {do not localize}
     SizeStr := Sys.Trim(LastCmdResult.Text.Text);
     IdDelete(SizeStr, 1, IndyPos(' ', SizeStr)); // delete the response   {do not localize}
-    result := Sys.StrToInt64(SizeStr, -1);
+    Result := Sys.StrToInt64(SizeStr, -1);
   end;
 end;
 
@@ -2067,7 +2061,7 @@ end;
 
 function TIdFTP.Quote(const ACommand: String): SmallInt;
 begin
-  result := SendCmd(ACommand);
+  Result := SendCmd(ACommand);
 end;
 
 procedure TIdFTP.Login;
@@ -2196,7 +2190,7 @@ begin
     end;
   fpcmOpen:
     begin
-      if (Length(ProxySettings.UserName)>0) then begin
+      if Length(ProxySettings.UserName) > 0 then begin
         if SendCmd('USER ' + ProxySettings.UserName, [230, 331]) = 331 then begin   {do not localize}
           SendCmd('PASS ' + GetLoginPassword, [230, 332]); {do not localize}
           if IsAccountNeeded then begin
@@ -2208,7 +2202,7 @@ begin
           end;
         end;
       end;
-      SendCmd('OPEN '+FtpHost);//? Server Reply? 220?     {do not localize}
+      SendCmd('OPEN ' + FtpHost);//? Server Reply? 220?     {do not localize}
       if SendCmd('USER ' + FUserName, [230, 232, 331]) = 331 then begin  {do not localize}
         SendCmd('PASS ' + GetLoginPassword, [230, 332]); {do not localize}
         if IsAccountNeeded then begin
@@ -2459,7 +2453,7 @@ var
   delim : Char;
   s : String;
 begin
-  s := Sys.Trim(LastCmdResult.Text[0]);
+  s := Sys.Trim(AReply);
   // "229 Entering Extended Passive Mode (|||59028|)"
   bLeft := IndyPos('(', s);   {do not localize}
   bRight := IndyPos(')', s);  {do not localize}
@@ -2469,7 +2463,7 @@ begin
   Fetch(S, delim);
   VIP := Fetch(S, delim);
   s := Sys.Trim(Fetch(S, delim));
-  VPort := Sys.StrToInt(s,0);
+  VPort := Sys.StrToInt(s, 0);
   if VPort = 0 then begin
     raise EIdFTPServerSentInvalidPort.Create(Sys.Format(RSFTPServerSentInvalidPort, [s]));
   end;
@@ -2479,10 +2473,6 @@ begin
 end;
 
 procedure TIdFTP.SendEPassive(var VIP: string; var VPort: integer);
-var
-  bLeft, bRight: Integer;
-  delim: Char;
-  s: string;
 begin
   SendDataSettings;
   //Note that for FTP Proxies, it is not desirable for the server to choose
@@ -2501,23 +2491,7 @@ begin
     Exit;
   end;
   try
-    ParseEPSV(Sys.Trim(LastCmdResult.Text[0]), VIP, VPort);
-    // "229 Entering Extended Passive Mode (|||59028|)"
-    bLeft := IndyPos('(', s);   {do not localize}
-    bRight := IndyPos(')', s);  {do not localize}
-    s := Copy(s, bLeft + 1, bRight - bLeft - 1);
-    delim := s[1]; // normally is | but the RFC say it may be different
-    Fetch(S, delim);
-    Fetch(S, delim);
-    VIP := Fetch(S, delim);
-    s := Sys.Trim(Fetch(S, delim));
-    VPort := Sys.StrToInt(s,0);
-    if VPort = 0 then begin
-      raise EIdFTPServerSentInvalidPort.Create(Sys.Format(RSFTPServerSentInvalidPort, [s]));
-    end;
-    if VIP = '' then begin
-      VIP := Host;
-    end;
+    ParseEPSV(LastCmdResult.Text[0], VIP, VPort);
   except
     SendCmd('ABOR');  {do not localize}
     raise;
@@ -2594,10 +2568,11 @@ begin
 end;
 
 procedure TIdFTP.ExtListItem(ADest: TIdStrings; AFList : TIdFTPListItems; const AItem: string);
-var i : Integer;
+var
+  i : Integer;
 begin
   ADest.Clear;
-  SendCMD(Sys.Trim('MLST '+AItem), 250);  {do not localize}
+  SendCmd(Sys.Trim('MLST ' + AItem), 250);  {do not localize}
   for i := 0 to LastCmdResult.Text.Count -1 do begin
     if Pos(';', LastCmdResult.Text[i]) > 0 then begin
       ADest.Add(LastCmdResult.Text[i]);
@@ -2778,7 +2753,7 @@ end;
 
 function TIdFTP.GetSupportsTLS: Boolean;
 begin
-  Result := (FindAuthCmd<>'');
+  Result := (FindAuthCmd <> '');
 end;
 
 function TIdFTP.FindAuthCmd: String;

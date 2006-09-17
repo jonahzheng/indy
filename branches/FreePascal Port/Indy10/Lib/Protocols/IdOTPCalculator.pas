@@ -75,6 +75,7 @@ type
 
   EIdOTPError = class(EIdException);
   EIdOTPUnknownMethod = class(EIdOTPError);
+
 implementation
 
 uses

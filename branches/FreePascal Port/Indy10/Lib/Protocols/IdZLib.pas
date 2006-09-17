@@ -256,18 +256,30 @@ end;
 function DMAOfStream(AStream: TStream; out Available: integer): Pointer;
 begin
   if AStream.inheritsFrom(TCustomMemoryStream) then
-    Result := TCustomMemoryStream(AStream).Memory
-  else if AStream.inheritsFrom(TStringStream) then
-    Result := Pointer(TStringStream(AStream).DataString)
-  else
-    Result := nil;
+  begin
+    Result := TCustomMemoryStream(AStream).Memory;
+  end
+  else 
+  begin
+    if AStream.inheritsFrom(TStringStream) then
+    begin
+      Result := Pointer(TStringStream(AStream).DataString);
+    end
+    else
+    begin
+      Result := nil;
+    end;
+  end;
   if Result <> nil then
   begin
     //what if integer overflow?
     Available := AStream.Size - AStream.Position;
-    Inc(Integer(Result), AStream.Position);
+    Inc(PtrInt(Result), AStream.Position);
   end
-  else Available := 0;
+  else
+  begin 
+    Available := 0;
+  end;
 end;
 
 function CanResizeDMAStream(AStream: TStream): boolean;

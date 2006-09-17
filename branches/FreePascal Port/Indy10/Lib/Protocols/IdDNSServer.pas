@@ -298,9 +298,9 @@ type
   public
      constructor Create(List :TIdDNSMap);
      destructor Destroy; override;
- 
+  published
      procedure SyncAndUpdate (Sender : TObject);
-//these can't be published in FPC
+
      property Host : string read FHost write SetHost;
      property DomainName : string read FDomainName write FDomainName;
   end;

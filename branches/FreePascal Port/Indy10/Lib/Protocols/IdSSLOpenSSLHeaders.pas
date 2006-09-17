@@ -55,7 +55,7 @@ interface
 // with Win32 API header files
 (*$HPPEMIT '#include <time.h>'*)
 
-Const
+const
   OPENSSL_ASN1_F_A2D_ASN1_OBJECT = 100;
   OPENSSL_ASN1_F_A2I_ASN1_ENUMERATED = 236;
   OPENSSL_ASN1_F_A2I_ASN1_INTEGER = 101;
@@ -1922,8 +1922,8 @@ Const
   OPENSSL_SSL_MAX_KEY_ARG_LENGTH = 8;
   OPENSSL_SSL_MAX_MASTER_KEY_LENGTH = 48;
   OPENSSL_SSL_MAX_SID_CTX_LENGTH = 32;
-  OPENSSL_SSL_MAX_SSL_SESSION_ID_LENGTH = 32;
   OPENSSL_SSL_MAX_KRB5_PRINCIPAL_LENGTH = 256;
+  OPENSSL_SSL_MAX_SSL_SESSION_ID_LENGTH = 32;
   OPENSSL_SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER = $00000002;
   OPENSSL_SSL_MODE_ENABLE_PARTIAL_WRITE = $00000001;
   OPENSSL_SSL_NOTHING = 1;
@@ -4955,8 +4955,12 @@ const
   fn_fopen = 'mi_fopen';  {Do not localize}
   fn_fclose = 'mi_fclose';  {Do not localize}
 
+  //
+  fn_PKCS12_create = 'PKCS12_create'; {Do not localize}
+  fn_i2d_PKCS12_bio = 'i2d_PKCS12_bio'; {Do not localize}
+  fn_PKCS12_free = 'PKCS12_free'; {Do not localize}
+
   //GREGOR
-   
   fn_RAND_screen = 'RAND_screen';  {Do not localize}
 
   //experimental
@@ -5228,6 +5232,10 @@ begin
   //@IdSslCryptoDbgFree := LoadFunctionCLib(fn_CRYPTO_dbg_free);
   //@IdSslCryptoDbgSetOptions := LoadFunctionCLib(fn_CRYPTO_dbg_set_options);
   //@IdSslCryptoDbgGetOptions := LoadFunctionCLib(fn_CRYPTO_dbg_get_options);
+
+  @IdSSLPKCS12Create := LoadFunctionCLib(fn_PKCS12_create);
+  @IdSSLI2dPKCS12Bio := LoadFunctionCLib(fn_i2d_PKCS12_bio);
+  @IdSSLPKCS12Free := LoadFunctionCLib(fn_PKCS12_free);
 
   //@IdSslAddAllAlgorithms := LoadFunctionCLib('OpenSSL_add_all_algorithms');
   @IdSslAddAllCiphers := LoadFunctionCLib(fn_OpenSSL_add_all_ciphers);

@@ -193,6 +193,7 @@ interface
 {$TYPEDADDRESS OFF}
 uses
   Classes,
+  IdBuffer,
   IdGlobal,
   IdException,
   IdStackConsts,
@@ -210,8 +211,7 @@ uses
   IdSocks,
   IdScheduler,
   IdSys,
-  IdYarn,
-  IdBuffer;
+  IdYarn;
 
 type
   TIdX509 = class;
@@ -707,49 +707,49 @@ begin
 
   LockLoadSSL.Acquire;
   try
-  if SSLIsLoaded then
+    if SSLIsLoaded then
     begin
-    Result:=True;
-    Exit;
+      Result := True;
+      Exit;
     end;
 
-  Result := IdSSLOpenSSLHeaders.Load;
-  if not Result then Exit;
+    Result := IdSSLOpenSSLHeaders.Load;
+    if not Result then Exit;
 
-  {$IFDEF IDOPENSSLMEMORY}
-  //has to be done before anything that uses memory
-  IdSslCryptoMallocInit;
-  {$ENDIF}
+    {$IFDEF IDOPENSSLMEMORY}
+    //has to be done before anything that uses memory
+    IdSslCryptoMallocInit;
+    {$ENDIF}
 
-  //required eg to encrypt a private key when writing
-  IdSslAddAllCiphers;
-  IdSslAddAllDigests;
+    //required eg to encrypt a private key when writing
+    IdSslAddAllCiphers;
+    IdSslAddAllDigests;
 
-  InitializeRandom;
-  // IdSslRandScreen;
-  IdSslLoadErrorStrings;
+    InitializeRandom;
+    // IdSslRandScreen;
+    IdSslLoadErrorStrings;
 
-  // Successful loading if true
-  Result := IdSslAddSslAlgorithms > 0;
-  if not Result then Exit;
+    // Successful loading if true
+    Result := IdSslAddSslAlgorithms > 0;
+    if not Result then Exit;
 
-  // Create locking structures, we need them for callback routines
-  Assert(LockInfoCB=nil);
-  LockInfoCB := TIdCriticalSection.Create;
-  LockPassCB := TIdCriticalSection.Create;
-  LockVerifyCB := TIdCriticalSection.Create;
+    // Create locking structures, we need them for callback routines
+    Assert(LockInfoCB=nil);
+    LockInfoCB := TIdCriticalSection.Create;
+    LockPassCB := TIdCriticalSection.Create;
+    LockVerifyCB := TIdCriticalSection.Create;
 
-  // Handle internal OpenSSL locking
-  CallbackLockList := TThreadList.Create;
-  IdSslSetLockingCallback(SslLockingCallback);
-  PrepareOpenSSLLocking;
+    // Handle internal OpenSSL locking
+    CallbackLockList := TThreadList.Create;
+    IdSslSetLockingCallback(SslLockingCallback);
+    PrepareOpenSSLLocking;
 
-  IdSslSetIdCallback(_GetThreadID);
+    IdSslSetIdCallback(_GetThreadID);
 
-  SSLIsLoaded := True;
-  Result := True;
+    SSLIsLoaded := True;
+    Result := True;
   finally
-  LockLoadSSL.Release;
+    LockLoadSSL.Release;
   end;
 end;
 
@@ -762,6 +762,7 @@ begin
   //ssl was never loaded
   if LockInfoCB=nil then Exit;
 
+  IdSslSetLockingCallback(nil);
   IdSSLOpenSSLHeaders.Unload;
 
   Sys.FreeAndNil(LockInfoCB);
@@ -843,48 +844,49 @@ begin
   try
     VerifiedOK := True;
     try
-      hcert := IdSslX509StoreCtxGetCurrentCert(ctx);
       hSSL := IdSslX509StoreCtxGetAppData(ctx);
-      Certificate := TIdX509.Create(hcert);
-
-      if hSSL <> nil then begin
-        IdSSLSocket := TIdSSLSocket(IdSslGetAppData(hSSL));
-      end
-      else begin
+      if hSSL = nil then begin
         Result := Ok;
-        exit;
+        Exit;
       end;
 
-      //Error :=
-      IdSslX509StoreCtxGetError(ctx);
-      Depth := IdSslX509StoreCtxGetErrorDepth(ctx);
-      //  str := Format('Certificate: %s', [Certificate.Subject.OneLine]);    {Do not Localize}
-      //  str := IdSSLSocket.GetSessionIDAsString;
-      //  ShowMessage(str);
+      hcert := IdSslX509StoreCtxGetCurrentCert(ctx);
+      Certificate := TIdX509.Create(hcert);
+      try
+        IdSSLSocket := TIdSSLSocket(IdSslGetAppData(hSSL));
 
-      if not ((Ok>0) and (IdSSLSocket.fSSLContext.VerifyDepth>=Depth)) then begin
-        Ok := 0;
-        {if Error = OPENSSL_X509_V_OK then begin
-          Error := OPENSSL_X509_V_ERR_CERT_CHAIN_TOO_LONG;
-        end;}
-      end;
+        //Error :=
+        IdSslX509StoreCtxGetError(ctx);
+        Depth := IdSslX509StoreCtxGetErrorDepth(ctx);
+        //  str := Format('Certificate: %s', [Certificate.Subject.OneLine]);    {Do not Localize}
+        //  str := IdSSLSocket.GetSessionIDAsString;
+        //  ShowMessage(str);
+
+        if not ((Ok > 0) and (IdSSLSocket.fSSLContext.VerifyDepth >= Depth)) then begin
+          Ok := 0;
+          {if Error = OPENSSL_X509_V_OK then begin
+            Error := OPENSSL_X509_V_ERR_CERT_CHAIN_TOO_LONG;
+          end;}
+        end;
       
-      LOk := False;
-      if Ok = 1 then begin
-        LOk := True;
-      end;
+        LOk := False;
+        if Ok = 1 then begin
+          LOk := True;
+        end;
 
-      if (IdSSLSocket.fParent is TIdSSLIOHandlerSocketOpenSSL) then begin
-        VerifiedOK := TIdSSLIOHandlerSocketOpenSSL(IdSSLSocket.fParent).DoVerifyPeer(Certificate, LOk);
-      end;
+        if (IdSSLSocket.fParent is TIdSSLIOHandlerSocketOpenSSL) then begin
+          VerifiedOK := TIdSSLIOHandlerSocketOpenSSL(IdSSLSocket.fParent).DoVerifyPeer(Certificate, LOk);
+        end;
 
-      if (IdSSLSocket.fParent is TIdServerIOHandlerSSLOpenSSL) then begin
-        VerifiedOK := TIdServerIOHandlerSSLOpenSSL(IdSSLSocket.fParent).DoVerifyPeer(Certificate, LOk);
+        if (IdSSLSocket.fParent is TIdServerIOHandlerSSLOpenSSL) then begin
+          VerifiedOK := TIdServerIOHandlerSSLOpenSSL(IdSSLSocket.fParent).DoVerifyPeer(Certificate, LOk);
+        end;
+      finally
+        Sys.FreeAndNil(Certificate);
       end;
-
-      Sys.FreeAndNil(Certificate);
     except
     end;
+
     //if VerifiedOK and (Ok > 0) then begin
     if VerifiedOK {and (Ok > 0)} then begin
       Result := 1;
@@ -1106,12 +1108,9 @@ end;
 procedure TIdSSLIOHandlerSocketOpenSSL.ConnectClient;
 begin
   inherited ConnectClient;
-
-  DoBeforeConnect(self);
-
+  DoBeforeConnect(Self);
   // CreateSSLContext(sslmClient);
   // CreateSSLContext(SSLOptions.fMode);
-
   StartSSL;
 end;
 
@@ -1135,11 +1134,14 @@ begin
   Sys.FreeAndNil(fSSLSocket);
 
   //if close is being called from destroy then this buffer is already freed
-  if fRecvBuffer<>nil then fRecvBuffer.Clear;
+  if Assigned(fRecvBuffer) then begin
+    fRecvBuffer.Clear;
+  end;
 
   if not IsPeer then begin
     Sys.FreeAndNil(fSSLContext);
   end;
+
   inherited Close;
 end;
 
@@ -1341,7 +1343,7 @@ var
   LLastError: Integer;
 begin
   if ATimeout = IdTimeoutDefault then begin
-	if (ReadTimeout = IdTimeoutDefault) or (ReadTimeOut = 0) then begin
+    if (ReadTimeout = IdTimeoutDefault) or (ReadTimeOut = 0) then begin
       ATimeout := IdTimeoutInfinite;
     end else begin
       ATimeout := FReadTimeout;
@@ -1354,7 +1356,7 @@ begin
     LByteCount := 0;
     repeat
       if Readable(ATimeout) then begin
-        if Assigned(FRecvBuffer) then begin
+        if Opened then begin
           // No need to call AntiFreeze, the Readable does that.
           if BindingAllocated then begin
             SetLength(LBuffer, RecvBufferSize);
@@ -1366,7 +1368,7 @@ begin
                   Intercept.Receive(LBuffer);
                   LByteCount := Length(LBuffer);
                 end;
-                FRecvBuffer.Write(LBuffer);
+                fRecvBuffer.Write(LBuffer);
               end;
             finally
               SetLength(LBuffer, 0);
@@ -1382,8 +1384,7 @@ begin
         FClosedGracefully := LByteCount = 0;
 
         if not ClosedGracefully then begin
-          LLastError := GBSDStack.CheckForSocketError(LByteCount, [Id_WSAESHUTDOWN
-           , Id_WSAECONNABORTED]);
+          LLastError := GBSDStack.CheckForSocketError(LByteCount, [Id_WSAESHUTDOWN, Id_WSAECONNABORTED]);
           if LLastError <> 0 then begin
             LByteCount := 0;
             Close;
@@ -1407,7 +1408,7 @@ begin
 //                PChar(IOHandler.RecvBuffer.Memory)[i] := Chr(Ord(PChar(IOHandler.RecvBuffer.Memory)[i]) and $7F);
 //              end;
 //            end;
-            FRecvBuffer.ExtractToIdBuffer(FInputBuffer,-1);
+            fRecvBuffer.ExtractToIdBuffer(FInputBuffer,-1);
           end;
         end;
         // Check here as other side may have closed connection
@@ -1430,7 +1431,8 @@ begin
 end;
 
 function TIdSSLIOHandlerSocketOpenSSL.Clone: TIdSSLIOHandlerSocketBase;
-var LIO : TIdSSLIOHandlerSocketOpenSSL;
+var
+  LIO : TIdSSLIOHandlerSocketOpenSSL;
 begin
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   LIO.SSLOptions.Assign( SSLOptions );
@@ -2090,7 +2092,7 @@ begin
   end;
 end;
 
-function TIdX509.RnotBefore:TIdDateTime;
+function TIdX509.RnotBefore: TIdDateTime;
 begin
   if FX509 = nil then begin
     Result := 0
@@ -2166,4 +2168,3 @@ finalization
   Sys.FreeAndNil(LockLoadSSL);
 
 end.
-

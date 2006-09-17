@@ -70,7 +70,7 @@
   Rev 1.21    10/20/2003 12:58:18 PM  JPMugaas
   Exception messages moved to RS.
 
-  Rev 1.20    10/17/2003 1:15:26 AM  DSiders
+    Rev 1.20    10/17/2003 1:15:26 AM  DSiders
   Added resource strings used in Message Client, HTTP, IMAP4.
 
   Rev 1.19    2003.10.14 1:28:00 PM  czhower
@@ -82,7 +82,7 @@
   Rev 1.17    9/8/2003 02:24:36 AM  JPMugaas
   New message for custom FTP Proxy support.
 
-  Rev 1.16    8/10/2003 11:05:22 AM  BGooijen
+    Rev 1.16    8/10/2003 11:05:22 AM  BGooijen
   fixed typo
 
   Rev 1.15    6/17/2003 03:14:38 PM  JPMugaas
@@ -203,6 +203,7 @@ resourcestring
   RSNNTPNoOnNewNewsList = 'No OnNewNewsList event has been defined.';
   RSNNTPNoOnXHDREntry = 'No OnXHDREntry event has been defined.';
   RSNNTPNoOnXOVER = 'No OnXOVER event has been defined.';
+
   // HTTP Status
   RSHTTPChunkStarted = 'Chunk Started';
   RSHTTPContinue = 'Continue';
@@ -234,6 +235,7 @@ resourcestring
   RSHTTPRequestEntityToLong = 'Request Entity To Long';
   RSHTTPRequestURITooLong = 'Request-URI Too Long. 256 Chars max';
   RSHTTPUnsupportedMediaType = 'Unsupported Media Type';
+  RSHTTPExpectationFailed = 'Expectation Failed';
   RSHTTPInternalServerError = 'Internal Server Error';
   RSHTTPNotImplemented = 'Not Implemented';
   RSHTTPBadGateway = 'Bad Gateway';
@@ -379,6 +381,7 @@ resourcestring
   RSQueryInvalidHeaderID = 'Invalid Header Id %d';
   RSQueryLessThanTwelve = 'Received Packet is too small. Less than 12 bytes. %d';
   RSQueryPackReceivedTooSmall = 'Received Packet is too small. %d';
+  RSQueryUnknownError = 'Unknown Error %d, Id %d';
   RSQueryInvalidIpV6 = 'Invalid IP V6 Address. %s';
 
   RSQueryMustProvideSOARecord = 'You have to provide a TIdRR_SOA object with Serial number and Name to progress IXFR. %d';
@@ -750,9 +753,7 @@ resourcestring
   RSFTPCmdEndOfStat = 'End of Status';
   RSFTPCmdExtsSupportedStart = 'Extensions supported:';
   RSFTPCmdExtsSupportedEnd = 'End of extentions.';
-
   RSFTPNoOnDirEvent = 'No OnListDirectory event found!';
-
   RSFTPImplicitTLSRequiresSSL = 'Implicit FTP requires that IOHandler be set to a TIdServerIOHandlerSSL.';
 
   //%s number of attributes changes
@@ -922,7 +923,6 @@ resourcestring
 
   // OTP Calculator
   RSFTPFSysErrMsg = 'Permission Denied';
-  // OTP Calculator
   RSOTPUnknownMethod = 'Unknown OTP method';
 
 implementation

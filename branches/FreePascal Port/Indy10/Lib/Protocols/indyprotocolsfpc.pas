@@ -98,6 +98,7 @@ uses
   IdGopher,
   IdGopherConsts,
   IdGopherServer,
+  IdHL7,
   IdHTTP,
   IdHTTPHeaderInfo,
   IdHTTPProxyServer,
@@ -211,6 +212,5 @@ uses
   IdZLibCompressorBase;
 
 implementation
-
 
 end.

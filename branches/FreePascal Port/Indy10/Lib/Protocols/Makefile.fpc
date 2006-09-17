@@ -8,8 +8,8 @@ main=indy
 [compiler]
 includedir=../Inc
 unittargetdir=lib/$(CPU_TARGET)-$(OS_TARGET)
-unitdir=../System/lib/$(CPU_TARGET)-$(OS_TARGET) \
-        ../Core/lib/$(CPU_TARGET)-$(OS_TARGET)
+unitdir=../lib/$(CPU_TARGET)-$(OS_TARGET) \
+        ../lib/$(CPU_TARGET)-$(OS_TARGET)
 options=-gl
 
 [target]
@@ -38,6 +38,7 @@ rsts_watcom=
 rsts_win32=IdZLibConst
 rsts_win64=
 rsts_wince=
+rsts_gba=
 implicitunits=IdASN1Util \
   IdAllFTPListParsers \
   IdAttachment \
@@ -134,6 +135,7 @@ implicitunits=IdASN1Util \
   IdGopher \
   IdGopherConsts \
   IdGopherServer \
+  IdHL7 \
   IdHTTP \
   IdHTTPHeaderInfo \
   IdHTTPProxyServer \
@@ -273,17 +275,17 @@ units_macos=
 implicitunits_morphos=
 units_morphos=
 implicitunits_netbsd=IdSSLOpenSSLHeaders IdZLibHeaders \
-IdZLib IdZLibConst IdNTLM
+  IdZLib IdZLibConst IdNTLM
 units_netbsd=IdCompressorZLib IdSSLOpenSSL \
-IdCompressionIntercept IdAuthenticationNTLM
+  IdCompressionIntercept IdAuthenticationNTLM
 implicitunits_netware=
 units_netware=
 implicitunits_netwlibc=
 units_netwlibc=
 implicitunits_openbsd=IdSSLOpenSSLHeaders IdZLibHeaders \
-IdZLib IdZLibConst IdNTLM
+  IdZLib IdZLibConst IdNTLM
 units_openbsd=IdCompressorZLib IdSSLOpenSSL \
-IdCompressionIntercept IdAuthenticationNTLM
+  IdCompressionIntercept IdAuthenticationNTLM
 implicitunits_os2=
 units_os2=
 implicitunits_palmos=
@@ -294,19 +296,23 @@ units_qnx=IdCompressorZLib IdSSLOpenSSL IdCompressionIntercept IdAuthenticationN
 implicitunits_solaris=IdSSLOpenSSLHeaders IdZLibHeaders \
              IdZLib IdZLibConst IdNTLM
 units_solaris=IdCompressorZLib IdSSLOpenSSL \
-IdCompressionIntercept IdAuthenticationNTLM
+  IdCompressionIntercept IdAuthenticationNTLM
 implicitunits_watcom=
 units_watcom=
 implicitunits_win32=IdSSLOpenSSLHeaders IdZLibHeaders \
              IdZLib IdZLibConst IdNTLM
 units_win32=IdCompressorZLib IdSSLOpenSSL \
-IdCompressionIntercept IdAuthenticationNTLM
-implicitunits_win64=
-units_win64=
+  IdCompressionIntercept IdAuthenticationNTLM
+implicitunits_win64=IdSSLOpenSSLHeaders IdZLibHeaders \
+             IdZLib IdZLibConst IdNTLM
+units_win64=IdCompressorZLib IdSSLOpenSSL \
+  IdCompressionIntercept IdAuthenticationNTLM
 implicitunits_wince=
 units_wince=
 implicitunits_wdosx=
 units_wdosx=
+implicitunits_gba=
+units_gba=
 
 [requires]
 packages=indycorefpc

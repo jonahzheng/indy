@@ -167,9 +167,9 @@ word - max. packet size supported by server
 const
   IdPORT_FSP = 21;
 
-  HSIZE=12;    //header size
-  DEF_MAXSPACE=1012; //data length
-  DEF_MAXSIZE=DEF_MAXSPACE+HSIZE; //default maximum packet size
+  HSIZE = 12;    //header size
+  DEF_MAXSPACE = 1012; //data length
+  DEF_MAXSIZE = DEF_MAXSPACE+HSIZE; //default maximum packet size
 
 //commands
   CC_VERSION     = $10;  //Get server version string and setup
@@ -221,7 +221,7 @@ RDIRENT.HEADER types:
 }
   TIdFSPStatInfo = class(TIdCollectionItem)
   protected
-      FModifiedDateGMT : TIdDateTime;
+    FModifiedDateGMT : TIdDateTime;
     FModifiedDate: TIdDateTime;
     //Size is Int64 in case FSP 3 has an expansion, otherise, it can only handle
     //file sizes up 4 GB's.  It's not a bug, it's a feature.
@@ -233,12 +233,14 @@ RDIRENT.HEADER types:
     property ModifiedDate: TIdDateTime read FModifiedDate write FModifiedDate;
     property ModifiedDateGMT : TIdDateTime read FModifiedDateGMT write FModifiedDateGMT;
   end;
+
   TIdFSPListItem = class(TIdFSPStatInfo)
   protected
     FFileName: string;
   published
     property FileName: string read FFileName write FFileName;
   end;
+
   TIdFSPListItems = class(TIdCollection)
   protected
     function GetItems(AIndex: Integer): TIdFSPListItem;
@@ -249,8 +251,8 @@ RDIRENT.HEADER types:
     function ParseEntries(const AData : TIdBytes; const ADataLen : Cardinal) : Boolean;
     function IndexOf(AItem: TIdFSPListItem): Integer;
     property Items[AIndex: Integer]: TIdFSPListItem read GetItems write SetItems; default;
-
   end;
+
   TIdFSPDirInfo = class(TObject)
   protected
     FOwnsDir,
@@ -282,6 +284,7 @@ causes that directory can be listable even it do not have
     property CanRenameFiles : Boolean read FCanRenameFiles write FCanRenameFiles;
     property ReadMe : String read FReadMe write FReadMe;
   end;
+
   TIdFSPPacket = class(TObject)
   protected
     FCmd: Byte;
@@ -307,7 +310,9 @@ causes that directory can be listable even it do not have
     property ExtraData : TIdBytes read FExtraData write FExtraData;
   //  property WritePacket : TIdBytes read GetWritePacket write SetWritePacket;
   end;
+
   TIdFSPLogEvent = procedure (Sender : TObject; APacket : TIdFSPPacket) of object;
+
   TIdFSP = class(TIdUDPClient)
   protected
     FConEstablished : Boolean;
@@ -328,7 +333,6 @@ causes that directory can be listable even it do not have
     FDirInfo : TIdFSPDirInfo;
     FStatInfo : TIdFSPStatInfo;
     FOnRecv, FOnSend : TIdFSPLogEvent;
-
     FAbortFlag : TIdThreadSafeBoolean;
 
     //note:  This is optimized for performance - DO NOT MESS with it even if you don't like it
@@ -366,16 +370,14 @@ causes that directory can be listable even it do not have
     //this is so we can use it similarly to FTP
     //and also sends a BYE command which is the courteous thing to do.
     procedure List;  overload;
-    procedure List(  
-      const ASpecifier: string); overload;
+    procedure List(const ASpecifier: string); overload;
     procedure GetDirInfo(const ADIR : String); overload;
     procedure GetDirInfo(const ADIR : String; ADirInfo : TIdFSPDirInfo); overload;
     procedure GetStatInfo(const APath : String);
-    procedure Get(const ASourceFile, ADestFile: string; const ACanOverwrite: boolean = false;
-      AResume: Boolean = false); overload;
-    procedure Get(const ASourceFile: string; ADest: TIdStream; AResume: Boolean = false); overload;
-    procedure Put(const ASource: TIdStream; const ADestFile: string;
-       const AGMTTime : TIdDateTime=0); overload;
+    procedure Get(const ASourceFile, ADestFile: string; const ACanOverwrite: Boolean = False;
+      AResume: Boolean = False); overload;
+    procedure Get(const ASourceFile: string; ADest: TIdStream; AResume: Boolean = False); overload;
+    procedure Put(const ASource: TIdStream; const ADestFile: string; const AGMTTime : TIdDateTime = 0); overload;
     procedure Put(const ASourceFile: string; const ADestFile: string=''); overload;
     property SystemDesc: string read FSystemDesc;
     property SystemServerLogs : Boolean read  FSystemServerLogs;
@@ -478,10 +480,9 @@ procedure TIdFSP.Disconnect;
 var
   LBuf,LData, LExtra : TIdBytes;
 begin
-  if FConEstablished then
-  begin
-    SetLength(LBuf,0);
-    SendCmd( CC_BYE,LBuf,0,LData,LExtra);
+  if FConEstablished then begin
+    SetLength(LBuf, 0);
+    SendCmd(CC_BYE, LBuf, 0, LData, LExtra);
     inherited Disconnect;
   end;
   FConEstablished := False;
@@ -490,11 +491,11 @@ end;
 procedure TIdFSP.Get(const ASourceFile: string; ADest: TIdStream; AResume: Boolean);
 var
   LSendPacket : TIdFSPPacket;
-    LRecvPacket :  TIdFSPPacket;
-    LLen : Integer;
-    LTmpBuf : TIdBytes;
+  LRecvPacket :  TIdFSPPacket;
+  LLen : Integer;
+  LTmpBuf : TIdBytes;
 begin
-  SetLength(LTmpBuf,MaxBufferSize);
+  SetLength(LTmpBuf, MaxBufferSize);
   LSendPacket := TIdFSPPacket.Create;
   try
     LRecvPacket := TIdFSPPacket.Create;
@@ -577,7 +578,7 @@ begin
   FConEstablished := False;
   FClientMaxPacketSize := DEF_MAXSIZE;
   FAbortFlag := TIdThreadSafeBoolean.Create;
-  FAbortFlag.Value := FALSE;
+  FAbortFlag.Value := False;
 end;
 
 procedure TIdFSP.List;
@@ -599,18 +600,17 @@ begin
   SetLength(LTmpBuf, MaxBufferSize);
   LSendPacket := TIdFSPPacket.Create;
   try
-  LRecvPacket :=  TIdFSPPacket.Create;
-  try
-  //
-    LSendPacket.Cmd := CC_GET_DIR;
-    LSendPacket.FFilePosition := 0;
-    SetLength(LRecvPacket.FData, MaxBufferSize );
-    SetLength(LSendPacket.FExtraData, 2);
+    LRecvPacket := TIdFSPPacket.Create;
+    try
+      LSendPacket.Cmd := CC_GET_DIR;
+      LSendPacket.FFilePosition := 0;
+      SetLength(LRecvPacket.FData, MaxBufferSize);
+      SetLength(LSendPacket.FExtraData, 2);
 
-    CopyTIdNetworkWord(PrefPayloadSize,LSendPacket.FExtraData,0);
+      CopyTIdNetworkWord(PrefPayloadSize, LSendPacket.FExtraData, 0);
 
-    FDirectoryListing.Clear;
-    repeat
+      FDirectoryListing.Clear;
+      repeat
         LSendPacket.Data := ToBytes(LSpecifier+#0);
         LSendPacket.DataLen := Length(LSendPacket.Data);
 
@@ -693,7 +693,6 @@ Note
 Some fsp servers do not responds to this command,
 because this command is used by FSP scanners and
 servers do not wishes to be detected.
-
   }
   SetLength(LData, 0);
   SendCmdOnce(CC_VERSION, LData, LData, 0, LBuf, LExtraBuf);
@@ -837,7 +836,7 @@ var
   LTmpBuf : TIdBytes;
 begin
   LPosition := 0;
-  SetLength( LTmpBuf,MaxBufferSize);
+  SetLength(LTmpBuf, MaxBufferSize);
   LSendPacket := TIdFSPPacket.Create;
   try
     LRecvPacket := TIdFSPPacket.Create;
@@ -925,7 +924,7 @@ var
   LBuf, LExBuf : TIdBytes;
 begin
   LData := ToBytes(ADirName+#0);
-  SendCmd(CC_DEL_DIR,LData,0,LBuf, LExBuf);
+  SendCmd(CC_DEL_DIR, LData, 0, LBuf, LExBuf);
 end;
 
 procedure TIdFSP.Rename(const ASourceFile, ADestFile: string);
@@ -1086,10 +1085,10 @@ begin
   FCmd := 0;
   FFilePosition := 0;
   FDataLen := 0;
-  SetLength(FData,0);
-  SetLength(FExtraData,0);
-  FSequence:=0;
-  FKey:=0;
+  SetLength(FData, 0);
+  SetLength(FExtraData, 0);
+  FSequence := 0;
+  FKey := 0;
 end;
 
 function TIdFSPPacket.WritePacket : TIdBytes;
@@ -1239,7 +1238,6 @@ var
   i : Cardinal;
   LI : TIdFSPListItem;
   LSkip : Boolean;
-  LFileName : String;
 begin
   Result := False;
   i := 0;

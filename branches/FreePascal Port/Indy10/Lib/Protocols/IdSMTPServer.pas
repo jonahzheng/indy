@@ -123,6 +123,7 @@ type
     FOnReset: TOnSMTPEvent;
     //misc
     FServerName : String;
+    FAllowPipelining: Boolean;
     //
     function CreateGreeting: TIdReply; override;
     function CreateReplyUnknownCommand: TIdReply; override;
@@ -195,6 +196,7 @@ type
     property OnReceived: TOnReceived read FOnReceived write FOnReceived;
     property OnReset: TOnSMTPEvent read FOnReset write FOnReset;
     //properties
+    property AllowPipelining : Boolean read FAllowPipelining write FAllowPipelining default False;
     property ServerName : String read FServerName write FServerName;
     property DefaultPort default IdPORT_SMTP;
     property UseTLS;
@@ -311,7 +313,9 @@ begin
     ASender.Reply.Text.Add('AUTH LOGIN');    {Do not Localize}
   end;
   ASender.Reply.Text.Add('ENHANCEDSTATUSCODES'); {do not localize}
-  ASender.Reply.Text.Add('PIPELINING'); {do not localize}
+  if FAllowPipelining then begin
+    ASender.Reply.Text.Add('PIPELINING'); {do not localize}
+  end;
   if (FUseTLS in ExplicitTLSVals) and (not LContext.UsingTLS) then begin
     ASender.Reply.Text.Add('STARTTLS');    {Do not Localize}
   end;
@@ -321,10 +325,9 @@ begin
   LContext.HeloString := ASender.UnparsedParams;
 end;
 
-procedure TIdSMTPServer.DoReplyUnknownCommand(AContext: TIdContext;
-  ALine: string);
+procedure TIdSMTPServer.DoReplyUnknownCommand(AContext: TIdContext; ALine: string);
 begin
-  CmdSyntaxError(AContext,ALine);
+  CmdSyntaxError(AContext, ALine);
 end;
 
 function TIdSMTPServer.GetRepliesClass: TIdRepliesClass;
@@ -580,7 +583,7 @@ end;
 
 procedure TIdSMTPServer.AddrNotWillForward(ASender: TIdCommand; const AAddress : String = ''; const ATo : String = '');
 begin
-  SetEnhReply(ASender.Reply, 521, Id_EHR_SEC_DEL_NOT_AUTH, Sys.Format(RSSMTPUserNotLocal, [AAddress]),
+  SetEnhReply(ASender.Reply, 521, Id_EHR_SEC_DEL_NOT_AUTH, Sys.Format(RSSMTPUserNotLocal, [AAddress, ATo]),
     TIdSMTPServerContext(ASender.Context).EHLO);
 end;
 
@@ -590,8 +593,7 @@ begin
     TIdSMTPServerContext(ASender.Context).EHLO);
 end;
 
-procedure TIdSMTPServer.AddrNoRelaying(ASender: TIdCommand;
-  const AAddress: String);
+procedure TIdSMTPServer.AddrNoRelaying(ASender: TIdCommand; const AAddress: String);
 begin
   SetEnhReply(ASender.Reply, 550, Id_EHR_SEC_DEL_NOT_AUTH, Sys.Format(RSSMTPSvrNoRelay, [AAddress]),
     TIdSMTPServerContext(ASender.Context).EHLO);
@@ -610,17 +612,15 @@ begin
     TIdSMTPServerContext(ASender.Context).EHLO);
 end;
 
-procedure TIdSMTPServer.AddrDisabledPerm(ASender: TIdCommand;
-  const AAddress: String);
+procedure TIdSMTPServer.AddrDisabledPerm(ASender: TIdCommand; const AAddress: String);
 begin
-  SetEnhReply(ASender.Reply, 550, Id_EHR_MB_DISABLED_PERM, Sys.Format(RSSMTPAccountDisabled,[AAddress]),
+  SetEnhReply(ASender.Reply, 550, Id_EHR_MB_DISABLED_PERM, Sys.Format(RSSMTPAccountDisabled, [AAddress]),
     TIdSMTPServerContext(ASender.Context).EHLO);
 end;
 
-procedure TIdSMTPServer.AddrDisabledTemp(ASender: TIdCommand;
-  const AAddress: String);
+procedure TIdSMTPServer.AddrDisabledTemp(ASender: TIdCommand; const AAddress: String);
 begin
-  SetEnhReply(ASender.Reply, 550, Id_EHR_MB_DISABLED_TEMP, Sys.Format(RSSMTPAccountDisabled,[AAddress]),
+  SetEnhReply(ASender.Reply, 550, Id_EHR_MB_DISABLED_TEMP, Sys.Format(RSSMTPAccountDisabled, [AAddress]),
     TIdSMTPServerContext(ASender.Context).EHLO);
 end;
 
@@ -668,13 +668,13 @@ end;
 
 procedure TIdSMTPServer.MailFromAccept(ASender: TIdCommand; const AAddress : String = '');
 begin
-  SetEnhReply(ASender.Reply, 250, Id_EHR_MSG_OTH_OK, Sys.Format(RSSMTPSvrAddressOk,[AAddress]),
+  SetEnhReply(ASender.Reply, 250, Id_EHR_MSG_OTH_OK, Sys.Format(RSSMTPSvrAddressOk, [AAddress]),
     TIdSMTPServerContext(ASender.Context).EHLO);
 end;
 
 procedure TIdSMTPServer.MailFromReject(ASender: TIdCommand; const AAddress : String = '');
 begin
-  SetEnhReply(ASender.Reply, 550, Id_EHR_SEC_DEL_NOT_AUTH, Sys.Format(RSSMTPSvrNotPermitted,[AAddress]),
+  SetEnhReply(ASender.Reply, 550, Id_EHR_SEC_DEL_NOT_AUTH, Sys.Format(RSSMTPSvrNotPermitted, [AAddress]),
     TIdSMTPServerContext(ASender.Context).EHLO);
 end;
 
@@ -891,10 +891,6 @@ var
 
       if Pos('$ipaddress', LReceivedString) <> 0 then begin                 {do not localize}
         LTokens.Add('$ipaddress=' + LContext.Binding.PeerIP);               {do not localize}
-      end;
-
-      if Pos('$helo', LReceivedString) <> 0 then begin                      {do not localize}
-        LTokens.Add('$helo=' + LContext.HeloString);                        {do not localize}
       end;
 
       if Pos('$helo', LReceivedString) <> 0 then begin                      {do not localize}

@@ -325,38 +325,27 @@ begin
 end;
 
 class function TIdSysVCL.CompareDate(const D1, D2: TDateTime): Integer;
-var LTM1, LTM2 : TTimeStamp;
+var
+  LTM1, LTM2 : TTimeStamp;
 begin
   LTM1 := DateTimeToTimeStamp(D1);
   LTM2 := DateTimeToTimeStamp(D2);
-  if (LTM1.Date = LTM2.Date) then
-  begin
-    if (LTM1.Time < LTM2.Time) then
-    begin
-       Result := -1;
+  if LTM1.Date = LTM2.Date then begin
+    if LTM1.Time < LTM2.Time then begin
+      Result := -1;
     end
-    else
-    begin
-      if (LTM1.Time > LTM2.Time) then
-      begin
-        Result := 1;
-      end
-      else
-      begin
-        Result := 0;
-      end;
-    end;
-  end
-  else
-  begin
-    if LTM1.Date > LTM2.Date then
-    begin
+    else if LTM1.Time > LTM2.Time then begin
       Result := 1;
     end
-    else
-    begin
-      Result := -1;
+    else begin
+      Result := 0;
     end;
+  end
+  else if LTM1.Date > LTM2.Date then begin
+    Result := 1;
+  end
+  else begin
+    Result := -1;
   end;
 end;
 
@@ -414,9 +403,9 @@ begin
   {$IFDEF VCL10ORABOVE}
   //single-parameter fileage is deprecated in d2006 and above
   if not SysUtils.FileAge(FileName,Result) then
-    begin
-    Result:=0;
-    end;
+  begin
+    Result := 0;
+  end;
   {$ELSE}
   Result := SysUtils.FileDateToDateTime( SysUtils.FileAge(FileName));
   {$ENDIF}
@@ -488,7 +477,7 @@ var
 begin
   LTM := DateTimeToTimeStamp(ADateTime);
   LTM.Time := LTM.Time + AMSec;
-  Result :=  TimeStampToDateTime(LTM);
+  Result := TimeStampToDateTime(LTM);
 end;
 
 class function TIdSysVCL.FileDateToDateTime(
@@ -524,7 +513,7 @@ begin
   DecodeDate(GMTValue, wYear, wMonth, wDay);
   Result := Format('%s, %.2d %s %.4d %s %s',    {do not localize}
                    [wdays[DayOfWeek(GMTValue)], wDay, monthnames[wMonth],
-                    wYear, FormatDateTime('HH":"mm":"ss',GMTValue),'GMT']);  {do not localize}
+                    wYear, FormatDateTime('HH":"nn":"ss',GMTValue),'GMT']);  {do not localize}
 end;
 
 
@@ -538,7 +527,7 @@ begin
   DecodeDate(Value, wYear, wMonth, wDay);
   Result := Format('%s, %d %s %d %s %s',    {do not localize}
                    [ wdays[DayOfWeek(Value)], wDay, monthnames[wMonth],
-                    wYear, FormatDateTime( 'HH":"mm":"ss', Value), {do not localize}
+                    wYear, FormatDateTime( 'HH":"nn":"ss', Value), {do not localize}
                     DateTimeToGmtOffSetStr(OffsetFromUTC, AIsGMT)]);
 end;
 
