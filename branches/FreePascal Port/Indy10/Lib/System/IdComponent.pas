@@ -98,11 +98,9 @@ type
     Level: Integer;
   end;
 
-  TWorkBeginEvent = procedure(ASender: TObject; AWorkMode: TWorkMode;
-   AWorkCountMax: Int64) of object;
-  TWorkEndEvent = procedure(AWSender: TObject; AWorkMode: TWorkMode) of object;
-  TWorkEvent = procedure(ASender: TObject; AWorkMode: TWorkMode;
-   AWorkCount: Int64) of object;
+  TWorkBeginEvent = procedure(ASender: TObject; AWorkMode: TWorkMode; AWorkCountMax: Int64) of object;
+  TWorkEndEvent = procedure(ASender: TObject; AWorkMode: TWorkMode) of object;
+  TWorkEvent = procedure(ASender: TObject; AWorkMode: TWorkMode; AWorkCount: Int64) of object;
 
   TIdComponent = class(TIdBaseComponent)
   protected
