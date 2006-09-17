@@ -4,6 +4,7 @@ interface
 uses
   IdAntiFreezeBase,
   IdBaseComponent,
+  IdCTypes,
   IdComponent,
   IdException,
   IdGlobal,
@@ -22,6 +23,5 @@ uses
   IdSysVCL;
 
 implementation
-
 
 end.
