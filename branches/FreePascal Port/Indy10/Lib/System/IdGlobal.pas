@@ -749,10 +749,7 @@ type
   EIdEndOfStream = class(EIdException);
   EIdInvalidIPv6Address = class(EIdException);
 
-  {$IFNDEF DotNet}
-  TBytes = array of Byte;
-  {$ENDIF}
-  TIdBytes = TBytes;
+  TIdBytes = array of Byte;
   {$IFDEF FPC}
   TIdPort = Word;
   {$ELSE}
