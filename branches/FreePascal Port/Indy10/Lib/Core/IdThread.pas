@@ -186,7 +186,7 @@ type
     procedure BeforeExecute; virtual;//1 not abstract - otherwise it is required
     procedure BeforeRun; virtual; //2* not abstract - otherwise it is required
     procedure Cleanup; virtual;//4*
-    procedure DoException (AException: Exception); virtual;
+    procedure DoException(AException: Exception); virtual;
     procedure DoStopped; virtual;
     procedure Execute; override;
     function GetStopped: Boolean;
@@ -231,6 +231,7 @@ type
     procedure AfterRun; override;
     procedure BeforeRun; override;
     procedure Run; override;
+    procedure DoException(AException: Exception); override;
   public
     // Defaults because
     // Must always create suspended so task can be set
@@ -239,8 +240,7 @@ type
       ATask: TIdTask = nil;
       AName: string = ''
       ); reintroduce; virtual;
-    destructor Destroy;
-      override;
+    destructor Destroy; override;
     //
     // Must be writeable because tasks are often created after thread or
     // thread is pooled
@@ -263,8 +263,7 @@ implementation
 uses
   IdResourceStringsCore;
 
-class procedure TIdThread.WaitAllThreadsTerminated(
- AMSec: Integer = IdWaitAllThreadsTerminatedCount);
+class procedure TIdThread.WaitAllThreadsTerminated(AMSec: Integer = IdWaitAllThreadsTerminatedCount);
 begin
   while AMSec > 0 do begin
     if GThreadCount.Value = 0 then begin
@@ -386,11 +385,10 @@ begin
   end;
 end;
 
-constructor TIdThread.Create(ACreateSuspended: Boolean; ALoop: Boolean;
- AName: string);
+constructor TIdThread.Create(ACreateSuspended: Boolean; ALoop: Boolean; AName: string);
 begin
 {$IFDEF DOTNET}
-  inherited Create(true);
+  inherited Create(True);
 {$ENDIF}
   FOptions := [itoDataOwner];
   if ACreateSuspended then begin
@@ -410,7 +408,7 @@ begin
   // not suspended will start before we initialize
   inherited Create(ACreateSuspended);
 {$ENDIF}
-  {$IFNDEF VCL6ORABOVE}
+{$IFNDEF VCL6ORABOVE}
   // Delphi 6 and above raise an exception when an error occures
   // while creating a thread (eg. not enough address space to allocate a stack)
   // Delphi 5 and below don't do that, which results in a TIdThread instance
@@ -419,7 +417,7 @@ begin
   if (ThreadID = 0) then begin
     Sys.RaiseLastOSError;
   end;
-  {$ENDIF}
+{$ENDIF}
   // Last, so we only do this if successful
   GThreadCount.Increment;
 end;
@@ -501,10 +499,10 @@ begin
   end;
 end;
 
-procedure TIdThread.DoException (AException: Exception);
+procedure TIdThread.DoException(AException: Exception);
 begin
   if Assigned(FOnException) then begin
-    FOnException(self, AException);
+    FOnException(Self, AException);
   end;
 end;
 
@@ -558,10 +556,13 @@ begin
   FTask.DoBeforeRun;
 end;
 
-constructor TIdThreadWithTask.Create(
-  ATask: TIdTask;
-  AName: string
-  );
+procedure TIdThreadWithTask.DoException(AException: Exception);
+begin
+  inherited DoException(AException);
+  FTask.DoException(AException);
+end;
+
+constructor TIdThreadWithTask.Create(ATask: TIdTask; AName: string);
 begin
   inherited Create(True, True, AName);
   FTask := ATask;
@@ -579,17 +580,10 @@ begin
     Stop;
   end;
 end;
-
+  
 initialization
   SetThreadName('Main');  {do not localize}
   GThreadCount := TIdThreadSafeInteger.Create;
 finalization
-  // This call hangs if not all threads have been properly destroyed.
-  // But without this, bad threads can often have worse results. Catch 22.
-//  TIdThread.WaitAllThreadsTerminated;
-
-  {$IFDEF IDFREEONFINAL}
-  //only enable this if you know your code exits thread-clean
   Sys.FreeAndNil(GThreadCount);
-  {$ENDIF}
 end.

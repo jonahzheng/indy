@@ -390,9 +390,7 @@ type
     procedure PrepareCmd(var aCmd: string); virtual;
   public
     procedure CreateIOHandler(ABaseType: TIdIOHandlerClass = nil);
-    procedure CheckForGracefulDisconnect(
-     ARaiseExceptionIfDisconnected: Boolean = True
-     ); virtual;
+    procedure CheckForGracefulDisconnect(ARaiseExceptionIfDisconnected: Boolean = True); virtual;
     //
     function CheckResponse(AResponse: SmallInt;
      const AAllowedResponses: array of SmallInt): SmallInt; overload; virtual;
@@ -416,16 +414,14 @@ type
     //
     // Seperate one for singles as one of the older Delphi compilers cannot
     // match a single number into an array. IIRC newer ones do.
-    function GetResponse(AAllowedResponse: SmallInt): SmallInt; overload;
-    function GetResponse(const AAllowedResponses: array of SmallInt): SmallInt;
-     overload; virtual;
+    function GetResponse(const AAllowedResponse: SmallInt = -1): SmallInt; overload;
+    function GetResponse(const AAllowedResponses: array of SmallInt): SmallInt; overload; virtual;
     // No array type for strings as ones that use strings are usually bastard
     // protocols like POP3/IMAP which dont include proper substatus anyways.
     //
     // If a case can be made for some other condition this may be expanded
     // in the future
-    function GetResponse(AAllowedResponse: string): string;
-     overload; virtual;
+    function GetResponse(const AAllowedResponse: string): string; overload; virtual;
     //
     property Greeting: TIdReply read FGreeting write SetGreeting;
     // RaiseExceptionForCmdResult - Overload necesary as a exception as a default param doesnt work
@@ -433,12 +429,9 @@ type
     procedure RaiseExceptionForLastCmdResult(AException: TClassIdException);
      overload; virtual;
     // These are extended GetResponses, so see the comments for GetResponse
-    function SendCmd(AOut: string; AResponse: SmallInt = -1)
-     : SmallInt; overload;
-    function SendCmd(AOut: string; const AResponse: array of SmallInt)
-     : SmallInt; overload; virtual;
-    function SendCmd(AOut: string; AResponse: string): string;
-     overload;
+    function SendCmd(AOut: string; const AResponse: SmallInt = -1): SmallInt; overload;
+    function SendCmd(AOut: string; const AResponse: array of SmallInt): SmallInt; overload; virtual;
+    function SendCmd(AOut: string; const AResponse: string): string; overload;
     //
     procedure WriteHeader(AHeader: TIdStrings);
     procedure WriteRFCStrings(AStrings: TIdStrings);
@@ -559,8 +552,7 @@ begin
   end;
 end;
 
-function TIdTCPConnection.GetResponse(
- const AAllowedResponses: array of SmallInt): SmallInt;
+function TIdTCPConnection.GetResponse(const AAllowedResponses: array of SmallInt): SmallInt;
 begin
   GetInternalResponse;
   Result := CheckResponse(LastCmdResult.NumericCode, AAllowedResponses);
@@ -577,8 +569,7 @@ begin
   LastCmdResult.RaiseReplyError;
 end;
 
-function TIdTCPConnection.SendCmd(AOut: string;
- const AResponse: Array of SmallInt): SmallInt;
+function TIdTCPConnection.SendCmd(AOut: string; const AResponse: Array of SmallInt): SmallInt;
 begin
   CheckConnected;
   PrepareCmd(AOut);
@@ -671,7 +662,7 @@ begin
   end;
 end;
 
-function TIdTCPConnection.SendCmd(AOut: string; AResponse: SmallInt)
+function TIdTCPConnection.SendCmd(AOut: string; const AResponse: SmallInt)
  : SmallInt;
 begin
   if AResponse < 0 then begin
@@ -681,8 +672,7 @@ begin
   end;
 end;
 
-procedure TIdTCPConnection.CheckForGracefulDisconnect(
- ARaiseExceptionIfDisconnected: Boolean);
+procedure TIdTCPConnection.CheckForGracefulDisconnect(ARaiseExceptionIfDisconnected: Boolean);
 begin
   if Assigned(IOHandler) then begin
     IOHandler.CheckForDisconnect(ARaiseExceptionIfDisconnected);
@@ -721,12 +711,11 @@ begin
   LResponse := TIdStringList.Create; try
     // Some servers with bugs send blank lines before reply. Dont remember which
     // ones, but I do remember we changed this for a reason
-    LLine := IOHandler.ReadLnWait;
-    LResponse.Add(LLine);
-    while not FLastCmdResult.IsEndMarker(LLine) do begin
-      LLine := IOHandler.ReadLn;
+    // RLebeau 9/14/06: this can happen in between lines of the reply as well
+    repeat
+      LLine := IOHandler.ReadLnWait;
       LResponse.Add(LLine);
-    end;
+    until FLastCmdResult.IsEndMarker(LLine);
     //Note that FormattedReply uses an assign in it's property set method.
     FLastCmdResult.FormattedReply := LResponse;
   finally Sys.FreeAndNil(LResponse); end;
@@ -738,18 +727,22 @@ begin
   IOHandler.WriteRFCStrings(AStrings, True);
 end;
 
-function TIdTCPConnection.GetResponse(AAllowedResponse: SmallInt): SmallInt;
+function TIdTCPConnection.GetResponse(const AAllowedResponse: SmallInt): SmallInt;
 begin
-  Result := GetResponse([AAllowedResponse]);
+  if AAllowedResponse < 0 then begin
+    Result := GetResponse([]);
+  end else begin
+    Result := GetResponse([AAllowedResponse]);
+  end;
 end;
 
-function TIdTCPConnection.GetResponse(AAllowedResponse: string): string;
+function TIdTCPConnection.GetResponse(const AAllowedResponse: string): string;
 begin
   GetInternalResponse;
   Result := CheckResponse(LastCmdResult.Code, AAllowedResponse);
 end;
 
-function TIdTCPConnection.SendCmd(AOut, AResponse: string): string;
+function TIdTCPConnection.SendCmd(AOut: string; const AResponse: string): string;
 begin
   CheckConnected;
   PrepareCmd(AOut);
@@ -794,7 +787,7 @@ end;
 
 procedure TIdTCPConnection.CheckConnected;
 begin
-  EIdNotConnected.IfNotAssigned(IOHandler, 'Not connected.'); {do not localize}
+  EIdNotConnected.IfNotAssigned(IOHandler, RSNotConnected);
 end;
 
 procedure TIdTCPConnection.SetGreeting(AValue: TIdReply);

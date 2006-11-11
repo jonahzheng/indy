@@ -197,7 +197,7 @@
   Rev 1.66    11/23/03 1:46:28 PM  RLebeau
   Removed "var" specifier from TStrings parameter of ReadStrings().
 
-  Rev 1.65    11/4/2003 10:27:56 PM  DSiders
+    Rev 1.65    11/4/2003 10:27:56 PM  DSiders
   Removed exceptions moved to IdException.pas.
 
   Rev 1.64    2003.10.24 10:44:52 AM  czhower

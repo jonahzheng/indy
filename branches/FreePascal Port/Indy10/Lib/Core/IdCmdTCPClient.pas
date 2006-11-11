@@ -103,6 +103,7 @@ uses
   IdException,
   IdGlobal,
   IdReply,
+  IdResourceStringsCore,
   IdThread,
   IdTCPClient,
   IdCommandHandlers,
@@ -166,7 +167,7 @@ type
 
 implementation
 
-uses IdResourceStringsCore, IdReplyRFC, IdSys;
+uses IdReplyRFC, IdSys;
 
 type
 

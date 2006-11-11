@@ -322,14 +322,11 @@ type
     procedure DoBeforeListenerRun(AThread: TIdThread); virtual;
     procedure DoConnect(AContext: TIdContext); virtual;
     procedure DoDisconnect(AContext: TIdContext); virtual;
-    procedure DoException(AContext: TIdContext; AException: Exception);
+    procedure DoException(AContext: TIdContext; AException: Exception); virtual;
     function DoExecute(AContext: TIdContext): Boolean; virtual;
-    procedure DoListenException(
-      AThread: TIdListenerThread;
-      AException: Exception);
-    procedure DoMaxConnectionsExceeded(
-      AIOHandler: TIdIOHandler
-      ); virtual;
+    procedure DoListenException(AThread: TIdListenerThread; AException: Exception); virtual;
+    procedure DoMaxConnectionsExceeded(AIOHandler: TIdIOHandler); virtual;
+    procedure DoTerminateContext(AContext: TIdContext); virtual;
     function GetDefaultPort: TIdPort;
     procedure InitComponent; override;
     procedure Loaded; override;
@@ -355,7 +352,7 @@ type
     destructor Destroy; override;
     //
     property Contexts: TIdThreadList read FContexts;
-    property ContextClass:TIdContextClass read FContextClass write FContextClass;
+    property ContextClass: TIdContextClass read FContextClass write FContextClass;
     property ImplicitIOHandler: Boolean read FImplicitIOHandler;
     property ImplicitScheduler: Boolean read FImplicitScheduler;
   published
@@ -380,6 +377,7 @@ type
     property TerminateWaitTime: Integer read FTerminateWaitTime write FTerminateWaitTime default 5000;
     property Scheduler: TIdScheduler read FScheduler write SetScheduler;
   end;
+
   EIdTCPServerError = class(EIdException);
   EIdNoExecuteSpecified = class(EIdTCPServerError);
   EIdTerminateThreadTimeout = class(EIdTCPServerError);
@@ -660,9 +658,10 @@ begin
         LContext := TIdContext(Items[i]);
         Assert(LContext<>nil);
         Assert(LContext.Connection<>nil, LContext.ClassName);
-        // Dont call disconnect with true. Otherwise it frees the IOHandler and the thread
-        // is still running which often causes AVs and other.
-        LContext.Connection.Disconnect(False);
+        // RLebeau: allow descendants to perform their own cleanups before
+        // closing the connection.  FTP, for example, needs to abort an
+        // active data transfer on a separate asociated connection
+        DoTerminateContext(LContext);
       end;
     finally Contexts.UnLockList; end;
   end;
@@ -684,6 +683,13 @@ end;
 procedure TIdCustomTCPServer.DoMaxConnectionsExceeded(AIOHandler: TIdIOHandler);
 begin
 //
+end;
+
+procedure TIdCustomTCPServer.DoTerminateContext(AContext: TIdContext);
+begin
+  // Dont call disconnect with true. Otherwise it frees the IOHandler and the thread
+  // is still running which often causes AVs and other.
+  AContext.Connection.Disconnect(False);
 end;
 
 procedure TIdCustomTCPServer.InitComponent;
@@ -854,7 +860,7 @@ begin
     // ProcessingTimeout := False;
 
     // Check MaxConnections
-    if (Server.MaxConnections > 0) and not TIdThreadSafeList(Server.Contexts).IsCountLessThan(Server.MaxConnections) then begin
+    if (Server.MaxConnections > 0) and (not TIdThreadSafeList(Server.Contexts).IsCountLessThan(Server.MaxConnections)) then begin
       FServer.DoMaxConnectionsExceeded(LIOHandler);
       LPeer.Disconnect;
       Sys.Abort;
@@ -867,6 +873,7 @@ begin
     LContext.OnBeforeRun := Server.ContextConnected;
     LContext.OnRun := Server.DoExecute;
     LContext.OnAfterRun := Server.ContextDisconnected;
+    LContext.OnException := Server.DoException;
     //
     Server.ContextCreated(LContext);
     //
