@@ -59,7 +59,6 @@ uses
   Classes,
     IdASN1Util,
     IdObjs,
-  IdGlobal,
   IdException,
   IdUDPBase,
   IdUDPClient;
@@ -156,6 +155,7 @@ type
 implementation
 
 uses
+  IdGlobal,
   IdSys,
   IdStack;
 

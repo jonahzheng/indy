@@ -46,57 +46,73 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  IdObjs,
-  IdHash;
+  IdGlobal, IdHash, IdObjs;
 
 type
+  T4x4LongWordRecord = array[0..3] of LongWord;
   T16x4LongWordRecord = array[0..15] of LongWord;
   T4x4x4LongWordRecord = array[0..3] of T4x4LongWordRecord;
 
-  T512BitRecord = array [0..63] of byte;
-  T384BitRecord = array [0..47] of byte;
-  T128BitRecord = array [0..15] of byte;
+  T512BitRecord = array[0..63] of Byte;
+  T384BitRecord = array[0..47] of Byte;
+  T128BitRecord = array[0..15] of Byte;
 
-
-  TIdHashMessageDigest = class(TIdHash128);
+  TIdHashMessageDigest = class(TIdHash)
+  protected
+    FCBuffer: TIdBytes;
+    procedure MDCoder; virtual; abstract;
+    procedure Reset; virtual;
+  public
+    constructor Create(ABufferSize: Integer);
+  end;
 
   TIdHashMessageDigest2 = class(TIdHashMessageDigest)
   protected
     FX: T384BitRecord;
-    FCBuffer: T128BitRecord;
     FCheckSum: T128BitRecord;
 
-    procedure MDCoder;
-    procedure Reset;
+    procedure MDCoder; override;
+    procedure Reset; override;
+
+    function GetHashBytes(AStream: TIdStream; ASize: Int64): TIdBytes; override;
   public
-    function HashValue(AStream: TIdStream): T4x4LongWordRecord; override;
-    function HashValue( AStream: TIdStream; const ABeginPos, AEndPos: Int64) : T4x4LongWordRecord; overload;
+    constructor Create; virtual;
   end;
 
   TIdHashMessageDigest4 = class(TIdHashMessageDigest)
   protected
     FState: T4x4LongWordRecord;
-    FCBuffer: T512BitRecord;
 
-    procedure MDCoder; virtual;
+    function GetHashBytes(AStream: TIdStream; ASize: Int64): TIdBytes; override;
+    procedure MDCoder; override;
   public
-    function HashValue(AStream: TIdStream): T4x4LongWordRecord; override;
-    function HashValue( AStream: TIdStream; const ABeginPos, AEndPos: Int64) : T4x4LongWordRecord; overload;
+    constructor Create; virtual;
   end;
 
   TIdHashMessageDigest5 = class(TIdHashMessageDigest4)
   protected
     procedure MDCoder; override;
-  public
-
   end;
 
 implementation
 
+{ TIdHashMessageDigest }
+
+constructor TIdHashMessageDigest.Create(ABufferSize: Integer);
+begin
+  inherited Create;
+  SetLength(FCBuffer, ABufferSize);
+end;
+
+procedure TIdHashMessageDigest.Reset;
+begin
+  FillBytes(FCBuffer, Length(FCBuffer), 0);
+end;
+
 { TIdHashMessageDigest2 }
 
 const
-  MD2_PI_SUBST : array [0..255] of byte = (
+  MD2_PI_SUBST : array [0..255] of Byte = (
      41,  46,  67, 201, 162, 216, 124,   1,  61,  54,  84, 161, 236, 240,
       6,  19,  98, 167,   5, 243, 192, 199, 115, 140, 152, 147,  43, 217,
     188,  76, 130, 202,  30, 155,  87,  60, 253, 212, 224,  22, 103,  66,
@@ -116,6 +132,11 @@ const
     242, 239, 183,  14, 102,  88, 208, 228, 166, 119, 114, 248, 235, 117,
      75,  10,  49,  68,  80, 180, 143, 237,  31,  26, 219, 153, 141,  51,
      159,  17, 131, 20);
+
+constructor TIdHashMessageDigest2.Create;
+begin
+  inherited Create(16);
+end;
 
 procedure TIdHashMessageDigest2.MDCoder;
 const
@@ -160,95 +181,58 @@ procedure TIdHashMessageDigest2.Reset;
 var
   I: Integer;
 begin
+  inherited Reset;
   for I := 0 to 15 do
   begin
     FCheckSum[I] := 0;
-    FCBuffer[I] := 0;
     FX[I] := 0;
     FX[I+16] := 0;
     FX[I+32] := 0;
   end;
 end;
 
-function TIdHashMessageDigest2.HashValue(AStream: TIdStream): T4x4LongWordRecord;
-Var
+function TIdHashMessageDigest2.GetHashBytes(AStream: TIdStream; ASize: Int64): TIdBytes;
+var
   LStartPos: Integer;
-  LSize: Int64;
+  LSize: Integer;
   Pad: Byte;
   I: Integer;
 begin
+  Result := nil;
   Reset;
 
-  LStartPos := AStream.Position;
-  LSize := AStream.Size - LStartPos;
-
   // Code the entire file in complete 16-byte chunks.
-  while LSize - AStream.Position >= 16 do
+  while ASize >= 16 do
   begin
-    AStream.Read(FCBuffer, 16);
+    LSize := ReadTIdBytesFromStream(AStream, FCBuffer, 16);
+    // TODO: handle stream read error
     MDCoder;
+    Dec(ASize, LSize);
   end;
 
-  LStartPos := AStream.Read(FCBuffer, 16);
+  LStartPos := ReadTIdBytesFromStream(AStream, FCBuffer, 16);
+  // TODO: handle stream read error
   Pad := 16 - LStartPos;
+
   // Step 1
-  for I := LStartPos to 15 do
+  for I := LStartPos to 15 do begin
     FCBuffer[I] := Pad;
-  MDCoder;
-  // Step 2
-  for I := 0 to 15 do
-    FCBuffer[I] := FCheckSum[I];
-  MDCoder;
-
-  for I := 0 to 3 do
-    Result[I] := FX[I*4] +
-                 (FX[I*4+1] shl 8) +
-                 (FX[I*4+2] shl 16) +
-                 (FX[I*4+3] shl 24);
-end;
-
-function TIdHashMessageDigest2.HashValue(AStream: TIdStream; const ABeginPos,
-  AEndPos: Int64): T4x4LongWordRecord;
-Var
-  LStartPos: Integer;
-  LSize: Int64;
-  Pad: Byte;
-  I: Integer;
-begin
-  Reset;
-  AStream.Position := ABeginPos;
-  LStartPos := AStream.Position;
-  LSize := AStream.Size - LStartPos;
-  if AEndPos < AStream.Size  then
-  begin
-    if AEndPos > 0 then
-    begin
-      LSize := AEndPos - LStartPos;
-    end;
   end;
-  // Code the entire file in complete 16-byte chunks.
-  while LSize - AStream.Position >= 16 do
-  begin
-    AStream.Read(FCBuffer, 16);
-    MDCoder;
-  end;
-
-  LStartPos := AStream.Read(FCBuffer, 16);
-  Pad := 16 - LStartPos;
-  // Step 1
-  for I := LStartPos to 15 do
-    FCBuffer[I] := Pad;
   MDCoder;
+
   // Step 2
-  for I := 0 to 15 do
+  for I := 0 to 15 do begin
     FCBuffer[I] := FCheckSum[I];
+  end;
   MDCoder;
 
+  SetLength(Result, SizeOf(LongWord)*4);
   for I := 0 to 3 do
-    Result[I] := FX[I*4] +
-                 (FX[I*4+1] shl 8) +
-                 (FX[I*4+2] shl 16) +
-                 (FX[I*4+3] shl 24);
+  begin
+    CopyTIdLongWord(
+      FX[I*4] + (FX[I*4+1] shl 8) + (FX[I*4+2] shl 16) + (FX[I*4+3] shl 24),
+      Result, SizeOf(LongWord)*I);
+  end;
 end;
 
 { TIdHashMessageDigest4 }
@@ -261,7 +245,12 @@ const
 { TODO : Remove ROL and add IdGlobal to the uses clause, when it is ready for dotNET. }
 function ROL(AVal: LongWord; AShift: Byte): LongWord;
 begin
-   Result := (AVal shl AShift) or (AVal shr (32 - AShift));
+  Result := (AVal shl AShift) or (AVal shr (32 - AShift));
+end;
+
+constructor TIdHashMessageDigest4.Create;
+begin
+  inherited Create(64);
 end;
 
 procedure TIdHashMessageDigest4.MDCoder;
@@ -275,10 +264,12 @@ begin
   D := FState[3];
 
   for i := 0 to 15 do
+  begin
     buff[i] := FCBuffer[i*4+0] +
                (FCBuffer[i*4+1] shl 8) +
                (FCBuffer[i*4+2] shl 16) +
                (FCBuffer[i*4+3] shl 24);
+  end;
 
   // Round 1
   { Note:
@@ -333,50 +324,54 @@ begin
 end;
 {$Q+}
 
-function TIdHashMessageDigest4.HashValue(AStream: TIdStream): T4x4LongWordRecord;
+function TIdHashMessageDigest4.GetHashBytes(AStream: TIdStream; ASize: Int64): TidBytes;
 var
   LStartPos: Integer;
-  LBitSize,
-  LSize: Int64;
-  I: Integer;
+  LBitSize, LSize: Int64;
+  I, LReadSize: Integer;
 begin
-  LStartPos := AStream.Position;
-  LSize := AStream.Size - LStartPos;
+  Result := nil;
+  
+  LSize := ASize;
 
   // A straight assignment would be by ref on dotNET.
-  for I := 0 to 3 do
-  begin
+  for I := 0 to 3 do begin
     FState[I] := MD4_INIT_VALUES[I];
   end;
-  
-  while LSize - AStream.Position >= 64 do
+
+  while LSize >= 64 do
   begin
-    AStream.Read(FCBuffer, 64);
+    LReadSize := ReadTIdBytesFromStream(AStream, FCBuffer, 64);
+    // TODO: handle stream read error
     MDCoder;
+    Dec(LSize, LReadSize);
   end;
 
   // Read the last set of bytes.
-  LStartPos := AStream.Read(FCBuffer, 64);
+  LStartPos := ReadTIdBytesFromStream(AStream, FCBuffer, 64);
+  // TODO: handle stream read error
+  
   // Append one bit with value 1
   FCBuffer[LStartPos] := $80;
-  LStartPos := LStartPos + 1;
+  Inc(LStartPos);
 
   // Must have sufficient space to insert the 64-bit size value
   if LStartPos > 56 then
   begin
-    for I := LStartPos to 63 do
-    begin
+    for I := LStartPos to 63 do begin
       FCBuffer[I] := 0;
     end;
     MDCoder;
     LStartPos := 0;
   end;
+
   // Pad with zeroes. Leave room for the 64 bit size value.
-  for I := LStartPos to 55 do
+  for I := LStartPos to 55 do begin
     FCBuffer[I] := 0;
+  end;
 
   // Append the Number of bits processed.
-  LBitSize := LSize * 8;
+  LBitSize := ASize * 8;
   for I := 56 to 63 do
   begin
     FCBuffer[I] := LBitSize and $FF;
@@ -384,75 +379,16 @@ begin
   end;
   MDCoder;
 
-  Result := FState;
-end;
-
-function TIdHashMessageDigest4.HashValue(AStream: TIdStream; const ABeginPos,
-  AEndPos: Int64): T4x4LongWordRecord;
-var
-  LStartPos: Integer;
-  LBitSize,
-  LSize: Int64;
-  I: Integer;
-begin
-  LStartPos := AStream.Position;
-  LSize := AStream.Size - LStartPos;
-  if AEndPos < AStream.Size  then
-  begin
-    if AEndPos > 0 then
-    begin
-      LSize := AEndPos - LStartPos;
-    end;
+  SetLength(Result, SizeOf(LongWord)*4);
+  for I := 0 to 3 do begin
+    CopyTIdLongWord(FState[I], Result, SizeOf(LongWord)*I);
   end;
-  
-  // A straight assignment would be by ref on dotNET.
-  for I := 0 to 3 do
-    FState[I] := MD4_INIT_VALUES[I];
-
-  while LSize - AStream.Position >= 64 do
-  begin
-    AStream.Read(FCBuffer, 64);
-    MDCoder;
-  end;
-
-  // Read the last set of bytes.
-  LStartPos := AStream.Read(FCBuffer, 64);
-  // Append one bit with value 1
-  FCBuffer[LStartPos] := $80;
-  LStartPos := LStartPos + 1;
-
-  // Must have sufficient space to insert the 64-bit size value
-  if LStartPos > 56 then
-  begin
-    for I := LStartPos to 63 do
-    begin
-      FCBuffer[I] := 0;
-    end;
-    MDCoder;
-    LStartPos := 0;
-  end;
-  // Pad with zeroes. Leave room for the 64 bit size value.
-  for I := LStartPos to 55 do
-  begin
-    FCBuffer[I] := 0;
-  end;
-  // Append the Number of bits processed.
-  LBitSize := LSize * 8;
-  for I := 56 to 63 do
-  begin
-    FCBuffer[I] := LBitSize and $FF;
-    LBitSize := LBitSize shr 8;
-  end;
-  MDCoder;
-
-  Result := FState;
-
 end;
 
 { TIdHashMessageDigest5 }
 
 const
-  MD5_SINE : array [1..64] of LongWord = (
+  MD5_SINE : array[1..64] of LongWord = (
    { Round 1. }
    $d76aa478, $e8c7b756, $242070db, $c1bdceee, $f57c0faf, $4787c62a,
    $a8304613, $fd469501, $698098d8, $8b44f7af, $ffff5bb1, $895cd7be,

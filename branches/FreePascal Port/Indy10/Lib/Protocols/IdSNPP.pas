@@ -134,7 +134,7 @@ procedure TIdSNPP.Connect;
 begin
   inherited Connect;
   try
-    if GetResponse([]) <> 220 then
+    if GetResponse <> 220 then
     begin
       raise EIdSNPPConnectionRefused.CreateError(LastCmdResult.NumericCode,
         LastCmdResult.Text.Text);
@@ -148,7 +148,7 @@ end;
 procedure TIdSNPP.DisconnectNotifyPeer;
 begin
   inherited;
-  SendCmd('QUIT',211);  {do not localize}
+  SendCmd('QUIT', 211);  {do not localize}
 end;
 
 function TIdSNPP.Pager(APagerId: String): Boolean;

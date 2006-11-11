@@ -114,6 +114,7 @@ implementation
 
 Uses
   SysUtils,
+  IdGlobal,
   IdHash,
   IdHashMessageDigest,
   IdCoderMIME;
@@ -210,24 +211,27 @@ end;
 
 //* create NT hashed password */
 function CreateNTPassword(APassword, nonce: String): String;
-Var
+var
   nt_pw: String;
   nt_hpw: array [1..21] of Char;
-  nt_hpw128: T4x4LongWordRecord absolute nt_hpw;
-  MD4_CTX: TIdHashMessageDigest4;
+  nt_hpw128: TIdBytes;
   nt_resp: array [1..24] of Char;
 begin
   nt_pw := BuildUnicode(APassword);
 
-  MD4_CTX := TIdHashMessageDigest4.Create;
-  nt_hpw128 := MD4_CTX.HashValue(nt_pw);
-  MD4_CTX.Free;
+  with TIdHashMessageDigest4.Create do
+  try
+    nt_hpw128 := HashString(nt_pw);
+  finally
+    Free;
+  end;
 
+  Move(nt_hpw[1], nt_hpw128[0], 16);
   FillChar(nt_hpw[17], 5, 0);
 
   calc_resp(pdes_cblock(@nt_hpw[1]), nonce, Pdes_key_schedule(@nt_resp[1]));
 
-  result := nt_resp;
+  Result := nt_resp;
 end;
 
 function BuildType1Message(ADomain, AHost: String): String;

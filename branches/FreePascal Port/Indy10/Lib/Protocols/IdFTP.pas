@@ -768,6 +768,7 @@ type
 
     FOnBannerBeforeLogin : TIdFTPBannerEvent;
     FOnBannerAfterLogin : TIdFTPBannerEvent;
+    FOnBannerWarning : TIdFTPBannerEvent;
 
     FTZInfo : TIdFTPTZInfo;
 
@@ -823,6 +824,7 @@ type
     procedure DoCustomFTPProxy;
     procedure DoOnBannerAfterLogin(AText : TIdStrings);
     procedure DoOnBannerBeforeLogin(AText : TIdStrings);
+    procedure DoOnBannerWarning(AText : TIdStrings);
     procedure SendPBSZ; //protection buffer size
     procedure SendPROT; //data port protection
     procedure SendDataSettings; //this is for the extensions only;
@@ -994,6 +996,7 @@ type
 
     property OnBannerBeforeLogin : TIdFTPBannerEvent read FOnBannerBeforeLogin write FOnBannerBeforeLogin;
     property OnBannerAfterLogin : TIdFTPBannerEvent read FOnBannerAfterLogin write FOnBannerAfterLogin;
+    property OnBannerWarning : TIdFTPBannerEvent read FOnBannerWarning write FOnBannerWarning;
 
     property OnAfterClientLogin: TOnAfterClientLogin read FOnAfterClientLogin write FOnAfterClientLogin;
     property OnCreateFTPList: TIdCreateFTPList read FOnCreateFTPList write FOnCreateFTPList;
@@ -1112,7 +1115,11 @@ var
   LHost: String;
   LPort: Integer;
   LBuf : String;
+  LCode: SmallInt;
+  LSendQuitOnError: Boolean;
 begin
+  LSendQuitOnError := False;
+
   FCurrentTransferMode := dmStream;
   FTZInfo.FGMTOffsetAvailable := False;
    //FSSCNOn should be set to false to prevent problems.
@@ -1123,6 +1130,7 @@ begin
     FUsingExtDataPort := True;
   end;
   FUsingNATFastTrack := False;
+
   try
     //APR 011216: proxy support
     LHost := FHost;
@@ -1146,7 +1154,20 @@ begin
       FHost := LHost;
       FPort := LPort;
     end;//tryf
-    GetResponse([220]);
+
+    // RLebeau: RFC 959 allows the server to send a 1xx reply before the
+    // actual 220 greeting.  The client has to wait for the 220 to arrive
+    // before continuing. Although the RFC states to use 120 specifically,
+    // I have seen servers send other 1xx replies, such as 130
+    LCode := GetResponse;
+    if (LCode div 100) = 1 then
+    begin
+      DoOnBannerWarning(LastCmdResult.FormattedReply);
+      LCode := GetResponse;
+    end;
+    CheckResponse(LCode, [220]);
+
+    LSendQuitOnError := True;
 
     FGreeting.Assign(LastCmdResult);
     DoOnBannerBeforeLogin (FGreeting.FormattedReply);
@@ -1189,7 +1210,7 @@ begin
       DoStatus(ftpReady, [RSFTPStatusReady]);
     end;
   except
-    Disconnect;
+    Disconnect(LSendQuitOnError); // RLebeau: do not send the QUIT command if the greeting was not received
     raise;
   end;
 end;
@@ -1234,9 +1255,11 @@ begin
   //where SSCN is ignored.
   ClearSSCN;
   AResume := AResume and CanResume;
+  DoBeforeGet;
   // RLebeau 7/26/06: do not do this! It breaks the ability to resume files
   // ADest.Position := 0;
   InternalGet('RETR ' + ASourceFile, ADest, AResume);
+  DoAfterGet(ADest);
 end;
 
 procedure TIdFTP.Get(const ASourceFile, ADestFile: string; const ACanOverwrite: Boolean = False;
@@ -1272,7 +1295,7 @@ begin
   end;
 end;
 
-procedure TIdFTP.DoBeforePut (AStream: TIdStream);
+procedure TIdFTP.DoBeforePut(AStream: TIdStream);
 begin
   if Assigned(FOnBeforePut) then begin
     FOnBeforePut(Self, AStream);
@@ -1777,7 +1800,9 @@ end;
 
 procedure TIdFTP.StoreUnique(const ASource: TIdStream);
 begin
+  DoBeforePut(ASource);
   InternalPut('STOU', ASource);  {Do not localize}
+  DoAfterPut;
 end;
 
 procedure TIdFTP.StoreUnique(const ASourceFile: string);
@@ -3449,11 +3474,8 @@ var
   LRemoteCRC : String;
   LLocalCRC : String;
   LCmd : String;
-  LHashMD5 : TIdHashMessageDigest5;
-  LHashSHA1 : TIdHashSHA1;
-  LHashCRC : TIdHashCRC32;
-  LHashType : Integer; //0 - XSHA1, 1 - XMD5, 2 - XCRC
   LByteCount : Int64;  //used instead of AByteCount so you we don't exceed the file size
+  LHashClass: TIdHashClass;
 begin
   LLocalCRC := '';
   LRemoteCRC := '';
@@ -3462,102 +3484,74 @@ begin
     ALocalFile.Position := AStartPoint;
   end;
   
-  LByteCount := ALocalFile.Size - AStartPoint;
+  LByteCount := ALocalFile.Size - ALocalFile.Position;
   if (LByteCount > AByteCount) and (AByteCount > 0) then begin
     LByteCount := AByteCount;
   end;
 
   if IsExtSupported('XSHA1') then begin
-    LHashType := 0;
+    //XMD5 "filename" startpos endpos
+    //I think there's two syntaxes to this:
+    //
+    //Raiden Syntax if FEAT line contains " XMD5 filename;start;end"
+    //
+    //or what's used by some other servers if "FEAT line contains XMD5"
+    //
+    //XCRC "filename" [startpos] [number of bytes to calc]
+
+    if IndexOfFeatLine('XSHA1 filename;start;end') > -1 then begin
+      LCmd := 'XSHA1 "' + ARemoteFile + '" ' + Sys.IntToStr(AStartPoint) + ' ' + Sys.IntToStr(AStartPoint + LByteCOunt-1);
+    end else
+    begin
+      //BlackMoon FTP Server uses this one.
+      LCmd := 'XSHA1 "' + ARemoteFile + '"' + ' ' + Sys.IntToStr(AStartPoint);
+      if AByteCount > 0 then begin
+        LCmd := LCmd + ' ' + Sys.IntToStr(LByteCount);
+      end;
+    end;
+    LHashClass := TIdHashSHA1;
   end
   else if IsExtSupported('XMD5') then begin
-    LHashType := 1;
+    //XMD5 "filename" startpos endpos
+    //I think there's two syntaxes to this:
+    //
+    //Raiden Syntax if FEAT line contains " XMD5 filename;start;end"
+    //
+    //or what's used by some other servers if "FEAT line contains XMD5"
+    //
+    //XCRC "filename" [startpos] [number of bytes to calc]
+
+    if IndexOfFeatLine('XMD5 filename;start;end') > -1 then begin
+      LCmd := 'XMD5 "' + ARemoteFile + '" ' + Sys.IntToStr(AStartPoint) + ' ' + Sys.IntToStr(AStartPoint + LByteCount-1);
+    end else
+    begin
+      //BlackMoon FTP Server uses this one.
+      LCmd := 'XMD5 "' + ARemoteFile + '"';
+      if AByteCount > 0 then begin
+        LCmd := LCmd + ' ' + Sys.IntToStr(AStartPoint) + ' ' + Sys.IntToStr(LByteCount);
+      end
+      else if AStartPoint > 0 then begin
+        LCmd := LCmd + ' ' + Sys.IntToStr(AStartPoint);
+      end;
+    end;
+    LHashClass := TIdHashMessageDigest5;
   end else
   begin
-    LHashType := 2;
+    LCmd := 'XCRC "' + ARemoteFile + '"';
+    if AByteCount > 0 then begin
+      LCmd := LCmd + ' ' + Sys.IntToStr(AStartPoint) + ' ' + Sys.IntToStr(LByteCount);
+    end
+    else if AStartPoint > 0 then begin
+      LCmd := LCmd + ' ' + Sys.IntToStr(AStartPoint);
+    end;
+    LHashClass := TIdHashCRC32;
   end;
 
-  case LHashType of
-    0 : //XSHA1
-      begin
-        LHashSHA1 := TIdHashSHA1.Create;
-        try
-          LLocalCRC := Sys.UpperCase(TIdHashSHA1.AsHex(LHashSHA1.HashValue(ALocalFile, AStartPoint, AStartPoint + LByteCount)));
-        finally
-          Sys.FreeAndNil(LHashMD5);
-        end;
-
-        //XMD5 "filename" startpos endpos
-        //I think there's two syntaxes to this:
-        //
-        //Raiden Syntax if FEAT line contains " XMD5 filename;start;end"
-        //
-        //or what's used by some other servers if "FEAT line contains XMD5"
-        //
-        //XCRC "filename" [startpos] [number of bytes to calc]
-
-        if IndexOfFeatLine('XSHA1 filename;start;end') > -1 then begin
-           LCmd := 'XSHA1 "' + ARemoteFile + '" ' + Sys.IntToStr(AStartPoint) + ' ' + Sys.IntToStr(AStartPoint + LByteCOunt-1);
-        end else
-        begin
-          //BlackMoon FTP Server uses this one.
-          LCmd := 'XSHA1 "' + ARemoteFile + '"' + ' ' + Sys.IntToStr(AStartPoint);
-          if AByteCount > 0 then begin
-            LCmd := LCmd + ' ' + Sys.IntToStr(LByteCount);
-          end;
-        end;
-      end;
-
-    1 : //XMD5
-      begin
-        LHashMD5 := TIdHashMessageDigest5.Create;
-        try
-          LLocalCRC := Sys.UpperCase(TIdHashMessageDigest5.AsHex(LHashMD5.HashValue(ALocalFile, AStartPoint, AStartPoint + LByteCount)));
-        finally
-          Sys.FreeAndNil(LHashMD5);
-        end;
-
-        //XMD5 "filename" startpos endpos
-        //I think there's two syntaxes to this:
-        //
-        //Raiden Syntax if FEAT line contains " XMD5 filename;start;end"
-        //
-        //or what's used by some other servers if "FEAT line contains XMD5"
-        //
-        //XCRC "filename" [startpos] [number of bytes to calc]
-
-        if IndexOfFeatLine('XMD5 filename;start;end') > -1 then begin
-          LCmd := 'XMD5 "' + ARemoteFile + '" ' + Sys.IntToStr(AStartPoint) + ' ' + Sys.IntToStr(AStartPoint + LByteCount-1);
-        end else
-        begin
-          //BlackMoon FTP Server uses this one.
-          LCmd := 'XMD5 "' + ARemoteFile + '"';
-          if AByteCount > 0 then begin
-            LCmd := LCmd + ' ' + Sys.IntToStr(AStartPoint) + ' ' + Sys.IntToStr(LByteCount);
-          end
-          else if AStartPoint > 0 then begin
-            LCmd := LCmd + ' ' + Sys.IntToStr(AStartPoint);
-          end;
-        end;
-      end;
-
-    2 : //XCRC
-      begin
-        LHashCRC := TIdHashCRC32.Create;
-        try
-          LLocalCRC := Sys.UpperCase(Sys.IntToHex(LHashCRC.HashValue(ALocalFile, AStartPoint, LByteCount), 4));
-        finally
-          Sys.FreeAndNil(LHashMD5);
-        end;
-
-        LCmd := 'XCRC "' + ARemoteFile + '"';
-        if AByteCount > 0 then begin
-          LCmd := LCmd + ' ' + Sys.IntToStr(AStartPoint) + ' ' + Sys.IntToStr(LByteCount);
-        end
-        else if AStartPoint > 0 then begin
-          LCmd := LCmd + ' ' + Sys.IntToStr(AStartPoint);
-        end;
-      end;
+  with LHashClass.Create do
+  try
+    LLocalCRC := Sys.UpperCase(HashStreamAsHex(ALocalFile, AStartPoint, LByteCount));
+  finally
+    Free;
   end;
 
   if SendCMD(LCMD) = 250 then begin

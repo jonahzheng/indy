@@ -115,9 +115,9 @@ type
     FCompressionLevel: TIdCompressionLevel;
     FCompressRec: TZStreamRec;
     FDecompressRec: TZStreamRec;
-    FRecvBuf: Pointer;
+    FRecvBuf: TIdBytes;
     FRecvCount, FRecvSize: Integer;
-    FSendBuf: Pointer;
+    FSendBuf: TIdBytes;
     FSendCount, FSendSize: Integer;
     procedure SetCompressionLevel(Value: TIdCompressionLevel);
     procedure InitCompressors;
@@ -165,12 +165,8 @@ end;
 destructor TIdCompressionIntercept.Destroy;
 begin
   DeinitCompressors;
-  {$IFDEF FPC}
-
-  {$ELSE}
   SetLength(FRecvBuf, 0);
   SetLength(FSendBuf, 0);
-  {$ENDIF}
   inherited Destroy;
 end;
 
@@ -216,11 +212,12 @@ begin
     StreamEnd := False;
     LPos := 0;
     repeat
-      nChars := Max(Length(VBuffer) - LPos, Length(LBuffer));
-      Inc(LPos, nChars);
+      nChars := Min(Length(VBuffer) - LPos, Length(LBuffer));
       if nChars = 0 then begin
         Break;
       end;
+      CopyTIdBytes(VBuffer, LPos, LBuffer, 0, nChars);
+      Inc(LPos, nChars);
       FDecompressRec.next_in := PChar(@LBuffer[0]);
       FDecompressRec.avail_in := nChars;
       FDecompressRec.total_in := 0;
@@ -232,13 +229,9 @@ begin
           end else begin
             Inc(FRecvSize, 1024);
           end;
-          {$IFDEF FPC}
-          ReallocMem(FRecvBuf, FRecvSize);
-          {$ELSE}
           SetLength(FRecvBuf, FRecvSize);
-          {$ENDIF}
         end;
-        FDecompressRec.next_out := PChar(@FRecvBuf + FRecvCount);
+        FDecompressRec.next_out := PChar(@FRecvBuf[FRecvCount]);
         C := FRecvSize - FRecvCount;
         FDecompressRec.avail_out := C;
         FDecompressRec.total_out := 0;
@@ -277,18 +270,13 @@ begin
       end else begin
         FSendSize := 2048;
       end;
-      {$IFDEF FPC}
-      ReallocMem(FSendBuf,FSendSize);
-      {$ELSE}
       SetLength(FSendBuf, FSendSize);
-      {$ENDIF}
     end;
 
     // Get the data from the input stream and save it off
     FSendCount := LSize;
-     Move(VBuffer[0], FSendBuf^, FSendCount);
-//    BytesToRaw(VBuffer, FSendBuf, 0, FSendCount);
-    FCompressRec.next_in := PChar(FSendBuf); //PChar(@FSendBuf[0]);
+    CopyTIdBytes(VBuffer, 0, FSendBuf, 0, FSendCount);
+    FCompressRec.next_in := PChar(@FSendBuf[0]);
     FCompressRec.avail_in := FSendCount;
     FCompressRec.avail_out := 0;
 

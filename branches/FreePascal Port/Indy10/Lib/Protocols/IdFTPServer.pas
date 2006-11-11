@@ -1126,11 +1126,11 @@ type
     procedure SetFTPFileSystem(const AValue: TIdFTPBaseFileSystem);
     function  GetMD5Checksum(ASender : TIdFTPServerContext; const AFileName : String ) : String;
     //overrides from TIdTCPServer
-    procedure DoConnect(AContext:TIdContext); override;
-    procedure DoDisconnect(AContext:TIdContext); override;
-    procedure ContextCreated(AContext:TIdContext); override;
-    function CalculateCRCHash(AStrm : TIdStream;const ABeginPos,AEndPos:cardinal): String;
-    function CalculateMD5Checksum(AStrm : TIdStream;const ABeginPos,AEndPos:Int64) : String;
+    procedure DoConnect(AContext: TIdContext); override;
+    procedure DoDisconnect(AContext: TIdContext); override;
+    procedure ContextCreated(AContext: TIdContext); override;
+    function CalculateCRCHash(AStrm: TIdStream; const ABeginPos,AEndPos: Int64): String;
+    function CalculateMD5Checksum(AStrm: TIdStream; const ABeginPos, AEndPos: Int64) : String;
     procedure DoOnDataPortBeforeBind(ASender : TIdFTPServerContext); virtual;
     procedure DoDataChannelOperation(ASender: TIdCommand;const AConnectMode : Boolean=False);virtual;
     procedure DoOnDataPortAfterBind(ASender : TIdFTPServerContext); virtual;
@@ -1139,7 +1139,8 @@ type
     function GetRepliesClass: TIdRepliesClass; override;
     procedure InitComponent; override;
     procedure DoReplyUnknownCommand(AContext: TIdContext; ALine: string); override;
-
+    // overriden so we can close active transfers during a shutdown
+    procedure DoTerminateContext(AContext: TIdContext); override;
     //overriden so we can handle telnet sequences
     function ReadCommandLine(AContext: TIdContext): string; override;
   public
@@ -3246,8 +3247,9 @@ var
   LLine : String;
   LStrm : TIdStream;
 
-const DEF_BLOCKSIZE = 10*10240;
-      DEF_CHECKCMD_WAIT = 1;
+const
+  DEF_BLOCKSIZE = 10*10240;
+  DEF_CHECKCMD_WAIT = 1;
 
   procedure CheckControlConnection(AContext : TIdFTPServerContext; ACmdQueue : TIdStrings);
   var LLine : String;
@@ -4294,77 +4296,70 @@ begin
   end;
 end;
 
-function TIdFTPServer.CalculateCRCHash(AStrm : TIdStream;const ABeginPos,AEndPos:cardinal): String;
-var
-  value: Cardinal;
-  IdHashCRC32: TIdHashCRC32;
+function TIdFTPServer.CalculateCRCHash(AStrm: TIdStream; const ABeginPos, AEndPos: Int64): String;
 begin
-  IdHashCRC32 := nil;
+  with TIdHashCRC32.Create do
   try
-    IdHashCRC32 := TIdHashCRC32.create;
-    value := IdHashCRC32.HashValue( AStrm,ABeginPos,AEndPos ) ;
-    result := Sys.IntToHex( value, 8 ) ;
+    Result := HashStreamAsHex(AStrm, ABeginPos, AEndPos);
   finally
-    IdHashCRC32.free;
+    Free;
   end;
 end;
 
-function TIdFTPServer.CalculateMD5Checksum(AStrm : TIdStream;const ABeginPos,AEndPos:Int64) : String;
-var LMD : TIdHashMessageDigest5;
+function TIdFTPServer.CalculateMD5Checksum(AStrm: TIdStream; const ABeginPos, AEndPos: Int64) : String;
 begin
-  LMD := TIdHashMessageDigest5.Create;
+  with TIdHashMessageDigest5.Create do
   try
-    Result := TIdHashMessageDigest5.AsHex(LMD.HashValue(AStrm,ABeginPos,AEndPos));
+    Result := HashStreamAsHex(AStrm, ABeginPos, AEndPos);
   finally
-    Sys.FreeAndNil(LMD);
+    Free;
   end;
 end;
 
 procedure TIdFTPServer.CommandXCRC(ASender: TIdCommand);
-var LCalcStream : TIdStream;
-    LBuf : String;
-    LFileName : String;
-    LBeginPos, LEndPos : Cardinal;
-    LF : TIdFTPServerContext;
+var
+  LCalcStream : TIdStream;
+  LBuf : String;
+  LFileName : String;
+  LBeginPos, LEndPos : Int64;
+  LF : TIdFTPServerContext;
 begin
   LF := TIdFTPServerContext(ASender.Context);
   if LF.IsAuthenticated(ASender) then
   begin
     if Assigned(FOnCRCFile) or (Assigned(FTPFileSystem)) then
     begin
-
       LBuf := ASender.UnparsedParams;
-      if (Pos('"',LBuf) > 0) then
+      if Pos('"', LBuf) > 0 then
       begin
         Fetch(LBuf,'"');
-        LFileName := Fetch(LBuf,'"');
-      end
-      else
-      begin
+        LFileName := Fetch(LBuf, '"');
+     end else begin
         LFileName := Fetch(LBuf);
       end;
       LBuf := Sys.Trim(LBuf);
-      LBeginPos := Sys.StrToInt(Fetch(LBuf),0);
-      LEndPos := Sys.StrToInt(Fetch(LBuf),0);
+      LBeginPos := Sys.StrToInt(Fetch(LBuf), 0);
+      LEndPos := Sys.StrToInt(Fetch(LBuf), 0);
       if LFileName = '' then
       begin
         ASender.Reply.SetReply(501, Sys.Format(RSFTPParamError, [ASender.CommandHandler.Command]));
         Exit;
       end;
       LCalcStream := nil;
-      LFileName := DoProcessPath(LF,LFileName);
-      DoOnCRCFile(LF,LFileName,LCalcStream);
-      if assigned(LCalcStream) then try
-        LCalcStream.Position := 0;
-        ASender.Reply.SetReply(250,CalculateCRCHash(LCalcStream,LBeginPos,LEndPos));
-      finally
-        Sys.FreeAndNil(LCalcStream);
+      LFileName := DoProcessPath(LF, LFileName);
+      DoOnCRCFile(LF, LFileName, LCalcStream);
+      if Assigned(LCalcStream) then begin
+        try
+          LCalcStream.Position := 0;
+          ASender.Reply.SetReply(250, CalculateCRCHash(LCalcStream, LBeginPos, LEndPos));
+        finally
+          Sys.FreeAndNil(LCalcStream);
+        end;
       end else begin
         CmdFileActionAborted(ASender);
       end;
     end;
-  end
-  else
+  end else
   begin
     CmdNotImplemented(ASender);
   end;
@@ -4713,20 +4708,20 @@ begin
   end;
 end;
 
-function  TIdFTPServer.GetMD5Checksum(ASender : TIdFTPServerContext; const AFileName : String ) : String;
-var LCalcStream : TIdStream;
-
+function TIdFTPServer.GetMD5Checksum(ASender : TIdFTPServerContext; const AFileName : String ) : String;
+var
+  LCalcStream : TIdStream;
 begin
   Result := '';
-  DoOnMD5Cache(ASender,AFileName,Result);
+  DoOnMD5Cache(ASender, AFileName, Result);
   if Result = '' then
   begin
     LCalcStream := nil;
-    DoOnCRCFile(ASender,AFileName,LCalcStream);
-    if assigned(LCalcStream) then try
+    DoOnCRCFile(ASender, AFileName, LCalcStream);
+    if Assigned(LCalcStream) then try
       LCalcStream.Position := 0;
-      Result := CalculateMD5Checksum(LCalcStream,0,0);
-      DoOnMD5Verify(ASender,AFileName,Result);
+      Result := CalculateMD5Checksum(LCalcStream, 0, 0);
+      DoOnMD5Verify(ASender, AFileName, Result);
     finally
       Sys.FreeAndNil(LCalcStream);
     end;
@@ -5940,7 +5935,7 @@ begin
       DoOnCRCFile(LF,LFileName,LCalcStream);
       if assigned(LCalcStream) then try
         LCalcStream.Position := 0;
-        ASender.Reply.SetReply(250,Self.CalculateMD5Checksum(LCalcStream,LBeginPos,LEndPos));
+        ASender.Reply.SetReply(250, CalculateMD5Checksum(LCalcStream, LBeginPos, LEndPos));
       finally
         Sys.FreeAndNil(LCalcStream);
       end else begin
@@ -6261,6 +6256,15 @@ procedure TIdFTPServer.DoReplyUnknownCommand(AContext: TIdContext;
   ALine: string);
 begin
   CmdSyntaxError(AContext,ALine);
+end;
+
+procedure TIdFTPServer.DoTerminateContext(AContext: TIdContext);
+begin
+  try
+    TIdFTPServerContext(AContext).TerminateAndFreeDataChannel;
+  finally
+    inherited DoTerminateContext(AContext);
+  end;
 end;
 
 procedure TIdFTPServer.CmdSyntaxError(AContext: TIdContext; ALine: string; const AReply : TIdReply = nil);

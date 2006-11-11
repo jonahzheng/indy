@@ -283,11 +283,11 @@ begin
       IOHandler.WriteBufferClose;
     end;
     //RSET
-    if PosInSmallIntArray(GetResponse([]), RSET_ACCEPT) = -1 then begin
+    if PosInSmallIntArray(GetResponse, RSET_ACCEPT) = -1 then begin
       LError := SetupErrorReply;
     end;
     //MAIL FROM:
-    if PosInSmallIntArray(GetResponse([]), MAILFROM_ACCEPT) = -1 then begin
+    if PosInSmallIntArray(GetResponse, MAILFROM_ACCEPT) = -1 then begin
       if not Assigned(LError) then begin
         LError := SetupErrorReply;
       end;
@@ -296,10 +296,10 @@ begin
     if ARecipients.Count > 0 then begin
       LFailedRecips := 0;
       for I := 0 to ARecipients.Count - 1 do begin
-        if PosInSmallIntArray(GetResponse([]), RCPTTO_ACCEPT) = -1 then begin
+        if PosInSmallIntArray(GetResponse, RCPTTO_ACCEPT) = -1 then begin
           Inc(LFailedRecips);
-          if not Assigned(LError) then begin
-            if not FailedRecipientCanContinue(ARecipients[I].Address) then begin
+          if not FailedRecipientCanContinue(ARecipients[I].Address) then begin
+            if not Assigned(LError) then begin
               LError := SetupErrorReply;
             end;
           end;
@@ -310,7 +310,7 @@ begin
       end;
     end;
     //DATA - last in the batch
-    if PosInSmallIntArray(GetResponse([]), DATA_ACCEPT) <> -1 then begin
+    if PosInSmallIntArray(GetResponse, DATA_ACCEPT) <> -1 then begin
       SendMsg(AMsg);
       if PosInSmallIntArray(SendCmd('.'), DATA_PERIOD_ACCEPT) = -1 then begin {Do not Localize}
         if not Assigned(LError) then begin

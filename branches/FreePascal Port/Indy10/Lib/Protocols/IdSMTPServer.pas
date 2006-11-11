@@ -436,7 +436,6 @@ end;
 
 procedure TIdSMTPServer.CommandAUTH(ASender: TIdCommand);
 var
-  Login: string;
   LContext: TIdSMTPServerContext;
 begin
   LContext := TIdSMTPServerContext(ASender.Context);

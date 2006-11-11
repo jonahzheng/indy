@@ -48,81 +48,35 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  IdObjs,
-  IdHash;
-
-const
-  BufferSize = 64;
+  IdGlobal, IdHash, IdObjs;
 
 type
-  T512BitRecord = array [0..BufferSize-1] of Byte;
+  T5x4LongWordRecord = array[0..4] of LongWord;
+  T512BitRecord = array [0..63] of Byte;
 
-  TIdHashSHA1 = class(TIdHash160)
+  TIdHashSHA1 = class(TIdHash)
   protected
     FCheckSum: T5x4LongWordRecord;
-    FCBuffer: T512BitRecord;
+    FCBuffer: TIdBytes;
     procedure Coder;
+    function GetHashBytes(AStream: TIdStream; ASize: Int64): TIdBytes; override;
   public
-    function HashValue(AStream: TIdStream): T5x4LongWordRecord;  overload; override;
-    function HashValue( AStream: TIdStream; const ABeginPos, AEndPos: Int64) :  T5x4LongWordRecord;  overload;
+    constructor Create;
   end;
 
 implementation
 
 { TIdHashSHA1 }
 
-function SwapLongword(Const ALongword: Longword): Longword;
+function SwapLongWord(const AValue: LongWord): LongWord;
 begin
-  Result:= ((ALongword and $FF) shl 24) or ((ALongword and $FF00) shl 8) or ((ALongword and $FF0000) shr 8) or ((ALongword and $FF000000) shr 24);
+  Result := ((AValue and $FF) shl 24) or ((AValue and $FF00) shl 8) or ((AValue and $FF0000) shr 8) or ((AValue and $FF000000) shr 24);
 end;
 
-function TIdHashSHA1.HashValue(AStream: TIdStream): T5x4LongWordRecord;
-var
-  LSize: LongInt;
-  LLenHi: LongWord;
-  LLenLo: LongWord;
-  i: Integer;
+constructor TIdHashSHA1.Create;
 begin
-  FCheckSum[0] := $67452301;
-  FCheckSum[1] := $EFCDAB89;
-  FCheckSum[2] := $98BADCFE;
-  FCheckSum[3] := $10325476;
-  FCheckSum[4] := $C3D2E1F0;
-  LLenHi := 0;
-  LLenLo := 0;
-  repeat
-    LSize := AStream.Read(FCBuffer,BufferSize);
-    Inc(LLenLo,LSize*8);
-    if LLenLo < LongWord(LSize*8) then
-      Inc(LLenHi);
-    if LSize < BufferSize then begin
-      FCBuffer[LSize] := $80;
-      if LSize >= BufferSize - 8 then begin
-        for i := LSize + 1 to Pred(BufferSize) do
-          FCBuffer[i] := 0;
-        Coder;
-        LSize := -1;
-      end;
-      for i := LSize + 1 to Pred(BufferSize - 8) do
-        FCBuffer[i] := 0;
-      FCBuffer[BufferSize-8] := LLenHi shr 24;
-      FCBuffer[BufferSize-7] := (LLenHi shr 16) and $FF;
-      FCBuffer[BufferSize-6] := (LLenHi shr 8) and $FF;
-      FCBuffer[BufferSize-5] := LLenHi and $FF;
-      FCBuffer[BufferSize-4] := LLenLo shr 24;
-      FCBuffer[BufferSize-3] := (LLenLo shr 16) and $FF;
-      FCBuffer[BufferSize-2] := (LLenLo shr 8) and $FF;
-      FCBuffer[BufferSize-1] := LLenLo and $FF;
-      LSize := 0;
-    end;
-    Coder;
-  until LSize < BufferSize;
-  FCheckSum[0] := SwapLongWord(FCheckSum[0]);
-  FCheckSum[1] := SwapLongWord(FCheckSum[1]);
-  FCheckSum[2] := SwapLongWord(FCheckSum[2]);
-  FCheckSum[3] := SwapLongWord(FCheckSum[3]);
-  FCheckSum[4] := SwapLongWord(FCheckSum[4]);
-  Result:=FCheckSum;
+  inherited Create;
+  SetLength(FCBuffer, 64);
 end;
 
 {$Q-,R-} // Operations performed modulo $100000000
@@ -138,22 +92,26 @@ begin
   { The first 16 W values are identical to the input block with endian
     conversion. }
   for i := 0 to 15 do
+  begin
     W[i]:= (FCBuffer[i*4] shl 24) or
             (FCBuffer[i*4+1] shl 16) or
             (FCBuffer[i*4+2] shl 8) or
             FCBuffer[i*4+3];
+  end;
   { In normal x86 code all of the remaining 64 W values would be calculated
     here. Here only the four next values are calculated, to reduce the code
     size of the first of the four loops below. }
-  for i := 16 to 19 do begin
+  for i := 16 to 19 do
+  begin
     T := W[i-3] xor W[i-8] xor W[i-14] xor W[i-16];
     W[i] := (T shl 1) or (T shr 31);
   end;
-  A:= FCheckSum[0];
-  B:= FCheckSum[1];
-  C:= FCheckSum[2];
-  D:= FCheckSum[3];
-  E:= FCheckSum[4];
+
+  A := FCheckSum[0];
+  B := FCheckSum[1];
+  C := FCheckSum[2];
+  D := FCheckSum[3];
+  E := FCheckSum[4];
 
   { The following loop could be expanded, but has been kept together to reduce
     the code size. A small code size entails better performance due to CPU
@@ -344,60 +302,66 @@ begin
   FCheckSum[4]:= FCheckSum[4] + E;
 end;
 
-function TIdHashSHA1.HashValue(AStream: TIdStream; const ABeginPos,
-  AEndPos: Int64): T5x4LongWordRecord;
+function TIdHashSHA1.GetHashBytes(AStream: TIdStream; ASize: Int64): TIdBytes;
 var
-  LSize: LongInt;
+  LSize: Integer;
   LLenHi: LongWord;
   LLenLo: LongWord;
-  i: Integer;
+  I: Integer;
 begin
+  Result := nil;
+
   FCheckSum[0] := $67452301;
   FCheckSum[1] := $EFCDAB89;
   FCheckSum[2] := $98BADCFE;
   FCheckSum[3] := $10325476;
   FCheckSum[4] := $C3D2E1F0;
+
   LLenHi := 0;
   LLenLo := 0;
+
   repeat
-    LSize := AStream.Read(FCBuffer,BufferSize);
-    Inc(LLenLo,LSize*8);
-    if LLenLo < LongWord(LSize*8) then
-    begin
+    LSize := ReadTIdBytesFromStream(AStream, FCBuffer, 64);
+    // TODO: handle stream read error
+    Inc(LLenLo, LSize * 8);
+    if LLenLo < LongWord(LSize * 8) then begin
       Inc(LLenHi);
     end;
-    if LSize < BufferSize then begin
+    if LSize < 64 then begin
       FCBuffer[LSize] := $80;
-      if LSize >= BufferSize - 8 then begin
-        for i := LSize + 1 to Pred(BufferSize) do
-        begin
+      if LSize >= 56 then begin
+        for I := (LSize + 1) to 63 do begin
           FCBuffer[i] := 0;
         end;
         Coder;
         LSize := -1;
       end;
-      for i := LSize + 1 to Pred(BufferSize - 8) do
-      begin
+      for I := (LSize + 1) to 55 do begin
         FCBuffer[i] := 0;
       end;
-      FCBuffer[BufferSize-8] := LLenHi shr 24;
-      FCBuffer[BufferSize-7] := (LLenHi shr 16) and $FF;
-      FCBuffer[BufferSize-6] := (LLenHi shr 8) and $FF;
-      FCBuffer[BufferSize-5] := LLenHi and $FF;
-      FCBuffer[BufferSize-4] := LLenLo shr 24;
-      FCBuffer[BufferSize-3] := (LLenLo shr 16) and $FF;
-      FCBuffer[BufferSize-2] := (LLenLo shr 8) and $FF;
-      FCBuffer[BufferSize-1] := LLenLo and $FF;
+      FCBuffer[56] := (LLenHi shr 24);
+      FCBuffer[57] := (LLenHi shr 16) and $FF;
+      FCBuffer[58] := (LLenHi shr 8) and $FF;
+      FCBuffer[59] := (LLenHi and $FF);
+      FCBuffer[60] := (LLenLo shr 24);
+      FCBuffer[61] := (LLenLo shr 16) and $FF;
+      FCBuffer[62] := (LLenLo shr 8) and $FF;
+      FCBuffer[63] := (LLenLo and $FF);
       LSize := 0;
     end;
     Coder;
-  until LSize < BufferSize;
+  until LSize < 64;
+
   FCheckSum[0] := SwapLongWord(FCheckSum[0]);
   FCheckSum[1] := SwapLongWord(FCheckSum[1]);
   FCheckSum[2] := SwapLongWord(FCheckSum[2]);
   FCheckSum[3] := SwapLongWord(FCheckSum[3]);
   FCheckSum[4] := SwapLongWord(FCheckSum[4]);
-  Result:=FCheckSum;
+
+  SetLength(Result, SizeOf(LongWord)*5);
+  for I := 0 to 4 do begin
+    CopyTIdLongWord(FCheckSum[I], Result, SizeOf(LongWord)*I);
+  end;
 end;
 
 end.

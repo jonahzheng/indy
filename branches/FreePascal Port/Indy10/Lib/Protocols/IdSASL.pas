@@ -122,6 +122,7 @@ type
 
   end;
 
+  TIdSASLClass = class of TIdSASL;
 
 var
   GlobalSASLList: TIdThreadList;

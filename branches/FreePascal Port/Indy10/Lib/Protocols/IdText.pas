@@ -47,9 +47,9 @@ uses
 type
   TIdText = class(TIdMessagePart)
   protected
-    FBody: TIdStrings;
+    FBody: TIdStringList;
     function  GetContentType: string; override; //Content-Type
-    procedure SetBody(const AStrs : TIdStrings); virtual;
+    procedure SetBody(const AStrs : TIdStringList); virtual;
     procedure SetContentType(const AValue: string); override;
     procedure SetCharSet(const AValue: String); virtual;
   public
@@ -60,7 +60,7 @@ type
 
     class function PartType: TIdMessagePartType; override;
     //
-    property  Body: TIdStrings read FBody write SetBody;
+    property  Body: TIdStringList read FBody write SetBody;
   end;
 
 implementation
@@ -96,6 +96,7 @@ constructor TIdText.Create(Collection: TIdMessageParts; ABody: TIdStrings = nil)
 begin
   inherited Create(Collection);
   FBody := TIdStringList.Create;
+  FBody.Duplicates := iddupAccept; 
   if ABody <> nil then begin
     FBody.Assign(ABody);
   end;
@@ -137,7 +138,7 @@ begin
   Result := mptText;
 end;
 
-procedure TIdText.SetBody(const AStrs: TIdStrings);
+procedure TIdText.SetBody(const AStrs: TIdStringList);
 begin
   FBody.Assign(AStrs);
 end;
