@@ -298,7 +298,7 @@ type
   public
      constructor Create(List :TIdDNSMap);
      destructor Destroy; override;
-  published
+
      procedure SyncAndUpdate (Sender : TObject);
 
      property Host : string read FHost write SetHost;
