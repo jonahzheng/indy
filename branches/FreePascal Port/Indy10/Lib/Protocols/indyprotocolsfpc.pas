@@ -100,6 +100,7 @@ uses
   IdGopherServer,
   IdHL7,
   IdHMAC,
+  IdHMACMD5,
   IdHTTP,
   IdHTTPHeaderInfo,
   IdHTTPProxyServer,
