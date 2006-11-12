@@ -126,7 +126,7 @@ uses
 
 procedure TIdSNPP.InitComponent;
 begin
-  inherited;
+  inherited InitComponent;
   Port := 7777;
 end;
 
