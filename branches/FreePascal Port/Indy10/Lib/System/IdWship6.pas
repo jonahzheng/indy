@@ -217,7 +217,15 @@ end;
 Procedure CloseLibrary;
 var h : THandle;
 begin
+  //Do NOT remove these IFDEF's.  They are here because InterlockedExchange
+  //only handles 32bit values.  In Win64, the THandle is 64 bits and is define
+  //as a pointer
+  {$IFDEF WIN32}
   h := InterlockedExchange(Integer(hWship6Dll),0);
+  {$ENDIF}
+  {$IFDEF WIN64}
+  h := InterlockedExchange64(Int64(hWship6Dll),0);
+  {$ENDIF}
   if h<>0 then begin
     IdIPv6Available:=false;
     FreeLibrary(h);
