@@ -1603,15 +1603,21 @@ begin
           Self.SendCmd('REST ' + Sys.IntToStr(ADest.Position), [350]);   {do not localize}
         end;
         Self.IOHandler.WriteLn(ACommand);
-        Self.GetResponse([125, 150, 154]); //APR: Ericsson Switch FTP
-        if (FDataPortProtection = ftpdpsPrivate) then begin
-          TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).Passthrough := False;
-        end;
-        if FCurrentTransferMode = dmStream then begin
-          LPasvCl.IOHandler.ReadStream(ADest, -1, True);
-        end else begin
-          FCompressor.DecompressFTPFromIO(LPasvCl.IOHandler, ADest, FZLibWindowBits);
-          //ReadCompressedData(FCompressor, ADest, LPasvCl.IOHandler, FZLibWindowBits);
+        // APR: Ericsson Switch FTP
+        //
+        // RLebeau: some servers send 450 when no files are
+        // present, so do not read the stream in that case
+        if Self.GetResponse([125, 150, 154, 450]) <> 450 then
+        begin
+          if (FDataPortProtection = ftpdpsPrivate) then begin
+            TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).Passthrough := False;
+          end;
+          if FCurrentTransferMode = dmStream then begin
+            LPasvCl.IOHandler.ReadStream(ADest, -1, True);
+          end else begin
+            FCompressor.DecompressFTPFromIO(LPasvCl.IOHandler, ADest, FZLibWindowBits);
+            //ReadCompressedData(FCompressor, ADest, LPasvCl.IOHandler, FZLibWindowBits);
+          end;
         end;
       finally
         LPasvCl.Disconnect;
@@ -3350,6 +3356,13 @@ procedure TIdFTP.DoOnBannerBeforeLogin(AText: TIdStrings);
 begin
   if Assigned(OnBannerBeforeLogin) then begin
     OnBannerBeforeLogin(Self, AText.Text);
+  end;
+end;
+
+procedure TIdFTP.DoOnBannerWarning(AText: TIdStrings);
+begin
+  if Assigned(OnBannerWarning) then begin
+    OnBannerWarning(Self, AText.Text);
   end;
 end;
 
