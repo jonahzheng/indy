@@ -96,10 +96,11 @@ function TIdHashAdler32.GetHashBytes(AStream: TIdStream; ASize: Int64): TIdBytes
 const
   cBufSize = 8192;
 var
-  LBuffer: array[0..cBufSize-1] of Byte;
+  LBuffer: TIdBytes;
   LSize: Integer;
   LHash: LongWord;
 begin
+  SetLength(LBuffer,cBufSize);
   Result := nil;
   LHash := 1;
 
