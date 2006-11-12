@@ -136,6 +136,8 @@ implicitunits=IdASN1Util \
   IdGopherConsts \
   IdGopherServer \
   IdHL7 \
+  IdHMAC \
+  IdHMACMD5 \
   IdHTTP \
   IdHTTPHeaderInfo \
   IdHTTPProxyServer \
