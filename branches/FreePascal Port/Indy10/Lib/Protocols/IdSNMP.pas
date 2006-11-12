@@ -58,8 +58,9 @@ interface
 uses
   Classes,
     IdASN1Util,
-    IdObjs,
-  IdException,
+    IdException,
+    IdGlobal,
+    IdObjs,  
   IdUDPBase,
   IdUDPClient;
 
@@ -154,8 +155,7 @@ type
 
 implementation
 
-uses
-  IdGlobal,
+uses  
   IdSys,
   IdStack;
 
