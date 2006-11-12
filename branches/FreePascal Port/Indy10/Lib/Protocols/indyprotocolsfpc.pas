@@ -99,6 +99,7 @@ uses
   IdGopherConsts,
   IdGopherServer,
   IdHL7,
+  IdHMAC,
   IdHTTP,
   IdHTTPHeaderInfo,
   IdHTTPProxyServer,
