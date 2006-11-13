@@ -23,17 +23,23 @@ types while also making this header compile with Borland Delphi.
 type 
   {$IFDEF FPC}
   TIdC_ULONG = cuLong;
-  TIdC_UINT  = cUInt;
-  TIdC_UNSIGNED = cunsigned;
-  TIdC_PULONG = pculong;
+  PIdC_ULONG = pculong;
   TIdC_INT   = cInt;
+  PIdC_INT   = pcInt;
+  TIdC_UINT  = cUInt;
+  PIdC_UINT  = pcUInt;
+  TIdC_UNSIGNED = cunsigned;
+  PIdC_UNSIGNED = ^TIdC_UNSIGNED;
   {$ENDIF}
   {$IFNDEF FPC}
   TIdC_ULONG = LongWord;
-  TIdC_UINT  = LongWord;
-  TIdC_UNSIGNED = LongWord;
-  TIdC_PULONG = ^TIdC_UNSIGNED;
+  PIdC_ULONG = ^TIdC_ULONG;
   TIdC_INT   = LongInt;
+  PIdC_INT   = ^TIdC_INT;
+  TIdC_UINT  = LongWord;
+  PIdC_UINT  = ^TIdC_UINT;
+  TIdC_UNSIGNED = LongWord;
+  PIdC_UNSIGNED = ^TIdC_UNSIGNED;
   {$ENDIF}
     
 implementation
