@@ -41,6 +41,7 @@ interface
 uses
   SysUtils,
   Classes,
+  IdCTypes,
   IdZLibHeaders;
 
 type
@@ -108,7 +109,7 @@ type
   Out: OutBuf = ptr to newly allocated buffer containing decompressed data
        OutBytes = number of bytes in OutBuf   }
 procedure CompressBuf(const InBuf: Pointer; InBytes: Integer;
-                      out OutBuf: Pointer; out OutBytes: Integer);
+                      out OutBuf: Pointer; out OutBytes: TIdC_UINT);
 
 //generic read header from a buffer
 function  GetStreamType(InBuffer: Pointer; InCount: integer; gzheader: gz_headerp; out HeaderSize: integer): TZStreamType; overload;
@@ -219,7 +220,7 @@ begin
 end;
 
 procedure CompressBuf(const InBuf: Pointer; InBytes: Integer;
-                      out OutBuf: Pointer; out OutBytes: Integer);
+                      out OutBuf: Pointer; out OutBytes: TIdC_UINT);
 var
   strm: z_stream;
   P: Pointer;
@@ -239,7 +240,7 @@ begin
         P := OutBuf;
         Inc(OutBytes, 256);
         ReallocMem(OutBuf, OutBytes);
-        strm.next_out := PChar(Integer(OutBuf) + (Integer(strm.next_out) - Integer(P)));
+        strm.next_out := PChar(PtrUInt(OutBuf) + (PtrUInt(strm.next_out) - PtrUInt(P)));
         strm.avail_out := 256;
       end;
     finally
@@ -253,7 +254,7 @@ begin
   end;
 end;
 
-function DMAOfStream(AStream: TStream; out Available: integer): Pointer;
+function DMAOfStream(AStream: TStream; out Available: TIdC_UINT): Pointer;
 begin
   if AStream.inheritsFrom(TCustomMemoryStream) then
   begin
@@ -295,7 +296,7 @@ end;
 function TryStreamType(var strm: TZStreamRec; gzheader: PgzHeaderRec; const AWinBitsValue : Integer): boolean;
 var
   InitBuf: PChar;
-  InitIn : integer;
+  InitIn : TIdC_UINT;
 begin
     InitBuf := strm.next_in;
     InitIn  := strm.avail_in;
@@ -370,7 +371,7 @@ function GetStreamType(InStream: TStream; gzheader: gz_headerp; out HeaderSize: 
 const
   StepSize = 20; //one step be enough, but who knows...
 var
-  N       : integer;
+  N       : TIdC_UINT;
   Buff    : PChar;
   UseBuffer: boolean;
 begin
@@ -407,7 +408,7 @@ type
     InStream  : TStream;
     OutStream : TStream;
     InMem     : PChar; //direct memory access
-    InMemSize : integer;
+    InMemSize : TIdC_UINT;
     ReadBuf   : array[word] of char;
     Window    : array[0..WindowSize] of char;
   end;
@@ -445,7 +446,7 @@ var
   BackObj: PZBack;
 begin
   FillChar(strm, sizeof(strm), 0);
-  GetMem(BackObj, SizeOf(BackObj^));
+  GetMem(BackObj, SizeOf(TZBack));
   try
     //direct memory access if possible!
     BackObj.InMem := DMAOfStream(InStream, BackObj.InMemSize);
@@ -485,7 +486,7 @@ var
 begin
   LWindowBits := AWindowBits;
   FillChar(strm, sizeof(strm), 0);
-  GetMem(BackObj, SizeOf(BackObj^));
+  GetMem(BackObj, SizeOf(TZBack));
   try
     //direct memory access if possible!
     BackObj.InMem := DMAOfStream(InStream, BackObj.InMemSize);
@@ -653,7 +654,7 @@ var
   strm   : z_stream;
   InBuf, OutBuf : PChar;
   UseInBuf, UseOutBuf : boolean;
-  LastOutCount : integer;
+  LastOutCount : TIdC_UINT;
   procedure WriteOut;
   begin
     if UseOutBuf then
@@ -780,7 +781,7 @@ begin
         P := OutBuf;
         Inc(OutBytes, BufInc);
         ReallocMem(OutBuf, OutBytes);
-        strm.next_out := PChar(Integer(OutBuf) + (Integer(strm.next_out) - Integer(P)));
+        strm.next_out := PChar(PtrUInt(OutBuf) + (PtrUInt(strm.next_out) - PtrUInt(P)));
         strm.avail_out := BufInc;
       end;
     finally
