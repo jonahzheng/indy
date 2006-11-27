@@ -40,7 +40,7 @@ interface
 {$I IdCompilerDefines.inc}
 //Put FPC into Delphi mode
 uses
-  IdIntercept, IdGlobal, IdSocketHandle, IdObjs, IdBaseComponent;
+  IdIntercept, IdGlobal, IdObjs;
 
 type
   TIdLogBase = class(TIdConnectionIntercept)

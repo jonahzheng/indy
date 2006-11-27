@@ -31,7 +31,7 @@ interface
 {$I IdCompilerDefines.inc}
 //Put FPC into Delphi mode
 uses
-  IdLogBase, IdObjs, IdBaseComponent;
+  IdLogBase, IdObjs;
 
 type
   TLogItemStatusEvent = procedure(ASender: TIdNativeComponent; AText: string) of object;
