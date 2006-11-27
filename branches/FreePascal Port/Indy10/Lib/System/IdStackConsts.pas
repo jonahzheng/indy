@@ -231,7 +231,7 @@ const
 
   // Socket Type
 type
-  TIdSocketType = {$IFDEF DotNet} SocketType; {$ELSE} Integer; {$ENDIF}
+  TIdSocketType = {$IFDEF DotNet} SocketType; {$ELSE} TSocket; {$ENDIF}
 const
   {$IFNDEF DOTNET}
   Id_SOCK_STREAM     = SOCK_STREAM;      //1               /* stream socket */
