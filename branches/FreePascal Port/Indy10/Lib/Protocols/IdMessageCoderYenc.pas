@@ -233,7 +233,7 @@ begin
   LH := TIdHashCRC32.Create;
   try
     LH.HashStart(LHash);
-    //note that we have to do hashing here because there's no seek
+    // note that we have to do hashing here because there's no seek
     // in the TIdStream class, changing definitions in this API might
     // break something, and storing in an extra buffer will just eat space
     while True do
@@ -266,6 +266,7 @@ begin
         end;
       end;
     end;
+    LH.HashEnd(LHash);
 
     FlushOutputBuffer;
     EIdMessageYencInvalidSizeException.IfTrue(LPartSize <> LBytesDecoded, RSYencInvalidSize);

@@ -62,8 +62,6 @@ type
     FCBuffer: TIdBytes;
     procedure MDCoder; virtual; abstract;
     procedure Reset; virtual;
-  public
-    constructor Create(ABufferSize: Integer);
   end;
 
   TIdHashMessageDigest2 = class(TIdHashMessageDigest)
@@ -75,8 +73,9 @@ type
     procedure Reset; override;
 
     function GetHashBytes(AStream: TIdStream; ASize: Int64): TIdBytes; override;
+    function HashToHex(const AHash: TIdBytes): String; override;
   public
-    constructor Create; virtual;
+    constructor Create; override;
   end;
 
   TIdHashMessageDigest4 = class(TIdHashMessageDigest)
@@ -84,9 +83,11 @@ type
     FState: T4x4LongWordRecord;
 
     function GetHashBytes(AStream: TIdStream; ASize: Int64): TIdBytes; override;
+    function HashToHex(const AHash: TIdBytes): String; override;
+
     procedure MDCoder; override;
   public
-    constructor Create; virtual;
+    constructor Create; override;
   end;
 
   TIdHashMessageDigest5 = class(TIdHashMessageDigest4)
@@ -97,12 +98,6 @@ type
 implementation
 
 { TIdHashMessageDigest }
-
-constructor TIdHashMessageDigest.Create(ABufferSize: Integer);
-begin
-  inherited Create;
-  SetLength(FCBuffer, ABufferSize);
-end;
 
 procedure TIdHashMessageDigest.Reset;
 begin
@@ -135,7 +130,8 @@ const
 
 constructor TIdHashMessageDigest2.Create;
 begin
-  inherited Create(16);
+  inherited Create;
+  SetLength(FCBuffer, 16);
 end;
 
 procedure TIdHashMessageDigest2.MDCoder;
@@ -235,6 +231,11 @@ begin
   end;
 end;
 
+function TIdHashMessageDigest2.HashToHex(const AHash: TIdBytes): String;
+begin
+  Result := LongWordHashToHex(AHash, 4);
+end;
+
 { TIdHashMessageDigest4 }
 
 const
@@ -250,7 +251,8 @@ end;
 
 constructor TIdHashMessageDigest4.Create;
 begin
-  inherited Create(64);
+  inherited Create;
+  SetLength(FCBuffer, 64);
 end;
 
 procedure TIdHashMessageDigest4.MDCoder;
@@ -383,6 +385,11 @@ begin
   for I := 0 to 3 do begin
     CopyTIdLongWord(FState[I], Result, SizeOf(LongWord)*I);
   end;
+end;
+
+function TIdHashMessageDigest4.HashToHex(const AHash: TIdBytes): String;
+begin
+  Result := LongWordHashToHex(AHash, 4);
 end;
 
 { TIdHashMessageDigest5 }

@@ -60,8 +60,9 @@ type
     FCBuffer: TIdBytes;
     procedure Coder;
     function GetHashBytes(AStream: TIdStream; ASize: Int64): TIdBytes; override;
+    function HashToHex(const AHash: TIdBytes): String; override;
   public
-    constructor Create;
+    constructor Create; override;
   end;
 
 implementation
@@ -362,6 +363,11 @@ begin
   for I := 0 to 4 do begin
     CopyTIdLongWord(FCheckSum[I], Result, SizeOf(LongWord)*I);
   end;
+end;
+
+function TIdHashSHA1.HashToHex(const AHash: TIdBytes): String;
+begin
+  Result := LongWordHashToHex(AHash, 5);
 end;
 
 end.
