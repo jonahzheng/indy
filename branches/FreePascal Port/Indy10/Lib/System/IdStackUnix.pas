@@ -554,8 +554,7 @@ begin
         LAddr.sin_family := PF_INET;
         LAddr.sin_addr := StrToNetAddr(AIP);
         LAddr.sin_port := HToNs(APort);
-         LBytesOut := fpSendTo(ASocket, @ABuffer, ABufferLength, AFlags or Id_MSG_NOSIGNAL, Psockaddr(@LAddr6), SizeOf(sockaddr));
-
+        LBytesOut := fpSendTo(ASocket, @ABuffer, ABufferLength, AFlags or Id_MSG_NOSIGNAL, Psockaddr(@LAddr), SizeOf(sockaddr));
       end;
     Id_IPv6:
       begin
