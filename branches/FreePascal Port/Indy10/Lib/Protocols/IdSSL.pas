@@ -61,9 +61,7 @@ interface
 uses
   IdGlobal,
   IdIOHandler,
-  IdIOHandlerSocket,
   IdIOHandlerStack,
-  IdScheduler,
   IdServerIOHandler,
   IdYarn,
   IdObjs;

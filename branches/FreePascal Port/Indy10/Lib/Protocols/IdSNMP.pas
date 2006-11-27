@@ -131,7 +131,7 @@ type
   TIdSNMP = class(TIdUDPClient)
   protected
     fCommunity: string;
-    fTrapPort: Integer;
+    fTrapPort: TIdPort;
     procedure SetCommunity(const Value: string);
     procedure InitComponent; override;
   public
@@ -149,7 +149,7 @@ type
     function ReceiveTrap: integer;
   published
     property Port default 161;
-    property TrapPort : Integer read fTrapPort Write fTrapPort default 162;
+    property TrapPort : TIdPort read fTrapPort Write fTrapPort default 162;
     property Community : string read fCommunity write SetCommunity;
   end;
 

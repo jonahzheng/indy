@@ -326,7 +326,6 @@ uses
   Windows,
   {$ENDIF}
   IdCharsets,
-  IdBaseComponent,
   IdGlobal,
   IdException,
   IdObjs,
@@ -558,8 +557,6 @@ uses
   System.IO,
   System.Text,
   {$ENDIF}
-  IdAssignedNumbers,
-  IdResourceStringsCore,
   IdResourceStringsProtocols,
   IdStack;
 

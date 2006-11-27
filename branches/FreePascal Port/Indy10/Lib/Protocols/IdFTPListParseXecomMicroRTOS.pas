@@ -67,7 +67,7 @@ type
 implementation
 
 uses
-  IdGlobal, IdFTPCommon, IdGlobalProtocols, IdStrings,
+  IdGlobal, IdFTPCommon, IdGlobalProtocols,
   IdSys;
 
 { TIdFTPLPXecomMicroRTOS }

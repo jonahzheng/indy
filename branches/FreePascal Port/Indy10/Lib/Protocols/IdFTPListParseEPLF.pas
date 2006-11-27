@@ -46,7 +46,7 @@ unit IdFTPListParseEPLF;
 interface
 {$i IdCompilerDefines.inc}
 uses
-  IdFTPList, IdFTPListParseBase, IdFTPListTypes, IdObjs;
+  IdFTPList, IdFTPListParseBase,  IdObjs;
 
 type
   TIdAEPLFFTPListItem = class(TIdFTPListItem)

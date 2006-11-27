@@ -65,7 +65,7 @@ const
   IdDefIdentQueryTimeOut = 60000; // 1 minute
 
 type
-  TIdIdentQueryEvent = procedure (AContext:TIdContext; AServerPort, AClientPort : Integer) of object;
+  TIdIdentQueryEvent = procedure (AContext:TIdContext; AServerPort, AClientPort : TIdPort) of object;
   TIdIdentErrorType = (ieInvalidPort, ieNoUser, ieHiddenUser, ieUnknownError);
 
   TIdIdentServer = class(TIdCustomTCPServer)
@@ -75,9 +75,9 @@ type
     function DoExecute(AContext:TIdContext): boolean; override;
     procedure InitComponent; override;
   public
-    Procedure ReplyError(AContext:TIdContext; AServerPort, AClientPort : Integer; AErr : TIdIdentErrorType);
-    Procedure ReplyIdent(AContext:TIdContext; AServerPort, AClientPort : Integer; AOS, AUserName : String; const ACharset : String = '');    {Do not Localize}
-    Procedure ReplyOther(AContext:TIdContext; AServerPort, AClientPort : Integer; AOther : String);
+    Procedure ReplyError(AContext:TIdContext; AServerPort, AClientPort : TIdPort; AErr : TIdIdentErrorType);
+    Procedure ReplyIdent(AContext:TIdContext; AServerPort, AClientPort : TIdPort; AOS, AUserName : String; const ACharset : String = '');    {Do not Localize}
+    Procedure ReplyOther(AContext:TIdContext; AServerPort, AClientPort : TIdPort; AOther : String);
   published
     property QueryTimeOut : Integer read FQueryTimeOut write FQueryTimeOut default IdDefIdentQueryTimeOut;
     Property OnIdentQuery : TIdIdentQueryEvent read FOnIdentQuery write FOnIdentQuery;
@@ -100,7 +100,7 @@ end;
 
 function TIdIdentServer.DoExecute(AContext:TIdContext): boolean;
 var s : String;
-    ServerPort, ClientPort : Integer;
+    ServerPort, ClientPort : TIdPort;
 begin
   Result := True;
   s := AContext.Connection.IOHandler.ReadLn('',FQueryTimeOut);    {Do not Localize}

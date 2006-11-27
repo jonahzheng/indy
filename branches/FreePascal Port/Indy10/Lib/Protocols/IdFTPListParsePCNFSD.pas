@@ -28,7 +28,7 @@ unit IdFTPListParsePCNFSD;
 interface
 {$i IdCompilerDefines.inc}
 uses
-  IdFTPList, IdFTPListParseBase, IdFTPListTypes, IdObjs;
+  IdFTPList, IdFTPListParseBase, IdObjs;
 
 {
   This parser is a little more tolarant of stuff than others because of scanty samples.
@@ -56,7 +56,7 @@ type
 
 implementation
 uses
-  IdGlobal, IdFTPCommon, IdGlobalProtocols, IdStrings, IdSys;
+  IdGlobal, IdFTPCommon, IdGlobalProtocols, IdSys;
 
 const
   DIR = '<dir>';   {Do not translate}

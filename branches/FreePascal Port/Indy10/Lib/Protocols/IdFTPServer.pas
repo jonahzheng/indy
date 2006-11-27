@@ -797,7 +797,7 @@ type
     procedure SetErrorReply(const AValue: TIdReplyRFC);
     procedure SetOKReply(const AValue: TIdReplyRFC);
     function GetPeerIP: String;
-    function GetPeerPort: Integer;
+    function GetPeerPort: TIdPort;
   public
     constructor Create(APASV: Boolean; AControlContext: TIdFTPServerContext; const ARequirePASVFromSameIP : Boolean; AServer : TIdFTPServer); reintroduce;
     destructor Destroy; override;
@@ -805,7 +805,7 @@ type
     procedure SetPortParameters(const AIP: string;
        const APort: Integer; const AIPVersion: TIdIPVersion);
     property PeerIP : String read GetPeerIP;
-    property PeerPort : Integer read GetPeerPort;
+    property PeerPort : TIdPort read GetPeerPort;
     property Stopped : Boolean read FStopped write FStopped;
     property Data : TIdBaseObject read FData write FData;
     property Server : TIdFTPServer read FServer;
@@ -922,7 +922,7 @@ type
     FPASVBoundPortMin : Integer;
     FPASVBoundPortMax : Integer;
     FSystemType: string;
-    FDefaultDataPort : Integer;
+    FDefaultDataPort : TIdPort;
     FUserAccounts: TIdCustomUserManager;
     FOnAfterUserLogin: TOnAfterUserLoginEvent;
     FOnUserLogin: TOnFTPUserLoginEvent;
@@ -1118,8 +1118,8 @@ type
     procedure SetAnonymousAccounts(const AValue: TIdStringList);
     procedure SetUserAccounts(const AValue: TIdCustomUserManager);
     procedure SetFTPSecurityOptions(const AValue: TIdFTPSecurityOptions);
-    procedure SetPASVBoundPortMax(const Value: Integer);
-    procedure SetPASVBoundPortMin(const Value: Integer);
+    procedure SetPASVBoundPortMax(const Value: TIdPort);
+    procedure SetPASVBoundPortMin(const Value: TIdPort);
     procedure SetReplyUnknownSITECommand(AValue: TIdReply);
     procedure SetSITECommands(AValue: TIdCommandHandlers);
     procedure ThreadException(AThread: TIdThread; AException: Exception);
@@ -1156,7 +1156,7 @@ type
     property AnonymousAccounts: TIdStringList read FAnonymousAccounts write SetAnonymousAccounts;
     property AnonymousPassStrictCheck: Boolean read FAnonymousPassStrictCheck
      write FAnonymousPassStrictCheck default Id_DEF_PassStrictCheck;
-    property DefaultDataPort : Integer read FDefaultDataPort write FDefaultDataPort default IdPORT_FTP_DATA;
+    property DefaultDataPort : TIdPort read FDefaultDataPort write FDefaultDataPort default IdPORT_FTP_DATA;
     property FTPFileSystem:TIdFTPBaseFileSystem read FFTPFileSystem write SetFTPFileSystem;
     property FTPSecurityOptions : TIdFTPSecurityOptions read FFTPSecurityOptions write SetFTPSecurityOptions;
     property EndOfHelpLine : String read FEndOfHelpLine write FEndOfHelpLine;

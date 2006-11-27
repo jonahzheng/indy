@@ -64,7 +64,7 @@ type
 implementation
 
 uses
-  IdGlobal, IdFTPCommon, IdGlobalProtocols, IdStrings, IdSys;
+  IdGlobal, IdFTPCommon, IdGlobalProtocols, IdSys;
 
 { TIdFTPLPMusic }
 
@@ -106,7 +106,7 @@ class function TIdFTPLPMusic.ParseLine(const AItem: TIdFTPListItem;
   const APath: String): Boolean;
 var LBuf : String;
     LTmp : String;
-    LDay, LMonth, LYear : Integer;
+    LDay, LMonth, LYear : Word;
   LI : TIdMusicFTPListItem;
 begin
   LI := AItem as TIdMusicFTPListItem;

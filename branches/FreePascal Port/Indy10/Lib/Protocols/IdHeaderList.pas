@@ -144,7 +144,7 @@ end;
 
 procedure TIdHeaderList.ConvertToStdValues(ADest: TIdStrings);
 var
-  i: integer;
+  i: LongInt;
 begin
   for i := 0 to Count - 1 do begin
     ADest.Add(Sys.ReplaceOnlyFirst(Strings[i], NameValueSeparator, '='));    {Do not Localize}
@@ -175,7 +175,7 @@ end;
 
 procedure TIdHeaderList.Extract(const AName: string; ADest: TIdStrings);
 var
-  idx : Integer;
+  idx : LongInt;
 begin
   if Assigned(ADest) then begin
     for idx := 0 to Count - 1 do
@@ -190,7 +190,7 @@ end;
 procedure TIdHeaderList.FoldAndInsert(AString : String; Index: Integer);
 var
   LStrs : TIdStringList;
-  idx : Integer;
+  idx : LongInt;
 begin
   LStrs := FoldLine(AString);
   try
@@ -290,7 +290,7 @@ end;
 
 function TIdHeaderList.IndexOfName(const AName: string): Integer;
 var
-  i: Integer;
+  i: LongInt;
 begin
   Result := -1;
   for i := 0 to Count - 1 do begin

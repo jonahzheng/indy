@@ -53,7 +53,6 @@ uses
   IdException,
   IdGlobal,
   IdHashMessageDigest,
-  IdHeaderList,
   IdSys,
   IdObjs;
 
@@ -85,7 +84,7 @@ type
 implementation
 
 uses
-  IdHash, IdResourceStrings, IdResourceStringsProtocols;
+  IdResourceStringsProtocols;
 
 { TIdDigestAuthentication }
 

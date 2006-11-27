@@ -122,7 +122,7 @@ type
     FItemType : Char;
     FSelector : String;
     FServer : String;
-    FPort : Integer;
+    FPort : TIdPort;
     FGopherPlusItem : Boolean;
     FGopherBlock : TIdHeaderList;
     FViews : TIdStringList;
@@ -153,7 +153,7 @@ type
     property Server : String read FServer write FServer;
     {This indicates the port you connect to in order to request the item.  Set
     the port property to this value to get an item.}
-    property Port : Integer read FPort write FPort;
+    property Port : TIdPort read FPort write FPort;
     {This indicates if the item is on a Gopher+ server - you can use
     GetExtended Menues for menus}
     property GopherPlusItem : Boolean read FGopherPlusItem

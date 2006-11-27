@@ -691,7 +691,7 @@ begin
   for i := 1 to Length(AAttr) do
   begin
     Result := CharIsInSet(AAttr,i,'RASH');
-    if False then
+    if Result=False then
     begin
       break;
     end;

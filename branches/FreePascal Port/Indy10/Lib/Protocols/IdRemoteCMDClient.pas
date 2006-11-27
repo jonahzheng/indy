@@ -124,7 +124,7 @@ var
   stdErr : TIdSimpleServer;
   thr : TIdStdErrThread;
 
-  procedure SendAuthentication(APort : Integer);
+  procedure SendAuthentication(APort : TIdPort);
   begin
     // Send authentication and commands
     IOHandler.Write(Sys.IntToStr(APort)+#0);  //stdErr Port Number - none for this session

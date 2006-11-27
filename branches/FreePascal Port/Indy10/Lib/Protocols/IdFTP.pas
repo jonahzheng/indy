@@ -610,10 +610,10 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  IdAssignedNumbers, IdGlobal, IdCustomTransparentProxy, IdExceptionCore,
+  IdAssignedNumbers, IdGlobal,  IdExceptionCore,
   IdExplicitTLSClientServerBase, IdFTPCommon, IdFTPList, IdFTPListParseBase,
-  IdException, IdIOHandler, IdIOHandlerSocket, IdReplyFTP, IdBaseComponent,
-  IdReplyRFC, IdReply, IdSocketHandle, IdSys, IdTCPConnection, IdTCPClient,
+  IdException, IdIOHandler, IdIOHandlerSocket,
+  IdReplyFTP, IdReply, IdSocketHandle, IdSys, IdTCPConnection, IdTCPClient,
   IdThreadSafe, IdObjs, IdZLibCompressorBase;
 
 type
@@ -803,8 +803,8 @@ type
     function IndexOfFeatLine(const AFeatLine : String):Integer;
     procedure ClearSSCN;
     function SetSSCNToOn : Boolean;
-    procedure SendInternalPassive(const ACmd : String; var VIP: string; var VPort: integer);
-    procedure SendCPassive(var VIP: string; var VPort: integer);
+    procedure SendInternalPassive(const ACmd : String; var VIP: string; var VPort: TIdPort);
+    procedure SendCPassive(var VIP: string; var VPort: TIdPort);
     function FindAuthCmd : String;
     function GetReplyClass:TIdReplyClass; override;
     //
@@ -839,14 +839,14 @@ type
     procedure InternalGet(const ACommand: string; ADest: TIdStream; AResume: Boolean = false);
     procedure InternalPut(const ACommand: string; ASource: TIdStream; AFromBeginning: Boolean = true);
 //    procedure SetOnParseCustomListFormat(const AValue: TIdOnParseCustomListFormat);
-    procedure SendPassive(var VIP: string; var VPort: integer);
+    procedure SendPassive(var VIP: string; var VPort: TIdPort);
     procedure SendPort(AHandle: TIdSocketHandle); overload;
-    procedure SendPort(const AIP : String; const APort : Integer); overload;
-    procedure ParseEPSV(const AReply : String; var VIP : String; VPort : Integer);
+    procedure SendPort(const AIP : String; const APort : TIdPort); overload;
+    procedure ParseEPSV(const AReply : String; var VIP : String; VPort : TIdPort);
     //These two are for RFC 2428.txt
     procedure SendEPort(AHandle: TIdSocketHandle); overload;
-    procedure SendEPort(const AIP : String; const APort : Integer; const AIPVersion : TIdIPVersion); overload;
-    procedure SendEPassive(var VIP: string; var VPort: integer);
+    procedure SendEPort(const AIP : String; const APort : TIdPort; const AIPVersion : TIdIPVersion); overload;
+    procedure SendEPassive(var VIP: string; var VPort: TIdPort);
     procedure SetProxySettings(const Value: TIdFtpProxySettings);
     procedure SetClientInfo(const AValue: TIdFTPClientIdentifier);
     procedure SendTransferType;
@@ -1450,7 +1450,7 @@ end;
 procedure TIdFTP.InternalPut(const ACommand: string; ASource: TIdStream; AFromBeginning: Boolean = true);
 var
   LIP: string;
-  LPort: Integer;
+  LPort: TIdPort;
   LPasvCl : TIdTCPClient;
   LPortSv : TIdSimpleServer;
 begin
@@ -1571,7 +1571,7 @@ end;
 procedure TIdFTP.InternalGet(const ACommand: string; ADest: TIdStream; AResume: Boolean = false);
 var
   LIP: string;
-  LPort: Integer;
+  LPort: TIdPort;
   LPasvCl : TIdTCPClient;
   LPortSv : TIdSimpleServer;
 begin
@@ -1738,7 +1738,7 @@ begin
   end;
 end;
 
-procedure TIdFTP.SendPort(const AIP: String; const APort: Integer);
+procedure TIdFTP.SendPort(const AIP: String; const APort: TIdPort);
 begin
   SendDataSettings;
   SendCmd('PORT ' + Sys.StringReplace(AIP, '.', ',')   {do not localize}
@@ -1824,7 +1824,7 @@ begin
 end;
 
 procedure TIdFTP.SendInternalPassive(const ACmd: String; var VIP: string;
-  var VPort: integer);
+  var VPort: TIdPort);
 var
   i, bLeft, bRight: integer;
   s: string;
@@ -1856,12 +1856,12 @@ begin
   VPort := VPort + Sys.StrToInt(Sys.Trim(Fetch(s, ','))); {Do not translate}
 end;
 
-procedure TIdFTP.SendPassive(var VIP: string; var VPort: integer);
+procedure TIdFTP.SendPassive(var VIP: string; var VPort: TIdPort);
 begin
   SendInternalPassive('PASV', VIP, VPort); {do not localize}
 end;
 
-procedure TIdFTP.SendCPassive(var VIP: string; var VPort: integer);
+procedure TIdFTP.SendCPassive(var VIP: string; var VPort: TIdPort);
 begin
   SendInternalPassive('CPSV', VIP, VPort); {do not localize}
 end;
@@ -2478,7 +2478,7 @@ begin
   FUseExtensionDataPort := AValue;
 end;
 
-procedure TIdFTP.ParseEPSV(const AReply : String; var VIP : String; VPort : Integer);
+procedure TIdFTP.ParseEPSV(const AReply : String; var VIP : String; VPort : TIdPort);
 var
   bLeft, bRight: Integer;
   delim : Char;
@@ -2503,7 +2503,7 @@ begin
   end;
 end;
 
-procedure TIdFTP.SendEPassive(var VIP: string; var VPort: integer);
+procedure TIdFTP.SendEPassive(var VIP: string; var VPort: TIdPort);
 begin
   SendDataSettings;
   //Note that for FTP Proxies, it is not desirable for the server to choose
@@ -2539,7 +2539,7 @@ begin
   end;
 end;
 
-procedure TIdFTP.SendEPort(const AIP: String; const APort: Integer; const AIPVersion: TIdIPVersion);
+procedure TIdFTP.SendEPort(const AIP: String; const APort: TIdPort; const AIPVersion: TIdIPVersion);
 begin
   if SendCmd('EPRT |' + cIPVersions[AIPVersion] + '|' + AIP + '|' + Sys.IntToStr(APort) + '|') <> 200 then begin  {do not localize}
     SendPort(AIP, APort);
@@ -2911,7 +2911,7 @@ is being used.
 }
 var
   LIP : String;
-  LPort : Integer;
+  LPort : TIdPort;
 begin
   Result := True;
   if AFromSite.SetSSCNToOn then begin
@@ -3021,7 +3021,7 @@ end;
 procedure TIdFTP.FXPSetTransferPorts(AFromSite, AToSite: TIdFTP; const ATargetUsesPasv: Boolean);
 var
   LIP : String;
-  LPort : Integer;
+  LPort : TIdPort;
 {
 {
 SiteToSiteUpload

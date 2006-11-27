@@ -36,7 +36,7 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  IdFTPList, IdFTPListParseBase, IdFTPListTypes, IdObjs;
+  IdFTPList, IdFTPListParseBase, IdObjs;
 
 type
   TIdStratusVOSFTPListItem = class(TIdFTPListItem)

@@ -502,9 +502,6 @@ type
 
 implementation
 
-uses
-  IdContainers, IdResourceStrings, IdStrings;
-
 { TFTPListItem }
 
 constructor TIdFTPListItem.Create(AOwner: TIdCollection);

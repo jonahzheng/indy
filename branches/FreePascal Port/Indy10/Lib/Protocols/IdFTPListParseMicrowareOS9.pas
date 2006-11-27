@@ -69,7 +69,7 @@ type
 implementation
 
 uses
-  IdGlobal, IdFTPCommon, IdGlobalProtocols, IdStrings, IdSys;
+  IdGlobal, IdFTPCommon, IdGlobalProtocols, IdSys;
 
 const
   MICROWARE_OS9 = 'MicroWare OS-9'; {do not localize}
