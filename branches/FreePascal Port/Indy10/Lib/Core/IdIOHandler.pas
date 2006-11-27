@@ -402,7 +402,7 @@ interface
 {$I IdCompilerDefines.inc}
 uses
   IdException,
-  IdAntiFreezeBase, IdBuffer, IdBaseComponent, IdComponent, IdGlobal, IdExceptionCore,
+   IdBuffer,  IdComponent, IdGlobal, IdExceptionCore,
   IdIntercept, IdSys, IdResourceStringsCore, IdObjs, IdStream;
 
 const

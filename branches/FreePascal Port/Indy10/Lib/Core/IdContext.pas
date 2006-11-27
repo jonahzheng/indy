@@ -117,8 +117,7 @@ implementation
 { TIdContext }
 
 uses
-  IdGlobal,
-  IdIOHandlerSocket;
+  IdGlobal;
 
 constructor TIdContext.Create(AConnection: TIdTCPConnection; AYarn: TIdYarn; AList: TIdThreadList = nil);
 begin

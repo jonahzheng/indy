@@ -144,7 +144,6 @@ interface
 
 uses
   IdCustomTransparentProxy,
-  IdBaseComponent,
   IdGlobal,
   IdIOHandler,
   IdSocketHandle,
@@ -168,10 +167,10 @@ type
   protected
     FBinding: TIdSocketHandle;
     FBoundIP: string;
-    FBoundPort: Integer;
-    FBoundPortMax: Integer;
-    FBoundPortMin: Integer;
-    FDefaultPort: Integer;
+    FBoundPort: TIdPort;
+    FBoundPortMax: TIdPort;
+    FBoundPortMin: TIdPort;
+    FDefaultPort: TIdPort;
     FOnBeforeBind: TIdNotifyEvent;
     FOnAfterBind: TIdNotifyEvent;
     FOnSocketAllocated: TIdNotifyEvent;
@@ -205,16 +204,16 @@ type
       override;
     //
     property Binding: TIdSocketHandle read FBinding;
-    property BoundPortMax: Integer read FBoundPortMax write FBoundPortMax;
-    property BoundPortMin: Integer read FBoundPortMin write FBoundPortMin;
+    property BoundPortMax: TIdPort read FBoundPortMax write FBoundPortMax;
+    property BoundPortMin: TIdPort read FBoundPortMin write FBoundPortMin;
     // events
     property OnBeforeBind: TIdNotifyEvent read FOnBeforeBind write FOnBeforeBind;
     property OnAfterBind: TIdNotifyEvent read FOnAfterBind write FOnAfterBind;
     property OnSocketAllocated: TIdNotifyEvent read FOnSocketAllocated write FOnSocketAllocated;
   published
     property BoundIP: string read FBoundIP write FBoundIP;
-    property BoundPort: Integer read FBoundPort write FBoundPort default 0;
-    property DefaultPort: integer read FDefaultPort write FDefaultPort;
+    property BoundPort: TIdPort read FBoundPort write FBoundPort default 0;
+    property DefaultPort: TIdPort read FDefaultPort write FDefaultPort;
     property IPVersion: TIdIPVersion read FIPVersion write FIPVersion default ID_DEFAULT_IP_VERSION;
     property ReuseSocket: TIdReuseSocket read FReuseSocket write FReuseSocket default rsOSDependent;
     property TransparentProxy: TIdCustomTransparentProxy

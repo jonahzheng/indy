@@ -90,8 +90,7 @@ interface
 {$I IdCompilerDefines.inc}
 //needed to put FCP into Delphi mode
 uses
-  IdException, IdStack,
-  IdSys;
+  IdException, IdStack;
 
 type
   // IdFiber Exceptions

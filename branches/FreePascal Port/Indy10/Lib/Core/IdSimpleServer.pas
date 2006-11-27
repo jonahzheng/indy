@@ -111,9 +111,9 @@ type
     FAbortedRequested: Boolean;
     FAcceptWait: Integer;
     FBoundIP: String;
-    FBoundPort: Integer;
-    FBoundPortMin: Integer;
-    FBoundPortMax: Integer;
+    FBoundPort: TIdPort;
+    FBoundPortMin: TIdPort;
+    FBoundPortMax: TIdPort;
     FIPVersion: TIdIPVersion;
     FListenHandle: TIdStackSocketHandle;
     FListening: Boolean;
@@ -136,9 +136,9 @@ type
     property AcceptWait: Integer read FAcceptWait write FAcceptWait default ID_ACCEPT_WAIT;
   published
     property BoundIP: string read FBoundIP write FBoundIP;
-    property BoundPort: Integer read FBoundPort write FBoundPort;
-    property BoundPortMin: Integer read FBoundPortMin write FBoundPortMin;
-    property BoundPortMax: Integer read FBoundPortMax write FBoundPortMax;
+    property BoundPort: TIdPort read FBoundPort write FBoundPort;
+    property BoundPortMin: TIdPort read FBoundPortMin write FBoundPortMin;
+    property BoundPortMax: TIdPort read FBoundPortMax write FBoundPortMax;
     property Binding: TIdSocketHandle read GetBinding;
     property IPVersion: TIdIPVersion read FIPVersion write SetIPVersion;
 

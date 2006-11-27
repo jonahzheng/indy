@@ -80,7 +80,7 @@ type
   protected
     FHost: String;
     FPassword: String;
-    FPort: Integer;
+    FPort: TIdPort;
     FIPVersion : TIdIPVersion;
     FUsername: String;
     FChainedProxy: TIdCustomTransparentProxy;
@@ -110,7 +110,7 @@ type
     property  Enabled: Boolean read GetEnabled write SetEnabled;
     property  Host: String read FHost write FHost;
     property  Password: String read FPassword write FPassword;
-    property  Port: Integer read FPort write FPort;
+    property  Port: TIdPort read FPort write FPort;
     property  IPVersion : TIdIPVersion read FIPVersion write FIPVersion default ID_DEFAULT_IP_VERSION;
     property  Username: String read FUsername write FUsername;
     property  ChainedProxy: TIdCustomTransparentProxy read FChainedProxy write SetChainedProxy;

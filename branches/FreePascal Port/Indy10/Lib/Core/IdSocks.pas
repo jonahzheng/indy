@@ -186,7 +186,7 @@ interface
 {$I IdCompilerDefines.inc}
 //we need to put this in Delphi mode to work.
 uses
-  IdAssignedNumbers, IdException, IdBaseComponent,
+  IdAssignedNumbers, IdException,
   IdComponent, IdCustomTransparentProxy, IdGlobal, IdIOHandler,
   IdIOHandlerSocket, IdSocketHandle, IdSys, IdObjs;
 
@@ -520,7 +520,7 @@ var
   LRequestedAuthMethod,
   LServerAuthMethod,
   LUsernameLen,
-  LPasswordLen : Byte;
+  LPasswordLen : Integer;
 begin
   SetLength(LBuf, 3);
   // defined in rfc 1928

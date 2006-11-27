@@ -32,7 +32,6 @@ interface
 
 {$I IdCompilerDefines.inc}
 uses
-  IdObjs,
   IdGlobal;
 
 const

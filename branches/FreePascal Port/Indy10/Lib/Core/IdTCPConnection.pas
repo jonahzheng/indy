@@ -356,10 +356,8 @@ uses
   IdIOHandlerSocket,
   IdIOHandlerStack,
   IdReply,
-  IdSocketHandle,
   IdSys,
-  IdObjs,
-  IdBaseComponent;
+  IdObjs;
 
 type
   TIdTCPConnection = class(TIdComponent)
@@ -452,7 +450,7 @@ type
 implementation
 
 uses
-  IdAntiFreezeBase, IdResourceStringsCore, IdStackConsts, IdReplyRFC;
+  IdResourceStringsCore, IdReplyRFC;
 
 function TIdTCPConnection.GetIntercept: TIdConnectionIntercept;
 begin

@@ -198,7 +198,7 @@ type
     // Also has been split further to allow usage from C# as it does not have optional
     // params
     procedure Connect(const AHost: string); overload;
-    procedure Connect(const AHost: string; const APort: Integer); overload;
+    procedure Connect(const AHost: string; const APort: TIdPort); overload;
     function ConnectAndGetAll: string; virtual;
     //
     property BoundIP: string read FBoundIP write SetBoundIP;
@@ -242,7 +242,7 @@ type
 implementation
 
 uses
-  IdComponent, IdResourceStringsCore, IdIOHandlerSocket;
+  IdComponent, IdResourceStringsCore;
 
 { TIdTCPClientCustom }
 
@@ -470,7 +470,7 @@ begin
   Connect;
 end;
 
-procedure TIdTCPClientCustom.Connect(const AHost: string; const APort: Integer);
+procedure TIdTCPClientCustom.Connect(const AHost: string; const APort: TIdPort);
 begin
   Host := AHost;
   Port := APort;

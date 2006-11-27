@@ -208,7 +208,7 @@ implementation
 
 uses
   IdAntiFreezeBase, IdResourceStringsCore, IdResourceStrings, IdStackConsts, IdException,
-  IdTCPConnection, IdComponent, IdIOHandler;
+  IdComponent, IdIOHandler;
 
 type
   TIdConnectThread = class(TIdNativeThread)
