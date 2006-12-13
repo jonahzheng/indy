@@ -61,15 +61,13 @@ type
   TIdDateTimeBase = &Double;
 
   TIdSysNet = class(TIdSysBase)
-  private
   protected
     class function AddStringToFormat(SB: StringBuilder; I: Integer; S: String): Integer; static;
-    class procedure FmtStr(var Result: string; const Format: string;
-      const Args: array of const); static;
+    class procedure FmtStr(var Result: string; const AFormat: string; const Args: array of const); static;
   public
-    class function FormatBuf(var Buffer: System.Text.StringBuilder; const Format: string;
+    class function FormatBuf(var Buffer: System.Text.StringBuilder; const AFormat: string;
       FmtLen: Cardinal; const Args: array of const; Provider: IFormatProvider): Cardinal; overload; static;
-    class function FormatBuf(var Buffer: System.Text.StringBuilder; const Format: string;
+    class function FormatBuf(var Buffer: System.Text.StringBuilder; const AFormat: string;
       FmtLen: Cardinal; const Args: array of const): Cardinal;  overload; static;
     class function AnsiCompareText(const S1, S2: WideString): Integer; static;
     class function LastChars(const AStr : String; const ALen : Integer): String; static;
@@ -87,8 +85,8 @@ type
     class function StrToDateTime(const S : String): TIdDateTimeBase; static;
     class function Now : TIdDateTimeBase; static;
     class function DayOfWeek(const ADateTime: TIdDateTimeBase): Word; static;
-    class function FormatDateTime(const Format: string; ADateTime: TIdDateTimeBase): string; static;
-    class function Format(const Format: string; const Args: array of const): string; static;
+    class function FormatDateTime(const AFormat: string; ADateTime: TIdDateTimeBase): string; static;
+    class function Format(const AFormat: string; const Args: array of const): string; static;
     class function SameText(const S1, S2 : String) : Boolean; static;
     class function CompareStr(const S1, S2: string): Integer; static;
     class function CompareDate(const D1, D2 : TIdDateTimeBase) : Integer; static;
@@ -123,8 +121,7 @@ type
     class function StrToInt64Def(const S: string; const Default: Int64): Int64;  static;
     class function StringReplace(const S, OldPattern, NewPattern: string): string; overload; static;
     class function StringReplace(const S : String; const OldPattern, NewPattern: array of string): string; overload; static;
-    class function ConvertFormat(const AFormat : String;
-           const ADate : TIdDateTimeBase;
+    class function ConvertFormat(const AFormat : String; const ADate : TIdDateTimeBase;
            DTInfo : System.Globalization.DateTimeFormatInfo): String; static;
     class function ReplaceOnlyFirst(const S, OldPattern, NewPattern: string): string; overload; static;
     class function AnsiCompareStr(const S1, S2: WideString): Integer; overload; deprecated;
@@ -153,7 +150,6 @@ begin
   Result := DateTime.IsLeapYear(Year)
 end;
 
-
 class function TIdSysNet.CompareStr(const S1, S2: string): Integer;
 begin
   Result := System.&String.Compare(S1,S2,False);
@@ -169,9 +165,9 @@ begin
   Result := System.IO.File.Exists(FileName);
 end;
 
-class function TIdSysNet.Format(const Format: string;  const Args: array of const): string;
+class function TIdSysNet.Format(const AFormat: string; const Args: array of const): string;
 begin
-  FmtStr(Result, Format, Args);
+  FmtStr(Result, AFormat, Args);
 end;
 
 class procedure TIdSysNet.FreeAndNil(var Obj);
@@ -180,7 +176,7 @@ begin
   Obj := nil;
 end;
 
-class function TIdSysNet.IncludeTrailingPathDelimiter( const S: string): string;
+class function TIdSysNet.IncludeTrailingPathDelimiter(const S: string): string;
 begin
   Result := S;
   if (S = '') or (S[Length(S)] <> PATH_DELIN) then
@@ -202,14 +198,14 @@ class function TIdSysNet.IntToHex(Value: Int64; Digits: Integer): string;
 begin
   Result := System.&String.Format('{0:x' + Digits.ToString + '}', TObject(Value) );
   //Borland's standard string is one based, not zero based
-  Result := Copy(Result,Length(Result)-Digits+1,Digits);
+  Result := Copy(Result, Length(Result)-Digits+1, Digits);
 end;
 
 class function TIdSysNet.IntToHex(Value, Digits: Integer): string;
 begin
   Result := System.&String.Format('{0:x' + Digits.ToString + '}', TObject(Value));
   //Borland's standard string is one based, not zero based
-  Result := Copy(Result,Length(Result)-Digits+1,Digits);
+  Result := Copy(Result, Length(Result)-Digits+1, Digits);
 end;
 
 class function TIdSysNet.IntToStr(Value: Int64): string;
@@ -222,8 +218,7 @@ begin
   Result := System.Convert.ToString(Value);
 end;
 
-class function TIdSysNet.LastDelimiter(const Delimiters,
-  S: string): Integer;
+class function TIdSysNet.LastDelimiter(const Delimiters, S: string): Integer;
 begin
   Result := 0;
   if Assigned(S) and Assigned(Delimiters) then
@@ -237,21 +232,16 @@ begin
   Result := System.DateTime.Now.ToOADate;
 end;
 
-class function TIdSysNet.StringReplace(const S, OldPattern,
-  NewPattern: string): string;
+class function TIdSysNet.StringReplace(const S, OldPattern, NewPattern: string): string;
 begin
-  if Assigned(S) then
-  begin
-    Result := S.Replace(OldPattern, NewPattern)
-  end
-  else
-  begin
+  if Assigned(S) then begin
+    Result := S.Replace(OldPattern, NewPattern);
+  end else begin
     Result := S;
   end;
 end;
 
-class function TIdSysNet.ReplaceOnlyFirst(const S, OldPattern,
-  NewPattern: string): string;
+class function TIdSysNet.ReplaceOnlyFirst(const S, OldPattern, NewPattern: string): string;
 var
   LS : StringBuilder;
   i : Integer;
@@ -275,23 +265,24 @@ end;
 
 class function TIdSysNet.StringReplace(const S: String; const OldPattern,
   NewPattern: array of string): string;
-var LS : StringBuilder;
+var
+  LS : StringBuilder;
   i : Integer;
 begin
   LS := StringBuilder.Create(S);
   for i := Low(OldPattern) to High(OldPattern) do
   begin
-    LS.Replace(OldPattern[i],NewPattern[i]);
+    LS.Replace(OldPattern[i], NewPattern[i]);
   end;
   Result := LS.ToString;
 end;
 
-class function TIdSysNet.StrToInt64Def(const S: string;
-  const Default: Int64): Int64;
-var LErr : Integer;
+class function TIdSysNet.StrToInt64Def(const S: string; const Default: Int64): Int64;
+var
+  LErr : Integer;
 begin
-  Val(Trim(S),Result,LErr);
-  if LErr<>0 then
+  Val(Trim(S), Result, LErr);
+  if LErr <> 0 then
   begin
     Result := Default;
   end;
@@ -301,19 +292,19 @@ class function TIdSysNet.StrToInt(const S: string): Integer;
 var
   LErr: Integer;
 begin
-  Val(Trim(S),Result,LErr);
+  Val(Trim(S), Result, LErr);
   if LErr <> 0 then
   begin
     raise EConvertError.Create('');
   end;
 end;
 
-class function TIdSysNet.StrToInt(const S: string;
-  Default: Integer): Integer;
-var LErr : Integer;
+class function TIdSysNet.StrToInt(const S: string; Default: Integer): Integer;
+var
+  LErr : Integer;
 begin
-  Val(Trim(S),Result,LErr);
-  if LErr<>0 then
+  Val(Trim(S), Result, LErr);
+  if LErr <> 0 then
   begin
     Result := Default;
   end;
@@ -321,28 +312,28 @@ end;
 
 class function TIdSysNet.Trim(const S: string): string;
 begin
-  Result := S;
-  if Assigned(S) then
-  begin
+  if Assigned(S) then begin
     Result := S.Trim;
+  end else begin
+    Result := S;
   end;
 end;
 
 class function TIdSysNet.UpperCase(const S: string): string;
 begin
-  Result := S;
-  if Assigned(S) then
-  begin
+  if Assigned(S) then begin
     Result := S.ToUpper
+  end else begin
+    Result := S;
   end;
 end;
 
 class function TIdSysNet.LowerCase(const S: string): string;
 begin
-  Result := S;
-  if Assigned(S) then
-  begin
+  if Assigned(S) then begin
     Result := S.ToLower;
+  end else begin
+    Result := S;
   end;
 end;
 
@@ -431,10 +422,9 @@ begin
  Result := System.DateTime.Create(Year, Month, Day, 0, 0, 0, 0).ToOADate;
 end;
 
-class function TIdSysNet.AlignLeftCol(const AStr: String;
-  const AWidth: Integer): String;
+class function TIdSysNet.AlignLeftCol(const AStr: String; const AWidth: Integer): String;
 begin
-  Result := Copy(Result,Length(AStr)-AWidth+1,AWidth);
+  Result := Copy(Result, Length(AStr)-AWidth+1, AWidth);
 end;
 
 class function TIdSysNet.FloatToIntStr(const AFloat: Extended): String;
@@ -468,12 +458,9 @@ end;
 
 class function TIdSysNet.FileAge(const FileName: string): TIdDateTimeBase;
 begin
-  if System.IO.&File.Exists(FileName) then
-  begin
+  if System.IO.&File.Exists(FileName) then begin
     Result := System.IO.&File.GetLastWriteTime(FileName).ToOADate;
-  end
-  else
-  begin
+  end else begin
     Result := 0;
   end;
 end;
@@ -489,20 +476,21 @@ begin
 end;
 
 class function TIdSysNet.StrToInt64(const S: string): Int64;
-var LErr : Integer;
+var
+  LErr : Integer;
 begin
-  Val(Trim(S),Result,LErr);
+  Val(Trim(S), Result, LErr);
   if LErr <> 0 then
   begin
     raise EConvertError.Create('');
   end;
 end;
 
-class function TIdSysNet.StrToInt64(const S: string;
-  const Default: Int64): Int64;
-var LErr : Integer;
+class function TIdSysNet.StrToInt64(const S: string; const Default: Int64): Int64;
+var
+  LErr : Integer;
 begin
-  Val(Trim(S),Result,LErr);
+  Val(Trim(S), Result, LErr);
   if LErr <> 0 then
   begin
     Result := Default;
@@ -511,7 +499,7 @@ end;
 
 class function TIdSysNet.SameText(const S1, S2: String): Boolean;
 begin
-  Result := System.&String.Compare(S1,S2,True)=0;
+  Result := System.&String.Compare(S1, S2, True) = 0;
 end;
 
 class function TIdSysNet.AddStringToFormat(SB: StringBuilder; I: Integer; S: String): Integer;
@@ -521,8 +509,7 @@ begin
 end;
 
 class function TIdSysNet.ConvertFormat(const AFormat : String;
-  const ADate : TIdDateTimeBase;
-  DTInfo : System.Globalization.DateTimeFormatInfo): String;
+  const ADate : TIdDateTimeBase; DTInfo : System.Globalization.DateTimeFormatInfo): String;
 var
   LSB : StringBuilder;
   I, LCount, LHPos, LH2Pos, LLen: Integer;
@@ -532,7 +519,7 @@ begin
   Result := '';
   LSB := StringBuilder.Create;
   Llen := AFormat.Length;
-  if LLen=0 then
+  if LLen = 0 then
   begin
     Exit;
   end;
@@ -548,28 +535,28 @@ begin
     case C of
       't', 'T' : //t - short time, tt - long time
       begin
-        if (i < LLen) and ((AFormat[i+1]='t') or (AFormat.Chars[i]='T')) then
+        if (i < LLen) and ((AFormat[i+1] = 't') or (AFormat.Chars[i] = 'T')) then
         begin
-          LSB.Append(DTInfo.LongTimePattern );
+          LSB.Append(DTInfo.LongTimePattern);
           i := i + 2;
         end
         else
         begin
-          LSB.Append(DTInfo.ShortTimePattern );
+          LSB.Append(DTInfo.ShortTimePattern);
           i := i + 1;
         end;
       end;
       'c', 'C' : //
       begin
-        LSB.Append( DTInfo.ShortDatePattern  );
-        i := AddStringToFormat(LSB,i,' ');
-        LSB.Append( DTInfo.LongTimePattern );
+        LSB.Append(DTInfo.ShortDatePattern);
+        i := AddStringToFormat(LSB, i, ' ');
+        LSB.Append(DTInfo.LongTimePattern);
       end;
       'd' : //must do some mapping
       begin
         LCount := 0;
-        while (i + LCount<=LLen) and ((AFormat[i+LCount] ='D') or
-          (AFormat[i+LCount] ='d')) do
+        while ((i+LCount) <= LLen) and
+          ((AFormat[i+LCount] = 'D') or (AFormat[i+LCount] = 'd')) do
         begin
           Inc(LCount);
         end;
@@ -577,32 +564,32 @@ begin
           5 : LSB.Append(DTInfo.ShortDatePattern);
           6 : LSB.Append(DTInfo.LongDatePattern);
         else
-          LSB.Append(StringOfChar(c,LCount));
+          LSB.Append(StringOfChar(c, LCount));
         end;
-        Inc(i,LCount);
+        Inc(i, LCount);
       end;
       'h' : //h -
       //assume 24 hour format
       //remember positions in case am/pm pattern appears later
       begin
         LHPos := LSB.Length;
-        i := AddStringToFormat(LSB,i,'H');
+        i := AddStringToFormat(LSB, i, 'H');
         if (i <= LLen) then
         begin
-          if (AFormat[i] ='H') or (AFormat[i] = 'h') then
+          if (AFormat[i] = 'H') or (AFormat[i] = 'h') then
           begin
             LH2Pos := LSB.Length;
-            i := AddStringToFormat(LSB,i,'H');
+            i := AddStringToFormat(LSB, i, 'H');
           end;
         end;
       end;
       'a' : //check for AM/PM formats
       begin
-        if LAMPM ='' then
+        if LAMPM = '' then
         begin
           //We want to honor both lower and uppercase just like Borland's
           //FormatDate should
-          if DateTime.FromOADate(ADate).Hour <12 then
+          if DateTime.FromOADate(ADate).Hour < 12 then
           begin
             LAMPM := DTInfo.AMDesignator;
           end
@@ -611,65 +598,65 @@ begin
             LAMPM := DTInfo.PMDesignator;
           end;
         end;
-        if System.&String.Compare(AFormat,i-1,'am/pm',0,5,True)=0 then
+        if System.&String.Compare(AFormat, i-1, 'am/pm', 0, 5, True) = 0 then
         begin
           LSB.Append('"');
-          if AFormat.Chars[i-1]='a' then
+          if AFormat.Chars[i-1] = 'a' then
           begin
-            LSB.Append( System.Char.ToLower( LAMPM.Chars[0]) );
+            LSB.Append(System.Char.ToLower(LAMPM.Chars[0]));
           end
           else
           begin
-            LSB.Append( LSB.Append( System.Char.ToUpper( LAMPM.Chars[0]) ));
+            LSB.Append( LSB.Append(System.Char.ToUpper(LAMPM.Chars[0])));
           end;
-          if AFormat.Chars[i]='m' then
+          if AFormat.Chars[i] = 'm' then
           begin
-            LSB.Append( System.Char.ToLower( LAMPM.Chars[1]) );
+            LSB.Append(System.Char.ToLower(LAMPM.Chars[1]));
           end
           else
           begin
-            LSB.Append( LSB.Append( System.Char.ToUpper( LAMPM.Chars[1]) ));
+            LSB.Append(LSB.Append(System.Char.ToUpper(LAMPM.Chars[1])));
           end;
           LSB.Append('"');
-          i := i + 5;
+          Inc(i, 5);
         end
         else
         begin
-          if System.&String.Compare(AFormat,i-1,'a/p',0,3,True)=0 then
+          if System.&String.Compare(AFormat, i-1, 'a/p', 0, 3, True) = 0 then
           begin
             LSB.Append('"');
-            if AFormat.Chars[i-1]='a' then
+            if AFormat.Chars[i-1] = 'a' then
             begin
-              LSB.Append( System.Char.ToLower( LAMPM.Chars[0]) );
+              LSB.Append(System.Char.ToLower(LAMPM.Chars[0]));
             end
             else
             begin
-              LSB.Append( LSB.Append( System.Char.ToUpper( LAMPM.Chars[0]) ));
+              LSB.Append(LSB.Append(System.Char.ToUpper(LAMPM.Chars[0])));
             end;
             LSB.Append('"');
-            i := i + 3;
+            Inc(i, 3);
           end
           else
           begin
             LSB.Append('"');
-            if AFormat.Chars[i-1]='a' then
+            if AFormat.Chars[i-1] = 'a' then
             begin
-              LSB.Append( System.Char.ToLower( LAMPM.Chars[0]) );
+              LSB.Append(System.Char.ToLower(LAMPM.Chars[0]));
             end
             else
             begin
-              LSB.Append( LSB.Append( System.Char.ToUpper( LAMPM.Chars[0]) ));
+              LSB.Append(LSB.Append(System.Char.ToUpper(LAMPM.Chars[0])));
             end;
-            if AFormat.Chars[i]='m' then
+            if AFormat.Chars[i] = 'm' then
             begin
-              LSB.Append( System.Char.ToLower( LAMPM.Chars[1]) );
+              LSB.Append(System.Char.ToLower(LAMPM.Chars[1]));
             end
             else
             begin
-              LSB.Append( LSB.Append( System.Char.ToUpper( LAMPM.Chars[1]) ));
+              LSB.Append(LSB.Append(System.Char.ToUpper(LAMPM.Chars[1])));
             end;
             LSB.Append('"');
-            i := i + 5;
+            Inc(i, 5);
           end;
         end;
         if LHPos <> -1 then
@@ -685,69 +672,69 @@ begin
       end;
       'z', 'Z' :
       begin
-        if (i+2 < LLen) and (System.&String.Compare(AFormat,i-1,'zzz',0,3,True)=0) then
+        if ((i+2) < LLen) and (System.&String.Compare(AFormat, i-1, 'zzz', 0, 3, True) = 0) then
         begin
-          LSB.Append(DateTime.FromOADate(ADate).Millisecond.ToString );
-          i := i + 3;
+          LSB.Append(DateTime.FromOADate(ADate).Millisecond.ToString);
+          Inc(i, 3);
         end
         else
         begin
           LSB.Append('fff');
-          i := i + 1;
+          Inc(i, 1);
         end;
       end;
       '/' : //double his
       begin
-        i := AddStringToFormat(LSB,i,'\\');
+        i := AddStringToFormat(LSB, i, '\\');
       end;
-      '''','"' : //litteral
+      '''','"' : //literal
       begin
-        i := AddStringToFormat(LSB,i,C);
+        i := AddStringToFormat(LSB, i, C);
         LCount := 0;
-        while (i + LCount < LLen) and (AFormat.Chars[I+LCount]<>C) do
+        while ((i+LCount) < LLen) and (AFormat.Chars[I+LCount] <> C) do
         begin
           Inc(LCount);
         end;
-        LSB.Append(AFormat,i-1,LCount);
-        inc(i,LCount);
-        if i<=LLen then
+        LSB.Append(AFormat, i-1, LCount);
+        Inc(i, LCount);
+        if i <= LLen then
         begin
-          AddStringToFormat(LSB,i,c);
+          AddStringToFormat(LSB, i, c);
         end;
-
       end;
       'n','N' : //minutes - lowercase m
       begin
-        i := AddStringToFormat(LSB,i,'m');
+        i := AddStringToFormat(LSB, i, 'm');
       end;
       'm','M' : //monthes - must be uppercase
       begin
-        i := AddStringToFormat(LSB,i,'M');
+        i := AddStringToFormat(LSB, i, 'M');
       end;
       'y','Y' : //year - must be lowercase
       begin
-        i := AddStringToFormat(LSB,i,'y');
+        i := AddStringToFormat(LSB, i, 'y');
       end;
       's','S' : //seconds -must be lowercase
       begin
-        i := AddStringToFormat(LSB,i,'s');
+        i := AddStringToFormat(LSB, i, 's');
       end
       else
       begin
-        i := AddStringToFormat(LSB,i,C);
+        i := AddStringToFormat(LSB, i, C);
       end;
     end;
   until False;
   Result := LSB.ToString;
 end;
 
-class function TIdSysNet.FormatDateTime(const Format: string;
+class function TIdSysNet.FormatDateTime(const AFormat: string;
   ADateTime: TIdDateTimeBase): string;
-var LF : System.Globalization.DateTimeFormatInfo;
+var
+  LF : System.Globalization.DateTimeFormatInfo;
 begin
-  //unlike Borland's FormatDate, we only want the ENglish language
+  //unlike Borland's FormatDate, we only want the English language
   LF := System.Globalization.DateTimeFormatInfo.InvariantInfo;
-  Result := DateTime.FromOADate(ADateTime).ToString(ConvertFormat(Format,ADateTime,LF),LF);
+  Result := DateTime.FromOADate(ADateTime).ToString(ConvertFormat(AFormat, ADateTime, LF), LF);
 end;
 
 class function TIdSysNet.DayOfWeek(const ADateTime: TIdDateTimeBase): Word;
@@ -766,12 +753,9 @@ end;
 
 class function TIdSysNet.LastChars(const AStr: String; const ALen : Integer): String;
 begin
-  if Assigned(AStr) and (AStr.Length > ALen) then
-  begin
-    Result := Copy(AStr,Length(AStr)-ALen+1,ALen);
-  end
-  else
-  begin
+  if Assigned(AStr) and (AStr.Length > ALen) then begin
+    Result := Copy(AStr, Length(AStr)-ALen+1, ALen);
+  end else begin
     Result := AStr;
   end;
 end;
@@ -780,19 +764,20 @@ end;
 
 function TIdStringBuilderHelper.IndexOf(const value: String): Integer;
 begin
-  Result := IndexOf(value,0,Self.Length);
+  Result := IndexOf(value, 0, Self.Length);
 end;
 
 function TIdStringBuilderHelper.IndexOf(const value: String;
   const startIndex: Integer): Integer;
 begin
-   Result := IndexOf(value,startIndex,Self.Length);
+   Result := IndexOf(value, startIndex, Self.Length);
 end;
 
 function TIdStringBuilderHelper.IndexOf(const value: String;
   const startIndex, count: Integer): Integer;
-var i,j,l : Integer;
-    LFoundSubStr : Boolean;
+var
+  i,j,l : Integer;
+  LFoundSubStr : Boolean;
 begin
   Result := -1;
   if not Assigned(value)
@@ -812,7 +797,7 @@ begin
   begin
     if i < 0 then
     begin
-      break;
+      Break;
     end;
     if Self.Chars[i] = value.Chars[0] then
     begin
@@ -823,45 +808,42 @@ begin
       begin
         Result := i;
         Break;
-      end
-      else
+      end;
+      LFoundSubStr := True;
+      for j := 1 to value.Length-1 do
       begin
-        LFoundSubStr := True;
-        for j := 1 to value.Length-1 do
+        if Self.Chars[i + j] <> value.Chars[j] then
         begin
-         if Self.Chars[i + j] <> value.Chars[j] then
-         begin
-           LFoundSubStr := False;
-           break;
-         end;
-        end;
-        if LFoundSubStr then
-        begin
-          Result := i;
-          Exit;
+          LFoundSubStr := False;
+          Break;
         end;
       end;
+      if LFoundSubStr then
+      begin
+        Result := i;
+        Exit;
+      end;
     end;
-
   end;
 end;
 
 function TIdStringBuilderHelper.LastIndexOf(const value: String): Integer;
 begin
- Result := LastIndexOf(value,Self.Length);
+  Result := LastIndexOf(value, Self.Length);
 end;
 
 function TIdStringBuilderHelper.LastIndexOf(const value: String;
   const startIndex: Integer): Integer;
 begin
-  Result := LastIndexOf(value,startIndex,Self.Length);
+  Result := LastIndexOf(value, startIndex, Self.Length);
 end;
 
 function TIdStringBuilderHelper.LastIndexOf(const value: String;
   const startIndex, count: Integer): Integer;
-var i,j : Integer;
-    LFoundSubStr : Boolean;
-    LEndIndex, LStartIndex : Integer;
+var
+  i,j : Integer;
+  LFoundSubStr : Boolean;
+  LEndIndex, LStartIndex : Integer;
 begin
   Result := -1;
   LEndIndex := startindex - count;
@@ -878,8 +860,6 @@ begin
   begin
     LStartIndex := Self.Length-1;
   end;
-
-
   for i := LStartIndex downto LEndIndex+1+value.Length do
   begin
     if Self.Chars[i] = value.Chars[0] then
@@ -891,26 +871,22 @@ begin
       begin
         Result := i;
         Break;
-      end
-      else
+      end;
+      LFoundSubStr := True;
+      for j := value.Length-1 downto 1 do
       begin
-        LFoundSubStr := True;
-        for j := value.Length-1 downto 1 do
+        if Self.Chars[i + j] <> value.Chars[j] then
         begin
-         if Self.Chars[i + j] <> value.Chars[j] then
-         begin
-           LFoundSubStr := False;
-           break;
-         end;
-        end;
-        if LFoundSubStr then
-        begin
-          Result := i;
-          Exit;
+          LFoundSubStr := False;
+          Break;
         end;
       end;
+      if LFoundSubStr then
+      begin
+        Result := i;
+        Exit;
+      end;
     end;
-
   end;
 end;
 
@@ -918,67 +894,63 @@ function TIdStringBuilderHelper.ReplaceOnlyFirst(const oldValue,
   newValue: String; const startIndex, count: Integer): StringBuilder;
 var
   i : Integer;
-
 begin
   Result := Self;
-  i := Self.IndexOf(OldValue,startIndex,count);
+  i := Self.IndexOf(OldValue, startIndex, count);
   if i < 0 then
   begin
     Exit;
   end;
   if Assigned(oldValue) then
   begin
-    Self.Remove(i,oldValue.Length);
+    Self.Remove(i, oldValue.Length);
   end;
-  Self.Insert(i,newValue);
+  Self.Insert(i, newValue);
 end;
 
 function TIdStringBuilderHelper.ReplaceOnlyFirst(const oldValue,
   newValue: String): StringBuilder;
 begin
-  Result := ReplaceOnlyFirst(oldValue,newValue,0,Self.Length);
+  Result := ReplaceOnlyFirst(oldValue, newValue, 0, Self.Length);
 end;
 
 function TIdStringBuilderHelper.ReplaceOnlyLast(const oldValue,
   newValue: String; const startIndex, count: Integer): StringBuilder;
 var
   i : Integer;
-
 begin
   Result := Self;
-  i := Self.LastIndexOf(OldValue,startIndex,count);
+  i := Self.LastIndexOf(OldValue, startIndex, count);
   if i < 0 then
   begin
     Exit;
   end;
   if Assigned(oldValue) then
   begin
-    Self.Remove(i,oldValue.Length);
+    Self.Remove(i, oldValue.Length);
   end;
-  Self.Insert(i,newValue);
+  Self.Insert(i, newValue);
 end;
 
 function TIdStringBuilderHelper.ReplaceOnlyLast(const oldValue,
   newValue: String): StringBuilder;
-
 begin
-  Result := Self.ReplaceOnlyLast(oldValue,newValue,Self.Length,Self.Length);
+  Result := Self.ReplaceOnlyLast(oldValue, newValue, Self.Length, Self.Length);
 end;
 
 class function TIdSysNet.FormatBuf(var Buffer: System.Text.StringBuilder;
-  const Format: string; FmtLen: Cardinal; const Args: array of const): Cardinal;
+  const AFormat: string; FmtLen: Cardinal; const Args: array of const): Cardinal;
 var
   LFormat: NumberFormatInfo;
 begin
   //for most of our uses, we want the immutable settings instead of the user's
   //local settings.
   LFormat := NumberFormatInfo.InvariantInfo;
-
-  Result := FormatBuf(Buffer, Format, FmtLen, Args, LFormat);
+  Result := FormatBuf(Buffer, AFormat, FmtLen, Args, LFormat);
 end;
 
 class function TIdSysNet.FormatBuf(var Buffer: System.Text.StringBuilder;
-  const Format: string; FmtLen: Cardinal; const Args: array of const;
+  const AFormat: string; FmtLen: Cardinal; const Args: array of const;
   Provider: IFormatProvider): Cardinal;
 
   function ReadNumber(const AFmt : String;
@@ -987,7 +959,6 @@ class function TIdSysNet.FormatBuf(var Buffer: System.Text.StringBuilder;
     var VIdx : Integer;
     var VArgIdx : Integer;
     AScratch : System.Text.StringBuilder): Integer;
-
   begin
     Result := 0;
     AScratch.Length := 0;
@@ -1003,8 +974,7 @@ class function TIdSysNet.FormatBuf(var Buffer: System.Text.StringBuilder;
     if AFmt.Chars[VIdx] = '*' then
     begin
       //The value is embedded in the Args paramer;
-
-       AScratch.Append(AArgs[VArgIdx]);
+      AScratch.Append(AArgs[VArgIdx]);
       Inc(VArgIdx);
       Inc(VIdx);
     end
@@ -1012,29 +982,26 @@ class function TIdSysNet.FormatBuf(var Buffer: System.Text.StringBuilder;
     begin
       //parse the value
       repeat
-
         if VIdx >= AFmt.Length then
         begin
           Break;
         end;
-
-         if System.Char.IsDigit(AFmt.Chars[VIdx]) then
-         begin
-           AScratch.Append( AFmt.Chars[VIdx]);
-         end
-         else
-         begin
-           break;
-         end;
-         inc(VIdx);
+        if System.Char.IsDigit(AFmt.Chars[VIdx]) then
+        begin
+          AScratch.Append(AFmt.Chars[VIdx]);
+        end
+        else
+        begin
+          Break;
+        end;
+        Inc(VIdx);
       until False;
     end;
-    if AScratch.Length>0 then
+    if AScratch.Length > 0 then
     begin
-      Result := System.Convert.ToInt32 ( AScratch.ToString, AProvider );
+      Result := System.Convert.ToInt32(AScratch.ToString, AProvider);
     end;
   end;
-
 
 var
   LStrLen : Integer;
@@ -1043,12 +1010,11 @@ var
   LWidth : Integer;
   LFmStr : System.Text.StringBuilder;
   LScratch : System.Text.StringBuilder; //scratch pad for int. usage
-
 begin
   LWidth := 0;
   LIdx := 0;
   LArgIdx := 0;
-  LStrLen := Format.Length;
+  LStrLen := AFormat.Length;
   LFmStr := System.Text.StringBuilder.Create;
   LScratch := System.Text.StringBuilder.Create;
   repeat
@@ -1056,33 +1022,32 @@ begin
     begin
       Break;
     end;
-    if Format.Chars[LIdx]='%' then
+    if AFormat.Chars[LIdx] = '%' then
     begin
-      inc(LIdx);
+      Inc(LIdx);
       if LIdx >= LStrLen then
       begin
-        break;
+        Break;
       end;
-      //interpret as one litteral % in a string
-      if Format.Chars[LIdx] ='%' then
+      //interpret as one literal % in a string
+      if AFormat.Chars[LIdx] = '%' then
       begin
-        Buffer.Append(Format.Chars[LIdx]);
+        Buffer.Append(AFormat.Chars[LIdx]);
         Continue;
       end;
       LFmStr.Length := 0;
       LFmStr.Append('{0');
       //width specifier might be first
-      LWidth := ReadNumber(Format,Args,Provider,LIdx,LArgIdx,LScratch);
-
-      if Format.Chars[LIdx] = ':' then
+      LWidth := ReadNumber(AFormat, Args, Provider, LIdx, LArgIdx, LScratch);
+      if AFormat.Chars[LIdx] = ':' then
       begin
-        inc(LIdx);
+        Inc(LIdx);
         if LIdx >= LStrLen then
         begin
-          break;
+          Break;
         end;
         //That was not the width but the Index
-        if LWidth >-1 then
+        if LWidth > -1 then
         begin
           LArgIdx := LWidth;
           LWidth := -1;
@@ -1093,21 +1058,20 @@ begin
           Inc(LIdx);
           if LIdx >= LStrLen then
           begin
-            break;
+            Break;
           end;
         end;
-
-        LWidth := ReadNumber(Format,Args,Provider,LIdx,LArgIdx,LScratch);
+        LWidth := ReadNumber(AFormat, Args, Provider, LIdx, LArgIdx, LScratch);
       end;
       //Percission value
-      if Format.Chars[LIdx] = '.' then
+      if AFormat.Chars[LIdx] = '.' then
       begin
-        inc(LIdx);
+        Inc(LIdx);
         if LIdx >= LStrLen then
         begin
-          break;
+          Break;
         end;
-        LPerLen := ReadNumber(Format,Args,Provider,LIdx,LArgIdx,LScratch);
+        LPerLen := ReadNumber(AFormat, Args, Provider, LIdx, LArgIdx, LScratch);
       end
       else
       begin
@@ -1115,26 +1079,25 @@ begin
       end;
       if LWidth <> 0 then
       begin
-        LFmStr.Append(','+LWidth.ToString);
+        LFmStr.Append(',' + LWidth.ToString);
       end;
       LFmStr.Append(Char(':'));
 
-      case Format.Chars[LIdx] of
+      case AFormat.Chars[LIdx] of
         'd', 'D',
         'u', 'U': LFmStr.Append(Char('d'));
         'e', 'E',
         'f', 'F',
         'g', 'G',
         'n', 'N',
-        'x', 'X':  LFmStr.Append(Char(Format.Chars[LIdx]));
-
+        'x', 'X': LFmStr.Append(Char(AFormat.Chars[LIdx]));
         'm', 'M': LFmStr.Append(Char('c'));
         'p', 'P': LFmStr.Append(Char('x'));
         's', 'S': ;  // no format spec needed for strings
       else
         Continue;
       end;
-      if LPerLen>0 then
+      if LPerLen > 0 then
       begin
         LFmStr.Append(LPerLen.ToString);
       end;
@@ -1143,8 +1106,7 @@ begin
       //buffer because the Width specifier needs to truncate with a string.
       LScratch.Length := 0;
       LScratch.AppendFormat(Provider, LFmStr.ToString, [Args[LArgIdx]]);
-      if ((Format.Chars[LIdx] = 's') or (Format.Chars[LIdx] = 'S')) and
-        (LPerLen>0) then
+      if ((AFormat.Chars[LIdx] = 's') or (AFormat.Chars[LIdx] = 'S')) and (LPerLen > 0) then
       begin
         LScratch.Length := LPerLen;
       end;
@@ -1153,79 +1115,76 @@ begin
     end
     else
     begin
-      Buffer.Append(Format.Chars[LIdx]);
+      Buffer.Append(AFormat.Chars[LIdx]);
     end;
     Inc(LIdx);
   until False;
   Result := Buffer.Length;
 end;
 
-class procedure TIdSysNet.FmtStr(var Result: string; const Format: string;
+class procedure TIdSysNet.FmtStr(var Result: string; const AFormat: string;
   const Args: array of const);
 var
   Buffer: System.Text.StringBuilder;
 begin
-  Buffer := System.Text.StringBuilder.Create(Length(Format) * 2);
-  FormatBuf(Buffer, Format, Length(Format), Args);
+  Buffer := System.Text.StringBuilder.Create(Length(AFormat) * 2);
+  FormatBuf(Buffer, AFormat, Length(AFormat), Args);
   Result := Buffer.ToString;
 end;
 
 class function TIdSysNet.AnsiCompareText(const S1, S2: WideString): Integer;
 begin
-  Result := System.String.Compare(S1, S2, True);
+  Result := System.&String.Compare(S1, S2, True);
 end;
 
-class function TIdSysNet.ChangeFileExt(const FileName,
-  Extension: string): string;
+class function TIdSysNet.ChangeFileExt(const FileName, Extension: string): string;
 begin
-  if Length(Extension) <> 0 then
-  begin
-    Result := System.IO.Path.ChangeExtension(FileName, Extension)
-  end
-  else
-  begin
+  if Length(Extension) <> 0 then begin
+    Result := System.IO.Path.ChangeExtension(FileName, Extension);
+  end else begin
     Result := System.IO.Path.ChangeExtension(FileName, System.String(nil));
   end;
 end;
 
 class function TIdSysNet.AnsiCompareStr(const S1, S2: string): Integer;
 begin
-  if not Assigned(S1) and not Assigned(S2) then
-  begin
+  if not Assigned(S1) and not Assigned(S2) then begin
     Result := 0;
   end
-  else if not Assigned(S1) then
-  begin
+  else if not Assigned(S1) then begin
     Result := S1.CompareTo(S2);
-  end
-  else
+  end else begin
     Result := -1;
+  end;
 end;
 
 class function TIdSysNet.AnsiLowerCase(const S: WideString): WideString;
 begin
-  Result := S;
   if Assigned(S) then
   begin
     Result := S.ToLower;
+  end else begin
+    Result := S;
   end;
 end;
 
 class function TIdSysNet.AnsiUpperCase(const S: WideString): WideString;
 begin
-  Result := S;
   if Assigned(S) then
   begin
     Result := S.ToUpper;
+  end else begin
+    Result := S;
   end;
 end;
 
 class function TIdSysNet.AnsiPos(const Substr, S: WideString): Integer;
 begin
-  Result := 0;
   if Assigned(S) then
   begin
     Result := S.IndexOf(Substr) + 1;
+  end else begin
+    Result := 0;
   end;
 end;
 
@@ -1235,14 +1194,12 @@ begin
 end;
 
 const
-  wdays: array[1..7] of string = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'    {Do not Localize}
-   , 'Sat'); {do not localize}
+  wdays: array[1..7] of string = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'); {do not localize}
   monthnames: array[1..12] of string = ('Jan', 'Feb', 'Mar', 'Apr', 'May'    {Do not Localize}
    , 'Jun',  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'); {do not localize}
 
 class function TIdSysNet.DateTimeGMTToHttpStr(const GMTValue: TIdDateTimeBase) : String;
 // should adhere to RFC 2616
-
 var
   wDay,
   wMonth,
@@ -1279,7 +1236,7 @@ begin
     Exit;
   end;
   DecodeTime(ADateTime, AHour, AMin, ASec, AMSec);
-  Result := Format(' {0}{1}', [AHour.ToString('G2'), AMin.ToString('G2')]); {do not localize}
+  Result := Format(' %0.2d%0.2d', [AHour, AMin]); {do not localize}
   if ADateTime < 0.0 then
   begin
     Result[1] := '-'; {do not localize}
