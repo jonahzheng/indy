@@ -1308,7 +1308,12 @@ begin
       Dec(LWorkCount, i);
     end;
 
-    while Connected and (LWorkCount > 0) do begin
+    // RLebeau - don't call Connected() here!  ReadBytes() already
+    // does that internally. Calling Connected() here can cause an
+    // EIdConnClosedGracefully exception that breaks the loop
+    // prematurely and thus leave unread bytes in the InputBuffer.
+    // Let the loop catch the exception before exiting...
+    while {Connected and} (LWorkCount > 0) do begin
       i := Min(LWorkCount, RecvBufferSize);
       //TODO: Improve this - dont like the use of the exception handler
       //DONE -oAPR: Dont use a string, use a memory buffer or better yet the buffer itself.
@@ -1316,6 +1321,7 @@ begin
         try
           SetLength(LBuf, 0); // clear the buffer
           ReadBytes(LBuf, i, False);
+          TIdAntiFreezeBase.DoProcess;
         except
           on E: Exception do begin
             // RLebeau - ReadFromSource() inside of ReadBytes()
@@ -1325,7 +1331,7 @@ begin
             i := Min(i, FInputBuffer.Size);
             FInputBuffer.ExtractToBytes(LBuf, i);
             if (E is EIdConnClosedGracefully) and AReadUntilDisconnect then begin
-              break;
+              Break;
             end else begin
               raise;
             end;
@@ -1333,7 +1339,7 @@ begin
         end;
       finally
         if i > 0 then begin
-          TIdStreamHelper.Write(AStream,LBuf,i);
+          TIdStreamHelper.Write(AStream, LBuf, i);
           Dec(LWorkCount, i);
         end;
       end;
