@@ -59,7 +59,7 @@ unit IdIdentServer;
 interface
 {$i IdCompilerDefines.inc}
 uses
-  IdAssignedNumbers, IdContext, IdCustomTCPServer;
+  IdAssignedNumbers, IdContext, IdCustomTCPServer, IdGlobal;
 
 const
   IdDefIdentQueryTimeOut = 60000; // 1 minute
@@ -87,7 +87,7 @@ type
 implementation
 
 uses
-  IdGlobal, IdSys;
+  IdSys;
 
 { TIdIdentServer }
 
@@ -123,7 +123,7 @@ begin
 end;
 
 procedure TIdIdentServer.ReplyError(AContext:TIdContext; AServerPort,
-  AClientPort: Integer;  AErr : TIdIdentErrorType);
+  AClientPort: TIdPort;  AErr : TIdIdentErrorType);
 var s : String;
 begin
   s := Sys.IntToStr(AServerPort)+', '+Sys.IntToStr(AClientPort) + ' : ERROR : ';    {Do not Localize}
@@ -137,7 +137,7 @@ begin
 end;
 
 procedure TIdIdentServer.ReplyIdent(AContext:TIdContext; AServerPort,
-  AClientPort: Integer; AOS, AUserName: String; const ACharset: String);
+  AClientPort: TIdPort; AOS, AUserName: String; const ACharset: String);
 var s : String;
 begin
   s := Sys.IntToStr(AServerPort)+', '+Sys.IntToStr(AClientPort) + ' : USERID : ';    {Do not Localize}
@@ -149,7 +149,7 @@ begin
 end;
 
 procedure TIdIdentServer.ReplyOther(AContext:TIdContext; AServerPort,
-  AClientPort: Integer; AOther: String);
+  AClientPort: TIdPort; AOther: String);
 begin
   AContext.Connection.IOHandler.WriteLn(Sys.IntToStr(AServerPort)+', '+Sys.IntToStr(AClientPort) + ' : USERID : OTHER : '+AOther);    {Do not Localize}
 end;

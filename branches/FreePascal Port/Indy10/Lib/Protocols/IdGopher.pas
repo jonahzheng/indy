@@ -112,7 +112,7 @@ interface
 
 uses
   IdAssignedNumbers,
-  IdEMailAddress,
+  IdEMailAddress, IdGlobal,
   IdHeaderList, IdTCPClient, IdObjs, IdBaseComponent;
 
 type
@@ -244,7 +244,7 @@ type
 implementation
 
 uses
-  IdComponent, IdGlobal, IdException,
+  IdComponent, IdException,
   IdGlobalProtocols, IdGopherConsts, IdReplyRFC,
   IdSys,
   IdTCPConnection;

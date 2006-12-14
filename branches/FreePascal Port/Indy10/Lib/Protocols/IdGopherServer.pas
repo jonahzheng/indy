@@ -54,7 +54,8 @@ interface
 uses
   IdAssignedNumbers,
   IdContext,
-  IdCustomTCPServer;
+  IdCustomTCPServer,
+  IdGlobal;
 
 {
   Typical connection:
@@ -106,7 +107,7 @@ type
 implementation
 
 uses
-  IdGlobal, IdGopherConsts, IdResourceStringsProtocols, IdSys;
+  IdGopherConsts, IdResourceStringsProtocols, IdSys;
 
 procedure TIdGopherServer.InitComponent;
 begin

@@ -919,8 +919,8 @@ type
     FCmdHandlerList: TIdCommandHandler;
     FCmdHandlerNlst: TIdCommandHandler;
 //    FEmulateSystem: TIdFTPSystems;
-    FPASVBoundPortMin : Integer;
-    FPASVBoundPortMax : Integer;
+    FPASVBoundPortMin : TIdPort;
+    FPASVBoundPortMax : TIdPort;
     FSystemType: string;
     FDefaultDataPort : TIdPort;
     FUserAccounts: TIdCustomUserManager;
@@ -1118,8 +1118,8 @@ type
     procedure SetAnonymousAccounts(const AValue: TIdStringList);
     procedure SetUserAccounts(const AValue: TIdCustomUserManager);
     procedure SetFTPSecurityOptions(const AValue: TIdFTPSecurityOptions);
-    procedure SetPASVBoundPortMax(const Value: TIdPort);
-    procedure SetPASVBoundPortMin(const Value: TIdPort);
+    procedure SetPASVBoundPortMax(const AValue: TIdPort);
+    procedure SetPASVBoundPortMin(const AValue: TIdPort);
     procedure SetReplyUnknownSITECommand(AValue: TIdReply);
     procedure SetSITECommands(AValue: TIdCommandHandlers);
     procedure ThreadException(AThread: TIdThread; AException: Exception);
@@ -1160,8 +1160,8 @@ type
     property FTPFileSystem:TIdFTPBaseFileSystem read FFTPFileSystem write SetFTPFileSystem;
     property FTPSecurityOptions : TIdFTPSecurityOptions read FFTPSecurityOptions write SetFTPSecurityOptions;
     property EndOfHelpLine : String read FEndOfHelpLine write FEndOfHelpLine;
-    property PASVBoundPortMin : Integer read FPASVBoundPortMin write SetPASVBoundPortMin default DEF_PASV_BOUND_MIN;
-    property PASVBoundPortMax : Integer read FPASVBoundPortMax write SetPASVBoundPortMax default DEF_PASV_BOUND_MAX;
+    property PASVBoundPortMin : TIdPort read FPASVBoundPortMin write SetPASVBoundPortMin default DEF_PASV_BOUND_MIN;
+    property PASVBoundPortMax : TIdPort read FPASVBoundPortMax write SetPASVBoundPortMax default DEF_PASV_BOUND_MAX;
     property UserAccounts: TIdCustomUserManager read FUserAccounts write SetUserAccounts;
     property SystemType: string read FSystemType write FSystemType;
     property OnGreeting : TIdOnBanner read FOnGreeting write FOnGreeting;
@@ -5629,15 +5629,15 @@ begin
   DoOnClientID(ASender.Context as TIdFTPServerContext,ASender.UnparsedParams);
 end;
 
-procedure TIdFTPServer.SetPASVBoundPortMax(const Value: Integer);
+procedure TIdFTPServer.SetPASVBoundPortMax(const AValue: TIdPort);
 begin
   if FPASVBoundPortMax>-1 then
   begin
     if FPASVBoundPortMin<>0 then
     begin
-      if Value > FPASVBoundPortMin then
+      if AValue > FPASVBoundPortMin then
       begin
-        FPASVBoundPortMax := Value;
+        FPASVBoundPortMax := AValue;
       end
       else
       begin
@@ -5646,7 +5646,7 @@ begin
     end
     else
     begin
-      FPASVBoundPortMax := Value;
+      FPASVBoundPortMax := AValue;
     end;
   end
   else
@@ -5655,15 +5655,15 @@ begin
   end;
 end;
 
-procedure TIdFTPServer.SetPASVBoundPortMin(const Value: Integer);
+procedure TIdFTPServer.SetPASVBoundPortMin(const AValue: TIdPort);
 begin
   if FPASVBoundPortMin>-1 then
   begin
     if FPASVBoundPortMax<>0 then
     begin
-      if FPASVBoundPortMax > Value then
+      if FPASVBoundPortMax > AValue then
       begin
-        FPASVBoundPortMin := Value;
+        FPASVBoundPortMin := AValue;
       end
       else
       begin
@@ -5672,7 +5672,7 @@ begin
     end
     else
     begin
-      FPASVBoundPortMin := Value;
+      FPASVBoundPortMin := AValue;
     end;
   end
   else
@@ -6790,7 +6790,7 @@ begin
   end;
 end;
 
-function TIdDataChannel.GetPeerPort: Integer;
+function TIdDataChannel.GetPeerPort: TIdPort;
 begin
   result := 0;
   if Assigned(FDataChannel) then
