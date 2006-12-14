@@ -669,7 +669,7 @@ type
 implementation
 
 uses
-  IdStack, IdResourceStrings;
+  IdAntiFreezeBase, IdStack, IdResourceStrings;
 
 var
   GIOHandlerClassDefault: TIdIOHandlerClass = nil;
