@@ -525,7 +525,11 @@ uses
   Windows,
   {$ENDIF}
   {$IFNDEF DotNetDistro}
-  SyncObjs,
+    {$IFDEF FPC} 
+    syncobjs,
+  {$ELSE}
+    SyncObjs,
+  {$ENDIF}
   Classes,
   {$ENDIF}
   {$IFDEF UNIX}
@@ -975,9 +979,9 @@ procedure CopyTIdInt64(const ASource: Int64;
 procedure CopyTIdIPV6Address(const ASource: TIdIPv6Address;
     var VDest: TIdBytes; const ADestIndex: Integer);
 
-procedure CopyTIdString(const ASource: String;
-    var VDest: TIdBytes; const ADestIndex: Integer; ALength: Integer = -1);
-
+procedure CopyTIdString(const ASource: String; var VDest: TIdBytes;
+  const ADestIndex: Integer; const ALength: Integer = -1);
+  
 // Need to change prob not to use this set
 function CharPosInSet(const AString: string; const ACharPos: Integer; const ASet: String): Integer;
 function CharIsInSet(const AString: string; const ACharPos: Integer; const ASet: String): Boolean;
@@ -3662,7 +3666,6 @@ initialization
     IndyPos := AnsiPos;
   end;
   {$ENDIF}
-
 finalization
   {$IFNDEF DOTNET}
   Sys.FreeAndNil(GIdPorts);
