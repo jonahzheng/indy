@@ -151,7 +151,7 @@ uses
 type
      //needed so that in FreePascal, we can use pointers of different sizes
    ptrint = integer;
-   ptruint= cardinal;
+   ptruint= DWORD;
    {$endif}
    {$ifdef win64}
 type
@@ -2190,7 +2190,7 @@ type
 
   {$EXTERNALSYM WSACMSGHDR}
   WSACMSGHDR = record
-    cmsg_len: Integer;
+    cmsg_len: UINT;
     cmsg_level: Integer;
     cmsg_type: Integer;
     { followed by UCHAR cmsg_data[] }
@@ -2201,6 +2201,13 @@ type
   {$EXTERNALSYM LPWSACMSGHDR}
   LPWSACMSGHDR = PWSACMSGHDR;
 
+//JPM
+//I just made this one up so we don't have to determine the record size at run-time
+//and we can use the value as a specific integer type (signed or unsigned).  
+ {$EXTERNALSYM SIZE_WSACMSGHDR}
+const
+  SIZE_WSACMSGHDR = SizeOf(WSACMSGHDR);
+  
 { WinSock 2 extensions -- data types for the condition function in }
 { WSAAccept() and overlapped I/O completion routine. }
 type
@@ -5358,17 +5365,17 @@ begin
   if cmsg = nil then begin
     Result := WSA_CMSG_FIRSTHDR(msg);
   end else begin
-    if (PtrInt(cmsg) + WSA_CMSGHDR_ALIGN(cmsg^.cmsg_len) + SizeOf(WSACMSGHDR)) > (PtrInt(msg^.Control.buf) + msg^.Control.len) then begin
+    if (PtrUInt(cmsg) + WSA_CMSGHDR_ALIGN(cmsg^.cmsg_len) + SIZE_WSACMSGHDR) > (PtrUInt(msg^.Control.buf) + msg^.Control.len) then begin
       Result := nil;
     end else begin
-      Result := LPWSACMSGHDR(PtrInt(cmsg) + WSA_CMSGHDR_ALIGN(cmsg^.cmsg_len));
+      Result := LPWSACMSGHDR(PtrUInt(cmsg) + WSA_CMSGHDR_ALIGN(cmsg^.cmsg_len));
     end;
   end;
 end;
 
 function WSA_CMSG_DATA(cmsg: LPWSACMSGHDR): PByte;
 begin
-  Result := PByte(PtrInt(cmsg) + WSA_CMSGDATA_ALIGN(SizeOf(WSACMSGHDR)));
+  Result := PByte(PtrUInt(cmsg) + WSA_CMSGDATA_ALIGN(SIZE_WSACMSGHDR));
 end;
 
 function WSA_CMSG_SPACE(length: DWORD): DWORD;
