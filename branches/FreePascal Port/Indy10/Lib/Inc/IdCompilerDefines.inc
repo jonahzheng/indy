@@ -231,7 +231,7 @@
   {$IF defined(wince)} 
     {$DEFINE UNICODE} //CE is UNICODE ONLY
     {$define win32_or_win64_or_winCE}
-  {$ENDIF}
+  {$IFEND}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL5ORABOVE}
   {$DEFINE VCL6ORABOVE}
