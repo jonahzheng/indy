@@ -111,7 +111,6 @@ type
     //
     property AcceptWait: integer read FAcceptWait write FAcceptWait;
     property Binding: TIdSocketHandle read FBinding;
-  published
   end;
 
   TIdUDPServer = class(TIdUDPBase)
@@ -323,7 +322,7 @@ procedure TIdUDPListenerThread.Run;
 var
   PeerIP: string;
   PeerPort : TIdPort;
-  i,  ByteCount: Integer;
+  ByteCount: Integer;
 begin
   if FBinding.Select(AcceptWait) then try
     // Doublecheck to see if we've been stopped
