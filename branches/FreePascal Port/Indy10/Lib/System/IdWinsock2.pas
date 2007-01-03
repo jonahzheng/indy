@@ -147,7 +147,7 @@ uses
   IdException, SysUtils, Windows;
 
 {$ifndef FPC}
-  {ifdef win32}
+  {$ifdef win32}
 type
      //needed so that in FreePascal, we can use pointers of different sizes
    ptrint = integer;
