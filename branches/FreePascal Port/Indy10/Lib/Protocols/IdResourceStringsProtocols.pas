@@ -383,7 +383,6 @@ resourcestring
   RSQueryPackReceivedTooSmall = 'Received Packet is too small. %d';
   RSQueryUnknownError = 'Unknown Error %d, Id %d';
   RSQueryInvalidIpV6 = 'Invalid IP V6 Address. %s';
-
   RSQueryMustProvideSOARecord = 'You have to provide a TIdRR_SOA object with Serial number and Name to progress IXFR. %d';
  
   { LPD Client Logging event strings }
@@ -616,6 +615,7 @@ resourcestring
   RSSMTPMailboxUnavailable = 'Requested action not taken: mailbox unavailable';
   RSSMTPUserNotLocal = 'User %s not local; please try <%s>';
   RSSMTPUserNotLocalNoAddr = 'User %s not local; no forwarding address';
+  RSSMTPUserNotLocalFwdAddr = 'User %s not local; will forward to <%s>';
   RSSMTPTooManyRecipients = 'Too Many recipients.';
   RSSMTPAccountDisabled = '%s Account Disabled';
 
