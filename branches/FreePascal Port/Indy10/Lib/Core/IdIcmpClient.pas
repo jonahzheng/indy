@@ -166,19 +166,17 @@ type
     {$ENDIF}
     procedure PrepareEchoRequestIPv4(Buffer : String='');
     procedure PrepareEchoRequest(Buffer: string = '');    {Do not Localize}
-    procedure SendEchoRequest;   overload;
+    procedure SendEchoRequest; overload;
     procedure SendEchoRequest(const AIP : String); overload;
     function GetPacketSize: Integer;
     procedure SetPacketSize(const AValue: Integer);
 
     //these are made public in the client
     procedure InternalPing(const AIP : String; const ABuffer: String = ''; SequenceID: word = 0);   {Do not Localize} overload;
-
     //
     property PacketSize : Integer read GetPacketSize write SetPacketSize;
     property ReplyData: string read FReplydata;
     property ReplyStatus: TReplyStatus read FReplyStatus;
-
 
   public
     destructor Destroy; override;
@@ -211,12 +209,9 @@ uses
 procedure TIdCustomIcmpClient.PrepareEchoRequest(Buffer: string = '');    {Do not Localize}
 begin
   {$IFNDEF DOTNET}
-  if IPVersion = Id_IPv4 then
-  begin
+  if IPVersion = Id_IPv4 then begin
     PrepareEchoRequestIPv4(Buffer);
-  end
-  else
-  begin
+  end else begin
     PrepareEchoRequestIPv6(Buffer);
   end;
   {$ELSE}
@@ -230,9 +225,7 @@ begin
 end;
 
 function TIdCustomIcmpClient.DecodeResponse(BytesRead: Cardinal; var AReplyStatus: TReplyStatus): Boolean;
-
 begin
-
   if BytesRead = 0 then begin
     // Timed out
     AReplyStatus.MsRoundTripTime := GetTickDiff(FStartTime, Ticks);
@@ -283,8 +276,8 @@ end;
 function TIdCustomIcmpClient.Receive(ATimeOut: Integer): TReplyStatus;
 var
   BytesRead : Integer;
+  TripTime: Cardinal;
 begin
-
   Result := Self.FReplyStatus;
   FillBytes(FbufReceive, sizeOf(FbufReceive),0);
   FStartTime := Ticks;
@@ -296,8 +289,12 @@ begin
     end
     else
     begin
-      FReplyStatus.MsRoundTripTime := GetTickDiff(FStartTime, Ticks);
+      TripTime := GetTickDiff(FStartTime, Ticks);
+      ATimeOut := Cardinal(ATimeOut) - TripTime; // compute new timeout value
+
+      FReplyStatus.MsRoundTripTime := TripTime;
       FReplyStatus.Msg := RSICMPTimeout;
+
       // We caught a response that wasn't meant for this thread - so we must
       // make sure we don't report it as such in case we time out after this
       if Self.IPVersion = Id_IPv4 then
@@ -353,7 +350,7 @@ end;
 function TIdCustomIcmpClient.DecodeIPv4Packet(BytesRead: Cardinal; var AReplyStatus: TReplyStatus): boolean;
 var
   LIPHeaderLen:Cardinal;
-  RTTime: Cardinal;
+  RTTime: LongWord;
   LActualSeqID: word;
   LIdx : Integer;
   LIPv4 : TIdIPHdr;
@@ -588,9 +585,8 @@ begin
   // icmp_dun.ts.otime := Ticks; - not an official thing but for Indy internal use
   IdGlobal.CopyTIdLongWord(Ticks, FBufIcmp,8);
   //data
-  if Length(Buffer)>0 then
-  begin
-    IdGlobal.CopyTIdString(Buffer,FBufIcmp,12);
+  if Length(Buffer) > 0 then begin
+    IdGlobal.CopyTIdString(Buffer, FBufIcmp, 12);
   end;
   //the checksum is done in a send override
 
@@ -612,10 +608,9 @@ begin
     LIPv6.icmp6_cksum := 0;
     LIPv6.WriteStruct(FBufIcmp,LIdx);
     IdGlobal.CopyTIdLongWord(Ticks, FBufIcmp,LIdx);
-    Inc(LIdx,4);
-    if Length(Buffer)>0 then
-    begin
-      CopyTIdString(Buffer,FBufIcmp,LIdx,Length(Buffer));
+    Inc(LIdx, 4);
+    if Length(Buffer) > 0 then begin
+      CopyTIdString(Buffer, FBufIcmp, LIdx, Length(Buffer));
     end;
   finally
     Sys.FreeAndNil(LIPv6);
@@ -759,22 +754,17 @@ begin
   FPacketSize := AValue;
 end;
 
-procedure TIdCustomIcmpClient.InternalPing(const AIP, ABuffer: String;
-  SequenceID: word);
-
+procedure TIdCustomIcmpClient.InternalPing(const AIP, ABuffer: String; SequenceID: word);
 begin
   if SequenceID <> 0 then
   begin
     wSeqNo := SequenceID;
   end;
   SetLength(FbufIcmp,FPacketSize);
-  if  Self.FIPVersion = Id_IPv4 then
-  begin
-    SetLength(FbufReceive,FPacketSize+Id_IP_HSIZE);
-  end
-  else
-  begin
-    SetLength(FbufReceive,FPacketSize+(Id_IPv6_HSIZE*2));
+  if IPVersion = Id_IPv4 then begin
+    SetLength(FbufReceive, FPacketSize + Id_IP_HSIZE);
+  end else begin
+    SetLength(FbufReceive, FPacketSize + (Id_IPv6_HSIZE*2));
   end;
   PrepareEchoRequest(ABuffer);
   SendEchoRequest(AIP);
@@ -795,10 +785,11 @@ end;
 { TIdIcmpClient }
 
 procedure TIdIcmpClient.Ping(const ABuffer: String; SequenceID: word);
-var LIP : String;
+var
+  LIP : String;
 begin
   LIP := GStack.ResolveHost(Host,IPVersion);
-  InternalPing(LIP,ABuffer,SequenceID);
+  InternalPing(LIP, ABuffer, SequenceID);
 end;
 
 end.
