@@ -146,6 +146,21 @@ interface
 uses
   IdException, SysUtils, Windows;
 
+{$ifndef FPC}
+  {ifdef win32}
+type
+     //needed so that in FreePascal, we can use pointers of different sizes
+   ptrint = integer;
+   ptruint= cardinal;
+   {$endif}
+   {$ifdef win64}
+type
+     //needed so that in FreePascal, we can use pointers of different sizes
+   ptrint = Int64;
+   ptruint= Int64;
+   {$endif}
+{$endif}
+
 type
   EIdWinsockStubError = class(EIdException)
   protected
@@ -2012,7 +2027,7 @@ const
   MAX_NATURAL_ALIGNMENT   = SizeOf(Int64);
   {$ELSE}
   MAX_NATURAL_ALIGNMENT   = SizeOf(DWORD);
-  {$ENDIF}
+  {$IFEND}
 
 // WSARecvMsg flags
   {$EXTERNALSYM MSG_TRUNC}
