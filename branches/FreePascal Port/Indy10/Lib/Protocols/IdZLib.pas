@@ -193,6 +193,9 @@ const
 implementation
 
 uses
+{$IFNDEF FPC}
+  IdGlobal,
+{$ENDIF}
   IdZLibConst;
 
 const
