@@ -1799,7 +1799,11 @@ begin
   end;
   {$ENDIF}
   DateTimeToSystemTime(Value, dSysTime);
+  {$IFDEF FPC}
   Result := Windows.SetLocalTime(@dSysTime);
+  {$ELSE}
+  Result := Windows.SetLocalTime(dSysTime);
+  {$ENDIF}
   {$IFNDEF WINCE}
   {Undo the Process Privillage change we had done for the set time
   and close the handle that was allocated}
