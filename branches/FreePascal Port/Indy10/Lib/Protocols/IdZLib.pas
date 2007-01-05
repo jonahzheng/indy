@@ -112,11 +112,11 @@ procedure CompressBuf(const InBuf: Pointer; InBytes: Integer;
                       out OutBuf: Pointer; out OutBytes: TIdC_UINT);
 
 //generic read header from a buffer
-function  GetStreamType(InBuffer: Pointer; InCount: integer; gzheader: gz_headerp; out HeaderSize: integer): TZStreamType; overload;
+function  GetStreamType(InBuffer: Pointer; InCount: TIdC_UINT; gzheader: gz_headerp; out HeaderSize: TIdC_UINT): TZStreamType; overload;
 
 //generic read header from a stream
 //the stream position is preserved
-function  GetStreamType(InStream: TStream; gzheader: gz_headerp; out HeaderSize: integer): TZStreamType; overload;
+function  GetStreamType(InStream: TStream; gzheader: gz_headerp; out HeaderSize: TIdC_UINT): TZStreamType; overload;
 
 //Note that unlike other things in this unit, you specify things with number
 //values.  This is deliberate on my part because some things in Indy rely on
@@ -359,7 +359,7 @@ begin
   end;
 end;
 
-function  GetStreamType(InBuffer: Pointer; InCount: integer; gzheader: gz_headerp; out HeaderSize: integer): TZStreamType;
+function  GetStreamType(InBuffer: Pointer; InCount: TIdC_UINT; gzheader: gz_headerp; out HeaderSize: TIdC_UINT): TZStreamType;
 var
   strm : TZStreamRec;
 begin
@@ -370,7 +370,7 @@ begin
   HeaderSize    := InCount - strm.avail_in;
 end;
 
-function GetStreamType(InStream: TStream; gzheader: gz_headerp; out HeaderSize: integer): TZStreamType;
+function GetStreamType(InStream: TStream; gzheader: gz_headerp; out HeaderSize: TIdC_UINT): TZStreamType;
 const
   StepSize = 20; //one step be enough, but who knows...
 var
@@ -563,7 +563,7 @@ var
   strm   : TZStreamRec;
   InBuf, OutBuf : PChar;
   UseInBuf, UseOutBuf : boolean;
-  LastOutCount : integer;
+  LastOutCount : TIdC_UINT;
   procedure WriteOut;
   begin
     if UseOutBuf then
@@ -967,7 +967,7 @@ end;
 
 procedure TDecompressionStream.InitRead;
 var
-  N, S : integer;
+  N, S : TIdC_UINT;
 begin
   //never call this after starting!
   if FZRec.total_in > 0 then exit;
@@ -1013,7 +1013,7 @@ begin
     end;
     if (CCheck(inflate(FZRec, 0)) = Z_STREAM_END) then break;
   end;
-  Result := Count - FZRec.avail_out;
+  Result := TIdC_UINT(Count) - FZRec.avail_out;
 end;
 
 function TDecompressionStream.Write(const Buffer; Count: Longint): Longint;
@@ -1035,7 +1035,7 @@ begin
     FStrmPos := FInitialPos;
   end
   else if ( (Offset >= 0) and (Origin = soFromCurrent)) or
-          ( ((Offset - FZRec.total_out) > 0) and (Origin = soFromBeginning)) then
+          ( ((TIdC_UINT(Offset) - FZRec.total_out) > 0) and (Origin = soFromBeginning)) then
   begin
     if Origin = soFromBeginning then Dec(Offset, FZRec.total_out);
     if Offset > 0 then
