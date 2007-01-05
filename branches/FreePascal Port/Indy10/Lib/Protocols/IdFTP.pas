@@ -875,7 +875,8 @@ type
     function GetSupportsVerification : Boolean;
     //
     // holger: .NET compatibility change
-    property IPVersion;
+    //property IPVersion;
+    //tried moving to published
     //
   public
     function IsExtSupported(const ACmd : String):Boolean;
@@ -1012,6 +1013,7 @@ type
     property OnDirParseStart : TIdNotifyEvent read FOnDirParseStart write FOnDirParseStart;
     property OnDirParseEnd : TIdNotifyEvent read FOnDirParseEnd write FOnDirParseEnd;
     property ReadTimeout default DEF_Id_FTP_READTIMEOUT;
+    property IPVersion;
   end;
 
   EIdFTPException = class(EIdException);
