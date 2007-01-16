@@ -99,28 +99,42 @@ type
     dLimitExceeded  //exceeded administrative limit
     );
 
+  TIdSPFReply =
+    (
+    spfNone, //no published records or checkable domain
+    spfNeutral, //domain explicitially stated no assertion
+    spfPass, //authorized
+    spfFail, //not authorized
+    spfSoftFail, //may not be authorized
+    spfTempError, //transient error
+    spfPermError //permanent error
+    );
+
   TIdSMTPServerContext = class;
 
-  TOnSMTPUserLoginEvent = procedure(ASender: TIdSMTPServerContext; const AUsername, APassword: string;
-    var VAuthenticated: Boolean) of object;
   TOnMailFromEvent = procedure(ASender: TIdSMTPServerContext; const AAddress : string;
     AParams: TIdStrings; var VAction : TIdMailFromReply) of object;
+  TOnMsgReceive = procedure(ASender: TIdSMTPServerContext; AMsg: TIdStream;
+    var VAction : TIdDataReply) of object;
   TOnRcptToEvent = procedure(ASender: TIdSMTPServerContext; const AAddress : string;
     AParams: TIdStrings; var VAction : TIdRCPToReply; var VForward : String) of object;
-  TOnMsgReceive = procedure(ASender: TIdSMTPServerContext; AMsg: TIdStream;
-    var LAction : TIdDataReply) of object;
   TOnReceived = procedure(ASender: TIdSMTPServerContext; var AReceived : String) of object;
   TOnSMTPEvent = procedure(ASender: TIdSMTPServerContext) of object;
-
+  TOnSMTPUserLoginEvent = procedure(ASender: TIdSMTPServerContext; const AUsername, APassword: string;
+    var VAuthenticated: Boolean) of object;
+  TOnSPFCheck = procedure(ASender: TIdSMTPServerContext; const AIP, ADomain, AIdentity: String;
+    var VAction: TIdSPFReply) of object;
+  
   TIdSMTPServer = class(TIdExplicitTLSServer)
   protected
     //events
-    FOnUserLogin : TOnSMTPUserLoginEvent;
     FOnMailFrom : TOnMailFromEvent;
-    FOnRcptTo : TOnRcptToEvent;
     FOnMsgReceive : TOnMsgReceive;
+    FOnRcptTo : TOnRcptToEvent;
     FOnReceived : TOnReceived;
     FOnReset: TOnSMTPEvent;
+    FOnSPFCheck: TOnSPFCheck;
+    FOnUserLogin : TOnSMTPUserLoginEvent;
     //misc
     FServerName : String;
     FAllowPipelining: Boolean;
@@ -129,6 +143,7 @@ type
     function CreateReplyUnknownCommand: TIdReply; override;
     //
     function DoAuthLogin(ASender: TIdCommand; const Login: string): Boolean;
+    //
     //command handlers
     procedure CommandNOOP(ASender: TIdCommand);
     procedure CommandQUIT(ASender: TIdCommand);
@@ -187,14 +202,17 @@ type
     procedure InitializeCommandHandlers; override;
     //
     procedure DoReset(AContext: TIdSMTPServerContext; AIsTLSReset: Boolean = False);
+    function SPFAuthOk(AContext: TIdSMTPServerContext; AReply: TIdReply;
+      const ACmd, ADomain, AIdentity: String): Boolean;
   published
     //events
-    property OnMsgReceive : TOnMsgReceive read FOnMsgReceive write FOnMsgReceive;
-    property OnUserLogin : TOnSMTPUserLoginEvent read FOnUserLogin write FOnUserLogin;
     property OnMailFrom : TOnMailFromEvent read FOnMailFrom write FOnMailFrom;
+    property OnMsgReceive : TOnMsgReceive read FOnMsgReceive write FOnMsgReceive;
     property OnRcptTo : TOnRcptToEvent read FOnRcptTo write FOnRcptTo;
     property OnReceived: TOnReceived read FOnReceived write FOnReceived;
     property OnReset: TOnSMTPEvent read FOnReset write FOnReset;
+    property OnSPFCheck: TOnSPFCheck read FOnSPFCheck write FOnSPFCheck;
+    property OnUserLogin : TOnSMTPUserLoginEvent read FOnUserLogin write FOnUserLogin;
     //properties
     property AllowPipelining : Boolean read FAllowPipelining write FAllowPipelining default False;
     property ServerName : String read FServerName write FServerName;
@@ -227,13 +245,13 @@ type
     procedure Reset(AIsTLSReset: Boolean = False); virtual;
     //
     property SMTPState: TIdSMTPState read FSMTPState write FSMTPState;
-    property From: string read FFrom write FFrom;
-    property RCPTList: TIdEMailAddressList read FRCPTList write FRCPTList;
+    property From: String read FFrom write FFrom;
+    property RCPTList: TIdEMailAddressList read FRCPTList;
     property HELO: Boolean read FHELO write FHELO;
     property EHLO: Boolean read FEHLO write FEHLO;
     property HeloString : String read FHeloString write FHeloString;
-    property Username: string read FUsername write FUsername;
-    property Password: string read FPassword write FPassword;
+    property Username: String read FUsername write FUsername;
+    property Password: String read FPassword write FPassword;
     property LoggedIn: Boolean read FLoggedIn write FLoggedIn;
     property FinalStage: Boolean read FFinalStage write FFinalStage;
     property UsingTLS: Boolean read GetUsingTLS;
@@ -242,7 +260,7 @@ type
   end;
 
 const
- IdSMTPSvrReceivedString = 'Received: from $hostname[$ipaddress] (helo=$helo) by $svrhostname[$svripaddress] with $protocol ($servername)'; {do not localize}
+  IdSMTPSvrReceivedString = 'Received: from $hostname[$ipaddress] (helo=$helo) by $svrhostname[$svripaddress] with $protocol ($servername)'; {do not localize}
 
 implementation
 
@@ -308,21 +326,26 @@ var
   LContext : TIdSMTPServerContext;
 begin
   LContext := TIdSMTPServerContext(ASender.Context);
-  SetEnhReply(ASender.Reply, 250, '', Sys.Format(RSSMTPSvrHello, [ASender.UnparsedParams]), True);
-  if Assigned(FOnUserLogin) then begin
-    ASender.Reply.Text.Add('AUTH LOGIN');    {Do not Localize}
-  end;
-  ASender.Reply.Text.Add('ENHANCEDSTATUSCODES'); {do not localize}
-  if FAllowPipelining then begin
-    ASender.Reply.Text.Add('PIPELINING'); {do not localize}
-  end;
-  if (FUseTLS in ExplicitTLSVals) and (not LContext.UsingTLS) then begin
-    ASender.Reply.Text.Add('STARTTLS');    {Do not Localize}
-  end;
+
   DoReset(LContext);
   LContext.EHLO := True;
-  LContext.SMTPState := idSMTPHelo;
   LContext.HeloString := ASender.UnparsedParams;
+
+  if SPFAuthOk(LContext, ASender.Reply, 'EHLO', DomainName(ASender.UnparsedParams), ASender.UnparsedParams) then {do not localize}
+  begin
+    SetEnhReply(ASender.Reply, 250, '', Sys.Format(RSSMTPSvrHello, [ASender.UnparsedParams]), True);
+    if Assigned(FOnUserLogin) then begin
+      ASender.Reply.Text.Add('AUTH LOGIN');    {Do not Localize}
+    end;
+    ASender.Reply.Text.Add('ENHANCEDSTATUSCODES'); {do not localize}
+    if FAllowPipelining then begin
+      ASender.Reply.Text.Add('PIPELINING'); {do not localize}
+    end;
+    if (FUseTLS in ExplicitTLSVals) and (not LContext.UsingTLS) then begin
+      ASender.Reply.Text.Add('STARTTLS');    {Do not Localize}
+    end;
+    LContext.SMTPState := idSMTPHelo;
+  end;
 end;
 
 procedure TIdSMTPServer.DoReplyUnknownCommand(AContext: TIdContext; ALine: string);
@@ -470,11 +493,14 @@ begin
     Exit;
   end;
   if Length(ASender.UnparsedParams) > 0 then begin
-    ASender.Reply.SetReply(250, Sys.Format(RSSMTPSvrHello, [ASender.UnparsedParams]));
     DoReset(LContext);
-    LContext.HELO := True;
-    LContext.SMTPState := idSMTPHelo;
     LContext.HeloString := ASender.UnparsedParams;
+    LContext.HELO := True;
+    if SPFAuthOk(LContext, ASender.Reply, 'HELO', DomainName(ASender.UnparsedParams), ASender.UnparsedParams) then {do not localize}
+    begin
+      ASender.Reply.SetReply(250, Sys.Format(RSSMTPSvrHello, [ASender.UnparsedParams]));
+      LContext.SMTPState := idSMTPHelo;
+    end;
   end else begin
     ASender.Reply.SetReply(501, RSSMTPSvrParmErr);
   end;
@@ -702,7 +728,7 @@ var
   LContext : TIdSMTPServerContext;
   LM : TIdMailFromReply;
   LParams: TIdStringList;
-  LParam, S: String;
+  S: String;
 begin
   //Note that unlike other protocols, it might not be possible
   //to completely disable MAIL FROM for people not using SSL
@@ -717,31 +743,29 @@ begin
       try
         S := Sys.TrimLeft(Copy(ASender.UnparsedParams, 6, MaxInt));
         EMailAddress.Text := Fetch(S);
-        LM := mAccept;
-        if Assigned(FOnMailFrom) then begin
-          LParams := TIdStringList.Create;
-          try
-            while S <> '' do begin
-              LParam := Sys.TrimLeft(Fetch(S));
-              if LParam <> '' then begin
-                LParams.Add(LParam);
-              end;
+        if SPFAuthOk(LContext, ASender.Reply, 'MAIL FROM', EmailAddress.Domain, EmailAddress.Address) then  {do not localize}
+        begin
+          LM := mAccept;
+          if Assigned(FOnMailFrom) then begin
+            LParams := TIdStringList.Create;
+            try
+              SplitColumns(S, LParams);
+              FOnMailFrom(LContext, EMailAddress.Address, LParams, LM);
+            finally
+              Sys.FreeAndNil(LParams);
             end;
-            FOnMailFrom(LContext, EMailAddress.Address, LParams, LM);
-          finally
-            Sys.FreeAndNil(LParams);
           end;
-        end;
-        case LM of
-          mAccept :
-          begin
-            MailFromAccept(ASender, EMailAddress.Address);
-            LContext.From := EMailAddress.Address;
-            LContext.SMTPState := idSMTPMail;
-          end;
-          mReject :
-          begin
-            MailFromReject(ASender, EMailAddress.Text);
+          case LM of
+            mAccept :
+            begin
+              MailFromAccept(ASender, EMailAddress.Address);
+              LContext.From := EMailAddress.Address;
+              LContext.SMTPState := idSMTPMail;
+            end;
+            mReject :
+            begin
+              MailFromReject(ASender, EMailAddress.Text);
+            end;
           end;
         end;
       finally
@@ -768,7 +792,7 @@ var
   LContext : TIdSMTPServerContext;
   LAction : TIdRCPToReply;
   LParams: TIdStringList;
-  LForward, LParam, S : String;
+  LForward, S : String;
 begin
   LForward := '';
   LContext := TIdSMTPServerContext(ASender.Context);
@@ -800,12 +824,7 @@ begin
         if Assigned(FOnRcptTo) then begin
           LParams := TIdStringList.Create;
           try
-            while S <> '' do begin
-              LParam := Sys.TrimLeft(Fetch(S));
-              if LParam <> '' then begin
-                LParams.Add(LParam);
-              end;
-            end;
+            SplitColumns(S, LParams);
             FOnRcptTo(LContext, EMailAddress.Address, LParams, LAction, LForward);
           finally
             Sys.FreeAndNil(LParams);
@@ -1039,6 +1058,30 @@ begin
   end;
 end;
 
+function TIdSMTPServer.SPFAuthOk(AContext: TIdSMTPServerContext; AReply: TIdReply;
+  const ACmd, ADomain, AIdentity: String): Boolean;
+var
+  LAction: TIdSPFReply;
+begin
+  LAction := spfNeutral;
+  if Assigned(FOnSPFCheck) then begin
+    FOnSPFCheck(AContext, AContext.Binding.PeerIP, ADomain, AIdentity, LAction);
+  end;
+  case LAction of
+    spfNone, spfNeutral, spfPass, spfSoftFail:
+      Result := True; // let the caller handle the reply as needed
+    else
+    begin
+      if LAction = spfFail then begin
+        SetEnhReply(AReply, 550, '5.7.1', Sys.Format(RSSMTPSvrSPFCheckFailed, [ACmd]), AContext.EHLO); {do not localize}
+      end else begin
+        SetEnhReply(AReply, 451, '4.4.3', Sys.Format(RSSMTPSvrSPFCheckError, [ACmd]), AContext.EHLO); {do not localize}
+      end;
+      Result := False;
+    end;
+  end;
+end;
+
 { TIdSMTPServerContext }
 
 procedure TIdSMTPServerContext.CheckPipeLine;
@@ -1059,7 +1102,6 @@ begin
   Username := '';
   Password := '';
   LoggedIn := False;
-  Sys.FreeAndNil(FRCPTList);
   FRCPTList := TIdEMailAddressList.Create(nil);
 end;
 

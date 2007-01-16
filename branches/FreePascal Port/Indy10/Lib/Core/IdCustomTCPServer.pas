@@ -856,6 +856,10 @@ begin
   FServer := AServer;
 end;
 
+type
+  TIdContextAccess = class(TIdContext)
+  end;
+
 procedure TIdListenerThread.Run;
 var
   LContext: TIdContext;
@@ -911,6 +915,11 @@ begin
     Server.Scheduler.StartYarn(LYarn, LContext);
   except
     on E: Exception do begin
+      // RLebeau 1/11/07: TIdContext owns the Peer by default so
+      // take away ownership here so the Peer is not freed twice
+      if LContext <> nil then begin
+        TIdContextAccess(LContext).FOwnsConnection := False;
+      end;
       Sys.FreeAndNil(LContext);
       Sys.FreeAndNil(LPeer);
       // Must terminate - likely has not started yet
