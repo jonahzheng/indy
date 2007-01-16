@@ -175,7 +175,6 @@ type
   end;
 
 const
-  WINSOCK_VERSION = $0202;
   {$IFDEF UNDER_CE}
   WINSOCK2_DLL = 'ws2.dll'; {Do not Localize}
   {$ELSE}
