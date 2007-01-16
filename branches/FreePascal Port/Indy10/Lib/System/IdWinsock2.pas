@@ -182,7 +182,8 @@ const
   WINSOCK2_DLL = 'WS2_32.DLL';   {Do not Localize}
   MSWSOCK_DLL = 'MSWSOCK.DLL';   {Do not Localize}
   {$ENDIF}
-  
+  {$EXTERNALSYM WINSOCK_VERSION}
+  WINSOCK_VERSION = $0202;
 
 {$DEFINE WS2_DLL_FUNC_VARS}
 {$DEFINE INCL_WINSOCK_API_PROTOTYPES}
@@ -218,6 +219,7 @@ const
 (*$HPPEMIT '#include <wsnwlink.h>'*)
 (*$HPPEMIT '#include <wsnetbs.h>'*)
 (*$HPPEMIT '#include <ws2atm.h>'*)
+(*$HPPEMIT '#include <mswsock.h>'*)
 (*$HPPEMIT ''*)
 (*$HPPEMIT 'namespace Idwinsock2'*)
 (*$HPPEMIT '{'*)
@@ -3022,6 +3024,10 @@ const
   IPV6_LEAVE_GROUP           = IPV6_DROP_MEMBERSHIP;
   {$EXTERNALSYM IPV6_PKTINFO}
   IPV6_PKTINFO               = 19; // Receive packet information for ipv6
+  {$EXTERNALSYM IPV6_HOPLIMIT}
+  IPV6_HOPLIMIT              = 21; // Receive packet hop limit
+  {$EXTERNALSYM IPV6_PROTECTION_LEVEL}
+  IPV6_PROTECTION_LEVEL      = 23; // Set/get IPv6 protection level
 
   // Option to use with [gs]etsockopt at the IPPROTO_UDP level
   {$EXTERNALSYM UDP_NOCHECKSUM}
@@ -5095,7 +5101,6 @@ begin
   FixupStub(hMSWSockDll, 'WSARecvEx', @WSARecvEx);
   Result := WSARecvEx(s, buf, len, flags);
 end;
-
 
 function Stub_ConnectEx(const s : TSocket; const name: PSockAddr; const namelen: Integer; lpSendBuffer : Pointer;
   dwSendDataLength : DWORD; var lpdwBytesSent : DWORD; lpOverlapped : LPWSAOVERLAPPED) : BOOL;
