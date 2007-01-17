@@ -146,8 +146,24 @@ TIdSSLIOHandlerSocketOpenSSL or TIdServerIOHandlerSSLOpenSSL, your program will
 require the OpenSSL libraries.
 
 On many Unix systems, OpenSSL is installed by default but on a few, you may 
-have to install it yourself. On Windows, you can use the standard .DLL's from 
+have to install it yourself. On 64-bit Unix systems, OpenSSL will not work 
+properly because the OpenSSL header file IdSSLOpenSSLHeaders.pas assumes that a 
+C Long type is 32bits while it really is 64bit on those platforms.
+
+On Win32, you can use the standard .DLL's from 
 http://www.openssl.org/related/binaries.html.
+
+For a Win64 bit version of OpenSSL, you will have to compile the .DLL's. 
+Install the "Microsoft Platform SDK for Windows Server 2003 R2" and ActivePerl 
+( located at http://www.activestate.com/Products/ActivePerl/?mp=1 ). More 
+recent Microsoft SDK's do not include the ml64 assembler and OpenSSL requires 
+it. Then do the following:
+
+> perl Configure VC-WIN64A
+> ms\do_win64a
+> nmake -f ms\ntdll.mak
+> cd out32dll
+> ..\ms\test
 
 Note that some jurisdictions regulate the use and export of strong cryptography 
 while others may prohibit the use of strong cryptography but other nations may 
