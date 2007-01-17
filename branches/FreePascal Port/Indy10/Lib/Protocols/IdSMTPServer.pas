@@ -75,7 +75,13 @@ type
   EIdSMTPServerError = class(EIdException);
   EIdSMTPServerNoRcptTo = class(EIdSMTPServerError);
 
-  TIdMailFromReply = (mAccept, mReject);
+  TIdMailFromReply =
+    (
+    mAccept, //accept the mail message
+    mReject, //reject the mail message
+    mSystemFull, //no more space on server
+    mLimitExceeded //exceeded message size limit
+    );
 
   TIdRCPToReply =
     (
@@ -86,7 +92,9 @@ type
     rNoForward, //not local - will not forward - please use
     rTooManyAddresses, //too many addresses
     rDisabledPerm, //disabled permentantly - not accepting E-Mail
-    rDisabledTemp //disabled temporarily - not accepting E-Mail
+    rDisabledTemp, //disabled temporarily - not accepting E-Mail
+    rSystemFull, //no more space on server
+    rLimitExceeded //exceeded message size limit
     );
 
   TIdDataReply =
@@ -138,6 +146,7 @@ type
     //misc
     FServerName : String;
     FAllowPipelining: Boolean;
+    FMaxMsgSize: Integer;
     //
     function CreateGreeting: TIdReply; override;
     function CreateReplyUnknownCommand: TIdReply; override;
@@ -202,6 +211,7 @@ type
     procedure InitializeCommandHandlers; override;
     //
     procedure DoReset(AContext: TIdSMTPServerContext; AIsTLSReset: Boolean = False);
+    procedure SetMaxMsgSize(AValue: Integer);
     function SPFAuthOk(AContext: TIdSMTPServerContext; AReply: TIdReply;
       const ACmd, ADomain, AIdentity: String): Boolean;
   published
@@ -215,8 +225,9 @@ type
     property OnUserLogin : TOnSMTPUserLoginEvent read FOnUserLogin write FOnUserLogin;
     //properties
     property AllowPipelining : Boolean read FAllowPipelining write FAllowPipelining default False;
-    property ServerName : String read FServerName write FServerName;
     property DefaultPort default IdPORT_SMTP;
+    property MaxMsgSize: Integer read FMaxMsgSize write SetMaxMsgSize default 0;
+    property ServerName : String read FServerName write FServerName;
     property UseTLS;
   end;
 
@@ -233,6 +244,7 @@ type
     FUsername: string;
     FPassword: string;
     FLoggedIn: Boolean;
+    FMsgSize: Integer;
     FPipeLining : Boolean;
     FFinalStage : Boolean;
     function GetUsingTLS: Boolean;
@@ -253,6 +265,7 @@ type
     property Username: String read FUsername write FUsername;
     property Password: String read FPassword write FPassword;
     property LoggedIn: Boolean read FLoggedIn write FLoggedIn;
+    property MsgSize: Integer read FMsgSize write FMsgSize;
     property FinalStage: Boolean read FFinalStage write FFinalStage;
     property UsingTLS: Boolean read GetUsingTLS;
     property PipeLining: Boolean read FPipeLining write SetPipeLining;
@@ -341,6 +354,7 @@ begin
     if FAllowPipelining then begin
       ASender.Reply.Text.Add('PIPELINING'); {do not localize}
     end;
+    ASender.Reply.Text.Add(Sys.Format('SIZE %d', [FMaxMsgSize])); {do not localize}
     if (FUseTLS in ExplicitTLSVals) and (not LContext.UsingTLS) then begin
       ASender.Reply.Text.Add('STARTTLS');    {Do not Localize}
     end;
@@ -729,6 +743,7 @@ var
   LM : TIdMailFromReply;
   LParams: TIdStringList;
   S: String;
+  LSize: Integer;
 begin
   //Note that unlike other protocols, it might not be possible
   //to completely disable MAIL FROM for people not using SSL
@@ -746,25 +761,42 @@ begin
         if SPFAuthOk(LContext, ASender.Reply, 'MAIL FROM', EmailAddress.Domain, EmailAddress.Address) then  {do not localize}
         begin
           LM := mAccept;
-          if Assigned(FOnMailFrom) then begin
-            LParams := TIdStringList.Create;
-            try
-              SplitColumns(S, LParams);
-              FOnMailFrom(LContext, EMailAddress.Address, LParams, LM);
-            finally
-              Sys.FreeAndNil(LParams);
+          LParams := TIdStringList.Create;
+          try
+            SplitColumns(S, LParams);
+            // RLebeau: check the message size before accepting the message
+            LSize := Sys.StrToInt(LParams.Values['SIZE'], 0);
+            if (FMaxMsgSize > 0) and (LSize > FMaxMsgSize) then begin
+              LM := mLimitExceeded;
+            end else begin
+              if Assigned(FOnMailFrom) then begin
+                FOnMailFrom(LContext, EMailAddress.Address, LParams, LM);
+              end;
             end;
+          finally
+            Sys.FreeAndNil(LParams);
           end;
           case LM of
             mAccept :
             begin
               MailFromAccept(ASender, EMailAddress.Address);
               LContext.From := EMailAddress.Address;
+              // RLebeau: store the message size in case the OnRCPT handler
+              // wants to verify the size on a per-recipient basis
+              LContext.MsgSize := LSize;
               LContext.SMTPState := idSMTPMail;
             end;
             mReject :
             begin
               MailFromReject(ASender, EMailAddress.Text);
+            end;
+            mSystemFull:
+            begin
+              MailSubmitSystemFull(ASender);
+            end;
+            mLimitExceeded:
+            begin
+              MailSubmitLimitExceeded(ASender);
             end;
           end;
         end;
@@ -854,6 +886,8 @@ begin
             rTooManyAddresses : AddrTooManyRecipients(ASender);
             rDisabledPerm : AddrDisabledPerm(ASender, EMailAddress.Address);
             rDisabledTemp : AddrDisabledTemp(ASender, EMailAddress.Address);
+            rSystemFull : MailSubmitSystemFull(ASender);
+            rLimitExceeded : MailSubmitLimitExceeded(ASender);
           else
             AddrInvalid(ASender, EMailAddress.Address);
           end;
@@ -996,7 +1030,7 @@ var
 begin
   LReceivedString := IdSMTPSvrReceivedString;
   LContext := TIdSMTPServerContext(ASender.Context);
-  if (LContext.SMTPState <> idSMTPRcpt) then begin
+  if LContext.SMTPState <> idSMTPRcpt then begin
     BadSequenceError(ASender);
     Exit;
   end;
@@ -1027,8 +1061,13 @@ begin
         end;
         AMsg.CopyFrom(LStream, 0); // Copy the contents that was captured to the new stream.
         AMsg.Position := 0; // RLebeau: CopyFrom() does not reset the Position
-        if Assigned(FOnMsgReceive) then begin
-          FOnMsgReceive(LContext, AMsg, LAction);
+        // RLebeau: verify the message size now
+        if (FMaxMsgSize > 0) and (AMsg.Size > FMaxMsgSize) then begin
+          LAction := dLimitExceeded;
+        end else begin
+          if Assigned(FOnMsgReceive) then begin
+            FOnMsgReceive(LContext, AMsg, LAction);
+          end;
         end;
       finally
         Sys.FreeAndNil(AMsg);
@@ -1037,12 +1076,12 @@ begin
       Sys.FreeAndNil(LStream);
     end;
     case LAction of
-    dOk                   : MailSubmitOk(ASender); //accept the mail message
-    dMBFull               : MailSubmitStorageExceededFull(ASender); //Mail box full
-    dSystemFull           : MailSubmitSystemFull(ASender); //no more space on server
-    dLocalProcessingError : MailSubmitLocalProcessingError(ASender); //local processing error
-    dTransactionFailed    : MailSubmitTransactionFailed(ASender); //transaction failed
-    dLimitExceeded        : MailSubmitLimitExceeded(ASender); //exceeded administrative limit
+      dOk                   : MailSubmitOk(ASender); //accept the mail message
+      dMBFull               : MailSubmitStorageExceededFull(ASender); //Mail box full
+      dSystemFull           : MailSubmitSystemFull(ASender); //no more space on server
+      dLocalProcessingError : MailSubmitLocalProcessingError(ASender); //local processing error
+      dTransactionFailed    : MailSubmitTransactionFailed(ASender); //transaction failed
+      dLimitExceeded        : MailSubmitLimitExceeded(ASender); //exceeded administrative limit
     end;
   end else begin // No EHLO / HELO was received
     NoHello(ASender);
@@ -1056,6 +1095,12 @@ begin
   if Assigned(FOnReset) then begin
     FOnReset(AContext);
   end;
+end;
+
+procedure TIdSMTPServer.SetMaxMsgSize(AValue: Integer);
+begin
+  if AValue < 0 then AValue := 0;
+  FMaxMsgSize := AValue;
 end;
 
 function TIdSMTPServer.SPFAuthOk(AContext: TIdSMTPServerContext; AReply: TIdReply;
@@ -1134,6 +1179,7 @@ begin
   FUsername := '';
   FPassword := '';
   FLoggedIn := False;
+  FMsgSize := 0;
   FFinalStage := False;
   CheckPipeLine;
 end;
