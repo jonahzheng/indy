@@ -22,6 +22,8 @@ types while also making this header compile with Borland Delphi.
 }
 type 
   {$IFDEF FPC}
+  TIdC_LONG  = cLong;
+  PIdC_LONG  = pLong;
   TIdC_ULONG = cuLong;
   PIdC_ULONG = pculong;
   TIdC_INT   = cInt;
@@ -32,6 +34,8 @@ type
   PIdC_UNSIGNED = ^TIdC_UNSIGNED;
   {$ENDIF}
   {$IFNDEF FPC}
+  TIdC_LONG  = LongInt;
+  PIdC_LONG  = ^TIdC_LONG;  
   TIdC_ULONG = LongWord;
   PIdC_ULONG = ^TIdC_ULONG;
   TIdC_INT   = LongInt;
