@@ -47,14 +47,196 @@ unit IdSSLOpenSSLHeaders;
   Author: Gregor Ibic (gregor.ibic@intelicom.si)
   Copyright: (c) Gregor Ibic, Intelicom d.o.o and Indy Working Group.
 }
+{
+Note to self::
+
+===== Win64 ======
+Configuring for VC-WIN64A
+    no-camellia     [default]  OPENSSL_NO_CAMELLIA (skip dir)
+    no-gmp          [default]  OPENSSL_NO_GMP (skip dir)
+    no-krb5         [krb5-flavor not specified] OPENSSL_NO_KRB5
+    no-mdc2         [default]  OPENSSL_NO_MDC2 (skip dir)
+    no-rc5          [default]  OPENSSL_NO_RC5 (skip dir)
+    no-shared       [default]    
+    no-zlib         [default]
+    no-zlib-dynamic [default]
+IsMK1MF=1
+CC            =cl
+CFLAG         =-DOPENSSL_THREADS  -DDSO_WIN32
+EX_LIBS       =
+CPUID_OBJ     =
+BN_ASM        =bn_asm.o
+DES_ENC       =des_enc.o fcrypt_b.o
+AES_ASM_OBJ   =aes_core.o aes_cbc.o
+BF_ENC        =bf_enc.o
+CAST_ENC      =c_enc.o
+RC4_ENC       =rc4_enc.o
+RC5_ENC       =rc5_enc.o
+MD5_OBJ_ASM   =
+SHA1_OBJ_ASM  =
+RMD160_OBJ_ASM=
+PROCESSOR     =
+RANLIB        =true
+ARFLAGS       =
+PERL          =perl
+SIXTY_FOUR_BIT mode
+DES_INT used
+RC4_CHUNK is unsigned long long
+
+Configured for VC-WIN64A.
+---
+ms\do_win64a
+
+W:\openssl-0.9.8d>perl util\mkfiles.pl  1>MINFO
+
+W:\openssl-0.9.8d>perl ms\uplink.pl win64a  1>ms\uptable.asm
+
+W:\openssl-0.9.8d>ml64 -c -Foms\uptable.obj ms\uptable.asm
+Microsoft (R) Macro Assembler (AMD64) Version 8.00.40310.39
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+ Assembling: ms\uptable.asm
+
+W:\openssl-0.9.8d>perl util\mk1mf.pl no-asm VC-WIN64A  1>ms\nt.mak
+
+W:\openssl-0.9.8d>perl util\mk1mf.pl dll no-asm VC-WIN64A  1>ms\ntdll.mak
+
+W:\openssl-0.9.8d>perl util\mkdef.pl 32 libeay  1>ms\libeay32.def
+Warning: AES_bi_ige_encrypt does not have a number assigned
+Warning: AES_ige_encrypt does not have a number assigned
+
+W:\openssl-0.9.8d>perl util\mkdef.pl 32 ssleay  1>ms\ssleay32.def
+===
+
+perl Configure VC-WIN32 --prefix=c:/output
+Configuring for VC-WIN32
+    no-camellia     [default]  OPENSSL_NO_CAMELLIA (skip dir)
+    no-gmp          [default]  OPENSSL_NO_GMP (skip dir)
+    no-krb5         [krb5-flavor not specified] OPENSSL_NO_KRB5
+    no-mdc2         [default]  OPENSSL_NO_MDC2 (skip dir)
+    no-rc5          [default]  OPENSSL_NO_RC5 (skip dir)
+    no-shared       [default]
+    no-zlib         [default]
+    no-zlib-dynamic [default]
+IsMK1MF=1
+CC            =cl
+CFLAG         =-DOPENSSL_THREADS  -DDSO_WIN32
+EX_LIBS       =
+CPUID_OBJ     =
+BN_ASM        =bn_asm.o
+DES_ENC       =des_enc.o fcrypt_b.o
+AES_ASM_OBJ   =aes_core.o aes_cbc.o
+BF_ENC        =bf_enc.o
+CAST_ENC      =c_enc.o
+RC4_ENC       =rc4_enc.o
+RC5_ENC       =rc5_enc.o
+MD5_OBJ_ASM   =
+SHA1_OBJ_ASM  =
+RMD160_OBJ_ASM=
+PROCESSOR     =
+ 
+ARFLAGS       =
+PERL          =perl
+THIRTY_TWO_BIT mode
+BN_LLONG mode
+RC4_INDEX mode
+RC4_CHUNK is undefined
+
+Configured for VC-WIN32.
+
+Generating x86 for MASM assember
+Bignum
+DES
+"crypt(3)"
+Blowfish
+CAST5
+RC4
+MD5
+SHA1
+RIPEMD160
+RC5\32
+
+perl util\mkfiles.pl  1>MINFO
+
+perl util\mk1mf.pl VC-WIN32  1>ms\nt.mak
+
+perl util\mk1mf.pl dll VC-WIN32  1>ms\ntdll.mak
+
+perl util\mkdef.pl 32 libeay  1>ms\libeay32.def
+Warning: AES_bi_ige_encrypt does not have a number assigned
+Warning: AES_ige_encrypt does not have a number assigned
+
+perl util\mkdef.pl 32 ssleay  1>ms\ssleay32.def
+}
 
 interface
 {$i IdCompilerDefines.inc}
 
+//THe OpenSSL developers use a IF 0 and an IF 1 convention for selectively
+//enabling or disabling things.
+{$DEFINE USETHIS}
+{.$DEFINE OMITTHIS}
+{
+IMPORTANT!!!!
+
+A lot of IFDEF's and defines have to used because OpenSSL has a number of options'
+and those can effect the API.  The options are determined by a "configure" script
+that generates apporpriate make files with the appropriate defines.  If you do
+custom compiles of OpenSSL or if it's compiled differently that what I assume, 
+you will need to add or deactivate the defines.
+}
+{$ifdef win32}
+  {$define OPENSSL_SYSNAME_WIN32}
+  {$define WIN32_LEAN_AND_MEAN}
+  {$define L_ENDIAN}
+  {$define DSO_WIN32}
+  {$define _CRT_SECURE_NO_DEPRECATE}
+  {$define _CRT_NONSTDC_NO_DEPRECATE}
+  {$define BN_ASM}
+  {$define MD5_ASM}
+  {$define SHA1_ASM}
+  {$define RMD160_ASM}
+  {$define OPENSSL_NO_CAMELLIA}
+  {$define OPENSSL_NO_RC5}
+  {$define OPENSSL_NO_MDC2}
+  {$define OPENSSL_NO_KRB5}
+  {$define OPENSSL_NO_MDC}
+  {$define OPENSSL_NO_DYNAMIC_ENGINE}  
+{$endif}
+{$ifdef win64}
+  {$define WIN32_LEAN_AND_MEAN}
+  {$define L_ENDIAN}
+  {$define DSO_WIN32}
+  {$define OPENSSL_SYSNAME_WIN32}
+  {$define OPENSSL_SYSNAME_WINNT}
+  {$define UNICODE}
+  {$define _UNICODE}
+  {$define _CRT_SECURE_NO_DEPRECATE}
+  {$define _CRT_NONSTDC_NO_DEPRECATE}
+  {$define OPENSSL_NO_CAMELLIA}
+  {$define OPENSSL_NO_RC5} 
+  {$define OPENSSL_NO_MDC2} 
+  {$define OPENSSL_NO_KRB5} 
+  {$define OPENSSL_NO_DYNAMIC_ENGINE}
+{$endif}
+{$ifdef unix}
+
+//attempt to get this right from FreeBSD CVS
+//Makefile compile options.  The file is located
+//at http://www.freebsd.org/cgi/cvsweb.cgi/src/crypto/openssl/ .
+  {$define OPENSSL_NO_CAMELLIA}
+  {$define OPENSSL_NO_GMP}
+  {$define OPENSSL_NO_MDC2}
+  {$define OPENSSL_NO_RC5}
+{$endif}
+
 // the following emit is a workaround to a name conflict
 // with Win32 API header files
 (*$HPPEMIT '#include <time.h>'*)
-
+uses 
+{$IFDEF FPC} SysUtils, {$ENDIF}
+  IdCTypes;
+  
 const
   OPENSSL_ASN1_F_A2D_ASN1_OBJECT = 100;
   OPENSSL_ASN1_F_A2I_ASN1_ENUMERATED = 236;
@@ -635,9 +817,12 @@ const
   OPENSSL_EVP_F_PKCS5_PBE_KEYIVGEN = 117;
   OPENSSL_EVP_F_PKCS5_V2_PBE_KEYIVGEN = 118;
   OPENSSL_EVP_F_RC2_MAGIC_TO_METH = 109;
-  OPENSSL_EVP_MAX_IV_LENGTH = 8;
-  OPENSSL_EVP_MAX_KEY_LENGTH = 24;
-  OPENSSL_EVP_MAX_MD_SIZE = 16+20;
+  
+  OPENSSL_EVP_MAX_MD_SIZE = 64; //* longest known is SHA512 */  - value I found, 16+20;
+  OPENSSL_EVP_MAX_KEY_LENGTH = 32; //value I found, 24;
+  OPENSSL_EVP_MAX_IV_LENGTH = 16; //value I found, 8;
+  OPENSSL_EVP_MAX_BLOCK_LENGTH=32;
+
   OPENSSL_NID_dhKeyAgreement = 28;
   OPENSSL_EVP_PKEY_DH = OPENSSL_NID_dhKeyAgreement;
   OPENSSL_NID_dsa = 116;
@@ -1694,10 +1879,14 @@ const
   OPENSSL_SSL3_VERSION = $0300;
   OPENSSL_SSL3_VERSION_MAJOR = $03;
   OPENSSL_SSL3_VERSION_MINOR = $00;
-  OPENSSL_SSLEAY_BUILT_ON = 3;
-  OPENSSL_SSLEAY_CFLAGS = 2;
-  OPENSSL_SSLEAY_PLATFORM = 4;
+  
   OPENSSL_SSLEAY_VERSION = 0;
+//* #define SSLEAY_OPTIONS	1 no longer supported */
+  OPENSSL_SSLEAY_CFLAGS = 2;
+  OPENSSL_SSLEAY_BUILT_ON = 3;
+  OPENSSL_SSLEAY_PLATFORM = 4;
+  OPENSSL_SSLEAY_DIR = 5;
+  
   OPENSSL_SSLEAY_VERSION_NUMBER = OPENSSL_OPENSSL_VERSION_NUMBER;
   OPENSSL_TLS1_AD_ACCESS_DENIED = 49;
   OPENSSL_SSL_AD_ACCESS_DENIED = OPENSSL_TLS1_AD_ACCESS_DENIED;
@@ -2430,6 +2619,24 @@ const
 
   OPENSSL_MBSTRING_ASC = $1001;
 
+//kssl.h
+{$ifndef OPENSSL_NO_KRB5}
+{These are consts for Kerberos support.  These will not be complete because
+FreePascal, Borland Delphi, and Indy don't support Kerberos.  These are here
+as place holders so we get an exact OpenSSL API if Kerberos support was compiled
+in.
+}
+  KSSL_ERR_MAX = 255;
+
+	KSSL_CLIENT  = 1;
+  KSSL_SERVER  = 2;
+	KSSL_SERVICE = 3;
+  KSSL_KEYTAB = 4;
+
+  KSSL_CTX_OK = 0;
+  KSSL_CTX_ERR = 1;
+  KSSL_NOMEM = 2;
+{$endif}
 {Error - err.h }
 
 const
@@ -2442,12 +2649,17 @@ const
 
 type
   TERR_STATE = record
-    PID: cardinal;
-    Err_buff: array[0..OPENSSL_ERR_NUM_ERRORS-1] of Cardinal;
+    PID: TIdC_UINT;
+    err_flags : array [0..OPENSSL_ERR_NUM_ERRORS - 1] of TIdC_INT;
+    err_buffer: array[0..OPENSSL_ERR_NUM_ERRORS-1] of TIdC_UINT;
+    err_data : array [0..OPENSSL_ERR_NUM_ERRORS -1] of PChar;
+    err_data_flags : array [0..OPENSSL_ERR_NUM_ERRORS -1] of TIdC_INT;
+    
     err_file: array[0..OPENSSL_ERR_NUM_ERRORS-1] of PChar;
-    err_line: array[0..OPENSSL_ERR_NUM_ERRORS-1] of Integer;
-    top: Integer;
-    Bottom: Integer;
+    err_line: array[0..OPENSSL_ERR_NUM_ERRORS-1] of TIdC_INT;
+    
+    top: TIdC_INT;
+    Bottom: TIdC_INT;
   end; // record
 
 const
@@ -2506,6 +2718,16 @@ const
   OPENSSL_ERR_LIB_RAND   = 36;
 //#define ERR_LIB_DSO		37
   OPENSSL_ERR_LIB_DSO   = 37;
+//#define ERR_LIB_UI              40
+  OPENSSL_ERR_LIB_UI    = 40;
+//#define ERR_LIB_COMP            41
+  OPENSSL_ERR_LIB_COMP  = 41;
+//#define ERR_LIB_ECDSA		42
+  OPENSSL_ERR_LIB_ECDSA	= 42;
+//#define ERR_LIB_ECDH		43
+  OPENSSL_ERR_LIB_ECDH  = 43;
+//#define ERR_LIB_STORE           44
+  OPENSSL_ERR_LIB_STORE = 44;
 //#define ERR_LIB_USER		128
   OPENSSL_ERR_LIB_USER  = 128;
 
@@ -2533,6 +2755,19 @@ const
 
 //#define ERR_R_FATAL		32
   OPENSSL_ERR_R_FATAL	= 32;
+
+///ssl_locl.h constants.  For some reason, these aren't listed in the include files
+//so it seems that the OpenSSL headers are pulling stuff out of thin air.
+//In any case, I don't know how these constants will work on various platforms.
+//JPM
+
+//* Mostly for SSLv3 */
+  OPENSSL_SSL_PKEY_RSA_ENC = 0;
+  OPENSSL_SSL_PKEY_RSA_SIGN =1;
+  OPENSSL_SSL_PKEY_DSA_SIGN = 2;
+  OPENSSL_SSL_PKEY_DH_RSA = 3;
+  OPENSSL_SSL_PKEY_DH_DSA = 4;
+  OPENSSL_SSL_PKEY_NUM = 5;
 
 {$define ERR_file_name__FILE_}
 {$ifndef NO_ERR}
@@ -2588,6 +2823,21 @@ const
   OPENSSL_ERR_R_SSL2_LIB =	OPENSSL_ERR_LIB_SSL2;
 //#define ERR_R_SSL3_LIB	ERR_LIB_SSL3
   OPENSSL_ERR_R_SSL3_LIB =	OPENSSL_ERR_LIB_SSL3;
+  
+//#define DTLS1_COOKIE_LENGTH                     32
+  OPENSSL_DTLS1_COOKIE_LENGTH = 32;
+//#define DTLS1_RT_HEADER_LENGTH                  13
+  OPENSSL_DTLS1_RT_HEADER_LENGTH = 13;
+//#define DTLS1_HM_HEADER_LENGTH                  12
+  OPENSSL_DTLS1_HM_HEADER_LENGTH = 12;
+//#define DTLS1_HM_BAD_FRAGMENT                   -2
+  OPENSSL_DTLS1_HM_BAD_FRAGMENT = -2;
+//#define DTLS1_HM_FRAGMENT_RETRY                 -3
+  OPENSSL_DTLS1_HM_FRAGMENT_RETRY = -3;
+//#define DTLS1_CCS_HEADER_LENGTH                  3
+  OPENSSL_DTLS1_CCS_HEADER_LENGTH = 3;
+//#define DTLS1_AL_HEADER_LENGTH                   7
+  OPENSSL_DTLS1_AL_HEADER_LENGTH = 7;
 //#define ERR_R_PROXY_LIB	ERR_LIB_PROXY
   OPENSSL_ERR_R_PROXY_LIB =	OPENSSL_ERR_LIB_PROXY;
 //#define ERR_R_BIO_LIB	ERR_LIB_BIO
@@ -2616,16 +2866,125 @@ type
   PUShort	  =^Byte;
   PPChar	  =^PChar;
 
-  PSSL            = Pointer;
-  PPSSL_SESSION   =^PSSL_SESSION;
-  PSSL_CIPHER	  = Pointer;
-  Pevp_pkey_st    = Pointer;
-  PSTACK          = Pointer;
+//This is just a synthasis since Pascal probably has what we need.
+//In C, the OpenSSL developers were using the PQ_64BIT moniker
+//to ensure that they had a value that is always 64bit.
+//In Pascal, this is not a problem since Delphi and FreePascla have this in some form.
+  {$ifdef FPC}
+  PQ_64BIT = QWord;
+  {$else}
+  PQ_64BIT = Int64;
+    {$NODEFINE size_t}
+    size_t	  = Integer;
+  {$endif}
+
+// REMY - the following value was conflicting with iphlpapi.h under C++Builder
+//	(and possibly other headers) so using the HPPEMIT further above as a workaround
+
+   {$EXTERNALSYM time_t}
+  time_t	  = TIdC_LONG;
+  STACK = packed record
+    num : TIdC_INT; //int num;
+    data : PChar;  //char **data;
+    sorted : TIdC_INT;//int sorted;
+    num_alloc : TIdC_INT; //int num_alloc;
+    comp : function (_para1:PPchar; _para2:PPchar):  TIdC_INT; cdecl;
+    //int (*comp)(const char * const *, const char * const *);
+  end;
+  PSTACK          = ^STACK;
   PPSTACK         =^PSTACK;
-  PCRYPTO_EX_DATA = Pointer;
+
+  PSSL            = ^SSL;
+
+  SSL_CIPHER = packed record
+    valid : TIdC_INT;
+    name:	PChar;	//* text name */
+    id: TIdC_ULONG; ///* id, 4 bytes, first is version */
+    algorithms: TIdC_ULONG; //* what ciphers are used */
+    algo_strength: TIdC_ULONG; //* strength and export flags */
+    algorithm2: TIdC_ULONG;//* Extra flags */
+    strength_bits: TIdC_INT;		//* Number of bits really used */
+    alg_bits: TIdC_INT;			//* Number of bits for algorithm */
+    mask: TIdC_ULONG;		//* used for matching */
+    mask_strength: TIdC_ULONG;	//* also used for matching */
+  end;
+  PSSL_CIPHER	  = ^SSL_CIPHER;
+  {$ifdef debug}
+  STACK_OF_SSL_CIPHER = packed record
+    _stack: STACK;
+  end;
+  PSTACK_OF_SSL_CIPHER =^STACK_OF_SSL_CIPHER;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+   PSTACK_OF_SSL_CIPHER = PSTACK;
+  {$endif}  
+
+
+
+  //evp.h
+  //rsa.h - struct rsa_st
+  PRSA		  = Pointer;
+  PPRSA		  =^PRSA;
+  PRSA_METHOD	  = Pointer;
+  //dh.h
+    PDH		  = Pointer;
+  PPDH		  =^PDH;
+  // dsa.h
+  PDSA		  = Pointer;
+  PPDSA		  =^PDSA;
+
+  // ec.h
+  PEC_KEY = ^EC_KEY;
+  EC_KEY = packed record
+  end;
+  
+ // Pevp_pkey_st    = Pointer;
+  
+  //crypto.h
+  CRYPTO_EX_DATA = packed record
+    sk : PSTACK;
+    dummy : TIdC_INT; //* gcc is screwing up this data structure :-( */
+  end;
+  PCRYPTO_EX_DATA = ^CRYPTO_EX_DATA;
   PLHASH	  = Pointer;
+
+//conf.h
+  CONF_VALUE = packed record
+    section : PChar;
+    name : PChar;
+    value : PChar;
+  end;
+  PCONF_VALUE = ^CONF_VALUE;
+  {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_CONF_VALUE = packed record
+    stack: stack;
+  end;
+  PSTACK_OF_CONF_VALUE = ^STACK_OF_CONF_VALUE;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_CONF_VALUE = PSTACK;
+  {$endif}
+//
+
+  //* This is used to contain a list of bit names */
+  BIT_STRING_BITNAME = packed record
+    bitnum : TIdC_INT; //int bitnum;
+    lname : PChar; //const char *lname;
+    sname : PChar; //const char *sname;
+  end;
+  PBIT_STRING_BITNAME = ^BIT_STRING_BITNAME;
+  PPBIT_STRING_BITNAME = ^PBIT_STRING_BITNAME;
+
+  buf_mem_st = packed record
+    length : TIdC_INT; //* current number of bytes */
+    data : PChar;
+    max: TIdC_INT;	//* size of buffer */
+  end;
+  BUF_MEM = buf_mem_st;
+  PBUF_MEM	  = ^BUF_MEM;
+  PPBUF_MEM   = ^PBUF_MEM;
+  PBIO = ^BIO;
 {
-  PBUF_MEM	  = Pointer;
   PBIO		  = Pointer;
   PPBIO	          =^PBIO;
   PBIO_METHOD     = Pointer;
@@ -2636,62 +2995,1261 @@ type
   PBN_MONT_CTX    = Pointer;
   PBN_BLINDING	  = Pointer;
   PBN_RECP_CTX    = Pointer;
-  PASN1_TYPE	  = Pointer;
-  PPASN1_TYPE     =^PASN1_TYPE;
-  PASN1_OBJECT    = Pointer;
-  PPASN1_OBJECT   =^PASN1_OBJECT;
-  PASN1_STRING    = Pointer;
-  PPASN1_STRING   =^PASN1_STRING;
-  PASN1_CTX	  = Pointer;
-  PASN1_HEADER	  = Pointer;
-  PPASN1_HEADER   =^PASN1_HEADER;
-  PASN1_METHOD    = Pointer;
-  PRSA		  = Pointer;
-  PPRSA		  =^PRSA;
-  PRSA_METHOD	  = Pointer;
-  PDSA		  = Pointer;
-  PPDSA		  =^PDSA;
-  PDH		  = Pointer;
-  PPDH		  =^PDH;
 }
-  PEVP_MD_CTX     = Pointer;
-  PEVP_MD	  = Pointer;
-  PEVP_CIPHER	  = Pointer;
-  PEVP_CIPHER_CTX = Pointer;
-  PEVP_ENCODE_CTX = Pointer;
-  PX509_LOOKUP    = Pointer;
-  PX509_STORE     = Pointer;
-  PX509_STORE_CTX = Pointer;
-  PX509_CRL	  = Pointer;
-  PPX509_CRL               =^PX509_CRL;
-  PX509_LOOKUP_METHOD      = Pointer;
-  PX509_NAME               = Pointer;
-  PPX509_NAME              =^PX509_NAME;
-  PX509_OBJECT             = Pointer;
-  PPX509		   =^PX509;
-  PX509_EXTENSION_METHOD   = Pointer;
-  PX509_ATTRIBUTE	   = Pointer;
-  PPX509_ATTRIBUTE	   =^PX509_ATTRIBUTE;
-  PX509_EXTENSION	   = Pointer;
-  PPX509_EXTENSION	   =^PX509_EXTENSION;
-  PX509_NAME_ENTRY	   = Pointer;
+
+  //asn1.h
+//#define I2D_OF(type) int (*)(type *,unsigned char **)
+  I2D_OF_void = function(_para1 : Pointer; _para2 : PChar) : TIdC_INT; cdecl; 
+//D2I_OF(type) type *(*)(type **,const unsigned char **,long)
+  D2I_OF_void = function (var _para1 : Pointer; const _para2 : PChar; _para3 : TIdC_LONG) : Pointer; cdecl; 
+  //* This is just an opaque pointer */
+  ASN1_VALUE = packed record
+  end;
+  PASN1_VALUE = ^ASN1_VALUE;
+  PPASN1_VALUE = ^PASN1_VALUE;
+  {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_ASN1_VALUE = packed record
+    stack: stack;
+  end;
+  PSTACK_OF_ASN1_VALUE = ^STACK_OF_AASN1_VALUE;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ASN1_VALUE = PSTACK;
+  {$endif}
+  ASN1_OBJECT = packed record
+    sn, ln : PChar; //const char *sn,*ln;
+    nid    : TIdC_INT;//int nid;
+    length : TIdC_INT;//int length;
+    data   : PChar; //unsigned char *data;
+    flags  : TIdC_INT; //int flags;	/* Should we free this one */
+  end;
+  PASN1_OBJECT = ^ASN1_OBJECT;
+  PPASN1_OBJECT = ^PASN1_OBJECT;
+  {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_ASN1_OBJECT = packed record
+    stack: stack;
+  end;
+  PSTACK_OF_ASN1_OBJECT = ^STACK_OF_ASN1_OBJECT;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ASN1_OBJECT = PSTACK;
+  {$endif}
+  
+  asn1_string_st = packed record
+    length : TIdC_INT;//int length;
+    _type : TIdC_INT;//int type;
+    data : PChar;//unsigned char *data;
+    {/* The value of the following field depends on the type being
+    * held.  It is mostly being used for BIT_STRING so if the
+    * input data has a non-zero 'unused bits' value, it will be
+    * handled correctly */}
+    flags : TIdC_LONG; //long flags;
+  end;  
+
+  ASN1_STRING = asn1_string_st;
+  PASN1_STRING = ^ASN1_STRING;
+  PPASN1_STRING = ^PASN1_STRING;
+
+  ASN1_INTEGER = ASN1_STRING;
+  PASN1_INTEGER = ^ASN1_INTEGER;
+  PPASN1_INTEGER = ^PASN1_INTEGER;
+  {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_ASN1_INTEGER = packed record
+    stack: stack;
+  end;
+  PSTACK_OF_ASN1_INTEGER = ^STACK_OF_ASN1_INTEGER;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ASN1_INTEGER = PSTACK;
+  {$endif}
+    
+  ASN1_ENUMERATED	=	ASN1_STRING;
+  PASN1_ENUMERATED = ^ASN1_ENUMERATED;
+  PPASN1_ENUMERATED = ^PASN1_ENUMERATED;
+  
+  ASN1_BIT_STRING	=	ASN1_STRING;
+  PASN1_BIT_STRING = ^ASN1_BIT_STRING;
+  PPASN1_BIT_STRING = ^PASN1_BIT_STRING;
+  
+  ASN1_OCTET_STRING	= ASN1_STRING;
+  PASN1_OCTET_STRING = ^ASN1_OCTET_STRING;
+  PPASN1_OCTET_STRING = ^PASN1_OCTET_STRING;
+  
+  ASN1_PRINTABLESTRING = ASN1_STRING;
+  PASN1_PRINTABLESTRING = ^ASN1_PRINTABLESTRING;
+  PPASN1_PRINTABLESTRING = ^PASN1_PRINTABLESTRING;
+  
+  ASN1_T61STRING = ASN1_STRING;
+  PASN1_T61STRING = ^ASN1_T61STRING;
+  PPASN1_T61STRING = ^PASN1_T61STRING;
+  
+  ASN1_IA5STRING = ASN1_STRING;
+  PASN1_IA5STRING = ^ASN1_IA5STRING;
+  PPASN1_IA5STRING = ^PASN1_IA5STRING;
+  
+  ASN1_UTCTIME = ASN1_STRING;
+  PASN1_UTCTIME = ^ASN1_UTCTIME;
+  PPASN1_UTCTIME = ^PASN1_UTCTIME;
+  
+  ASN1_GENERALIZEDTIME = ASN1_STRING;
+  PASN1_GENERALIZEDTIME = ^ASN1_GENERALIZEDTIME;
+  PPASN1_GENERALIZEDTIME = ^PASN1_GENERALIZEDTIME;
+  
+  ASN1_TIME = ASN1_STRING;
+  PASN1_TIME = ^ASN1_TIME;
+  PPASN1_TIME = ^PASN1_TIME;
+  
+  ASN1_GENERALSTRING = ASN1_STRING;
+  PASN1_GENERALSTRING = ^ASN1_GENERALSTRING;
+  PPASN1_GENERALSTRING = ^PASN1_GENERALSTRING;
+  {$ifdef debug}
+  STACK_OF_ASN1_GENERALSTRING = packed record
+    _stack: STACK;
+  end;
+  PSTACK_OF_ASN1_GENERALSTRING =^STACK_OF_ASN1_GENERALSTRING;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+   PSTACK_OF_ASN1_GENERALSTRING = PSTACK;
+  {$endif}
+
+  ASN1_UNIVERSALSTRING = ASN1_STRING;
+  PASN1_UNIVERSALSTRING = ^ASN1_UNIVERSALSTRING;
+  PPASN1_UNIVERSALSTRING = ^PASN1_UNIVERSALSTRING;
+  
+  ASN1_BMPSTRING = ASN1_STRING;
+  PASN1_BMPSTRING = ^ASN1_BMPSTRING;
+  PPASN1_BMPSTRING = ^PASN1_BMPSTRING;
+  
+  ASN1_VISIBLESTRING = ASN1_STRING;
+  PASN1_VISIBLESTRING = ^ASN1_VISIBLESTRING;
+  PPASN1_VISIBLESTRING = ^PASN1_VISIBLESTRING;
+  
+  ASN1_UTF8STRING	= ASN1_STRING;
+  PASN1_UTF8STRING = ^ASN1_UTF8STRING;
+  PPASN1_UTF8STRING = ^PASN1_UTF8STRING;
+  
+  ASN1_BOOLEAN = TIdC_INT;
+  PASN1_BOOLEAN = ^ASN1_BOOLEAN;
+  PPASN1_BOOLEAN = ^PASN1_BOOLEAN;
+  
+  ASN1_NULL = TIdC_INT;
+  PASN1_NULL = ^ASN1_NULL;
+  PPASN1_NULL = ^PASN1_NULL;
+
+  ASN1_TYPE = packed record 
+     case Integer of 
+          0:  (ptr: PChar); 
+          1:  (boolean: ASN1_BOOLEAN); 
+          2:  (asn1_string: PASN1_STRING); 
+          3:  (_object: PASN1_OBJECT); 
+          4:  (integer: PASN1_INTEGER); 
+          5:  (enumerated: PASN1_ENUMERATED); 
+          6:  (bit_string: PASN1_BIT_STRING); 
+          7:  (octet_string: PASN1_OCTET_STRING); 
+          8:  (printablestring: PASN1_PRINTABLESTRING); 
+          9:  (t61string: PASN1_T61STRING); 
+          10: (ia5string: PASN1_IA5STRING); 
+          11: (generalstring: PASN1_GENERALSTRING); 
+          12: (bmpstring: PASN1_BMPSTRING); 
+          13: (universalstring: PASN1_UNIVERSALSTRING); 
+          14: (utctime: PASN1_UTCTIME); 
+          15: (generalizedtime: PASN1_GENERALIZEDTIME); 
+          16: (visiblestring: PASN1_VISIBLESTRING); 
+          17: (utf8string: PASN1_UTF8STRING); 
+ 
+          { set and sequence are left complete and still   
+          contain the set or sequence bytes } 
+ 
+          18: (_set: PASN1_STRING); 
+          19: (sequence: PASN1_STRING); 
+  end;
+  PASN1_TYPE = ^ASN1_TYPE;
+  PPASN1_TYPE = ^PASN1_TYPE;
+  {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_ASN1_TYPE = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_ASN1_TYPE = ^STACK_OF_ASN1_TYPE;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ASN1_TYPE = ^PSTACK;
+  {$endif}
+         
+  ASN1_CTX = packed record
+    p : PChar; //unsigned char *p;/* work char pointer */
+    eos : TIdC_INT;//	int eos;	/* end of sequence read for indefinite encoding */
+    error : TIdC_INT;//	int error;	/* error code to use when returning an error */
+    inf : TIdC_INT; //	int inf;	/* constructed if 0x20, indefinite is 0x21 */
+    tag : TIdC_INT;//	int tag;	/* tag from last 'get object' */
+    xclass : TIdC_INT;//	int xclass;	/* class from last 'get object' */
+    slen : TIdC_LONG;//	long slen;	/* length of last 'get object' */
+    max : PChar; //	unsigned char *max; /* largest value of p allowed */
+    q : PChar;//	unsigned char *q;/* temporary variable */
+    pp : PPChar; //	unsigned char **pp;/* variable */
+    line : TIdC_INT; //	int line;	/* used in error processing */
+  end;
+  PASN1_CTX = ^ASN1_CTX;
+  PPASN1_CTX = ^PASN1_CTX;
+
+  ASN1_METHOD = packed record
+    i2d : i2d_of_void; //i2d_of_void *i2d;
+    d2i : i2d_of_void; //d2i_of_void *d2i;
+    create : function: Pointer; cdecl; //void *(*create)(void);
+    destroy : procedure(ptr: Pointer); cdecl;//void (*destroy)(void *);
+  end;
+  PASN1_METHOD = ^ASN1_METHOD;
+  PPASN1_METHOD = ^PASN1_METHOD;
+ 
+  //* This is used when parsing some Netscape objects */
+  ASN1_HEADER = packed record
+    header : PASN1_OCTET_STRING; //	ASN1_OCTET_STRING *header;
+    data : Pointer; //	void *data;
+    meth : PASN1_METHOD; //ASN1_METHOD *meth;
+  end;
+  PASN1_HEADER = ^ASN1_HEADER;
+  PPASN1_HEADER = ^PASN1_HEADER;
+
+  ASN1_ENCODING = packed record
+    enc:PChar;
+    len:TIdC_LONG;//long
+    modified:TIdC_INT;
+  end;
+  PASN1_ENCODING = ^ASN1_ENCODING;
+  PPASN1_ENCODING = ^ASN1_ENCODING;
+
+  ASN1_STRING_TABLE = packed record
+    nid : TIdC_INT;
+    minsize : TIdC_LONG;
+    maxsize : TIdC_LONG;
+    mask : TIdC_ULONG;
+    flags : TIdC_ULONG;
+  end;
+  PASN1_STRING_TABLE = ^ASN1_STRING_TABLE;
+  PPASN1_STRING_TABLE = ^ASN1_STRING_TABLE;
+   {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_ASN1_STRING_TABLE = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_ASN1_STRING_TABLE = ^STACK_OF_ASN1_STRING_TABLE;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ASN1_STRING_TABLE = PSTACK;
+  {$endif}
+
+  //struct evp_pkey_st
+  PPEVP_PKEY = ^PEVP_PKEY;
+  PEVP_PKEY = ^EVP_PKEY;
+  EVP_PKEY_union = packed record
+    case byte of
+      0: (ptr : PChar);
+      {$ifndef OPENSSL_NO_RSA}
+      1: (rsa : PRSA);  ///* RSA */
+      {$endif}
+      {$ifndef OPENSSL_NO_DSA}
+      2: (dsa : PDSA);  ///* DSA */
+      {$endif}
+      {$ifndef OPENSSL_NO_DH}
+      3: (dh :PDH);  //* DH */
+      {$endif}
+      {$ifndef OPENSSL_NO_EC}
+      4: (ec : PEC_KEY);	//* ECC */
+      {$endif}
+  end;
+
+  //this was moved from x509 section so that something here can compile.
+  {$ifdef debug}
+  PSTACK_OF_X509_ATTRIBUTE = ^STACK_OF_X509_ATTRIBUTE;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_ATTRIBUTE = PSTACK;
+  {$endif}
+  
+  EVP_PKEY = packed record
+    _type : TIdC_INT;
+    save_type : TIdC_INT;
+    references : TIdC_INT;
+    pkey : EVP_PKEY_union;
+    attributes : PSTACK_OF_X509_ATTRIBUTE;  ///* [ 0 ] */
+  end;
+  
+  PEVP_MD = ^EVP_MD;
+
+  EVP_MD_CTX = packed record
+    digest : PEVP_MD;
+    engine : Pointer; //ENGINE *engine; /* functional reference if 'digest' is ENGINE-provided */
+    flags : TIdC_ULONG;
+    md_data : Pointer;
+  end;
+  PEVP_MD_CTX = ^EVP_MD_CTX;
+        
+  EVP_MD = packed record
+     _type : TIdC_INT;
+     pkey_type : TIdC_INT;
+     md_size : TIdC_INT;
+     flags : TIdC_ULONG;
+     init : function (ctx : PEVP_MD_CTX) : TIdC_INT; cdecl;
+     //int (*init)(EVP_MD_CTX *ctx);
+     update : function (ctx : PEVP_MD_CTX; data : Pointer; count : size_t):TIdC_INT; cdecl;
+     //int (*update)(EVP_MD_CTX *ctx,const void *data,size_t count);
+     _final : function (ctx : PEVP_MD_CTX; md : PChar) : TIdC_INT; cdecl;
+     //int (*final)(EVP_MD_CTX *ctx,unsigned char *md);
+     copy : function (_to : PEVP_MD_CTX; from : PEVP_MD_CTX ) : TIdC_INT; cdecl;
+     //int (*copy)(EVP_MD_CTX *to,const EVP_MD_CTX *from);
+     cleanup : function(ctx : PEVP_MD_CTX) : TIdC_INT; cdecl;
+     //int (*cleanup)(EVP_MD_CTX *ctx);
+
+     //* FIXME: prototype these some day */
+     sign : function(_type : TIdC_INT; m : PChar; m_length : TIdC_UINT; sigret : PChar; siglen : TIdC_UINT; key : Pointer) : TIdC_INT; cdecl;
+//   int (*sign)(int type, const unsigned char *m, unsigned int m_length,
+//      unsigned char *sigret, unsigned int *siglen, void *key);
+    verify : function(_type : TIdC_INT; m : PChar; m_length : PChar; sigbuf : PChar; siglen : TIdC_UINT; key : Pointer) : TIdC_INT; cdecl;
+//	int (*verify)(int type, const unsigned char *m, unsigned int m_length,
+//	      const unsigned char *sigbuf, unsigned int siglen,
+//	      void *key);
+    required_pkey_type : array [0..4] of TIdC_INT; //*EVP_PKEY_xxx */
+
+    block_size : TIdC_INT;
+    ctx_size : TIdC_INT; //* how big does the ctx->md_data need to be */
+  end;
+
+  PPEVP_CIPHER_CTX = ^PEVP_CIPHER_CTX;
+  PEVP_CIPHER_CTX = ^EVP_CIPHER_CTX;
+  
+  PEVP_CIPHER	  = ^EVP_CIPHER;
+  EVP_CIPHER = packed record
+    nid : TIdC_INT;
+    block_size : TIdC_INT;
+    key_len : TIdC_INT;		//* Default value for variable length ciphers */
+    iv_len : TIdC_INT;
+    flags : TIdC_UINT;	//* Various flags */
+    init : function (ctx : PEVP_CIPHER_CTX; key : PChar; iv : PChar; enc : TIdC_INT): TIdC_INT; cdecl;
+//  int (*init)(EVP_CIPHER_CTX *ctx, const unsigned char *key,
+//		    const unsigned char *iv, int enc);	/* init key */
+    do_cipher : function (ctx : PEVP_CIPHER_CTX; _out : PChar; _in : PChar; inl : TIdC_INT) : TIdC_INT; cdecl;
+//	int (*do_cipher)(EVP_CIPHER_CTX *ctx, unsigned char *out,
+//			 const unsigned char *in, unsigned int inl);/* encrypt/decrypt data */
+    cleanup : function (_para1 : PEVP_CIPHER_CTX): TIdC_INT; cdecl;
+//	int (*cleanup)(EVP_CIPHER_CTX *); /* cleanup ctx */
+	  ctx_size : TIdC_INT;	//* how big ctx->cipher_data needs to be */
+    set_asn1_parameters : function (_para1 : PEVP_CIPHER_CTX; _para2 : PASN1_TYPE) : TIdC_INT; cdecl;
+    //	int (*set_asn1_parameters)(EVP_CIPHER_CTX *, ASN1_TYPE *); /* Populate a ASN1_TYPE with parameters */
+    get_asn1_parameters :function (_para1 : PEVP_CIPHER_CTX; _para2 :  PASN1_TYPE) : TIdC_INT; cdecl;
+//	int (*get_asn1_parameters)(EVP_CIPHER_CTX *, ASN1_TYPE *); /* Get parameters from a ASN1_TYPE */
+    ctrl : function (_para1 : PEVP_CIPHER_CTX; _type : TIdC_INT; arg : TIdC_INT; ptr : Pointer): TIdC_INT; cdecl;
+//	int (*ctrl)(EVP_CIPHER_CTX *, int type, int arg, void *ptr); /* Miscellaneous operations */
+    app_data : Pointer;		//* Application data */
+  end;
+
+  EVP_CIPHER_CTX = packed record
+    cipher : PEVP_CIPHER; //const EVP_CIPHER *cipher;
+    engine : Pointer; //* functional reference if 'cipher' is ENGINE-provided */
+    encrypt: TIdC_INT; //* encrypt or decrypt */ 
+    buf_len : TIdC_INT;		//* number we have left */
+    oiv : array [0..OPENSSL_EVP_MAX_IV_LENGTH-1] of char;	//* original iv */
+    iv : array [0..OPENSSL_EVP_MAX_IV_LENGTH -1] of char;	//* working iv */
+    buf : array [0..OPENSSL_EVP_MAX_BLOCK_LENGTH -1] of char; //* saved partial block */
+    num : TIdC_INT;				//* used by cfb/ofb mode */
+    app_data : Pointer;		//* application stuff */
+    key_len : TIdC_INT;		//* May change for variable length cipher */
+    flags : TIdC_ULONG;	//* Various flags */
+    cipher_data : Pointer; //* per EVP data */
+    final_used : TIdC_INT;
+    block_mask : TIdC_INT;
+    _final : array [0..OPENSSL_EVP_MAX_BLOCK_LENGTH-1] of char;//* possible final block */
+  end;
+
+  EVP_CIPHER_INFO = packed record
+     cipher : PEVP_CIPHER; //const EVP_CIPHER *cipher;
+     iv : array [0..OPENSSL_EVP_MAX_IV_LENGTH -1] of char;
+  end;
+
+  EVP_ENCODE_CTX = packed record
+    num : TIdC_INT;	//* number saved in a partial encode/decode */
+    length: TIdC_INT;	//* The length is either the output line length
+                // * (in input bytes) or the shortest input line
+                // * length that is ok.  Once decoding begins,
+                // * the length is adjusted up each time a longer
+                // * line is decoded */
+    enc_data:array [0..79] of char;
+    line_num: TIdC_INT;	//* number read on current line */
+    expect_nl: TIdC_INT;
+  end;
+  PEVP_ENCODE_CTX = ^EVP_ENCODE_CTX;
+
+//pcy_int.h
+ {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_X509_POLICY_DATA = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_X509_POLICY_DATA = ^STACK_OF_X509_POLICY_DATA;
+  STACK_OF_X509_POLICY_REF = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_X509_POLICY_REF = ^STACK_OF_X509_POLICY_DATA;  
+  STACK_OF_X509_POLICY_NODE = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_X509_POLICY_NODE = ^STACK_OF_X509_POLICY_NODE;   
+  PSTACK_OF_POLICYQUALINFO = ^STACK_OF_POLICYQUALINFO; 
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_POLICY_DATA = PSTACK;
+  PSTACK_OF_X509_POLICY_REF = PSTACK;
+  PSTACK_OF_X509_POLICY_NODE = PSTACK;
+  PSTACK_OF_POLICYQUALINFO = PSTACK;
+  {$endif}  
+
+  X509_POLICY_DATA = packed record
+	  flags : TIdC_UINT;
+	//* Policy OID and qualifiers for this data */
+  	valid_policy : PASN1_OBJECT; 
+    qualifier_set : PSTACK_OF_POLICYQUALINFO;
+	  expected_policy_set : PSTACK_OF_ASN1_OBJECT
+  end;
+  PX509_POLICY_DATA = ^X509_POLICY_DATA;
+  X509_POLICY_REF = packed record
+	  subjectDomainPolicy : PASN1_OBJECT;
+	  data : PX509_POLICY_DATA;
+  //	const X509_POLICY_DATA *data; 
+  end;
+  PX509_POLICY_REF = ^X509_POLICY_REF;
+  X509_POLICY_CACHE = packed record
+    //* anyPolicy data or NULL if no anyPolicy */
+    anyPolicy : PX509_POLICY_DATA;
+    //* other policy data */
+    data : PSTACK_OF_X509_POLICY_DATA;
+	  //* If policyMappings extension present a table of mapped policies */
+    maps : PSTACK_OF_X509_POLICY_REF;
+    //* If InhibitAnyPolicy present this is its value or -1 if absent. */
+  	any_skip : TIdC_LONG;
+    //* If policyConstraints and requireExplicitPolicy present this is its
+    //* value or -1 if absent.
+	  //*/
+    explicit_skip : TIdC_LONG;
+   	//* If policyConstraints and policyMapping present this is its
+	  //* value or -1 if absent.
+    //     */
+	  map_skip : TIdC_LONG;    
+  end;
+  PX509_POLICY_CACHE = ^X509_POLICY_CACHE;
+
+//x509v3.h
+  //forward declarations from x509.h to make sure this compiles.
+    PX509 = ^X509;
+  PX509_CRL = ^X509_CRL;
+  PX509_NAME               = ^X509_NAME;
+  PX509_NAME_ENTRY	   = ^X509_NAME_ENTRY;
+  PX509_REQ	= ^X509_REQ;
+  PX509_REQ_INFO = ^X509_REQ_INFO;
+  PPX509_REQ_INFO	= ^PX509_REQ_INFO;
+   {$ifdef DEBUG_SAFESTACK}
+  PSTACK_OF_X509_NAME_ENTRY = ^STACK_OF_X509_NAME_ENTRY;
+  PSTACK_OF_X509_REVOKED = ^STACK_OF_X509_REVOKED;
+  {$else}
+  PSTACK_OF_X509_NAME_ENTRY = PSTACK;
+  PSTACK_OF_X509_REVOKED = PSTACK;
+  {$endif}
   PPX509_NAME_ENTRY	   =^PX509_NAME_ENTRY;
+  //forward declarations
+  PV3_EXT_METHOD = ^V3_EXT_METHOD;
+  PV3_EXT_CTX = ^V3_EXT_CTX;
+  //
+  X509V3_EXT_NEW = procedure; cdecl;
+//typedef void * (*X509V3_EXT_NEW)(void);
+   X509V3_EXT_FREE = procedure(_para1 : Pointer); cdecl;
+//typedef void (*X509V3_EXT_FREE)(void *);
+   X509V3_EXT_D2I = procedure(_para1 : Pointer; const _para2 : PPChar; para3 : TIdC_LONG); cdecl;
+//typedef void * (*X509V3_EXT_D2I)(void *, const unsigned char ** , long);
+   X509V3_EXT_I2D = function (_para1 : Pointer; _para2 : PPChar) : TIdC_INT; cdecl;
+//typedef int (*X509V3_EXT_I2D)(void *, unsigned char **);
+
+    X509V3_EXT_I2V = function ( method : PV3_EXT_METHOD; text : Pointer; extlist : PSTACK_OF_CONF_VALUE) : PSTACK_OF_CONF_VALUE; cdecl;
+//typedef STACK_OF(CONF_VALUE) * (*X509V3_EXT_I2V)(struct v3_ext_method *method, void *ext, STACK_OF(CONF_VALUE) *extlist);
+     X509V3_EXT_V2I = procedure ( method : Pv3_ext_method; ctx : PV3_EXT_CTX; values : PSTACK_OF_CONF_VALUE); cdecl;
+//typedef void * (*X509V3_EXT_V2I)(struct v3_ext_method *method, struct v3_ext_ctx *ctx, STACK_OF(CONF_VALUE) *values);
+   X509V3_EXT_I2S = function (method : Pv3_ext_method; text : Pointer) : PChar; cdecl;
+//typedef char * (*X509V3_EXT_I2S)(struct v3_ext_method *method, void *ext);
+    X509V3_EXT_S2I = procedure (method : Pv3_ext_method; ctx : Pv3_ext_ctx; const str : PChar); cdecl;
+//typedef void * (*X509V3_EXT_S2I)(struct v3_ext_method *method, struct v3_ext_ctx *ctx, const char *str)
+   X509V3_EXT_I2R = function (method : Pv3_ext_method; text : Pointer; _out : PBIO; indent : TIdC_INT) : TIdC_INT; cdecl;
+//typedef int (*X509V3_EXT_I2R)(struct v3_ext_method *method, void *ext, BIO *out, int indent);
+   X509V3_EXT_R2I = procedure (method : Pv3_ext_method; ctx : Pv3_ext_ctx; const str : PChar); cdecl;
+//typedef void * (*X509V3_EXT_R2I)(struct v3_ext_method *method, struct v3_ext_ctx *ctx, const char *str);
+
+   V3_EXT_METHOD = packed record
+    ext_nid : TIdC_INT;
+    ext_flags : TIdC_INT;
+//* If this is set the following four fields are ignored */
+    //I'm not sure what the ASN1_ITEM_EXP really is.  The headers don't make it clear, JPM.
+    it : Pointer; //ASN1_ITEM_EXP *it;
+//* Old style ASN1 calls */
+    ext_new : X509V3_EXT_NEW;
+    ext_free : X509V3_EXT_FREE;
+    d2i : X509V3_EXT_D2I;
+    i2d : X509V3_EXT_I2D;
+
+//* The following pair is used for string extensions */
+    i2s : X509V3_EXT_I2S;
+    s2i : X509V3_EXT_S2I;
+
+//* The following pair is used for multi-valued extensions */
+    i2v : X509V3_EXT_I2V;
+    v2i : X509V3_EXT_V2I;
+
+//* The following are used for raw extensions */
+    i2r : X509V3_EXT_I2R;
+    r2i : X509V3_EXT_R2I;
+
+    usr_data : Pointer;  //* Any extension specific data */
+  end;
+  X509V3_EXT_METHOD = V3_EXT_METHOD;
+ {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_X509V3_EXT_METHOD = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_X509V3_EXT_METHOD = ^STACK_OF_X509V3_EXT_METHOD;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509V3_EXT_METHOD = PSTACK;
+  {$endif}
+  X509V3_CONF_METHOD = packed record
+    get_string : function(db : Pointer; section, value : PChar) : PChar; cdecl;
+   // char * (*get_string)(void *db, char *section, char *value);
+    get_section : function(db : Pointer; section : PChar) : PSTACK_OF_CONF_VALUE; cdecl;
+   //STACK_OF(CONF_VALUE) * (*get_section)(void *db, char *section);
+    free_string : procedure(db : Pointer; _string : PChar); cdecl;
+   //void (*free_string)(void *db, char * string);
+    free_section : procedure (db : Pointer; section : PSTACK_OF_CONF_VALUE);
+   //void (*free_section)(void *db, STACK_OF(CONF_VALUE) *section);
+  end;
+  V3_EXT_CTX = packed record
+    flags : TIdC_INT;
+    issuer_cert : PX509;
+    subject_cert : PX509;
+    subject_req : PX509_REQ;
+    crl : PX509_CRL;
+    db_meth : X509V3_CONF_METHOD;
+    db : Pointer;
+//* Maybe more here */
+  end;
+  
+  ENUMERATED_NAMES = BIT_STRING_BITNAME;
+
+  BASIC_CONSTRAINTS = packed record
+   ca : TIdC_INT;
+   pathlen: PASN1_INTEGER;
+  end;
+  PBASIC_CONSTRAINTS = ^BASIC_CONSTRAINTS;
+
+  PKEY_USAGE_PERIOD = packed record
+    notBefore : ASN1_GENERALIZEDTIME;
+    notAfter : PASN1_GENERALIZEDTIME;
+  end;
+  PPKEY_USAGE_PERIOD = ^PKEY_USAGE_PERIOD;
+
+  OTHERNAME = packed record
+    type_id : PASN1_OBJECT;
+    value : PASN1_TYPE;
+  end;
+  POTHERNAME = ^OTHERNAME;
+
+  EDIPARTYNAME = packed record
+    nameAssigner : PASN1_STRING;
+    partyName : PASN1_STRING;
+  end;
+  PEDIPARTYNAME = ^EDIPARTYNAME;
+
+  GENERAL_NAME_union = packed record
+    case byte of
+      0 : (ptr : PChar);
+      1 : (otherName : POTHERNAME); //* otherName */
+      2 : (rfc822Name : PASN1_IA5STRING);
+      3 : (dNSName : PASN1_IA5STRING);
+      4 : (x400Address : PASN1_TYPE);
+      5 : (directoryName : PX509_NAME);
+      6 : (ediPartyName : PEDIPARTYNAME);
+      7 : (uniformResourceIdentifier : PASN1_IA5STRING);
+      8 : (iPAddress : PASN1_OCTET_STRING);
+      9 : (registeredID : PASN1_OBJECT);
+
+	//* Old names */
+     10 : (ip : PASN1_OCTET_STRING); //* iPAddress */
+     11 : (dirn : PX509_NAME);		//* dirn */
+     12 : (ia5 : PASN1_IA5STRING);//* rfc822Name, dNSName, uniformResourceIdentifier */
+     13 : (rid : ASN1_OBJECT); //* registeredID */
+     14 : (other : PASN1_TYPE); //* x400Address */
+  end;
+  GENERAL_NAME = packed record
+    _type : TIdC_INT;
+    d : GENERAL_NAME_union;
+  end;
+  PGENERAL_NAME = ^GENERAL_NAME;
+ {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_GENERAL_NAME = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_GENERAL_NAME = ^STACK_OF_GENERAL_NAME;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_GENERAL_NAME = PSTACK;
+  {$endif}
+
+  PGENERAL_NAMES = PSTACK_OF_GENERAL_NAME;
+
+  ACCESS_DESCRIPTION = packed record
+    method : PASN1_OBJECT;
+    location : PGENERAL_NAME;
+  end;
+  PACCESS_DESCRIPTION = ^ACCESS_DESCRIPTION;
+ {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_ACCESS_DESCRIPTION = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_ACCESS_DESCRIPTION = ^STACK_OF_ACCESS_DESCRIPTION;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ACCESS_DESCRIPTION = PSTACK;
+  {$endif}
+
+  PAUTHORITY_INFO_ACCESS = PSTACK_OF_ACCESS_DESCRIPTION;
+
+  PEXTENDED_KEY_USAGE = PSTACK_OF_ASN1_OBJECT;
+
+  DIST_POINT_NAME_union = packed record
+    case byte of
+    0 : (fullname : PGENERAL_NAMES);
+    1 : (relativename : PSTACK_OF_X509_NAME_ENTRY);
+  end;
+  DIST_POINT_NAME = packed record
+    _type : TIdC_INT;
+    name : DIST_POINT_NAME_union;
+  end;
+  PDIST_POINT_NAME = ^DIST_POINT_NAME;
+
+  DIST_POINT = packed record
+    distpoint : PDIST_POINT_NAME;
+    reasons : PASN1_BIT_STRING;
+    CRLissuer : PGENERAL_NAMES;
+  end;
+ {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_DIST_POINT = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_DIST_POINT = ^STACK_OF_DIST_POINT;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_DIST_POINT = PSTACK;
+  {$endif}
+
+  AUTHORITY_KEYID = packed record
+    keyid : PASN1_OCTET_STRING;
+    issuer : PGENERAL_NAMES;
+    serial : PASN1_INTEGER;
+  end;
+  PAUTHORITY_KEYID = ^AUTHORITY_KEYID;
+
+  //* Strong extranet structures */
+  SXNETID = packed record
+    zone : PASN1_INTEGER;
+    user : PASN1_OCTET_STRING;
+  end;
+  PSXNETID = ^SXNETID;
+ {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_SXNETID = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_SXNETID = ^STACK_OF_SXNETID;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_SXNETID = PSTACK;
+  {$endif}
+
+  SXNET = packed record
+    version : PASN1_INTEGER;
+    ids : PSTACK_OF_SXNETID;
+  end;
+  PSXNET = ^SXNET;
+
+  NOTICEREF = packed record
+    organization : PASN1_STRING;
+    noticenos : PSTACK_OF_ASN1_INTEGER;
+  end;
+  PNOTICEREF = ^NOTICEREF;
+
+  USERNOTICE = packed record
+    noticeref : PNOTICEREF;
+    exptext : PASN1_STRING;
+  end;
+  PUSERNOTICE = ^USERNOTICE;
+
+  POLICYQUALINFO_union = packed record
+    case byte of
+    0 : (cpsuri : PASN1_IA5STRING);
+    1 : (usernotice : PUSERNOTICE);
+    2 : (other : PASN1_TYPE);
+  end;
+  POLICYQUALINFO = packed record
+    pqualid : PASN1_OBJECT;
+    d : POLICYQUALINFO_union;
+  end;
+  PPOLICYQUALINFO = ^POLICYQUALINFO;
+ {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_POLICYQUALINFO = packed record
+    _stack: stack;
+  end;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  {$endif}
+
+  {$ifdef debug}
+  PSTACK_OF_POLICYINFO = ^STACK_OF_POLICYINFO;
+  {$else}
+  PSTACK_OF_POLICYINFO = PSTACK;
+  {$endif}
+  POLICYINFO = packed record
+    policyid : PASN1_OBJECT;
+    qualifiers : PSTACK_OF_POLICYQUALINFO;
+  end;
+ {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_POLICYQUALINFO = packed record
+    _stack: stack;
+  end;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  {$endif}
+
+  CERTIFICATEPOLICIES = PSTACK_OF_POLICYINFO;
+  //typedef STACK_OF(POLICYINFO) CERTIFICATEPOLICIES;
+
+  POLICY_MAPPING = packed record
+    issuerDomainPolicy : PASN1_OBJECT;
+    subjectDomainPolicy : PASN1_OBJECT;
+  end;
+  PPOLICY_MAPPING = ^POLICY_MAPPING;
+ {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_PPOLICY_MAPPING = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_POLICY_MAPPING = ^STACK_OF_POLICY_MAPPING;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_POLICY_MAPPING = PSTACK;
+  {$endif}
+
+  GENERAL_SUBTREE = packed record
+    base : PGENERAL_NAME;
+    minimum : PASN1_INTEGER;
+    maximum : PASN1_INTEGER;
+  end;
+  PGENERAL_SUBTREE = ^GENERAL_SUBTREE;
+ {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_GENERAL_SUBTREE = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_GENERAL_SUBTREE = ^STACK_OF_GENERAL_SUBTREE;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_GENERAL_SUBTREE = PSTACK;
+  {$endif}
+
+  NAME_CONSTRAINTS = packed record
+    permittedSubtrees : PSTACK_OF_GENERAL_SUBTREE;
+    excludedSubtrees : PSTACK_OF_GENERAL_SUBTREE;
+  end;
+  PNAME_CONSTRAINTS = ^NAME_CONSTRAINTS;
+
+  POLICY_CONSTRAINTS = packed record
+    requireExplicitPolicy : PASN1_INTEGER;
+    inhibitPolicyMapping : ASN1_INTEGER;
+  end;
+  PPOLICY_CONSTRAINTS = ^POLICY_CONSTRAINTS;
+
+  //* Proxy certificate structures, see RFC 3820 */
+  PROXY_POLICY = packed record
+    policyLanguage : PASN1_OBJECT;
+    policy : ASN1_OCTET_STRING;
+  end;
+  PPROXY_POLICY = ^PROXY_POLICY;
+  PROXY_CERT_INFO_EXTENSION = packed record
+    pcPathLengthConstraint : PASN1_INTEGER;
+    proxyPolicy : PPROXY_POLICY;
+  end;
+  PPROXY_CERT_INFO_EXTENSION = ^PROXY_CERT_INFO_EXTENSION;
+
+  PX509_PURPOSE = ^X509_PURPOSE;
+  X509_PURPOSE = packed record
+    purpose : TIdC_INT;
+    trust : TIdC_INT;    //* Default trust ID */
+    flags : TIdC_INT;
+    check_purpose : function(const _para1 : Px509_purpose; const _para2 : PX509; para3 : TIdC_INT) : TIdC_INT; cdecl;
+    //int (*check_purpose)(const struct x509_purpose_st *,
+    //  const X509 *, int);
+    name : PChar;
+    sname : PChar;
+    usr_data : Pointer;
+  end;
+  {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_X509_PURPOSE = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_X509_PURPOSE = ^STACK_OF_X509_PURPOSE;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_PURPOSE = PSTACK;
+  {$endif}
+  
+  //x509.h
+  x509_object_union = packed record
+    case byte of
+     0: (ptr : PChar);
+     1: (_x509 : Px509);
+     2: (crl : PX509_CRL);
+     3: (pkey : PEVP_PKEY);
+  end;
+  X509_OBJECT = packed record
+    _type : TIdC_INT;
+    data : x509_object_union;
+  end;
+  PX509_OBJECT             = ^X509_OBJECT;
+  PPX509_OBJECT            = ^PX509_OBJECT;
+  {$ifdef debug}
+  STACK_OF_X509_OBJECT= packed record
+    _stack: STACK;
+  end;
+  PSTACK_OF_X509_OBJECT = ^STACK_OF_X509_OBJECT;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_OBJECT = PSTACK;
+  {$endif}
+  
+  X509_ALGOR = packed record
+    algorithm : PASN1_OBJECT;
+    parameter : PASN1_TYPE;
+  end;
   PX509_ALGOR		   = Pointer;
   PPX509_ALGOR		   =^PX509_ALGOR;
-  PPX509_VAL		   =^PX509_VAL;
+   {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_X509_ALGOR = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_X509_ALGOR = ^STACK_OF_X509_ALGOR;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_ALGOR = PSTACK;
+  {$endif}
+
+  X509_VAL       = packed record
+    notBefore : PASN1_TIME;
+    notAfter : PASN1_TIME;
+  end;
+  PX509_VAL = ^X509_VAL;
+  PPX509_VAL =^PX509_VAL;
+
+  X509_PUBKEY = packed record
+    algor : PX509_ALGOR;
+    public_key : PASN1_BIT_STRING;
+    pkey : PEVP_PKEY;
+  end;
   PX509_PUBKEY		   = Pointer;
   PPX509_PUBKEY		   =^PX509_PUBKEY;
-  PX509_SIG		   = Pointer;
+
+  X509_SIG = packed record
+    algor : PX509_ALGOR;
+    digest : PASN1_OCTET_STRING;
+  end;
+  PX509_SIG		   = X509_SIG;
   PPX509_SIG		   =^PX509_SIG;
-  PPX509_CINF		   =^PX509_CINF;
-  PX509_REVOKED		   = Pointer;
-  PPX509_REVOKED	   =^PX509_REVOKED;
-  PX509_CRL_INFO	   = Pointer;
+
+  X509_NAME_ENTRY = packed record
+    _object : PASN1_OBJECT;
+    value : PASN1_STRING;
+    _set : TIdC_INT;
+    size : TIdC_INT; //* temp variable */
+  end;
+   {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_X509_NAME_ENTRY = packed record
+    _stack: stack;
+  end;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  {$endif}
+
+  X509_NAME = packed record
+    entries : PSTACK_OF_X509_NAME_ENTRY;  //STACK_OF(X509_NAME_ENTRY) *entries;
+    modified : TIdC_INT;	//* true if 'bytes' needs to be built */
+    {$ifndef OPENSSL_NO_BUFFER}
+    bytes : PBUF_MEM;
+    {$else}
+    bytes : PChar;
+    {$endif}
+    hash : TIdC_ULONG; //* Keep the hash around for lookups */
+  end;
+
+  PPX509_NAME              =^PX509_NAME;
+  {$ifdef debug}
+  STACK_OF_X509_NAME = packed record
+    _stack: STACK;
+  end;
+  PSTACK_OF_X509_NAME = ^STACK_OF_X509_NAME;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_NAME = PSTACK;
+  {$endif}
+
+  X509_EXTENSION = packed record
+    _object : PASN1_OBJECT;
+    critical : ASN1_BOOLEAN;
+    value : PASN1_OCTET_STRING;
+  end;
+  PX509_EXTENSION	   = ^X509_EXTENSION;
+  PPX509_EXTENSION	   =^PX509_EXTENSION;
+  {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_X509_EXTENSION = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_X509_EXTENSION = ^STACK_OF_X509_EXTENSION;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_EXTENSION = PSTACK;
+  {$endif}
+
+  x509_attributes_union = packed record
+    case byte of
+    $FF :(Ptr : PChar);
+    0 : (_set: PSTACK_OF_ASN1_TYPE); //STACK_OF(ASN1_TYPE) *set;  /* 0 */
+    1  : (_single: PASN1_TYPE);
+  end;
+  X509_ATTRIBUTE = packed record
+    _object : PASN1_OBJECT;
+    single : TIdC_INT; //* 0 for a set, 1 for a single item (which is wrong) */
+    value : x509_attributes_union;
+  end;
+  PX509_ATTRIBUTE	   = ^X509_ATTRIBUTE;
+  PPX509_ATTRIBUTE	   =^PX509_ATTRIBUTE;
+  {$ifdef debug}
+  STACK_OF_X509_ATTRIBUTE = packed record
+    _stack: STACK;
+  end;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  {$endif}
+
+  X509_REQ_INFO = packed record
+    enc:ASN1_ENCODING;
+    version:PASN1_INTEGER;
+    subject:PX509_NAME;
+    pubkey:PX509_PUBKEY;
+    attributes:PSTACK_OF_X509_ATTRIBUTE; //STACK_OF(X509_ATTRIBUTE) *attributes; /* [ 0 ] */
+  end;
+
+  X509_REQ = packed record
+    req_info:PX509_REQ_INFO;
+    sig_alg:PX509_ALGOR;
+    signature:PASN1_BIT_STRING;
+    references:TIdC_INT;
+  end;
+  PPX509_REQ = ^PX509_REQ;
+
+  PX509_CINF = ^X509_CINF;
+  X509_CINF = packed record
+    version: PASN1_INTEGER;
+    serialNumber: PASN1_INTEGER;
+    signature:PX509_ALGOR;
+    issuer:PX509_NAME;
+    validity:PX509_VAL;
+    subject:PX509_NAME;
+    key:PX509_PUBKEY;
+    issuerUID:PASN1_BIT_STRING; //* [ 1 ] optional in v2 */
+    subjectUID:PASN1_BIT_STRING; //* [ 2 ] optional in v2 */
+    extensions: PSTACK_OF_X509_EXTENSION; //* STACK_OF(X509_EXTENSION)
+  end;
+
+  X509_CERT_AUX = packed record
+    trust : PSTACK_OF_ASN1_OBJECT; //STACK_OF(ASN1_OBJECT) *trust;	/* trusted uses */
+    reject : PSTACK_OF_ASN1_OBJECT; //STACK_OF(ASN1_OBJECT) *reject; /* rejected uses */
+    alias : PASN1_UTF8STRING; //* "friendly name" */
+    keyid : PASN1_OCTET_STRING;	//* key id of private key */
+    other : PSTACK_OF_X509_ALGOR;//STACK_OF(X509_ALGOR) *other;/* other unspecified info */
+  end;
+  PX509_CERT_AUX = ^X509_CERT_AUX;
+
+  X509 = packed record
+    cert_info:PX509_CINF;
+    sig_alg : PX509_ALGOR;
+    signature : PASN1_BIT_STRING;
+    valid : TIdC_INT;
+    references : TIdC_INT;
+    name : PChar;
+    ex_data : CRYPTO_EX_DATA;
+    //* These contain copies of various extension values */
+    ex_pathlen : TIdC_LONG;
+    ex_pcpathlen : TIdC_LONG;
+    ex_flags : TIdC_ULONG;
+    ex_kusage : TIdC_ULONG;
+    ex_xkusage : TIdC_ULONG;
+    ex_nscert : TIdC_ULONG;
+    skid : PASN1_OCTET_STRING;
+    akid : PAUTHORITY_KEYID;
+    policy_cache : PX509_POLICY_CACHE;
+    {$ifndef OPENSSL_NO_SHA}
+    sha1_hash : array [0..OPENSSL_SHA_DIGEST_LENGTH-1] of char;
+    {$endif}
+    aux : PX509_CERT_AUX;
+  end;
+
+  {$ifdef debug}
+  STACK_OF_X509 = packed record
+    _stack: STACK;
+  end;
+  PSTACK_OF_X509 = ^STACK_OF_X509;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509 = PSTACK;
+  {$endif}
+  
+  X509_CRL_INFO = packed record
+    version : PASN1_INTEGER;
+    sig_alg : PX509_ALGOR;
+    issuer : PX509_NAME;
+    lastUpdate : PASN1_TIME;
+    nextUpdate : PASN1_TIME;
+    revoked : PSTACK_OF_X509_REVOKED; //STACK_OF(X509_REVOKED) *revoked;
+    extensions : PSTACK_OF_X509_EXTENSION; //STACK_OF(X509_EXTENSION) /* [0] */ *extensions;
+    enc : ASN1_ENCODING;
+  end;
+  PX509_CRL_INFO	   = ^X509_CRL_INFO;
   PPX509_CRL_INFO	   =^PX509_CRL_INFO;
+   {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_X509_CRL_INFO = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_XX509_CRL_INFO = ^STACK_OF_X509_CRL_INFO;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_CRL_INFO = PSTACK;
+  {$endif}
+  PX509_LOOKUP    = ^X509_LOOKUP;
+  PX509_STORE     = Pointer;
+  PX509_STORE_CTX = ^X509_STORE_CTX;
+  
+  X509_CRL = packed record
+    crl : PX509_CRL_INFO;
+    sig_alg : PX509_ALGOR;
+    signature : PASN1_BIT_STRING;
+    references : TIdC_INT;
+  end;
+  {$ifdef debug}
+  STACK_OF_X509_CRL = packed record
+    _stack: STACK;
+  end;
+  PSTACK_OF_X509_CRL = ^STACK_OF_X509_CRL;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_CRL = PSTACK;
+  {$endif}
+
+   X509_LOOKUP_METHOD = packed record
+     name : PChar;
+     new_item : function (ctx : PX509_LOOKUP): TIdC_INT; cdecl;
+     //int (*new_item)(X509_LOOKUP *ctx);
+     free : procedure (ctx : PX509_LOOKUP); cdecl;
+     //void (*free)(X509_LOOKUP *ctx);
+     init : function(ctx : PX509_LOOKUP) : TIdC_INT; cdecl;
+     //int (*init)(X509_LOOKUP *ctx);
+     shutdown : function(ctx : PX509_LOOKUP) : TIdC_INT; cdecl;  
+     //int (*shutdown)(X509_LOOKUP *ctx);
+     ctrl: function(ctx : PX509_LOOKUP; cmd : TIdC_INT; argc : PChar; argl : TIdC_LONG; out ret : PChar ) : TIdC_INT; cdecl;
+     //	int (*ctrl)(X509_LOOKUP *ctx,int cmd,const char *argc,long argl, char **ret);
+     get_by_subject: function(ctx : PX509_LOOKUP; _type : TIdC_INT; name : PX509_NAME; ret : X509_OBJECT ) : TIdC_INT; cdecl; 
+     //	int (*get_by_subject)(X509_LOOKUP *ctx,int type,X509_NAME *name, X509_OBJECT *ret);
+     get_by_issuer_serial : function(ctx : PX509_LOOKUP; _type : TIdC_INT; name : PX509_NAME; serial : PASN1_INTEGER; ret : PX509_OBJECT) : TIdC_INT; cdecl;
+     //	int (*get_by_issuer_serial)(X509_LOOKUP *ctx,int type,X509_NAME *name, ASN1_INTEGER *serial,X509_OBJECT *ret);
+     get_by_fingerprint : function (ctx : PX509_LOOKUP; _type : TIdC_INT; bytes : PChar; len : TIdC_INT; ret : PX509_OBJECT): TIdC_INT; cdecl;
+     //	int (*get_by_fingerprint)(X509_LOOKUP *ctx,int type, unsigned char *bytes,int len, X509_OBJECT *ret);
+     get_by_alias : function(ctx : PX509_LOOKUP; _type : TIdC_INT; str : PChar; ret : PX509_OBJECT) : TIdC_INT; cdecl;
+     //	int (*get_by_alias)(X509_LOOKUP *ctx,int type,char *str,int len, X509_OBJECT *ret);
+   end; 
+  PX509_LOOKUP_METHOD      = ^X509_LOOKUP_METHOD;
+  PPX509_LOOKUP_METHOD     = ^PX509_LOOKUP_METHOD;
+    
+  X509_VERIFY_PARAM = packed record
+    name : PChar;
+    check_time : time_t;           //* Time to use */
+    inh_flags : TIdC_ULONG;        //* Inheritance flags */
+    flags : TIdC_ULONG;            //* Various verify flags */
+    purpose : TIdC_INT;	  	   //* purpose to check untrusted certificates */
+    trust : TIdC_INT;              //* trust setting to check */
+    depth : TIdC_INT;              //* Verify depth */
+    policies : PSTACK_OF_ASN1_OBJECT; //* Permissible policies */
+  end;
+  PX509_VERIFY_PARAM = ^X509_VERIFY_PARAM;
+  {$ifdef debug}
+  STACK_OF_X509_VERIFY_PARAM = packed record
+    _stack: STACK;
+  end;
+  PSTACK_OF_X509_VERIFY_PARAM = ^STACK_OF_X509_VERIFY_PARAM;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_VERIFY_PARAM = PSTACK;
+  {$endif}  
+
+  X509_LOOKUP = packed record
+    init : TIdC_INT;            //* have we been started */
+    skip : TIdC_INT;            //* don't use us. */
+    method : PX509_LOOKUP_METHOD;     //* the functions */
+    method_data : PChar;              //* method data */
+
+    store_ctx : PX509_STORE;        //* who owns us */
+  end;
+  {$ifdef debug}
+  STACK_OF_X509_LOOKUP = packed record
+    _stack: STACK;
+  end;
+  PSTACK_OF_X509_LOOKUP = ^STACK_OF_X509_LOOKUP;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_LOOKUP = PSTACK;
+  {$endif}
+
+// * This is a used when verifying cert chains.  Since the
+// * gathering of the cert chain can take some time (and have to be
+// * 'retried', this needs to be kept and passed around. */
+  X509_STORE_CTX = packed record   //* X509_STORE_CTX */
+    ctx : PX509_STORE;
+    current_method : TIdC_INT;  //* used when looking up certs */
+    //* The following are set by the caller */
+    cert : PX509;              //* The cert to check */
+    untrusted : PX509;         //* chain of X509s - untrusted - passed in */
+   //STACK_OF(X509) *untrusted;	//* chain of X509s - untrusted - passed in */
+    crls : PSTACK_OF_X509_CRL;     //* set of CRLs passed in */
+  // STACK_OF(X509_CRL) *crls;	/* set of CRLs passed in */
+    param : PX509_VERIFY_PARAM;
+    other_ctx : Pointer;  //* Other info for use with get_issuer() */
+    //* Callbacks for various operations */
+    verify : function (ctx : PX509_STORE_CTX) : TIdC_INT; cdecl;  //* called to verify a certificate */
+//	int (*verify)(X509_STORE_CTX *ctx);	/* called to verify a certificate */
+    verify_cb : function (ok : TIdC_INT; ctx : PX509_STORE_CTX) : TIdC_INT; cdecl; //* error callback */
+//	int (*verify_cb)(int ok,X509_STORE_CTX *ctx);		/* error callback */
+    get_issuer : function (var issuer : PX509; ctx, x : PX509_STORE_CTX) : TIdC_INT; cdecl; //* get issuers cert from ctx */
+//	int (*get_issuer)(X509 **issuer, X509_STORE_CTX *ctx, X509 *x);	/* get issuers cert from ctx */
+    check_issued : function(ctx : PX509_STORE_CTX; x, issuer : PX509) : TIdC_INT; cdecl; //* check issued */
+//	int (*check_issued)(X509_STORE_CTX *ctx, X509 *x, X509 *issuer); /* check issued */
+     check_revocation : function (ctx : PX509_STORE_CTX): TIdC_INT; cdecl; //* Check revocation status of chain */
+//	int (*check_revocation)(X509_STORE_CTX *ctx); /* Check revocation status of chain */
+     get_crl : function (ctx : PX509_STORE_CTX; var crl : PX509; x : PX509): TIdC_INT; cdecl; //* retrieve CRL */
+//	int (*get_crl)(X509_STORE_CTX *ctx, X509_CRL **crl, X509 *x); /* retrieve CRL */
+     check_crl : function (ctx : PX509_STORE_CTX; var crl : PX509) : TIdC_INT; cdecl; //* Check CRL validity */
+//	int (*check_crl)(X509_STORE_CTX *ctx, X509_CRL *crl); /* Check CRL validity */
+     cert_crl : function (ctx : PX509_STORE_CTX; crl : PX509_CRL; x : PX509) : TIdC_INT; cdecl; //* Check certificate against CRL */
+//	int (*cert_crl)(X509_STORE_CTX *ctx, X509_CRL *crl, X509 *x); /* Check certificate against CRL */
+     check_policy : function (ctx : PX509_STORE_CTX) : TIdC_INT;  cdecl;
+//	int (*check_policy)(X509_STORE_CTX *ctx);
+     cleanup : function (ctx : PX509_STORE_CTX) : TIdC_INT;  cdecl;
+//	int (*cleanup)(X509_STORE_CTX *ctx);
+  end;
+  
+// * This is used to hold everything.  It is used for all certificate
+// * validation.  Once we have a certificate chain, the 'verify'
+// * function is then called to actually check the cert chain. */
+  X509_STORE = packed record
+    //* The following is a cache of trusted certs */
+    cache : TIdC_INT; 	//* if true, stash any hits */
+    objs : PSTACK_OF_X509_OBJECT;	//* Cache of all objects */
+
+    //* These are external lookup methods */
+    get_cert_methods : PSTACK_OF_X509_LOOKUP;
+
+    param : PX509_VERIFY_PARAM;
+
+    //* Callbacks for various operations */
+    verify : function (ctx : PX509_STORE_CTX) : TIdC_INT; cdecl; //* called to verify a certificate */
+//  int (*verify)(X509_STORE_CTX *ctx);	/* called to verify a certificate */
+    verify_cb : function (ok : TIdC_INT; ctx : X509_STORE_CTX) : TIdC_INT;  cdecl; //* error callback */
+//	int (*verify_cb)(int ok,X509_STORE_CTX *ctx);	/* error callback */
+    get_issuer : function(var issuer : PX509; ctx : PX509_STORE_CTX; x : PX509) : TIdC_INT; cdecl; //* get issuers cert from ctx */
+//	int (*get_issuer)(X509 **issuer, X509_STORE_CTX *ctx, X509 *x);	/* get issuers cert from ctx */
+    check_issued : function(ctx : PX509_STORE_CTX; x, issuer : PX509) : TIdC_INT; cdecl; //* check issued */
+//	int (*check_issued)(X509_STORE_CTX *ctx, X509 *x, X509 *issuer); /* check issued */
+    check_revocation : function(ctx : PX509_STORE_CTX) : TIdC_INT; cdecl;
+//	int (*check_revocation)(X509_STORE_CTX *ctx); /* Check revocation status of chain */
+    get_crl : function(ctx : PX509_STORE_CTX; var crl : PX509_CRL; x : PX509) : TIdC_INT; cdecl; //* retrieve CRL */
+//	int (*get_crl)(X509_STORE_CTX *ctx, X509_CRL **crl, X509 *x); /* retrieve CRL */
+    check_crl : function(ctx : PX509_STORE_CTX; crl : PX509_CRL) : TIdC_INT; cdecl; //* Check CRL validity */
+//	int (*check_crl)(X509_STORE_CTX *ctx, X509_CRL *crl); /* Check CRL validity */
+    cert_crl : function(ctx : PX509_STORE_CTX; crl : PX509_CRL; x : PX509) : TIdC_INT; cdecl; //* Check certificate against CRL */
+//	int (*cert_crl)(X509_STORE_CTX *ctx, X509_CRL *crl, X509 *x); /* Check certificate against CRL */
+    cleanup : function(ctx : PX509_STORE_CTX) : TIdC_INT; cdecl;
+//	int (*cleanup)(X509_STORE_CTX *ctx);
+
+    ex_data : CRYPTO_EX_DATA;
+    references : TIdC_INT;
+  end;
+  
+  PPX509		   =^PX509;
+  PX509_EXTENSION_METHOD   = Pointer;
+  
+  PX509_TRUST = ^X509_TRUST;
+  X509_TRUST = packed record
+    trust : TIdC_INT;
+    flags : TIdC_INT;
+    check_trust : function(_para1 : PX509_TRUST; para2 : PX509; _para3 : TIdC_INT) : TIdC_INT; cdecl;
+    //int (*check_trust)(struct x509_trust_st *, X509 *, int);
+    name : PChar;
+    arg1 : TIdC_INT;
+    arg2 : Pointer;
+  end; 
+  PPX509_TRUST = ^PX509_TRUST;
+   {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_X509_NAME_ENTRY = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_509_TRUST = ^STACK_OF_509_TRUST;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_509_TRUST = PSTACK;
+  {$endif}   
+  
+  X509_REVOKED = packed record
+    serialNumber:PASN1_INTEGER;
+    revocationDate:PASN1_TIME;
+    extensions:PSTACK_OF_X509_EXTENSION; //STACK_OF(X509_EXTENSION) /* optional */ *extensions;
+    sequence:TIdC_INT;
+  end;
+  PX509_REVOKED		   = ^X509_REVOKED;
+  PPX509_REVOKED	   =^PX509_REVOKED;
+  
+  {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_X509_REVOKED = packed record
+    _stack: stack;
+  end;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  {$endif}
+
   PX509_PKEY		   = Pointer;
   PPX509_PKEY		   =^PX509_PKEY;
-  PX509_INFO	           = Pointer;
+  
+  X509_INFO = packed record
+    x509 : PX509;
+    crl : PX509_CRL;
+    x_pkey : PX509_PKEY;
+    enc_cipher:EVP_CIPHER_INFO;
+    enc_len:TIdC_INT;
+    enc_data:PChar;
+    references:TIdC_INT;
+  end;
+  PX509_INFO	           = ^X509_INFO;
   PPX509_INFO		   =^PX509_INFO;
+ {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_X509_INFO = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_X509_INFO = ^STACK_OF_X509_INFO;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_INFO = PSTACK;
+  {$endif}    
+
 {
   PPKCS7_ISSUER_AND_SERIAL = Pointer;
   PKCS7			   = Pointer;
@@ -2741,68 +4299,58 @@ type
   P_des_cblock		   = Pointer;
   Pdes_cblock		   = Pointer;
   PDSA_SIG		   = Pointer;
-  PSTACK_ASN1_TYPE	   = Pointer;
-  PPSTACK_ASN1_TYPE	   = Pointer;
-  PSTACK_X509_NAME_ENTRY   = Pointer;
-  PPSTACK_X509_NAME_ENTRY  = Pointer;
+  PSTACK_OF_ASN1_TYPE	   = Pointer;
+  PPSTACK_OF_ASN1_TYPE	   = Pointer;
+  PSTACK_OF_X509_NAME_ENTRY   = Pointer;
+  PPSTACK_OF_X509_NAME_ENTRY  = Pointer;
 }
-  PSTACK_X509_NAME         = Pointer;
 {
-  PSTACK_X509_EXTENSION	   = Pointer;
-  PPSTACK_X509_EXTENSIO    = Pointer;
-  PSTACK_X509_ATTRIBUTE    = Pointer;
-  PPSTACK_X509_ATTRIBUTE   =^PSTACK_X509_ATTRIBUTE;
-  PSTACK_X509		   = Pointer;
-  PPSTACK_X509		   =^PSTACK_X509;
-  PSTACK_X509_INFO         = Pointer;
+  PSTACK_OF_X509_EXTENSION	   = Pointer;
+  PPSTACK_OF_X509_EXTENSIO    = Pointer;
+  PSTACK_OF_X509_ATTRIBUTE    = Pointer;
+  PPSTACK_OF_X509_ATTRIBUTE   =^PSTACK_OF_X509_ATTRIBUTE;
+  PSTACK_OF_X509		   = Pointer;
+  PPSTACK_OF_X509		   =^PSTACK_OF_X509;
+  PSTACK_OF_X509_INFO         = Pointer;
   PPBEPARAM		   = Pointer;
   PPPBEPARAM		   =^PPBEPARAM;
   PPBKDF2PARAM		   = Pointer;
   PPPBKDF2PARAM		   =^PPBKDF2PARAM;
   PPBE2PARAM		   = Pointer;
   PPPBE2PARAM		   =^PPBE2PARAM;
-  PPSTACK_X509_EXTENSION   = Pointer;
+  PPSTACK_OF_X509_EXTENSION   = Pointer;
   PPKCS8_PRIV_KEY_INFO	   = Pointer;
   PPPKCS8_PRIV_KEY_INFO    =^PPKCS8_PRIV_KEY_INFO;
   PEVP_PBE_KEYGEN          = Pointer;
   PEVP_CIPHER_INFO	   = Pointer;
 }
-  Ppem_password_cb	   = Pointer;
-  PPEM_ENCODE_SEAL_CTX     = Pointer;
-  PSTACK_SSL_CIPHER        = Pointer;
-  PSTACK_SSL_COMP          = Pointer;
-  PSSL_COMP		   = Pointer;
+  Ppem_password_cb	   = function (buf : PChar; size : TIdC_INT; rwflag : TIdC_INT; userdata : Pointer) : TIdC_INT; cdecl;
+
+  PEM_ENCODE_SEAL_CTX   = packed record
+    encode : EVP_ENCODE_CTX;
+    md : EVP_MD_CTX;
+    cipher : EVP_CIPHER_CTX;
+  end;
+  PPEM_ENCODE_SEAL_CTX     = ^PEM_ENCODE_SEAL_CTX;
+  PSTACK_OF_SSL_COMP          = Pointer;
+  PSSL_COMP = ^SSL_COMP;
   // PASN1_UTCTIME		   = Pointer;
 
-  ASN1_STRING = packed record
-    length: Integer;
-    _type: Integer;
-    data: PChar;
-    {/* The value of the following field depends on the type being
-     * held.  It is mostly being used for BIT_STRING so if the
-     * input data has a non-zero 'unused bits' value, it will be
-     * handled correctly */}
-    flags: LongWord;
-  end;
-
-  PASN1_UTCTIME = ^ASN1_UTCTIME;
-  ASN1_UTCTIME = ASN1_STRING;
-
 {
-  PSTACK_ASN1_OBJECT	   = Pointer;
-  PPSTACK_ASN1_OBJECT      =^PSTACK_ASN1_OBJECT;
-  PSTACK_X509_ALGOR        = Pointer;
-  PPSTACK_X509_ALGOR       =^PSTACK_X509_ALGOR;
-  PSTACK_X509_REVOKED      = Pointer;
-  PPSTACK_X509_REVOKED     =^PSTACK_X509_REVOKED;
-  PSTACK_X509_CRL          = Pointer;
-  PPSTACK_X509_CRL         =^PSTACK_X509_CRL;
-  PSTACK_X509_LOOKUP       = Pointer;
-  PPSTACK_X509_LOOKUP      =^PSTACK_X509_LOOKUP;
-  PSTACK_PKCS7_SIGNER_INFO = Pointer;
-  PPSTACK_PKCS7_SIGNER_INFO=^PSTACK_PKCS7_SIGNER_INFO;
-  PSTACK_PKCS7_RECIP_INFO  = Pointer;
-  PPSTACK_PKCS7_RECIP_INFO =^PSTACK_PKCS7_RECIP_INFO;
+  PSTACK_OF_ASN1_OBJECT	   = Pointer;
+  PPSTACK_OF_ASN1_OBJECT      =^PSTACK_OF_ASN1_OBJECT;
+  PSTACK_OF_X509_ALGOR        = Pointer;
+  PPSTACK_OF_X509_ALGOR       =^PSTACK_OF_X509_ALGOR;
+  PSTACK_OF_X509_REVOKED      = Pointer;
+  PPSTACK_OF_X509_REVOKED     =^PSTACK_OF_X509_REVOKED;
+  PSTACK_OF_X509_CRL          = Pointer;
+  PPSTACK_OF_X509_CRL         =^PSTACK_OF_X509_CRL;
+  PSTACK_OF_X509_LOOKUP       = Pointer;
+  PPSTACK_OF_X509_LOOKUP      =^PSTACK_OF_X509_LOOKUP;
+  PSTACK_OF_PKCS7_SIGNER_INFO = Pointer;
+  PPSTACK_OF_PKCS7_SIGNER_INFO=^PSTACK_OF_PKCS7_SIGNER_INFO;
+  PSTACK_OF_PKCS7_RECIP_INFO  = Pointer;
+  PPSTACK_OF_PKCS7_RECIP_INFO =^PSTACK_OF_PKCS7_RECIP_INFO;
 }
 //GREGOR - spremenjana deklaracija ker se tolèe
 //  Phostent	  = Pointer;
@@ -2811,10 +4359,7 @@ type
 { This should cause problems, but I will solve them ONLY if they came ...      }
 { !!!InvalidTypes!!!                                                           }
 
-// REMY - the following value was conflicting with iphlpapi.h under C++Builder
-//	(and possibly other headers) so using the HPPEMIT further above as a workaround
-  {$EXTERNALSYM time_t}
-  time_t	  = Integer;
+
 //END REMY
 
   // des_cblock	  = Integer;
@@ -2823,7 +4368,7 @@ type
   const_des_cblock = des_cblock;
   // des_key_schedule= Integer;
 
-  DES_LONG = LongWord;
+  DES_LONG = TIdC_ULONG;
   des_cblock_union = packed record
     case integer of
       0: (cblock: des_cblock);
@@ -2832,154 +4377,946 @@ type
 
   des_ks_struct = packed record
     ks : des_cblock_union;
-    weak_key: Integer;
+    weak_key: TIdC_INT;
   end;
 
   des_key_schedule = array[1..16] of des_ks_struct;
+  des_cblocks     = array[0..7] of byte;
+//  des_cblocks     = Integer;
 
-  des_cblocks     = Integer;
-  {$NODEFINE size_t}
-  size_t	  = Integer;
+  TIdSslLockingCallback = procedure (mode, n : TIdC_INT; Afile : PChar; line : TIdC_INT) cdecl;
+  TIdSslIdCallback = function: TIdC_ULONG cdecl;
+    
+{  X509_REQ = packed record
+    nid : TIdC_INT;
+    minsize : TIdC_LONG;
+    maxsize : TIdC_LONG;
+    mask : TIdC_ULONG;
+    flags : TIdC_ULONG;
+  end;
+  PX509_REQ = ^X509_REQ;
+  PPX509_REQ = ^PX509_REQ;  }
 
-  TIdSslLockingCallback = procedure (mode, n : integer; Afile : PChar; line : integer) cdecl;
-  TIdSslIdCallback = function: integer cdecl;
-
-  PX509_VAL = ^X509_VAL;
-  X509_VAL = packed record
-    notBefore:PASN1_UTCTIME;
-    notAfter:PASN1_UTCTIME;
+///ssl_locl.h structs.  For some reason, these aren't listed in the include files
+//so it seems that the OpenSSL headers are pulling stuff out of thin air.
+//In any case, I don't know how these structs will work on various platforms.
+//JPM
+  PSSL3_ENC_METHOD = ^SSL3_ENC_METHOD;
+  SSL3_ENC_METHOD = packed record
+    enc : function (_para1 : PSSL) :TIdC_INT; cdecl;
+//	int (*enc)(SSL *, int);
+    mac : function (_para1 : PSSL; _para2 : PChar; _para3 : TIdC_INT) : TIdC_INT; cdecl;
+//	int (*mac)(SSL *, unsigned char *, int);
+    setup_key_block : function (_para1 : PSSL) : TIdC_INT; cdecl;
+//	int (*setup_key_block)(SSL *);
+    generate_master_secret : function (_para1 : PSSL; _para2, para3 : PChar; _para4 : TIdC_INT): TIdC_INT; cdecl;
+//	int (*generate_master_secret)(SSL *, unsigned char *, unsigned char *, int);
+     change_cipher_state : function (_para1 : PSSL; para2 : TIdC_INT) : TIdC_INT; cdecl;
+//	int (*change_cipher_state)(SSL *, int);
+     final_finish_mac : function (_para1 : PSSL; _para2, _para3 : PEVP_MD_CTX;
+        para4 : PChar; para5 : TIdC_INT; _para5 : PChar) : TIdC_INT; cdecl;
+//	int (*final_finish_mac)(SSL *, EVP_MD_CTX *, EVP_MD_CTX *, const char *, int, unsigned char *);
+     finish_mac_length : TIdC_INT;
+     cert_verify_mac : function (_para1 : PSSL; _para2 : PEVP_MD_CTX; _para3 : PChar) : TIdC_INT; cdecl;
+//	int (*cert_verify_mac)(SSL *, EVP_MD_CTX *, unsigned char *);
+     client_finished_label : PChar;
+//	const char *client_finished_label;
+     client_finished_label_len : TIdC_INT;
+//	int client_finished_label_len;
+     server_finished_label : PChar;
+//	const char *server_finished_label;
+     server_finished_label_len : TIdC_INT;
+//	int server_finished_label_len;
+     alert_value : function(_para1 : TIdC_INT) : TIdC_INT; cdecl;
+//	int (*alert_value)(int);
   end;
 
-  PX509_CINF = ^X509_CINF;
-    X509_CINF = packed record
-    version:Integer; //ASN1_INTEGER;
-    serialNumber:Integer; //ASN1_INTEGER;
-    signature:Pointer; //X509_ALGOR;
-    issuer:Pointer; //X509_NAME;
-    validity:PX509_VAL;
-    //todo
+  CERT_PKEY = packed record
+    x509 : PX509;
+    privatekey : PEVP_PKEY;
   end;
+  PCERT_PKEY = ^CERT_PKEY;
+  
+  PPCERT = ^PCERT;
+  PCERT = ^CERT;
+  CERT = packed record
+    //* Current active set */
+    key : PCERT_PKEY; //* ALWAYS points to an element of the pkeys array
+                      // * Probably it would make more sense to store
+                      // * an index, not a pointer. */
 
-  ASN1_ENCODING = packed record
-    enc:Pointer;
-    len:Cardinal;//long
-    modified:Integer;
+    //* The following masks are for the key and auth
+    // * algorithms that are supported by the certs below */
+    valid : TIdC_INT;
+    mask : TIdC_ULONG;
+    export_mask:TIdC_ULONG;
+    {$ifndef OPENSSL_NO_RSA}
+    rsa_tmp:PRSA;
+    rsa_tmp_cb:function (ssl :PSSL; is_export : TIdC_INT; keysize : TIdC_INT) :PRSA;cdecl;
+    {$endif}
+    {$ifndef OPENSSL_NO_DH}
+    dh_tmp : PDH;
+    dh_tmp_cb : function (ssl : PSSL; is_export : TIdC_INT; keysize : TIdC_INT) : PDH; cdecl;
+    {$endif}
+    {$ifdef OPENSSL_NO_ECDH}
+    ecdh_tmp : PEC_KEY;
+    //* Callback for generating ephemeral ECDH keys */
+    ecdh_tmp_cb : function (ssl : PSSL; is_export : TIdC_INT; keysize : TIdC_INT) : PEC_KEY; cdecl;
+    {$endif}
+    pkeys : array [0..OPENSSL_SSL_PKEY_NUM - 1] of CERT_PKEY;
+    references : TIdC_INT; //* >1 only if SSL_copy_session_id is used */
   end;
-
-  PPX509_REQ_INFO	= ^PX509_REQ_INFO;
-  PX509_REQ_INFO = ^X509_REQ_INFO;
-  X509_REQ_INFO = packed record
-    enc:ASN1_ENCODING;
-    version:Pointer;
-    subject:Pointer;
-    pubkey:Pointer;
-    attributes:Pointer;
+  
+  SESS_CERT = packed record
+    cert_chain : PSTACK_OF_X509; //* as received from peer (not for SSL2) */
+    //* The 'peer_...' members are used only by clients. */
+    peer_cert_type : TIdC_INT;
+    peer_key : PCERT_PKEY; //* points to an element of peer_pkeys (never NULL!) */
+    peer_pkeys : array [0..OPENSSL_SSL_PKEY_NUM - 1] of  CERT_PKEY;
+    //* Obviously we don't have the private keys of these,
+    //* so maybe we shouldn't even use the CERT_PKEY type here. */
+    {$ifndef OPENSSL_NO_RSA}
+    peer_rsa_tmp : PRSA; //* not used for SSL 2 */
+    {$else}
+    {$endif}
+    {$ifndef OPENSSL_NO_DH}
+    peer_dh_tmp : PDH; //* not used for SSL 2 */
+    {$endif}
+    {$ifndef OPENSSL_NO_ECDH}
+    ecdh_tmp : PEC_KEY;
+    {$endif}
+    references : TIdC_INT; //* actually always 1 at the moment */
   end;
-
-  PPX509_REQ = ^PX509_REQ;
-  PX509_REQ	= ^X509_REQ;
-  X509_REQ = packed record
-    req_info:PX509_REQ_INFO;
-    sig_alg:Pointer;
-    signature:Pointer;
-    references:Integer;
-  end;
-
-  PX509 = ^X509;
-  X509 = packed record
-    cert_info:PX509_CINF;
-    //todo
-  end;
+  PSESS_CERT = ^SESS_CERT;
+//end ssl_locl.h
 
   PPKCS12 = ^PKCS12;
   PKCS12 = packed record
   end;
 
   //http://www.openssl.org/docs/crypto/bio.html
-  PBIO = ^BIO;
+   PBIO_METHOD = ^BIO_METHOD;
+  Pbio_info_cb = procedure (_para1 : PBIO; _para2 : TIdC_INT; _para3 : PChar;
+     _para4 : TIdC_INT; _para5, _para6 : TIdC_LONG);
+//typedef void bio_info_cb(struct bio_st *, int, const char *, int, long, long);
+  BIO_METHOD = packed record
+//    int type;
+    _type : TIdC_INT;
+//    const char *name;
+    name : PChar;
+//    int (*bwrite)(BIO *, const char *, int);
+     bwrite : function(_para1 : PBIO; _para2 : PChar; _para3 : TIdC_INT) : TIdC_INT; cdecl;
+//    int (*bread)(BIO *, char *, int);
+     bputs : function (_para1 : PBIO; _para2 : PChar) : TIdC_INT; cdecl;
+//    int (*bputs)(BIO *, const char *);
+     bgets : function (_para1 : PBIO; _para2 : PChar; _para3 : TIdC_INT) : TIdC_INT; cdecl;
+//    int (*bgets)(BIO *, char *, int);
+     ctrl : function (_para1 : PBIO; _para2 : TIdC_INT;
+       _para3 : TIdC_LONG; _para4 : Pointer) : TIdC_LONG; cdecl;
+//    long (*ctrl)(BIO *, int, long, void *);
+     create : function(_para1 : PBIO) : TIdC_INT; cdecl;
+//    int (*create)(BIO *);
+     destroy : function (_para1 : PBIO) : TIdC_INT; cdecl;
+//    int (*destroy)(BIO *);
+     callback_ctrl : function (_para1 : PBIO; _para2 : TIdC_INT;
+        _para3 : pbio_info_cb): TIdC_LONG; cdecl;
+//    long (*callback_ctrl)(BIO *, int, bio_info_cb *);
+  end;
+
   BIO = packed record
+    method : PBIO_METHOD;
+//	BIO_METHOD *method;
+//	/* bio, mode, argp, argi, argl, ret */
+//	long (*callback)(struct bio_st *,int,const char *,int, long,long);
+     callback : function (_para1 : PBIO; _para2 : TIdC_INT; _para3 : PChar;
+       _para4 : TIdC_INT; _para5, _para6 : TIdC_LONG) : TIdC_LONG; cdecl;
+//	char *cb_arg; /* first argument for the callback */
+     cb_arg : PChar; //* first argument for the callback */
+//	int init;
+     shutdown : TIdC_INT;
+//	int shutdown;
+     flags : TIdC_INT;  //* extra storage */
+//	int flags;	/* extra storage */
+     retry_reason : TIdC_INT;
+//	int retry_reason;
+     num : TIdC_INT;
+//	int num;
+     ptr : Pointer;
+//	void *ptr;
+     next_bio : PBIO;                  //* used by filter BIOs */
+//	struct bio_st *next_bio;	/* used by filter BIOs */
+     prev_bio : PBIO;                  //* used by filter BIOs */
+//	struct bio_st *prev_bio;	/* used by filter BIOs */
+     references : TIdC_INT;
+//	int references;
+     num_read : TIdC_ULONG;
+//	unsigned long num_read;
+     num_write : TIdC_ULONG;
+//	unsigned long num_write;
+     ex_data : CRYPTO_EX_DATA;
+//	CRYPTO_EX_DATA ex_data;
   end;
+  
 
-  PSSL_SESSION = ^SSL_SESSION;
+  
   SSL_SESSION = packed record
-    key_arg_length: Word;
-    key_arg: Array[0..OPENSSL_SSL_MAX_KEY_ARG_LENGTH-1] of Byte;
-    master_key_length: Integer;
-    master_key: Array[0..OPENSSL_SSL_MAX_MASTER_KEY_LENGTH-1] of Byte;
-    session_id_length: Word;
-    session_id: Array[0..OPENSSL_SSL_MAX_SSL_SESSION_ID_LENGTH-1] of Byte;
-    sid_ctx_length: Word;
-    sid_ctx:Array[0..OPENSSL_SSL_MAX_SID_CTX_LENGTH-1] of Byte;
-    krb5_client_princ_len: Word;
-    krb5_client_princ: Array[0..OPENSSL_SSL_MAX_KRB5_PRINCIPAL_LENGTH-1] of Byte;
-    not_resumable: Integer;
-  end;
+    ssl_version : TIdC_INT;    //* what ssl version session info is
+        // * being kept in here? */
 
+	//* only really used in SSLv2 */
+    key_arg_length: TIdC_UINT;
+    key_arg: Array[0..OPENSSL_SSL_MAX_KEY_ARG_LENGTH-1] of Byte;
+    master_key_length: TIdC_INT;
+    master_key: Array[0..OPENSSL_SSL_MAX_MASTER_KEY_LENGTH-1] of Byte;
+    //* session_id - valid? */
+    session_id_length: TIdC_UINT;
+    session_id: Array[0..OPENSSL_SSL_MAX_SSL_SESSION_ID_LENGTH-1] of Byte;
+	//* this is used to determine whether the session is being reused in
+	// * the appropriate context. It is up to the application to set this,
+	// * via SSL_new */    
+    sid_ctx_length: TIdC_UINT;
+    sid_ctx:Array[0..OPENSSL_SSL_MAX_SID_CTX_LENGTH-1] of Byte;
+{$ifndef OPENSSL_NO_KRB5}
+    krb5_client_princ_len: TIdC_UINT;
+    krb5_client_princ: Array[0..OPENSSL_SSL_MAX_KRB5_PRINCIPAL_LENGTH-1] of Byte;
+{$endif}
+    not_resumable: TIdC_INT;
+    //* The cert is the certificate used to establish this connection */
+ //   sess_cert : PSESS_CERT;  //struct sess_cert_st /* SESS_CERT */ *sess_cert;
+     sess_cert :  PSESS_CERT;
+  end;
+  PSSL_SESSION = ^SSL_SESSION;
+  
   // typedef struct ssl_method_st
+  PSSL_CTX = ^SSL_CTX;
+  
+  SSL_METHOD_PROC = procedure; cdecl;
   PSSL_METHOD = ^SSL_METHOD;
   SSL_METHOD = packed record
-    version:Integer;
-    //todo
+     version: TIdC_INT;
+     ssl_new: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_clear: procedure(s: PSSL); cdecl;
+     ssl_free: procedure(s: PSSL); cdecl;
+     ssl_accept: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_connect: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_read: function(s: PSSL; buf: Pointer; len: TIdC_INT):TIdC_INT; cdecl;
+     ssl_peek: function(s: PSSL; buf: Pointer; len: TIdC_INT):TIdC_INT; cdecl;
+     ssl_write: function(s: PSSL; const buf: Pointer; len:TIdC_INT): TIdC_INT; cdecl;
+     ssl_shutdown: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_renegotiate: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_renegotiate_check: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_get_message: function(s: PSSL; st1, stn, mt: TIdC_INT; max: TIdC_LONG; ok: PIdC_INT): TIdC_LONG; cdecl;
+     ssl_read_bytes: function(s: PSSL; _type: TIdC_INT; buf:PByte; len, peek: TIdC_INT): TIdC_INT; cdecl;
+     ssl_write_bytes: function(s: PSSL; _type: TIdC_INT; const buf: Pointer; len: TIdC_INT): TIdC_INT; cdecl;
+     ssl_dispatch_alert: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_ctrl: function(s: PSSL; cmd: TIdC_INT; larg: TIdC_LONG; parg: Pointer): TIdC_LONG; cdecl;
+     ssl_ctx_ctrl: function(ctx: PSSL_CTX; cmd: TIdC_INT; larg:TIdC_LONG; parg: Pointer): TIdC_LONG; cdecl;
+     get_cipher_by_char: function(const ptr: PByte):PSSL_CIPHER; cdecl;
+     put_cipher_by_char: function(const cipher: PSSL_CIPHER;ptr: PByte): TIdC_INT; cdecl;
+     ssl_pending: function(const s: PSSL): TIdC_INT; cdecl;
+     num_ciphers: function: TIdC_INT; cdecl;
+     get_cipher: function(ncipher: TIdC_UNSIGNED): PSSL_CIPHER;cdecl;
+     get_ssl_method: function(version: TIdC_INT): PSSL_METHOD; cdecl;
+     get_timeout: function : TIdC_LONG; cdecl;
+     ssl3_enc: pssl3_enc_method;
+     ssl_version: function : TIdC_INT; cdecl;
+     ssl_callback_ctrl: function(s: PSSL; cb_id: TIdC_INT; fp: SSL_METHOD_PROC): TIdC_LONG; cdecl;
+     ssl_ctx_callback_ctrl: function(s: PSSL_CTX; cb_id:TIdC_INT; fp: SSL_METHOD_PROC): TIdC_LONG; cdecl;
+  end;
+  PPSSL_METHOD  =^PSSL_METHOD;
+
+//comp.h
+  PCOMP_CTX = ^COMP_CTX;
+
+  COMP_METHOD = packed record
+    _type : TIdC_INT;		//* NID for compression library */
+    name : PChar; //* A text string to identify the library */
+    init : function (ctx : PCOMP_CTX) : TIdC_INT;cdecl;
+    finish : procedure (ctx : PCOMP_CTX); cdecl;
+    compress : function (ctx : PCOMP_CTX;
+      _out : PChar; olen : TIdC_UINT;
+      _in : PChar; ilen : TIdC_UINT) : TIdC_INT; cdecl;
+    expand : function  (ctx : PCOMP_CTX;
+      _out : PChar; olen : TIdC_UINT;
+      _in : PChar; ilen : TIdC_UINT) : TIdC_INT; cdecl;
+    //* The following two do NOTHING, but are kept for backward compatibility */
+    ctrl : function : TIdC_INT; cdecl;
+    callback_ctrl : function : TIdC_INT; cdecl;
+  end;
+  PCOMP_METHOD = ^COMP_METHOD;
+  
+  COMP_CTX = packed record
+    meth : PCOMP_METHOD;
+    compress_in : TIdC_ULONG;
+    compress_out : TIdC_ULONG;
+    expand_in : TIdC_ULONG;
+    expand_out : TIdC_ULONG;
+
+    ex_data : PCRYPTO_EX_DATA;
   end;
 
-  //rsa.h - struct rsa_st
-  PRSA = ^RSA;
-  RSA = packed record
+//kssl.h
+{$ifndef OPENSSL_NO_KRB5}
+{These are structures for Kerberos support.  These will not be complete because
+FreePascal, Borland Delphi, and Indy don't support Kerberos.  These are here
+as place holders so we get an exact OpenSSL API if Kerberos support was compiled
+in.
+}
+  KSSL_ERR = packed record
+	  reason : TIdC_INT;
+	  text : array [0..KSSL_ERR_MAX] of char;  
+  end;
+  KSSL_CTX = packed record
+  {I am not going to do anything to define this because it uses things in the 
+  Kerberos API.  Since there's no support for Kerberos, I'm leaving it empty.
+  We only need the pointer anyway}
+  end;
+  PKSSL_CTX = ^KSSL_CTX;
+{$endif}
+ //ssl.h
+
+//* This callback type is used inside SSL_CTX, SSL, and in the functions that set
+// * them. It is used to override the generation of SSL/TLS session IDs in a
+// * server. Return value should be zero on an error, non-zero to proceed. Also,
+// * callbacks should themselves check if the id they generate is unique otherwise
+// * the SSL handshake will fail with an error - callbacks can do this using the
+// * 'ssl' value they're passed by;
+// *      SSL_has_matching_session_id(ssl, id, *id_len)
+// * The length value passed in is set at the maximum size the session ID can be.
+// * In SSLv2 this is 16 bytes, whereas SSLv3/TLSv1 it is 32 bytes. The callback
+// * can alter this length to be less if desired, but under SSLv2 session IDs are
+// * supposed to be fixed at 16 bytes so the id will be padded after the callback
+// * returns in this case. It is also an error for the callback to set the size to
+// * zero. */
+//typedef int (*GEN_SESSION_CB)(const SSL *ssl, unsigned char *id,
+//				unsigned int *id_len);
+  PGEN_SESSION_CB = function (const SSL : PSSL; id : PChar; id_len : TIdC_UINT) : TIdC_INT; cdecl;
+
+  SSL_COMP = packed record
+    id : TIdC_INT;
+    name : PChar;
+    {$ifndef OPENSSL_NO_COMP}
+    method : PCOMP_METHOD;
+    {$else}
+    method : PChar;
+    {$endif}
   end;
 
-  //struct evp_pkey_st
-  PPEVP_PKEY = ^PEVP_PKEY;
-  PEVP_PKEY = ^EVP_PKEY;
-  EVP_PKEY = packed record
+   {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_COMP = packed record
+    _stack: stack;
   end;
+  PSTACK_OF_COMP = ^STACK_OF_COMP;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_COMP = PSTACK;
+  {$endif}
 
-  PSSL_CTX = ^SSL_CTX;
+   //void (*info_callback)(const SSL *ssl,int type,int val); /* used if SSL's info_callback is NULL */
+  PSSL_CTX_info_callback = procedure (const ssl : PSSL; _type, val : TIdC_INT); cdecl;
   SSL_CTX = packed record
     method:PSSL_METHOD;
-    cipher_list:Pointer;
-    cipher_list_by_id:Pointer;
-    cert_store:Pointer;
-    sessions:Pointer;
-    session_cache_size:Cardinal;
-    session_cache_head:Pointer;
-    session_cache_tail:Pointer;
-    session_cache_mode:Integer;
-    session_timeout:Longint;
-    new_session_cb:Pointer;
-    remove_session_cb:Pointer;
-    get_session_cb:Pointer;
-    sess_connect:Integer;
-    sess_connect_renegotiate:Integer;
-    sess_connect_good:Integer;
-    sess_accept:Integer;
-    sess_accept_renegotiate:Integer;
-    sess_accept_good:Integer;
-    sess_miss:Integer;
-    sess_timeout:Integer;
-    sess_cache_full:Integer;
-    sess_hit:Integer;
-    sess_cb_hit:Integer;
-    references:Integer;
-    app_verify_callback:Pointer;
+    cipher_list:PSTACK_OF_SSL_CIPHER;
+    //* same as above but sorted for lookup */
+    cipher_list_by_id:PSTACK_OF_SSL_CIPHER;
+    cert_store:PX509_STORE;
+    sessions:PLHASH;
+    //* a set of SSL_SESSIONs */
+    //* Most session-ids that will be cached, default is
+    // * SSL_SESSION_CACHE_MAX_SIZE_DEFAULT. 0 is unlimited. */
+    session_cache_size:TIdC_ULONG;
+    session_cache_head:PSSL_SESSION;
+    session_cache_tail:PSSL_SESSION;
+    //* This can have one of 2 values, ored together,
+    // * SSL_SESS_CACHE_CLIENT,
+    // * SSL_SESS_CACHE_SERVER,
+    // * Default is SSL_SESSION_CACHE_SERVER, which means only
+    // * SSL_accept which cache SSL_SESSIONS. */
+    session_cache_mode:TIdC_INT;
+    session_timeout:TIdC_LONG;
+// * If this callback is not null, it will be called each
+// * time a session id is added to the cache.  If this function
+// * returns 1, it means that the callback will do a
+// * SSL_SESSION_free() when it has finished using it.  Otherwise,
+// * on 0, it means the callback has finished with it.
+// * If remove_session_cb is not null, it will be called when
+// * a session-id is removed from the cache.  After the call,
+// * OpenSSL will SSL_SESSION_free() it. */
+    new_session_cb:function (ssl : PSSL; sess: PSSL_SESSION): TIdC_INT; cdecl;
+    //int (*new_session_cb)(struct ssl_st *ssl,SSL_SESSION *sess);
+    remove_session_cb:procedure (ctx : PSSL_CTX; sess : PSSL_SESSION); cdecl;
+    //void (*remove_session_cb)(struct ssl_ctx_st *ctx,SSL_SESSION *sess);
+    get_session_cb:function (ssl : PSSL; data : PChar; len, copy : TIdC_INT) : PSSL_SESSION; cdecl;
+    //	SSL_SESSION *(*get_session_cb)(struct ssl_st *ssl,
+    //    unsigned char *data,int len,int *copy);
+    sess_connect:TIdC_INT;  ///* SSL new conn - started */
+    sess_connect_renegotiate:TIdC_INT;  //* SSL reneg - requested */
+    sess_connect_good:TIdC_INT; //* SSL new conne/reneg - finished */
+    sess_accept:TIdC_INT;    ///* SSL new accept - started */
+    sess_accept_renegotiate:TIdC_INT; ///* SSL reneg - requested */
+    sess_accept_good:TIdC_INT;  //* SSL accept/reneg - finished */
+    sess_miss:TIdC_INT;  //* session lookup misses  */
+    sess_timeout:TIdC_INT; //* reuse attempt on timeouted session */
+    sess_cache_full:TIdC_INT; //* session removed due to full cache */
+    sess_hit:TIdC_INT; //* session reuse actually done */
+    sess_cb_hit:TIdC_INT; //* session-id that was not
+                          //* in the cache was
+                          //* passed back via the callback.  This
+                          //* indicates that the application is
+                          //* supplying session-id's from other
+                          //* processes - spooky :-) */
+    
+    references:TIdC_INT;
+    //* if defined, these override the X509_verify_cert() calls */
+    app_verify_callback:function (_para1 : PX509_STORE_CTX; _para2 : Pointer) : TIdC_INT; cdecl;
     app_verify_arg:Pointer;
-    default_passwd_callback:Pointer;
+    //* before OpenSSL 0.9.7, 'app_verify_arg' was ignored
+    // * ('app_verify_callback' was called with just one argument) */
+
+    //* Default password callback. */
+    default_passwd_callback: ppem_password_cb;
+    //* Default password callback user data. */
     default_passwd_callback_userdata:Pointer;
-    client_cert_cb:Pointer;
-    app_gen_cookie_cb:Pointer;
+    //* get client cert callback */
+    client_cert_cb:function (SSL : PSSL; x509 : PPX509; pkey : PPEVP_PKEY) : TIdC_INT; cdecl;
+    //int (*client_cert_cb)(SSL *ssl, X509 **x509, EVP_PKEY **pkey);
+    
+    //* verify cookie callback */
+    app_gen_cookie_cb:function (ssl : PSSL; cookie : PChar; cookie_len : TIdC_UINT) : TIdC_INT; cdecl;
+    //int (*app_verify_cookie_cb)(SSL *ssl, unsigned char *cookie,
+    //    unsigned int cookie_len);
     app_verify_cookie_cb:Pointer;
-    ex_data_stack:Pointer;
-    ex_data_dummy:Integer;
-    rsa_md5:Pointer;
-    md5:Pointer;
-    sha1:Pointer;
-    extra_certs:Pointer;
-    comp_methods:Pointer;
-    info_callback:Pointer;
-    //todo
+    
+    ex_data : CRYPTO_EX_DATA;
+    rsa_md5 : PEVP_MD;
+    //const EVP_MD *rsa_md5;/* For SSLv2 - name is 'ssl2-md5' */
+    md5:PEVP_MD;
+    //const EVP_MD *md5;	/* For SSLv3/TLSv1 'ssl3-md5' */
+    sha1:PEVP_MD;
+    //const EVP_MD *sha1;   /* For SSLv3/TLSv1 'ssl3->sha1' */
+    extra_certs:PSTACK_OF_X509; //STACK_OF(X509) *extra_certs;
+    comp_methods:PSTACK_OF_COMP;//* stack of SSL_COMP, SSLv3/TLSv1 */
+    //* Default values used when no per-SSL value is defined follow */
+    info_callback:PSSL_CTX_info_callback;//* used if SSL's info_callback is NULL */
+    //void (*info_callback)(const SSL *ssl,int type,int val); /* used if SSL's info_callback is NULL */
+
+    //* what we put in client cert requests */
+     client_CA : PSTACK_OF_X509_NAME;
+     //* Default values to use in SSL structures follow (these are copied by SSL_new) */
+     options : TIdC_ULONG;
+     mode : TIdC_ULONG;
+     max_cert_list : TIdC_LONG;
+     cert : PCERT;
+     read_ahead : TIdC_INT;
+     //* callback that allows applications to peek at protocol messages */
+     msg_callback : procedure (write_p, version, content_type : TIdC_INT; const buf : Pointer; len : size_t; ssl : PSSL; arg : Pointer); cdecl;
+     //void (*msg_callback)(int write_p, int version, int content_type, const void *buf, size_t len, SSL *ssl, void *arg);
+     msg_callback_arg : Pointer;
+     
+     verify_mode : TIdC_INT;
+     sid_ctx_length : TIdC_UINT;
+     sid_ctx : array[0..OPENSSL_SSL_MAX_SID_CTX_LENGTH - 1] of char;
+     default_verify_callback : function(ok : TIdC_INT; ctx : PX509_STORE_CTX) : TIdC_INT; cdecl; //* called 'verify_callback' in the SSL */
+     //int (*default_verify_callback)(int ok,X509_STORE_CTX *ctx); /* called 'verify_callback' in the SSL */
+
+     //* Default generate session ID callback. */
+     generate_session_id : PGEN_SESSION_CB;
+
+     param : PX509_VERIFY_PARAM;
+
+{$IFDEF OMITTHIS}
+     purpose : TIdC_INT;		//* Purpose setting */
+     trust : TIdC_INT;		//* Trust setting */
+{$ENDIF}
+
+     quiet_shutdown : TIdC_INT;
   end;
 
-  PV3_EXT_CTX = ^V3_EXT_CTX;
-  V3_EXT_CTX = packed record
+  PSSL2_STATE = ^SSL2_STATE;
+  PSSL3_STATE = ^SSL3_STATE;
+  PDTLS1_STATE = ^DTLS1_STATE;
+  
+  SSL = packed record
+//	/* protocol version
+//	 * (one of SSL2_VERSION, SSL3_VERSION, TLS1_VERSION, DTLS1_VERSION)
+//	 */
+        version : TIdC_INT;
+        _type : TIdC_INT; //* SSL_ST_CONNECT or SSL_ST_ACCEPT */
+
+        method : PSSL_METHOD; //* SSLv3 */
+
+//	/* There are 2 BIO's even though they are normally both the
+//	 * same.  This is so data can be read and written to different
+//	 * handlers */
+
+{$ifndef OPENSSL_NO_BIO}
+        rbio : PBIO; //* used by SSL_read */
+        wbio : PBIO; //* used by SSL_write */
+        bbio : PBIO; //* used during session-id reuse to concatenate
+		     //* messages */
+{$else}
+        rbio : PChar; //* used by SSL_read */
+        wbio : PChar; //* used by SSL_write */
+        bbio : PChar;
+{$endif}
+//	/* This holds a variable that indicates what we were doing
+//	 * when a 0 or -1 is returned.  This is needed for
+//	 * non-blocking IO so we know what request needs re-doing when
+//	 * in SSL_accept or SSL_connect */
+        rwstate : TIdC_INT;
+
+//      /* true when we are actually in SSL_accept() or SSL_connect() */
+        in_handshake : TIdC_INT;
+        handshake_func : function (_para1 : PSSL) : TIdC_INT; cdecl;
+//      int (*handshake_func)(SSL *);
+
+//	/* Imagine that here's a boolean member "init" that is
+//	 * switched as soon as SSL_set_{accept/connect}_state
+//	 * is called for the first time, so that "state" and
+//	 * "handshake_func" are properly initialized.  But as
+//	 * handshake_func is == 0 until then, we use this
+//	 * test instead of an "init" member.
+//	 */
+
+        server : TIdC_INT;  //* are we the server side? - mostly used by SSL_clear*/
+
+	new_session : TIdC_INT;
+                       //* 1 if we are to use a new session.
+	               //* 2 if we are a server and are inside a handshake
+	               //*   (i.e. not just sending a HelloRequest)
+	               //* NB: For servers, the 'new' session may actually be a previously
+	               //* cached session or even the previous session unless
+	               //* SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION is set */
+	quiet_shutdown : TIdC_INT;//* don't send shutdown packets */
+        shutdown : TIdC_INT;//* we have shut things down, 0x01 sent, 0x02
+                               //* for received */
+        state : TIdC_INT;  //* where we are */
+        rstate : TIdC_INT;	//* where we are when reading */
+
+        init_buf : PBUF_MEM;    //* buffer used during init */
+        init_msg : Pointer;     //* pointer to handshake message body, set by ssl3_get_message() */
+        init_num : TIdC_INT;    //* amount read/written */
+	init_off : TIdC_INT;    //* amount read/written */
+
+	//* used internally to point at a raw packet */
+        packet : PChar;
+        packet_length : TIdC_UINT;
+
+        s2 : Pssl2_state; //* SSLv2 variables */
+        s3 : Pssl3_state; //* SSLv3 variables */
+        d1 : Pdtls1_state; //* DTLSv1 variables */
+
+        read_ahead : TIdC_INT; //* Read as many input bytes as possible
+                               //* (for non-blocking reads) */
+
+	//* callback that allows applications to peek at protocol messages */
+        msg_callback : procedure(write_p, version,  content_type : TIdC_INT;
+          const buf : Pointer; len : size_t; ssl : PSSL; arg : Pointer); cdecl;
+//	void (*msg_callback)(int write_p, int version, int content_type, const void *buf, size_t len, SSL *ssl, void *arg);
+        msg_callback_arg : Pointer;
+//	void *msg_callback_arg;
+
+        hit : TIdC_INT;    //* reusing a previous session */
+
+	param : PX509_VERIFY_PARAM;
+
+{$IFDEF OMITTHIS}
+        purpose : TIdC_INT;		//* Purpose setting */
+        trust : TIdC_INT;		//* Trust setting */
+{$ENDIF}
+
+	//* crypto */
+        cipher_list : PSTACK_OF_SSL_CIPHER;
+        cipher_list_by_id : PSTACK_OF_SSL_CIPHER;
+
+        //* These are the ones being used, the ones in SSL_SESSION are
+        //* the ones to be 'copied' into these ones */
+
+        enc_read_ctx : PEVP_CIPHER_CTX;	 //* cryptographic state */
+	read_hash : PEVP_MD;		//* used for mac generation */
+//      const EVP_MD *read_hash;		/* used for mac generation */
+{$ifndef OPENSSL_NO_COMP}
+	expand : PCOMP_CTX;             //* uncompress */
+{$else}
+	expand : PChar;
+{$endif}
+
+        enc_write_ctx : PEVP_CIPHER_CTX;   //* cryptographic state */
+        write_hash : PEVP_MD;              //* used for mac generation */
+//	const EVP_MD *write_hash;          /* used for mac generation */
+{$ifndef OPENSSL_NO_COMP}
+        compress : PCOMP_CTX;                //* compression */
+{$else}
+	compress : PChar;
+{$endif}
+
+	//* session info */
+
+	//* client cert? */
+	//* This is used to hold the server certificate used */
+        cert : PCERT;
+	//struct cert_st /* CERT */ *cert;
+
+	//* the session_id_context is used to ensure sessions are only reused
+	// * in the appropriate context */
+        sid_ctx_length : TIdC_UINT;
+        sid_ctx : array [0..OPENSSL_SSL_MAX_SID_CTX_LENGTH -1] of char;
+
+	//* This can also be in the session once a session is established */
+        session : PSSL_SESSION;
+
+	//* Default generate session ID callback. */
+        generate_session_id : PGEN_SESSION_CB;
+
+	//* Used in SSL2 and SSL3 */
+        verify_mode : TIdC_INT;	//* 0 don't care about verify failure.
+				//* 1 fail if verify fails */
+        verify_callback : function (ok : TIdC_INT;
+            ctx : PX509_STORE_CTX) : TIdC_INT; cdecl; //* fail if callback returns 0 */
+//	int (*verify_callback)(int ok,X509_STORE_CTX *ctx); /* fail if callback returns 0 */
+        info_callback : procedure(const ssl : PSSL; _type, val : TIdC_INT) ; cdecl;
+//	void (*info_callback)(const SSL *ssl,int type,int val); /* optional informational callback */
+
+        error : TIdC_INT;		//* error bytes to be written */
+        error_code : TIdC_INT;		//* actual code */
+
+{$ifndef OPENSSL_NO_KRB5}
+	kssl_ctx : PKSSL_CTX;     //* Kerberos 5 context */
+{$endif}	//* OPENSSL_NO_KRB5 */
+
+        ctx : PSSL_CTX;
+	//* set this flag to 1 and a sleep(1) is put into all SSL_read()
+	//* and SSL_write() calls, good for nbio debuging :-) */
+        debug : TIdC_INT;
+
+	//* extra application data */
+        verify_result : TIdC_LONG;
+	ex_data : CRYPTO_EX_DATA;
+
+	//* for server side, keep the list of CA_dn we can use */
+        client_CA : PSTACK_OF_X509_NAME;
+
+        references : TIdC_INT;
+        options : TIdC_ULONG; //* protocol behaviour */
+        mode : TIdC_ULONG; //* API behaviour */
+        max_cert_list : TIdC_LONG;
+        first_packet : TIdC_INT;
+        client_version : TIdC_INT;//* what was passed, used for
+				  //* SSLv3/TLS rollback check */
+  end;
+
+//ssl2.h
+   SSL2_STATE = packed record
+	three_byte_header : TIdC_INT;
+	clear_text : TIdC_INT;		//* clear text */
+	escape : TIdC_INT;		//* not used in SSLv2 */
+	ssl2_rollback : TIdC_INT;	//* used if SSLv23 rolled back to SSLv2 */
+
+	//* non-blocking io info, used to make sure the same
+	//* args were passwd */
+	wnum : TIdC_UINT;	//* number of bytes sent so far */
+	wpend_tot : TIdC_INT;
+ 
+        wpend_buf : PChar;
+//	const unsigned char *wpend_buf;
+
+        wpend_off : TIdC_INT;	//* offset to data to write */
+        wpend_len : TIdC_INT; 	//* number of bytes passwd to write */
+        wpend_ret : TIdC_INT; 	//* number of bytes to return to caller */
+
+	//* buffer raw data */
+	rbuf_left : TIdC_INT;
+	rbuf_offs : TIdC_INT;
+        rbuf : PChar;
+        wbuf : PChar;
+
+        write_ptr : PChar; //* used to point to the start due to
+	                   //* 2/3 byte header. */
+
+        padding : TIdC_UINT;
+        rlength : TIdC_UINT; //* passed to ssl2_enc */
+        ract_data_length : TIdC_INT; //* Set when things are encrypted. */
+        wlength : TIdC_UINT; //* passed to ssl2_enc */
+        wact_data_length : TIdC_INT; //* Set when things are decrypted. */
+	ract_data : PChar;
+	wact_data : PChar;
+	mac_data : PChar;
+
+	read_key : PChar;
+	write_key : PChar;
+
+	//* Stuff specifically to do with this SSL session */
+        challenge_length : TIdC_UINT;
+        challenge : array [0..OPENSSL_SSL2_MAX_CHALLENGE_LENGTH -1] of char;
+        conn_id_length : TIdC_UINT;
+        conn_id : array [0..OPENSSL_SSL2_MAX_CONNECTION_ID_LENGTH -1] of char;
+        key_material_length : TIdC_UINT;
+        key_material : array[0..(OPENSSL_SSL2_MAX_KEY_MATERIAL_LENGTH*2)-1] of char;
+
+	read_sequence : TIdC_ULONG;
+	write_sequence : TIdC_ULONG;
+
+        tmp_conn_id_length : TIdC_UINT;
+        tmp_cert_type : TIdC_UINT;
+	tmp_cert_length : TIdC_UINT;
+        tmp_csl : TIdC_UINT;
+        tmp_clear : TIdC_UINT;
+        tmp_enc : TIdC_UINT;
+        tmp_ccl : array [0..OPENSSL_SSL2_MAX_CERT_CHALLENGE_LENGTH -1] of char;
+	tmp_cipher_spec_length : TIdC_UINT;
+	tmp_session_id_length : TIdC_UINT;
+	tmp_clen : TIdC_UINT;
+	tmp_rlen : TIdC_UINT;
+   end;
+
+//sl3.h
+   PSSL3_RECORD = ^SSL3_RECORD;
+   SSL3_RECORD = packed record
+{*r *}	_type : TIdC_INT;               //* type of record */
+{*rw*}	length : TIdC_UINT;    //* How many bytes available */
+{*r *}	off : TIdC_UINT;       //* read/write offset into 'buf' */
+{*rw*}	data : PChar;    //* pointer to the record data */
+{*rw*}	input : PChar;   //* where the decode bytes are */
+{*r *}	comp : PChar;   //* only used with decompression - malloc()ed */
+{*r *}  epoch : TIdC_ULONG;    //* epoch number, needed by DTLS1 */
+{*r *}  seq_num : PQ_64BIT;       //* sequence number, needed by DTLS1 */
+   end;
+   PSSL3_BUFFER = ^SSL3_BUFFER;
+   SSL3_BUFFER = packed record
+	buf : PChar;             //* at least SSL3_RT_MAX_PACKET_SIZE bytes,
+	                         //* see ssl3_setup_buffers() */
+	len : size_t;            //* buffer size */
+	offset : TIdC_INT;       //* where to 'copy from' */
+	left : TIdC_INT;         //* how many bytes left */
+   end;
+   
+   SSL3_STATE = packed record
+	      flags : TIdC_LONG;
+        delay_buf_pop_ret : TIdC_INT;
+
+        read_sequence : array [0..7] of char;
+        read_mac_secret : array [0..OPENSSL_EVP_MAX_MD_SIZE -1] of char;
+        write_sequence : array [0..7] of char;
+        write_mac_secret : array [0..OPENSSL_EVP_MAX_MD_SIZE] of char;
+
+        server_random : array [0..OPENSSL_SSL3_RANDOM_SIZE - 1] of char;
+	      client_random : array [0..OPENSSL_SSL3_RANDOM_SIZE -1] of char;
+
+	//* flags for countermeasure against known-IV weakness */
+        need_empty_fragments : TIdC_INT;
+        empty_fragment_done : TIdC_INT;
+
+        rbuf : PSSL3_BUFFER;    //* read IO goes into here */
+        wbuf : PSSL3_BUFFER;	//* write IO goes into here */
+
+        rrec : PSSL3_RECORD;    //* each decoded record goes in here */
+        wrec : PSSL3_RECORD;    //* goes out from here */
+
+	//* storage for Alert/Handshake protocol data received but not
+	//* yet processed by ssl3_read_bytes: */
+        alert_fragment : array [0..1] of PChar;
+      	alert_fragment_len : TIdC_UINT;
+      	handshake_fragment : array [0..3] of PChar;
+        handshake_fragment_len : TIdC_UINT;
+
+	//* partial write - check the numbers match */
+        wnum : TIdC_UINT;	//* number of bytes sent so far */
+        wpend_tot : TIdC_INT;	//* number bytes written */
+	      wpend_type : TIdC_INT;
+       	wpend_ret : TIdC_INT;	//* number of bytes submitted */
+
+        wpend_buf : PChar;
+  //const unsigned char *wpend_buf;
+
+	//* used during startup, digest all incoming/outgoing packets */
+        finish_dgst1 : PEVP_MD_CTX;
+        finish_dgst2 : PEVP_MD_CTX;
+
+	//* this is set whenerver we see a change_cipher_spec message
+	//* come in when we are not looking for one */
+        change_cipher_spec : TIdC_INT;
+
+        warn_alert : TIdC_INT;
+        fatal_alert : TIdC_INT;
+	//* we allow one fatal and one warning alert to be outstanding,
+	//* send close alert via the warning alert */
+       	alert_dispatch : TIdC_INT;
+      	send_alert : array [0..1] of char;
+
+	//* This flag is set when we should renegotiate ASAP, basically when
+	//* there is no more data in the read or write buffers */
+       	renegotiate : TIdC_INT;
+       	total_renegotiations : TIdC_INT;
+      	num_renegotiations : TIdC_INT;
+
+        in_read_app_data : TIdC_INT;
+
+
+	//* actually only needs to be 16+20 */
+      	tmp_cert_verify_md: array [0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of char;
+
+        //* actually only need to be 16+20 for SSLv3 and 12 for TLS */
+       	tmp_finish_md : array[0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of char;
+      	tmp_finish_md_len : TIdC_INT;
+      	tmp_peer_finish_md : array[0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of char;
+      	tmp_peer_finish_md_len : TIdC_INT;
+
+	      tmp_message_size : TIdC_UINT;
+      	tmp_message_type : TIdC_INT;
+
+	//* used to hold the new cipher we are going to use */
+      	tmp_new_cipher : PSSL_CIPHER;
+       {$ifndef OPENSSL_NO_DH}
+        tmp_dh : PDH;
+       {$endif}
+
+{$ifndef OPENSSL_NO_ECDH}
+       	tmp_ecdh : PEC_KEY; //* holds short lived ECDH key */
+{$endif}
+
+	//* used when SSL_ST_FLUSH_DATA is entered */
+       	tmp_next_state : TIdC_INT;
+
+      	tmp_reuse_message : TIdC_INT;
+
+//* used for certificate requests */
+       	tmp_cert_req : TIdC_INT;
+	      tmp_ctype_num : TIdC_INT;
+      	tmp_ctype : array [0..OPENSSL_SSL3_CT_NUMBER -1] of char;
+      	tmp_ca_names : PSTACK_OF_X509_NAME;
+
+      	tmp_use_rsa_tmp : TIdC_INT;
+
+      	tmp_key_block_length : TIdC_INT;
+       	tmp_key_block : PChar;
+
+        tmp_new_sym_enc : PEVP_CIPHER;
+        //const EVP_CIPHER *new_sym_enc;
+        tmp_new_hash : PEVP_MD;
+        //const EVP_MD *new_hash;
+{$ifndef OPENSSL_NO_COMP}
+        tmp_new_compression : PSSL_COMP;
+       //const SSL_COMP *new_compression;
+{$else}
+      	tmp_new_compression : PChar;
+{$endif}
+       	tmp_cert_request : TIdC_INT;
+  end;
+
+//openssl/pq_compat.h
+  ppitem = ^pitem;
+  pitem = packed record
+	  priority : PQ_64BIT;
+	  data : Pointer;
+	  next : ppitem;  
+  end;
+//ssl/dtls1.h
+  //for some reason, this header is refering to crypto/pqueue/pqueue.c
+  //which is in the OpenSSL headers.
+  
+  pqueue = packed record
+	  items : ppitem;
+	  count : TIdC_INT;  
+  end;
+  //
+  DTLS1_BITMAP = packed record
+     map : PQ_64BIT;
+     length : TIdC_ULONG;     //* sizeof the bitmap in bits */
+     max_seq_num : PQ_64BIT;  //* max record number seen so far */
+  end;
+  PDTLS1_BITMAP = ^DTLS1_BITMAP;
+  
+  hm_header = packed record
+     _type : PChar;
+     msg_len : TIdC_ULONG;
+     seq : TIdC_USHORT;
+     frag_off : TIdC_ULONG;
+     frag_len : TIdC_ULONG;
+     is_ccs : TIdC_UINT;
+  end;
+  ccs_header_st = packed record
+    _type : PChar;
+    seq : TIdC_USHORT;
+  end;
+  dtls1_timeout_st = packed record
+    //* Number of read timeouts so far */
+    read_timeouts : TIdC_UINT;
+
+    //* Number of write timeouts so far */
+    write_timeouts : TIdC_UINT;
+
+    //* Number of alerts received so far */
+    num_alerts : TIdC_UINT;
+  end;
+
+  record_pqueue = packed record
+    epoch : TIdC_USHORT;
+    q : pqueue;
+  end;
+
+  hm_fragment = packed record
+    msg_header : hm_header;
+//	struct hm_header_st msg_header;
+    fragment : PChar;
+  end;
+
+  DTLS1_STATE = packed record
+        send_cookie : TIdC_UINT;
+        cookie : array [0..OPENSSL_DTLS1_COOKIE_LENGTH - 1 ] of char;
+        rcvd_cookie : array [0..OPENSSL_DTLS1_COOKIE_LENGTH -1] of char;
+        cookie_len : TIdC_UINT;
+
+	//*
+	//* The current data and handshake epoch.  This is initially
+	//* undefined, and starts at zero once the initial handshake is
+	//* completed
+	//*/
+       	r_epoch : TIdC_USHORT;
+       	w_epoch : TIdC_USHORT;
+ 
+	//* records being received in the current epoch */
+        	bitmap : DTLS1_BITMAP;
+
+	//* renegotiation starts a new set of sequence numbers */
+        	next_bitmap : DTLS1_BITMAP;
+
+	//* handshake message numbers */
+         	handshake_write_seq : TIdC_USHORT;
+          next_handshake_write_seq : TIdC_USHORT;
+
+          handshake_read_seq : TIdC_USHORT;
+
+	//* Received handshake records (processed and unprocessed) */
+          unprocessed_rcds : record_pqueue;
+          processed_rcds : record_pqueue;
+
+	//* Buffered handshake messages */
+          buffered_messages : pqueue;
+
+	//* Buffered (sent) handshake records */
+          sent_messages : pqueue;
+
+          mtu : TIdC_UINT; //* max wire packet size */
+
+         w_msg_hdr : hm_header;
+        //struct hm_header_st w_msg_hdr;
+         r_msg_hdr : hm_header;
+        //struct hm_header_st r_msg_hdr;
+         timeout :  dtls1_timeout_st;
+        //struct dtls1_timeout_st timeout;
+
+	//* storage for Alert/Handshake protocol data received but not
+	//* yet processed by ssl3_read_bytes: */
+         alert_fragment : array [0..OPENSSL_DTLS1_AL_HEADER_LENGTH-1] of char;
+         alert_fragment_len : TIdC_UINT;
+         handshake_fragment : array[0..OPENSSL_DTLS1_HM_HEADER_LENGTH -1] of char;
+         handshake_fragment_len : TIdC_UINT;
+
+         retransmitting : TIdC_UINT;
+  end;
+//
+
+{  V3_EXT_CTX = packed record
     flags:Integer;
     issuer_cert:PX509;
     subject_cert:PX509;
@@ -2987,267 +5324,461 @@ type
     crl:PX509_CRL;
     db_meth:Pointer; //PX509V3_CONF_METHOD;
     db:Pointer;
-  end;
+  end;  }
+
 
   X509V3_CTX = V3_EXT_CTX;
+  PX509V3_CTX = ^X509V3_CTX;
 
+type
+    //RSA *	RSA_generate_key(int bits, unsigned long e,void
+	//	(*callback)(int,int,void *),void *cb_arg);
+	TRSA_generate_key_callback = procedure (p1, p2 : TIdC_INT; p3 : Pointer) cdecl;
+	//int CRYPTO_set_mem_functions(void *(*m)(size_t),void *(*r)(void *,size_t), void (*f)(void *));
+	TCRYPTO_set_mem_functions_myAlloc = function (size : size_t) : Pointer cdecl;
+	TCRYPTO_set_mem_functions_myReAlloc = function (ptr : Pointer; size : size_t) : TIdC_INT cdecl;
+	TCRYPTO_set_mem_functions_myFree = procedure (ptr : Pointer) cdecl;
+  //int CRYPTO_set_mem_ex_functions(void *(*m)(size_t,const char *,int),
+  //                              void *(*r)(void *,size_t,const char *,int),
+  //                              void (*f)(void *));
+  
+	TCRYPTO_set_mem_ex_functions_m = function(size : size_t; 
+    const c : PChar; i : TIdC_INT) : Pointer cdecl;  
+  TCRYPTO_set_mem_ex_functions_r = function(ptr : Pointer;
+    size : size_t; const c : PChar; i : TIdC_INT) : Pointer cdecl;
+  TCRYPTO_set_mem_ex_functions_f = procedure (ptr : Pointer) cdecl;
+//CRYPTO_set_mem_debug_functions(void (*m)(void *,int,const char *,int,int),
+//				   void (*r)(void *,void *,int,const char *,int,int),
+//				   void (*f)(void *,int),
+//				   void (*so)(long),
+//				   long (*go)(void));  
+	Tset_mem_debug_functions_m = procedure (addr : Pointer; num : TIdC_INT;
+     const _file : PChar;line, before_p : TIdC_INT) cdecl;
+  Tset_mem_debug_functions_r = procedure (addr1,addr2 : Pointer; num : TIdC_INT;
+    const _file : PChar; line, before_p : TIdC_INT); cdecl;
+  Tset_mem_debug_functions_f = procedure (addr : Pointer; before_p : TIdC_INT); cdecl; 
+  Tset_mem_debug_functions_so = procedure (bits : TIdC_LONG); cdecl;
+  Tset_mem_debug_functions_go = function : TIdC_LONG; cdecl;
+//void SSL_CTX_set_verify(SSL_CTX *ctx,int mode,
+//			int (*callback)(int, X509_STORE_CTX *));
+  TSSL_CTX_set_verify_callback = function (ok : TIdC_INT; ctx : PX509_STORE_CTX) : TIdC_INT cdecl;
 var
+//void OpenSSL_add_all_ciphers(void);
   IdSslAddAllAlgorithms : procedure cdecl = nil;
+//void OpenSSL_add_all_digests(void);  
   IdSslAddAllCiphers : procedure cdecl = nil;
+//void OpenSSL_add_all_digests(void);
   IdSslAddAllDigests : procedure cdecl = nil;
+//void EVP_cleanup(void);  
   IdSslEvpCleanup : procedure cdecl = nil;
 
+  //SSL Version function
+  IdSslSSLeay_version : function(_type : TIdC_INT) : PChar cdecl = nil;
   //CRYPTO_set_mem_ex_functions
-  IdSslCryptoSetMemFunctions : function(myAlloc:Pointer;myReAlloc:Pointer;myFree:Pointer):Integer cdecl = nil;
-  IdSslCryptoMalloc : function(num:Integer;afile:PChar;line:Integer):Pointer cdecl = nil;
+//int CRYPTO_set_mem_functions(void *(*m)(size_t),void *(*r)(void *,size_t), void (*f)(void *));  
+  IdSslCryptoSetMemFunctions : function(myAlloc:TCRYPTO_set_mem_functions_myAlloc;
+    myReAlloc:TCRYPTO_set_mem_functions_myReAlloc;
+    myFree:TCRYPTO_set_mem_functions_myFree):TIdC_INT cdecl = nil;
+//void *CRYPTO_malloc(int num, const char *file, int line);  
+  IdSslCryptoMalloc : function(num:TIdC_INT; afile:PChar;line:TIdC_INT):Pointer cdecl = nil;
   //void CRYPTO_free(void *);
-  IdSslCryptoFree : procedure cdecl = nil;
+  IdSslCryptoFree : procedure(ptr : Pointer) cdecl = nil;
   //void CRYPTO_mem_leaks(struct bio_st *bio);
-  IdSslCryptoMemLeaks : procedure(b:Pointer) cdecl = nil;
+  IdSslCryptoMemLeaks : procedure(b:PBIO) cdecl = nil;
   //int CRYPTO_mem_ctrl(int mode);
-  IdSslCryptoMemCtrl : function(mode:Integer):Integer cdecl = nil;
-  IdSslCryptoSetMemDebugFunctions : function(p1,p2,p3,p4,p5:Pointer):Integer cdecl = nil;
+  IdSslCryptoMemCtrl : function(mode:TIdC_INT):TIdC_INT cdecl = nil;
+  //int CRYPTO_set_mem_ex_functions(void *(*m)(size_t,const char *,int),
+  //                              void *(*r)(void *,size_t,const char *,int),
+  //                              void (*f)(void *));
+  
+//CRYPTO_set_mem_debug_functions(void (*m)(void *,int,const char *,int,int),
+//				   void (*r)(void *,void *,int,const char *,int,int),
+//				   void (*f)(void *,int),
+//				   void (*so)(long),
+//				   long (*go)(void));
+  IdSslCryptoSetMemDebugFunctions : procedure (m :Tset_mem_debug_functions_m;
+        r: Tset_mem_debug_functions_r; 
+        f : Tset_mem_debug_functions_f; 
+        so : Tset_mem_debug_functions_so;
+        go : Tset_mem_debug_functions_go) cdecl = nil;
   //
-  IdSslCryptoDbgMalloc : procedure(addr:Pointer;num:Integer;afile:PChar;line,before:Integer) cdecl = nil;
-  IdSslCryptoDbgRealloc : procedure(arrd1,addr2:Pointer;num:Integer;afile:PChar;line,before:Integer) cdecl = nil;
-  IdSslCryptoDbgFree : procedure(addr:Pointer;before:Integer) cdecl = nil;
-  IdSslCryptoDbgSetOptions : procedure(bits:Cardinal) cdecl = nil;
-  IdSslCryptoDbgGetOptions : function:Cardinal cdecl = nil;
+  
+  // void CRYPTO_dbg_malloc(void *addr,int num,const char *file,int line,int before_p);
+  IdSslCryptoDbgMalloc : procedure(addr:Pointer;num:TIdC_INT;
+    afile:PChar;line,before:TIdC_INT) cdecl = nil;
+  //void CRYPTO_dbg_realloc(void *addr1,void *addr2,int num,const char *file,int line,int before_p);
+  IdSslCryptoDbgRealloc : procedure(arrd1,addr2:Pointer;num:TIdC_INT;
+    afile:PChar;line,before:TIdC_INT) cdecl = nil;
+  //void CRYPTO_dbg_free(void *addr,int before_p);
+  IdSslCryptoDbgFree : procedure(addr:Pointer;before:TIdC_INT) cdecl = nil;
+  //void CRYPTO_dbg_set_options(long bits);
+  IdSslCryptoDbgSetOptions : procedure(bits:TIdC_LONG) cdecl = nil;
+  //long CRYPTO_dbg_get_options(void);
+  IdSslCryptoDbgGetOptions : function:TIdC_LONG cdecl = nil;
 
   //STACK *sk_new_null(void);
   IdSslSkNewNull : function:pointer cdecl = nil;
   //int sk_push(STACK *st,char *data);
-  IdSslSkPush : function(st:PSTACK;char:Pointer):Integer cdecl = nil;
+  IdSslSkPush : function(st:PSTACK;data:PChar):TIdC_INT cdecl = nil;
 
   //IdSslRsaNew : function():cdecl = nil;
+  
+  //void	RSA_free (RSA *r);
   IdSslRsaFree : procedure(rsa:PRSA) cdecl = nil;
-  IdSslRsaGenerateKey : function(num:Integer; e:Cardinal; callback:Pointer; cb_arg:Pointer):PRSA; cdecl = nil;
+  //RSA *	RSA_generate_key(int bits, unsigned long e,void
+	//	(*callback)(int,int,void *),void *cb_arg);
+  IdSslRsaGenerateKey : function(bits:TIdC_INT; e:TIdC_ULONG; 
+    callback: TRSA_generate_key_callback;
+    cb_arg:Pointer):PRSA; cdecl = nil;
   //int	RSA_check_key(const RSA *);
-  IdSslRsaCheckKey : function(rsa:PRSA):Integer cdecl = nil;
-
+  IdSslRsaCheckKey : function(rsa:PRSA):TIdC_INT cdecl = nil;
+  //BIO *	BIO_new(BIO_METHOD *type);
   IdSslBioNew : function(ptype:pointer):PBIO cdecl = nil;
-  IdSslBioFree : function(bio:PBIO):Integer cdecl = nil;
-  IdSslBioSMem : function():Pointer cdecl = nil;
-  IdSslBioSFile : function():Pointer cdecl = nil;
+  //int	BIO_free(BIO *a);
+  IdSslBioFree : function(bio:PBIO):TIdC_INT cdecl = nil;
+  //BIO_METHOD *BIO_s_mem(void);
+  IdSslBioSMem : function():PBIO_METHOD cdecl = nil;
+  //BIO_METHOD *BIO_s_file(void );
+  IdSslBioSFile : function():PBIO_METHOD cdecl = nil;
   //long	BIO_ctrl(BIO *bp,int cmd,long larg,void *parg);
-  IdSslBioCtrl : function(bp:PBIO;cmd:Integer;larg:Cardinal;parg:Pointer):Cardinal cdecl = nil;
+  IdSslBioCtrl : function(bp:PBIO;cmd:TIdC_INT;larg:TIdC_LONG;
+    parg:Pointer):TIdC_LONG cdecl = nil;
   //BIO *BIO_new_file(const char *filename, const char *mode);
   IdSslBioNewFile : function(FileName:PChar;mode:PChar):PBIO cdecl = nil;
   //int    BIO_puts(BIO *b,const char *buf);
-  IdSslBioPutS : function(b:PBIO;txt:PChar):integer cdecl = nil;
+  IdSslBioPutS : function(b:PBIO;txt:PChar):TIdC_INT cdecl = nil;
   //int	BIO_read(BIO *b, void *data, int len);
-  IdSslBioRead : function(b:Pointer;data:PChar;len:Integer):Integer cdecl = nil;
+  IdSslBioRead : function(b:Pointer;data:PChar;len:TIdC_INT):TIdC_INT cdecl = nil;
   //int    BIO_write(BIO *b, const void *buf, int len);
-  IdSslBioWrite : function(b:Pointer; buf:Pointer; len:Integer):Integer cdecl = nil;
+  IdSslBioWrite : function(b:PBIO; buf:Pointer; len:TIdC_INT):TIdC_INT cdecl = nil;
 
   //int PEM_write_bio_X509_REQ(BIO *bp, X509_REQ *x)
-  IdSslPemWriteBioX509Req : function(bp:PBIO;x:PX509_REQ):Integer cdecl = nil;
+  IdSslPemWriteBioX509Req : function(bp:PBIO;x:PX509_REQ):TIdC_INT cdecl = nil;
   //(BIO *, EVP_PKEY *, const EVP_CIPHER *, char *, int, pem_password_cb *, void *);
-  IdSslPemWriteBioPKCS8PrivateKey : function(bp:PBIO;key:Pointer;enc:Pointer;kstr:PChar;klen:Integer;cb:Pointer;u:Pointer):Integer cdecl = nil;
+//int PEM_write_bio_PKCS8PrivateKey(BIO *, EVP_PKEY *, const EVP_CIPHER *,
+//                                  char *, int, pem_password_cb *, void *);  
+  IdSslPemWriteBioPKCS8PrivateKey : function(bp:PBIO;key:PEVP_PKEY;enc:PEVP_CIPHER;
+    kstr:PChar;klen:TIdC_INT;cb:Ppem_password_cb;u:Pointer):TIdC_INT cdecl = nil;
   //int	PEM_ASN1_write_bio(i2d_of_void *i2d,const char *name,BIO *bp,char *x,
 	//		   const EVP_CIPHER *enc,unsigned char *kstr,int klen,
 	//		   pem_password_cb *cb, void *u);
-  IdSslPemAsn1WriteBio : function(i2d:Pointer;Name:PChar;bp:Pointer;x:PChar;enc:Pointer;kstr:PChar;klen:Integer;cb:Pointer;u:Pointer):Integer cdecl = nil;
+  IdSslPemAsn1WriteBio : function(i2d:d2i_of_void;Name:PChar;
+    bp:PBIO;x:PChar;enc:PEVP_CIPHER;kstr:PChar;klen:TIdC_INT;
+    cb:ppem_password_cb;u:Pointer):TIdC_INT cdecl = nil;
   //void *	PEM_ASN1_read_bio(d2i_of_void *d2i, const char *name, BIO *bp,
 	//		  void **x, pem_password_cb *cb, void *u);
-  IdSslPemAsn1ReadBio : function(d2i:Pointer;Name:PChar;bp:Pointer;x:PChar;cb:Pointer;u:PChar):Pointer cdecl = nil;
+  IdSslPemAsn1ReadBio : function(d2i:d2i_of_void;Name:PChar;bp:PBIO;
+          var x:Pointer;cb:Ppem_password_cb;u:PChar):Pointer cdecl = nil;
   //EVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x,
   //pem_password_cb *cb, void *u);
-  IdSslPemReadBioPrivateKey : function(bio:Pointer;x:Pointer;cb:Pointer;u:PChar):Pointer cdecl = nil;
+  IdSslPemReadBioPrivateKey : function(bio:PBIO;var x:PEVP_PKEY;cb:Ppem_password_cb;u:PChar):PEVP_PKEY cdecl = nil;
 
   //const EVP_CIPHER *EVP_des_ede3_cbc(void);
-  IdSslEvpDesEde3Cbc : function():Pointer cdecl = nil;
+  IdSslEvpDesEde3Cbc : function():PEVP_CIPHER cdecl = nil;
   //EVP_PKEY *	EVP_PKEY_new(void);
-  IdSslEvpPKeyNew : function():Pointer cdecl = nil;
+  IdSslEvpPKeyNew : function():PEVP_PKEY cdecl = nil;
   //void		EVP_PKEY_free(EVP_PKEY *pkey);
-  IdSslEvpPKeyFree : procedure(pkey:Pointer) cdecl = nil;
+  IdSslEvpPKeyFree : procedure(pkey:PEVP_PKEY) cdecl = nil;
   //int 		EVP_PKEY_assign(EVP_PKEY *pkey,int type,char *key);
-  IdSslEvpPKeyAssign : function(pkey:Pointer;aType:Integer;key:Pointer):Integer cdecl = nil;
+  IdSslEvpPKeyAssign : function(pkey:PEVP_MD;aType:TIdC_INT;key:PChar):TIdC_INT cdecl = nil;
   //const EVP_MD *EVP_get_digestbyname(const char *name);
-  IdSslEvpGetDigestByName : function(Name:PChar):Pointer cdecl = nil;
+  IdSslEvpGetDigestByName : function(Name:PChar):PEVP_MD cdecl = nil;
 
   //int ASN1_INTEGER_set(ASN1_INTEGER *a, long v);
-  IdSslAsn1IntegerSet : function(a:Pointer;v:Integer):Integer cdecl = nil;
+  IdSslAsn1IntegerSet : function(a:PASN1_INTEGER;v:TIdC_LONG):TIdC_INT cdecl = nil;
   //IdSslAsn1UtcTimeNew : function():Pointer cdecl = nil;
   //ASN1_STRING *	ASN1_STRING_type_new(int type );
-  IdSslAsn1StringTypeNew : function(aType:Integer):Pointer cdecl = nil;
+  IdSslAsn1StringTypeNew : function(aType:TIdC_INT):PASN1_STRING cdecl = nil;
   //void		ASN1_STRING_free(ASN1_STRING *a);
-  IdSslAsn1StringFree : procedure(a:Pointer) cdecl = nil;
+  IdSslAsn1StringFree : procedure(a:PASN1_STRING) cdecl = nil;
 
   //int i2d_X509_bio(BIO *bp,X509 *x509);
-  IdSslI2dX509Bio : function(bp:PBIO;x509:PX509):Integer cdecl = nil;
+  IdSslI2dX509Bio : function(bp:PBIO;x509:PX509):TIdC_INT cdecl = nil;
   //int i2d_PrivateKey_bio(BIO *bp, EVP_PKEY *pkey);
-  IdSslI2dPrivateKeyBio : function(b:Pointer;pkey:Pointer):Integer cdecl = nil;
-  IdSslI2dX509 : function(x:Pointer;buf:Pointer):Integer cdecl = nil;
+  IdSslI2dPrivateKeyBio : function(b:PBIO;pkey:PEVP_PKEY):TIdC_INT cdecl = nil;
+  //int i2d_X509(X509 *x, unsigned char **out);
+  IdSslI2dX509 : function(x:PX509; var buf:PChar):TIdC_INT cdecl = nil;
   //X509 *d2i_X509_bio(BIO *bp,X509 **x509);
-  IdSslD2iX509Bio : function(bp:Pointer;x:Pointer):Integer cdecl = nil;
-  IdSslD2iX509 : function():Integer cdecl = nil;
+  IdSslD2iX509Bio : function(bp:PBIO;x:PPx509):PX509 cdecl = nil;
+  
+  //X509 *d2i_X509(X509 **px, unsigned char **in, int len);
+  IdSslD2iX509 :   function(pr : PX509;  _in : PPChar; len : TIdC_INT):PX509 cdecl = nil;
   //int i2d_X509_REQ_bio(X509_REQ *x, BIO *bp);
-  IdSslI2dX509ReqBio : function(x:PX509_REQ;bp:PBIO):Integer cdecl = nil;
+  IdSslI2dX509ReqBio : function(x:PX509_REQ;bp:PBIO):TIdC_INT cdecl = nil;
+  
 
-  IdSslX509New : function():Pointer cdecl = nil;
-  IdSslX509Free : procedure(x:Pointer) cdecl = nil;
-  IdSslX509ReqNew : function():Pointer cdecl = nil;
-  IdSslX509ReqFree : procedure(x:Pointer) cdecl = nil;
+  IdSslX509New : function():PPX509 cdecl = nil;
+  IdSslX509Free : procedure(x:PX509) cdecl = nil;
+  IdSslX509ReqNew : function():PX509_REQ cdecl = nil;
+  IdSslX509ReqFree : procedure(x:PX509_REQ) cdecl = nil;
   //X509_REQ *	X509_to_X509_REQ(X509 *x, EVP_PKEY *pkey, const EVP_MD *md);
-  IdSslX509ToX509Req : function(x:Pointer;pkey:Pointer;md:Pointer):Pointer cdecl = nil;
+  IdSslX509ToX509Req : function(x:PX509;pkey:PEVP_PKEY;md:PEVP_MD):PX509_REQ cdecl = nil;
   //int X509_NAME_add_entry_by_txt(X509_NAME *name, const char *field, int type,
 	//		const unsigned char *bytes, int len, int loc, int set);
-  IdSslX509NameAddEntryByTxt : function(name:PX509_NAME;Field:PChar;atype:Integer;
-   abytes:PChar; len:Integer; loc:Integer; aset:Integer):Integer cdecl = nil;
+  IdSslX509NameAddEntryByTxt : function(name:PX509_NAME;Field:PChar;atype:TIdC_INT;
+     abytes:PChar; len:TIdC_INT; loc:TIdC_INT; aset:TIdC_INT):TIdC_INT cdecl = nil;
   //int 		X509_set_version(X509 *x,long version);
-  IdSslX509SetVersion : function(x:Pointer;version:Cardinal):Integer cdecl = nil;
+  IdSslX509SetVersion : function(x:PX509;version:TIdC_LONG):TIdC_INT cdecl = nil;
   //ASN1_INTEGER *	X509_get_serialNumber(X509 *x);
-  IdSslX509GetSerialNumber : function(x:Pointer):Pointer cdecl = nil;
+  IdSslX509GetSerialNumber : function(x:PX509):PASN1_INTEGER cdecl = nil;
   //  ASN1_TIME *	X509_gmtime_adj(ASN1_TIME *s, long adj);
-  IdSslX509GmTimeAdj : function(s:Pointer;adj:Integer):Pointer cdecl = nil;
+  IdSslX509GmTimeAdj : function(s:PASN1_TIME;adj:TIdC_LONG):PASN1_TIME cdecl = nil;
   //int 		X509_set_notBefore(X509 *x, ASN1_TIME *tm);
-  IdSslX509SetNotBefore : function(x:Pointer;aTime:Pointer):Integer cdecl = nil;
-  IdSslX509SetNotAfter : function(x:Pointer;aTime:Pointer):Integer cdecl = nil;
+  IdSslX509SetNotBefore : function(x:PX509;aTime:PASN1_TIME):TIdC_INT cdecl = nil;
+  //int 		X509_set_notAfter(X509 *x, ASN1_TIME *tm);
+  IdSslX509SetNotAfter : function(x:PX509;aTime:PASN1_TIME):TIdC_INT cdecl = nil;
   //int 		X509_set_pubkey(X509 *x, EVP_PKEY *pkey);
-  IdSslX509SetPubKey : function(x:Pointer;pkey:Pointer):Integer cdecl = nil;
+  IdSslX509SetPubKey : function(x:PX509;pkey:PEVP_PKEY):TIdC_INT cdecl = nil;
   //int		X509_REQ_set_pubkey(X509_REQ *x, EVP_PKEY *pkey);
-  IdSslX509ReqSetPubKey : function(x:Pointer;pkey:Pointer):Integer cdecl = nil;
+  IdSslX509ReqSetPubKey : function(x:PX509_REQ;
+    pkey:PEVP_PKEY):TIdC_INT cdecl = nil;
   //int X509_sign(X509 *x, EVP_PKEY *pkey, const EVP_MD *md);
-  IdSslX509Sign : function(x:Pointer;pkey:Pointer;md:Pointer):Integer cdecl = nil;
+  IdSslX509Sign : function(x:PX509;
+    pkey:PEVP_PKEY;md:PEVP_MD):TIdC_INT cdecl = nil;
   //int X509_REQ_sign(X509_REQ *x, EVP_PKEY *pkey, const EVP_MD *md);
-  IdSslX509ReqSign : function(x:PX509_REQ;pkey:PEVP_PKEY;md:PEVP_MD):Integer cdecl = nil;
+  IdSslX509ReqSign : function(x:PX509_REQ;pkey:PEVP_PKEY;
+    md:PEVP_MD):TIdC_INT cdecl = nil;
   //int X509_REQ_add_extensions(X509_REQ *req, STACK_OF(X509_EXTENSION) *exts);
-  IdSslX509ReqAddExtensions : function(req:PX509_REQ;exts:Pointer):Integer cdecl = nil;
+  IdSslX509ReqAddExtensions : function(req:PX509_REQ;
+    exts:PSTACK_OF_X509_EXTENSION):TIdC_INT cdecl = nil;
   //X509_EXTENSION *X509V3_EXT_conf_nid(LHASH *conf, X509V3_CTX *ctx, int ext_nid, char *value);
-  IdSslX509V3ExtConfNid : function(conf:PLHASH;ctx:Pointer;ext_nid:Integer;Value:PChar):Pointer cdecl = nil;
+  IdSslX509V3ExtConfNid : function(conf:PLHASH;ctx:PX509V3_CTX;
+    ext_nid:TIdC_INT;Value:PChar):PX509_EXTENSION cdecl = nil;
   //X509_EXTENSION *X509_EXTENSION_create_by_NID(X509_EXTENSION **ex,
   //  int nid, int crit, ASN1_OCTET_STRING *data);
-  IdSslX509ExtensionCreateByNid : function(ex:Pointer;nid:Integer;crit:Integer;data:Pointer):PX509_EXTENSION cdecl = nil;
+  IdSslX509ExtensionCreateByNid : function(var ex:PX509_EXTENSION;nid:TIdC_INT;
+    crit:TIdC_INT;data:PASN1_OCTET_STRING):PX509_EXTENSION cdecl = nil;
   //void X509V3_set_ctx(X509V3_CTX *ctx, X509 *issuer, X509 *subject,
 	//			 X509_REQ *req, X509_CRL *crl, int flags);
-  IdSslX509V3SetCtx : procedure(ctx:Pointer;issuer:Pointer;subject:Pointer;req:Pointer;crl:Pointer;flags:Integer) cdecl = nil;
-
-  IdSslX509ExtensionFree : function(ex:Pointer):Pointer cdecl = nil;
-  IdSslX509AddExt : function(cert:Pointer;ext:Pointer;loc:integer):Integer cdecl = nil;
-
-  IdSslCtxSetCipherList : function(arg0: PSSL_CTX; str: PChar):Integer cdecl = nil;
+  IdSslX509V3SetCtx : procedure(ctx:PX509V3_CTX;issuer:PX509;
+    subject:PX509;req:PX509_REQ;
+    crl:PX509_CRL;flags:TIdC_INT) cdecl = nil;
+//void            X509_EXTENSION_free(X509_EXTENSION *a);
+  IdSslX509ExtensionFree : procedure(ex:PX509_EXTENSION) cdecl = nil;
+//int             X509_add_ext(X509 *x, X509_EXTENSION *ex, int loc);
+  IdSslX509AddExt : function(cert:PX509;ext:PX509_EXTENSION;
+    loc:TIdC_INT):TIdC_INT cdecl = nil;
+//int	SSL_CTX_set_cipher_list(SSL_CTX *,const char *str);
+  IdSslCtxSetCipherList : function(arg0: PSSL_CTX; str: PChar):TIdC_INT cdecl = nil;
+//SSL_CTX *SSL_CTX_new(SSL_METHOD *meth);  
   IdSslCtxNew : function(meth: PSSL_METHOD):PSSL_CTX cdecl = nil;
+//void	SSL_CTX_free(SSL_CTX *);  
   IdSslCtxFree : procedure(arg0: PSSL_CTX) cdecl = nil;
-  IdSslSetFd : function(s: PSSL; fd: Integer):Integer cdecl = nil;
-  IdSslCtxUsePrivateKeyFile : function(ctx: PSSL_CTX; const _file: PChar; _type: Integer):Integer cdecl = nil;
+//int	SSL_set_fd(SSL *s, int fd);
+  IdSslSetFd : function(s: PSSL; fd: TIdC_INT):TIdC_INT cdecl = nil;
+//int	SSL_CTX_use_PrivateKey_file(SSL_CTX *ctx, const char *file, int type);  
+  IdSslCtxUsePrivateKeyFile : function(ctx: PSSL_CTX; 
+    const _file: PChar; _type: TIdC_INT):TIdC_INT cdecl = nil;
   //int SSL_CTX_use_PrivateKey(SSL_CTX *ctx, EVP_PKEY *pkey);
-  IdSslCtxUsePrivateKey : function(ctx:Pointer;pkey:Pointer):Integer cdecl = nil;
+  IdSslCtxUsePrivateKey : function(ctx:PSSL_CTX;pkey:PEVP_PKEY):TIdC_INT cdecl = nil;
   //int SSL_CTX_use_certificate(SSL_CTX *ctx, X509 *x);
-  IdSslCtxUseCertificate : function(ctx:PSSL_CTX; x:PX509):Integer cdecl = nil;
-  IdSslCtxUseCertificateFile : function(ctx: PSSL_CTX; const _file: PChar; _type: Integer):Integer cdecl = nil;
+  IdSslCtxUseCertificate : function(ctx:PSSL_CTX; x:PX509):TIdC_INT cdecl = nil;
+//int	SSL_CTX_use_certificate_file(SSL_CTX *ctx, const char *file, int type);  
+  IdSslCtxUseCertificateFile : function(ctx: PSSL_CTX; const _file: PChar; 
+    _type: TIdC_INT):TIdC_INT cdecl = nil;
+//void	SSL_load_error_strings(void );  
   IdSslLoadErrorStrings : procedure cdecl = nil;
+//const char *SSL_state_string_long(const SSL *s);
   IdSslStateStringLong : function(s: PSSL):PChar cdecl = nil;
+//  X509 *	SSL_get_peer_certificate(const SSL *s);
   IdSslGetPeerCertificate : function(s: PSSL):PX509 cdecl = nil;
-  IdSslCtxSetVerify : procedure(ctx: PSSL_CTX; mode: Integer; arg2: PFunction) cdecl = nil;
-  IdSslCtxSetVerifyDepth : procedure(ctx: PSSL_CTX; depth: Integer); cdecl = nil;
-  IdSslCtxGetVerifyDepth : function (ctx: PSSL_CTX):Integer;  cdecl = nil;
+//  void SSL_CTX_set_verify(SSL_CTX *ctx,int mode,
+//			int (*callback)(int, X509_STORE_CTX *));
+  IdSslCtxSetVerify : procedure(ctx: PSSL_CTX; mode: TIdC_INT; 
+    arg2: TSSL_CTX_set_verify_callback) cdecl = nil;
+//void SSL_CTX_set_verify_depth(SSL_CTX *ctx,int depth);
+  IdSslCtxSetVerifyDepth : procedure(ctx: PSSL_CTX; depth: TIdC_INT); cdecl = nil;
+//  int SSL_CTX_get_verify_depth(const SSL_CTX *ctx);
+  IdSslCtxGetVerifyDepth : function (ctx: PSSL_CTX):TIdC_INT;  cdecl = nil;
+//void SSL_CTX_set_default_passwd_cb(SSL_CTX *ctx, pem_password_cb *cb);  
   IdSslCtxSetDefaultPasswdCb : procedure(ctx: PSSL_CTX; cb: Ppem_password_cb) cdecl = nil;
+//void SSL_CTX_set_default_passwd_cb_userdata(SSL_CTX *ctx, void *u);  
   IdSslCtxSetDefaultPasswdCbUserdata : procedure(ctx: PSSL_CTX; u: Pointer) cdecl = nil;
-  IdSslCtxCheckPrivateKeyFile : function(ctx: PSSL_CTX):Integer cdecl = nil;
+//int SSL_CTX_check_private_key(const SSL_CTX *ctx);  
+  IdSslCtxCheckPrivateKeyFile : function(ctx: PSSL_CTX):TIdC_INT cdecl = nil;
+//SSL *	SSL_new(SSL_CTX *ctx);  
   IdSslNew : function(ctx: PSSL_CTX):PSSL cdecl = nil;
+//void	SSL_free(SSL *ssl);  
   IdSslFree : procedure(ssl: PSSL) cdecl = nil;
-  IdSslAccept : function(ssl: PSSL):Integer cdecl = nil;
-  IdSslConnect : function(ssl: PSSL):Integer cdecl = nil;
-  IdSslRead : function(ssl: PSSL; buf: PChar; num: Integer):Integer cdecl = nil;
-  IdSslPeek : function(ssl: PSSL; buf: PChar; num: Integer):Integer cdecl = nil;
-  IdSslWrite : function(ssl: PSSL; const buf: PChar; num: Integer):Integer cdecl = nil;
-  IdSslCtxCtrl : function(ssl:PSSL; cmd:Integer; larg:LongInt; parg:PChar):LongInt cdecl = nil;
-  IdSslGetError : function(s: PSSL; ret_code: Integer):Integer cdecl = nil;
+//int 	SSL_accept(SSL *ssl);  
+  IdSslAccept : function(ssl: PSSL):TIdC_INT cdecl = nil;
+//int 	SSL_connect(SSL *ssl);
+  IdSslConnect : function(ssl: PSSL):TIdC_INT cdecl = nil;
+//int 	SSL_read(SSL *ssl,void *buf,int num);
+  IdSslRead : function(ssl: PSSL; buf: PChar; num: TIdC_INT):TIdC_INT cdecl = nil;
+//int 	SSL_peek(SSL *ssl,void *buf,int num);
+  IdSslPeek : function(ssl: PSSL; buf: PChar; num: TIdC_INT):TIdC_INT cdecl = nil;
+//int 	SSL_write(SSL *ssl,const void *buf,int num);  
+  IdSslWrite : function(ssl: PSSL; const buf: PChar; 
+    num: TIdC_INT):TIdC_INT cdecl = nil;
+//long SSL_CTX_ctrl(SSL_CTX *ctx, int cmd, long larg, void *parg);  
+  IdSslCtxCtrl : function(ssl:PSSL_CTX; cmd:TIdC_INT; larg:TIdC_LONG; 
+    parg:PChar):TIdC_LONG cdecl = nil;
+//int	SSL_get_error(const SSL *s,int ret_code);  
+  IdSslGetError : function(s: PSSL; ret_code: TIdC_INT):TIdC_INT cdecl = nil;
+//SSL_METHOD *SSLv2_method(void);		/* SSLv2 */
   IdSslMethodV2 : function:PSSL_METHOD cdecl = nil;
+//SSL_METHOD *SSLv2_server_method(void);	/* SSLv2 */  
   IdSslMethodServerV2 : function:PSSL_METHOD cdecl = nil;
+//SSL_METHOD *SSLv2_client_method(void);	/* SSLv2 */
   IdSslMethodClientV2 : function:PSSL_METHOD cdecl = nil;
+//SSL_METHOD *SSLv3_method(void);		/* SSLv3 */  
   IdSslMethodV3 : function:PSSL_METHOD cdecl = nil;
+//SSL_METHOD *SSLv3_server_method(void);	/* SSLv3 */  
   IdSslMethodServerV3 : function:PSSL_METHOD cdecl = nil;
+//SSL_METHOD *SSLv3_client_method(void);	/* SSLv3 */  
   IdSslMethodClientV3 : function:PSSL_METHOD cdecl = nil;
+//SSL_METHOD *SSLv23_method(void);	/* SSLv3 but can rollback to v2 */  
   IdSslMethodV23 : function:PSSL_METHOD cdecl = nil;
+//SSL_METHOD *SSLv23_server_method(void);	/* SSLv3 but can rollback to v2 */
   IdSslMethodServerV23 : function:PSSL_METHOD cdecl = nil;
+//SSL_METHOD *SSLv23_client_method(void);	/* SSLv3 but can rollback to v2 */  
   IdSslMethodClientV23 : function:PSSL_METHOD cdecl = nil;
+//SSL_METHOD *TLSv1_method(void);		/* TLSv1.0 */  
   IdSslMethodTLSV1 : function:PSSL_METHOD cdecl = nil;
+//SSL_METHOD *TLSv1_server_method(void);	/* TLSv1.0 */  
   IdSslMethodServerTLSV1 : function:PSSL_METHOD cdecl = nil;
+//SSL_METHOD *TLSv1_client_method(void);	/* TLSv1.0 */  
   IdSslMethodClientTLSV1 : function:PSSL_METHOD cdecl = nil;
-  IdSslShutdown : function(s: PSSL):Integer cdecl = nil;
+  
+//SSL_METHOD *DTLSv1_method(void);		/* DTLSv1.0 */
+  IdSslMethodDTLSv1 : function() : PSSL_METHOD cdecl = nil;
+//SSL_METHOD *DTLSv1_server_method(void);	/* DTLSv1.0 */
+  IdSslMethodServerDTLSv1 : function : PSSL_METHOD cdecl = nil;
+//SSL_METHOD *DTLSv1_client_method(void);	/* DTLSv1.0 */
+  IdSslMethodClientDTLSv1 : function : PSSL_METHOD cdecl = nil; 
+
+//int SSL_shutdown(SSL *s);  
+  IdSslShutdown : function(s: PSSL):TIdC_INT cdecl = nil;
+//void SSL_set_connect_state(SSL *s);  
   IdSslSetConnectState : procedure(s: PSSL) cdecl = nil;
+//void SSL_set_accept_state(SSL *s);  
   IdSslSetAcceptState : procedure(s: PSSL) cdecl = nil;
-  IdSslSetShutdown : procedure(ssl: PSSL; mode: Integer) cdecl = nil;
-  IdSslCtxLoadVerifyLocations : function(ctx: PSSL_CTX; const CAfile: PChar; const CApath: PChar):Integer cdecl = nil;
+//void SSL_set_shutdown(SSL *ssl,int mode);
+  IdSslSetShutdown : procedure(ssl: PSSL; mode: TIdC_INT) cdecl = nil;
+//int SSL_CTX_load_verify_locations(SSL_CTX *ctx, const char *CAfile,
+//	const char *CApath);  
+  IdSslCtxLoadVerifyLocations : function(ctx: PSSL_CTX; 
+    const CAfile: PChar; const CApath: PChar):TIdC_INT cdecl = nil;
+//SSL_SESSION *SSL_get_session(const SSL *ssl);
   IdSslGetSession : function(ssl: PSSL):PSSL_SESSION cdecl = nil;
-  IdSslAddSslAlgorithms : function:Integer cdecl = nil;
+//#define SSLeay_add_ssl_algorithms()	SSL_library_init()
+//#define OpenSSL_add_ssl_algorithms()	SSL_library_init()
+//int SSL_library_init(void); 
+  IdSslAddSslAlgorithms : function:TIdC_INT cdecl = nil;
   // IdSslSetAppData : function(s: PSSL; arg: Pointer):Integer cdecl = nil;
   // IdSslGetAppData : function(s: PSSL):Pointer cdecl = nil;
-  IdSslSessionGetId : function(s: PSSL_SESSION; id: PPChar; length: PInteger):Integer cdecl = nil;
-  IdSslX509NameOneline : function(a: PX509_NAME; buf: PChar; size: Integer):PChar cdecl = nil;
-  IdSslX509NameHash : function(x: PX509_NAME):Cardinal cdecl = nil;
+  
+//const unsigned char *SSL_SESSION_get_id(const SSL_SESSION *s, unsigned int *len);  
+  IdSslSessionGetId : function(s: PSSL_SESSION; 
+    id: PPChar; length: PIdC_INT):PChar cdecl = nil;
+//char *		X509_NAME_oneline(X509_NAME *a,char *buf,int size);  
+  IdSslX509NameOneline : function(a: PX509_NAME; 
+    buf: PChar; size: TIdC_INT):PChar cdecl = nil;
+//unsigned long	X509_NAME_hash(X509_NAME *x);  
+  IdSslX509NameHash : function(x: PX509_NAME):TIdC_ULONG cdecl = nil;
   //int X509_set_issuer_name(X509 *x, X509_NAME *name);
-  IdSslX509SetIssuerName : function(x: PX509; name: PX509_NAME):Integer cdecl = nil;
+  IdSslX509SetIssuerName : function(x: PX509; name: PX509_NAME):TIdC_INT cdecl = nil;
+//X509_NAME *	X509_get_issuer_name(X509 *a);  
   IdSslX509GetIssuerName : function(a: PX509):PX509_NAME cdecl = nil;
-  IdSslX509SetSubjectName : function(x: PX509; name: PX509_NAME):Integer cdecl = nil;
+//int 		X509_set_subject_name(X509 *x, X509_NAME *name);  
+  IdSslX509SetSubjectName : function(x: PX509; name: PX509_NAME):TIdC_INT cdecl = nil;
+//X509_NAME *	X509_get_subject_name(X509 *a);  
   IdSslX509GetSubjectName : function(a: PX509):PX509_NAME cdecl = nil;
-  IdSslX509Digest : function(data: PX509; _type: PEVP_MD; md: PChar; len: PUInteger):Integer cdecl = nil;
+//int X509_digest(const X509 *data,const EVP_MD *type,
+//		unsigned char *md, unsigned int *len);
+  IdSslX509Digest : function(data: PX509; _type: PEVP_MD; 
+      md: PChar; var len: TIdC_UINT):TIdC_INT cdecl = nil;
+//EVP_MD *EVP_md5(void);  
   IdSslEvpMd5 : function:PEVP_MD cdecl = nil;
-  IdSslX509StoreCtxGetExData : function(ctx: PX509_STORE_CTX; idx: Integer):Pointer cdecl = nil;
-  IdSslX509StoreCtxGetError : function(ctx: PX509_STORE_CTX):Integer cdecl = nil;
-  IdSslX509StoreCtxSetError : procedure(ctx: PX509_STORE_CTX; s: Integer) cdecl = nil;
-  IdSslX509StoreCtxGetErrorDepth : function(ctx: PX509_STORE_CTX):Integer cdecl = nil;
+  //void *	X509_STORE_CTX_get_ex_data(X509_STORE_CTX *ctx,int idx);
+  IdSslX509StoreCtxGetExData : function(ctx: PX509_STORE_CTX; idx: TIdC_INT):Pointer cdecl = nil;
+//int	X509_STORE_CTX_get_error(X509_STORE_CTX *ctx);  
+  IdSslX509StoreCtxGetError : function(ctx: PX509_STORE_CTX):TIdC_INT cdecl = nil;
+//void	X509_STORE_CTX_set_error(X509_STORE_CTX *ctx,int s);  
+  IdSslX509StoreCtxSetError : procedure(ctx: PX509_STORE_CTX; s: TIdC_INT) cdecl = nil;
+//int	X509_STORE_CTX_get_error_depth(X509_STORE_CTX *ctx);  
+  IdSslX509StoreCtxGetErrorDepth : function(ctx: PX509_STORE_CTX):TIdC_INT cdecl = nil;
+//X509 *	X509_STORE_CTX_get_current_cert(X509_STORE_CTX *ctx);
   IdSslX509StoreCtxGetCurrentCert : function(ctx: PX509_STORE_CTX):PX509 cdecl = nil;
-  IdSslCryptoNumLocks : function: integer cdecl = nil;
+//int CRYPTO_num_locks(void); /* return CRYPTO_NUM_LOCKS (shared libs!) */  
+  IdSslCryptoNumLocks : function: TIdC_INT cdecl = nil;
+// void CRYPTO_set_locking_callback(void (*func)(int mode,int type,
+//					      const char *file,int line)); 
   IdSslSetLockingCallback : procedure(ALockingCallback : TIdSslLockingCallback) cdecl = nil;
+//void CRYPTO_set_id_callback(unsigned long (*func)(void));
   IdSslSetIdCallback : procedure(AIdCallback : TIdSslIdCallback) cdecl = nil;
 
   // 3DES functions
+//void DES_set_odd_parity(DES_cblock *key);  
   IdDES_set_odd_parity: procedure(Key: des_cblock) cdecl = nil;
-  IdDES_set_key: function(key: const_des_cblock; schedule: des_key_schedule): Integer cdecl = nil;
-  IdDES_ecb_encrypt: procedure(Input: des_cblock; output: des_cblock; ks: des_key_schedule; enc: Integer) cdecl = nil;
+//int DES_set_key(const_DES_cblock *key, DES_key_schedule *schedule);
+  IdDES_set_key: function(key: const_des_cblock; schedule: des_key_schedule): TIdC_INT cdecl = nil;
+//        void DES_ecb_encrypt(const_DES_cblock *input, DES_cblock *output,
+//               DES_key_schedule *ks, int enc);  
+  IdDES_ecb_encrypt: procedure(Input: des_cblock; output: des_cblock; 
+    ks: des_key_schedule; enc: TIdC_INT) cdecl = nil;
 
   //More SSL functions
   // int SSL_set_ex_data(SSL *ssl,int idx,void *data);
-  IdSSL_set_ex_data: function(ssl: PSSL; idx: Integer; data: Pointer): Integer; cdecl = nil;
+  IdSSL_set_ex_data: function(ssl: PSSL; 
+    idx: TIdC_INT; data: Pointer): TIdC_INT; cdecl = nil;
   // void *SSL_get_ex_data(SSL *ssl,int idx);
-  IdSSL_get_ex_data: function(ssl: PSSL; idx: integer): Pointer; cdecl = nil;
+  IdSSL_get_ex_data: function(ssl: PSSL; idx: TIdC_INT): Pointer; cdecl = nil;
 
   //PKCS12 *PKCS12_create(char *pass, char *name, EVP_PKEY *pkey,
   //X509 *cert, STACK_OF(X509) *ca, int nid_key, int nid_cert,
   //int iter, int mac_iter, int keytype);
   IdSSLPKCS12Create: function(pass:PChar;Name:PChar;pkey:PEVP_PKEY;
-   cert:PX509;ca:Pointer;nid_key:Integer;nid_cert:Integer;
-   iter:Integer;mac_iter:Integer;keytype:Integer):PPKCS12; cdecl=nil;
+   cert : PX509; ca : PSTACK_OF_X509; nid_key, nid_cert :TIdC_INT;
+   iter, mac_iter, keytype : TIdC_INT) : PPKCS12; cdecl=nil;
 
   //int i2d_PKCS12_bio(BIO *bp, PKCS12 *p12);
-  IdSSLI2dPKCS12Bio: function(b:PBIO;p12:PPKCS12):Integer; cdecl = nil;
+  IdSSLI2dPKCS12Bio: function(b:PBIO;p12 : PPKCS12) : TIdC_INT; cdecl = nil;
 
   //PKCS12_free
   IdSSLPKCS12Free: procedure(p12:PPKCS12) cdecl = nil;
+//STACK_OF(X509_NAME) *SSL_load_client_CA_file(const char *file);
+  IdSSLLoadClientCAFile: function(const _file: PChar):PSTACK_OF_X509_NAME; cdecl = nil;
+//void SSL_CTX_set_client_CA_list(SSL_CTX *ctx, STACK_OF(X509_NAME) *name_list);  
+  IdSSLCtxSetClientCAList: procedure(ctx: PSSL_CTX; list: PSTACK_OF_X509_NAME); cdecl = nil;
+//int SSL_CTX_set_default_verify_paths(SSL_CTX *ctx);
+  IdSSLCtxSetDefaultVerifyPaths: function(ctx: PSSL_CTX): TIdC_INT; cdecl = nil;
+//int	SSL_CTX_set_session_id_context(SSL_CTX *ctx,const unsigned char *sid_ctx,
+//				       unsigned int sid_ctx_len);
+  IdSSLCtxSetSessionIdContext: function(ctx: PSSL_CTX; const sid_ctx: PChar; 
+    sid_ctx_len: TIdC_UINT):TIdC_INT; cdecl = nil;
 
-  IdSSLLoadClientCAFile: function(const _file: PChar):PSTACK_X509_NAME; cdecl = nil;
-  IdSSLCtxSetClientCAList: procedure(ctx: PSSL_CTX; list: PSTACK_X509_NAME); cdecl = nil;
+//char *SSL_CIPHER_description(SSL_CIPHER *,char *buf,int size);
+  IdSSLCipherDescription: function(arg0: PSSL_CIPHER; buf: PChar; size: TIdC_INT):PChar; cdecl = nil;
 
-  IdSSLCtxSetDefaultVerifyPaths: function(ctx: PSSL_CTX): Integer; cdecl = nil;
-  IdSSLCtxSetSessionIdContext: function(ctx: PSSL_CTX; const sid_ctx: PChar; sid_ctx_len: UInteger):Integer; cdecl = nil;
-
-  //SSL_CIPHER_description
-  IdSSLCipherDescription: function(arg0: PSSL_CIPHER; buf: PChar; size: Integer):PChar; cdecl = nil;
-  //f_SSL_get_current_cipher
+//SSL_CIPHER *SSL_get_current_cipher(const SSL *s);  
   IdSSLGetCurrentCipher: function(s: PSSL):PSSL_CIPHER; cdecl = nil;
+//const char *	SSL_CIPHER_get_name(const SSL_CIPHER *c);
   IdSSLCipherGetName: function(c: PSSL_CIPHER):PChar; cdecl = nil;
+//char *	SSL_CIPHER_get_version(const SSL_CIPHER *c);  
   IdSSLCipherGetVersion: function(c: PSSL_CIPHER):PChar; cdecl = nil;
-  IdSSLCipherGetBits: function(c: PSSL_CIPHER; alg_bits: PInteger):Integer; cdecl = nil;
+  //int	SSL_CIPHER_get_bits(const SSL_CIPHER *c,int *alg_bits);
+  IdSSLCipherGetBits: function(c: PSSL_CIPHER;var alg_bits: TIdC_INT):TIdC_INT cdecl = nil;
 
   //experimental
-   IdSSLERR_error_string_n: procedure(AError : Cardinal; ErrorStr : PChar; Len : Cardinal); cdecl = nil;
+//void ERR_error_string_n(unsigned long e, char *buf, size_t len);
+   IdSSLERR_error_string_n: procedure(AError : TIdC_ULONG; ErrorStr : PChar; 
+     Len : size_t); cdecl = nil;
 //unsigned long ERR_get_error(void );
-   IdSSLERR_get_err : function : Cardinal;
+   IdSSLERR_get_err : function : TIdC_ULONG cdecl;
    //unsigned long ERR_peek_error(void );
-   IdSSLERR_peek_err : function : Cardinal;
+   IdSSLERR_peek_err : function : TIdC_ULONG cdecl;
 //  ERR_error_string(
    IdSSLERR_clear_error : procedure;  cdecl = nil;
 //     char *ERR_error_string(unsigned long e,char *buf);
-   IdSSLERR_error_string : function (e: cardinal; buff: PChar): PChar;  cdecl = nil;
+   IdSSLERR_error_string : function (e: TIdC_ULONG; buff: PChar): PChar;  cdecl = nil;
   //const char *ERR_lib_error_string(unsigned long e);
-   IdSSLERR_lib_error_string : function(e : Cardinal): PChar; cdecl = nil;
+   IdSSLERR_lib_error_string : function(e : TIdC_ULONG): PChar; cdecl = nil;
   //const char *ERR_func_error_string(unsigned long e);
-   IdSSLERR_func_error_string : function(e : Cardinal): PChar; cdecl = nil;
+   IdSSLERR_func_error_string : function(e : TIdC_ULONG): PChar; cdecl = nil;
   //const char *ERR_reason_error_string(unsigned long e);
-  IdSSLERR_reason_error_string : function(e : Cardinal): PChar;  cdecl = nil;
+  IdSSLERR_reason_error_string : function(e : TIdC_ULONG): PChar;  cdecl = nil;
   // void ERR_load_ERR_strings(void);
   IdSSLERR_load_ERR_strings : procedure; cdecl = nil;
   //void ERR_load_crypto_strings(void);
@@ -3255,7 +5786,7 @@ var
   //void ERR_free_strings(void)
   IdSSLERR_free_strings : procedure; cdecl = nil;
   //void ERR_remove_state(unsigned long pid);
-  IdSslErrRemoveState : procedure(pid:Cardinal) cdecl = nil;
+  IdSslErrRemoveState : procedure(pid:TIdC_ULONG) cdecl = nil;
 
   //void CRYPTO_cleanup_all_ex_data(void);
   IdSslCryptoCleanupAllExData : procedure cdecl = nil;
@@ -3267,7 +5798,7 @@ var
 
 function IdSslUCTTimeDecode(UCTtime : PASN1_UTCTIME; Var year, month, day, hour, min, sec: Word;
   Var tz_hour, tz_min: Integer): Integer;
-function IdSslSetAppData(s: PSSL; arg: Pointer): Integer;
+function IdSslSetAppData(s: PSSL; arg: Pointer): TIdC_INT;
 function IdSslGetAppData(s: PSSL): Pointer;
 
 function Load: Boolean;
@@ -3277,23 +5808,27 @@ function WhichFailedToLoad: String;
 procedure InitializeRandom;
 
 function IdSslX509StoreCtxGetAppData(ctx:PX509_STORE_CTX):Pointer;
-function IdSslX509GetNotBefore(x509: PX509):PASN1_UTCTIME;
-function IdSslX509GetNotAfter(x509: PX509):PASN1_UTCTIME;
-procedure IdSslCtxSetInfoCallback(ctx: PSSL_CTX; cb: PFunction);
-function IdSslCtxSetOptions(ctx: PSSL_CTX; op: Longint):Longint;
-function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPChar; length: PInteger):Integer;
-function IdSslCtxGetVersion(ctx: PSSL_CTX):Integer;
-
-function IdSslBioSetClose(b:PBio;c:Cardinal):Cardinal;
+function IdSslX509GetNotBefore(x509: PX509):PASN1_TIME;
+//function IdSslX509GetNotBefore(x509: PX509):PASN1_UTCTIME;
+function IdSslX509GetNotAfter(x509: PX509):PASN1_TIME;
+//function IdSslX509GetNotAfter(x509: PX509):PASN1_UTCTIME;
+procedure IdSslCtxSetInfoCallback(ctx: PSSL_CTX; cb: PSSL_CTX_info_callback);
+function IdSslCtxSetOptions(ctx: PSSL_CTX; op: TIdC_INT):TIdC_LONG;
+function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPChar; length: PIdC_INT) : TIdC_UINT;
+function IdSslCtxGetVersion(ctx: PSSL_CTX):TIdC_INT;
+function IdSslBioSetClose(b:PBio;c:TIdC_LONG):TIdC_LONG;
 procedure IdSslBioGetMemPtr(b:PBIO;pp:Pointer);
-function IdSslBioPending(b:PBIO):Integer;
-function IdSslPemWriteBio(b:Pointer;x:Pointer):Integer;
-function IdSslPemReadBio(bp:Pointer;x:Pointer;cb:Pointer;u:PChar):Pointer;
-function IdSslMalloc(aSize:Integer):Pointer;
+function IdSslBioPending(b:PBIO):TIdC_LONG;
+function IdSslPemWriteBio(b:PBIO;x:PChar):TIdC_INT;
+function IdSslPemReadBio(bp:PBIO;x:Pointer;cb:ppem_password_cb;u:PChar):PX509;
+function IdSslMalloc(aSize:TIdC_INT):Pointer;
 procedure IdSslMemCheck(const aEnabled:boolean);
-function IdSslEvpPKeyAssignRsa(pkey:Pointer;rsa:Pointer):Integer;
-function IdSslX509ReqGetSubjectName(x:PX509_REQ):Pointer;
+function IdSslEvpPKeyAssignRsa(pkey:PEVP_MD;rsa:PChar):TIdC_INT;
+function IdSslX509ReqGetSubjectName(x:PX509_REQ):PX509_NAME;
+//function IdSslX509ReqGetSubjectName(x:PX509_REQ):PASN1_BIT_STRING;
 procedure IdSslX509V3SetCtxNoDb(ctx:X509V3_CTX);
+
+function ErrMsg(AErr : TIdC_ULONG) : string;
 
 implementation
 
@@ -3302,13 +5837,13 @@ uses
   IdSys,
   IdGlobal  //needed for Sys symbol
   {$IFDEF KYLIX}
-  , libc;
+   , libc
   {$ENDIF}
   {$IFDEF FPC}
     {$IFDEF USELIBC}
-    , libc
+     , libc 
     {$ENDIF}
-    , DynLibs // better add DynLibs only for fpc
+    , DynLibs  // better add DynLibs only for fpc
   {$ENDIF}
   {$ifdef win32_or_win64_or_winCE}
   , Windows
@@ -4899,6 +7434,9 @@ const
   fn_TLSv1_method = 'TLSv1_method';  {Do not localize}
   fn_TLSv1_server_method = 'TLSv1_server_method';  {Do not localize}
   fn_TLSv1_client_method = 'TLSv1_client_method';  {Do not localize}
+  fn_DTLSv1_method = 'DTLSv1_method'; {Do not localize}
+  fn_DTLSv1_server_method = 'DTLSv1_server_method'; {Do not localize}
+  fn_DTLSv1_client_method = 'DTLSv1_client_method'; {Do not localize}
   fn_SSL_get_ciphers = 'SSL_get_ciphers';  {Do not localize}
   fn_SSL_do_handshake = 'SSL_do_handshake';  {Do not localize}
   fn_SSL_renegotiate = 'SSL_renegotiate';  {Do not localize}
@@ -4996,18 +7534,24 @@ function LoadFunction(const FceName:String):Pointer;
 begin
   Result := GetProcAddress(hIdSSL, PChar(FceName));
 
-  if (Result = nil) then FFailedFunctionLoadList.Add(FceName);
-;  {Do not localize}
+  if (Result = nil) then 
+  begin
+    FFailedFunctionLoadList.Add(FceName);
+  end;
+  {Do not localize}
 end;
 
 function LoadFunctionCLib(const FceName:String):Pointer;
 begin
   Result := GetProcAddress(hIdCrypto, PChar(FceName));
-  if (Result = nil) then FFailedFunctionLoadList.Add(FceName);  {Do not localize}
+  if (Result = nil) then
+  begin 
+    FFailedFunctionLoadList.Add(FceName);  {Do not localize}
+  end;
 end;
 
 // remove this function, it is not used
-function ErrMsg(AErr : Cardinal) : string;
+function ErrMsg(AErr : TIdC_ULONG) : string;
 var
   LString: String;
 Begin
@@ -5101,6 +7645,9 @@ begin
   @IdSslMethodTLSV1 := LoadFunction(fn_TLSv1_method);
   @IdSslMethodServerTLSV1 := LoadFunction(fn_TLSv1_server_method);
   @IdSslMethodClientTLSV1 := LoadFunction(fn_TLSv1_client_method);
+  @IdSslMethodDTLSv1 := LoadFunction(fn_DTLSv1_method);
+  @IdSslMethodServerDTLSv1 := LoadFunction(fn_DTLSv1_server_method);
+  @IdSslMethodClientDTLSv1 := LoadFunction(fn_DTLSv1_client_method);
   @IdSslShutdown := LoadFunction(fn_SSL_shutdown);
   @IdSslSetConnectState := LoadFunction(fn_SSL_set_connect_state);
   @IdSslSetAcceptState := LoadFunction(fn_SSL_set_accept_state);
@@ -5110,6 +7657,7 @@ begin
   @IdSslAddSslAlgorithms := LoadFunction(fn_SSLeay_add_ssl_algorithms);
   @IdSslSessionGetId := LoadFunction(fn_SSL_SESSION_get_id);
   // CRYPTO LIB
+  @IdSslSSLeay_version := LoadFunctionCLib(fn_SSLeay_version);
   @IdSslX509NameOneline := LoadFunctionCLib(fn_X509_NAME_oneline);
   @IdSslX509NameHash := LoadFunctionCLib(fn_X509_NAME_hash);
   @IdSslX509SetIssuerName := LoadFunctionCLib(fn_X509_set_issuer_name);
@@ -5262,7 +7810,6 @@ begin
   @IdSslSkPush := LoadFunctionCLib(fn_sk_push);
 
   Result := (FFailedFunctionLoadList.Count = 0);
-
 end;
 
 procedure Unload;
@@ -5320,7 +7867,10 @@ begin
   Result := 1;
   // Check if first 12 chars are numbers
   for i := 1 to 12 do begin
-    if (time_str[i] > '9') or (time_str[i] < '0') then exit;    {Do not Localize}
+    if (time_str[i] > '9') or (time_str[i] < '0') then
+    begin
+      exit;    {Do not Localize}
+    end;
   end;
 
   // Convert time from string to number
@@ -5356,7 +7906,7 @@ begin
   end;
 end;
 
-function IdSslSetAppData(s: PSSL; arg: Pointer): Integer;
+function IdSslSetAppData(s: PSSL; arg: Pointer): TIdC_INT;
 begin
   Result := IdSSL_set_ex_data(s, 0, arg);
 end;
@@ -5379,33 +7929,36 @@ begin
   Result := IdSslX509StoreCtxGetExData(ctx, 0);
 end;
 
-function IdSslX509GetNotBefore(x509: PX509):PASN1_UTCTIME;
+//function IdSslX509GetNotBefore(x509: PX509):PASN1_UTCTIME;
+function IdSslX509GetNotBefore(x509: PX509):PASN1_TIME;
 begin
   Assert(x509<>nil);
   Result := x509.cert_info.validity.notBefore;
 end;
 
-function IdSslX509GetNotAfter(x509: PX509):PASN1_UTCTIME;
+//function IdSslX509GetNotAfter(x509: PX509):PASN1_UTCTIME;
+function IdSslX509GetNotAfter(x509: PX509):PASN1_TIME;
 //#define	X509_get_notAfter(x) ((x)->cert_info->validity->notAfter)
 begin
   Assert(x509<>nil);
   Result := x509.cert_info.validity.notAfter;
 end;
 
-procedure IdSslCtxSetInfoCallback(ctx: PSSL_CTX; cb: PFunction);
+procedure IdSslCtxSetInfoCallback(ctx: PSSL_CTX; cb: PSSL_CTX_info_callback);
 //#define SSL_CTX_set_info_callback(ctx,cb)	((ctx)->info_callback=(cb))
 begin
   Assert(ctx<>nil);
   ctx.info_callback:=cb;
 end;
 
-function IdSslCtxSetOptions(ctx: PSSL_CTX; op: Longint):Longint;
+function IdSslCtxSetOptions(ctx: PSSL_CTX; op: TIdC_INT):TIdC_LONG;
 //#define SSL_CTX_set_options(ctx,op) SSL_CTX_ctrl((ctx),SSL_CTRL_OPTIONS,(op),NULL)
 begin
+//long (*ssl_ctx_ctrl)(SSL_CTX *ctx,int cmd,long larg,void *parg);
   Result := IdSslCtxCtrl(ctx, OPENSSL_SSL_CTRL_OPTIONS, op, nil);
 end;
 
-function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPChar; length: PInteger):Integer;
+function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPChar; length: PIdC_INT) : TIdC_UINT;
 begin
   Assert(s<>nil);
   id^ := @s.sid_ctx;
@@ -5413,15 +7966,18 @@ begin
   Length^ := Result;
 end;
 
-function IdSslCtxGetVersion(ctx: PSSL_CTX):Integer;
+function IdSslCtxGetVersion(ctx: PSSL_CTX):TIdC_INT;
 begin
   Assert(ctx<>nil);
   Result := ctx.method.version;
 end;
 
-function IdSslBioSetClose(b:PBio;c:Cardinal):Cardinal;
+function IdSslBioSetClose(b:PBio;c:TIdC_LONG):TIdC_LONG;
 //#define BIO_set_close(b,c)	(int)BIO_ctrl(b,BIO_CTRL_SET_CLOSE,(c),NULL)
+//long	BIO_ctrl(BIO *bp,int cmd,long larg,void *parg);
 begin
+//  IdSslBioCtrl : function(bp:PBIO;cmd:TIdC_INT;larg:TIdC_LONG;
+//    parg:Pointer):TIdC_LONG cdecl = nil;
   Result := IdSslBioCtrl(b,OPENSSL_BIO_CTRL_SET_CLOSE, c, nil);
 end;
 
@@ -5432,32 +7988,38 @@ begin
   IdSslBioCtrl(b, OPENSSL_BIO_C_GET_BUF_MEM_PTR, 0, pp);
 end;
 
-function IdSslBioPending(b:PBIO):Integer;
+function IdSslBioPending(b:PBIO):TIdC_LONG;
 //#define BIO_pending(b)		(int)BIO_ctrl(b,BIO_CTRL_PENDING,0,NULL)
 begin
   Result := IdSslBioCtrl(b, OPENSSL_BIO_CTRL_PENDING, 0, nil);
 end;
 
-function IdSslPemReadBio(bp:Pointer;x:Pointer;cb:Pointer;u:PChar):Pointer;
+function IdSslPemReadBio(bp:PBIO;x:Pointer;cb:ppem_password_cb;u:PChar):PX509;
 //#define	PEM_read_bio_X509(bp,x,cb,u) (X509 *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_X509,PEM_STRING_X509,bp,(char **)x,cb,u)
 begin
+//  IdSslPemAsn1ReadBio : function(d2i:d2i_of_void;Name:PChar;bp:PBIO;
+//          var x:Pointer;cb:Ppem_password_cb;u:PChar):Pointer cdecl = nil;
   Result := IdSslPemAsn1ReadBio(@IdSslD2iX509, OPENSSL_PEM_STRING_X509, bp, x, nil, nil);
 end;
 
-function IdSslPemWriteBio(b:Pointer;x:Pointer):Integer;
+function IdSslPemWriteBio(b:PBIO;x:PChar):TIdC_INT;
 //#define PEM_write_bio_X509(bp,x)
 //PEM_ASN1_write_bio((int (*)())i2d_X509,
 //PEM_STRING_X509,bp,(char *)x, NULL,NULL,0,NULL,NULL)
 begin
   Assert(b<>nil);
   Assert(x<>nil);
+//function(i2d:d2i_of_void;Name:PChar;
+//    bp:PBIO;x:PChar;enc:PEVP_CIPHER;kstr:PChar;klen:TIdC_INT;
+//    cb:ppem_password_cb;u:Pointer):TIdC_INT cdecl = nil;
 
-  Result := IdSslPemAsn1WriteBio(@IdSslI2dX509, OPENSSL_PEM_STRING_X509, b, x, nil, nil, 0, nil, nil);
+  Result := IdSslPemAsn1WriteBio(@IdSslI2dX509, OPENSSL_PEM_STRING_X509, 
+    b, x, nil, nil, 0, nil, nil);
   Assert(Result<>0);
 end;
 
-function IdSslMalloc(aSize:Integer):Pointer;
+function IdSslMalloc(aSize:TIdC_INT):Pointer;
 //can also use CRYPTO_mem_leaks(bio)
 begin
   Result := IdSslCryptoMalloc(aSize, '', 0);
@@ -5476,17 +8038,18 @@ begin
   Assert(r<>0);
 end;
 
-function IdSslEvpPKeyAssignRsa(pkey:Pointer;rsa:Pointer):Integer;
+function IdSslEvpPKeyAssignRsa(pkey:PEVP_MD;rsa:PChar):TIdC_INT;
 //#define EVP_PKEY_assign_RSA(pkey,rsa) EVP_PKEY_assign((pkey),EVP_PKEY_RSA,(char *)(rsa))
 begin
   Result := IdSslEvpPKeyAssign(pkey, OPENSSL_EVP_PKEY_RSA, rsa);
 end;
 
-function IdSslX509ReqGetSubjectName(x:PX509_REQ):Pointer;
+function IdSslX509ReqGetSubjectName(x:PX509_REQ):PX509_NAME;
 //#define	X509_REQ_get_subject_name(x) ((x)->req_info->subject)
+
 begin
   Assert(x<>nil);
-  Result := x.req_info.subject;
+  Result := x^.req_info^.subject;
 end;
 
 procedure IdSslX509V3SetCtxNoDb(ctx:X509V3_CTX);
