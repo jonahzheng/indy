@@ -182,14 +182,56 @@ IMPORTANT!!!!
 A lot of IFDEF's and defines have to used because OpenSSL has a number of options'
 and those can effect the API.  The options are determined by a "configure" script
 that generates apporpriate make files with the appropriate defines.  If you do
-custom compiles of OpenSSL or if it's compiled differently that what I assume, 
+custom compiles of OpenSSL or if it's compiled differently that what I assume,
 you will need to add or deactivate the defines.
+
+my $default_depflags = "-DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_GMP -DOPENSSL_NO_MDC2 -DOPENSSL_NO_RC5 ";
+
+my $x86_gcc_des="DES_PTR DES_RISC1 DES_UNROLL";
+
+my $x86_gcc_opts="RC4_INDEX MD2_INT";
+
+
+
+except from configure script:
+
 }
+
+//# Win64 targets, WIN64I denotes IA-64 and WIN64A - AMD64
+//"VC-WIN64I","cl::::WIN64I::SIXTY_FOUR_BIT RC4_CHUNK_LL DES_INT EXPORT_VAR_AS_FN:${no_asm}:win32",
+//"VC-WIN64A","cl::::WIN64A::SIXTY_FOUR_BIT RC4_CHUNK_LL DES_INT EXPORT_VAR_AS_FN:${no_asm}:win32",
+
+//# Visual C targets
+//"VC-NT","cl::::WINNT::BN_LLONG RC4_INDEX EXPORT_VAR_AS_FN ${x86_gcc_opts}:${no_asm}:win32",
+//"VC-CE","cl::::WINCE::BN_LLONG RC4_INDEX EXPORT_VAR_AS_FN ${x86_gcc_opts}:${no_asm}:win32",
+//"VC-WIN32","cl::::WIN32::BN_LLONG RC4_INDEX EXPORT_VAR_AS_FN ${x86_gcc_opts}:${no_asm}:win32",
+
+//# Borland C++ 4.5
+//"BC-32","bcc32::::WIN32::BN_LLONG DES_PTR RC4_INDEX EXPORT_VAR_AS_FN:${no_asm}:win32",
+
+// example Linux systems.
+//"linux-elf",	"gcc:-DL_ENDIAN -DTERMIO -O3 -fomit-frame-pointer -Wall::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+//"linux-ppc",	"gcc:-DB_ENDIAN -DTERMIO -O3 -Wall::-D_REENTRANT::-ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_RISC1 DES_UNROLL::linux_ppc32.o::::::::::dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+//"linux-generic64","gcc:-DTERMIO -O3 -Wall::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_INT DES_UNROLL BF_PTR:${no_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+//"linux-x86_64",	"gcc:-m64 -DL_ENDIAN -DTERMIO -O3 -Wall -DMD32_REG_T=int::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK BF_PTR2 DES_INT DES_UNROLL:${x86_64_asm}:dlfcn:linux-shared:-fPIC:-m64:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+
+//example FreeBSD systems.
+//"BSD-x86",	"gcc:-DL_ENDIAN -DTERMIOS -O3 -fomit-frame-pointer -Wall::${BSDthreads}:::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_out_asm}:dlfcn:bsd-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+//"BSD-x86-elf",	"gcc:-DL_ENDIAN -DTERMIOS -O3 -fomit-frame-pointer -Wall::${BSDthreads}:::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:bsd-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+
+//"BSD-x86_64",	"gcc:-DL_ENDIAN -DTERMIOS -O3 -DMD32_REG_T=int -Wall::${BSDthreads}:::SIXTY_FOUR_BIT_LONG RC4_CHUNK DES_INT DES_UNROLL:${x86_64_asm}:dlfcn:bsd-gcc-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+
 {$ifdef win32}
   {$define OPENSSL_SYSNAME_WIN32}
-  {$define WIN32_LEAN_AND_MEAN}
   {$define L_ENDIAN}
   {$define DSO_WIN32}
+
+  {$define BN_LLONG}
+  {$define RC4_INDEX}
+  {$define EXPORT_VAR_AS_FN}
+  {$define RC4_INDEX}
+  {$define MD2_INT}
+
   {$define _CRT_SECURE_NO_DEPRECATE}
   {$define _CRT_NONSTDC_NO_DEPRECATE}
   {$define BN_ASM}
@@ -201,11 +243,33 @@ you will need to add or deactivate the defines.
   {$define OPENSSL_NO_MDC2}
   {$define OPENSSL_NO_KRB5}
   {$define OPENSSL_NO_MDC}
-  {$define OPENSSL_NO_DYNAMIC_ENGINE}  
+  {$define OPENSSL_NO_DYNAMIC_ENGINE}
+
+{$endif}
+{$ifdef wince}
+  {$define BN_LLONG}
+  {$define RC4_INDEX}
+  {$define EXPORT_VAR_AS_FN}
+  {$define RC4_INDEX}
+  {$define MD2_INT}
+
+  {$define OPENSSL_NO_CAMELLIA}
+  {$define OPENSSL_NO_RC5}
+  {$define OPENSSL_NO_MDC2}
+  {$define OPENSSL_NO_KRB5}
+  {$define OPENSSL_NO_DYNAMIC_ENGINE}
+
+  {$define EXPORT_VAR_AS_FN}  
 {$endif}
 {$ifdef win64}
-  {$define WIN32_LEAN_AND_MEAN}
+   //"VC-WIN64A","cl::::WIN64A::-SIXTY_FOUR_BIT RC4_CHUNK_LL DES_INT EXPORT_VAR_AS_FN:${no_asm}:win32",
+  {$define SIXTY_FOUR_BIT}
+  {$define RC4_CHUNK_LL}
+  {$define DES_INT}
+  {$define EXPORT_VAR_AS_FN}
+
   {$define L_ENDIAN}
+
   {$define DSO_WIN32}
   {$define OPENSSL_SYSNAME_WIN32}
   {$define OPENSSL_SYSNAME_WINNT}
@@ -214,10 +278,12 @@ you will need to add or deactivate the defines.
   {$define _CRT_SECURE_NO_DEPRECATE}
   {$define _CRT_NONSTDC_NO_DEPRECATE}
   {$define OPENSSL_NO_CAMELLIA}
-  {$define OPENSSL_NO_RC5} 
-  {$define OPENSSL_NO_MDC2} 
-  {$define OPENSSL_NO_KRB5} 
+  {$define OPENSSL_NO_RC5}
+  {$define OPENSSL_NO_MDC2}
+  {$define OPENSSL_NO_KRB5}
   {$define OPENSSL_NO_DYNAMIC_ENGINE}
+
+  {$define EXPORT_VAR_AS_FN}
 {$endif}
 {$ifdef unix}
 
@@ -230,13 +296,42 @@ you will need to add or deactivate the defines.
   {$define OPENSSL_NO_RC5}
 {$endif}
 
+//#if (defined(OPENSSL_NO_RSA) || defined(OPENSSL_NO_MD5)) && !defined(OPENSSL_NO_SSL2)
+//#define OPENSSL_NO_SSL2
+//#endif
+{$IFDEF OPENSSL_NO_RSA}
+  {$IFNDEF OPENSSL_NO_SSL2}
+    {$DEFINE OPENSSL_NO_SSL2}
+  {$ENDIF}
+{$ENDIF}
+{$IFDEF OPENSSL_NO_MD5}
+  {$IFNDEF OPENSSL_NO_SSL2}
+    {$DEFINE OPENSSL_NO_SSL2}
+  {$ENDIF}
+{$ENDIF}
+
+{$IFDEF WIN64}
+  {$DEFINE SYS_WIN}
+{$ENDIF}
+{$IFDEF WIN32}
+  {$DEFINE SYS_WIN}
+{$ENDIF}
+{$IFDEF WINCE}
+  {$DEFINE SYS_WIN}
+{$ENDIF}
+{$IFNDEF SIXTY_FOUR_BIT}
+  {$IFNDEF SIXTY_FOUR_BIT_LONG}
+//I've over simplified this because we don't support 8 or 16bit architectures
+    {$DEFINE THIRTY_TWO_BIT}
+  {$ENDIF}
+{$ENDIF}
 // the following emit is a workaround to a name conflict
 // with Win32 API header files
 (*$HPPEMIT '#include <time.h>'*)
 uses 
 {$IFDEF FPC} SysUtils, {$ENDIF}
   IdCTypes;
-  
+
 const
   OPENSSL_ASN1_F_A2D_ASN1_OBJECT = 100;
   OPENSSL_ASN1_F_A2I_ASN1_ENUMERATED = 236;
@@ -483,10 +578,36 @@ const
   OPENSSL_ASN1_R_WRONG_TAG = 149;
   OPENSSL_ASN1_R_WRONG_TYPE = 150;
   OPENSSL_ASN1_STRING_FLAG_BITS_LEFT = $08;
-  OPENSSL_BF_BLOCK = 8;
-  OPENSSL_BF_DECRYPT = 0;
-  OPENSSL_BF_ENCRYPT = 1;
-  OPENSSL_BF_ROUNDS = 16;
+  OPENSSL_ASN1_STRING_FLAG_NDEF = $010;
+  OPENSSL_ASN1_LONG_UNDEF = $7fffffff; //0x7fffffffL
+
+  OPENSSL_UB_NAME = 32768;
+  OPENSSL_UB_COMMON_NAME = 64;
+  OPENSSL_UB_LOCALITY_NAME = 128;
+  OPENSSL_UB_STATE_NAME  = 128;
+  OPENSSL_UB_ORGANIZATION_NAME = 64;
+  OPENSSL_UB_ORGANIZATION_UNIT_NAME = 64;
+  OPENSSL_UB_TITLE = 64;
+  OPENSSL_UB_EMAIL_ADDRESS = 128;
+
+  OPENSSL_ASN1_STRFLGS_ESC_2253 = 1;
+  OPENSSL_ASN1_STRFLGS_ESC_CTRL = 2;
+  OPENSSL_ASN1_STRFLGS_ESC_MSB = 4;
+  OPENSSL_ASN1_STRFLGS_ESC_QUOTE = 8;
+
+  OPENSSL_ASN1_STRFLGS_UTF8_CONVERT =  $10;
+  OPENSSL_ASN1_STRFLGS_IGNORE_TYPE	=  $20;
+  OPENSSL_ASN1_STRFLGS_SHOW_TYPE    =  $40;
+  OPENSSL_ASN1_STRFLGS_DUMP_ALL	    =  $80;
+  OPENSSL_ASN1_STRFLGS_DUMP_UNKNOWN = $100;
+  OPENSSL_ASN1_STRFLGS_DUMP_DER     = $200;
+  OPENSSL_ASN1_STRFLGS_RFC2253  = (OPENSSL_ASN1_STRFLGS_ESC_2253 or
+	   OPENSSL_ASN1_STRFLGS_ESC_CTRL or
+     OPENSSL_ASN1_STRFLGS_ESC_MSB or
+     OPENSSL_ASN1_STRFLGS_UTF8_CONVERT or
+     OPENSSL_ASN1_STRFLGS_DUMP_UNKNOWN or
+     OPENSSL_ASN1_STRFLGS_DUMP_DER);
+
   OPENSSL_BIO_BIND_NORMAL = 0;
   OPENSSL_BIO_BIND_REUSEADDR = 2;
   OPENSSL_BIO_BIND_REUSEADDR_IF_UNUSED = 1;
@@ -653,15 +774,40 @@ const
   OPENSSL_BIO_TYPE_SOCKET = 5 or $0400 or $0100;
   OPENSSL_BIO_TYPE_SOURCE_SINK = $0400;
   OPENSSL_BIO_TYPE_SSL = 7 or $0200;
+
+  {$IFDEF SIXTY_FOUR_BIT_LONG}
+  OPENSSL_BN_BITS	 = 128;
+  OPENSSL_BN_BYTES = 8;
+  OPENSSL_BN_BITS2 = 64;
+  OPENSSL_BN_BITS4 = 32;
+  OPENSSL_BN_DEC_FMT1	= '%lu';
+  OPENSSL_BN_DEC_FMT2	= '%019lu';
+  OPENSSL_BN_DEC_NUM = 19;
+  {$ENDIF}
+  {$IFDEF SIXTY_FOUR_BIT}
+    {$UNDEF BN_LLONG}
+    {$UNDEF BN_ULLONG}
+  OPENSSL_BN_BITS	= 128;
+  OPENSSL_BN_BYTES = 8;
+  OPENSSL_BN_BITS2 = 64;
+  OPENSSL_BN_BITS4 = 32;
+  OPENSSL_BN_DEC_FMT1 = '%llu';  {Do not localize}
+  OPENSSL_BN_DEC_FMT2	= '%019llu';  {Do not localize}
+  OPENSSL_BN_DEC_NUM	= 19;
+  {$ENDIF}
+  {$IFDEF THIRTY_TWO_BIT}
   OPENSSL_BN_BITS = 64;
+  OPENSSL_BN_BYTES = 4;
   OPENSSL_BN_BITS2 = 32;
   OPENSSL_BN_BITS4 = 16;
-  OPENSSL_BN_BYTES = 4;
-  OPENSSL_BN_CTX_NUM = 12;
   OPENSSL_BN_DEC_FMT1 = '%lu';  {Do not localize}
   OPENSSL_BN_DEC_FMT2 = '%09lu';  {Do not localize}
   OPENSSL_BN_DEC_NUM = 9;
+  {$ENDIF}
+  OPENSSL_BN_CTX_NUM = 12;
+  {$IFNDEF OPENSSL_NO_DEPRECATED}
   OPENSSL_BN_DEFAULT_BITS = 1280;
+  {$ENDIF}
   OPENSSL_BN_FLG_FREE = $8000;
   OPENSSL_BN_FLG_MALLOCED = $01;
   OPENSSL_BN_FLG_STATIC_DATA = $02;
@@ -715,10 +861,34 @@ const
   OPENSSL_B_ASN1_UTF8STRING = $2000;
   OPENSSL_B_ASN1_VIDEOTEXSTRING = $0008;
   OPENSSL_B_ASN1_VISIBLESTRING = $0040;
-  OPENSSL_CAST_BLOCK = 8;
-  OPENSSL_CAST_DECRYPT = 0;
-  OPENSSL_CAST_ENCRYPT = 1;
-  OPENSSL_CAST_KEY_LENGTH = 16;
+  OPENSSL_B_ASN1_UTCTIME = $4000;
+  OPENSSL_B_ASN1_GENERALIZEDTIME = $8000;
+  OPENSSL_B_ASN1_SEQUENCE = $10000;
+  OPENSSL_B_ASN1_TIME = OPENSSL_B_ASN1_UTCTIME or
+    OPENSSL_B_ASN1_GENERALIZEDTIME;
+  OPENSSL_B_ASN1_PRINTABLE = OPENSSL_B_ASN1_PRINTABLESTRING or
+			OPENSSL_B_ASN1_T61STRING or
+			OPENSSL_B_ASN1_IA5STRING or
+			OPENSSL_B_ASN1_BIT_STRING or
+			OPENSSL_B_ASN1_UNIVERSALSTRING or
+			OPENSSL_B_ASN1_BMPSTRING or
+			OPENSSL_B_ASN1_UTF8STRING or
+			OPENSSL_B_ASN1_SEQUENCE or
+			OPENSSL_B_ASN1_UNKNOWN;
+  OPENSSL_B_ASN1_DIRECTORYSTRING = OPENSSL_B_ASN1_PRINTABLESTRING or
+			OPENSSL_B_ASN1_TELETEXSTRING or
+			OPENSSL_B_ASN1_BMPSTRING or
+			OPENSSL_B_ASN1_UNIVERSALSTRING or
+			OPENSSL_B_ASN1_UTF8STRING;
+  OPENSSL_B_ASN1_DISPLAYTEXT = OPENSSL_B_ASN1_IA5STRING or
+			OPENSSL_B_ASN1_VISIBLESTRING or
+			OPENSSL_B_ASN1_BMPSTRING or
+			OPENSSL_B_ASN1_UTF8STRING;
+  OPENSSL_MBSTRING_FLAG = $1000;
+  OPENSSL_MBSTRING_UTF8	= (OPENSSL_MBSTRING_FLAG);
+  OPENSSL_MBSTRING_ASC	= (OPENSSL_MBSTRING_FLAG or 1);
+  OPENSSL_MBSTRING_BMP	= (OPENSSL_MBSTRING_FLAG or 2);
+  OPENSSL_MBSTRING_UNIV	= (OPENSSL_MBSTRING_FLAG or 4);
   OPENSSL__CLOCKS_PER_SEC_ = 1000;
   OPENSSL_CLOCKS_PER_SEC = OPENSSL__CLOCKS_PER_SEC_;
   OPENSSL_CLK_TCK = OPENSSL_CLOCKS_PER_SEC;
@@ -763,10 +933,26 @@ const
   OPENSSL_CRYPTO_READ = 4;
   OPENSSL_CRYPTO_UNLOCK = 2;
   OPENSSL_CRYPTO_WRITE = 8;
+  {$IFNDEF OPENSSL_NO_AES}
+  OPENSSL_AES_ENCRYPT	= 1;
+  OPENSSL_AES_DECRYPT	= 0;
+
+  OPENSSL_AES_MAXNR = 14;
+  OPENSSL_AES_BLOCK_SIZE = 16;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_CAST}
+  OPENSSL_CAST_BLOCK = 8;
+  OPENSSL_CAST_DECRYPT = 0;
+  OPENSSL_CAST_ENCRYPT = 1;
+  OPENSSL_CAST_KEY_LENGTH = 16;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_DES}
   OPENSSL_DES_CBC_MODE = 0;
   OPENSSL_DES_DECRYPT = 0;
   OPENSSL_DES_ENCRYPT = 1;
   OPENSSL_DES_PCBC_MODE = 1;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_DH}
   OPENSSL_DH_CHECK_P_NOT_PRIME = $01;
   OPENSSL_DH_CHECK_P_NOT_STRONG_PRIME = $02;
   OPENSSL_DH_FLAG_CACHE_MONT_P = $01;
@@ -781,12 +967,15 @@ const
   OPENSSL_DH_NOT_SUITABLE_GENERATOR = $08;
   OPENSSL_DH_R_NO_PRIVATE_VALUE = 100;
   OPENSSL_DH_UNABLE_TO_CHECK_GENERATOR = $04;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_DSA}
   OPENSSL_DSA_FLAG_CACHE_MONT_P = $01;
   OPENSSL_DSA_F_D2I_DSA_SIG = 110;
   OPENSSL_DSA_F_DSAPARAMS_PRINT = 100;
   OPENSSL_DSA_F_DSAPARAMS_PRINT_FP = 101;
   OPENSSL_DSA_F_DSA_DO_SIGN = 112;
   OPENSSL_DSA_F_DSA_DO_VERIFY = 113;
+
   OPENSSL_DSA_F_DSA_IS_PRIME = 102;
   OPENSSL_DSA_F_DSA_NEW = 103;
   OPENSSL_DSA_F_DSA_PRINT = 104;
@@ -796,7 +985,48 @@ const
   OPENSSL_DSA_F_DSA_SIG_NEW = 109;
   OPENSSL_DSA_F_DSA_VERIFY = 108;
   OPENSSL_DSA_F_I2D_DSA_SIG = 111;
+  OPENSSL_DSA_F_SIG_CB = 114;
+
   OPENSSL_DSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE = 100;
+  OPENSSL_DSA_R_MISSING_PARAMETERS = 101;
+  OPENSSL_DSA_R_BAD_Q_VALUE = 102;
+
+  OPENSSL_DSA_R_MODULUS_TOO_LARGE = 103;  
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_EC}
+  OPENSSL_ECC_MAX_FIELD_BITS = 661;
+  OPENSSL_EC_NAMED_CURVE	= $001;
+  OPENSSL_POINT_CONVERSION_COMPRESSED = 2;
+  OPENSSL_POINT_CONVERSION_UNCOMPRESSED = 4;
+  OPENSSL_POINT_CONVERSION_HYBRID = 6;
+  OPENSSL_EC_PKEY_NO_PARAMETERS	= $001;
+  OPENSSL_EC_PKEY_NO_PUBKEY	= $002;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_ECDSA}
+  OPENSSL_ECDSA_F_ECDSA_DATA_NEW_METHOD = 100;
+  OPENSSL_ECDSA_F_ECDSA_DO_SIGN	= 101;
+  OPENSSL_ECDSA_F_ECDSA_DO_VERIFY	= 102;
+  OPENSSL_ECDSA_F_ECDSA_SIGN_SETUP = 103;
+  OPENSSL_ECDSA_R_BAD_SIGNATURE	 = 100;
+  OPENSSL_ECDSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE	= 101;
+  OPENSSL_ECDSA_R_ERR_EC_LIB = 102;
+  OPENSSL_ECDSA_R_MISSING_PARAMETERS = 103;
+  OPENSSL_ECDSA_R_RANDOM_NUMBER_GENERATION_FAILED	= 104;
+  OPENSSL_ECDSA_R_SIGNATURE_MALLOC_FAILED	= 105;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_ECDH}
+  OPENSSL_ECDH_F_ECDH_COMPUTE_KEY = 100;
+  OPENSSL_ECDH_F_ECDH_DATA_NEW_METHOD	= 101;
+  OPENSSL_ECDH_R_KDF_FAILED	= 102;
+  OPENSSL_ECDH_R_NO_PRIVATE_VALUE	= 100;
+  OPENSSL_ECDH_R_POINT_ARITHMETIC_FAILURE = 101;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_BF}
+  OPENSSL_BF_BLOCK = 8;
+  OPENSSL_BF_DECRYPT = 0;
+  OPENSSL_BF_ENCRYPT = 1;
+  OPENSSL_BF_ROUNDS = 16;
+  {$ENDIF}  
   OPENSSL_EVP_BLOWFISH_KEY_SIZE = 16;
   OPENSSL_EVP_CAST5_KEY_SIZE = 16;
   OPENSSL_EVP_F_D2I_PKEY = 100;
@@ -888,15 +1118,54 @@ const
   OPENSSL_MSS_EXIT_SUCCESS = 0;
   OPENSSL_FILENAME_MAX = 1024;
   OPENSSL_FOPEN_MAX = 20;
+  {$IFNDEF OPENSSL_NO_IDEA}
   OPENSSL_IDEA_BLOCK = 8;
   OPENSSL_IDEA_DECRYPT = 0;
   OPENSSL_IDEA_ENCRYPT = 1;
   OPENSSL_IDEA_KEY_LENGTH = 16;
+  {$ENDIF}
   OPENSSL_IS_SEQUENCE = 0;
   OPENSSL_IS_SET = 1;
   OPENSSL_KRBDES_DECRYPT = OPENSSL_DES_DECRYPT;
   OPENSSL_KRBDES_ENCRYPT = OPENSSL_DES_ENCRYPT;
   OPENSSL_LH_LOAD_MULT = 256;
+
+  OPENSSL_L_ctermid = 16;
+  OPENSSL_L_cuserid = 9;
+  OPENSSL_L_tmpnam = 1024;
+  {$IFNDEF OPENSSL_NO_MD2}
+  OPENSSL_MD2_BLOCK = 16;
+  OPENSSL_MD2_DIGEST_LENGTH = 16;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD4}
+  OPENSSL_MD4_CBLOCK  = 64;
+  OPENSSL_MD4_LBLOCK = (OPENSSL_MD4_CBLOCK div 4);
+  OPENSSL_MD4_DIGEST_LENGTH = 16;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD5}
+  OPENSSL_MD5_CBLOCK = 64;
+  OPENSSL_MD5_LBLOCK = 16;	//(OPENSSL_MD5_CBLOCK/4);
+  OPENSSL_MD5_DIGEST_LENGTH = 16;
+  {$ENDIF}
+   {$IFNDEF OPENSSL_NO_MDC2}
+  OPENSSL_MDC2_BLOCK = 8;
+  OPENSSL_MDC2_DIGEST_LENGTH = 16;
+  {$ENDIF}  
+  {$IFNDEF OPENSSL_NO_SHA}
+  OPENSSL_SHA_LBLOCK = 16;
+  OPENSSL_SHA_CBLOCK = 64; //(OPENSSL_SHA_LBLOCK * 4);
+  OPENSSL_SHA_DIGEST_LENGTH = 20;
+  OPENSSL_SHA_LAST_BLOCK = (OPENSSL_SHA_CBLOCK-8);
+  OPENSSL_SHA256_CBLOCK = 	(OPENSSL_SHA_LBLOCK*4);
+  OPENSSL_SHA224_DIGEST_LENGTH = 28;
+  OPENSSL_SHA256_DIGEST_LENGTH = 32;
+  OPENSSL_SHA384_DIGEST_LENGTH = 48;
+  OPENSSL_SHA512_DIGEST_LENGTH = 64;
+    {$IFNDEF OPENSSL_NO_SHA512}
+  OPENSSL_SHA512_CBLOCK =(OPENSSL_SHA_LBLOCK*8);
+    {$ENDIF}
+  {$ENDIF}
+
   OPENSSL_LN_SMIMECapabilities = 'S/MIME Capabilities';  {Do not localize}
   OPENSSL_LN_X500 = 'X500';  {Do not localize}
   OPENSSL_LN_X509 = 'X509';  {Do not localize}
@@ -963,6 +1232,7 @@ const
   OPENSSL_LN_localityName = 'localityName';  {Do not localize}
   OPENSSL_LN_md2 = 'md2';  {Do not localize}
   OPENSSL_LN_md2WithRSAEncryption = 'md2WithRSAEncryption';  {Do not localize}
+  OPENSSL_LN_md4 = 'md4'; {Do not localize}
   OPENSSL_LN_md5 = 'md5';  {Do not localize}
   OPENSSL_LN_md5WithRSA = 'md5WithRSA';  {Do not localize}
   OPENSSL_LN_md5WithRSAEncryption = 'md5WithRSAEncryption';  {Do not localize}
@@ -1053,6 +1323,10 @@ const
   OPENSSL_LN_sha1WithRSA = 'sha1WithRSA';  {Do not localize}
   OPENSSL_LN_sha1WithRSAEncryption = 'sha1WithRSAEncryption';  {Do not localize}
   OPENSSL_LN_shaWithRSAEncryption = 'shaWithRSAEncryption';  {Do not localize}
+  OPENSSL_LN_sha256WithRSAEncryption = 'sha256WithRSAEncryption'; {Do not localize}
+  OPENSSL_LN_sha384WithRSAEncryption = 'sha384WithRSAEncryption'; {Do not localize}
+  OPENSSL_LN_sha512WithRSAEncryption = 'sha512WithRSAEncryption'; {do not localize}
+  OPENSSL_LN_sha224WithRSAEncryption = 'sha224WithRSAEncryption'; {Do not localize}
   OPENSSL_LN_stateOrProvinceName = 'stateOrProvinceName';  {Do not localize}
   OPENSSL_LN_subject_alt_name = 'X509v3 Subject Alternative Name';  {Do not localize}
   OPENSSL_LN_subject_key_identifier = 'X509v3 Subject Key Identifier';  {Do not localize}
@@ -1065,15 +1339,7 @@ const
   OPENSSL_LN_x509Certificate = 'x509Certificate';  {Do not localize}
   OPENSSL_LN_x509Crl = 'x509Crl';  {Do not localize}
   OPENSSL_LN_zlib_compression = 'zlib compression';  {Do not localize}
-  OPENSSL_L_ctermid = 16;
-  OPENSSL_L_cuserid = 9;
-  OPENSSL_L_tmpnam = 1024;
-  OPENSSL_MD2_BLOCK = 16;
-  OPENSSL_MD2_DIGEST_LENGTH = 16;
-  OPENSSL_MD5_CBLOCK = 64;
-  OPENSSL_MD5_DIGEST_LENGTH = 16;
-  OPENSSL_MDC2_BLOCK = 8;
-  OPENSSL_MDC2_DIGEST_LENGTH = 16;
+
   OPENSSL_NID_SMIMECapabilities = 167;
   OPENSSL_NID_X500 = 11;
   OPENSSL_NID_X509 = 12;
@@ -1137,6 +1403,8 @@ const
   OPENSSL_NID_localityName = 15;
   OPENSSL_NID_md2 = 3;
   OPENSSL_NID_md2WithRSAEncryption = 7;
+  OPENSSL_NID_md4	= 257;
+  OPENSSL_NID_md4WithRSAEncryption = 396;
   OPENSSL_NID_md5 = 4;
   OPENSSL_NID_md5WithRSA = 104;
   OPENSSL_NID_md5WithRSAEncryption = 8;
@@ -1224,6 +1492,10 @@ const
   OPENSSL_NID_sha1 = 64;
   OPENSSL_NID_sha1WithRSA = 115;
   OPENSSL_NID_sha1WithRSAEncryption = 65;
+  OPENSSL_NID_sha256WithRSAEncryption = 668;
+  OPENSSL_NID_sha384WithRSAEncryption = 669;
+  OPENSSL_NID_sha512WithRSAEncryption = 670;
+  OPENSSL_NID_sha224WithRSAEncryption = 671;
   OPENSSL_NID_shaWithRSAEncryption = 42;
   OPENSSL_NID_stateOrProvinceName = 16;
   OPENSSL_NID_subject_alt_name = 85;
@@ -1374,14 +1646,21 @@ const
   OPENSSL_PKCS7_S_BODY = 1;
   OPENSSL_PKCS7_S_HEADER = 0;
   OPENSSL_PKCS7_S_TAIL = 2;
+
+  OPENSSL_PKCS8_NS_DB = 3;
+  OPENSSL_PKCS8_EMBEDDED_PARAM = 2;
   OPENSSL_PKCS8_NO_OCTET = 1;
   OPENSSL_PKCS8_OK = 0;
+
   OPENSSL_P_tmpdir = '/tmp';  {Do not localize}
   OPENSSL_MSS_RAND_MAX = $7fffffff;
+  {$IFNDEF OPENSSL_NO_RC2}
   OPENSSL_RC2_BLOCK = 8;
   OPENSSL_RC2_DECRYPT = 0;
   OPENSSL_RC2_ENCRYPT = 1;
   OPENSSL_RC2_KEY_LENGTH = 16;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_RC5}
   OPENSSL_RC5_12_ROUNDS = 12;
   OPENSSL_RC5_16_ROUNDS = 16;
   OPENSSL_RC5_32_BLOCK = 8;
@@ -1389,12 +1668,19 @@ const
   OPENSSL_RC5_8_ROUNDS = 8;
   OPENSSL_RC5_DECRYPT = 0;
   OPENSSL_RC5_ENCRYPT = 1;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_HMAC}
+  OPENSSL_HMAC_MAX_MD_CBLOCK = 128;	//* largest known is SHA512 */
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_RIPEMD}
   OPENSSL_RIPEMD160_BLOCK = 16;
   OPENSSL_RIPEMD160_CBLOCK = 64;
   OPENSSL_RIPEMD160_DIGEST_LENGTH = 20;
   OPENSSL_RIPEMD160_LAST_BLOCK = 56;
   OPENSSL_RIPEMD160_LBLOCK = 16;
   OPENSSL_RIPEMD160_LENGTH_BLOCK = 8;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_RSA}
   OPENSSL_RSA_3 = $3;
   OPENSSL_RSA_F4 = $10001;
   OPENSSL_RSA_FLAG_BLINDING = $08;
@@ -1460,11 +1746,11 @@ const
   OPENSSL_RSA_R_UNKNOWN_PADDING_TYPE = 118;
   OPENSSL_RSA_R_WRONG_SIGNATURE_LENGTH = 119;
   OPENSSL_RSA_SSLV23_PADDING = 2;
+  {$ENDIF}
   OPENSSL_SEEK_CUR = 1;
   OPENSSL_SEEK_END = 2;
   OPENSSL_SEEK_SET = 0;
-  OPENSSL_SHA_DIGEST_LENGTH = 20;
-  OPENSSL_SHA_LBLOCK = 16;
+
   OPENSSL_SN_Algorithm = 'Algorithm';  {Do not localize}
   OPENSSL_SN_SMIMECapabilities = 'SMIME-CAPS';  {Do not localize}
   OPENSSL_SN_authority_key_identifier = 'authorityKeyIdentifier';  {Do not localize}
@@ -1585,6 +1871,7 @@ const
   OPENSSL_SN_undef = 'UNDEF';  {Do not localize}
   OPENSSL_SN_uniqueIdentifier = 'UID';  {Do not localize}
   OPENSSL_SN_zlib_compression = 'ZLIB';  {Do not localize}
+
   OPENSSL_SSL_ST_CONNECT = $1000;
   OPENSSL_SSL23_ST_CR_SRVR_HELLO_A = $220 or OPENSSL_SSL_ST_CONNECT;
   OPENSSL_SSL23_ST_CR_SRVR_HELLO_B = $221 or OPENSSL_SSL_ST_CONNECT;
@@ -2240,6 +2527,7 @@ const
   OPENSSL_SSL_R_NULL_SSL_CTX = 195;
   OPENSSL_SSL_R_NULL_SSL_METHOD_PASSED = 196;
   OPENSSL_SSL_R_OLD_SESSION_CIPHER_NOT_RETURNED = 197;
+  OPENSSL_SSL_R_ONLY_TLS_ALLOWED_IN_FIPS_MODE = 297;
   OPENSSL_SSL_R_PACKET_LENGTH_TOO_LONG = 198;
   OPENSSL_SSL_R_PATH_TOO_LONG = 270;
   OPENSSL_SSL_R_PEER_DID_NOT_RETURN_A_CERTIFICATE = 199;
@@ -2617,8 +2905,6 @@ const
   OPENSSL_i586 = 1;
   OPENSSL_pentium = 1;
 
-  OPENSSL_MBSTRING_ASC = $1001;
-
 //kssl.h
 {$ifndef OPENSSL_NO_KRB5}
 {These are consts for Kerberos support.  These will not be complete because
@@ -2896,58 +3182,615 @@ type
 
   PSSL            = ^SSL;
 
-  SSL_CIPHER = packed record
-    valid : TIdC_INT;
-    name:	PChar;	//* text name */
-    id: TIdC_ULONG; ///* id, 4 bytes, first is version */
-    algorithms: TIdC_ULONG; //* what ciphers are used */
-    algo_strength: TIdC_ULONG; //* strength and export flags */
-    algorithm2: TIdC_ULONG;//* Extra flags */
-    strength_bits: TIdC_INT;		//* Number of bits really used */
-    alg_bits: TIdC_INT;			//* Number of bits for algorithm */
-    mask: TIdC_ULONG;		//* used for matching */
-    mask_strength: TIdC_ULONG;	//* also used for matching */
+  //opensslconf.h
+  {$IFNDEF OPENSSL_NO_MD2}
+     {$IFDEF MD2_CHAR}
+  MD2_INT = char;
+     {$ELSE}
+        {$IFDEF MD2_LONG}
+  MD2_INT = TIdC_ULONG;
+        {$ELSE}
+  MD2_INT = TIdC_UINT;
+        {$ENDIF}
+     {$ENDIF}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_RC1}
+     {$IFDEF RC2_SHORT}
+  RC2_INT = TIdC_USHORT;
+     {$ELSE}
+        {$IFDEF RC2_LONG}
+  RC2_INT = TIdC_ULONG;
+        {$ELSE}
+  RC2_INT = TIdC_UINT;
+        {$ENDIF}
+     {$ENDIF}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_RC4}
+     {$IFDEF RC4_CHAR}
+  RC4_INT = TIdC_USHORT;
+     {$ELSE}
+        {$IFDEF RC4_LONG}
+  RC4_INT = TIdC_ULONG;
+        {$ELSE}
+  RC4_INT = TIdC_UINT;
+        {$ENDIF}
+     {$ENDIF}
+     {$IFDEF RC4_CHUNK}
+  RC4_CHUNK = TIdC_ULONG;
+      {$ELSE}
+         {$IFDEF RC4_CHUNK_LL}
+  RC4_CHUNK = TIdC_ULONGLONG;
+         {$ELSE}
+             {$UNDEF RC4_CHUNK}
+         {$ENDIF}
+      {$ENDIF}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_IDEA}
+     {$IFDEF IDEA_SHORT}
+  IDEA_INT = TIdC_USHORT;
+     {$ELSE}
+        {$IFDEF IDEA_LONG}
+  IDEA_INT = TIdC_ULONG;
+        {$ELSE}
+  IDEA_INT = TIdC_UINT;
+        {$ENDIF}
+     {$ENDIF}
+  {$ENDIF}
+  //
+
+//rand.h
+  RAND_METHOD = packed record
+    seed : procedure (const buf : Pointer; num : TIdC_INT) cdecl;
+//	void (*seed)(const void *buf, int num);
+    bytes : function(const buf : PChar; num : TIdC_INT) : TIdC_INT cdecl;
+//	int (*bytes)(unsigned char *buf, int num);
+    cleanup : procedure cdecl;
+//	void (*cleanup)(void);
+    add : procedure (const buf : Pointer; num : TIdC_INT; entropy : TIdC_DOUBLE) cdecl;
+//	void (*add)(const void *buf, int num, double entropy);
+    pseudorand : function(buf : PChar; num : TIdC_INT) : TIdC_INT cdecl;
+//	int (*pseudorand)(unsigned char *buf, int num);
+    status : function : TIdC_INT cdecl;
+//	int (*status)(void);
   end;
-  PSSL_CIPHER	  = ^SSL_CIPHER;
-  {$ifdef debug}
-  STACK_OF_SSL_CIPHER = packed record
-    _stack: STACK;
+//bn.h
+  {$IFDEF SIXTY_FOUR_BIT_LONG}
+  BN_ULLONG = TIdC_LONGLONG;
+  BN_ULONG = TIdC_ULONG;
+  BN_LONG = TIdC_LONG;
+  {$ENDIF}
+  {$IFDEF SIXTY_FOUR_BIT}
+  BN_LONG = TIdC_LONGLONG;
+  BN_ULONG = TIdC_ULONGLONG;
+  {$ENDIF}
+  {$IFDEF THIRTY_TWO_BIT}
+     {$IFDEF BN_LLONG}
+        BN_ULLONG = TIdC_INT64;
+     {$ELSE}
+        BN_ULLONG = TIdC_ULONGLONG;
+     {$ENDIF}
+      BN_LONG = TIdC_LONG;
+      BN_ULONG = TIdC_ULONG;
+  {$ENDIF}
+  PBN_LONG = ^BN_LONG;
+  PBN_ULONG = ^BN_ULONG;
+  BIGNUM = packed record
+  	d : PBN_ULONG;	//* Pointer to an array of 'BN_BITS2' bit chunks. */
+  	top : TIdC_INT;	//* Index of last used d +1. */
+  	//* The next are internal book keeping for bn_expand. */
+  	dmax : TIdC_INT;	//* Size of the d array. */
+  	neg : TIdC_INT;	//* one if the number is negative */
+	  flags : TIdC_INT;
   end;
-  PSTACK_OF_SSL_CIPHER =^STACK_OF_SSL_CIPHER;
-  {$else}
-  //I think the DECLARE_STACK_OF macro is empty
-   PSTACK_OF_SSL_CIPHER = PSTACK;
-  {$endif}  
-
-
-
-  //evp.h
-  //rsa.h - struct rsa_st
-  PRSA		  = Pointer;
-  PPRSA		  =^PRSA;
-  PRSA_METHOD	  = Pointer;
-  //dh.h
-    PDH		  = Pointer;
-  PPDH		  =^PDH;
-  // dsa.h
-  PDSA		  = Pointer;
-  PPDSA		  =^PDSA;
-
-  // ec.h
-  PEC_KEY = ^EC_KEY;
-  EC_KEY = packed record
+  PBIGNUM = ^BIGNUM;
+  BN_CTX = packed record
+    //This is defined internally.  I don't want to do anything with an internal structure.
   end;
-  
- // Pevp_pkey_st    = Pointer;
-  
+  PBN_CTX = ^BN_CTX;
+  PPBN_CTX = ^PBN_CTX; 
+  //* Used for montgomery multiplication */
+  BN_MONT_CTX = packed record
+	  ri : TIdC_INT;        //* number of bits in R */
+	  RR : BIGNUM;     //* used to convert to montgomery form */
+	  N : BIGNUM;      //* The modulus */
+    Ni : BIGNUM;     //* R*(1/R mod N) - N*Ni = 1
+	               //* (Ni is only stored for bignum algorithm) */
+	  n0 : BN_ULONG;   //* least significant word of Ni */
+	  flags : TIdC_INT;
+  end;
+  PBN_MONT_CTX = ^BN_MONT_CTX;
+  BN_BLINDING = packed record
+    //I can't locate any information about the record feilds in this.
+  end;
+  PBN_BLINDING = ^BN_BLINDING;
+  BN_RECP_CTX = packed record
+	  N : BIGNUM;	//* the divisor */
+	  Nr : BIGNUM;	//* the reciprocal */
+	  num_bits : TIdC_INT;
+	  shift : TIdC_INT;
+	  flags : TIdC_INT;
+  end;
+  PBN_RECP_CTX = ^BN_RECP_CTX;
+
+  PBN_GENCB = ^BN_GENCB;
+  PPBN_GENCB = ^PBN_GENCB;
+  BN_cb_1 =  procedure (p1, p2 : TIdC_INT; p3 : Pointer); cdecl;
+  BN_cb_2 =  procedure (p1, p2 : TIdC_INT; p3 : PBN_GENCB); cdecl;
+  BN_GENCB_union = packed record
+    case Integer of
+    		//* if(ver==1) - handles old style callbacks */
+        0 : (cb_1 : BN_cb_1);
+	 //	void (*cb_1)(int, int, void *);
+		//* if(ver==2) - new callback style */
+        1 : (cb_2 : BN_cb_2);
+		//int (*cb_2)(int, int, BN_GENCB *);
+		//} cb;
+  end;
+  BN_GENCB = packed record
+    ver : TIdC_UINT;	//* To handle binary (in)compatibility */
+	  arg : Pointer;		//* callback-specific data */
+    cb : BN_GENCB_union;
+  end;
+
+  //md2.h
+  {$IFNDEF OPENSSL_NO_MD2}
+   MD2_CTX = packed record
+     num : TIdC_UINT;
+     data : array [0..OPENSSL_MD2_BLOCK - 1] of char;
+     cksm : array [0..OPENSSL_MD2_BLOCK - 1] of MD2_INT;
+     state : array[0..OPENSSL_MD2_BLOCK -1] of MD2_INT;
+   end;
+   PMD2_CTX = ^MD2_CTX;
+   {$ENDIF}
+  //md4.h
+  {$IFNDEF OPENSSL_NO_MD4}
+  MD4_LONG = TIdC_ULONG;
+  MD4_CTX = packed record
+	  A,B,C,D : MD4_LONG;
+	  Nl,Nh : MD4_LONG;
+	  data : array [0..(OPENSSL_MD4_LBLOCK-1)] of MD4_LONG;
+	  num : TIdC_UINT;
+  end;
+  {$ENDIF}
+  //md5.h
+   MD5_LONG = TIdC_UINT;
+   MD5_CTX = packed record
+	   A,B,C,D : MD5_LONG;
+	   Nl,Nh : MD5_LONG;
+	   data : array [0..(OPENSSL_MD5_LBLOCK - 1)] of MD5_LONG;
+	   num : TIdC_UINT;
+   end;
+   PMD5_CTX = ^MD5_CTX;  
+  //sha.h
+//#if defined(OPENSSL_NO_SHA) || (defined(OPENSSL_NO_SHA0) && defined(OPENSSL_NO_SHA1))
+//#error SHA is disabled.
+//#endif
+  {$IFDEF OPENSSL_NO_SHA}
+    {$DEFINE DONTUSESHA}
+  {$ENDIF}
+  {$IFDEF PENSSL_NO_SHA0}
+     {$IFDEF OPENSSL_NO_SHA1}
+         {$DEFINE DONTUSESHA}
+     {$ENDIF}
+  {$ENDIF}
+  {$IFNDEF DONTUSESHA}
+    {$IFDEF OPENSSL_FIPS}
+      FIPS_SHA_SIZE_T  = size_t;
+    {$ENDIF}
+  {$ENDIF}
+
+  SHA_LONG  = TIdC_UINT;
+
+  SHA_CTX = packed record
+    h0,h1,h2,h3,h4 : SHA_LONG;
+    Nl,Nh : SHA_LONG;
+    data : array [0..OPENSSL_SHA_LBLOCK] of SHA_LONG;
+    num : TIdC_INT;
+  end;
+
+    {$IFNDEF OPENSSL_NO_SHA256}
+  SHA256_CTX = packed record
+ 	  h : array [0..(8 - 1)] of SHA_LONG;
+  	Nl,Nh : SHA_LONG;
+	  data : array [0..(OPENSSL_SHA_LBLOCK -1)] of SHA_LONG;
+	  num,md_len : TIdC_UINT;
+  end;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA512}
+  //not defined like this in sha.h but a comment
+  //says that it must be 64 bit.
+  SHA_LONG64 = TIdC_UINT64;
+  TSHA512_CTX_Union = packed record
+    case integer of
+     0 : (d : array [0..(OPENSSL_SHA_LBLOCK -1)] of SHA_LONG64);
+     1 : (p : array [0..(OPENSSL_SHA512_CBLOCK -1)] of byte);
+  end;
+  SHA512_CTX = packed record
+    h : array[0..(8-1)]of SHA_LONG64;
+    Nl,Nh : SHA_LONG64;
+    u :  TSHA512_CTX_Union;
+    num,md_len : TIdC_UINT;
+  end;
+  {$ENDIF}
+
+  //engiene.h
+  ENGINE = packed record
+     //I don't have any info about record feilds.
+  end;
+  PENGINE = ^ENGINE;
   //crypto.h
   CRYPTO_EX_DATA = packed record
     sk : PSTACK;
     dummy : TIdC_INT; //* gcc is screwing up this data structure :-( */
   end;
   PCRYPTO_EX_DATA = ^CRYPTO_EX_DATA;
-  PLHASH	  = Pointer;
 
+  //evp.h
+  EVP_PBE_KEYGEN = packed record
+
+  end;
+  PEVP_PBE_KEYGEN = ^EVP_PBE_KEYGEN;
+  //rsa.h - struct rsa_st
+  {$IFNDEF OPENSSL_NO_RSA}
+  PRSA		  = ^RSA;
+  PPRSA		  =^PRSA;
+
+  RSA_METHOD = packed record
+	  name : PChar;
+    rsa_pub_enc : function (flen : TIdC_INT; const from : PChar;
+      _to : PChar;
+      rsa : PRSA; padding : TIdC_INT) : TIdC_INT; cdecl;
+//	int (*rsa_pub_enc)(int flen,const unsigned char *from,
+//			   unsigned char *to,
+//			   RSA *rsa,int padding);
+    rsa_pub_dec : function (flen : TIdC_INT; const from : PChar;
+      _to : PChar;
+      rsa : PRSA; padding : TIdC_INT) : TIdC_INT; cdecl;
+//	int (*rsa_pub_dec)(int flen,const unsigned char *from,
+//			   unsigned char *to,
+//			   RSA *rsa,int padding);
+    rsa_priv_enc : function (flen : TIdC_INT; const from : PChar;
+      _to : PChar;
+      rsa : PRSA; padding : TIdC_INT) : TIdC_INT; cdecl;
+//	int (*rsa_priv_enc)(int flen,const unsigned char *from,
+//			    unsigned char *to,
+//			    RSA *rsa,int padding);
+    rsa_priv_dec : function (flen : TIdC_INT; const from : PChar;
+       _to : PChar;
+      rsa : PRSA; padding : TIdC_INT) : TIdC_INT; cdecl;
+//	int (*rsa_priv_dec)(int flen,const unsigned char *from,
+//			    unsigned char *to,
+//			    RSA *rsa,int padding);
+     rsa_mod_exp : function (r0 : PBIGNUM; const I : PBIGNUM; rsa : PRSA; ctx : PBN_CTX) : TIdC_INT cdecl; //* Can be null */
+//	int (*rsa_mod_exp)(BIGNUM *r0,const BIGNUM *I,RSA *rsa,BN_CTX *ctx); /* Can be null */
+     bn_mod_exp : function (r : PBIGNUM; const a : PBIGNUM; const p : PBIGNUM;
+       const m: PBIGNUM; ctx : PBN_CTX;
+       m_ctx : PBN_MONT_CTX ) : TIdC_INT; cdecl; //* Can be null */
+//	int (*bn_mod_exp)(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
+//			  const BIGNUM *m, BN_CTX *ctx,
+//			  BN_MONT_CTX *m_ctx); /* Can be null */
+      init : function (rsa : PRSA) : TIdC_INT; cdecl;
+//	int (*init)(RSA *rsa);		/* called at new */
+      finish : function (rsa : PRSA) : TIdC_INT; cdecl;
+//	int (*finish)(RSA *rsa);	/* called at free */
+      flags : TIdC_INT; //* RSA_METHOD_FLAG_* things */
+      app_data : PChar;   //* may be needed! */
+//* New sign and verify functions: some libraries don't allow arbitrary data
+//* to be signed/verified: this allows them to be used. Note: for this to work
+//* the RSA_public_decrypt() and RSA_private_encrypt() should *NOT* be used
+//* RSA_sign(), RSA_verify() should be used instead. Note: for backwards
+//* compatibility this functionality is only enabled if the RSA_FLAG_SIGN_VER
+//* option is set in 'flags'.
+//*/
+    rsa_sign : function (_type : TIdC_INT;
+      const m : PChar; m_length : TIdC_UINT;
+      sigret : PChar; siglen : PIdC_UINT; const rsa : PRSA) : TIdC_INT; cdecl;
+//	int (*rsa_sign)(int type,
+//		const unsigned char *m, unsigned int m_length,
+//		unsigned char *sigret, unsigned int *siglen, const RSA *rsa);
+    rsa_verify : function(dtype : TIdC_INT;
+      const m : PChar; m_length : PIdC_UINT;
+      sigbuf : PChar; siglen : PIdC_UINT; const rsa :PRSA) : TIdC_INT; cdecl;
+//	int (*rsa_verify)(int dtype,
+//		const unsigned char *m, unsigned int m_length,
+//		unsigned char *sigbuf, unsigned int siglen, const RSA *rsa);
+//* If this callback is NULL, the builtin software RSA key-gen will be used. This
+//* is for behavioural compatibility whilst the code gets rewired, but one day
+//* it would be nice to assume there are no such things as "builtin software"
+//* implementations. */
+    rsa_keygen : function (rsa : PRSA; bits : TIdC_INT; e : PBIGNUM; cb : PBN_GENCB) : TIdC_INT; cdecl;
+//	int (*rsa_keygen)(RSA *rsa, int bits, BIGNUM *e, BN_GENCB *cb);
+  end;
+  PRSA_METHOD	  = Pointer;
+  RSA = packed record
+	//* The first parameter is used to pickup errors where
+	//* this is passed instead of aEVP_PKEY, it is set to 0 */
+	  pad : TIdC_INT;
+	  version : TIdC_LONG;
+//	const RSA_METHOD *meth;
+	//* functional reference if 'meth' is ENGINE-provided */
+    engine : PENGINE;
+ //	ENGINE *engine;
+    n : PBIGNUM;
+    e : PBIGNUM;
+    d : PBIGNUM;
+    p : PBIGNUM;
+	  q : PBIGNUM;
+    dmp1 : PBIGNUM;
+    dmq1 : PBIGNUM;
+    iqmp : PBIGNUM;
+	//* be careful using this if the RSA structure is shared */
+	  ex_data : CRYPTO_EX_DATA;
+	  references : TIdC_INT;
+	  flags : TIdC_INT;
+
+	//* Used to cache montgomery values */
+	  _method_mod_n : PBN_MONT_CTX;
+	  _method_mod_p : PBN_MONT_CTX;
+	  _method_mod_q : PBN_MONT_CTX;
+
+	//* all BIGNUM values are actually in the following data, if it is not
+	//* NULL */
+	  bignum_data : PChar;
+    blinding : PBN_BLINDING;
+	  mt_blinding : PBN_BLINDING;
+  end;
+  {$ENDIF}
+  //dh.h
+  {$IFNDEF OPENSSL_NO_DH}
+  PDH		  = ^DH;
+  DH_METHOD = packed record
+    name : PChar;
+    //const char *name;
+    //* Methods here */
+    generate_key : function (dh : PDH) : TIdC_INT; cdecl;
+//	int (*generate_key)(DH *dh);
+    compute_key : function (key : PChar; const pub_key : PBIGNUM; dh : PDH) : TIdC_INT; cdecl;
+//	int (*compute_key)(unsigned char *key,const BIGNUM *pub_key,DH *dh);
+    bn_mod_exp : function (const dh : PDH; r : PBIGNUM; const e : PBIGNUM;
+      const p : PBIGNUM; const m : PBIGNUM; ctx : PBN_CTX;
+      m_ctx : PBN_MONT_CTX) : TIdC_INT; cdecl;  //* Can be null */
+//	int (*bn_mod_exp)(const DH *dh, BIGNUM *r, const BIGNUM *a,
+//				const BIGNUM *p, const BIGNUM *m, BN_CTX *ctx,
+//				BN_MONT_CTX *m_ctx); /* Can be null */
+     init : function (dh : PDH) : TIdC_INT; cdecl;
+//	int (*init)(DH *dh);
+     finish : function (dh : PDH) : TIdC_INT; cdecl;
+//	int (*finish)(DH *dh);
+	  flags : TIdC_INT;
+	  app_data : PChar;
+	//* If this is non-NULL, it will be used to generate parameters */
+    generate_params : function(dh : PDH; prime_len, generator : TIdC_INT; cb : PBN_GENCB) : TIdC_INT; cdecl;
+  //	int (*generate_params)(DH *dh, int prime_len, int generator, BN_GENCB *cb);
+  end;
+
+  DH = packed record
+    //* The first parameter is used to pickup errors where
+    //* this is passed instead of aEVP_PKEY, it is set to 0 */
+	  pad : TIdC_INT;
+    version : TIdC_LONG;
+    meth : PRSA_METHOD;
+    //const RSA_METHOD *meth;
+    //* functional reference if 'meth' is ENGINE-provided */
+	  engine: PENGINE;
+    n : PBIGNUM;
+    e : PBIGNUM;
+ 	  d : PBIGNUM;
+    p : PBIGNUM;
+    q : PBIGNUM;
+    dmp1 : PBIGNUM;
+    dmq1 : PBIGNUM;
+    iqmp : PBIGNUM;
+	//* be careful using this if the RSA structure is shared */
+    ex_data : CRYPTO_EX_DATA;
+    references : TIdC_INT;
+    flags : TIdC_INT;
+
+	//* Used to cache montgomery values */
+	  _method_mod_n : BN_MONT_CTX;
+	  _method_mod_p : BN_MONT_CTX;
+	  _method_mod_q : BN_MONT_CTX;
+
+	//* all BIGNUM values are actually in the following data, if it is not
+	//* NULL */
+	  bignum_data : PChar;
+  	blinding : PBN_BLINDING;
+	  mt_blinding : PBN_BLINDING;
+  end;
+
+  PPDH		  =^PDH;
+  {$ENDIF}
+  // dsa.h
+  {$IFNDEF OPENSSL_NO_DSA}
+  DSA_SIG   = packed record
+	  r : PBIGNUM;
+    s : PBIGNUM;
+  end;
+  PDSA_SIG = ^DSA_SIG;
+  PDSA = ^DSA;
+  DSA_METHOD = packed record
+    name : PChar;
+	//const char *name;
+    dsa_do_sign : function (const dgst : PChar; dlen : TIdC_INT; dsa : PDSA) : PDSA_SIG; cdecl;
+  //	DSA_SIG * (*dsa_do_sign)(const unsigned char *dgst, int dlen, DSA *dsa);
+    dsa_sign_setup : function (dsa : PDSA; ctx_in : BN_CTX; kinvp, rp : PPBN_CTX) : TIdC_INT; cdecl;
+	//int (*dsa_sign_setup)(DSA *dsa, BN_CTX *ctx_in, BIGNUM **kinvp,
+	 //							BIGNUM **rp);
+    dsa_do_verify : function(dgst : PChar; dgst_len : TIdC_INT;
+      sig : PDSA_SIG; dsa : PDSA) : TIdC_INT; cdecl;
+//	int (*dsa_do_verify)(const unsigned char *dgst, int dgst_len,
+//							DSA_SIG *sig, DSA *dsa);
+    dsa_mod_exp : function(dsa : PDSA; rr, a1, p1,
+       a2, p2, m : PBIGNUM; ctx : PBN_CTX;
+       in_mont : PBN_MONT_CTX) : TIdC_INT; cdecl;
+//	int (*dsa_mod_exp)(DSA *dsa, BIGNUM *rr, BIGNUM *a1, BIGNUM *p1,
+//			BIGNUM *a2, BIGNUM *p2, BIGNUM *m, BN_CTX *ctx,
+//			BN_MONT_CTX *in_mont);
+    bn_mod_exp : function (dsa : PDSA; r, a : PBIGNUM; const p, m : PBIGNUM; ctx : PBN_CTX;
+       m_ctx : PBN_CTX): TIdC_INT; cdecl; //* Can be null */
+//	int (*bn_mod_exp)(DSA *dsa, BIGNUM *r, BIGNUM *a, const BIGNUM *p,
+//				const BIGNUM *m, BN_CTX *ctx,
+//				BN_MONT_CTX *m_ctx); /* Can be null */
+     init : function (dsa : PDSA) : TIdC_INT; cdecl;
+//	int (*init)(DSA *dsa);
+     finish : function (dsa : PDSA) : TIdC_INT; cdecl;
+//	int (*finish)(DSA *dsa);
+	  flags : TIdC_INT;
+    app_data : PChar;
+	//* If this is non-NULL, it is used to generate DSA parameters */
+     dsa_paramgen : function (dsa : PDSA; bits : TIdC_INT;
+       seed : PChar; seed_len : TIdC_INT;
+       counter_ret : PIdC_INT; h_ret : PIdC_ULONG;
+       cb : PBN_GENCB ) : TIdC_INT; cdecl;
+//	int (*dsa_paramgen)(DSA *dsa, int bits,
+//			unsigned char *seed, int seed_len,
+//			int *counter_ret, unsigned long *h_ret,
+//			BN_GENCB *cb);
+
+//* If this is non-NULL, it is used to generate DSA keys */
+    dsa_keygen : function(dsa : PDSA) : TIdC_INT; cdecl;
+//	int (*dsa_keygen)(DSA *dsa);
+  end;
+  PDSA_METHOD = ^DSA_METHOD;
+  DSA = packed record
+	//* This first variable is used to pick up errors where
+	//* a DSA is passed instead of of a EVP_PKEY */
+	  pad : TIdC_INT;
+	  version : TIdC_LONG;
+	  write_params : TIdC_INT;
+	  p : PBIGNUM;
+	  q : PBIGNUM;	//* == 20 */
+	  g : PBIGNUM;
+
+	  pub_key : PBIGNUM;  //* y public key */
+    priv_key : PBIGNUM; //* x private key */
+
+	  kinv : BIGNUM;	//* Signing pre-calc */
+	  r : PBIGNUM;	//* Signing pre-calc */
+
+	  flags : TIdC_INT;
+	//* Normally used to cache montgomery values */
+	  method_mont_p : PBN_MONT_CTX;
+	  references : TIdC_INT;
+	  ex_data : CRYPTO_EX_DATA;
+    meth : PDSA_METHOD;
+	//const DSA_METHOD *meth;
+	//* functional reference if 'meth' is ENGINE-provided */
+	  engine : PENGINE;
+  end;
+  PPDSA		  =^PDSA;
+  {$ENDIF}
+  // ec.h
+  {$IFNDEF OPENSSL_NO_EC}
+  EC_METHOD = packed record
+    //The feilds are internal to OpenSSL, they are not listed in the header.
+  end;
+  PEC_METHOD = ^EC_METHOD;
+  PPEC_METHOD = ^PEC_METHOD;
+  EC_GROUP = packed record
+      //The feilds are internal to OpenSSL, they are not listed in the header.
+  end;
+  PEC_GROUP = ^EC_GROUP;
+  PPEC_GROUP = ^PEC_GROUP;
+
+  EC_POINT = packed record
+   //The feilds are internal to OpenSSL, they are not listed in the header.
+  end;
+  PEC_POINT = ^EC_POINT;
+  PPEC_POINT = ^PEC_POINT;
+  EC_builtin_curve = packed record
+    nid : TIdC_INT;
+	  comment : PChar;
+    //const char *comment;
+  end;
+  PEC_KEY = ^EC_KEY;
+  EC_KEY = packed record
+    //The feilds are internal to OpenSSL, they are not listed in the header.
+  end;
+  PPEC_KEY = ^PEC_KEY;
+  {$ENDIF}
+//ecdsa.h
+  {$IFNDEF OPENSSL_NO_ECDSA}
+  ECDSA_SIG = packed record
+	  r : PBIGNUM;
+	  s : PBIGNUM;
+  end;
+  PECDSA_SIG = ^ECDSA_SIG;
+  PPECDSA_SIG = ^PECDSA_SIG;
+  ECDH_METHOD = packed record
+    //defined interally, not through the header so use function to access members
+  end;
+  PECDH_METHOD = ^ECDH_METHOD;
+  PPECDH_METHOD = ^PECDH_METHOD;
+  {$ENDIF}
+//ecdh.h
+//aes.h
+ {$IFNDEF OPENSSL_NO_AES}
+  //OpenSSL Developer's note
+  //* This should be a hidden type, but EVP requires that the size be known */
+  AES_KEY = packed record
+{$ifdef AES_LONG}
+    rd_key: array[0..(4 *(OPENSSL_AES_MAXNR + 1)-1)] of TIdC_UINT;
+{$else}
+    rd_key : array [0..(4 *(OPENSSL_AES_MAXNR + 1)-1)] of TIdC_UINT;
+{$endif}
+    rounds : TIdC_INT;
+  end;
+  PAES_KEY = ^AES_KEY;
+  PPAES_KEY = ^PAES_KEY;
+  {$ENDIF}
+//lhash.h
+  PLHASH_NODE = ^LHASH_NODE;
+  LHASH_NODE = packed record
+    data : Pointer;
+
+    next : PLHASH_NODE;
+    //struct lhash_node_st *next;
+{$ifndef OPENSSL_NO_HASH_COMP}
+   hash : TIdC_ULONG;
+{$endif}
+  end;
+  LHASH_COMP_FN_TYPE = function (const p1,p2 : Pointer) : TIdC_INT; cdecl;
+  PLHASH_COMP_FN_TYPE = ^LHASH_COMP_FN_TYPE;
+//typedef int (*LHASH_COMP_FN_TYPE)(const void *, const void *);
+  LHASH_HASH_FN_TYPE = function(const p1 : Pointer) : TIdC_ULONG; cdecl;
+//typedef unsigned long (*LHASH_HASH_FN_TYPE)(const void *);
+  LHASH_DOALL_FN_TYPE = procedure(p1 : Pointer); cdecl;
+//typedef void (*LHASH_DOALL_FN_TYPE)(void *);
+  LHASH_DOALL_ARG_FN_TYPE = procedure(p1, p2 : Pointer); cdecl;
+//typedef void (*LHASH_DOALL_ARG_FN_TYPE)(void *, void *);
+  LHASH = packed record
+    b : PLHASH_COMP_FN_TYPE;
+    //	LHASH_NODE **b;
+	  comp : LHASH_COMP_FN_TYPE;
+	  hash : LHASH_HASH_FN_TYPE;
+    num_nodes : TIdC_UINT;
+    num_alloc_nodes : TIdC_UINT;
+    p : TIdC_UINT;
+	  pmax : TIdC_UINT;
+	  up_load : TIdC_ULONG; //* load times 256 */
+	  down_load : TIdC_ULONG; //* load times 256 */
+	  num_items : TIdC_ULONG;
+
+	  num_expands : TIdC_ULONG;
+    num_expand_reallocs : TIdC_ULONG;
+    num_contracts : TIdC_ULONG;
+    num_contract_reallocs : TIdC_ULONG;
+    num_hash_calls : TIdC_ULONG;
+    num_comp_calls : TIdC_ULONG;
+    num_insert : TIdC_ULONG;
+    num_replace : TIdC_ULONG;
+    num_delete : TIdC_ULONG;
+    num_no_delete : TIdC_ULONG;
+    num_retrieve : TIdC_ULONG;
+    num_retrieve_miss : TIdC_ULONG;
+    num_hash_comps : TIdC_ULONG;
+
+    error : TIdC_INT;
+  end;
+  PLHASH	  = ^LHASH;
+
+  
 //conf.h
   CONF_VALUE = packed record
     section : PChar;
@@ -2984,20 +3827,13 @@ type
   PBUF_MEM	  = ^BUF_MEM;
   PPBUF_MEM   = ^PBUF_MEM;
   PBIO = ^BIO;
+  PFILE = pointer;
 {
-  PBIO		  = Pointer;
-  PPBIO	          =^PBIO;
-  PBIO_METHOD     = Pointer;
   PFILE		  = Pointer;
-  PBIGNUM	  = Pointer;
-  PPBIGNUM	  =^PBIGNUM;
-  PBN_CTX	  = Pointer;
-  PBN_MONT_CTX    = Pointer;
-  PBN_BLINDING	  = Pointer;
-  PBN_RECP_CTX    = Pointer;
 }
 
   //asn1.h
+
 //#define I2D_OF(type) int (*)(type *,unsigned char **)
   I2D_OF_void = function(_para1 : Pointer; _para2 : PChar) : TIdC_INT; cdecl; 
 //D2I_OF(type) type *(*)(type **,const unsigned char **,long)
@@ -3034,7 +3870,8 @@ type
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_ASN1_OBJECT = PSTACK;
   {$endif}
-  
+  PPSTACK_OF_ASN1_OBJECT = ^PSTACK_OF_ASN1_OBJECT;
+
   asn1_string_st = packed record
     length : TIdC_INT;//int length;
     _type : TIdC_INT;//int type;
@@ -3236,6 +4073,94 @@ type
   PSTACK_OF_ASN1_STRING_TABLE = PSTACK;
   {$endif}
 
+
+  {$IFNDEF OPENSSL_EXPORT_VAR_AS_FUNCTION}
+//* ASN1_ITEM pointer exported type */
+//typedef const ASN1_ITEM ASN1_ITEM_EXP;
+ // ASN1_ITEM_EXP = ASN1_ITEM;
+ // PASN1_ITEM_EXP = ^ASN1_ITEM_EXP;
+    PASN1_ITEM = ^ASN1_ITEM;
+    PASN1_ITEM_EXP = PASN1_ITEM;
+  {$ELSE}
+//* Platforms that can't easily handle shared global variables are declared
+// * as functions returning ASN1_ITEM pointers.
+// */
+
+//* ASN1_ITEM pointer exported type */
+//typedef const ASN1_ITEM * ASN1_ITEM_EXP(void);
+   ASN1_ITEM_EXP = function : PASN1_ITEM cdecl;
+   PASN1_ITEM_EXP = ^ASN1_ITEM_EXP;
+  {$ENDIF}
+  //asn1t.h
+  ASN1_TEMPLATE = packed record
+    flags : TIdC_ULONG;		//* Various flags */
+    tag : TIdC_LONG;			//* tag, not used if no tagging */
+    offset : TIdC_ULONG;		//* Offset of this field in structure */
+{$ifndef NO_ASN1_FIELD_NAMES}
+    field_name : PChar;		//* Field name */
+{$endif}
+    item : PASN1_ITEM_EXP;		//* Relevant ASN1_ITEM or ASN1_ADB */
+  end;
+  PASN1_TEMPLATE = ^ASN1_TEMPLATE;
+  ASN1_ITEM = packed record
+    itype : Char;			//* The item type, primitive, SEQUENCE, CHOICE or extern */
+    utype : TIdC_LONG;			//* underlying type */
+    templates : PASN1_TEMPLATE; //* If SEQUENCE or CHOICE this contains the contents */
+    //const ASN1_TEMPLATE *templates;	/* If SEQUENCE or CHOICE this contains the contents */
+    tcount : TIdC_LONG;			//* Number of templates if SEQUENCE or CHOICE */
+    funcs : Pointer; //* functions that handle this type */
+    //const void *funcs;		/* functions that handle this type */
+    size : TIdC_LONG;			//* Structure size (usually)*/
+{$ifndef NO_ASN1_FIELD_NAMES}
+    sname : PChar;		//* Structure name */
+//const char *sname;		/* Structure name */
+{$endif}
+  end;
+
+  {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_ASN1_ADB_TABLE = packed record
+    stack: stack;
+  end;
+  PSTACK_OF_ASN1_ADB_TABLE = ^STACK_OF_ASN1_ADB_TABLE;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ASN1_ADB_TABLE = PSTACK;
+  {$endif}
+  PPSTACK_OF_ASN1_ADB_TABLE = ^PSTACK_OF_ASN1_ADB_TABLE;
+
+  PASN1_ADB_TABLE = ^ASN1_ADB_TABLE;
+  
+  PASN1_ADB = ^ASN1_ADB;
+  ASN1_ADB = packed record
+	  flags : TIdC_ULONG;	//* Various flags */
+   	offset : TIdC_ULONG;	//* Offset of selector field */
+    app_items : PPSTACK_OF_ASN1_ADB_TABLE; //* Application defined items */
+    //	STACK_OF(ASN1_ADB_TABLE) **app_items; //* Application defined items */
+    tbl : PASN1_ADB_TABLE;	//* Table of possible types */
+ //	const ASN1_ADB_TABLE *tbl;	//* Table of possible types */
+	  tblcount : TIdC_LONG;		//* Number of entries in tbl */
+	  default_tt : PASN1_TEMPLATE;  //* Type to use if no match */
+ //	const ASN1_TEMPLATE *default_tt;  //* Type to use if no match */
+    null_tt : PASN1_TEMPLATE;  //* Type to use if selector is NULL */
+ //	const ASN1_TEMPLATE *null_tt;  //* Type to use if selector is NULL */
+
+  end;
+
+  ASN1_ADB_TABLE = packed record
+	  flags : TIdC_LONG;	//* Various flags */
+   	offset : TIdC_LONG;	//* Offset of selector field */
+    app_items : PPSTACK_OF_ASN1_ADB_TABLE; //* Application defined items */
+	//STACK_OF(ASN1_ADB_TABLE) **app_items; //* Application defined items */
+    tbl : PASN1_ADB_TABLE;	//* Table of possible types */
+ //	const ASN1_ADB_TABLE *tbl;	//* Table of possible types */
+
+	  tblcount : TIdC_LONG;		//* Number of entries in tbl */
+    default_tt : PASN1_TEMPLATE;  //* Type to use if no match */
+ //	const ASN1_TEMPLATE *default_tt;  //* Type to use if no match */
+    null_tt : PASN1_TEMPLATE;  //* Type to use if selector is NULL */
+ //	const ASN1_TEMPLATE *null_tt;  //* Type to use if selector is NULL */
+  end;
+  //evp.h
   //struct evp_pkey_st
   PPEVP_PKEY = ^PEVP_PKEY;
   PEVP_PKEY = ^EVP_PKEY;
@@ -3255,7 +4180,7 @@ type
       4: (ec : PEC_KEY);	//* ECC */
       {$endif}
   end;
-
+  Pevp_pkey_st    = PEVP_PKEY;
   //this was moved from x509 section so that something here can compile.
   {$ifdef debug}
   PSTACK_OF_X509_ATTRIBUTE = ^STACK_OF_X509_ATTRIBUTE;
@@ -3263,7 +4188,8 @@ type
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_X509_ATTRIBUTE = PSTACK;
   {$endif}
-  
+  PPSTACK_OF_X509_ATTRIBUTE = ^PSTACK_OF_X509_ATTRIBUTE;
+
   EVP_PKEY = packed record
     _type : TIdC_INT;
     save_type : TIdC_INT;
@@ -3276,7 +4202,7 @@ type
 
   EVP_MD_CTX = packed record
     digest : PEVP_MD;
-    engine : Pointer; //ENGINE *engine; /* functional reference if 'digest' is ENGINE-provided */
+    engine : PENGINE; //ENGINE *engine; /* functional reference if 'digest' is ENGINE-provided */
     flags : TIdC_ULONG;
     md_data : Pointer;
   end;
@@ -3342,7 +4268,7 @@ type
 
   EVP_CIPHER_CTX = packed record
     cipher : PEVP_CIPHER; //const EVP_CIPHER *cipher;
-    engine : Pointer; //* functional reference if 'cipher' is ENGINE-provided */
+    engine : PENGINE; //* functional reference if 'cipher' is ENGINE-provided */
     encrypt: TIdC_INT; //* encrypt or decrypt */ 
     buf_len : TIdC_INT;		//* number we have left */
     oiv : array [0..OPENSSL_EVP_MAX_IV_LENGTH-1] of char;	//* original iv */
@@ -3362,7 +4288,7 @@ type
      cipher : PEVP_CIPHER; //const EVP_CIPHER *cipher;
      iv : array [0..OPENSSL_EVP_MAX_IV_LENGTH -1] of char;
   end;
-
+  PEVP_CIPHER_INFO = ^EVP_CIPHER_INFO;
   EVP_ENCODE_CTX = packed record
     num : TIdC_INT;	//* number saved in a partial encode/decode */
     length: TIdC_INT;	//* The length is either the output line length
@@ -3375,7 +4301,21 @@ type
     expect_nl: TIdC_INT;
   end;
   PEVP_ENCODE_CTX = ^EVP_ENCODE_CTX;
-
+  //hmac.h
+  //This has to come after the EVP definitions
+  {$IFNDEF OPENSSL_NO_HMAC}
+  HMAC_CTX = packed record
+    md : PEVP_MD;
+    //const EVP_MD *md;
+    md_ctx : EVP_MD_CTX;
+    i_ctx : EVP_MD_CTX;
+    o_ctx : EVP_MD_CTX;
+    key_length : TIdC_UINT;
+    key : array[0..(OPENSSL_HMAC_MAX_MD_CBLOCK - 1)] of byte;
+  end;
+  PHMAC_CTX = ^HMAC_CTX;
+  PPHMAC_CTX = ^PHMAC_CTX;
+  {$ENDIF}
 //pcy_int.h
  {$ifdef DEBUG_SAFESTACK}
   STACK_OF_X509_POLICY_DATA = packed record
@@ -3407,6 +4347,7 @@ type
 	  expected_policy_set : PSTACK_OF_ASN1_OBJECT
   end;
   PX509_POLICY_DATA = ^X509_POLICY_DATA;
+
   X509_POLICY_REF = packed record
 	  subjectDomainPolicy : PASN1_OBJECT;
 	  data : PX509_POLICY_DATA;
@@ -3436,6 +4377,7 @@ type
 //x509v3.h
   //forward declarations from x509.h to make sure this compiles.
     PX509 = ^X509;
+    PPX509 = ^PX509;
   PX509_CRL = ^X509_CRL;
   PX509_NAME               = ^X509_NAME;
   PX509_NAME_ENTRY	   = ^X509_NAME_ENTRY;
@@ -3449,6 +4391,8 @@ type
   PSTACK_OF_X509_NAME_ENTRY = PSTACK;
   PSTACK_OF_X509_REVOKED = PSTACK;
   {$endif}
+  PPSTACK_OF_X509_REVOKED = ^PSTACK_OF_X509_REVOKED;
+  
   PPX509_NAME_ENTRY	   =^PX509_NAME_ENTRY;
   //forward declarations
   PV3_EXT_METHOD = ^V3_EXT_METHOD;
@@ -3481,7 +4425,7 @@ type
     ext_flags : TIdC_INT;
 //* If this is set the following four fields are ignored */
     //I'm not sure what the ASN1_ITEM_EXP really is.  The headers don't make it clear, JPM.
-    it : Pointer; //ASN1_ITEM_EXP *it;
+    it : PASN1_ITEM_EXP; //ASN1_ITEM_EXP *it;
 //* Old style ASN1 calls */
     ext_new : X509V3_EXT_NEW;
     ext_free : X509V3_EXT_FREE;
@@ -3512,6 +4456,8 @@ type
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_X509V3_EXT_METHOD = PSTACK;
   {$endif}
+  PPSTACK_OF_X509V3_EXT_METHOD = ^PSTACK_OF_X509V3_EXT_METHOD;
+
   X509V3_CONF_METHOD = packed record
     get_string : function(db : Pointer; section, value : PChar) : PChar; cdecl;
    // char * (*get_string)(void *db, char *section, char *value);
@@ -3530,6 +4476,7 @@ type
     crl : PX509_CRL;
     db_meth : X509V3_CONF_METHOD;
     db : Pointer;
+// OpenSSL developer's message from header
 //* Maybe more here */
   end;
   
@@ -3701,7 +4648,7 @@ type
   //I think the DECLARE_STACK_OF macro is empty
   {$endif}
 
-  {$ifdef debug}
+  {$ifdef DEBUG_SAFESTACK}
   PSTACK_OF_POLICYINFO = ^STACK_OF_POLICYINFO;
   {$else}
   PSTACK_OF_POLICYINFO = PSTACK;
@@ -3735,7 +4682,8 @@ type
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_POLICY_MAPPING = PSTACK;
   {$endif}
-
+  PPSTACK_OF_POLICY_MAPPING = ^PSTACK_OF_POLICY_MAPPING;
+  
   GENERAL_SUBTREE = packed record
     base : PGENERAL_NAME;
     minimum : PASN1_INTEGER;
@@ -3797,8 +4745,24 @@ type
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_X509_PURPOSE = PSTACK;
   {$endif}
-  
+
   //x509.h
+  X509_HASH_DIR_CTX = packed record
+	  num_dirs : TIDC_INT;
+	  dirs : PPChar;
+	  dirs_type : PIdC_INT;
+	  num_dirs_alloced : TIdC_INT;
+  end;
+  PX509_HASH_DIR_CTX = ^X509_HASH_DIR_CTX;
+
+  X509_CERT_FILE_CTX = packed record
+	  num_paths : TIdC_INT;	//* number of paths to files or directories */
+	  num_alloced : TIdC_INT;
+	  paths : PPChar;	//* the list of paths or directories */
+	  path_type : TIdC_INT;
+  end;
+  PX509_CERT_FILE_CTX = ^X509_CERT_FILE_CTX;
+
   x509_object_union = packed record
     case byte of
      0: (ptr : PChar);
@@ -3821,12 +4785,12 @@ type
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_X509_OBJECT = PSTACK;
   {$endif}
-  
+
   X509_ALGOR = packed record
     algorithm : PASN1_OBJECT;
     parameter : PASN1_TYPE;
   end;
-  PX509_ALGOR		   = Pointer;
+  PX509_ALGOR		   = ^X509_ALGOR;
   PPX509_ALGOR		   =^PX509_ALGOR;
    {$ifdef DEBUG_SAFESTACK}
   STACK_OF_X509_ALGOR = packed record
@@ -3837,7 +4801,8 @@ type
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_X509_ALGOR = PSTACK;
   {$endif}
-
+  PPSTACK_OF_X509_ALGOR = ^PSTACK_OF_X509_ALGOR;
+  
   X509_VAL       = packed record
     notBefore : PASN1_TIME;
     notAfter : PASN1_TIME;
@@ -3850,7 +4815,7 @@ type
     public_key : PASN1_BIT_STRING;
     pkey : PEVP_PKEY;
   end;
-  PX509_PUBKEY		   = Pointer;
+  PX509_PUBKEY		   = ^X509_PUBKEY;
   PPX509_PUBKEY		   =^PX509_PUBKEY;
 
   X509_SIG = packed record
@@ -3895,6 +4860,7 @@ type
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_X509_NAME = PSTACK;
   {$endif}
+  PPSTACK_OF_X509_NAME = ^PSTACK_OF_X509_NAME;
 
   X509_EXTENSION = packed record
     _object : PASN1_OBJECT;
@@ -3912,6 +4878,7 @@ type
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_X509_EXTENSION = PSTACK;
   {$endif}
+  PPSTACK_OF_X509_EXTENSION = ^PSTACK_OF_X509_EXTENSION;
 
   x509_attributes_union = packed record
     case byte of
@@ -4029,9 +4996,56 @@ type
   PSTACK_OF_X509_CRL_INFO = PSTACK;
   {$endif}
   PX509_LOOKUP    = ^X509_LOOKUP;
-  PX509_STORE     = Pointer;
+  //This has to be declared ehre for a reference in the next type.
+  {$ifdef debug}
+  STACK_OF_X509_LOOKUP = packed record
+    _stack: STACK;
+  end;
+  PSTACK_OF_X509_LOOKUP = ^STACK_OF_X509_LOOKUP;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_LOOKUP = PSTACK;
+  {$endif}
+
+  PX509_VERIFY_PARAM = ^X509_VERIFY_PARAM;
   PX509_STORE_CTX = ^X509_STORE_CTX;
-  
+  PPX509_CRL = ^PX509_CRL;
+
+  X509_STORE = packed record
+  	//* The following is a cache of trusted certs */
+	  cache : TIdC_INT; 	//* if true, stash any hits */
+	  objs : PSTACK_OF_X509_OBJECT;	//* Cache of all objects */
+
+	  //* These are external lookup methods */
+	  get_cert_methods : PSTACK_OF_X509_LOOKUP;
+
+	  param : PX509_VERIFY_PARAM;
+
+	//* Callbacks for various operations */
+    verify : function (ctx : PX509_STORE_CTX) : TIdC_INT; cdecl;//* called to verify a certificate */
+//	int (*verify)(X509_STORE_CTX *ctx);	/* called to verify a certificate */
+    verify_cb : function (ok : TIdC_INT; ctx : PX509_STORE_CTX) : TIdC_INT; cdecl; //* error callback */
+//	int (*verify_cb)(int ok,X509_STORE_CTX *ctx);	/* error callback */
+    get_issuer : function (issuer : PPX509; ctx : PX509_STORE_CTX; x : PX509) : TIdC_INT; cdecl; //* get issuers cert from ctx */
+//	int (*get_issuer)(X509 **issuer, X509_STORE_CTX *ctx, X509 *x);	/* get issuers cert from ctx */
+    check_issued : function (ctx : PX509_STORE_CTX; x : PX509; issuer : PX509) : TIdC_INT; cdecl; //* check issued */
+//	int (*check_issued)(X509_STORE_CTX *ctx, X509 *x, X509 *issuer); /* check issued */
+    check_revocation : function (ctx : PX509_STORE_CTX) : TIdC_INT; cdecl;
+//	int (*check_revocation)(X509_STORE_CTX *ctx); /* Check revocation status of chain */
+    get_crl : function (ctx : PX509_STORE_CTX; crl : PPX509_CRL; x : PX509) : TIdC_INT; cdecl;//* retrieve CRL */
+//	int (*get_crl)(X509_STORE_CTX *ctx, X509_CRL **crl, X509 *x); /* retrieve CRL */
+    check_crl : function(ctx : PX509_STORE_CTX; crl : PX509_CRL) : TIdC_INT; cdecl; //* Check CRL validity */
+//	int (*check_crl)(X509_STORE_CTX *ctx, X509_CRL *crl); /* Check CRL validity */
+    cert_crl : function(ctx : PX509_STORE_CTX; crl : PX509_CRL; x : PX509) : TIdC_INT; cdecl; //* Check certificate against CRL */
+//	int (*cert_crl)(X509_STORE_CTX *ctx, X509_CRL *crl, X509 *x); /* Check certificate against CRL */
+    cleanup : function(ctx : PX509_STORE_CTX) : TIdC_INT; cdecl;
+//	int (*cleanup)(X509_STORE_CTX *ctx);
+
+	  ex_data : CRYPTO_EX_DATA;
+	  references : TIdC_INT;
+  end;
+  PX509_STORE     = ^X509_STORE;
+
   X509_CRL = packed record
     crl : PX509_CRL_INFO;
     sig_alg : PX509_ALGOR;
@@ -4082,7 +5096,7 @@ type
     depth : TIdC_INT;              //* Verify depth */
     policies : PSTACK_OF_ASN1_OBJECT; //* Permissible policies */
   end;
-  PX509_VERIFY_PARAM = ^X509_VERIFY_PARAM;
+
   {$ifdef debug}
   STACK_OF_X509_VERIFY_PARAM = packed record
     _stack: STACK;
@@ -4101,16 +5115,8 @@ type
 
     store_ctx : PX509_STORE;        //* who owns us */
   end;
-  {$ifdef debug}
-  STACK_OF_X509_LOOKUP = packed record
-    _stack: STACK;
-  end;
-  PSTACK_OF_X509_LOOKUP = ^STACK_OF_X509_LOOKUP;
-  {$else}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_X509_LOOKUP = PSTACK;
-  {$endif}
 
+  PPSTACK_OF_X509_LOOKUP = ^PSTACK_OF_X509_LOOKUP;
 // * This is a used when verifying cert chains.  Since the
 // * gathering of the cert chain can take some time (and have to be
 // * 'retried', this needs to be kept and passed around. */
@@ -4147,45 +5153,7 @@ type
      cleanup : function (ctx : PX509_STORE_CTX) : TIdC_INT;  cdecl;
 //	int (*cleanup)(X509_STORE_CTX *ctx);
   end;
-  
-// * This is used to hold everything.  It is used for all certificate
-// * validation.  Once we have a certificate chain, the 'verify'
-// * function is then called to actually check the cert chain. */
-  X509_STORE = packed record
-    //* The following is a cache of trusted certs */
-    cache : TIdC_INT; 	//* if true, stash any hits */
-    objs : PSTACK_OF_X509_OBJECT;	//* Cache of all objects */
 
-    //* These are external lookup methods */
-    get_cert_methods : PSTACK_OF_X509_LOOKUP;
-
-    param : PX509_VERIFY_PARAM;
-
-    //* Callbacks for various operations */
-    verify : function (ctx : PX509_STORE_CTX) : TIdC_INT; cdecl; //* called to verify a certificate */
-//  int (*verify)(X509_STORE_CTX *ctx);	/* called to verify a certificate */
-    verify_cb : function (ok : TIdC_INT; ctx : X509_STORE_CTX) : TIdC_INT;  cdecl; //* error callback */
-//	int (*verify_cb)(int ok,X509_STORE_CTX *ctx);	/* error callback */
-    get_issuer : function(var issuer : PX509; ctx : PX509_STORE_CTX; x : PX509) : TIdC_INT; cdecl; //* get issuers cert from ctx */
-//	int (*get_issuer)(X509 **issuer, X509_STORE_CTX *ctx, X509 *x);	/* get issuers cert from ctx */
-    check_issued : function(ctx : PX509_STORE_CTX; x, issuer : PX509) : TIdC_INT; cdecl; //* check issued */
-//	int (*check_issued)(X509_STORE_CTX *ctx, X509 *x, X509 *issuer); /* check issued */
-    check_revocation : function(ctx : PX509_STORE_CTX) : TIdC_INT; cdecl;
-//	int (*check_revocation)(X509_STORE_CTX *ctx); /* Check revocation status of chain */
-    get_crl : function(ctx : PX509_STORE_CTX; var crl : PX509_CRL; x : PX509) : TIdC_INT; cdecl; //* retrieve CRL */
-//	int (*get_crl)(X509_STORE_CTX *ctx, X509_CRL **crl, X509 *x); /* retrieve CRL */
-    check_crl : function(ctx : PX509_STORE_CTX; crl : PX509_CRL) : TIdC_INT; cdecl; //* Check CRL validity */
-//	int (*check_crl)(X509_STORE_CTX *ctx, X509_CRL *crl); /* Check CRL validity */
-    cert_crl : function(ctx : PX509_STORE_CTX; crl : PX509_CRL; x : PX509) : TIdC_INT; cdecl; //* Check certificate against CRL */
-//	int (*cert_crl)(X509_STORE_CTX *ctx, X509_CRL *crl, X509 *x); /* Check certificate against CRL */
-    cleanup : function(ctx : PX509_STORE_CTX) : TIdC_INT; cdecl;
-//	int (*cleanup)(X509_STORE_CTX *ctx);
-
-    ex_data : CRYPTO_EX_DATA;
-    references : TIdC_INT;
-  end;
-  
-  PPX509		   =^PX509;
   PX509_EXTENSION_METHOD   = Pointer;
   
   PX509_TRUST = ^X509_TRUST;
@@ -4217,7 +5185,7 @@ type
   end;
   PX509_REVOKED		   = ^X509_REVOKED;
   PPX509_REVOKED	   =^PX509_REVOKED;
-  
+
   {$ifdef DEBUG_SAFESTACK}
   STACK_OF_X509_REVOKED = packed record
     _stack: stack;
@@ -4248,81 +5216,144 @@ type
   {$else}
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_X509_INFO = PSTACK;
-  {$endif}    
+  {$endif}
 
+//OpenSSL Developer's note
+//* The next 2 structures and their 8 routines were sent to me by
+//* Pat Richard <patr@x509.com> and are used to manipulate
+//* Netscapes spki structures - useful if you are writing a CA web page
+  NETSCAPE_SPKAC = packed record
+    pubkey : PX509_PUBKEY;
+    challenge : PASN1_IA5STRING;	//* challenge sent in atlas >= PR2 */
+  end;
+  PNETSCAPE_SPKAC = ^NETSCAPE_SPKAC;
+  PPNETSCAPE_SPKAC = ^PNETSCAPE_SPKAC;
+  NETSCAPE_SPKI = packed record
+	  spkac : PNETSCAPE_SPKAC;	//* signed public key and challenge */
+    sig_algor : PX509_ALGOR;
+	  signature : PASN1_BIT_STRING;
+  end;
+  PNETSCAPE_SPKI = ^NETSCAPE_SPKI;
+  PPNETSCAPE_SPKI = ^PNETSCAPE_SPKI;
+
+  NETSCAPE_CERT_SEQUENCE = packed record
+	  _type : PASN1_OBJECT;
+    certs : PSTACK_OF_X509;
+  end;
+  PNETSCAPE_CERT_SEQUENCE = ^NETSCAPE_CERT_SEQUENCE;
+  PPNETSCAPE_CERT_SEQUENCE = ^PNETSCAPE_CERT_SEQUENCE;
+  
+  //* Password based encryption structure */
+  PBEPARAM = packed record
+    salt : PASN1_OCTET_STRING;
+    iter : PASN1_INTEGER;
+  end;
+  PPBEPARAM = ^PBEPARAM;
+  PPPBEPARAM = ^PPBEPARAM;
+  //* Password based encryption V2 structures */
+  PBE2PARAM = packed record
+    keyfunc : PX509_ALGOR;
+    encryption : PX509_ALGOR;
+  end;
+  PPBE2PARAM = ^PBE2PARAM;
+  PBKDF2PARAM = packed record
+    salt : PASN1_TYPE;	//* Usually OCTET STRING but could be anything */
+    iter : PASN1_INTEGER;
+    keylength : PASN1_INTEGER;
+    prf : PX509_ALGOR;
+  end;
+  PPBKDF2PARAM = ^PBKDF2PARAM;
+  PPPBKDF2PARAM = ^PPBKDF2PARAM;
+  
+  PKCS8_PRIV_KEY_INFO = packed record
+    broken : TIdC_INT;     //* Flag for various broken formats */
+//#define PKCS8_OK		0
+//#define PKCS8_NO_OCTET		1
+//#define PKCS8_EMBEDDED_PARAM	2
+//#define PKCS8_NS_DB		3
+    version : PASN1_INTEGER;
+    pkeyalg : PX509_ALGOR;
+    pkey : PASN1_TYPE; //* Should be OCTET STRING but some are broken */
+    attributes : PSTACK_OF_X509_ATTRIBUTE;
+  end;
+  PPKCS8_PRIV_KEY_INFO = ^PKCS8_PRIV_KEY_INFO;
+  PPPKCS8_PRIV_KEY_INFO = ^PPKCS8_PRIV_KEY_INFO;
+
+  PPKCS7_RECIP_INFO = ^PKCS7_RECIP_INFO;
+
+   PSHA_CTX = ^SHA_CTX;
+   //ripemd.h
+   {$IFNDEF OPENSSL_NO_RIPEMD}
+   RIPEMD160_LONG = TIdC_UINT;
+   RIPEMD160_CTX = packed record
+	   A,B,C,D,E : RIPEMD160_LONG;
+	   Nl,Nh : RIPEMD160_LONG;
+	   data : array [0..OPENSSL_RIPEMD160_LBLOCK -1 ] of RIPEMD160_LONG;
+     num : TIdC_UINT;
+   end;
+   PRIPEMD160_CTX = ^RIPEMD160_CTX;
+   {$ENDIF}
+   {$IFNDEF OPENSSL_NO_RC4}
+   RC4_KEY = packed record
+	   x,y : RC4_INT;
+	   data : array [0..(256 - 1)] of RC4_INT;
+   end;
+   PRC4_KEY = ^RC4_KEY;
+   {$ENDIF}
+   //rc2.h
+   {$IFNDEF OPENSSL_NO_RC2}
+   RC2_KEY = packed record
+     data : array [0..(64 - 1)] of RC2_INT;
+   end;
+   PRC2_KEY = ^RC2_KEY;
+   {$ENDIF}
+   {$IFNDEF OPENSSL_NO_RC5}
+   RC5_32_INT = TIdC_UINT;
+   RC5_32_KEY = packed record
+	//* Number of rounds */
+	   rounds : TIdC_INT;
+  	 data : array [0..(2*(OPENSSL_RC5_16_ROUNDS+1)-1)] of RC5_32_INT;
+   end;
+   PRC5_32_KEY = ^RC5_32_KEY;
+   {$ENDIF}
+   {$IFNDEF OPENSSL_NO_BF}
+    BF_LONG = TIdC_UINT;
+    BF_KEY = packed record
+	    P : array [0..(OPENSSL_BF_ROUNDS+2)-1] of BF_LONG;
+	    S : array [0..(4*256)-1] of BF_LONG;
+    end;
+    PBF_KEY = ^BF_KEY;
+    {$ENDIF}
+    {$IFNDEF OPENSSL_NO_CAST}
+    CAST_LONG = TIdC_ULONG;
+    CAST_KEY = packed record
+	    data : array[0..(32 -1)] of CAST_LONG;
+	    short_key : TIdC_INT;	//* Use reduced rounds for short key */
+    end;
+    PCAST_KEY = ^CAST_KEY;
+    {$ENDIF}
+    {$IFNDEF OPENSSL_NO_IDEA}
+    IDEA_KEY_SCHEDULE = packed record
+       data : array [0..(9-1),0..(6-1)] of IDEA_INT;
+    end;
+    PIDEA_KEY_SCHEDULE = ^IDEA_KEY_SCHEDULE;
+    {$ENDIF}
+    //mdc2.h
+    MDC2_CTX = packed record
+//this is not defined in headers so it's best use functions in the API to access the structure.
+
+    end;
+    PMDC2_CTX = ^MDC2_CTX;
+
+    //tmdiff.h
+
+    MS_TM = packed record
+   //this is not defined in headers so it's best use functions in the API to access the structure.
+    end;
+    PMS_TM = ^MS_TM;
+    PPMS_TM = ^PMS_TM;
 {
-  PPKCS7_ISSUER_AND_SERIAL = Pointer;
-  PKCS7			   = Pointer;
-  PPKCS7                   =^PKCS7;
-  PPPKCS7		   =^PPKCS7;
-  PKCS7_SIGNER_INFO	   = Pointer;
-}
-{
-  PPKCS7_SIGNER_INFO       =^PKCS7_SIGNER_INFO;
-  PPPKCS7_SIGNER_INFO      =^PPKCS7_SIGNER_INFO;
-  PKCS7_RECIP_INFO	   = Pointer;
-  PPKCS7_RECIP_INFO        =^PKCS7_RECIP_INFO;
-  PPPKCS7_RECIP_INFO       =^PPKCS7_RECIP_INFO;
-  PPPKCS7_ISSUER_AND_SERIAL=^PPKCS7_ISSUER_AND_SERIAL;
-  PKCS7_SIGNED	           = Pointer;
-  PPKCS7_SIGNED		   =^PKCS7_SIGNED;
-  PPPKCS7_SIGNED	   = Pointer;
-  PPKCS7_ENC_CONTENT	   = Pointer;
-  PPPKCS7_ENC_CONTENT	   =^PPKCS7_ENC_CONTENT;
-  PPKCS7_ENVELOPE	   = Pointer;
-  PPPKCS7_ENVELOPE	   =^PPKCS7_ENVELOPE;
-  PPKCS7_SIGN_ENVELOPE	   = Pointer;
-  PPPKCS7_SIGN_ENVELOPE	   =^PPKCS7_SIGN_ENVELOPE;
-  PPKCS7_DIGEST		   = Pointer;
-  PPPKCS7_DIGEST	   =^PPKCS7_DIGEST;
-  PPKCS7_ENCRYPT	   = Pointer;
-  PPPKCS7_ENCRYPT	   =^PPKCS7_ENCRYPT;
-  PNETSCAPE_SPKI	   = Pointer;
-  PPNETSCAPE_SPKI	   =^PNETSCAPE_SPKI;
-  PNETSCAPE_SPKAC	   = Pointer;
-  PPNETSCAPE_SPKAC	   =^PNETSCAPE_SPKAC;
-  PNETSCAPE_CERT_SEQUENCE  = Pointer;
-  PPNETSCAPE_CERT_SEQUENCE =^PNETSCAPE_CERT_SEQUENCE;
-  Pbio_st		   = Pointer;
-  PMD2_CTX		   = Pointer;
-  PMD5_CTX		   = Pointer;
-  PSHA_CTX		   = Pointer;
-  PRIPEMD160_CTX	   = Pointer;
-  PRC4_KEY		   = Pointer;
-  PRC2_KEY		   = Pointer;
-  PRC5_32_KEY		   = Pointer;
-  PBF_KEY		   = Pointer;
-  PCAST_KEY		   = Pointer;
-  PIDEA_KEY_SCHEDULE       = Pointer;
-  PMDC2_CTX                = Pointer;
-  PPDSA_SIG                = Pointer;
-  P_des_cblock		   = Pointer;
-  Pdes_cblock		   = Pointer;
-  PDSA_SIG		   = Pointer;
-  PSTACK_OF_ASN1_TYPE	   = Pointer;
-  PPSTACK_OF_ASN1_TYPE	   = Pointer;
-  PSTACK_OF_X509_NAME_ENTRY   = Pointer;
-  PPSTACK_OF_X509_NAME_ENTRY  = Pointer;
-}
-{
-  PSTACK_OF_X509_EXTENSION	   = Pointer;
-  PPSTACK_OF_X509_EXTENSIO    = Pointer;
-  PSTACK_OF_X509_ATTRIBUTE    = Pointer;
-  PPSTACK_OF_X509_ATTRIBUTE   =^PSTACK_OF_X509_ATTRIBUTE;
-  PSTACK_OF_X509		   = Pointer;
-  PPSTACK_OF_X509		   =^PSTACK_OF_X509;
-  PSTACK_OF_X509_INFO         = Pointer;
-  PPBEPARAM		   = Pointer;
-  PPPBEPARAM		   =^PPBEPARAM;
-  PPBKDF2PARAM		   = Pointer;
-  PPPBKDF2PARAM		   =^PPBKDF2PARAM;
-  PPBE2PARAM		   = Pointer;
-  PPPBE2PARAM		   =^PPBE2PARAM;
-  PPSTACK_OF_X509_EXTENSION   = Pointer;
-  PPKCS8_PRIV_KEY_INFO	   = Pointer;
-  PPPKCS8_PRIV_KEY_INFO    =^PPKCS8_PRIV_KEY_INFO;
   PEVP_PBE_KEYGEN          = Pointer;
-  PEVP_CIPHER_INFO	   = Pointer;
 }
   Ppem_password_cb	   = function (buf : PChar; size : TIdC_INT; rwflag : TIdC_INT; userdata : Pointer) : TIdC_INT; cdecl;
 
@@ -4332,25 +5363,22 @@ type
     cipher : EVP_CIPHER_CTX;
   end;
   PPEM_ENCODE_SEAL_CTX     = ^PEM_ENCODE_SEAL_CTX;
-  PSTACK_OF_SSL_COMP          = Pointer;
+
+ {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_SSL_COMP = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_SSL_COMP = ^STACK_OF_SSL_COMP;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_SSL_COMP = PSTACK;
+  {$endif}
+  PPSTACK_OF_SSL_COMP = ^PSTACK_OF_SSL_COMP;
   PSSL_COMP = ^SSL_COMP;
   // PASN1_UTCTIME		   = Pointer;
 
 {
-  PSTACK_OF_ASN1_OBJECT	   = Pointer;
-  PPSTACK_OF_ASN1_OBJECT      =^PSTACK_OF_ASN1_OBJECT;
-  PSTACK_OF_X509_ALGOR        = Pointer;
-  PPSTACK_OF_X509_ALGOR       =^PSTACK_OF_X509_ALGOR;
-  PSTACK_OF_X509_REVOKED      = Pointer;
-  PPSTACK_OF_X509_REVOKED     =^PSTACK_OF_X509_REVOKED;
-  PSTACK_OF_X509_CRL          = Pointer;
-  PPSTACK_OF_X509_CRL         =^PSTACK_OF_X509_CRL;
-  PSTACK_OF_X509_LOOKUP       = Pointer;
-  PPSTACK_OF_X509_LOOKUP      =^PSTACK_OF_X509_LOOKUP;
-  PSTACK_OF_PKCS7_SIGNER_INFO = Pointer;
-  PPSTACK_OF_PKCS7_SIGNER_INFO=^PSTACK_OF_PKCS7_SIGNER_INFO;
-  PSTACK_OF_PKCS7_RECIP_INFO  = Pointer;
-  PPSTACK_OF_PKCS7_RECIP_INFO =^PSTACK_OF_PKCS7_RECIP_INFO;
+
 }
 //GREGOR - spremenjana deklaracija ker se tolèe
 //  Phostent	  = Pointer;
@@ -4487,13 +5515,177 @@ type
     {$endif}
     references : TIdC_INT; //* actually always 1 at the moment */
   end;
-  PSESS_CERT = ^SESS_CERT;
-//end ssl_locl.h
+//pkcs7.h
+  PPKCS7 = ^PKCS7;
+  PKCS7_ISSUER_AND_SERIAL = packed record
+    issuer : PX509_NAME;
+    serial : PASN1_INTEGER;
+  end;
+  PPKCS7_ISSUER_AND_SERIAL = ^PKCS7_ISSUER_AND_SERIAL;
+  PKCS7_SIGNER_INFO = packed record
+    version : PASN1_INTEGER;	//* version 1 */
+    issuer_and_serial : PPKCS7_ISSUER_AND_SERIAL;
+    digest_alg : PX509_ALGOR;
+    auth_attr : PSTACK_OF_X509_ATTRIBUTE;	//* [ 0 ] */
+    digest_enc_alg : PX509_ALGOR;
+    enc_digest :  PASN1_OCTET_STRING;
+    unauth_attr : PSTACK_OF_X509_ATTRIBUTE;	//* [ 1 ] */
+    //* The private key to sign with */
+    pkey : PEVP_PKEY;
+  end;
+  PPKCS7_SIGNER_INFO = ^PKCS7_SIGNER_INFO;
+   {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_PKCS7_SIGNER_INFO = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_PKCS7_SIGNER_INFO = ^STACK_OF_PKCS7_SIGNER_INFO;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_PKCS7_SIGNER_INFO = PSTACK;
+  {$endif}
+  PKCS7_RECIP_INFO = packed record
+	  version : PASN1_INTEGER;	//* version 0 */
+		issuer_and_serial : PPKCS7_ISSUER_AND_SERIAL;
+		key_enc_algor : PX509_ALGOR;
+		enc_key : PASN1_OCTET_STRING;
+	  cert : PX509; //* get the pub-key from this */
+  end;
+   {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_PKCS7_RECIP_INFO = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_PKCS7_RECIP_INFO = ^STACK_OF_PKCS7_RECIP_INFO;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_PKCS7_RECIP_INFO = PSTACK;
+  {$endif}
+  PPSTACK_OF_PKCS7_RECIP_INFO = ^PSTACK_OF_PKCS7_RECIP_INFO;
+  
+  PKCS7_SIGNED = packed record
+		 version : PASN1_INTEGER;	//* version 1 */
+	   md_algs : PSTACK_OF_X509_ALGOR;	//* md used */
+	   cert : PSTACK_OF_X509;		//* [ 0 ] */
+	   crl : PSTACK_OF_X509_CRL;		//* [ 1 ] */
+	   signer_info : PSTACK_OF_PKCS7_SIGNER_INFO;
 
-  PPKCS12 = ^PKCS12;
-  PKCS12 = packed record
+     contents : PPKCS7;
+     //	struct pkcs7_st			*contents;
+  end;
+  PPKCS7_SIGNED = ^PKCS7_SIGNED;
+  PPPKCS7_SIGNED = ^PPKCS7_SIGNED;
+  
+  PKCS7_ENC_CONTENT = packed record
+    content_type : PASN1_OBJECT;
+    algorithm : PX509_ALGOR;
+    enc_data : PASN1_OCTET_STRING;	//* [ 0 ] */
+    cipher : PEVP_CIPHER;
+ //	const EVP_CIPHER		*cipher;
+  end;
+  PPKCS7_ENC_CONTENT = ^PKCS7_ENC_CONTENT;
+  PKCS7_ENVELOPE = packed record
+    version : PASN1_INTEGER;	//* version 0 */
+    recipientinfo : PSTACK_OF_PKCS7_RECIP_INFO;
+    enc_data : PPKCS7_ENC_CONTENT;
+  end;
+  PPKCS7_ENVELOPE = ^PKCS7_ENVELOPE;
+  //OpenSSL developer notes
+  ///* The above structure is very very similar to PKCS7_SIGN_ENVELOPE.
+  //* How about merging the two */
+
+  PKCS7_SIGN_ENVELOPE = packed record
+    version : PASN1_INTEGER;	//* version 1 */
+    md_algs : PSTACK_OF_X509_ALGOR;	//* md used */
+    cert : PSTACK_OF_X509;		//* [ 0 ] */
+    crl : PSTACK_OF_X509_CRL;		//* [ 1 ] */
+    signer_info : PSTACK_OF_PKCS7_SIGNER_INFO;
+
+    enc_data : PPKCS7_ENC_CONTENT;
+    recipientinfo : PSTACK_OF_PKCS7_RECIP_INFO;
+  end;
+  PPKCS7_SIGN_ENVELOPE = ^PKCS7_SIGN_ENVELOPE;
+
+  PKCS7_DIGEST = packed record
+    version : PASN1_INTEGER;	//* version 0 */
+    md : PX509_ALGOR;		//* md used */
+    contents : PPKCS7;
+//	struct pkcs7_st 		*contents;
+    digest : PASN1_OCTET_STRING;
+  end;
+  PPKCS7_DIGEST = ^PKCS7_DIGEST;
+
+  PKCS7_ENCRYPT = packed record
+    version : PASN1_INTEGER;	//* version 0 */
+    enc_data : PPKCS7_ENC_CONTENT;
+  end;
+  PPKCS7_ENCRYPT = ^PKCS7_ENCRYPT;
+
+  PKCS7_union = packed record
+	//* content as defined by the type */
+	//* all encryption/message digests are applied to the 'contents',
+	//* leaving out the 'type' field. */
+    case Integer of
+      0 : (ptr : PChar);
+      		//* NID_pkcs7_data */
+	    1 : (data : PASN1_OCTET_STRING);
+     //* NID_pkcs7_signed */
+      2 : (sign : PPKCS7_SIGNED);
+     //* NID_pkcs7_enveloped */
+      3 : (enveloped : PPKCS7_ENVELOPE);
+		 //* NID_pkcs7_signedAndEnveloped */
+      4 : (signed_and_enveloped : PPKCS7_SIGN_ENVELOPE);
+     //* NID_pkcs7_digest */
+      5 : (digest : PPKCS7_DIGEST);
+      //* NID_pkcs7_encrypted */
+      6 : (encrypted : PPKCS7_ENCRYPT);
+  end;
+  PKCS7 = packed record
+	//* The following is non NULL if it contains ASN1 encoding of
+	// * this structure */
+	  asn1 : PChar;
+    length : TIdC_LONG;
+
+//#define PKCS7_S_HEADER	0
+//#define PKCS7_S_BODY	1
+//#define PKCS7_S_TAIL	2
+    state : TIdC_INT; //* used during processing */
+
+    detached : TIdC_INT;
+
+    _type : PASN1_OBJECT;
+	//* content as defined by the type */
+	//* all encryption/message digests are applied to the 'contents',
+	//* leaving out the 'type' field. */
+    d : PKCS7_union;
   end;
 
+   {$ifdef DEBUG_SAFESTACK}
+  STACK_OF_PKCS7 = packed record
+    _stack: stack;
+  end;
+  PSTACK_OF_PKCS7 = ^STACK_OF_PKCS7;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_PKCS7 = PSTACK;
+  {$endif}
+//pkcs12.h
+  PKCS12_MAC_DATA = packed record
+    dinfo : PX509_SIG;
+    salt : PASN1_OCTET_STRING;
+    iter : PASN1_INTEGER;	//* defaults to 1 */
+  end;
+  PPKCS12_MAC_DATA = ^PKCS12_MAC_DATA;
+  PSESS_CERT = ^SESS_CERT;
+  PPKCS12 = ^PKCS12;
+  PKCS12 = packed record
+    version : PASN1_INTEGER;
+    mac : PPKCS12_MAC_DATA;
+    authsafes : PPKCS7;
+  end;
+
+//end ssl_locl.h
+
+
+  //bio.h
   //http://www.openssl.org/docs/crypto/bio.html
    PBIO_METHOD = ^BIO_METHOD;
   Pbio_info_cb = procedure (_para1 : PBIO; _para2 : TIdC_INT; _para3 : PChar;
@@ -4556,74 +5748,7 @@ type
      ex_data : CRYPTO_EX_DATA;
 //	CRYPTO_EX_DATA ex_data;
   end;
-  
 
-  
-  SSL_SESSION = packed record
-    ssl_version : TIdC_INT;    //* what ssl version session info is
-        // * being kept in here? */
-
-	//* only really used in SSLv2 */
-    key_arg_length: TIdC_UINT;
-    key_arg: Array[0..OPENSSL_SSL_MAX_KEY_ARG_LENGTH-1] of Byte;
-    master_key_length: TIdC_INT;
-    master_key: Array[0..OPENSSL_SSL_MAX_MASTER_KEY_LENGTH-1] of Byte;
-    //* session_id - valid? */
-    session_id_length: TIdC_UINT;
-    session_id: Array[0..OPENSSL_SSL_MAX_SSL_SESSION_ID_LENGTH-1] of Byte;
-	//* this is used to determine whether the session is being reused in
-	// * the appropriate context. It is up to the application to set this,
-	// * via SSL_new */    
-    sid_ctx_length: TIdC_UINT;
-    sid_ctx:Array[0..OPENSSL_SSL_MAX_SID_CTX_LENGTH-1] of Byte;
-{$ifndef OPENSSL_NO_KRB5}
-    krb5_client_princ_len: TIdC_UINT;
-    krb5_client_princ: Array[0..OPENSSL_SSL_MAX_KRB5_PRINCIPAL_LENGTH-1] of Byte;
-{$endif}
-    not_resumable: TIdC_INT;
-    //* The cert is the certificate used to establish this connection */
- //   sess_cert : PSESS_CERT;  //struct sess_cert_st /* SESS_CERT */ *sess_cert;
-     sess_cert :  PSESS_CERT;
-  end;
-  PSSL_SESSION = ^SSL_SESSION;
-  
-  // typedef struct ssl_method_st
-  PSSL_CTX = ^SSL_CTX;
-  
-  SSL_METHOD_PROC = procedure; cdecl;
-  PSSL_METHOD = ^SSL_METHOD;
-  SSL_METHOD = packed record
-     version: TIdC_INT;
-     ssl_new: function(s: PSSL): TIdC_INT; cdecl;
-     ssl_clear: procedure(s: PSSL); cdecl;
-     ssl_free: procedure(s: PSSL); cdecl;
-     ssl_accept: function(s: PSSL): TIdC_INT; cdecl;
-     ssl_connect: function(s: PSSL): TIdC_INT; cdecl;
-     ssl_read: function(s: PSSL; buf: Pointer; len: TIdC_INT):TIdC_INT; cdecl;
-     ssl_peek: function(s: PSSL; buf: Pointer; len: TIdC_INT):TIdC_INT; cdecl;
-     ssl_write: function(s: PSSL; const buf: Pointer; len:TIdC_INT): TIdC_INT; cdecl;
-     ssl_shutdown: function(s: PSSL): TIdC_INT; cdecl;
-     ssl_renegotiate: function(s: PSSL): TIdC_INT; cdecl;
-     ssl_renegotiate_check: function(s: PSSL): TIdC_INT; cdecl;
-     ssl_get_message: function(s: PSSL; st1, stn, mt: TIdC_INT; max: TIdC_LONG; ok: PIdC_INT): TIdC_LONG; cdecl;
-     ssl_read_bytes: function(s: PSSL; _type: TIdC_INT; buf:PByte; len, peek: TIdC_INT): TIdC_INT; cdecl;
-     ssl_write_bytes: function(s: PSSL; _type: TIdC_INT; const buf: Pointer; len: TIdC_INT): TIdC_INT; cdecl;
-     ssl_dispatch_alert: function(s: PSSL): TIdC_INT; cdecl;
-     ssl_ctrl: function(s: PSSL; cmd: TIdC_INT; larg: TIdC_LONG; parg: Pointer): TIdC_LONG; cdecl;
-     ssl_ctx_ctrl: function(ctx: PSSL_CTX; cmd: TIdC_INT; larg:TIdC_LONG; parg: Pointer): TIdC_LONG; cdecl;
-     get_cipher_by_char: function(const ptr: PByte):PSSL_CIPHER; cdecl;
-     put_cipher_by_char: function(const cipher: PSSL_CIPHER;ptr: PByte): TIdC_INT; cdecl;
-     ssl_pending: function(const s: PSSL): TIdC_INT; cdecl;
-     num_ciphers: function: TIdC_INT; cdecl;
-     get_cipher: function(ncipher: TIdC_UNSIGNED): PSSL_CIPHER;cdecl;
-     get_ssl_method: function(version: TIdC_INT): PSSL_METHOD; cdecl;
-     get_timeout: function : TIdC_LONG; cdecl;
-     ssl3_enc: pssl3_enc_method;
-     ssl_version: function : TIdC_INT; cdecl;
-     ssl_callback_ctrl: function(s: PSSL; cb_id: TIdC_INT; fp: SSL_METHOD_PROC): TIdC_LONG; cdecl;
-     ssl_ctx_callback_ctrl: function(s: PSSL_CTX; cb_id:TIdC_INT; fp: SSL_METHOD_PROC): TIdC_LONG; cdecl;
-  end;
-  PPSSL_METHOD  =^PSSL_METHOD;
 
 //comp.h
   PCOMP_CTX = ^COMP_CTX;
@@ -4662,6 +5787,7 @@ FreePascal, Borland Delphi, and Indy don't support Kerberos.  These are here
 as place holders so we get an exact OpenSSL API if Kerberos support was compiled
 in.
 }
+
   KSSL_ERR = packed record
 	  reason : TIdC_INT;
 	  text : array [0..KSSL_ERR_MAX] of char;  
@@ -4674,6 +5800,95 @@ in.
   PKSSL_CTX = ^KSSL_CTX;
 {$endif}
  //ssl.h
+   PSSL_CIPHER	  = ^SSL_CIPHER;
+   SSL_CIPHER = packed record
+    valid : TIdC_INT;
+    name:	PChar;	//* text name */
+    id: TIdC_ULONG; ///* id, 4 bytes, first is version */
+    algorithms: TIdC_ULONG; //* what ciphers are used */
+    algo_strength: TIdC_ULONG; //* strength and export flags */
+    algorithm2: TIdC_ULONG;//* Extra flags */
+    strength_bits: TIdC_INT;		//* Number of bits really used */
+    alg_bits: TIdC_INT;			//* Number of bits for algorithm */
+    mask: TIdC_ULONG;		//* used for matching */
+    mask_strength: TIdC_ULONG;	//* also used for matching */
+  end;
+
+  {$ifdef debug}
+  STACK_OF_SSL_CIPHER = packed record
+    _stack: STACK;
+  end;
+  PSTACK_OF_SSL_CIPHER =^STACK_OF_SSL_CIPHER;
+  {$else}
+  //I think the DECLARE_STACK_OF macro is empty
+   PSTACK_OF_SSL_CIPHER = PSTACK;
+  {$endif}  
+
+  SSL_SESSION = packed record
+    ssl_version : TIdC_INT;    //* what ssl version session info is
+        // * being kept in here? */
+
+	//* only really used in SSLv2 */
+    key_arg_length: TIdC_UINT;
+    key_arg: Array[0..OPENSSL_SSL_MAX_KEY_ARG_LENGTH-1] of Byte;
+    master_key_length: TIdC_INT;
+    master_key: Array[0..OPENSSL_SSL_MAX_MASTER_KEY_LENGTH-1] of Byte;
+    //* session_id - valid? */
+    session_id_length: TIdC_UINT;
+    session_id: Array[0..OPENSSL_SSL_MAX_SSL_SESSION_ID_LENGTH-1] of Byte;
+	//* this is used to determine whether the session is being reused in
+	// * the appropriate context. It is up to the application to set this,
+	// * via SSL_new */    
+    sid_ctx_length: TIdC_UINT;
+    sid_ctx:Array[0..OPENSSL_SSL_MAX_SID_CTX_LENGTH-1] of Byte;
+{$ifndef OPENSSL_NO_KRB5}
+    krb5_client_princ_len: TIdC_UINT;
+    krb5_client_princ: Array[0..OPENSSL_SSL_MAX_KRB5_PRINCIPAL_LENGTH-1] of Byte;
+{$endif}
+    not_resumable: TIdC_INT;
+    //* The cert is the certificate used to establish this connection */
+ //   sess_cert : PSESS_CERT;  //struct sess_cert_st /* SESS_CERT */ *sess_cert;
+     sess_cert :  PSESS_CERT;
+  end;
+  PSSL_SESSION = ^SSL_SESSION;
+  
+  // typedef struct ssl_method_st
+  PSSL_CTX = ^SSL_CTX;
+
+  SSL_METHOD_PROC = procedure; cdecl;
+  PSSL_METHOD = ^SSL_METHOD;
+  SSL_METHOD = packed record
+     version: TIdC_INT;
+     ssl_new: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_clear: procedure(s: PSSL); cdecl;
+     ssl_free: procedure(s: PSSL); cdecl;
+     ssl_accept: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_connect: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_read: function(s: PSSL; buf: Pointer; len: TIdC_INT):TIdC_INT; cdecl;
+     ssl_peek: function(s: PSSL; buf: Pointer; len: TIdC_INT):TIdC_INT; cdecl;
+     ssl_write: function(s: PSSL; const buf: Pointer; len:TIdC_INT): TIdC_INT; cdecl;
+     ssl_shutdown: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_renegotiate: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_renegotiate_check: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_get_message: function(s: PSSL; st1, stn, mt: TIdC_INT; max: TIdC_LONG; ok: PIdC_INT): TIdC_LONG; cdecl;
+     ssl_read_bytes: function(s: PSSL; _type: TIdC_INT; buf:PByte; len, peek: TIdC_INT): TIdC_INT; cdecl;
+     ssl_write_bytes: function(s: PSSL; _type: TIdC_INT; const buf: Pointer; len: TIdC_INT): TIdC_INT; cdecl;
+     ssl_dispatch_alert: function(s: PSSL): TIdC_INT; cdecl;
+     ssl_ctrl: function(s: PSSL; cmd: TIdC_INT; larg: TIdC_LONG; parg: Pointer): TIdC_LONG; cdecl;
+     ssl_ctx_ctrl: function(ctx: PSSL_CTX; cmd: TIdC_INT; larg:TIdC_LONG; parg: Pointer): TIdC_LONG; cdecl;
+     get_cipher_by_char: function(const ptr: PByte):PSSL_CIPHER; cdecl;
+     put_cipher_by_char: function(const cipher: PSSL_CIPHER;ptr: PByte): TIdC_INT; cdecl;
+     ssl_pending: function(const s: PSSL): TIdC_INT; cdecl;
+     num_ciphers: function: TIdC_INT; cdecl;
+     get_cipher: function(ncipher: TIdC_UNSIGNED): PSSL_CIPHER;cdecl;
+     get_ssl_method: function(version: TIdC_INT): PSSL_METHOD; cdecl;
+     get_timeout: function : TIdC_LONG; cdecl;
+     ssl3_enc: pssl3_enc_method;
+     ssl_version: function : TIdC_INT; cdecl;
+     ssl_callback_ctrl: function(s: PSSL; cb_id: TIdC_INT; fp: SSL_METHOD_PROC): TIdC_LONG; cdecl;
+     ssl_ctx_callback_ctrl: function(s: PSSL_CTX; cb_id:TIdC_INT; fp: SSL_METHOD_PROC): TIdC_LONG; cdecl;
+  end;
+  PPSSL_METHOD  =^PSSL_METHOD;
 
 //* This callback type is used inside SSL_CTX, SSL, and in the functions that set
 // * them. It is used to override the generation of SSL/TLS session IDs in a
@@ -4835,39 +6050,39 @@ in.
   PSSL2_STATE = ^SSL2_STATE;
   PSSL3_STATE = ^SSL3_STATE;
   PDTLS1_STATE = ^DTLS1_STATE;
-  
+
   SSL = packed record
 //	/* protocol version
 //	 * (one of SSL2_VERSION, SSL3_VERSION, TLS1_VERSION, DTLS1_VERSION)
 //	 */
-        version : TIdC_INT;
-        _type : TIdC_INT; //* SSL_ST_CONNECT or SSL_ST_ACCEPT */
+    version : TIdC_INT;
+    _type : TIdC_INT; //* SSL_ST_CONNECT or SSL_ST_ACCEPT */
 
-        method : PSSL_METHOD; //* SSLv3 */
+    method : PSSL_METHOD; //* SSLv3 */
 
 //	/* There are 2 BIO's even though they are normally both the
 //	 * same.  This is so data can be read and written to different
 //	 * handlers */
 
 {$ifndef OPENSSL_NO_BIO}
-        rbio : PBIO; //* used by SSL_read */
-        wbio : PBIO; //* used by SSL_write */
-        bbio : PBIO; //* used during session-id reuse to concatenate
-		     //* messages */
+    rbio : PBIO; //* used by SSL_read */
+    wbio : PBIO; //* used by SSL_write */
+    bbio : PBIO; //* used during session-id reuse to concatenate
+		//* messages */
 {$else}
-        rbio : PChar; //* used by SSL_read */
-        wbio : PChar; //* used by SSL_write */
-        bbio : PChar;
+    rbio : PChar; //* used by SSL_read */
+    wbio : PChar; //* used by SSL_write */
+    bbio : PChar;
 {$endif}
 //	/* This holds a variable that indicates what we were doing
 //	 * when a 0 or -1 is returned.  This is needed for
 //	 * non-blocking IO so we know what request needs re-doing when
 //	 * in SSL_accept or SSL_connect */
-        rwstate : TIdC_INT;
+    rwstate : TIdC_INT;
 
 //      /* true when we are actually in SSL_accept() or SSL_connect() */
-        in_handshake : TIdC_INT;
-        handshake_func : function (_para1 : PSSL) : TIdC_INT; cdecl;
+    in_handshake : TIdC_INT;
+    handshake_func : function (_para1 : PSSL) : TIdC_INT; cdecl;
 //      int (*handshake_func)(SSL *);
 
 //	/* Imagine that here's a boolean member "init" that is
@@ -4878,200 +6093,200 @@ in.
 //	 * test instead of an "init" member.
 //	 */
 
-        server : TIdC_INT;  //* are we the server side? - mostly used by SSL_clear*/
+    server : TIdC_INT;  //* are we the server side? - mostly used by SSL_clear*/
 
-	new_session : TIdC_INT;
+	  new_session : TIdC_INT;
                        //* 1 if we are to use a new session.
 	               //* 2 if we are a server and are inside a handshake
 	               //*   (i.e. not just sending a HelloRequest)
 	               //* NB: For servers, the 'new' session may actually be a previously
 	               //* cached session or even the previous session unless
 	               //* SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION is set */
-	quiet_shutdown : TIdC_INT;//* don't send shutdown packets */
-        shutdown : TIdC_INT;//* we have shut things down, 0x01 sent, 0x02
+	  quiet_shutdown : TIdC_INT;//* don't send shutdown packets */
+    shutdown : TIdC_INT;//* we have shut things down, 0x01 sent, 0x02
                                //* for received */
-        state : TIdC_INT;  //* where we are */
-        rstate : TIdC_INT;	//* where we are when reading */
+    state : TIdC_INT;  //* where we are */
+    rstate : TIdC_INT;	//* where we are when reading */
 
-        init_buf : PBUF_MEM;    //* buffer used during init */
-        init_msg : Pointer;     //* pointer to handshake message body, set by ssl3_get_message() */
-        init_num : TIdC_INT;    //* amount read/written */
-	init_off : TIdC_INT;    //* amount read/written */
+    init_buf : PBUF_MEM;    //* buffer used during init */
+    init_msg : Pointer;     //* pointer to handshake message body, set by ssl3_get_message() */
+    init_num : TIdC_INT;    //* amount read/written */
+    init_off : TIdC_INT;    //* amount read/written */
 
 	//* used internally to point at a raw packet */
-        packet : PChar;
-        packet_length : TIdC_UINT;
+    packet : PChar;
+    packet_length : TIdC_UINT;
 
-        s2 : Pssl2_state; //* SSLv2 variables */
-        s3 : Pssl3_state; //* SSLv3 variables */
-        d1 : Pdtls1_state; //* DTLSv1 variables */
+    s2 : Pssl2_state; //* SSLv2 variables */
+    s3 : Pssl3_state; //* SSLv3 variables */
+    d1 : Pdtls1_state; //* DTLSv1 variables */
 
-        read_ahead : TIdC_INT; //* Read as many input bytes as possible
+    read_ahead : TIdC_INT; //* Read as many input bytes as possible
                                //* (for non-blocking reads) */
 
 	//* callback that allows applications to peek at protocol messages */
-        msg_callback : procedure(write_p, version,  content_type : TIdC_INT;
+    msg_callback : procedure(write_p, version,  content_type : TIdC_INT;
           const buf : Pointer; len : size_t; ssl : PSSL; arg : Pointer); cdecl;
 //	void (*msg_callback)(int write_p, int version, int content_type, const void *buf, size_t len, SSL *ssl, void *arg);
-        msg_callback_arg : Pointer;
+    msg_callback_arg : Pointer;
 //	void *msg_callback_arg;
 
-        hit : TIdC_INT;    //* reusing a previous session */
+    hit : TIdC_INT;    //* reusing a previous session */
 
-	param : PX509_VERIFY_PARAM;
+	  param : PX509_VERIFY_PARAM;
 
 {$IFDEF OMITTHIS}
-        purpose : TIdC_INT;		//* Purpose setting */
-        trust : TIdC_INT;		//* Trust setting */
+    purpose : TIdC_INT;		//* Purpose setting */
+    trust : TIdC_INT;		//* Trust setting */
 {$ENDIF}
 
 	//* crypto */
-        cipher_list : PSTACK_OF_SSL_CIPHER;
-        cipher_list_by_id : PSTACK_OF_SSL_CIPHER;
+    cipher_list : PSTACK_OF_SSL_CIPHER;
+    cipher_list_by_id : PSTACK_OF_SSL_CIPHER;
 
-        //* These are the ones being used, the ones in SSL_SESSION are
-        //* the ones to be 'copied' into these ones */
+    //* These are the ones being used, the ones in SSL_SESSION are
+    //* the ones to be 'copied' into these ones */
 
-        enc_read_ctx : PEVP_CIPHER_CTX;	 //* cryptographic state */
-	read_hash : PEVP_MD;		//* used for mac generation */
+    enc_read_ctx : PEVP_CIPHER_CTX;	 //* cryptographic state */
+	  read_hash : PEVP_MD;		//* used for mac generation */
 //      const EVP_MD *read_hash;		/* used for mac generation */
 {$ifndef OPENSSL_NO_COMP}
-	expand : PCOMP_CTX;             //* uncompress */
+  	expand : PCOMP_CTX;             //* uncompress */
 {$else}
-	expand : PChar;
+	  expand : PChar;
 {$endif}
 
-        enc_write_ctx : PEVP_CIPHER_CTX;   //* cryptographic state */
-        write_hash : PEVP_MD;              //* used for mac generation */
+    enc_write_ctx : PEVP_CIPHER_CTX;   //* cryptographic state */
+    write_hash : PEVP_MD;              //* used for mac generation */
 //	const EVP_MD *write_hash;          /* used for mac generation */
 {$ifndef OPENSSL_NO_COMP}
-        compress : PCOMP_CTX;                //* compression */
+    compress : PCOMP_CTX;                //* compression */
 {$else}
-	compress : PChar;
+  	compress : PChar;
 {$endif}
 
 	//* session info */
 
 	//* client cert? */
 	//* This is used to hold the server certificate used */
-        cert : PCERT;
+    cert : PCERT;
 	//struct cert_st /* CERT */ *cert;
 
 	//* the session_id_context is used to ensure sessions are only reused
 	// * in the appropriate context */
-        sid_ctx_length : TIdC_UINT;
-        sid_ctx : array [0..OPENSSL_SSL_MAX_SID_CTX_LENGTH -1] of char;
+    sid_ctx_length : TIdC_UINT;
+    sid_ctx : array [0..OPENSSL_SSL_MAX_SID_CTX_LENGTH -1] of char;
 
 	//* This can also be in the session once a session is established */
-        session : PSSL_SESSION;
+    session : PSSL_SESSION;
 
 	//* Default generate session ID callback. */
-        generate_session_id : PGEN_SESSION_CB;
+    generate_session_id : PGEN_SESSION_CB;
 
 	//* Used in SSL2 and SSL3 */
-        verify_mode : TIdC_INT;	//* 0 don't care about verify failure.
+    verify_mode : TIdC_INT;	//* 0 don't care about verify failure.
 				//* 1 fail if verify fails */
-        verify_callback : function (ok : TIdC_INT;
+    verify_callback : function (ok : TIdC_INT;
             ctx : PX509_STORE_CTX) : TIdC_INT; cdecl; //* fail if callback returns 0 */
 //	int (*verify_callback)(int ok,X509_STORE_CTX *ctx); /* fail if callback returns 0 */
-        info_callback : procedure(const ssl : PSSL; _type, val : TIdC_INT) ; cdecl;
+    info_callback : procedure(const ssl : PSSL; _type, val : TIdC_INT) ; cdecl;
 //	void (*info_callback)(const SSL *ssl,int type,int val); /* optional informational callback */
 
-        error : TIdC_INT;		//* error bytes to be written */
-        error_code : TIdC_INT;		//* actual code */
+    error : TIdC_INT;		//* error bytes to be written */
+    error_code : TIdC_INT;		//* actual code */
 
 {$ifndef OPENSSL_NO_KRB5}
-	kssl_ctx : PKSSL_CTX;     //* Kerberos 5 context */
+	  kssl_ctx : PKSSL_CTX;     //* Kerberos 5 context */
 {$endif}	//* OPENSSL_NO_KRB5 */
 
-        ctx : PSSL_CTX;
+    ctx : PSSL_CTX;
 	//* set this flag to 1 and a sleep(1) is put into all SSL_read()
 	//* and SSL_write() calls, good for nbio debuging :-) */
-        debug : TIdC_INT;
+    debug : TIdC_INT;
 
 	//* extra application data */
-        verify_result : TIdC_LONG;
-	ex_data : CRYPTO_EX_DATA;
+    verify_result : TIdC_LONG;
+	  ex_data : CRYPTO_EX_DATA;
 
 	//* for server side, keep the list of CA_dn we can use */
-        client_CA : PSTACK_OF_X509_NAME;
+    client_CA : PSTACK_OF_X509_NAME;
 
-        references : TIdC_INT;
-        options : TIdC_ULONG; //* protocol behaviour */
-        mode : TIdC_ULONG; //* API behaviour */
-        max_cert_list : TIdC_LONG;
-        first_packet : TIdC_INT;
-        client_version : TIdC_INT;//* what was passed, used for
+    references : TIdC_INT;
+    options : TIdC_ULONG; //* protocol behaviour */
+    mode : TIdC_ULONG; //* API behaviour */
+    max_cert_list : TIdC_LONG;
+    first_packet : TIdC_INT;
+    client_version : TIdC_INT;//* what was passed, used for
 				  //* SSLv3/TLS rollback check */
   end;
 
 //ssl2.h
-   SSL2_STATE = packed record
-	three_byte_header : TIdC_INT;
-	clear_text : TIdC_INT;		//* clear text */
-	escape : TIdC_INT;		//* not used in SSLv2 */
-	ssl2_rollback : TIdC_INT;	//* used if SSLv23 rolled back to SSLv2 */
+  SSL2_STATE = packed record
+	  three_byte_header : TIdC_INT;
+    clear_text : TIdC_INT;		//* clear text */
+    escape : TIdC_INT;		//* not used in SSLv2 */
+    ssl2_rollback : TIdC_INT;	//* used if SSLv23 rolled back to SSLv2 */
 
 	//* non-blocking io info, used to make sure the same
 	//* args were passwd */
-	wnum : TIdC_UINT;	//* number of bytes sent so far */
-	wpend_tot : TIdC_INT;
- 
-        wpend_buf : PChar;
+    wnum : TIdC_UINT;	//* number of bytes sent so far */
+    wpend_tot : TIdC_INT;
+
+    wpend_buf : PChar;
 //	const unsigned char *wpend_buf;
 
-        wpend_off : TIdC_INT;	//* offset to data to write */
-        wpend_len : TIdC_INT; 	//* number of bytes passwd to write */
-        wpend_ret : TIdC_INT; 	//* number of bytes to return to caller */
+    wpend_off : TIdC_INT;	//* offset to data to write */
+    wpend_len : TIdC_INT; 	//* number of bytes passwd to write */
+    wpend_ret : TIdC_INT; 	//* number of bytes to return to caller */
 
 	//* buffer raw data */
-	rbuf_left : TIdC_INT;
-	rbuf_offs : TIdC_INT;
-        rbuf : PChar;
-        wbuf : PChar;
+	  rbuf_left : TIdC_INT;
+    rbuf_offs : TIdC_INT;
+    rbuf : PChar;
+    wbuf : PChar;
 
-        write_ptr : PChar; //* used to point to the start due to
-	                   //* 2/3 byte header. */
+    write_ptr : PChar; //* used to point to the start due to
+         //* 2/3 byte header. */
 
-        padding : TIdC_UINT;
-        rlength : TIdC_UINT; //* passed to ssl2_enc */
-        ract_data_length : TIdC_INT; //* Set when things are encrypted. */
-        wlength : TIdC_UINT; //* passed to ssl2_enc */
-        wact_data_length : TIdC_INT; //* Set when things are decrypted. */
-	ract_data : PChar;
-	wact_data : PChar;
-	mac_data : PChar;
+    padding : TIdC_UINT;
+    rlength : TIdC_UINT; //* passed to ssl2_enc */
+    ract_data_length : TIdC_INT; //* Set when things are encrypted. */
+    wlength : TIdC_UINT; //* passed to ssl2_enc */
+    wact_data_length : TIdC_INT; //* Set when things are decrypted. */
+    ract_data : PChar;
+    wact_data : PChar;
+    mac_data : PChar;
 
-	read_key : PChar;
-	write_key : PChar;
+    read_key : PChar;
+    write_key : PChar;
 
 	//* Stuff specifically to do with this SSL session */
-        challenge_length : TIdC_UINT;
-        challenge : array [0..OPENSSL_SSL2_MAX_CHALLENGE_LENGTH -1] of char;
-        conn_id_length : TIdC_UINT;
-        conn_id : array [0..OPENSSL_SSL2_MAX_CONNECTION_ID_LENGTH -1] of char;
-        key_material_length : TIdC_UINT;
-        key_material : array[0..(OPENSSL_SSL2_MAX_KEY_MATERIAL_LENGTH*2)-1] of char;
+    challenge_length : TIdC_UINT;
+    challenge : array [0..OPENSSL_SSL2_MAX_CHALLENGE_LENGTH -1] of char;
+    conn_id_length : TIdC_UINT;
+    conn_id : array [0..OPENSSL_SSL2_MAX_CONNECTION_ID_LENGTH -1] of char;
+    key_material_length : TIdC_UINT;
+    key_material : array[0..(OPENSSL_SSL2_MAX_KEY_MATERIAL_LENGTH*2)-1] of char;
 
-	read_sequence : TIdC_ULONG;
-	write_sequence : TIdC_ULONG;
+    read_sequence : TIdC_ULONG;
+    write_sequence : TIdC_ULONG;
 
-        tmp_conn_id_length : TIdC_UINT;
-        tmp_cert_type : TIdC_UINT;
-	tmp_cert_length : TIdC_UINT;
-        tmp_csl : TIdC_UINT;
-        tmp_clear : TIdC_UINT;
-        tmp_enc : TIdC_UINT;
-        tmp_ccl : array [0..OPENSSL_SSL2_MAX_CERT_CHALLENGE_LENGTH -1] of char;
-	tmp_cipher_spec_length : TIdC_UINT;
-	tmp_session_id_length : TIdC_UINT;
-	tmp_clen : TIdC_UINT;
-	tmp_rlen : TIdC_UINT;
-   end;
+    tmp_conn_id_length : TIdC_UINT;
+    tmp_cert_type : TIdC_UINT;
+    tmp_cert_length : TIdC_UINT;
+    tmp_csl : TIdC_UINT;
+    tmp_clear : TIdC_UINT;
+    tmp_enc : TIdC_UINT;
+    tmp_ccl : array [0..OPENSSL_SSL2_MAX_CERT_CHALLENGE_LENGTH -1] of char;
+    tmp_cipher_spec_length : TIdC_UINT;
+    tmp_session_id_length : TIdC_UINT;
+    tmp_clen : TIdC_UINT;
+    tmp_rlen : TIdC_UINT;
+  end;
 
 //sl3.h
-   PSSL3_RECORD = ^SSL3_RECORD;
-   SSL3_RECORD = packed record
+  PSSL3_RECORD = ^SSL3_RECORD;
+  SSL3_RECORD = packed record
 {*r *}	_type : TIdC_INT;               //* type of record */
 {*rw*}	length : TIdC_UINT;    //* How many bytes available */
 {*r *}	off : TIdC_UINT;       //* read/write offset into 'buf' */
@@ -5080,127 +6295,127 @@ in.
 {*r *}	comp : PChar;   //* only used with decompression - malloc()ed */
 {*r *}  epoch : TIdC_ULONG;    //* epoch number, needed by DTLS1 */
 {*r *}  seq_num : PQ_64BIT;       //* sequence number, needed by DTLS1 */
-   end;
-   PSSL3_BUFFER = ^SSL3_BUFFER;
-   SSL3_BUFFER = packed record
-	buf : PChar;             //* at least SSL3_RT_MAX_PACKET_SIZE bytes,
+  end;
+  PSSL3_BUFFER = ^SSL3_BUFFER;
+  SSL3_BUFFER = packed record
+    buf : PChar;             //* at least SSL3_RT_MAX_PACKET_SIZE bytes,
 	                         //* see ssl3_setup_buffers() */
-	len : size_t;            //* buffer size */
-	offset : TIdC_INT;       //* where to 'copy from' */
-	left : TIdC_INT;         //* how many bytes left */
-   end;
-   
-   SSL3_STATE = packed record
-	      flags : TIdC_LONG;
-        delay_buf_pop_ret : TIdC_INT;
+    len : size_t;            //* buffer size */
+    offset : TIdC_INT;       //* where to 'copy from' */
+    left : TIdC_INT;         //* how many bytes left */
+  end;
 
-        read_sequence : array [0..7] of char;
-        read_mac_secret : array [0..OPENSSL_EVP_MAX_MD_SIZE -1] of char;
-        write_sequence : array [0..7] of char;
-        write_mac_secret : array [0..OPENSSL_EVP_MAX_MD_SIZE] of char;
+  SSL3_STATE = packed record
+	   flags : TIdC_LONG;
+     delay_buf_pop_ret : TIdC_INT;
 
-        server_random : array [0..OPENSSL_SSL3_RANDOM_SIZE - 1] of char;
-	      client_random : array [0..OPENSSL_SSL3_RANDOM_SIZE -1] of char;
+     read_sequence : array [0..7] of char;
+     read_mac_secret : array [0..OPENSSL_EVP_MAX_MD_SIZE -1] of char;
+     write_sequence : array [0..7] of char;
+     write_mac_secret : array [0..OPENSSL_EVP_MAX_MD_SIZE] of char;
+
+     server_random : array [0..OPENSSL_SSL3_RANDOM_SIZE - 1] of char;
+	   client_random : array [0..OPENSSL_SSL3_RANDOM_SIZE -1] of char;
 
 	//* flags for countermeasure against known-IV weakness */
-        need_empty_fragments : TIdC_INT;
-        empty_fragment_done : TIdC_INT;
+     need_empty_fragments : TIdC_INT;
+     empty_fragment_done : TIdC_INT;
 
-        rbuf : PSSL3_BUFFER;    //* read IO goes into here */
-        wbuf : PSSL3_BUFFER;	//* write IO goes into here */
+     rbuf : PSSL3_BUFFER;    //* read IO goes into here */
+     wbuf : PSSL3_BUFFER;	//* write IO goes into here */
 
-        rrec : PSSL3_RECORD;    //* each decoded record goes in here */
-        wrec : PSSL3_RECORD;    //* goes out from here */
+     rrec : PSSL3_RECORD;    //* each decoded record goes in here */
+     wrec : PSSL3_RECORD;    //* goes out from here */
 
 	//* storage for Alert/Handshake protocol data received but not
 	//* yet processed by ssl3_read_bytes: */
-        alert_fragment : array [0..1] of PChar;
-      	alert_fragment_len : TIdC_UINT;
-      	handshake_fragment : array [0..3] of PChar;
-        handshake_fragment_len : TIdC_UINT;
+     alert_fragment : array [0..1] of PChar;
+     alert_fragment_len : TIdC_UINT;
+     handshake_fragment : array [0..3] of PChar;
+     handshake_fragment_len : TIdC_UINT;
 
 	//* partial write - check the numbers match */
-        wnum : TIdC_UINT;	//* number of bytes sent so far */
-        wpend_tot : TIdC_INT;	//* number bytes written */
-	      wpend_type : TIdC_INT;
-       	wpend_ret : TIdC_INT;	//* number of bytes submitted */
+     wnum : TIdC_UINT;	//* number of bytes sent so far */
+     wpend_tot : TIdC_INT;	//* number bytes written */
+	   wpend_type : TIdC_INT;
+     wpend_ret : TIdC_INT;	//* number of bytes submitted */
 
-        wpend_buf : PChar;
+     wpend_buf : PChar;
   //const unsigned char *wpend_buf;
 
 	//* used during startup, digest all incoming/outgoing packets */
-        finish_dgst1 : PEVP_MD_CTX;
-        finish_dgst2 : PEVP_MD_CTX;
+     finish_dgst1 : PEVP_MD_CTX;
+     finish_dgst2 : PEVP_MD_CTX;
 
 	//* this is set whenerver we see a change_cipher_spec message
 	//* come in when we are not looking for one */
-        change_cipher_spec : TIdC_INT;
+     change_cipher_spec : TIdC_INT;
 
-        warn_alert : TIdC_INT;
-        fatal_alert : TIdC_INT;
+     warn_alert : TIdC_INT;
+     fatal_alert : TIdC_INT;
 	//* we allow one fatal and one warning alert to be outstanding,
 	//* send close alert via the warning alert */
-       	alert_dispatch : TIdC_INT;
-      	send_alert : array [0..1] of char;
+     alert_dispatch : TIdC_INT;
+     send_alert : array [0..1] of char;
 
 	//* This flag is set when we should renegotiate ASAP, basically when
 	//* there is no more data in the read or write buffers */
-       	renegotiate : TIdC_INT;
-       	total_renegotiations : TIdC_INT;
-      	num_renegotiations : TIdC_INT;
+     renegotiate : TIdC_INT;
+     total_renegotiations : TIdC_INT;
+     num_renegotiations : TIdC_INT;
 
-        in_read_app_data : TIdC_INT;
+     in_read_app_data : TIdC_INT;
 
 
 	//* actually only needs to be 16+20 */
-      	tmp_cert_verify_md: array [0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of char;
+    tmp_cert_verify_md: array [0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of char;
 
-        //* actually only need to be 16+20 for SSLv3 and 12 for TLS */
-       	tmp_finish_md : array[0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of char;
-      	tmp_finish_md_len : TIdC_INT;
-      	tmp_peer_finish_md : array[0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of char;
-      	tmp_peer_finish_md_len : TIdC_INT;
+  //* actually only need to be 16+20 for SSLv3 and 12 for TLS */
+    tmp_finish_md : array[0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of char;
+    tmp_finish_md_len : TIdC_INT;
+    tmp_peer_finish_md : array[0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of char;
+    tmp_peer_finish_md_len : TIdC_INT;
 
-	      tmp_message_size : TIdC_UINT;
-      	tmp_message_type : TIdC_INT;
+	  tmp_message_size : TIdC_UINT;
+    tmp_message_type : TIdC_INT;
 
 	//* used to hold the new cipher we are going to use */
-      	tmp_new_cipher : PSSL_CIPHER;
-       {$ifndef OPENSSL_NO_DH}
-        tmp_dh : PDH;
-       {$endif}
+    tmp_new_cipher : PSSL_CIPHER;
+    {$ifndef OPENSSL_NO_DH}
+    tmp_dh : PDH;
+    {$endif}
 
 {$ifndef OPENSSL_NO_ECDH}
-       	tmp_ecdh : PEC_KEY; //* holds short lived ECDH key */
+    tmp_ecdh : PEC_KEY; //* holds short lived ECDH key */
 {$endif}
 
 	//* used when SSL_ST_FLUSH_DATA is entered */
-       	tmp_next_state : TIdC_INT;
+    tmp_next_state : TIdC_INT;
 
-      	tmp_reuse_message : TIdC_INT;
+    tmp_reuse_message : TIdC_INT;
 
 //* used for certificate requests */
-       	tmp_cert_req : TIdC_INT;
-	      tmp_ctype_num : TIdC_INT;
-      	tmp_ctype : array [0..OPENSSL_SSL3_CT_NUMBER -1] of char;
-      	tmp_ca_names : PSTACK_OF_X509_NAME;
+    tmp_cert_req : TIdC_INT;
+	  tmp_ctype_num : TIdC_INT;
+    tmp_ctype : array [0..OPENSSL_SSL3_CT_NUMBER -1] of char;
+    tmp_ca_names : PSTACK_OF_X509_NAME;
 
-      	tmp_use_rsa_tmp : TIdC_INT;
+    tmp_use_rsa_tmp : TIdC_INT;
 
-      	tmp_key_block_length : TIdC_INT;
-       	tmp_key_block : PChar;
+    tmp_key_block_length : TIdC_INT;
+    tmp_key_block : PChar;
 
-        tmp_new_sym_enc : PEVP_CIPHER;
+    tmp_new_sym_enc : PEVP_CIPHER;
         //const EVP_CIPHER *new_sym_enc;
-        tmp_new_hash : PEVP_MD;
+    tmp_new_hash : PEVP_MD;
         //const EVP_MD *new_hash;
 {$ifndef OPENSSL_NO_COMP}
-        tmp_new_compression : PSSL_COMP;
+    tmp_new_compression : PSSL_COMP;
        //const SSL_COMP *new_compression;
 {$else}
-      	tmp_new_compression : PChar;
+    tmp_new_compression : PChar;
 {$endif}
-       	tmp_cert_request : TIdC_INT;
+    tmp_cert_request : TIdC_INT;
   end;
 
 //openssl/pq_compat.h
@@ -5208,31 +6423,31 @@ in.
   pitem = packed record
 	  priority : PQ_64BIT;
 	  data : Pointer;
-	  next : ppitem;  
+	  next : ppitem;
   end;
 //ssl/dtls1.h
   //for some reason, this header is refering to crypto/pqueue/pqueue.c
   //which is in the OpenSSL headers.
-  
+
   pqueue = packed record
 	  items : ppitem;
-	  count : TIdC_INT;  
+	  count : TIdC_INT;
   end;
   //
   DTLS1_BITMAP = packed record
-     map : PQ_64BIT;
-     length : TIdC_ULONG;     //* sizeof the bitmap in bits */
-     max_seq_num : PQ_64BIT;  //* max record number seen so far */
+    map : PQ_64BIT;
+    length : TIdC_ULONG;     //* sizeof the bitmap in bits */
+    max_seq_num : PQ_64BIT;  //* max record number seen so far */
   end;
   PDTLS1_BITMAP = ^DTLS1_BITMAP;
-  
+
   hm_header = packed record
-     _type : PChar;
-     msg_len : TIdC_ULONG;
-     seq : TIdC_USHORT;
-     frag_off : TIdC_ULONG;
-     frag_len : TIdC_ULONG;
-     is_ccs : TIdC_UINT;
+    _type : PChar;
+    msg_len : TIdC_ULONG;
+    seq : TIdC_USHORT;
+    frag_off : TIdC_ULONG;
+    frag_len : TIdC_ULONG;
+    is_ccs : TIdC_UINT;
   end;
   ccs_header_st = packed record
     _type : PChar;
@@ -5261,70 +6476,60 @@ in.
   end;
 
   DTLS1_STATE = packed record
-        send_cookie : TIdC_UINT;
-        cookie : array [0..OPENSSL_DTLS1_COOKIE_LENGTH - 1 ] of char;
-        rcvd_cookie : array [0..OPENSSL_DTLS1_COOKIE_LENGTH -1] of char;
-        cookie_len : TIdC_UINT;
+    send_cookie : TIdC_UINT;
+    cookie : array [0..OPENSSL_DTLS1_COOKIE_LENGTH - 1 ] of char;
+    rcvd_cookie : array [0..OPENSSL_DTLS1_COOKIE_LENGTH -1] of char;
+    cookie_len : TIdC_UINT;
 
 	//*
 	//* The current data and handshake epoch.  This is initially
 	//* undefined, and starts at zero once the initial handshake is
 	//* completed
 	//*/
-       	r_epoch : TIdC_USHORT;
-       	w_epoch : TIdC_USHORT;
- 
+    r_epoch : TIdC_USHORT;
+    w_epoch : TIdC_USHORT;
+
 	//* records being received in the current epoch */
-        	bitmap : DTLS1_BITMAP;
+    bitmap : DTLS1_BITMAP;
 
 	//* renegotiation starts a new set of sequence numbers */
-        	next_bitmap : DTLS1_BITMAP;
+    next_bitmap : DTLS1_BITMAP;
 
 	//* handshake message numbers */
-         	handshake_write_seq : TIdC_USHORT;
-          next_handshake_write_seq : TIdC_USHORT;
+    handshake_write_seq : TIdC_USHORT;
+    next_handshake_write_seq : TIdC_USHORT;
 
-          handshake_read_seq : TIdC_USHORT;
+    handshake_read_seq : TIdC_USHORT;
 
 	//* Received handshake records (processed and unprocessed) */
-          unprocessed_rcds : record_pqueue;
-          processed_rcds : record_pqueue;
+    unprocessed_rcds : record_pqueue;
+    processed_rcds : record_pqueue;
 
 	//* Buffered handshake messages */
-          buffered_messages : pqueue;
+    buffered_messages : pqueue;
 
 	//* Buffered (sent) handshake records */
-          sent_messages : pqueue;
+    sent_messages : pqueue;
 
-          mtu : TIdC_UINT; //* max wire packet size */
+    mtu : TIdC_UINT; //* max wire packet size */
 
-         w_msg_hdr : hm_header;
-        //struct hm_header_st w_msg_hdr;
-         r_msg_hdr : hm_header;
-        //struct hm_header_st r_msg_hdr;
-         timeout :  dtls1_timeout_st;
-        //struct dtls1_timeout_st timeout;
+    w_msg_hdr : hm_header;
+    //struct hm_header_st w_msg_hdr;
+    r_msg_hdr : hm_header;
+    //struct hm_header_st r_msg_hdr;
+    timeout :  dtls1_timeout_st;
+    //struct dtls1_timeout_st timeout;
 
 	//* storage for Alert/Handshake protocol data received but not
 	//* yet processed by ssl3_read_bytes: */
-         alert_fragment : array [0..OPENSSL_DTLS1_AL_HEADER_LENGTH-1] of char;
-         alert_fragment_len : TIdC_UINT;
-         handshake_fragment : array[0..OPENSSL_DTLS1_HM_HEADER_LENGTH -1] of char;
-         handshake_fragment_len : TIdC_UINT;
+    alert_fragment : array [0..OPENSSL_DTLS1_AL_HEADER_LENGTH-1] of char;
+    alert_fragment_len : TIdC_UINT;
+    handshake_fragment : array[0..OPENSSL_DTLS1_HM_HEADER_LENGTH -1] of char;
+    handshake_fragment_len : TIdC_UINT;
 
-         retransmitting : TIdC_UINT;
+    retransmitting : TIdC_UINT;
   end;
 //
-
-{  V3_EXT_CTX = packed record
-    flags:Integer;
-    issuer_cert:PX509;
-    subject_cert:PX509;
-    subject_req:PX509_REQ;
-    crl:PX509_CRL;
-    db_meth:Pointer; //PX509V3_CONF_METHOD;
-    db:Pointer;
-  end;  }
 
 
   X509V3_CTX = V3_EXT_CTX;
@@ -5341,9 +6546,9 @@ type
   //int CRYPTO_set_mem_ex_functions(void *(*m)(size_t,const char *,int),
   //                              void *(*r)(void *,size_t,const char *,int),
   //                              void (*f)(void *));
-  
-	TCRYPTO_set_mem_ex_functions_m = function(size : size_t; 
-    const c : PChar; i : TIdC_INT) : Pointer cdecl;  
+
+	TCRYPTO_set_mem_ex_functions_m = function(size : size_t;
+    const c : PChar; i : TIdC_INT) : Pointer cdecl;
   TCRYPTO_set_mem_ex_functions_r = function(ptr : Pointer;
     size : size_t; const c : PChar; i : TIdC_INT) : Pointer cdecl;
   TCRYPTO_set_mem_ex_functions_f = procedure (ptr : Pointer) cdecl;
@@ -5351,35 +6556,37 @@ type
 //				   void (*r)(void *,void *,int,const char *,int,int),
 //				   void (*f)(void *,int),
 //				   void (*so)(long),
-//				   long (*go)(void));  
+//				   long (*go)(void));
 	Tset_mem_debug_functions_m = procedure (addr : Pointer; num : TIdC_INT;
      const _file : PChar;line, before_p : TIdC_INT) cdecl;
   Tset_mem_debug_functions_r = procedure (addr1,addr2 : Pointer; num : TIdC_INT;
     const _file : PChar; line, before_p : TIdC_INT); cdecl;
-  Tset_mem_debug_functions_f = procedure (addr : Pointer; before_p : TIdC_INT); cdecl; 
+  Tset_mem_debug_functions_f = procedure (addr : Pointer; before_p : TIdC_INT); cdecl;
   Tset_mem_debug_functions_so = procedure (bits : TIdC_LONG); cdecl;
   Tset_mem_debug_functions_go = function : TIdC_LONG; cdecl;
 //void SSL_CTX_set_verify(SSL_CTX *ctx,int mode,
 //			int (*callback)(int, X509_STORE_CTX *));
   TSSL_CTX_set_verify_callback = function (ok : TIdC_INT; ctx : PX509_STORE_CTX) : TIdC_INT cdecl;
+////void sk_pop_free(STACK *st, void (*func)(void *));
+  Tsk_pop_free_func = procedure (p : Pointer); cdecl;
 var
 //void OpenSSL_add_all_ciphers(void);
   IdSslAddAllAlgorithms : procedure cdecl = nil;
-//void OpenSSL_add_all_digests(void);  
+//void OpenSSL_add_all_digests(void);
   IdSslAddAllCiphers : procedure cdecl = nil;
 //void OpenSSL_add_all_digests(void);
   IdSslAddAllDigests : procedure cdecl = nil;
-//void EVP_cleanup(void);  
+//void EVP_cleanup(void);
   IdSslEvpCleanup : procedure cdecl = nil;
 
   //SSL Version function
   IdSslSSLeay_version : function(_type : TIdC_INT) : PChar cdecl = nil;
   //CRYPTO_set_mem_ex_functions
-//int CRYPTO_set_mem_functions(void *(*m)(size_t),void *(*r)(void *,size_t), void (*f)(void *));  
+//int CRYPTO_set_mem_functions(void *(*m)(size_t),void *(*r)(void *,size_t), void (*f)(void *));
   IdSslCryptoSetMemFunctions : function(myAlloc:TCRYPTO_set_mem_functions_myAlloc;
     myReAlloc:TCRYPTO_set_mem_functions_myReAlloc;
     myFree:TCRYPTO_set_mem_functions_myFree):TIdC_INT cdecl = nil;
-//void *CRYPTO_malloc(int num, const char *file, int line);  
+//void *CRYPTO_malloc(int num, const char *file, int line);
   IdSslCryptoMalloc : function(num:TIdC_INT; afile:PChar;line:TIdC_INT):Pointer cdecl = nil;
   //void CRYPTO_free(void *);
   IdSslCryptoFree : procedure(ptr : Pointer) cdecl = nil;
@@ -5390,19 +6597,19 @@ var
   //int CRYPTO_set_mem_ex_functions(void *(*m)(size_t,const char *,int),
   //                              void *(*r)(void *,size_t,const char *,int),
   //                              void (*f)(void *));
-  
+
 //CRYPTO_set_mem_debug_functions(void (*m)(void *,int,const char *,int,int),
 //				   void (*r)(void *,void *,int,const char *,int,int),
 //				   void (*f)(void *,int),
 //				   void (*so)(long),
 //				   long (*go)(void));
   IdSslCryptoSetMemDebugFunctions : procedure (m :Tset_mem_debug_functions_m;
-        r: Tset_mem_debug_functions_r; 
-        f : Tset_mem_debug_functions_f; 
+        r: Tset_mem_debug_functions_r;
+        f : Tset_mem_debug_functions_f;
         so : Tset_mem_debug_functions_so;
         go : Tset_mem_debug_functions_go) cdecl = nil;
   //
-  
+
   // void CRYPTO_dbg_malloc(void *addr,int num,const char *file,int line,int before_p);
   IdSslCryptoDbgMalloc : procedure(addr:Pointer;num:TIdC_INT;
     afile:PChar;line,before:TIdC_INT) cdecl = nil;
@@ -5422,14 +6629,17 @@ var
   IdSslSkPush : function(st:PSTACK;data:PChar):TIdC_INT cdecl = nil;
 
   //IdSslRsaNew : function():cdecl = nil;
-  
+
   //void	RSA_free (RSA *r);
   IdSslRsaFree : procedure(rsa:PRSA) cdecl = nil;
+  //THis function is depreciated.
   //RSA *	RSA_generate_key(int bits, unsigned long e,void
 	//	(*callback)(int,int,void *),void *cb_arg);
-  IdSslRsaGenerateKey : function(bits:TIdC_INT; e:TIdC_ULONG; 
+  IdSslRsaGenerateKey : function(bits:TIdC_INT; e:TIdC_ULONG;
     callback: TRSA_generate_key_callback;
     cb_arg:Pointer):PRSA; cdecl = nil;
+  // int	RSA_generate_key_ex(RSA *rsa, int bits, BIGNUM *e, BN_GENCB *cb);
+  IdSslRsaGenerateKeyEx : function(rsa : PRSA; bits : TIdC_INT; e : PBIGNUM; cb : PBN_GENCB) : TIdC_INT cdecl = nil;
   //int	RSA_check_key(const RSA *);
   IdSslRsaCheckKey : function(rsa:PRSA):TIdC_INT cdecl = nil;
   //BIO *	BIO_new(BIO_METHOD *type);
@@ -5456,57 +6666,67 @@ var
   IdSslPemWriteBioX509Req : function(bp:PBIO;x:PX509_REQ):TIdC_INT cdecl = nil;
   //(BIO *, EVP_PKEY *, const EVP_CIPHER *, char *, int, pem_password_cb *, void *);
 //int PEM_write_bio_PKCS8PrivateKey(BIO *, EVP_PKEY *, const EVP_CIPHER *,
-//                                  char *, int, pem_password_cb *, void *);  
+//                                  char *, int, pem_password_cb *, void *);
+  {$IFNDEF OPENSSL_NO_BIO}
   IdSslPemWriteBioPKCS8PrivateKey : function(bp:PBIO;key:PEVP_PKEY;enc:PEVP_CIPHER;
     kstr:PChar;klen:TIdC_INT;cb:Ppem_password_cb;u:Pointer):TIdC_INT cdecl = nil;
   //int	PEM_ASN1_write_bio(i2d_of_void *i2d,const char *name,BIO *bp,char *x,
 	//		   const EVP_CIPHER *enc,unsigned char *kstr,int klen,
 	//		   pem_password_cb *cb, void *u);
+
   IdSslPemAsn1WriteBio : function(i2d:d2i_of_void;Name:PChar;
     bp:PBIO;x:PChar;enc:PEVP_CIPHER;kstr:PChar;klen:TIdC_INT;
     cb:ppem_password_cb;u:Pointer):TIdC_INT cdecl = nil;
   //void *	PEM_ASN1_read_bio(d2i_of_void *d2i, const char *name, BIO *bp,
 	//		  void **x, pem_password_cb *cb, void *u);
+
   IdSslPemAsn1ReadBio : function(d2i:d2i_of_void;Name:PChar;bp:PBIO;
           var x:Pointer;cb:Ppem_password_cb;u:PChar):Pointer cdecl = nil;
   //EVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x,
   //pem_password_cb *cb, void *u);
-  IdSslPemReadBioPrivateKey : function(bio:PBIO;var x:PEVP_PKEY;cb:Ppem_password_cb;u:PChar):PEVP_PKEY cdecl = nil;
+  {$ENDIF}
 
+  IdSslPemReadBioPrivateKey : function(bio:PBIO;var x:PEVP_PKEY;cb:Ppem_password_cb;u:PChar):PEVP_PKEY cdecl = nil;
+  {$IFNDEF OPENSSL_NO_DES}
   //const EVP_CIPHER *EVP_des_ede3_cbc(void);
   IdSslEvpDesEde3Cbc : function():PEVP_CIPHER cdecl = nil;
+  {$ENDIF}
   //EVP_PKEY *	EVP_PKEY_new(void);
   IdSslEvpPKeyNew : function():PEVP_PKEY cdecl = nil;
   //void		EVP_PKEY_free(EVP_PKEY *pkey);
   IdSslEvpPKeyFree : procedure(pkey:PEVP_PKEY) cdecl = nil;
-  //int 		EVP_PKEY_assign(EVP_PKEY *pkey,int type,char *key);
+
+  {$ifndef OPENSSL_NO_RSA}
+ //int 		EVP_PKEY_assign(EVP_PKEY *pkey,int type,char *key);  
   IdSslEvpPKeyAssign : function(pkey:PEVP_MD;aType:TIdC_INT;key:PChar):TIdC_INT cdecl = nil;
+  {$ENDIF}
   //const EVP_MD *EVP_get_digestbyname(const char *name);
   IdSslEvpGetDigestByName : function(Name:PChar):PEVP_MD cdecl = nil;
 
   //int ASN1_INTEGER_set(ASN1_INTEGER *a, long v);
   IdSslAsn1IntegerSet : function(a:PASN1_INTEGER;v:TIdC_LONG):TIdC_INT cdecl = nil;
+  //  long ASN1_INTEGER_get(ASN1_INTEGER *a);
+  IdSslAsn1IntegerGet : function(a:PASN1_INTEGER) : TIdC_LONG cdecl = nil;
   //IdSslAsn1UtcTimeNew : function():Pointer cdecl = nil;
   //ASN1_STRING *	ASN1_STRING_type_new(int type );
   IdSslAsn1StringTypeNew : function(aType:TIdC_INT):PASN1_STRING cdecl = nil;
   //void		ASN1_STRING_free(ASN1_STRING *a);
   IdSslAsn1StringFree : procedure(a:PASN1_STRING) cdecl = nil;
 
+  //int i2d_X509(X509 *x, unsigned char **out);
+  IdSslI2dX509 : function(x:PX509; var buf:PChar):TIdC_INT cdecl = nil;
+  //X509 *d2i_X509(X509 **px, unsigned char **in, int len);
+  IdSslD2iX509 :   function(pr : PX509;  _in : PPChar; len : TIdC_INT):PX509 cdecl = nil;
+  {$IFNDEF OPENSSL_NO_BIO}
+  //X509 *d2i_X509_bio(BIO *bp,X509 **x509);
+  IdSslD2iX509Bio : function(bp:PBIO;x:PPx509):PX509 cdecl = nil;
+  //int i2d_X509_REQ_bio(X509_REQ *x, BIO *bp);
+  IdSslI2dX509ReqBio : function(x:PX509_REQ;bp:PBIO):TIdC_INT cdecl = nil;
   //int i2d_X509_bio(BIO *bp,X509 *x509);
   IdSslI2dX509Bio : function(bp:PBIO;x509:PX509):TIdC_INT cdecl = nil;
   //int i2d_PrivateKey_bio(BIO *bp, EVP_PKEY *pkey);
   IdSslI2dPrivateKeyBio : function(b:PBIO;pkey:PEVP_PKEY):TIdC_INT cdecl = nil;
-  //int i2d_X509(X509 *x, unsigned char **out);
-  IdSslI2dX509 : function(x:PX509; var buf:PChar):TIdC_INT cdecl = nil;
-  //X509 *d2i_X509_bio(BIO *bp,X509 **x509);
-  IdSslD2iX509Bio : function(bp:PBIO;x:PPx509):PX509 cdecl = nil;
-  
-  //X509 *d2i_X509(X509 **px, unsigned char **in, int len);
-  IdSslD2iX509 :   function(pr : PX509;  _in : PPChar; len : TIdC_INT):PX509 cdecl = nil;
-  //int i2d_X509_REQ_bio(X509_REQ *x, BIO *bp);
-  IdSslI2dX509ReqBio : function(x:PX509_REQ;bp:PBIO):TIdC_INT cdecl = nil;
-  
-
+  {$ENDIF}
   IdSslX509New : function():PPX509 cdecl = nil;
   IdSslX509Free : procedure(x:PX509) cdecl = nil;
   IdSslX509ReqNew : function():PX509_REQ cdecl = nil;
@@ -5685,12 +6905,42 @@ var
   IdSslX509SetSubjectName : function(x: PX509; name: PX509_NAME):TIdC_INT cdecl = nil;
 //X509_NAME *	X509_get_subject_name(X509 *a);  
   IdSslX509GetSubjectName : function(a: PX509):PX509_NAME cdecl = nil;
-//int X509_digest(const X509 *data,const EVP_MD *type,
+  //int		OBJ_obj2nid(const ASN1_OBJECT *o);
+   IdSslOBJObj2Nid  : function (const o : PASN1_OBJECT) : TIdC_INT cdecl = nil;
+
+   //ASN1_OBJECT *	OBJ_nid2obj(int n);
+   IdSslOBJNid2Obj : function (n : TIdC_INT) : PASN1_OBJECT cdecl = nil;
+//const char *	OBJ_nid2ln(int n);
+   IdSslOBJNid2ln : function (n : TIdC_INT) : PChar cdecl = nil;
+//const char *	OBJ_nid2sn(int n);
+   IdSslOBJNid2sn : function (n : TIdC_INT) : PChar cdecl = nil;
+
+   //int X509_digest(const X509 *data,const EVP_MD *type,
 //		unsigned char *md, unsigned int *len);
-  IdSslX509Digest : function(data: PX509; _type: PEVP_MD; 
+  IdSslX509Digest : function(data: PX509; _type: PEVP_MD;
       md: PChar; var len: TIdC_UINT):TIdC_INT cdecl = nil;
-//EVP_MD *EVP_md5(void);  
+  {$IFNDEF OPENSSL_NO_SHA512}
+//const EVP_MD *EVP_sha512(void);
+  IdSslEvpSHA512 : function : PEVP_MD cdecl = nil;
+//const EVP_MD *EVP_sha384(void);
+  IdSslEvpSHA386 : function : PEVP_MD cdecl = nil;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA256}
+//const EVP_MD *EVP_sha256(void);
+  IdSslEvpSHA256 : function : PEVP_MD cdecl = nil;
+//const EVP_MD *EVP_sha224(void);
+  IdSslEvpSHA224 : function : PEVP_MD cdecl = nil;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA}
+//EVP_MD *EVP_sha1(void);
+  IdSslEvpSHA1 : function: PEVP_MD cdecl = nil;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD5}
+//EVP_MD *EVP_md5(void);
   IdSslEvpMd5 : function:PEVP_MD cdecl = nil;
+  {$ENDIF}
+  //int		EVP_PKEY_type(int type);
+  IdSslEvpPKEYType : function(_type : TIdC_INT): TIdC_INT cdecl =nil;
   //void *	X509_STORE_CTX_get_ex_data(X509_STORE_CTX *ctx,int idx);
   IdSslX509StoreCtxGetExData : function(ctx: PX509_STORE_CTX; idx: TIdC_INT):Pointer cdecl = nil;
 //int	X509_STORE_CTX_get_error(X509_STORE_CTX *ctx);  
@@ -5752,7 +7002,7 @@ var
 //char *SSL_CIPHER_description(SSL_CIPHER *,char *buf,int size);
   IdSSLCipherDescription: function(arg0: PSSL_CIPHER; buf: PChar; size: TIdC_INT):PChar; cdecl = nil;
 
-//SSL_CIPHER *SSL_get_current_cipher(const SSL *s);  
+//SSL_CIPHER *SSL_get_current_cipher(const SSL *s);
   IdSSLGetCurrentCipher: function(s: PSSL):PSSL_CIPHER; cdecl = nil;
 //const char *	SSL_CIPHER_get_name(const SSL_CIPHER *c);
   IdSSLCipherGetName: function(c: PSSL_CIPHER):PChar; cdecl = nil;
@@ -5792,9 +7042,9 @@ var
   IdSslCryptoCleanupAllExData : procedure cdecl = nil;
 
   //STACK_OF(SSL_COMP) *SSL_COMP_get_compression_methods(void);
-  IdSslCompGetCompressionMethods : function:Pointer cdecl = nil;
+  IdSslCompGetCompressionMethods : function:PSTACK_OF_SSL_COMP cdecl = nil;
   //void sk_pop_free(STACK *st, void (*func)(void *));
-  IdSslSkPopFree : procedure(st:Pointer;func:Pointer) cdecl = nil;
+  IdSslSkPopFree : procedure(st:PSTACK;func:Tsk_pop_free_func) cdecl = nil;
 
 function IdSslUCTTimeDecode(UCTtime : PASN1_UTCTIME; Var year, month, day, hour, min, sec: Word;
   Var tz_hour, tz_min: Integer): Integer;
@@ -5807,11 +7057,22 @@ function WhichFailedToLoad: String;
 
 procedure InitializeRandom;
 
+
 function IdSslX509StoreCtxGetAppData(ctx:PX509_STORE_CTX):Pointer;
+function IdSslX509GetVersion(x : PX509): TIdC_LONG;
+function IdSslX509GetSignatureType(x : PX509) : TIdC_INT;
 function IdSslX509GetNotBefore(x509: PX509):PASN1_TIME;
-//function IdSslX509GetNotBefore(x509: PX509):PASN1_UTCTIME;
 function IdSslX509GetNotAfter(x509: PX509):PASN1_TIME;
+
+//function IdSslX509GetNotBefore(x509: PX509):PASN1_UTCTIME;
 //function IdSslX509GetNotAfter(x509: PX509):PASN1_UTCTIME;
+
+function IdSslX509CRLGetVersion(x : PX509_CRL) : TIdC_LONG;
+function IdSslX509CRLGetLastUpdate(x : PX509_CRL) : PASN1_TIME;
+function IdSslX509CRLGetNextUpdate(x : PX509_CRL) : PASN1_TIME;
+function IdX509CRLGetIssuer(x : PX509_CRL) : PX509_NAME;
+function IdSslCRLGetRevoked(x : PX509_CRL) : PSTACK_OF_X509_REVOKED;
+
 procedure IdSslCtxSetInfoCallback(ctx: PSSL_CTX; cb: PSSL_CTX_info_callback);
 function IdSslCtxSetOptions(ctx: PSSL_CTX; op: TIdC_INT):TIdC_LONG;
 function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPChar; length: PIdC_INT) : TIdC_UINT;
@@ -5823,9 +7084,12 @@ function IdSslPemWriteBio(b:PBIO;x:PChar):TIdC_INT;
 function IdSslPemReadBio(bp:PBIO;x:Pointer;cb:ppem_password_cb;u:PChar):PX509;
 function IdSslMalloc(aSize:TIdC_INT):Pointer;
 procedure IdSslMemCheck(const aEnabled:boolean);
+{$IFNDEF OPENSSL_NO_RSA}
 function IdSslEvpPKeyAssignRsa(pkey:PEVP_MD;rsa:PChar):TIdC_INT;
+{$ENDIF}
 function IdSslX509ReqGetSubjectName(x:PX509_REQ):PX509_NAME;
 //function IdSslX509ReqGetSubjectName(x:PX509_REQ):PASN1_BIT_STRING;
+ function IdX509ReqGetVersion(x : PX509_REQ): TIdC_LONG;
 procedure IdSslX509V3SetCtxNoDb(ctx:X509V3_CTX);
 
 function ErrMsg(AErr : TIdC_ULONG) : string;
@@ -5851,7 +7115,6 @@ uses
 
 const
   {$IFDEF UNIX}
- // SSL_Indy_DLL_name    = 'libindy_ssl.so'; {Do not localize}
   SSL_DLL_name         = 'libssl.so'; {Do not localize}
   SSLCLIB_DLL_name      = 'libcrypto.so'; {Do not localize}
   {$ENDIF}
@@ -5865,8 +7128,10 @@ var
 
   FFailedFunctionLoadList : TIdStringList;
 
+  {$IFDEF SYS_WIN}
   // LIBEAY functions - open SSL 0.9.6a
   IdSslRandScreen : procedure cdecl = nil;
+  {$ENDIF}
 
 { This constant's are used twice. First time in Load function and second time  }  {Do not localize}
 { in function WhichFailedToLoad. I belive that this reduce size of final       }
@@ -5924,7 +7189,9 @@ const
   fn_CRYPTO_dbg_realloc = 'CRYPTO_dbg_realloc';  {Do not localize}
   fn_CRYPTO_dbg_free = 'CRYPTO_dbg_free';  {Do not localize}
   fn_CRYPTO_dbg_remalloc = 'CRYPTO_dbg_remalloc';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_FP_API}
   fn_CRYPTO_mem_leaks_fp = 'CRYPTO_mem_leaks_fp';  {Do not localize}
+  {$ENDIF}
   fn_CRYPTO_mem_leaks = 'CRYPTO_mem_leaks';  {Do not localize}
   fn_CRYPTO_mem_leaks_cb = 'CRYPTO_mem_leaks_cb';  {Do not localize}
   fn_CRYPTO_cleanup_all_ex_data = 'CRYPTO_cleanup_all_ex_data'; {Do not localize}
@@ -5940,6 +7207,7 @@ const
   fn_lh_doall = 'lh_doall';  {Do not localize}
   fn_lh_doall_arg = 'lh_doall_arg';  {Do not localize}
   fn_lh_strhash = 'lh_strhash';  {Do not localize}
+
   fn_lh_stats = 'lh_stats';  {Do not localize}
   fn_lh_node_stats = 'lh_node_stats';  {Do not localize}
   fn_lh_node_usage_stats = 'lh_node_usage_stats';  {Do not localize}
@@ -6010,31 +7278,89 @@ const
   fn_BIO_new_bio_pair = 'BIO_new_bio_pair';  {Do not localize}
   fn_BIO_copy_next_retry = 'BIO_copy_next_retry';  {Do not localize}
   fn_BIO_ghbn_ctrl = 'BIO_ghbn_ctrl';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_MD2}
   fn_MD2_options = 'MD2_options';  {Do not localize}
   fn_MD2_Init = 'MD2_Init';  {Do not localize}
   fn_MD2_Update = 'MD2_Update';  {Do not localize}
   fn_MD2_Final = 'MD2_Final';  {Do not localize}
   fn_MD2 = 'MD2';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD4}
+  fn_MD4_Init = 'MD4_Init'; {Do not localize}
+  fn_MD4_Update = 'MD4_Update'; {Do not localize}
+  fn_MD4_Final = 'MD4_Final'; {Do not localize}
+  fn_MD4 = 'MD4'; {Do not localize}
+  fn_MD4_Transform = 'MD4_Transform'; {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD5}
   fn_MD5_Init = 'MD5_Init';  {Do not localize}
   fn_MD5_Update = 'MD5_Update';  {Do not localize}
   fn_MD5_Final = 'MD5_Final';  {Do not localize}
   fn_MD5 = 'MD5';  {Do not localize}
   fn_MD5_Transform = 'MD5_Transform';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA}
+    {$IFNDEF OPENSSL_NO_SHA0}
   fn_SHA_Init = 'SHA_Init';  {Do not localize}
   fn_SHA_Update = 'SHA_Update';  {Do not localize}
   fn_SHA_Final = 'SHA_Final';  {Do not localize}
   fn_SHA = 'SHA';  {Do not localize}
   fn_SHA_Transform = 'SHA_Transform';  {Do not localize}
+    {$ENDIF}
+    {$IFNDEF OPENSSL_NO_SHA1}
   fn_SHA1_Init = 'SHA1_Init';  {Do not localize}
   fn_SHA1_Update = 'SHA1_Update';  {Do not localize}
   fn_SHA1_Final = 'SHA1_Final';  {Do not localize}
   fn_SHA1 = 'SHA1';  {Do not localize}
   fn_SHA1_Transform = 'SHA1_Transform';  {Do not localize}
+    {$ENDIF}
+    {$IFNDEF OPENSSL_NO_SHA256}
+  fn_SHA224_Init = 'SHA224_Init'; {Do not localize}
+  fn_SHA224_Update = 'SHA224_Update'; {Do not localize}
+  fn_SHA224_Final = 'SHA224_Final'; {Do not localize}
+  fn_SHA224 = 'SHA224'; {Do not localize}
+  fn_SHA256_Init = 'SHA256_Init'; {Do not localize}
+  fn_SHA256_Update = 'SHA256_Update'; {Do not localize}
+  fn_SHA256_Final = 'SHA256_Final'; {Do not localize}
+  fn_SHA256 = 'SHA256'; {Do not localize}
+  fn_SHA256_Transform = 'SHA256_Transform'; {Do not localize}
+    {$ENDIF}
+    {$IFNDEF OPENSSL_NO_SHA512}
+  fn_SHA384_Init = 'SHA384_Init'; {Do not localize}
+  fn_SHA384_Update = 'SHA384_Update'; {Do not localize}
+  fn_SHA384_Final = 'SHA384_Final'; {Do not localize}
+  fn_SHA384 = 'SHA384'; {Do not localize}
+  fn_SHA512_Init = 'SHA512_Init'; {Do not localize}
+  fn_SHA512_Update = 'SHA512_Update'; {Do not localize}
+  fn_SHA512_Final = 'SHA512_Final'; {Do not localize}
+  fn_SHA512 = 'SHA512'; {Do not localize}
+  fn_SHA512_Transform = 'SHA512_Transform'; {Do not localize}
+    {$ENDIF}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_RIPEMD}
   fn_RIPEMD160_Init = 'RIPEMD160_Init';  {Do not localize}
   fn_RIPEMD160_Update = 'RIPEMD160_Update';  {Do not localize}
   fn_RIPEMD160_Final = 'RIPEMD160_Final';  {Do not localize}
   fn_RIPEMD160 = 'RIPEMD160';  {Do not localize}
   fn_RIPEMD160_Transform = 'RIPEMD160_Transform';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_HMAC}
+  fn_HMAC_CTX_init = 'HMAC_CTX_init'; {Do not localize}
+  fn_HMAC_CTX_cleanup = 'HMAC_CTX_cleanup'; {Do not localize}
+  fn_HMAC_Init = 'HMAC_Init'; {Do not localize}
+  fn_HMAC_Init_ex = 'HMAC_Init_ex'; {Do not localize}
+  fn_HMAC_Update = 'HMAC_Update'; {Do not localize}
+  fn_HMAC_Final = 'HMAC_Final'; {Do not localize}
+  fn_HMAC = 'HMAC'; {Do not localize}
+  {$ENDIF}
+  {$IFNDEF HEADER_TMDIFF_H}
+  fn_ms_time_new = 'ms_time_new'; {Do not localize}
+  fn_ms_time_free = 'ms_time_free'; {Do not localize}
+  fn_ms_time_get = 'ms_time_get'; {Do not localize}
+  fn_ms_time_diff = 'ms_time_diff'; {Do not localize}
+  fn_ms_time_cmp = 'ms_time_cmp'; {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_DES}
   fn_des_options = 'DES_options';  {Do not localize}
   fn_des_ecb3_encrypt = 'DES_ecb3_encrypt';  {Do not localize}
   fn_des_cbc_cksum = 'DES_cbc_cksum';  {Do not localize}
@@ -6055,6 +7381,7 @@ const
   fn_des_enc_read = 'DES_enc_read';  {Do not localize}
   fn_des_enc_write = 'DES_enc_write';  {Do not localize}
   fn_des_fcrypt = 'DES_fcrypt';  {Do not localize}
+
   fn_crypt = 'crypt';  {Do not localize}
   fn_des_ofb_encrypt = 'DES_ofb_encrypt';  {Do not localize}
   fn_des_pcbc_encrypt = 'DES_pcbc_encrypt';  {Do not localize}
@@ -6074,9 +7401,13 @@ const
   fn_des_ofb64_encrypt = 'DES_ofb64_encrypt';  {Do not localize}
   fn_des_read_pw = 'DES_read_pw';  {Do not localize}
   fn_des_cblock_print_file = 'DES_cblock_print_file';  {Do not localize}
+   {$ENDIF}
+  {$IFNDEF OPENSSL_NO_RC4}
   fn_RC4_options = 'RC4_options';  {Do not localize}
   fn_RC4_set_key = 'RC4_set_key';  {Do not localize}
   fn_RC4 = 'RC4';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_RC2}
   fn_RC2_set_key = 'RC2_set_key';  {Do not localize}
   fn_RC2_ecb_encrypt = 'RC2_ecb_encrypt';  {Do not localize}
   fn_RC2_encrypt = 'RC2_encrypt';  {Do not localize}
@@ -6084,6 +7415,8 @@ const
   fn_RC2_cbc_encrypt = 'RC2_cbc_encrypt';  {Do not localize}
   fn_RC2_cfb64_encrypt = 'RC2_cfb64_encrypt';  {Do not localize}
   fn_RC2_ofb64_encrypt = 'RC2_ofb64_encrypt';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_RC5}
   fn_RC5_32_set_key = 'RC5_32_set_key';  {Do not localize}
   fn_RC5_32_ecb_encrypt = 'RC5_32_ecb_encrypt';  {Do not localize}
   fn_RC5_32_encrypt = 'RC5_32_encrypt';  {Do not localize}
@@ -6091,6 +7424,8 @@ const
   fn_RC5_32_cbc_encrypt = 'RC5_32_cbc_encrypt';  {Do not localize}
   fn_RC5_32_cfb64_encrypt = 'RC5_32_cfb64_encrypt';  {Do not localize}
   fn_RC5_32_ofb64_encrypt = 'RC5_32_ofb64_encrypt';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_BF}
   fn_BF_set_key = 'BF_set_key';  {Do not localize}
   fn_BF_ecb_encrypt = 'BF_ecb_encrypt';  {Do not localize}
   fn_BF_encrypt = 'BF_encrypt';  {Do not localize}
@@ -6099,6 +7434,8 @@ const
   fn_BF_cfb64_encrypt = 'BF_cfb64_encrypt';  {Do not localize}
   fn_BF_ofb64_encrypt = 'BF_ofb64_encrypt';  {Do not localize}
   fn_BF_options = 'BF_options';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_CAST}
   fn_CAST_set_key = 'CAST_set_key';  {Do not localize}
   fn_CAST_ecb_encrypt = 'CAST_ecb_encrypt';  {Do not localize}
   fn_CAST_encrypt = 'CAST_encrypt';  {Do not localize}
@@ -6106,6 +7443,8 @@ const
   fn_CAST_cbc_encrypt = 'CAST_cbc_encrypt';  {Do not localize}
   fn_CAST_cfb64_encrypt = 'CAST_cfb64_encrypt';  {Do not localize}
   fn_CAST_ofb64_encrypt = 'CAST_ofb64_encrypt';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_IDEA}
   fn_idea_options = 'idea_options';  {Do not localize}
   fn_idea_ecb_encrypt = 'idea_ecb_encrypt';  {Do not localize}
   fn_idea_set_encrypt_key = 'idea_set_encrypt_key';  {Do not localize}
@@ -6114,14 +7453,294 @@ const
   fn_idea_cfb64_encrypt = 'idea_cfb64_encrypt';  {Do not localize}
   fn_idea_ofb64_encrypt = 'idea_ofb64_encrypt';  {Do not localize}
   fn_idea_encrypt = 'idea_encrypt';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD2}
   fn_MDC2_Init = 'MDC2_Init';  {Do not localize}
   fn_MDC2_Update = 'MDC2_Update';  {Do not localize}
   fn_MDC2_Final = 'MDC2_Final';  {Do not localize}
   fn_MDC2 = 'MDC2';  {Do not localize}
+  {$ENDIF}
+
+   {$IFNDEF OPENSSL_NO_RSA}
+  fn_RSA_new = 'RSA_new';  {Do not localize}
+  fn_RSA_new_method = 'RSA_new_method';  {Do not localize}
+  fn_RSA_size = 'RSA_size';  {Do not localize}
+  fn_RSA_generate_key = 'RSA_generate_key';  {Do not localize}
+  fn_RSA_generate_key_ex = 'RSA_generate_key_ex'; {Do not localize}
+  fn_RSA_check_key = 'RSA_check_key';  {Do not localize}
+  fn_RSA_public_encrypt = 'RSA_public_encrypt';  {Do not localize}
+  fn_RSA_private_encrypt = 'RSA_private_encrypt';  {Do not localize}
+  fn_RSA_public_decrypt = 'RSA_public_decrypt';  {Do not localize}
+  fn_RSA_private_decrypt = 'RSA_private_decrypt';  {Do not localize}
+  fn_RSA_free = 'RSA_free';  {Do not localize}
+  fn_RSA_flags = 'RSA_flags';  {Do not localize}
+  fn_RSA_set_default_method = 'RSA_set_default_method';  {Do not localize}
+  fn_RSA_get_default_method = 'RSA_get_default_method';  {Do not localize}
+  fn_RSA_get_method = 'RSA_get_method';  {Do not localize}
+  fn_RSA_set_method = 'RSA_set_method';  {Do not localize}
+  fn_RSA_memory_lock = 'RSA_memory_lock';  {Do not localize}
+  fn_RSA_PKCS1_SSLeay = 'RSA_PKCS1_SSLeay';  {Do not localize}
+  fn_ERR_load_RSA_strings = 'ERR_load_RSA_strings';  {Do not localize}
+  fn_d2i_RSAPublicKey = 'd2i_RSAPublicKey';  {Do not localize}
+  fn_i2d_RSAPublicKey = 'i2d_RSAPublicKey';  {Do not localize}
+  fn_d2i_RSAPrivateKey = 'd2i_RSAPrivateKey';  {Do not localize}
+  fn_i2d_RSAPrivateKey = 'i2d_RSAPrivateKey';  {Do not localize}
+    {$IFNDEF OPENSSL_NO_FP_API}
+  fn_RSA_print_fp = 'RSA_print_fp';  {Do not localize}
+    {$ENDIF}
+    {$IFNDEF OPENSSL_NO_BIO}
+  fn_RSA_print = 'RSA_print';  {Do not localize}
+    {$ENDIF}
+  fn_i2d_Netscape_RSA = 'i2d_Netscape_RSA';  {Do not localize}
+  fn_d2i_Netscape_RSA = 'd2i_Netscape_RSA';  {Do not localize}
+  fn_d2i_Netscape_RSA_2 = 'd2i_Netscape_RSA_2';  {Do not localize}
+  fn_RSA_sign = 'RSA_sign';  {Do not localize}
+  fn_RSA_verify = 'RSA_verify';  {Do not localize}
+  fn_RSA_sign_ASN1_OCTET_STRING = 'RSA_sign_ASN1_OCTET_STRING';  {Do not localize}
+  fn_RSA_verify_ASN1_OCTET_STRING = 'RSA_verify_ASN1_OCTET_STRING';  {Do not localize}
+  fn_RSA_blinding_on = 'RSA_blinding_on';  {Do not localize}
+  fn_RSA_blinding_off = 'RSA_blinding_off';  {Do not localize}
+  fn_RSA_padding_add_PKCS1_type_1 = 'RSA_padding_add_PKCS1_type_1';  {Do not localize}
+  fn_RSA_padding_check_PKCS1_type_1 = 'RSA_padding_check_PKCS1_type_1';  {Do not localize}
+  fn_RSA_padding_add_PKCS1_type_2 = 'RSA_padding_add_PKCS1_type_2';  {Do not localize}
+  fn_RSA_padding_check_PKCS1_type_2 = 'RSA_padding_check_PKCS1_type_2';  {Do not localize}
+  fn_RSA_padding_add_PKCS1_OAEP = 'RSA_padding_add_PKCS1_OAEP';  {Do not localize}
+  fn_RSA_padding_check_PKCS1_OAEP = 'RSA_padding_check_PKCS1_OAEP';  {Do not localize}
+  fn_RSA_padding_add_SSLv23 = 'RSA_padding_add_SSLv23';  {Do not localize}
+  fn_RSA_padding_check_SSLv23 = 'RSA_padding_check_SSLv23';  {Do not localize}
+  fn_RSA_padding_add_none = 'RSA_padding_add_none';  {Do not localize}
+  fn_RSA_padding_check_none = 'RSA_padding_check_none';  {Do not localize}
+  fn_RSA_get_ex_new_index = 'RSA_get_ex_new_index';  {Do not localize}
+  fn_RSA_set_ex_data = 'RSA_set_ex_data';  {Do not localize}
+  fn_RSA_get_ex_data = 'RSA_get_ex_data';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_DH}
+  fn_DH_OpenSSL = 'DH_OpenSSL'; {Do not localize}
+  fn_DH_set_default_method = 'DH_set_default_method'; {Do not localize}
+  fn_DH_set_method = 'DH_set_method'; {Do not localize}
+  fn_DH_new_method = 'DH_new_method'; {Do not localize}
+  fn_DH_new = 'DH_new';  {Do not localize}
+  fn_DH_up_ref = 'DH_up_ref'; {Do not localize}
+  fn_DH_free = 'DH_free';  {Do not localize}
+  fn_DH_size = 'DH_size';  {Do not localize}
+    {$IFNDEF OPENSSL_NO_DEPRECATED}
+  fn_DH_generate_parameters = 'DH_generate_parameters';  {Do not localize}
+    {$ENDIF}
+  fn_DH_generate_parameters_ex = 'DH_generate_parameters_ex'; {Do not localize}
+  fn_DH_get_ex_new_index = 'DH_get_ex_new_index'; {Do not localize}
+  fn_DH_set_ex_data = 'DH_set_ex_data'; {Do not localize}
+  fn_DH_get_ex_data = 'DH_get_ex_data'; {Do not localize}
+  fn_DH_check = 'DH_check';  {Do not localize}
+  fn_DH_check_pub_key = 'DH_check_pub_key'; {Do not localize}
+  fn_DH_generate_key = 'DH_generate_key';  {Do not localize}
+  fn_DH_compute_key = 'DH_compute_key';  {Do not localize}
+  fn_d2i_DHparams = 'd2i_DHparams';  {Do not localize}
+  fn_i2d_DHparams = 'i2d_DHparams';  {Do not localize}
+    {$IFNDEF OPENSSL_NO_FP_API}
+  fn_DHparams_print_fp = 'DHparams_print_fp';  {Do not localize}
+    {$ENDIF}
+
+  fn_DHparams_print = 'DHparams_print';  {Do not localize}
+   {$ENDIF}
+  fn_ERR_load_DH_strings = 'ERR_load_DH_strings';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_DSA}
+  fn_DSA_SIG_new = 'DSA_SIG_new';  {Do not localize}
+  fn_DSA_SIG_free = 'DSA_SIG_free';  {Do not localize}
+  fn_i2d_DSA_SIG = 'i2d_DSA_SIG';  {Do not localize}
+  fn_d2i_DSA_SIG = 'd2i_DSA_SIG';  {Do not localize}
+  fn_DSA_do_sign = 'DSA_do_sign';  {Do not localize}
+  fn_DSA_do_verify = 'DSA_do_verify';  {Do not localize}
+  fn_DSA_new = 'DSA_new';  {Do not localize}
+  fn_DSA_size = 'DSA_size';  {Do not localize}
+  fn_DSA_sign_setup = 'DSA_sign_setup';  {Do not localize}
+  fn_DSA_sign = 'DSA_sign';  {Do not localize}
+  fn_DSA_verify = 'DSA_verify';  {Do not localize}
+  fn_DSA_free = 'DSA_free';  {Do not localize}
+  fn_ERR_load_DSA_strings = 'ERR_load_DSA_strings';  {Do not localize}
+  fn_d2i_DSAPublicKey = 'd2i_DSAPublicKey';  {Do not localize}
+  fn_d2i_DSAPrivateKey = 'd2i_DSAPrivateKey';  {Do not localize}
+  fn_d2i_DSAparams = 'd2i_DSAparams';  {Do not localize}
+   {$IFNDEF OPENSSL_NO_DEPRECATED}
+  fn_DSA_generate_parameters = 'DSA_generate_parameters';  {Do not localize}
+    {$ENDIF}
+  fn_DSA_generate_parameters_ex = 'DSA_generate_parameters_ex'; {Do not localize}
+  fn_DSA_generate_key = 'DSA_generate_key';  {Do not localize}
+  fn_i2d_DSAPublicKey = 'i2d_DSAPublicKey';  {Do not localize}
+  fn_i2d_DSAPrivateKey = 'i2d_DSAPrivateKey';  {Do not localize}
+  fn_i2d_DSAparams = 'i2d_DSAparams';  {Do not localize}
+    {$IFNDEF OPENSSL_NO_BIO}
+  fn_DSAparams_print = 'DSAparams_print';  {Do not localize}
+  fn_DSA_print = 'DSA_print';  {Do not localize}
+    {$ENDIF}
+    {$IFNDEF OPENSSL_NO_FP_API}
+  fn_DSAparams_print_fp = 'DSAparams_print_fp';  {Do not localize}
+  fn_DSA_print_fp = 'DSA_print_fp';  {Do not localize}
+    {$ENDIF}
+  fn_DSA_is_prime = 'DSA_is_prime';  {Do not localize}
+    {$IFNDEF OPENSSL_NO_DH}
+  fn_DSA_dup_DH = 'DSA_dup_DH';  {Do not localize}
+    {$ENDIF}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_EC}
+  fn_EC_GFp_simple_method = 'EC_GFp_simple_method'; {Do not localize}
+  fn_EC_GFp_mont_method = 'EC_GFp_mont_method'; {Do not localize}
+  fn_EC_GFp_nist_method = 'EC_GFp_nist_method'; {Do not localize}
+  fn_EC_GF2m_simple_method = 'EC_GF2m_simple_method'; {Do not localize}
+  fn_EC_GROUP_new = 'EC_GROUP_new'; {Do not localize}
+  fn_EC_GROUP_free = 'EC_GROUP_free'; {Do not localize}
+  fn_EC_GROUP_clear_free = 'EC_GROUP_clear_free'; {Do not localize}
+  fn_EC_GROUP_copy = 'EC_GROUP_copy'; {Do not localize}
+  fn_EC_GROUP_dup = 'EC_GROUP_dup'; {Do not localize}
+  fn_EC_GROUP_method_of = 'EC_GROUP_method_of'; {Do not localize}
+  fn_EC_METHOD_get_field_type = 'EC_METHOD_get_field_type'; {Do not localize}
+  fn_EC_GROUP_set_generator = 'EC_GROUP_set_generator'; {Do not localize}
+  fn_EC_GROUP_get0_generator = 'EC_GROUP_get0_generator'; {Do not localize}
+  fn_EC_GROUP_get_order = 'EC_GROUP_get_order'; {Do not localize}
+  fn_EC_GROUP_get_cofactor = 'EC_GROUP_get_cofactor'; {Do not localize}
+  fn_EC_GROUP_set_curve_name ='EC_GROUP_set_curve_name'; {Do not localize}
+  fn_EC_GROUP_get_curve_name = 'EC_GROUP_get_curve_name'; {Do not localize}
+  fn_EC_GROUP_set_asn1_flag = 'EC_GROUP_set_asn1_flag'; {Do not localize}
+  fn_EC_GROUP_get_asn1_flag = 'EC_GROUP_get_asn1_flag'; {Do not localize}
+  fn_EC_GROUP_set_point_conversion_form = 'EC_GROUP_set_point_conversion_form'; {Do not localize}
+  fn_EC_GROUP_get_point_conversion_form = 'EC_GROUP_get_point_conversion_form'; {Do not localize}
+  fn_EC_GROUP_get0_seed = 'EC_GROUP_get0_seed'; {Do not localize}
+  fn_EC_GROUP_get_seed_len = 'EC_GROUP_get_seed_len'; {Do not localize}
+  fn_EC_GROUP_set_seed = 'EC_GROUP_set_seed'; {Do not localize}
+  fn_EC_GROUP_set_curve_GFp = 'EC_GROUP_set_curve_GFp'; {Do not localize}
+  fn_EC_GROUP_get_curve_GFp = 'EC_GROUP_get_curve_GFp'; {Do not localize}
+  fn_EC_GROUP_set_curve_GF2m = 'EC_GROUP_set_curve_GF2m'; {Do not localize}
+  fn_EC_GROUP_get_curve_GF2m = 'EC_GROUP_get_curve_GF2m'; {Do not localize}
+  fn_EC_GROUP_get_degree = 'EC_GROUP_get_degree'; {Do not localize}
+  fn_EC_GROUP_check = 'EC_GROUP_check'; {Do not localize}
+  fn_EC_GROUP_check_discriminant = 'EC_GROUP_check_discriminant'; {Do not localize}
+  fn_EC_GROUP_cmp = 'EC_GROUP_cmp'; {Do not localize}
+  fn_EC_GROUP_new_curve_GFp = 'EC_GROUP_new_curve_GFp'; {Do not localize}
+  fn_EC_GROUP_new_curve_GF2m = 'EC_GROUP_new_curve_GF2m'; {Do not localize}
+  fn_EC_GROUP_new_by_curve_name = 'EC_GROUP_new_by_curve_name'; {Do not localize}
+  fn_EC_get_builtin_curves = 'EC_get_builtin_curves'; {Do not localize}
+  fn_EC_POINT_new = 'EC_POINT_new'; {Do not localize}
+  fn_EC_POINT_free  = 'EC_POINT_free'; {Do not localize}
+  fn_EC_POINT_clear_free  = 'EC_POINT_clear_free'; {Do not localize}
+  fn_EC_POINT_copy = 'EC_POINT_copy'; {Do not localize}
+  fn_EC_POINT_dup = 'EC_POINT_dup'; {Do not localize}
+
+  fn_EC_POINT_method_of = 'EC_POINT_method_of'; {Do not localize}
+
+  fn_EC_POINT_set_to_infinity = 'EC_POINT_set_to_infinity'; {Do not localize}
+  fn_EC_POINT_set_Jprojective_coordinates_GFp = 'EC_POINT_set_Jprojective_coordinates_GFp'; {Do not localize}
+  fn_EC_POINT_get_Jprojective_coordinates_GFp = 'EC_POINT_get_Jprojective_coordinates_GFp'; {Do not localize}
+  fn_EC_POINT_set_affine_coordinates_GFp = 'EC_POINT_set_affine_coordinates_GFp'; {Do not localize}
+  fn_EC_POINT_get_affine_coordinates_GFp = 'EC_POINT_get_affine_coordinates_GFp'; {Do not localize}
+  fn_EC_POINT_set_compressed_coordinates_GFp = 'EC_POINT_set_compressed_coordinates_GFp'; {Do not localize}
+  fn_EC_POINT_set_affine_coordinates_GF2m = 'EC_POINT_set_affine_coordinates_GF2m'; {Do not localize}
+  fn_EC_POINT_set_compressed_coordinates_GF2m = 'EC_POINT_set_compressed_coordinates_GF2m'; {Do not localize}
+
+  fn_EC_POINT_point2oct = 'EC_POINT_point2oct'; {Do not localize}
+  fn_EC_POINT_oct2point = 'EC_POINT_oct2point'; {Do not localize}
+  fn_EC_POINT_point2bn = 'EC_POINT_point2bn'; {Do not localize}
+  fn_EC_POINT_bn2point = 'EC_POINT_bn2point'; {Do not localize}
+  fn_EC_POINT_point2hex = 'EC_POINT_point2hex'; {Do not localize}
+  fn_EC_POINT_hex2point = 'EC_POINT_hex2point'; {Do not localize}
+  fn_EC_POINT_add = 'EC_POINT_add'; {Do not localize}
+  fn_EC_POINT_dbl = 'EC_POINT_dbl'; {Do not localize}
+  fn_EC_POINT_invert = 'EC_POINT_invert'; {Do not localize}
+  fn_EC_POINT_is_at_infinity = 'EC_POINT_is_at_infinity'; {Do not localize}
+  fn_EC_POINT_is_on_curve = 'EC_POINT_is_on_curve'; {Do not localize}
+  fn_EC_POINT_cmp = 'EC_POINT_cmp'; {Do not localize}
+  fn_EC_POINT_make_affine = 'EC_POINT_make_affine'; {Do not localize}
+  fn_EC_POINTs_make_affine = 'EC_POINTs_make_affine'; {Do not localize}
+  fn_EC_POINTs_mul = 'EC_POINTs_mul'; {Do not localize}
+  fn_EC_POINT_mul = 'EC_POINT_mul'; {Do not localize}
+  fn_EC_GROUP_precompute_mult = 'EC_GROUP_precompute_mult'; {Do not localize}
+  fn_EC_GROUP_have_precompute_mult = 'EC_GROUP_have_precompute_mult'; {Do not localize}
+  fn_EC_GROUP_get_basis_type = 'EC_GROUP_get_basis_type'; {Do not localize}
+  fn_EC_GROUP_get_trinomial_basis = 'EC_GROUP_get_trinomial_basis'; {Do not localize}
+  fn_EC_GROUP_get_pentanomial_basis = 'EC_GROUP_get_pentanomial_basis'; {Do not localize}
+  fn_d2i_ECPKParameters = 'd2i_ECPKParameters'; {Do not localize}
+  fn_i2d_ECPKParameters = 'i2d_ECPKParameters'; {Do not localize}
+{$ifndef OPENSSL_NO_BIO}
+  fn_ECPKParameters_print = 'ECPKParameters_print'; {Do not localize}
+{$Endif}
+{$ifndef OPENSSL_NO_FP_API}
+  fn_ECPKParameters_print_fp = 'ECPKParameters_print_fp';  {Do not localize}
+{$endif}
+  fn_EC_KEY_new = 'EC_KEY_new'; {Do not localize}
+  fn_EC_KEY_new_by_curve_name = 'EC_KEY_new_by_curve_name'; {Do not localize}
+  fn_EC_KEY_free = 'EC_KEY_free'; {Do not localize}
+  fn_EC_KEY_copy = 'EC_KEY_copy'; {Do not localize}
+  fn_EC_KEY_dup = 'EC_KEY_dup'; {Do not localize}
+  fn_EC_KEY_up_ref = 'EC_KEY_up_ref'; {Do not localize}
+  fn_EC_KEY_get0_group = 'EC_KEY_get0_group'; {Do not localize}
+  fn_EC_KEY_set_group = 'EC_KEY_set_group'; {Do not localize}
+  fn_EC_KEY_get0_private_key = 'EC_KEY_get0_private_key'; {Do not localize}
+  fn_EC_KEY_set_private_key = 'EC_KEY_set_private_key'; {Do not localize}
+  fn_EC_KEY_get0_public_key = 'EC_KEY_get0_public_key'; {Do not localize}
+  fn_EC_KEY_set_public_key = 'EC_KEY_set_public_key'; {Do not localize}
+  fn_EC_KEY_get_enc_flags = 'EC_KEY_get_enc_flags'; {Do not localize}
+  fn_EC_KEY_set_enc_flags = 'EC_KEY_set_enc_flags'; {Do not localize}
+  fn_EC_KEY_get_conv_form = 'EC_KEY_get_conv_form'; {Do not localize}
+  fn_EC_KEY_set_conv_form = 'EC_KEY_set_conv_form'; {Do not localize}
+  fn_EC_KEY_get_key_method_data = 'EC_KEY_get_key_method_data'; {Do not localize}
+  fn_EC_KEY_insert_key_method_data = 'EC_KEY_insert_key_method_data'; {Do not localize}
+  fn_EC_KEY_set_asn1_flag = 'EC_KEY_set_asn1_flag'; {Do not localize}
+  fn_EC_KEY_precompute_mult = 'EC_KEY_precompute_mult'; {Do not localize}
+  fn_EC_KEY_generate_key  = 'EC_KEY_generate_key'; {Do not localize}
+  fn_EC_KEY_check_key = 'EC_KEY_check_key'; {Do not localize}
+  fn_d2i_ECPrivateKey = 'd2i_ECPrivateKey'; {Do not localize}
+  fn_i2d_ECPrivateKey = 'i2d_ECPrivateKey'; {Do not localize}
+  fn_d2i_ECParameters = 'd2i_ECParameters'; {Do not localize}
+  fn_i2d_ECParameters = 'i2d_ECParameters'; {Do not localize}
+  fn_o2i_ECPublicKey = 'o2i_ECPublicKey'; {Do not localize}
+  fn_i2o_ECPublicKey = 'i2o_ECPublicKey'; {Do not localize}
+  {$ifndef OPENSSL_NO_BIO}
+  fn_ECParameters_print = 'ECParameters_print'; {Do not localize}
+  fn_EC_KEY_print = 'EC_KEY_print'; {Do not localize}
+  {$endif}
+  {$ifndef OPENSSL_NO_FP_API}
+  fn_ECParameters_print_fp = 'ECParameters_print_fp'; {Do not localize}
+  fn_EC_KEY_print_fp = 'EC_KEY_print_fp'; {Do not localize}
+  {$endif}
+{$ENDIF}
+{$IFNDEF OPENSSL_NO_ECDSA}
+  fn_ECDSA_SIG_new = 'ECDSA_SIG_new'; {Do not localize}
+  fn_ECDSA_SIG_free = 'ECDSA_SIG_free'; {Do not localize}
+  fn_i2d_ECDSA_SIG = 'i2d_ECDSA_SIG'; {Do not localize}
+  fn_d2i_ECDSA_SIG = 'd2i_ECDSA_SIG'; {Do not localize}
+  fn_ECDSA_do_sign = 'ECDSA_do_sign'; {Do not localize}
+  fn_ECDSA_do_sign_ex = 'ECDSA_do_sign_ex'; {Do not localize}
+  fn_ECDSA_do_verify = 'ECDSA_do_verify'; {Do not localize}
+  fn_ECDSA_OpenSSL = 'ECDSA_OpenSSL'; {Do not localize}
+  fn_ECDSA_set_default_method = 'ECDSA_set_default_method'; {Do not localize}
+  fn_ECDSA_get_default_method = 'ECDSA_get_default_method'; {Do not localize}
+  fn_ECDSA_set_method = 'ECDSA_set_method'; {Do not localize}
+  fn_ECDSA_size = 'ECDSA_size'; {Do not localize}
+  fn_ECDSA_sign_setup = 'ECDSA_sign_setup'; {Do not localize}
+  fn_ECDSA_sign = 'ECDSA_sign'; {Do not localize}
+  fn_ECDSA_sign_ex = 'ECDSA_sign_ex'; {Do not localize}
+  fn_ECDSA_verify = 'ECDSA_verify'; {Do not localize}
+  fn_ECDSA_get_ex_new_index = 'ECDSA_get_ex_new_index'; {Do not localize}
+  fn_ECDSA_set_ex_data = 'ECDSA_set_ex_data'; {Do not localize}
+  fn_ECDSA_get_ex_data = 'ECDSA_get_ex_data'; {Do not localize}
+  fn_ERR_load_ECDSA_strings = 'ERR_load_ECDSA_strings'; {Do not localize}
+{$ENDIF}
+{$ifndef OPENSSL_NO_ECDH}
+  fn_ECDH_OpenSSL = 'ECDH_OpenSSL'; {Do not localize}
+  fn_ECDH_set_default_method = 'ECDH_set_default_method'; {Do not localize}
+  fn_ECDH_get_default_method = 'ECDH_get_default_method'; {Do not localize}
+  fn_ECDH_set_method = 'ECDH_set_method'; {Do not localize}
+  fn_ECDH_compute_key = 'ECDH_compute_key'; {Do not localize}
+  fn_ECDH_get_ex_new_index = 'ECDH_get_ex_new_index'; {Do not localize}
+  fn_ECDH_set_ex_data = 'ECDH_set_ex_data'; {Do not localize}
+  fn_ECDH_get_ex_data = 'ECDH_get_ex_data'; {Do not localize}
+  fn_ERR_load_ECDH_strings = 'ERR_load_ECDH_strings'; {Do not localize}
+ {$ENDIF}
+
   fn_BN_value_one = 'BN_value_one';  {Do not localize}
   fn_BN_options = 'BN_options';  {Do not localize}
   fn_BN_CTX_new = 'BN_CTX_new';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_DEPRECATED}
   fn_BN_CTX_init = 'BN_CTX_init';  {Do not localize}
+  {$ENDIF}
   fn_BN_CTX_free = 'BN_CTX_free';  {Do not localize}
   fn_BN_rand = 'BN_rand';  {Do not localize}
   fn_BN_num_bits = 'BN_num_bits';  {Do not localize}
@@ -6161,7 +7780,9 @@ const
   fn_BN_mod_exp_simple = 'BN_mod_exp_simple';  {Do not localize}
   fn_BN_mask_bits = 'BN_mask_bits';  {Do not localize}
   fn_BN_mod_mul = 'BN_mod_mul';  {Do not localize}
+  {$IFNDEF  OPENSSL_NO_FP_API}
   fn_BN_print_fp = 'BN_print_fp';  {Do not localize}
+  {$ENDIF}
   fn_BN_print = 'BN_print';  {Do not localize}
   fn_BN_reciprocal = 'BN_reciprocal';  {Do not localize}
   fn_BN_rshift = 'BN_rshift';  {Do not localize}
@@ -6178,8 +7799,11 @@ const
   fn_BN_dec2bn = 'BN_dec2bn';  {Do not localize}
   fn_BN_gcd = 'BN_gcd';  {Do not localize}
   fn_BN_mod_inverse = 'BN_mod_inverse';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_DEPRECATED}
   fn_BN_generate_prime = 'BN_generate_prime';  {Do not localize}
   fn_BN_is_prime = 'BN_is_prime';  {Do not localize}
+  fn_BN_is_prime_fasttest = 'BN_is_prime_fasttest'; {Do not localize}
+   {$ENDIF}
   fn_ERR_load_BN_strings = 'ERR_load_BN_strings';  {Do not localize}
   fn_bn_mul_add_words = 'bn_mul_add_words';  {Do not localize}
   fn_bn_mul_words = 'bn_mul_words';  {Do not localize}
@@ -6199,8 +7823,10 @@ const
   fn_BN_BLINDING_update = 'BN_BLINDING_update';  {Do not localize}
   fn_BN_BLINDING_convert = 'BN_BLINDING_convert';  {Do not localize}
   fn_BN_BLINDING_invert = 'BN_BLINDING_invert';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_DEPRECATED}
   fn_BN_set_params = 'BN_set_params';  {Do not localize}
   fn_BN_get_params = 'BN_get_params';  {Do not localize}
+  {$ENDIF}
   fn_BN_RECP_CTX_init = 'BN_RECP_CTX_init';  {Do not localize}
   fn_BN_RECP_CTX_new = 'BN_RECP_CTX_new';  {Do not localize}
   fn_BN_RECP_CTX_free = 'BN_RECP_CTX_free';  {Do not localize}
@@ -6208,91 +7834,48 @@ const
   fn_BN_mod_mul_reciprocal = 'BN_mod_mul_reciprocal';  {Do not localize}
   fn_BN_mod_exp_recp = 'BN_mod_exp_recp';  {Do not localize}
   fn_BN_div_recp = 'BN_div_recp';  {Do not localize}
-  fn_RSA_new = 'RSA_new';  {Do not localize}
-  fn_RSA_new_method = 'RSA_new_method';  {Do not localize}
-  fn_RSA_size = 'RSA_size';  {Do not localize}
-  fn_RSA_generate_key = 'RSA_generate_key';  {Do not localize}
-  fn_RSA_check_key = 'RSA_check_key';  {Do not localize}
-  fn_RSA_public_encrypt = 'RSA_public_encrypt';  {Do not localize}
-  fn_RSA_private_encrypt = 'RSA_private_encrypt';  {Do not localize}
-  fn_RSA_public_decrypt = 'RSA_public_decrypt';  {Do not localize}
-  fn_RSA_private_decrypt = 'RSA_private_decrypt';  {Do not localize}
-  fn_RSA_free = 'RSA_free';  {Do not localize}
-  fn_RSA_flags = 'RSA_flags';  {Do not localize}
-  fn_RSA_set_default_method = 'RSA_set_default_method';  {Do not localize}
-  fn_RSA_get_default_method = 'RSA_get_default_method';  {Do not localize}
-  fn_RSA_get_method = 'RSA_get_method';  {Do not localize}
-  fn_RSA_set_method = 'RSA_set_method';  {Do not localize}
-  fn_RSA_memory_lock = 'RSA_memory_lock';  {Do not localize}
-  fn_RSA_PKCS1_SSLeay = 'RSA_PKCS1_SSLeay';  {Do not localize}
-  fn_ERR_load_RSA_strings = 'ERR_load_RSA_strings';  {Do not localize}
-  fn_d2i_RSAPublicKey = 'd2i_RSAPublicKey';  {Do not localize}
-  fn_i2d_RSAPublicKey = 'i2d_RSAPublicKey';  {Do not localize}
-  fn_d2i_RSAPrivateKey = 'd2i_RSAPrivateKey';  {Do not localize}
-  fn_i2d_RSAPrivateKey = 'i2d_RSAPrivateKey';  {Do not localize}
-  fn_RSA_print_fp = 'RSA_print_fp';  {Do not localize}
-  fn_RSA_print = 'RSA_print';  {Do not localize}
-  fn_i2d_Netscape_RSA = 'i2d_Netscape_RSA';  {Do not localize}
-  fn_d2i_Netscape_RSA = 'd2i_Netscape_RSA';  {Do not localize}
-  fn_d2i_Netscape_RSA_2 = 'd2i_Netscape_RSA_2';  {Do not localize}
-  fn_RSA_sign = 'RSA_sign';  {Do not localize}
-  fn_RSA_verify = 'RSA_verify';  {Do not localize}
-  fn_RSA_sign_ASN1_OCTET_STRING = 'RSA_sign_ASN1_OCTET_STRING';  {Do not localize}
-  fn_RSA_verify_ASN1_OCTET_STRING = 'RSA_verify_ASN1_OCTET_STRING';  {Do not localize}
-  fn_RSA_blinding_on = 'RSA_blinding_on';  {Do not localize}
-  fn_RSA_blinding_off = 'RSA_blinding_off';  {Do not localize}
-  fn_RSA_padding_add_PKCS1_type_1 = 'RSA_padding_add_PKCS1_type_1';  {Do not localize}
-  fn_RSA_padding_check_PKCS1_type_1 = 'RSA_padding_check_PKCS1_type_1';  {Do not localize}
-  fn_RSA_padding_add_PKCS1_type_2 = 'RSA_padding_add_PKCS1_type_2';  {Do not localize}
-  fn_RSA_padding_check_PKCS1_type_2 = 'RSA_padding_check_PKCS1_type_2';  {Do not localize}
-  fn_RSA_padding_add_PKCS1_OAEP = 'RSA_padding_add_PKCS1_OAEP';  {Do not localize}
-  fn_RSA_padding_check_PKCS1_OAEP = 'RSA_padding_check_PKCS1_OAEP';  {Do not localize}
-  fn_RSA_padding_add_SSLv23 = 'RSA_padding_add_SSLv23';  {Do not localize}
-  fn_RSA_padding_check_SSLv23 = 'RSA_padding_check_SSLv23';  {Do not localize}
-  fn_RSA_padding_add_none = 'RSA_padding_add_none';  {Do not localize}
-  fn_RSA_padding_check_none = 'RSA_padding_check_none';  {Do not localize}
-  fn_RSA_get_ex_new_index = 'RSA_get_ex_new_index';  {Do not localize}
-  fn_RSA_set_ex_data = 'RSA_set_ex_data';  {Do not localize}
-  fn_RSA_get_ex_data = 'RSA_get_ex_data';  {Do not localize}
-  fn_DH_new = 'DH_new';  {Do not localize}
-  fn_DH_free = 'DH_free';  {Do not localize}
-  fn_DH_size = 'DH_size';  {Do not localize}
-  fn_DH_generate_parameters = 'DH_generate_parameters';  {Do not localize}
-  fn_DH_check = 'DH_check';  {Do not localize}
-  fn_DH_generate_key = 'DH_generate_key';  {Do not localize}
-  fn_DH_compute_key = 'DH_compute_key';  {Do not localize}
-  fn_d2i_DHparams = 'd2i_DHparams';  {Do not localize}
-  fn_i2d_DHparams = 'i2d_DHparams';  {Do not localize}
-  fn_DHparams_print_fp = 'DHparams_print_fp';  {Do not localize}
-  fn_DHparams_print = 'DHparams_print';  {Do not localize}
-  fn_ERR_load_DH_strings = 'ERR_load_DH_strings';  {Do not localize}
-  fn_DSA_SIG_new = 'DSA_SIG_new';  {Do not localize}
-  fn_DSA_SIG_free = 'DSA_SIG_free';  {Do not localize}
-  fn_i2d_DSA_SIG = 'i2d_DSA_SIG';  {Do not localize}
-  fn_d2i_DSA_SIG = 'd2i_DSA_SIG';  {Do not localize}
-  fn_DSA_do_sign = 'DSA_do_sign';  {Do not localize}
-  fn_DSA_do_verify = 'DSA_do_verify';  {Do not localize}
-  fn_DSA_new = 'DSA_new';  {Do not localize}
-  fn_DSA_size = 'DSA_size';  {Do not localize}
-  fn_DSA_sign_setup = 'DSA_sign_setup';  {Do not localize}
-  fn_DSA_sign = 'DSA_sign';  {Do not localize}
-  fn_DSA_verify = 'DSA_verify';  {Do not localize}
-  fn_DSA_free = 'DSA_free';  {Do not localize}
-  fn_ERR_load_DSA_strings = 'ERR_load_DSA_strings';  {Do not localize}
-  fn_d2i_DSAPublicKey = 'd2i_DSAPublicKey';  {Do not localize}
-  fn_d2i_DSAPrivateKey = 'd2i_DSAPrivateKey';  {Do not localize}
-  fn_d2i_DSAparams = 'd2i_DSAparams';  {Do not localize}
-  fn_DSA_generate_parameters = 'DSA_generate_parameters';  {Do not localize}
-  fn_DSA_generate_key = 'DSA_generate_key';  {Do not localize}
-  fn_i2d_DSAPublicKey = 'i2d_DSAPublicKey';  {Do not localize}
-  fn_i2d_DSAPrivateKey = 'i2d_DSAPrivateKey';  {Do not localize}
-  fn_i2d_DSAparams = 'i2d_DSAparams';  {Do not localize}
-  fn_DSAparams_print = 'DSAparams_print';  {Do not localize}
-  fn_DSA_print = 'DSA_print';  {Do not localize}
-  fn_DSAparams_print_fp = 'DSAparams_print_fp';  {Do not localize}
-  fn_DSA_print_fp = 'DSA_print_fp';  {Do not localize}
-  fn_DSA_is_prime = 'DSA_is_prime';  {Do not localize}
-  fn_DSA_dup_DH = 'DSA_dup_DH';  {Do not localize}
+  fn_BN_GF2m_add = 'BN_GF2m_add'; {Do not localize}
+  fn_BN_GF2m_mod = 'BN_GF2m_mod'; {Do not localize}
+  fn_BN_GF2m_mod_mul = 'BN_GF2m_mod_mul'; {Do not localize}
+  fn_BN_GF2m_mod_sqr = 'BN_GF2m_mod_sqr'; {Do not localize}
+  fn_BN_GF2m_mod_inv = 'BN_GF2m_mod_inv'; {Do not localize}
+  fn_BN_GF2m_mod_div = 'BN_GF2m_mod_div'; {Do not localize}
+  fn_BN_GF2m_mod_exp = 'BN_GF2m_mod_exp'; {Do not localize}
+  fn_BN_GF2m_mod_sqrt = 'BN_GF2m_mod_sqrt'; {Do not localize}
+  fn_BN_GF2m_mod_solve_quad = 'BN_GF2m_mod_solve_quad'; {Do not localize}
+  fn_BN_GF2m_mod_arr = 'BN_GF2m_mod_arr'; {Do not localize}
+  fn_BN_GF2m_mod_mul_arr = 'BN_GF2m_mod_mul_arr'; {Do not localize}
+  fn_BN_GF2m_mod_sqr_arr = 'BN_GF2m_mod_sqr_arr'; {Do not localize}
+  fn_BN_GF2m_mod_inv_arr = 'BN_GF2m_mod_inv_arr'; {Do not localize}
+  fn_BN_GF2m_mod_div_arr = 'BN_GF2m_mod_div_arr'; {Do not localize}
+  fn_BN_GF2m_mod_exp_arr = 'BN_GF2m_mod_exp_arr'; {Do not localize}
+  fn_BN_GF2m_mod_sqrt_arr = 'BN_GF2m_mod_sqrt_arr'; {Do not localize}
+  fn_BN_GF2m_mod_solve_quad_arr = 'BN_GF2m_mod_solve_quad_arr'; {Do not localize}
+  fn_BN_GF2m_poly2arr = 'BN_GF2m_poly2arr'; {Do not localize}
+  fn_BN_GF2m_arr2poly = 'BN_GF2m_arr2poly'; {Do not localize}
+//* faster mod functions for the 'NIST primes' 
+// * 0 <= a < p^2 */
+  fn_BN_nist_mod_192 = 'BN_nist_mod_192'; {Do not localize}
+  fn_BN_nist_mod_224 = 'BN_nist_mod_224'; {Do not localize}
+  fn_BN_nist_mod_256 = 'BN_nist_mod_256'; {Do not localize}
+  fn_BN_nist_mod_384 = 'BN_nist_mod_384'; {Do not localize}
+  fn_BN_nist_mod_521 = 'BN_nist_mod_521'; {Do not localize}
+  fn_BN_get0_nist_prime_192 = 'BN_get0_nist_prime_192'; {Do not localize}
+  fn_BN_get0_nist_prime_224 = 'BN_get0_nist_prime_224'; {Do not localize}
+  fn_BN_get0_nist_prime_256 = 'BN_get0_nist_prime_256'; {Do not localize}
+  fn_BN_get0_nist_prime_384 = 'BN_get0_nist_prime_384'; {Do not localize}
+  fn_BN_get0_nist_prime_521 = 'BN_get0_nist_prime_521'; {Do not localize}
+  //
+  fn_get_rfc2409_prime_768 = 'get_rfc2409_prime_768'; {Do not localize}
+  fn_get_rfc2409_prime_1024 = 'get_rfc2409_prime_1024'; {Do not localize}
+  fn_get_rfc3526_prime_1536 = 'get_rfc3526_prime_1536'; {Do not localize}
+  fn_get_rfc3526_prime_2048 = 'get_rfc3526_prime_2048'; {Do not localize}
+  fn_get_rfc3526_prime_3072 = 'get_rfc3526_prime_3072'; {Do not localize}
+  fn_get_rfc3526_prime_4096 = 'get_rfc3526_prime_4096'; {Do not localize}
+  fn_get_rfc3526_prime_6144 = 'get_rfc3526_prime_6144'; {Do not localize}
+  fn_get_rfc3526_prime_8192 = 'get_rfc3526_prime_8192'; {Do not localize}
+  fn_BN_bntest_rand = 'BN_bntest_rand'; {Do not localize}
+
   fn_sk_ASN1_TYPE_new = 'sk_ASN1_TYPE_new';  {Do not localize}
   fn_sk_ASN1_TYPE_new_null = 'sk_ASN1_TYPE_new_null';  {Do not localize}
   fn_sk_ASN1_TYPE_free = 'sk_ASN1_TYPE_free';  {Do not localize}
@@ -6393,6 +7976,7 @@ const
   fn_ASN1_TIME_set = 'ASN1_TIME_set';  {Do not localize}
   fn_i2d_ASN1_SET = 'i2d_ASN1_SET';  {Do not localize}
   fn_d2i_ASN1_SET = 'd2i_ASN1_SET';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_BIO}
   fn_i2a_ASN1_INTEGER = 'i2a_ASN1_INTEGER';  {Do not localize}
   fn_a2i_ASN1_INTEGER = 'a2i_ASN1_INTEGER';  {Do not localize}
   fn_i2a_ASN1_ENUMERATED = 'i2a_ASN1_ENUMERATED';  {Do not localize}
@@ -6400,6 +7984,7 @@ const
   fn_i2a_ASN1_OBJECT = 'i2a_ASN1_OBJECT';  {Do not localize}
   fn_a2i_ASN1_STRING = 'a2i_ASN1_STRING';  {Do not localize}
   fn_i2a_ASN1_STRING = 'i2a_ASN1_STRING';  {Do not localize}
+  {$ENDIF}
   fn_i2t_ASN1_OBJECT = 'i2t_ASN1_OBJECT';  {Do not localize}
   fn_a2d_ASN1_OBJECT = 'a2d_ASN1_OBJECT';  {Do not localize}
   fn_ASN1_OBJECT_create = 'ASN1_OBJECT_create';  {Do not localize}
@@ -6421,10 +8006,14 @@ const
   fn_ASN1_put_object = 'ASN1_put_object';  {Do not localize}
   fn_ASN1_object_size = 'ASN1_object_size';  {Do not localize}
   fn_ASN1_dup = 'ASN1_dup';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_FP_API}
   fn_ASN1_d2i_fp = 'ASN1_d2i_fp';  {Do not localize}
   fn_ASN1_i2d_fp = 'ASN1_i2d_fp';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_BIO}
   fn_ASN1_d2i_bio = 'ASN1_d2i_bio';  {Do not localize}
   fn_ASN1_i2d_bio = 'ASN1_i2d_bio';  {Do not localize}
+  {$ENDIF}
   fn_ASN1_UTCTIME_print = 'ASN1_UTCTIME_print';  {Do not localize}
   fn_ASN1_GENERALIZEDTIME_print = 'ASN1_GENERALIZEDTIME_print';  {Do not localize}
   fn_ASN1_TIME_print = 'ASN1_TIME_print';  {Do not localize}
@@ -6506,58 +8095,173 @@ const
   fn_ERR_load_EVP_strings = 'ERR_load_EVP_strings';  {Do not localize}
   fn_EVP_CIPHER_CTX_init = 'EVP_CIPHER_CTX_init';  {Do not localize}
   fn_EVP_CIPHER_CTX_cleanup = 'EVP_CIPHER_CTX_cleanup';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_BIO}
   fn_BIO_f_md = 'BIO_f_md';  {Do not localize}
   fn_BIO_f_base64 = 'BIO_f_base64';  {Do not localize}
   fn_BIO_f_cipher = 'BIO_f_cipher';  {Do not localize}
   fn_BIO_f_reliable = 'BIO_f_reliable';  {Do not localize}
   fn_BIO_set_cipher = 'BIO_set_cipher';  {Do not localize}
+  {$ENDIF}
   fn_EVP_md_null = 'EVP_md_null';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_MD2}
   fn_EVP_md2 = 'EVP_md2';  {Do not localize}
-  fn_EVP_md5 = 'EVP_md5';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD4}
+  fn_EVP_md4 = 'EVP_md4';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD5}
+   fn_EVP_md5 = 'EVP_md5';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA}
   fn_EVP_sha = 'EVP_sha';  {Do not localize}
   fn_EVP_sha1 = 'EVP_sha1';  {Do not localize}
   fn_EVP_dss = 'EVP_dss';  {Do not localize}
   fn_EVP_dss1 = 'EVP_dss1';  {Do not localize}
+  fn_EVP_ecdsa = 'EVP_ecdsa';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA256}
+  fn_EVP_sha512 = 'EVP_sha512'; {Do not localize}
+  fn_EVP_sha384 = 'EVP_sha384'; {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA512}
+  fn_EVP_sha256 = 'EVP_sha256'; {Do not localize}
+  fn_EVP_sha224 = 'EVP_sha224'; {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MDC2}
   fn_EVP_mdc2 = 'EVP_mdc2';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_RIPEMD}
   fn_EVP_ripemd160 = 'EVP_ripemd160';  {Do not localize}
+  {$ENDIF}
   fn_EVP_enc_null = 'EVP_enc_null';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_DES}
   fn_EVP_des_ecb = 'EVP_des_ecb';  {Do not localize}
   fn_EVP_des_ede = 'EVP_des_ede';  {Do not localize}
   fn_EVP_des_ede3 = 'EVP_des_ede3';  {Do not localize}
+    {$DEFINE EVP_des_cfb}
+    {$DEFINE EVP_des_cfb64}
   fn_EVP_des_cfb = 'EVP_des_cfb';  {Do not localize}
   fn_EVP_des_ede_cfb = 'EVP_des_ede_cfb';  {Do not localize}
   fn_EVP_des_ede3_cfb = 'EVP_des_ede3_cfb';  {Do not localize}
   fn_EVP_des_ofb = 'EVP_des_ofb';  {Do not localize}
   fn_EVP_des_ede_ofb = 'EVP_des_ede_ofb';  {Do not localize}
+    {$DEFINE EVP_des_ede_cfb}
+    {$DEFINE EVP_des_ede_cfb64}
   fn_EVP_des_ede3_ofb = 'EVP_des_ede3_ofb';  {Do not localize}
   fn_EVP_des_cbc = 'EVP_des_cbc';  {Do not localize}
   fn_EVP_des_ede_cbc = 'EVP_des_ede_cbc';  {Do not localize}
   fn_EVP_des_ede3_cbc = 'EVP_des_ede3_cbc';  {Do not localize}
+    {$DEFINE EVP_des_ede3_cfb}
+    {$DEFINE EVP_des_ede3_cfb64}
   fn_EVP_desx_cbc = 'EVP_desx_cbc';  {Do not localize}
+  fn_EVP_des_ede3_cfb8 = 'EVP_des_ede3_cfb8'; {Do not localize}
+  {$ENDIF}
+  {$IFDEF OPENSSL_NO_RC4}
   fn_EVP_rc4 = 'EVP_rc4';  {Do not localize}
   fn_EVP_rc4_40 = 'EVP_rc4_40';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_IDEA}
   fn_EVP_idea_ecb = 'EVP_idea_ecb';  {Do not localize}
+  fn_EVP_idea_cfb64 = 'EVP_idea_cfb64'; {Do not localize}
+    {$DEFINE EVP_idea_cfb}
+    {$DEFINE EVP_idea_cfb64 }
   fn_EVP_idea_cfb = 'EVP_idea_cfb';  {Do not localize}
   fn_EVP_idea_ofb = 'EVP_idea_ofb';  {Do not localize}
   fn_EVP_idea_cbc = 'EVP_idea_cbc';  {Do not localize}
+
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_RC2}
   fn_EVP_rc2_ecb = 'EVP_rc2_ecb';  {Do not localize}
   fn_EVP_rc2_cbc = 'EVP_rc2_cbc';  {Do not localize}
   fn_EVP_rc2_40_cbc = 'EVP_rc2_40_cbc';  {Do not localize}
   fn_EVP_rc2_64_cbc = 'EVP_rc2_64_cbc';  {Do not localize}
+  fn_EVP_rc2_cfb64 = 'EVP_rc2_cfb64'; {Do not localize}
   fn_EVP_rc2_cfb = 'EVP_rc2_cfb';  {Do not localize}
+    {$DEFINE EVP_rc2_cfb}
+    {$DEFINE EVP_rc2_cfb64}
   fn_EVP_rc2_ofb = 'EVP_rc2_ofb';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_BF}
   fn_EVP_bf_ecb = 'EVP_bf_ecb';  {Do not localize}
   fn_EVP_bf_cbc = 'EVP_bf_cbc';  {Do not localize}
   fn_EVP_bf_cfb = 'EVP_bf_cfb';  {Do not localize}
+  fn_EVP_bf_cfb64 = 'EVP_bf_cfb64'; {Do not localize}
+    {$DEFINE EVP_bf_cfb}
+    {$DEFINE EVP_bf_cfb64}
   fn_EVP_bf_ofb = 'EVP_bf_ofb';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_CAST}
   fn_EVP_cast5_ecb = 'EVP_cast5_ecb';  {Do not localize}
   fn_EVP_cast5_cbc = 'EVP_cast5_cbc';  {Do not localize}
   fn_EVP_cast5_cfb = 'EVP_cast5_cfb';  {Do not localize}
+  fn_EVP_cast5_cfb64 = 'EVP_cast5_cfb64'; {Do not localize}
+    {$DEFINE EVP_cast5_cfb}
+    {$DEFINE EVP_cast5_cfb64}
   fn_EVP_cast5_ofb = 'EVP_cast5_ofb';  {Do not localize}
+  {$ENDIF}
+  {$IFDEF OPENSSL_NO_RC5 }
   fn_EVP_rc5_32_12_16_cbc = 'EVP_rc5_32_12_16_cbc';  {Do not localize}
   fn_EVP_rc5_32_12_16_ecb = 'EVP_rc5_32_12_16_ecb';  {Do not localize}
   fn_EVP_rc5_32_12_16_cfb = 'EVP_rc5_32_12_16_cfb';  {Do not localize}
+  fn_EVP_rc5_32_12_16_cfb64 = 'EVP_rc5_32_12_16_cfb64'; {Do not localize}
+     {$DEFINE EVP_rc5_32_12_16_cfb}
+     {$DEFINE EVP_rc5_32_12_16_cfb64}
   fn_EVP_rc5_32_12_16_ofb = 'EVP_rc5_32_12_16_ofb';  {Do not localize}
+  {$ENDIF}
+  {$IFDEF OPENSSL_NO_AES}
+  fn_EVP_aes_128_ecb = 'EVP_aes_128_ecb'; {do not localize}
+  fn_EVP_aes_128_cbc = 'EVP_aes_128_cbc'; {do not localize}
+  fn_EVP_aes_128_cfb1 = 'EVP_aes_128_cfb1'; {do not localize}
+  fn_EVP_aes_128_cfb8 = 'EVP_aes_128_cfb8'; {do not localize}
+  fn_EVP_aes_128_ofb = 'EVP_aes_128_ofb'; {do not localize}
+  fn_EVP_aes_128_cfb128 = 'EVP_aes_128_cfb128'; {do not localize}
+    {$DEFINE EVP_aes_128_cfb}
+    {$DEFINE EVP_aes_128_cfb128}
+  fn_EVP_aes_192_ecb = 'EVP_aes_192_ecb'; {Do not localize}
+  fn_EVP_aes_192_cbc = 'EVP_aes_192_cbc'; {Do not localize}
+  fn_EVP_aes_192_cfb1 = 'EVP_CIPHER *EVP_aes_192_cfb1'; {Do not localize}
+  fn_EVP_aes_192_cfb8 = 'EVP_aes_192_cfb8'; {Do not localize}
+  fn_EVP_aes_192_cfb128 = 'EVP_aes_192_cfb128'; {Do not localize}
+    {$DEFINE EVP_aes_192_cfb}
+    {$DEFINE EVP_aes_192_cfb128}
+  fn_EVP_aes_192_ofb = 'EVP_aes_192_ofb'; {Do not localize}
+
+  fn_EVP_aes_256_ecb = 'EVP_aes_256_ecb'; {Do not localize}
+  fn_EVP_aes_256_cbc = 'EVP_aes_256_cbc'; {Do not localize}
+  fn_EVP_aes_256_cfb1 = 'EVP_aes_256_cfb1'; {Do not localize}
+  fn_EVP_aes_256_cfb8 = 'EVP_aes_256_cfb8'; {Do not localize}
+  fn_EVP_aes_256_cfb128 = 'EVP_aes_256_cfb128'; {Do not localize}
+    {$DEFINE EVP_aes_256_cfb}
+    {$DEFINE EVP_aes_256_cfb128}
+  fn_EVP_aes_256_ofb = 'EVP_aes_256_ofb'; {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_CAMELLIA}
+  fn_EVP_camellia_128_ecb = 'EVP_camellia_128_ecb'; {Do not localize}
+  fn_EVP_camellia_128_cbc = 'EVP_camellia_128_cbc'; {Do not localize}
+  fn_EVP_camellia_128_cfb1 = 'EVP_camellia_128_cfb1'; {Do not localize}
+  fn_EVP_camellia_128_cfb8 = 'EVP_camellia_128_cfb8'; {Do not localize}
+  fn_EVP_camellia_128_cfb128 = 'EVP_camellia_128_cfb128'; {Do not localize}
+    {$DEFINE EVP_camellia_128_cfb}
+    {$DEFINE EVP_camellia_128_cfb128}
+  fn_EVP_camellia_128_ofb = 'EVP_camellia_128_ofb'; {Do not localize}
+  fn_EVP_camellia_192_ecb = 'EVP_camellia_192_ecb'; {Do not localize}
+  fn_EVP_camellia_192_cbc = 'EVP_camellia_192_cbc'; {Do not localize}
+  fn_EVP_camellia_192_cfb1 = 'EVP_camellia_192_cfb1'; {Do not localize}
+  fn_EVP_camellia_192_cfb8 = 'EVP_camellia_192_cfb8'; {Do not localize}
+  fn_EVP_camellia_192_cfb128 = 'EVP_camellia_192_cfb128' {Do not localize}
+    {$DEFINE define EVP_camellia_192_cfb}
+    {$DEFINE EVP_camellia_192_cfb128}
+  fn_EVP_camellia_192_ofb = 'EVP_camellia_192_ofb'; {Do not localize}
+  fn_EVP_camellia_256_ecb = 'EVP_camellia_256_ecb'; {Do not localize}
+  fn_EVP_camellia_256_cbc = 'EVP_camellia_256_cbc'; {Do not localize}
+  fn_EVP_camellia_256_cfb1 = 'EVP_camellia_256_cfb1'; {Do not localize}
+  fn_EVP_camellia_256_cfb8 = 'EVP_camellia_256_cfb8'; {Do not localize}
+  fn_EVP_camellia_256_cfb128 = 'EVP_camellia_256_cfb128'; {Do not localize}
+    {$DEFINE EVP_camellia_256_cfb}
+    {$DEFINE EVP_camellia_256_cfb128}
+  fn_EVP_camellia_256_ofb = 'EVP_camellia_256_ofb'; {Do not localize}
+  {$ENDIF}
+
   fn_SSLeay_add_all_algorithms = 'SSLeay_add_all_algorithms';  {Do not localize}
   fn_SSLeay_add_all_ciphers = 'SSLeay_add_all_ciphers';  {Do not localize}
   fn_SSLeay_add_all_digests = 'SSLeay_add_all_digests';  {Do not localize}
@@ -6869,8 +8573,10 @@ const
   fn_i2d_PKCS7_ISSUER_AND_SERIAL = 'i2d_PKCS7_ISSUER_AND_SERIAL';  {Do not localize}
   fn_d2i_PKCS7_ISSUER_AND_SERIAL = 'd2i_PKCS7_ISSUER_AND_SERIAL';  {Do not localize}
   fn_PKCS7_ISSUER_AND_SERIAL_digest = 'PKCS7_ISSUER_AND_SERIAL_digest';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_FP_API}
   fn_d2i_PKCS7_fp = 'd2i_PKCS7_fp';  {Do not localize}
   fn_i2d_PKCS7_fp = 'i2d_PKCS7_fp';  {Do not localize}
+  {$ENDIF}
   fn_PKCS7_dup = 'PKCS7_dup';  {Do not localize}
   fn_d2i_PKCS7_bio = 'd2i_PKCS7_bio';  {Do not localize}
   fn_i2d_PKCS7_bio = 'i2d_PKCS7_bio';  {Do not localize}
@@ -6960,16 +8666,32 @@ const
   fn_i2d_X509_CRL_fp = 'i2d_X509_CRL_fp';  {Do not localize}
   fn_d2i_X509_REQ_fp = 'd2i_X509_REQ_fp';  {Do not localize}
   fn_i2d_X509_REQ_fp = 'i2d_X509_REQ_fp';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_RSA}
   fn_d2i_RSAPrivateKey_fp = 'd2i_RSAPrivateKey_fp';  {Do not localize}
   fn_i2d_RSAPrivateKey_fp = 'i2d_RSAPrivateKey_fp';  {Do not localize}
   fn_d2i_RSAPublicKey_fp = 'd2i_RSAPublicKey_fp';  {Do not localize}
   fn_i2d_RSAPublicKey_fp = 'i2d_RSAPublicKey_fp';  {Do not localize}
+  fn_d2i_RSA_PUBKEY_fp = 'd2i_RSA_PUBKEY_fp'; {Do not localize}
+  fn_i2d_RSA_PUBKEY_fp = 'i2d_RSA_PUBKEY_fp'; {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_DSA}
+  fn_d2i_DSA_PUBKEY_fp = 'd2i_DSA_PUBKEY_fp'; {Do not localize}
+  fn_i2d_DSA_PUBKEY_fp = 'i2d_DSA_PUBKEY_fp'; {Do not localize}
   fn_d2i_DSAPrivateKey_fp = 'd2i_DSAPrivateKey_fp';  {Do not localize}
   fn_i2d_DSAPrivateKey_fp = 'i2d_DSAPrivateKey_fp';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_EC}
+  fn_d2i_EC_PUBKEY_fp = 'd2i_EC_PUBKEY_fp'; {Do not localize}
+  fn_i2d_EC_PUBKEY_fp = 'i2d_EC_PUBKEY_fp'; {Do not localize}
+  fn_d2i_ECPrivateKey_fp = 'd2i_ECPrivateKey_fp'; {Do not localize}
+  fn_i2d_ECPrivateKey_fp = 'i2d_ECPrivateKey_fp'; {Do not localize}
+  {$ENDIF}
+
   fn_d2i_PKCS8_fp = 'd2i_PKCS8_fp';  {Do not localize}
   fn_i2d_PKCS8_fp = 'i2d_PKCS8_fp';  {Do not localize}
   fn_d2i_PKCS8_PRIV_KEY_INFO_fp = 'd2i_PKCS8_PRIV_KEY_INFO_fp';  {Do not localize}
   fn_i2d_PKCS8_PRIV_KEY_INFO_fp = 'i2d_PKCS8_PRIV_KEY_INFO_fp';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_BIO}
   fn_d2i_X509_bio = 'd2i_X509_bio';  {Do not localize}
   fn_i2d_X509_bio = 'i2d_X509_bio';  {Do not localize}
   fn_i2d_PrivateKey_bio = 'i2d_PrivateKey_bio'; {Do not localize}
@@ -6977,16 +8699,33 @@ const
   fn_i2d_X509_CRL_bio = 'i2d_X509_CRL_bio';  {Do not localize}
   fn_d2i_X509_REQ_bio = 'd2i_X509_REQ_bio';  {Do not localize}
   fn_i2d_X509_REQ_bio = 'i2d_X509_REQ_bio';  {Do not localize}
+    {$IFNDEF OPENSSL_NO_RSA}
   fn_d2i_RSAPrivateKey_bio = 'd2i_RSAPrivateKey_bio';  {Do not localize}
   fn_i2d_RSAPrivateKey_bio = 'i2d_RSAPrivateKey_bio';  {Do not localize}
   fn_d2i_RSAPublicKey_bio = 'd2i_RSAPublicKey_bio';  {Do not localize}
   fn_i2d_RSAPublicKey_bio = 'i2d_RSAPublicKey_bio';  {Do not localize}
+    {$ENDIF}
+    {$IFNDEF OPENSSL_NO_DSA}
+  fn_d2i_DSA_PUBKEY_bio = 'd2i_DSA_PUBKEY_bio'; {Do not localize}
+  fn_i2d_DSA_PUBKEY_bio = 'i2d_DSA_PUBKEY_bio'; {Do not localize}
   fn_d2i_DSAPrivateKey_bio = 'd2i_DSAPrivateKey_bio';  {Do not localize}
   fn_i2d_DSAPrivateKey_bio = 'i2d_DSAPrivateKey_bio';  {Do not localize}
+    {$ENDIF}
+    {$IFNDEF OPENSSL_NO_EC}
+  fn_d2i_EC_PUBKEY_bio = 'd2i_EC_PUBKEY_bio'; {Do not localize}
+  fn_i2d_EC_PUBKEY_bio = 'i2d_EC_PUBKEY_bio'; {Do not localize}
+  fn_d2i_ECPrivateKey_bio = 'd2i_ECPrivateKey_bio'; {Do not localize}
+  fn_i2d_ECPrivateKey_bio = 'i2d_ECPrivateKey_bio'; {Do not localize}
+    {$ENDIF}
   fn_d2i_PKCS8_bio = 'd2i_PKCS8_bio';  {Do not localize}
   fn_i2d_PKCS8_bio = 'i2d_PKCS8_bio';  {Do not localize}
   fn_d2i_PKCS8_PRIV_KEY_INFO_bio = 'd2i_PKCS8_PRIV_KEY_INFO_bio';  {Do not localize}
   fn_i2d_PKCS8_PRIV_KEY_INFO_bio = 'i2d_PKCS8_PRIV_KEY_INFO_bio';  {Do not localize}
+
+  fn_d2i_PrivateKey_bio = 'd2i_PrivateKey_bio'; {Do not localize}
+  fn_i2d_PUBKEY_bio = 'i2d_PUBKEY_bio'; {Do not localize}
+  fn_d2i_PUBKEY_bio = 'd2i_PUBKEY_bio'; {Do not localize}
+  {$ENDIF}
   fn_X509_dup = 'X509_dup';  {Do not localize}
   fn_X509_ATTRIBUTE_dup = 'X509_ATTRIBUTE_dup';  {Do not localize}
   fn_X509_EXTENSION_dup = 'X509_EXTENSION_dup';  {Do not localize}
@@ -7122,13 +8861,27 @@ const
   fn_X509_NAME_cmp = 'X509_NAME_cmp';  {Do not localize}
   fn_X509_NAME_hash = 'X509_NAME_hash';  {Do not localize}
   fn_X509_CRL_cmp = 'X509_CRL_cmp';  {Do not localize}
+  
+  {$IFNDEF OPENSSL_NO_FP_API}
+  fn_X509_print_ex_fp = 'X509_print_ex_fp'; {Do not localize}
   fn_X509_print_fp = 'X509_print_fp';  {Do not localize}
   fn_X509_CRL_print_fp = 'X509_CRL_print_fp';  {Do not localize}
   fn_X509_REQ_print_fp = 'X509_REQ_print_fp';  {Do not localize}
+  fn_X509_NAME_print_ex_fp = 'X509_NAME_print_ex_fp'; {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_BIO}
+
   fn_X509_NAME_print = 'X509_NAME_print';  {Do not localize}
+  fn_X509_NAME_print_ex = 'X509_NAME_print_ex'; {Do not localize}
+  fn_X509_print_ex = 'X509_print_ex'; {Do not localize}
   fn_X509_print = 'X509_print';  {Do not localize}
+  fn_X509_ocspid_print = 'X509_ocspid_print'; {Do not localize}
+  fn_X509_CERT_AUX_print = 'X509_CERT_AUX_print'; {Do not localize}
   fn_X509_CRL_print = 'X509_CRL_print';  {Do not localize}
   fn_X509_REQ_print = 'X509_REQ_print';  {Do not localize}
+  fn_X509_REQ_print_ex = 'X509_REQ_print_ex'; {Do not localize}
+  {$ENDIF}
+  
   fn_X509_NAME_entry_count = 'X509_NAME_entry_count';  {Do not localize}
   fn_X509_NAME_get_text_by_NID = 'X509_NAME_get_text_by_NID';  {Do not localize}
   fn_X509_NAME_get_text_by_OBJ = 'X509_NAME_get_text_by_OBJ';  {Do not localize}
@@ -7225,59 +8978,64 @@ const
   fn_PEM_SignFinal = 'PEM_SignFinal';  {Do not localize}
   fn_PEM_proc_type = 'PEM_proc_type';  {Do not localize}
   fn_PEM_dek_info = 'PEM_dek_info';  {Do not localize}
+
+  {$IFNDEF OPENSSL_NO_BIO}
   fn_PEM_read_bio_X509 = 'PEM_read_bio_X509';  {Do not localize}
-  fn_PEM_read_X509 = 'PEM_read_X509';  {Do not localize}
   fn_PEM_write_bio_X509 = 'PEM_write_bio_X509';  {Do not localize}
-  fn_PEM_write_X509 = 'PEM_write_X509';  {Do not localize}
   fn_PEM_read_bio_X509_REQ = 'PEM_read_bio_X509_REQ';  {Do not localize}
-  fn_PEM_read_X509_REQ = 'PEM_read_X509_REQ';  {Do not localize}
   fn_PEM_write_bio_X509_REQ = 'PEM_write_bio_X509_REQ';  {Do not localize}
-  fn_PEM_write_X509_REQ = 'PEM_write_X509_REQ';  {Do not localize}
   fn_PEM_read_bio_X509_CRL = 'PEM_read_bio_X509_CRL';  {Do not localize}
-  fn_PEM_read_X509_CRL = 'PEM_read_X509_CRL';  {Do not localize}
   fn_PEM_write_bio_X509_CRL = 'PEM_write_bio_X509_CRL';  {Do not localize}
-  fn_PEM_write_X509_CRL = 'PEM_write_X509_CRL';  {Do not localize}
   fn_PEM_read_bio_PKCS7 = 'PEM_read_bio_PKCS7';  {Do not localize}
-  fn_PEM_read_PKCS7 = 'PEM_read_PKCS7';  {Do not localize}
   fn_PEM_write_bio_PKCS7 = 'PEM_write_bio_PKCS7';  {Do not localize}
-  fn_PEM_write_PKCS7 = 'PEM_write_PKCS7';  {Do not localize}
   fn_PEM_read_bio_NETSCAPE_CERT_SEQUENCE = 'PEM_read_bio_NETSCAPE_CERT_SEQUENCE';  {Do not localize}
-  fn_PEM_read_NETSCAPE_CERT_SEQUENCE = 'PEM_read_NETSCAPE_CERT_SEQUENCE';  {Do not localize}
   fn_PEM_write_bio_NETSCAPE_CERT_SEQUENCE = 'PEM_write_bio_NETSCAPE_CERT_SEQUENCE';  {Do not localize}
-  fn_PEM_write_NETSCAPE_CERT_SEQUENCE = 'PEM_write_NETSCAPE_CERT_SEQUENCE';  {Do not localize}
   fn_PEM_read_bio_PKCS8 = 'PEM_read_bio_PKCS8';  {Do not localize}
-  fn_PEM_read_PKCS8 = 'PEM_read_PKCS8';  {Do not localize}
   fn_PEM_write_bio_PKCS8 = 'PEM_write_bio_PKCS8';  {Do not localize}
-  fn_PEM_write_PKCS8 = 'PEM_write_PKCS8';  {Do not localize}
   fn_PEM_read_bio_PKCS8_PRIV_KEY_INFO = 'PEM_read_bio_PKCS8_PRIV_KEY_INFO';  {Do not localize}
-  fn_PEM_read_PKCS8_PRIV_KEY_INFO = 'PEM_read_PKCS8_PRIV_KEY_INFO';  {Do not localize}
   fn_PEM_write_bio_PKCS8_PRIV_KEY_INFO = 'PEM_write_bio_PKCS8_PRIV_KEY_INFO';  {Do not localize}
-  fn_PEM_write_PKCS8_PRIV_KEY_INFO = 'PEM_write_PKCS8_PRIV_KEY_INFO';  {Do not localize}
   fn_PEM_read_bio_RSAPrivateKey = 'PEM_read_bio_RSAPrivateKey';  {Do not localize}
-  fn_PEM_read_RSAPrivateKey = 'PEM_read_RSAPrivateKey';  {Do not localize}
   fn_PEM_write_bio_RSAPrivateKey = 'PEM_write_bio_RSAPrivateKey';  {Do not localize}
-  fn_PEM_write_RSAPrivateKey = 'PEM_write_RSAPrivateKey';  {Do not localize}
   fn_PEM_read_bio_RSAPublicKey = 'PEM_read_bio_RSAPublicKey';  {Do not localize}
-  fn_PEM_read_RSAPublicKey = 'PEM_read_RSAPublicKey';  {Do not localize}
   fn_PEM_write_bio_RSAPublicKey = 'PEM_write_bio_RSAPublicKey';  {Do not localize}
-  fn_PEM_write_RSAPublicKey = 'PEM_write_RSAPublicKey';  {Do not localize}
   fn_PEM_read_bio_DSAPrivateKey = 'PEM_read_bio_DSAPrivateKey';  {Do not localize}
-  fn_PEM_read_DSAPrivateKey = 'PEM_read_DSAPrivateKey';  {Do not localize}
   fn_PEM_write_bio_DSAPrivateKey = 'PEM_write_bio_DSAPrivateKey';  {Do not localize}
-  fn_PEM_write_DSAPrivateKey = 'PEM_write_DSAPrivateKey';  {Do not localize}
   fn_PEM_read_bio_DSAparams = 'PEM_read_bio_DSAparams';  {Do not localize}
-  fn_PEM_read_DSAparams = 'PEM_read_DSAparams';  {Do not localize}
   fn_PEM_write_bio_DSAparams = 'PEM_write_bio_DSAparams';  {Do not localize}
-  fn_PEM_write_DSAparams = 'PEM_write_DSAparams';  {Do not localize}
   fn_PEM_read_bio_DHparams = 'PEM_read_bio_DHparams';  {Do not localize}
-  fn_PEM_read_DHparams = 'PEM_read_DHparams';  {Do not localize}
   fn_PEM_write_bio_DHparams = 'PEM_write_bio_DHparams';  {Do not localize}
-  fn_PEM_write_DHparams = 'PEM_write_DHparams';  {Do not localize}
   fn_PEM_read_bio_PrivateKey = 'PEM_read_bio_PrivateKey';  {Do not localize}
-  fn_PEM_read_PrivateKey = 'PEM_read_PrivateKey';  {Do not localize}
   fn_PEM_write_bio_PrivateKey = 'PEM_write_bio_PrivateKey';  {Do not localize}
-  fn_PEM_write_PrivateKey = 'PEM_write_PrivateKey';  {Do not localize}
   fn_PEM_write_bio_PKCS8PrivateKey = 'PEM_write_bio_PKCS8PrivateKey';  {Do not localize}
+  {$ENDIF}
+
+  fn_PEM_read_X509 = 'PEM_read_X509';  {Do not localize}
+  fn_PEM_write_X509 = 'PEM_write_X509';  {Do not localize}
+  fn_PEM_read_X509_REQ = 'PEM_read_X509_REQ';  {Do not localize}
+  fn_PEM_write_X509_REQ = 'PEM_write_X509_REQ';  {Do not localize}
+  fn_PEM_read_X509_CRL = 'PEM_read_X509_CRL';  {Do not localize}
+  fn_PEM_write_X509_CRL = 'PEM_write_X509_CRL';  {Do not localize}
+  fn_PEM_read_PKCS7 = 'PEM_read_PKCS7';  {Do not localize}
+
+  fn_PEM_write_PKCS7 = 'PEM_write_PKCS7';  {Do not localize}
+  fn_PEM_read_NETSCAPE_CERT_SEQUENCE = 'PEM_read_NETSCAPE_CERT_SEQUENCE';  {Do not localize}
+  fn_PEM_write_NETSCAPE_CERT_SEQUENCE = 'PEM_write_NETSCAPE_CERT_SEQUENCE';  {Do not localize}
+  fn_PEM_read_PKCS8 = 'PEM_read_PKCS8';  {Do not localize}
+  fn_PEM_write_PKCS8 = 'PEM_write_PKCS8';  {Do not localize}
+  fn_PEM_read_PKCS8_PRIV_KEY_INFO = 'PEM_read_PKCS8_PRIV_KEY_INFO';  {Do not localize}
+  fn_PEM_write_PKCS8_PRIV_KEY_INFO = 'PEM_write_PKCS8_PRIV_KEY_INFO';  {Do not localize}
+  fn_PEM_read_RSAPrivateKey = 'PEM_read_RSAPrivateKey';  {Do not localize}
+  fn_PEM_write_RSAPrivateKey = 'PEM_write_RSAPrivateKey';  {Do not localize}
+  fn_PEM_read_RSAPublicKey = 'PEM_read_RSAPublicKey';  {Do not localize}
+  fn_PEM_write_RSAPublicKey = 'PEM_write_RSAPublicKey';  {Do not localize}
+  fn_PEM_read_DSAPrivateKey = 'PEM_read_DSAPrivateKey';  {Do not localize}
+  fn_PEM_write_DSAPrivateKey = 'PEM_write_DSAPrivateKey';  {Do not localize}
+  fn_PEM_read_DSAparams = 'PEM_read_DSAparams';  {Do not localize}
+  fn_PEM_write_DSAparams = 'PEM_write_DSAparams';  {Do not localize}
+  fn_PEM_read_DHparams = 'PEM_read_DHparams';  {Do not localize}
+  fn_PEM_write_DHparams = 'PEM_write_DHparams';  {Do not localize}
+  fn_PEM_read_PrivateKey = 'PEM_read_PrivateKey';  {Do not localize}
+  fn_PEM_write_PrivateKey = 'PEM_write_PrivateKey';  {Do not localize}
   fn_PEM_write_PKCS8PrivateKey = 'PEM_write_PKCS8PrivateKey';  {Do not localize}
   fn_sk_SSL_CIPHER_new = 'sk_SSL_CIPHER_new';  {Do not localize}
   fn_sk_SSL_CIPHER_new_null = 'sk_SSL_CIPHER_new_null';  {Do not localize}
@@ -7315,12 +9073,16 @@ const
   fn_sk_SSL_COMP_shift = 'sk_SSL_COMP_shift';  {Do not localize}
   fn_sk_SSL_COMP_pop = 'sk_SSL_COMP_pop';  {Do not localize}
   fn_sk_SSL_COMP_sort = 'sk_SSL_COMP_sort';  {Do not localize}
+
+  {$IFNDEF OPENSSL_NO_BIO}
   fn_BIO_f_ssl = 'BIO_f_ssl';  {Do not localize}
   fn_BIO_new_ssl = 'BIO_new_ssl';  {Do not localize}
   fn_BIO_new_ssl_connect = 'BIO_new_ssl_connect';  {Do not localize}
   fn_BIO_new_buffer_ssl_connect = 'BIO_new_buffer_ssl_connect';  {Do not localize}
   fn_BIO_ssl_copy_session_id = 'BIO_ssl_copy_session_id';  {Do not localize}
   fn_BIO_ssl_shutdown = 'BIO_ssl_shutdown';  {Do not localize}
+  {$ENDIF}
+  
   fn_SSL_CTX_set_cipher_list = 'SSL_CTX_set_cipher_list';  {Do not localize}
   fn_SSL_CTX_new = 'SSL_CTX_new';  {Do not localize}
   fn_SSL_CTX_free = 'SSL_CTX_free';  {Do not localize}
@@ -7340,20 +9102,27 @@ const
   fn_SSL_get_shared_ciphers = 'SSL_get_shared_ciphers';  {Do not localize}
   fn_SSL_get_read_ahead = 'SSL_get_read_ahead';  {Do not localize}
   fn_SSL_pending = 'SSL_pending';  {Do not localize}
+
+  {$IFNDEF OPENSSL_NO_SOCK}
   fn_SSL_set_fd = 'SSL_set_fd';  {Do not localize}
   fn_SSL_set_rfd = 'SSL_set_rfd';  {Do not localize}
   fn_SSL_set_wfd = 'SSL_set_wfd';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_BIO}
   fn_SSL_set_bio = 'SSL_set_bio';  {Do not localize}
   fn_SSL_get_rbio = 'SSL_get_rbio';  {Do not localize}
   fn_SSL_get_wbio = 'SSL_get_wbio';  {Do not localize}
+  {$ENDIF}
   fn_SSL_set_cipher_list = 'SSL_set_cipher_list';  {Do not localize}
   fn_SSL_set_read_ahead = 'SSL_set_read_ahead';  {Do not localize}
   fn_SSL_get_verify_mode = 'SSL_get_verify_mode';  {Do not localize}
   fn_SSL_get_verify_depth = 'SSL_get_verify_depth';  {Do not localize}
   fn_SSL_set_verify = 'SSL_set_verify';  {Do not localize}
   fn_SSL_set_verify_depth = 'SSL_set_verify_depth';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_RSA}
   fn_SSL_use_RSAPrivateKey = 'SSL_use_RSAPrivateKey';  {Do not localize}
   fn_SSL_use_RSAPrivateKey_ASN1 = 'SSL_use_RSAPrivateKey_ASN1';  {Do not localize}
+  {$ENDIF}
   fn_SSL_use_PrivateKey = 'SSL_use_PrivateKey';  {Do not localize}
   fn_SSL_use_PrivateKey_ASN1 = 'SSL_use_PrivateKey_ASN1';  {Do not localize}
   fn_SSL_use_certificate = 'SSL_use_certificate';  {Do not localize}
@@ -7361,7 +9130,9 @@ const
   fn_SSL_use_RSAPrivateKey_file = 'SSL_use_RSAPrivateKey_file';  {Do not localize}
   fn_SSL_use_PrivateKey_file = 'SSL_use_PrivateKey_file';  {Do not localize}
   fn_SSL_use_certificate_file = 'SSL_use_certificate_file';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_RSA}
   fn_SSL_CTX_use_RSAPrivateKey_file = 'SSL_CTX_use_RSAPrivateKey_file';  {Do not localize}
+  {$ENDIF}
   fn_SSL_CTX_use_PrivateKey_file = 'SSL_CTX_use_PrivateKey_file';  {Do not localize}
   fn_SSL_CTX_use_certificate_file = 'SSL_CTX_use_certificate_file';  {Do not localize}
   fn_SSL_CTX_use_certificate_chain_file = 'SSL_CTX_use_certificate_chain_file';  {Do not localize}
@@ -7381,8 +9152,12 @@ const
   fn_SSL_SESSION_new = 'SSL_SESSION_new';  {Do not localize}
   fn_SSL_SESSION_hash = 'SSL_SESSION_hash';  {Do not localize}
   fn_SSL_SESSION_cmp = 'SSL_SESSION_cmp';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_FP_API}
   fn_SSL_SESSION_print_fp = 'SSL_SESSION_print_fp';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_BIO}
   fn_SSL_SESSION_print = 'SSL_SESSION_print';  {Do not localize}
+  {$ENDIF}
   fn_SSL_SESSION_free = 'SSL_SESSION_free';  {Do not localize}
   fn_i2d_SSL_SESSION = 'i2d_SSL_SESSION';  {Do not localize}
   fn_SSL_set_session = 'SSL_set_session';  {Do not localize}
@@ -7487,11 +9262,24 @@ const
   fn_SSL_CTX_get_ex_data = 'SSL_CTX_get_ex_data';  {Do not localize}
   fn_SSL_CTX_get_ex_new_index = 'SSL_CTX_get_ex_new_index';  {Do not localize}
   fn_SSL_get_ex_data_X509_STORE_CTX_idx = 'SSL_get_ex_data_X509_STORE_CTX_idx';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_RSA}
   fn_SSL_CTX_set_tmp_rsa_callback = 'SSL_CTX_set_tmp_rsa_callback';  {Do not localize}
   fn_SSL_set_tmp_rsa_callback = 'SSL_set_tmp_rsa_callback';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_DH}
   fn_SSL_CTX_set_tmp_dh_callback = 'SSL_CTX_set_tmp_dh_callback';  {Do not localize}
   fn_SSL_set_tmp_dh_callback = 'SSL_set_tmp_dh_callback';  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_ECDH}
+  fn_SSL_CTX_set_tmp_ecdh_callback = 'SSL_CTX_set_tmp_ecdh_callback'; {Do not localize}
+  fn_SSL_set_tmp_ecdh_callback = 'SSL_set_tmp_ecdh_callback'; {Do not localize}
+  {$ENDIF}
+  
   fn_SSL_COMP_add_compression_method = 'SSL_COMP_add_compression_method';  {Do not localize}
+  fn_SSL_get_current_expansion = 'SSL_get_current_expansion'; {Do not localize}
+  fn_SSL_COMP_get_name = 'SSL_COMP_get_name'; {Do not localize}
+  fn_SSL_COMP_get_compression_methods = 'SSL_COMP_get_compression_methods'; {Do not localize}
+
   // GREGOR
 //  fn_SSLeay_add_ssl_algorithms = 'mi_SSLeay_add_ssl_algorithms';  {Do not localize}
 
@@ -7514,9 +9302,33 @@ const
   fn_i2d_PKCS12_bio = 'i2d_PKCS12_bio'; {Do not localize}
   fn_PKCS12_free = 'PKCS12_free'; {Do not localize}
 
+  fn_RAND_set_rand_method = 'RAND_set_rand_method'; {Do not localize}
+  fn_RAND_get_rand_method = 'RAND_get_rand_method'; {Do not localize}
+  {$IFNDEF OPENSSL_NO_ENGINE}
+  fn_RAND_set_rand_engine = 'RAND_set_rand_engine'; {Do not localize}
+  {$ENDIF}
+  fn_RAND_SSLeay = 'RAND_SSLeay'; {Do not localize}
+  fn_RAND_cleanup = 'RAND_cleanup'; {Do not localize}
+  fn_RAND_bytes = 'RAND_bytes'; {Do not localize}
+  fn_RAND_pseudo_bytes = 'RAND_pseudo_bytes'; {Do not localize}
+  fn_RAND_seed = 'RAND_seed'; {Do not localize}
+  fn_RAND_add = 'RAND_add'; {Do not localize}
+  fn_RAND_load_file = 'RAND_load_file'; {Do not localize}
+  fn_RAND_write_file = 'RAND_write_file'; {Do not localize}
+  fn_RAND_file_name = 'RAND_file_name'; {Do not localize}
+  fn_RAND_status = 'RAND_status'; {Do not localize}
+  fn_RAND_query_egd_bytes = 'RAND_query_egd_bytes'; {Do not localize}
+  fn_RAND_egd = 'RAND_egd'; {Do not localize}
+  fn_RAND_egd_bytes = 'RAND_egd_bytes'; {Do not localize}
+  fn_RAND_poll = 'RAND_poll'; {Do not localize}
+
+  {$IFDEF SYS_WIN}
   //GREGOR
   fn_RAND_screen = 'RAND_screen';  {Do not localize}
 
+  fn_RAND_event = 'RAND_event('; {Do not localize}
+  {$ENDIF}
+  fn_ERR_load_RAND_strings = 'ERR_load_RAND_strings'; {Do not localize}
   //experimental
   fn_ERR_get_error = 'ERR_get_error';  {Do not localize}
   fn_ERR_peek_error = 'ERR_peek_error';  {Do not localize}
@@ -7529,6 +9341,27 @@ const
   fn_ERR_load_ERR_strings = 'ERR_load_ERR_strings'; {Do not localize}
   fn_ERR_free_strings = 'ERR_free_strings'; {do not localize}
   fn_ERR_remove_state = 'ERR_remove_state'; {do not localize}
+  {$IFDEF OPENSSL_EXPORT_VAR_AS_FUNCTION}
+  //These have a gl prefix because they may not be functions in some platforms.
+  //They are functions in Win32 because DLL's can't export global variables
+  //while Unix shared objects may expose them.
+  gl_ASN1_OBJECT_it = 'ASN1_OBJECT_it'; {do not localize}
+  gl_ASN1_OCTET_STRING_NDEF_it = 'ASN1_OCTET_STRING_NDEF_it'; {Do not localize}
+
+  gl_ASN1_BOOLEAN_it = 'ASN1_BOOLEAN_it'; {Do not localize}
+  gl_ASN1_SEQUENCE_it = 'ASN1_SEQUENCE_it'; {Do not localize}
+  gl_CBIGNUM_it = 'CBIGNUM_it'; {Do not localize}
+  gl_BIGNUM_it = 'BIGNUM_it'; {Do not localize}
+  gl_LONG_it = 'LONG_it'; {Do not localize}
+  gl_ZLONG_it = 'ZLONG_it'; {Do not localize}
+
+  gl_POLICY_MAPPING_it = 'POLICY_MAPPING_it'; {Do not localize}
+  gl_POLICY_MAPPINGS_it = 'POLICY_MAPPINGS_it';  {Do not localize}
+  gl_GENERAL_SUBTREE_it = 'GENERAL_SUBTREE_it'; {Do not localize}
+  gl_NAME_CONSTRAINTS_it = 'NAME_CONSTRAINTS_it'; {Do not localize}
+  gl_POLICY_CONSTRAINTS_it = 'POLICY_CONSTRAINTS_it'; {Do not localize}
+  
+  {$ENDIF}
 
 function LoadFunction(const FceName:String):Pointer;
 begin
@@ -7680,14 +9513,16 @@ begin
   @IdSslX509ExtensionFree := LoadFunctionCLib(fn_X509_EXTENSION_free);
   @IdSslX509AddExt := LoadFunctionCLib(fn_X509_add_ext);
 
-  {$IFNDEF UNIX}
+  {$IFDEF SYS_WIN}
   @IdSslRandScreen := LoadFunctionCLib(fn_RAND_screen);
   {$ENDIF}
-  
+
+  {$IFNDEF OPENSSL_NO_DES}
   // 3DES
   @iddes_set_odd_parity := LoadFunctionCLib(fn_des_set_odd_parity);
   @iddes_set_key := LoadFunctionCLib(fn_des_set_key);
   @iddes_ecb_encrypt := LoadFunctionCLib(fn_des_ecb_encrypt);
+  {$ENDIF}
   // More SSL functions
 
   @IdSSL_set_ex_data := LoadFunction(fn_SSL_set_ex_data);
@@ -7773,17 +9608,42 @@ begin
   @IdSslPemWriteBioX509Req := LoadFunctionCLib(fn_PEM_write_bio_X509_REQ);
 
   //EVP
+  {$IFNDEF OPENSSL_NO_DES}
   @IdSslEvpDesEde3Cbc :=LoadFunctionCLib(fn_EVP_des_ede3_cbc);
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA512}
+  @IdSslEvpSHA512 := LoadFunctionCLib(fn_EVP_sha512);
+  @IdSslEvpSHA386 := LoadFunctionCLib(fn_EVP_sha384);
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA256}
+  @IdSslEvpSHA256 := LoadFunctionCLib(fn_EVP_sha256);
+  @IdSslEvpSHA224 := LoadFunctionCLib(fn_EVP_sha224);
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA}
+  @IdSslEvpSHA1 := LoadFunctionCLib(fn_EVP_sha1);
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD5}
   @IdSslEvpMd5 := LoadFunctionCLib(fn_EVP_md5);
+  {$ENDIF}
+  @IdSslEvpPKEYType := LoadFunctionCLib(fn_EVP_PKEY_type);
+  
   @IdSslEvpPKeyNew := LoadFunctionCLib(fn_EVP_PKEY_new);
   @IdSslEvpPKeyFree := LoadFunctionCLib(fn_EVP_PKEY_free);
   @IdSslEvpPKeyAssign := LoadFunctionCLib(fn_EVP_PKEY_assign);
   @IdSslEvpGetDigestByName := LoadFunctionCLib(fn_EVP_get_digestbyname);
+  //OBJ
+   @IdSslOBJObj2Nid := LoadFunctionCLib(fn_OBJ_obj2nid);
+   @IdSslOBJNid2Obj := LoadFunctionCLib(fn_OBJ_nid2obj);
+   @IdSslOBJNid2ln := LoadFunctionCLib(fn_OBJ_nid2ln);
+   @IdSslOBJNid2sn := LoadFunctionCLib(fn_OBJ_nid2sn);
 
   //ASN1
   @IdSslAsn1IntegerSet := LoadFunctionCLib(fn_ASN1_INTEGER_set);
+  @IdSslAsn1IntegerGet := LoadFunctionCLib(fn_ASN1_INTEGER_get);
   @IdSslAsn1StringTypeNew := LoadFunctionCLib(fn_ASN1_STRING_type_new);
   @IdSslAsn1StringFree := LoadFunctionCLib(fn_ASN1_STRING_free);
+
+
 
   @IdSslCryptoSetMemFunctions := LoadFunctionCLib(fn_CRYPTO_set_mem_functions);
   @IdSslCryptoMalloc := LoadFunctionCLib(fn_CRYPTO_malloc);
@@ -7923,10 +9783,90 @@ begin
   end;
 end;
 
+//#define M_ASN1_STRING_length(x)	((x)->length)
+function IdSslMASN1StringLength(x : PASN1_STRING): TIdC_INT;
+begin
+  Result := x^.length;
+end;
+
+//#define M_ASN1_STRING_length_set(x, n)	((x)->length = (n))
+procedure IdSslMASN1StringLengthSet(x : PASN1_STRING; n : TIdC_INT);
+begin
+  x^.length := n;
+end;
+
+//#define M_ASN1_STRING_type(x)	((x)->type)
+function IdSslMASN1StringType(x : PASN1_STRING) : TIdC_INT;
+begin
+  Result := x^._type;
+end;
+
+//#define M_ASN1_STRING_data(x)	((x)->data)
+function IdSslMASN1StringData(x : PASN1_STRING) : PChar;
+begin
+  Result := x^.data;
+end;
+
 function IdSslX509StoreCtxGetAppData(ctx:PX509_STORE_CTX):Pointer;
 //#define X509_STORE_CTX_get_app_data(ctx) X509_STORE_CTX_get_ex_data(ctx,0)
 begin
   Result := IdSslX509StoreCtxGetExData(ctx, 0);
+end;
+//#define		X509_get_signature_type(x) EVP_PKEY_type(OBJ_obj2nid((x)->sig_alg->algorithm))
+
+function IdSslX509GetVersion(x : PX509): TIdC_LONG;
+//#define		X509_get_version(x) ASN1_INTEGER_get((x)->cert_info->version)
+begin
+  Result := IdSslAsn1IntegerGet(x^.cert_info^.version);
+end;
+
+function IdSslX509GetSignatureType(x : PX509) : TIdC_INT;
+{
+http://groups.google.com/group/mailing.openssl.dev/browse_thread/thread/c1ab56fc4fb7af6a/98a2e94fe893aecf?lnk=st&q=X509_get_signature_type+&rnum=1&hl=en#98a2e94fe893aecf
+
+Austin Krauss via RT wrote: 
+
+> D:\openssl-0.9.7b\out32dll\Release>openssl version -a 
+> OpenSSL 0.9.7b 10 Apr 2003 
+> built on: date not available 
+> platform: information not available 
+> options:  bn(64,32) md2(int) rc4(idx,int) des(idx,cisc,4,long) idea(int) blowfish(idx) 
+> compiler: information not available 
+> OPENSSLDIR: "/usr/local/ssl" 
+
+> Windows 2000 SP3 x86 
+> Visual C++ 6.0 SP5 
+
+> I'm running into a problem parsing the certificate that I've recieved from the peer. I'm trying to call X509_get_signature_type(...) to get the key algorithm used. After I went through this function with the debugger, I'm finding that "NID_sha1WithRSAEncryption" (which is correct by the way) is getting passed to EVP_PKEY_type(...). It seems as if there is not a EVP constant that maps to this particular NID and thus EVP_PKEY_type is returning NID_undef to my function. 
+
+As a addition to: 
+http://marc.theaimsgroup.com/?l=openssl-users&m=105074607225189&w=2 
+I would suggest that X509_get_signature_type(x) should 
+be changed to 'OBJ_obj2nid((x)->sig_alg->algorithm' (i.e. remove 
+the call to EVP_PKEY_type()) because currently this macro 
+returns the type of the key used for the signature generation 
+and *not* the type of the signature (i.e. key alg + hash alg). 
+The other solution would be to change EVP_PKEY_type() to 
+include the other RSA OIDs as well (from the usage of this macro 
+in OpenSSL the second alternative is simpler to implement, but 
+in this case the name of the macro should better be changed to 
+X509_get_signature_key_type() :-). 
+
+Regards, 
+Nils
+}
+begin
+  Assert(x<>nil);
+//              EVP_PKEY_type(OBJ_obj2nid((x)->sig_alg->algorithm)
+  Result :=   IdSslOBJObj2Nid((x.sig_alg.algorithm ));
+end;
+
+function IdSslX509ReqGetSubjectName(x:PX509_REQ):PX509_NAME;
+//#define	X509_REQ_get_subject_name(x) ((x)->req_info->subject)
+
+begin
+  Assert(x<>nil);
+  Result := x^.req_info^.subject;
 end;
 
 //function IdSslX509GetNotBefore(x509: PX509):PASN1_UTCTIME;
@@ -7942,6 +9882,42 @@ function IdSslX509GetNotAfter(x509: PX509):PASN1_TIME;
 begin
   Assert(x509<>nil);
   Result := x509.cert_info.validity.notAfter;
+end;
+
+function IdX509ReqGetVersion(x : PX509_REQ): TIdC_LONG;
+//#define		X509_REQ_get_version(x) ASN1_INTEGER_get((x)->req_info->version)
+begin
+  Result := IdSslASN1IntegerGet(x^.req_info^.version);
+end;
+
+function IdSslX509CRLGetVersion(x : PX509_CRL) : TIdC_LONG;
+//#define		X509_CRL_get_version(x) ASN1_INTEGER_get((x)->crl->version)
+begin
+  Result := IdSslASN1IntegerGet(x^.crl^.version);
+end;
+
+function IdSslX509CRLGetLastUpdate(x : PX509_CRL) : PASN1_TIME;
+//#define 	X509_CRL_get_lastUpdate(x) ((x)->crl->lastUpdate)
+begin
+  Result := x^.crl^.lastUpdate;
+end;
+
+function IdSslX509CRLGetNextUpdate(x : PX509_CRL) : PASN1_TIME;
+//#define 	X509_CRL_get_nextUpdate(x) ((x)->crl->nextUpdate)
+begin
+  Result := x^.crl^.nextUpdate;
+end;
+
+function IdX509CRLGetIssuer(x : PX509_CRL) : PX509_NAME;
+//#define		X509_CRL_get_issuer(x) ((x)->crl->issuer)
+begin
+  Result := x^.crl^.issuer
+end;
+
+function IdSslCRLGetRevoked(x : PX509_CRL) : PSTACK_OF_X509_REVOKED;
+//#define		X509_CRL_get_REVOKED(x) ((x)->crl->revoked)
+begin
+  Result := x^.crl^.revoked;
 end;
 
 procedure IdSslCtxSetInfoCallback(ctx: PSSL_CTX; cb: PSSL_CTX_info_callback);
@@ -7969,7 +9945,7 @@ end;
 function IdSslCtxGetVersion(ctx: PSSL_CTX):TIdC_INT;
 begin
   Assert(ctx<>nil);
-  Result := ctx.method.version;
+  Result := ctx^.method^.version;
 end;
 
 function IdSslBioSetClose(b:PBio;c:TIdC_LONG):TIdC_LONG;
@@ -8038,19 +10014,13 @@ begin
   Assert(r<>0);
 end;
 
+{$IFNDEF OPENSSL_NO_RSA}
 function IdSslEvpPKeyAssignRsa(pkey:PEVP_MD;rsa:PChar):TIdC_INT;
 //#define EVP_PKEY_assign_RSA(pkey,rsa) EVP_PKEY_assign((pkey),EVP_PKEY_RSA,(char *)(rsa))
 begin
   Result := IdSslEvpPKeyAssign(pkey, OPENSSL_EVP_PKEY_RSA, rsa);
 end;
-
-function IdSslX509ReqGetSubjectName(x:PX509_REQ):PX509_NAME;
-//#define	X509_REQ_get_subject_name(x) ((x)->req_info->subject)
-
-begin
-  Assert(x<>nil);
-  Result := x^.req_info^.subject;
-end;
+{$ENDIF}
 
 procedure IdSslX509V3SetCtxNoDb(ctx:X509V3_CTX);
 //#define X509V3_set_ctx_nodb(ctx) (ctx)->db = NULL;

@@ -457,8 +457,70 @@ type
     property OneLine: string read CertInOneLine;
   end;
 
+  TIdX509Info = class(TObject)
+  protected
+      //Do not free this here because it belongs
+      //to the X509 or something else.
+      FX509    : PX509;
+  public
+    constructor Create( aX509: PX509);
+  end;
+  TIdX509Fingerprints = class(TIdX509Info)
+    protected
+
+      function GetMD5: TEVP_MD;
+      function GetMD5AsString:String;
+      function GetSHA1: TEVP_MD;
+      function GetSHA1AsString:String;
+      function GetSHA224 : TEVP_MD;
+      function GetSHA224AsString : String;
+      function GetSHA256 : TEVP_MD;
+      function GetSHA256AsString : String;
+      function GetSHA386 : TEVP_MD;
+      function GetSHA386AsString : String;
+      function GetSHA512 : TEVP_MD;
+      function GetSHA512AsString : String;
+    public
+
+      property MD5 : TEVP_MD read GetMD5;
+      property MD5AsString : String read  GetMD5AsString;
+{IMPORTANT!!!
+
+FIPS approves only these algorithms for hashing.
+SHA-1
+SHA-224
+SHA-256
+SHA-384
+SHA-512
+
+http://csrc.nist.gov/CryptoToolkit/tkhash.html
+}
+      property SHA1 : TEVP_MD read GetSHA1;
+      property SHA1AsString : String read  GetSHA1AsString;
+
+      property SHA224 : TEVP_MD read GetSHA224;
+      property SHA224AsString : String read GetSHA224AsString;
+      property SHA256 : TEVP_MD read GetSHA256;
+      property SHA256AsString : String read GetSHA256AsString;
+      property SHA386 : TEVP_MD read GetSHA386;
+      property SHA386AsString : String read GetSHA386AsString;
+      property SHA512 : TEVP_MD read GetSHA512;
+      property SHA512AsString : String read GetSHA512AsString;
+  end;
+  TIdX509SigInfo = class(TIdX509Info)
+  protected
+    function GetSignature : String;
+    function GetSigType : TIdC_INT;
+    function GetSigTypeAsString : String;
+  public
+    property Signature : String read GetSignature;
+    property SigType : TIdC_INT read  GetSigType ;
+    property SigTypeAsString : String read GetSigTypeAsString;
+  end;
   TIdX509 = class(TObject)
   protected
+    FFingerprints : TIdX509Fingerprints;
+    FSigInfo : TIdX509SigInfo;
     FCanFreeX509 : Boolean;
     FX509    : PX509;
     FSubject : TIdX509Name;
@@ -470,9 +532,14 @@ type
     function RFingerprint:TEVP_MD;
     function RFingerprintAsString:String;
     function GetSerialNumber: String;
+    function GetVersion : TIdC_LONG;
   public
     Constructor Create(aX509: PX509; aCanFreeX509: Boolean = True); virtual;
     Destructor Destroy; override;
+    property Version : TIdC_LONG read GetVersion;
+    //
+    property SigInfo : TIdX509SigInfo read FSigInfo;
+    property Fingerprints : TIdX509Fingerprints read  FFingerprints;
     //
     property Fingerprint: TEVP_MD read RFingerprint;
     property FingerprintAsString: String read RFingerprintAsString;
@@ -860,6 +927,32 @@ end;}
 function LogicalAnd(A, B: Integer): Boolean;
 begin
   Result := (A and B) = B;
+end;
+
+ function BytesToHexString(ptr : Pointer; ALen : Integer) : String;
+var i : PtrInt;
+begin
+  Result := '';
+  for i := 0 to (ALen - 1) do
+  begin
+    if I<>0 then
+    begin
+      Result := Result + ':';    {Do not Localize}
+    end;
+    Result := Result +  Sys.Format('%.2x', [Byte(Pointer(PtrInt(ptr)+I)^)]);
+  end;
+end;
+
+function MDAsString(AMD : TEVP_MD) : String;
+var I : Integer;
+begin
+  Result := '';
+  for I := 0 to AMD.Length - 1 do begin
+    if I <> 0 then begin
+      Result := Result + ':';    {Do not Localize}
+    end;
+    Result := Result + Sys.Format('%.2x', [Byte(AMD.MD[I])]);  {do not localize}
+  end;
 end;
 
 function VerifyCallback(Ok: TIdC_INT; ctx: PX509_STORE_CTX): TIdC_INT; cdecl;
@@ -2064,6 +2157,114 @@ end;
 //  X509 Certificate
 ///////////////////////////////////////////////////////////////
 
+{ TIdX509Info }
+
+constructor TIdX509Info.Create(aX509: PX509);
+begin
+  inherited Create;
+  Self.FX509 :=  aX509;
+end;
+
+{ TIdX509Fingerprints }
+
+function TIdX509Fingerprints.GetMD5: TEVP_MD;
+begin
+   IdSslX509Digest(FX509, IdSslEvpMd5, PChar(@Result.MD), Result.Length);
+end;
+
+function TIdX509Fingerprints.GetMD5AsString: String;
+var
+//  I: Integer;
+  EVP_MD: TEVP_MD;
+begin
+  EVP_MD := MD5;
+{  for I := 0 to EVP_MD.Length - 1 do begin
+    if I <> 0 then begin
+      Result := Result + ':';    {Do not Localize}
+{    end;
+    Result := Result + Sys.Format('%.2x', [Byte(EVP_MD.MD[I])]);  {do not localize}
+{  end;      }
+  Result := MDAsString(EVP_MD);
+end;
+
+function TIdX509Fingerprints.GetSHA1: TEVP_MD;
+begin
+  IdSslX509Digest(FX509, IdSslEvpSHA1, PChar(@Result.MD), Result.Length);
+end;
+
+function TIdX509Fingerprints.GetSHA1AsString: String;
+var EVP_MD : TEVP_MD;
+begin
+  EVP_MD := SHA1;
+  Result := MDAsString(EVP_MD);
+end;
+
+function TIdX509Fingerprints.GetSHA224 : TEVP_MD;
+begin
+   IdSslX509Digest(FX509, IdSslEvpSHA224, PChar(@Result.MD), Result.Length);
+end;
+
+function TIdX509Fingerprints.GetSHA224AsString : String;
+var EVP_MD : TEVP_MD;
+begin
+  EVP_MD := SHA224;
+  Result := MDAsString(EVP_MD);
+end;
+
+function TIdX509Fingerprints.GetSHA256 : TEVP_MD;
+begin
+  IdSslX509Digest(FX509, IdSslEvpSHA256, PChar(@Result.MD), Result.Length);
+end;
+
+function TIdX509Fingerprints.GetSHA256AsString : String;
+var EVP_MD : TEVP_MD;
+begin
+  EVP_MD := SHA256;
+  Result := MDAsString(EVP_MD);
+end;
+
+function TIdX509Fingerprints.GetSHA386 : TEVP_MD;
+begin
+   IdSslX509Digest(FX509, IdSslEvpSHA386, PChar(@Result.MD), Result.Length);
+end;
+
+function TIdX509Fingerprints.GetSHA386AsString : String;
+var EVP_MD : TEVP_MD;
+begin
+  EVP_MD := SHA386;
+  Result := MDAsString(EVP_MD);
+end;
+
+function TIdX509Fingerprints.GetSHA512 : TEVP_MD;
+begin
+    IdSslX509Digest(FX509, IdSslEvpSHA512, PChar(@Result.MD), Result.Length);
+end;
+
+function TIdX509Fingerprints.GetSHA512AsString : String;
+var EVP_MD : TEVP_MD;
+begin
+  EVP_MD := SHA512;
+  Result := MDAsString(EVP_MD);
+end;
+
+
+{ TIdX509SigInfo }
+
+function TIdX509SigInfo.GetSignature: String;
+begin
+ Result := BytesToHexString( FX509^.signature^.data, FX509^.signature^.length);
+end;
+
+function TIdX509SigInfo.GetSigType: TIdC_INT;
+begin
+  Result := IdSslX509GetSignatureType(FX509);
+end;
+
+function TIdX509SigInfo.GetSigTypeAsString: String;
+begin
+  Result := IdSslOBJNid2ln(SigType);
+end;
+
 { TIdX509 }
 
 constructor TIdX509.Create(aX509: PX509; aCanFreeX509: Boolean = True);
@@ -2071,17 +2272,21 @@ begin
   inherited Create;
 
   FX509 := aX509;
-  FCanFreeX509 := aCanFreeX509; 
 
+  FCanFreeX509 := aCanFreeX509;
+  FFingerprints := TIdX509Fingerprints.Create(FX509);
+  FSigInfo := TIdX509SigInfo.Create(FX509);
   FSubject := nil;
   FIssuer := nil;
+
+
 end;
 
 destructor TIdX509.Destroy;
 begin
   Sys.FreeAndNil(FSubject);
   Sys.FreeAndNil(FIssuer);
-
+  Sys.FreeAndNil(FFingerprints);
   { If the X.509 certificate handle was obtained from a certificate
   store or from the SSL connection as a peer certificate, then DO NOT
   free it here!  The memory is owned by the OpenSSL library and will
@@ -2100,12 +2305,17 @@ begin
   if FX509<>nil then
   begin
     LSN := IdSslX509GetSerialNumber(FX509);
-    Result := ToHex(RawToBytes(LSN.data^,LSN.length));
+    Result := BytesToHexString(LSN.data,LSN.length);
   end
   else
   begin
     Result := '';
   end;
+end;
+
+function TIdX509.GetVersion : TIdC_LONG;
+begin
+  Result := IdSslX509GetVersion(FX509);
 end;
 
 function TIdX509.RSubject: TIdX509Name;
@@ -2151,17 +2361,17 @@ end;
 
 function TIdX509.RFingerprintAsString: String;
 var
-  I: Integer;
+//  I: Integer;
   EVP_MD: TEVP_MD;
 begin
-  Result := '';
   EVP_MD := Fingerprint;
-  for I := 0 to EVP_MD.Length - 1 do begin
+{  for I := 0 to EVP_MD.Length - 1 do begin
     if I <> 0 then begin
       Result := Result + ':';    {Do not Localize}
-    end;
+{    end;
     Result := Result + Sys.Format('%.2x', [Byte(EVP_MD.MD[I])]);  {do not localize}
-  end;
+{  end;      }
+  Result := MDAsString(EVP_MD);
 end;
 
 function TIdX509.RnotBefore: TIdDateTime;
