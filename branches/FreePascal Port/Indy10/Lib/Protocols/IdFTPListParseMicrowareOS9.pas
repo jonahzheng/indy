@@ -69,7 +69,7 @@ type
 implementation
 
 uses
-  IdGlobal, IdFTPCommon, IdGlobalProtocols, IdSys;
+  IdGlobal, IdFTPCommon, IdGlobalProtocols, IdStrings, IdSys;
 
 const
   MICROWARE_OS9 = 'MicroWare OS-9'; {do not localize}
@@ -137,12 +137,10 @@ begin
   //permissions
   LPerms := Fetch(LBuf);
   LBuf := Sys.TrimLeft(LBuf);
-  if Copy(LPerms,1,1)='d' then
+  if TextStartsWith(LPerms, 'd') then
   begin
     LI.ItemType := ditDirectory;
-  end
-  else
-  begin
+  end else begin
     LI.ItemType := ditFile;
   end;
   LI.PermissionDisplay := LPerms;

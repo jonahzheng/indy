@@ -668,33 +668,33 @@ end;
 
 function StrPart(var AInput: string; const AMaxLength : Integer; const ADelete: Boolean = IdFetchDeleteDefault) : String;
 begin
-  Result := Copy(AInput,1,AMaxLength);
+  Result := Copy(AInput, 1, AMaxLength);
   if ADelete then
   begin
-    Delete(AInput,1,AMaxLength);
+    Delete(AInput, 1, AMaxLength);
   end;
 end;
 
 function FetchLength(var AInput: string;
   const AMaxLength : Integer;
- const ADelim: string = IdFetchDelimDefault;
- const ADelete: Boolean = IdFetchDeleteDefault;
- const ACaseSensitive: Boolean = IdFetchCaseSensitiveDefault): String;
-var i : Integer;
+  const ADelim: string = IdFetchDelimDefault;
+  const ADelete: Boolean = IdFetchDeleteDefault;
+  const ACaseSensitive: Boolean = IdFetchCaseSensitiveDefault): String;
+var
+  i : Integer;
 begin
-
   if ADelim = #0 then begin
-      // AnsiPos does not work with #0
-      i := Pos(ADelim, AInput);
+    // AnsiPos does not work with #0
+    i := Pos(ADelim, AInput);
   end else begin
-      i := IndyPos(ADelim, AInput);
+    i := IndyPos(ADelim, AInput);
   end;
-  if (i > AMaxLength) or (i=0) then
+  if (i > AMaxLength) or (i = 0) then
   begin
     Result := Copy(AInput, 1, AMaxLength);
     if ADelete then
     begin
-      Delete(AInput,1,AMaxLength);
+      Delete(AInput, 1, AMaxLength);
     end;
   end
   else
@@ -792,12 +792,12 @@ begin
   for i := 1 to Length(AData) do
   begin
     LPos := i;
-    if (IsNumeric(AData[i])=False) and (AData[i]<>',') then
+    if (not IsNumeric(AData[i])) and (AData[i] <> ',') then
     begin
       Break;
     end;
   end;
-  Result := Copy(AData,LPos,Length(AData));
+  Result := Copy(AData, LPos, Length(AData));
 end;
 
 {Path processing}
@@ -816,11 +816,11 @@ var i : Integer;
 begin
   for i := Length(APath) downto 1 do
   begin
-    if (Copy(APath,i,1) = PATH_FILENAME_SEP_DOS) or
-      (Copy(APath,i,1) = PATH_FILENAME_SEP_UNIX) then
+    if (APath[i] = PATH_FILENAME_SEP_DOS) or
+      (APath[i] = PATH_FILENAME_SEP_UNIX) then
     begin
       Result := i;
-      exit;
+      Exit;
     end;
   end;
   Result := 0;
@@ -850,7 +850,7 @@ begin
   end
   else
   begin
-    Result := Copy(AFileName, i+1, Length(AFileName));
+    Result := Copy(AFileName, i+1, MaxInt);
   end;
 end;
 
@@ -876,12 +876,15 @@ Sometimes, in order to shoot yourself in the foot, you have to reinvent the
 gun, the bullet, and your foot :-).
 
 }
-var LBuf : String;
+var
+  LBuf : String;
+  I: Integer;
 begin
   Result := '';
   LBuf := IndyGetFileName(AFileName);
-  if IndyPos('.',LBuf)>0 then begin
-    Result := Copy(LBuf,IndyPos('.',LBuf),$FFFF);
+  I := IndyPos('.', LBuf);
+  if I > 0 then begin
+    Result := Copy(LBuf, I, $FFFF);
   end;
 end;
 
@@ -889,13 +892,13 @@ function StripInitPathDelin(const AStr : String): String;
 begin
   Result := AStr;
   //strip off any beggining / or \
-  if Copy(Result,1,Length(PATH_FILENAME_SEP_UNIX))=PATH_FILENAME_SEP_UNIX then
+  if TextStartsWith(Result, PATH_FILENAME_SEP_UNIX) then
   begin
-    IdDelete(Result,1,Length(PATH_FILENAME_SEP_UNIX));
+    IdDelete(Result, 1, Length(PATH_FILENAME_SEP_UNIX));
   end;
-  if Copy(Result,1,Length(PATH_FILENAME_SEP_DOS))=PATH_FILENAME_SEP_DOS then
+  if TextStartsWith(Result, PATH_FILENAME_SEP_DOS) then
   begin
-    IdDelete(Result,1,Length(PATH_FILENAME_SEP_DOS));
+    IdDelete(Result, 1, Length(PATH_FILENAME_SEP_DOS));
   end;
 end;
 
@@ -934,7 +937,7 @@ end;
 
 function IsSubDirContentsBanner(const AData: String): Boolean;
 begin
-  Result := (AData<>'') and (Copy(AData,Length(AData),1)=':');
+  Result := TextEndsWith(AData, ':');
   if Result then
   begin
     //A line ending in : might be a standard Unix list item where the filename
@@ -945,9 +948,8 @@ end;
 
 function IsTotalLine(const AData: String): Boolean;
 begin
-  Result := StartsWith(AData,'TOTAL')
-    and (Copy(AData,Length(AData),1)<>':');
-    //just in case someone is doing a recursive listing and there's a dir with the name total
+  //just in case someone is doing a recursive listing and there's a dir with the name total
+  Result := TextStartsWith(AData, 'TOTAL') and (not TextEndsWith(AData, ':'));
 end;
 
 {Quoted strings}
@@ -955,7 +957,7 @@ end;
 function UnquotedStr(const AStr : String): String;
 begin
   Result := AStr;
-  if (Copy(Result,1,1)='"') then
+  if TextStartsWith(Result, '"') then
   begin
     Delete(Result,1,1);
     Result := Fetch(Result,'"');
@@ -977,13 +979,13 @@ begin
     begin
       Break;
     end;
-    lComma := IndyPos(',',LBuf);
-    LOpenQuote := IndyPos('"',LBuf);
-    if LComma=0 then
+    lComma := IndyPos(',', LBuf);
+    LOpenQuote := IndyPos('"', LBuf);
+    if LComma = 0 then
     begin
       LComma := Length(LBuf);
     end;
-    if (LOpenQuote=0) or (LComma < LOpenQuote) then
+    if (LOpenQuote = 0) or (LComma < LOpenQuote) then
     begin
       LArg := Sys.TrimLeft(Fetch(LBuf,','));
     end
@@ -1096,27 +1098,27 @@ var
 begin
   Result := False;
   LBuffer := ADate;
-  if IndyPos('-',LBuffer)>0 then
+  if IndyPos('-', LBuffer) > 0 then
   begin
     LMSecPart := LBuffer;
-    LBuffer := Fetch(LMSecPart,'-');
+    LBuffer := Fetch(LMSecPart, '-');
     if not IsNumeric(LMSecPart) then
     begin
       Exit;
     end;
   end;
-  if IndyPos('+',LBuffer)>0 then
+  if IndyPos('+', LBuffer) > 0 then
   begin
     LMSecPart := LBuffer;
-    LBuffer := Fetch(LMSecPart,'+');
+    LBuffer := Fetch(LMSecPart, '+');
     if not IsNumeric(LMSecPart) then
     begin
       Exit;
     end;
   end;
-  if IndyPos('.',LBuffer)>0 then
+  if IndyPos('.', LBuffer) > 0 then
   begin
-    LMSecPart := Fetch(LBuffer,'.');
+    LMSecPart := Fetch(LBuffer, '.');
   end;
   if Length(LBuffer)<>14 then
   begin
@@ -1200,21 +1202,21 @@ begin
   if LBuffer <> '' then
   begin
     //extract any offset
-      if IndyPos('-',LBuffer)>0 then
+      if IndyPos('-',LBuffer) > 0 then
       begin
         LOffset := LBuffer;
-        LBuffer := Fetch(LOffset,'-');
+        LBuffer := Fetch(LOffset, '-');
         LOffset := '-'+LOffset;
       end;
-      if IndyPos('+',LBuffer)>0 then
+      if IndyPos('+', LBuffer) > 0 then
       begin
         LOffset := LBuffer;
-        LBuffer := Fetch(LOffset,'+');
+        LBuffer := Fetch(LOffset, '+');
       end;
   //  1234 56 78  90 12 34
   //  ---------- ---------
   //  1998 11 07  08 52 15
-      LYear := Sys.StrToInt( Copy( LBuffer,1,4),0);
+      LYear := Sys.StrToInt(Copy(LBuffer,1,4),0);
       LMonth := Sys.StrToInt(Copy(LBuffer,5,2),0);
       LDay := Sys.StrToInt(Copy(LBuffer,7,2),0);
 
@@ -1442,26 +1444,26 @@ begin
   LPM := False;
   LAM := False;
   LBuffer := Sys.UpperCase(AData);
-  if (IndyPos('PM',LBuffer)>0) then {do not localize}
+  if IndyPos('PM', LBuffer) > 0 then {do not localize}
   begin
     LPM := True;
-    LBuffer := Fetch(LBuffer,'PM'); {do not localize}
+    LBuffer := Fetch(LBuffer, 'PM'); {do not localize}
   end;
-  if (IndyPos('AM',LBuffer)>0) then {do not localize}
+  if IndyPos('AM', LBuffer) > 0 then {do not localize}
   begin
     LAM := True;
-    LBuffer := Fetch(LBuffer,'AM'); {do not localize}
+    LBuffer := Fetch(LBuffer, 'AM'); {do not localize}
   end;
   //one server only gives an a or p instead of am or pm
-  if (IndyPos('P',LBuffer)>0) then {do not localize}
+  if IndyPos('P', LBuffer) > 0 then {do not localize}
   begin
     LPM := True;
-    LBuffer := Fetch(LBuffer,'P'); {do not localize}
+    LBuffer := Fetch(LBuffer, 'P'); {do not localize}
   end;
-  if (IndyPos('A',LBuffer)>0) then {do not localize}
+  if IndyPos('A', LBuffer) >0 then {do not localize}
   begin
     LAM := True;
-    LBuffer := Fetch(LBuffer,'A'); {do not localize}
+    LBuffer := Fetch(LBuffer, 'A'); {do not localize}
   end;
   LBuffer := Sys.Trim(LBuffer);
   Sys.DecodeTime(Sys.Now,LCHour,LCMin,LCSec,LCMSec);
@@ -1577,30 +1579,30 @@ var
 begin
   Sys.DecodeDate(Sys.Now,LCYear,LCMonth,LCDay);
   LBuffer := AData;
-  if (IndyPos('/',LBuffer)=3) then
+  if IndyPos('/', LBuffer) = 3 then
   begin
     //two digit things could be in order of yy/mm/dd or mm/dd/yy in a partitionned dtaset
-    LYear :=  Sys.StrToInt( Fetch(LBuffer,'/'),LCYear);
+    LYear := Sys.StrToInt(Fetch(LBuffer,'/'), LCYear);
     if (LYear < 13) and (LYear > 0) then
     begin
       LMonth := LYear;
-      LDay :=  Sys.StrToInt( Fetch(LBuffer,'/'),LCDay);
-      LYear :=   Sys.StrToInt( Fetch(LBuffer,'/'),LCYear);
+      LDay := Sys.StrToInt(Fetch(LBuffer,'/'), LCDay);
+      LYear := Sys.StrToInt(Fetch(LBuffer,'/'), LCYear);
     end
     else
     begin
-      LMonth :=   Sys.StrToInt( Fetch(LBuffer,'/'),LCMonth);
-      LDay :=  Sys.StrToInt( Fetch(LBuffer,'/'),LCDay);
+      LMonth := Sys.StrToInt(Fetch(LBuffer,'/'), LCMonth);
+      LDay := Sys.StrToInt(Fetch(LBuffer,'/'), LCDay);
     end;
   end
   else
   begin
-    LYear :=  Sys.StrToInt( Fetch(LBuffer,'/'),LCYear);
-    LMonth :=   Sys.StrToInt( Fetch(LBuffer,'/'),LCMonth);
-    LDay :=  Sys.StrToInt( Fetch(LBuffer,'/'),LCDay);
+    LYear := Sys.StrToInt(Fetch(LBuffer,'/'), LCYear);
+    LMonth := Sys.StrToInt(Fetch(LBuffer,'/'), LCMonth);
+    LDay := Sys.StrToInt(Fetch(LBuffer,'/'), LCDay);
   end;
   LYear := Y2Year(LYear);
-  Result := Sys.EncodeDate(LYear,LMonth,LDay);
+  Result := Sys.EncodeDate(LYear, LMonth, LDay);
 end;
 
 function AS400Date(const AData: String): TIdDateTime;
@@ -1698,14 +1700,14 @@ end;
 
 function IsUnixLsErr(const AData: String): Boolean;
 begin
-  Result := (IndyPos('/bin/ls:', AData)=1);  {do not localize}
+  Result := TextStartsWith(AData, '/bin/ls:');  {do not localize}
 end;
 
 function IsUnixHiddenFile(const AFileName : String): Boolean;
 var LName : String;
 begin
   LName := IndyGetFileName(StripInitPathDelin(AFileName));
-  Result := (IsNavPath(AFileName)=False) and (Copy(LName,1,1)='.');
+  Result := (not IsNavPath(AFileName)) and TextStartsWith(LName, '.');
 end;
 
 function IsUnixExec(const LUPer, LGPer, LOPer : String): Boolean;
@@ -1736,18 +1738,21 @@ begin
 end;
 
 function PermStringToModeBits(const APerms : String): Cardinal;
+var
+  Len: Integer;
 begin
   Result := 0;
+  Len := Length(APerms);
   //owner bits
-  if Copy(APerms,1,1)='r' then
+  if (Len > 0) and (APerms[1] = 'r') then
   begin
     Result := Result or IdS_IRUSR;
   end;
-  if Copy(APerms,2,1)='w' then
+  if (Len > 1) and (APerms[2] ='w') then
   begin
     Result := Result or IdS_IWUSR;
   end;
-  if Length(APerms)>2 then
+  if Len > 2 then
   begin
     case APerms[3] of
       'x' : //exec
@@ -1756,8 +1761,7 @@ begin
       end;
       's' : //SUID and exec
       begin
-        Result := Result or IdS_IXUSR;
-        Result := Result or IdS_ISUID;
+        Result := Result or IdS_IXUSR or IdS_ISUID;
       end;
       'S' : //SUID bit without owner exec
       begin
@@ -1766,15 +1770,15 @@ begin
     end;
   end;
   //group bits
-  if Copy(APerms,4,1)='r' then
+  if (Len > 3) and (APerms[4] = 'r') then
   begin
     Result := Result or IdS_IRGRP;
   end;
-  if Copy(APerms,5,1)='w' then
+  if (Len > 4) and (APerms[5] ='w') then
   begin
     Result := Result or IdS_IWGRP;
   end;
-  if Length(APerms)>5 then
+  if Len > 5 then
   begin
     case APerms[6] of
       'x' : //exec
@@ -1783,8 +1787,7 @@ begin
       end;
       's' : //SUID and exec
       begin
-        Result := Result or IdS_IXGRP;
-        Result := Result or IdS_ISGID;
+        Result := Result or IdS_IXGRP or IdS_ISGID;
       end;
       'S' : //SGID bit without group exec
       begin
@@ -1793,24 +1796,29 @@ begin
     end;
   end;
   //Other permissions
-  if Copy(APerms,7,1)='r' then
+  if (Len > 6) and (APerms[7] = 'r') then
   begin
     Result := Result or IdS_IROTH;
   end;
-  if Copy(APerms,8,1)='w' then
+  if (Len > 7) and (APerms[8] = 'w') then
   begin
     Result := Result or IdS_IWOTH;
   end;
-  if Length(APerms)>8 then
+  if Len > 8 then
   begin
     case APerms[9] of
-      'x' : Result := Result or IdS_IXOTH;
-      't' :
+      'x' :
       begin
         Result := Result or IdS_IXOTH;
+      end;
+      't' :
+      begin
+        Result := Result or IdS_IXOTH or IdS_ISVTX;
+      end;
+      'T' :
+      begin
         Result := Result or IdS_ISVTX;
       end;
-      'T' : Result := Result or IdS_ISVTX;
     end;
   end;
 end;
@@ -2075,9 +2083,9 @@ var s : TIdStrings;
   LModStr : String;
 begin
   LModStr := AStr;
-  if (Copy(LModStr,2,1)='[') then
+  if (Length(LModStr) > 1) and (LModStr[2] = '[') then
   begin
-    IdInsert(' ',LModStr,2);
+    IdInsert(' ', LModStr, 2);
   end;
   s := TIdStringList.Create;
   try
@@ -2126,7 +2134,7 @@ begin
   Result := '';
   LOpen := IndyPos('[',AData);         {Do not translate}
   LClose := IndyPos(']',AData);       {Do not translate}
-  if (LOpen <>0) and (LClose <> 0) and (LOpen < LClose) then
+  if (LOpen <> 0) and (LClose <> 0) and (LOpen < LClose) then
   begin
     Result := Copy(AData,LOpen+1,LClose-LOpen-1);
   end;
@@ -2139,8 +2147,8 @@ function ExcludeQVNET(const AData : String) : Boolean;
 //A few tests will return a false positive with WinQVTNet
 //This function prevents this.
 begin
-  Result := (IsMMDDYY(Copy(AData,36,10),'-')=False) or
-              ((Copy(AData,46,1)=' ')=False) or (IsHHMMSS(Copy(AData,47,5),':')=False);
+  Result := (not IsMMDDYY(Copy(AData,36,10),'-')) or
+              (Copy(AData,46,1) <> ' ') or (not IsHHMMSS(Copy(AData,47,5),':'));
 
 end;
 
@@ -2165,15 +2173,16 @@ end;
 function ExtractRecFormat(const ARecFM : String): String;
 begin
   Result := ARecFM;
-  if (Copy(Result,1,1)='<') then
+  if TextStartsWith(Result, '<') then
   begin
-    IdDelete(Result,1,1);
+    IdDelete(Result, 1, 1);
   end;
-  if (Copy(Result,Length(Result),1)='>') then
+  if TextEndsWith(Result, '>') then
   begin
-    Result := Fetch(Result,'>');
+    Result := Fetch(Result, '>');
   end;
 end;
+
 //===== IBM VSE Power Queue
 function DispositionCodeToTIdVSEPQDisposition(const ADisp : Char) : TIdVSEPQDisposition;
 begin
@@ -2303,7 +2312,7 @@ end;
 function IsValidSterCommFlags(const AString : String) : Boolean;
 var i : Integer;
 begin
-  if AString='' then
+  if AString = '' then
   begin
     Result := False;
     Exit;
@@ -2311,11 +2320,11 @@ begin
   Result := True;
   for i := 1 to Length(AString) do
   begin
-    if (IndyPos(AString[i],CValidFlags)=0) and
-      (IndyPos(AString[i],CWhiteSpace)=0) then
+    if (IndyPos(AString[i], CValidFlags) = 0) and
+      (IndyPos(AString[i], CWhiteSpace) = 0) then
     begin
       Result := False;
-      break;
+      Break;
     end;
   end;
 end;

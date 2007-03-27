@@ -513,8 +513,8 @@ begin
   ModifiedDate := 0.0;
   FFileName := '';    {Do not Localize}
   FLocalFileName := '';
-    FSizeAvail := True;
-    FModifiedAvail := True;
+  FSizeAvail := True;
+  FModifiedAvail := True;
 end;
 
 procedure TIdFTPListItem.Assign(Source: TIdPersistent);

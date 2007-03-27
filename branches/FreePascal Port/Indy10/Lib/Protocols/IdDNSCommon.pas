@@ -1381,7 +1381,7 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
+     if not TextEndsWith(Self.RRName, '.') then begin
         QName := Self.RRName + '.' + FullName;
      end else begin
          QName := Self.RRName;
@@ -1405,7 +1405,7 @@ var
 begin
   if Length(FAnswer) = 0 then begin
      SetLength(Result, 0);
-     if Copy(Self.RRName, Length(Self.RRName), 1) <> '.' then
+     if not TextEndsWith(Self.RRName, '.') then
      begin
        QName := Self.RRName + '.' + FullName;
      end
@@ -1468,7 +1468,7 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
+     if not TextEndsWith(Self.RRName, '.') then begin
         QName := Self.RRName + '.' + FullName;
      end else begin
          QName := Self.RRName;
@@ -1492,7 +1492,7 @@ begin
   RRData := nil;
   if Length(FAnswer) = 0 then begin
      SetLength(Result, 0);
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then
+     if not TextEndsWith(Self.RRName, '.') then
      begin
        QName := Self.RRName + '.' + FullName;
      end
@@ -1542,7 +1542,7 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
+     if not TextEndsWith(Self.RRName, '.') then begin
         QName := Self.RRName + '.' + FullName;
      end else begin
          QName := Self.RRName;
@@ -1566,7 +1566,7 @@ begin
   RRData := nil;
   if Length(FAnswer) = 0 then begin
      SetLength(Result, 0);
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then
+     if not TextEndsWith(Self.RRName, '.') then
      begin
         QName := Self.RRName + '.' + FullName;
      end
@@ -1616,7 +1616,7 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
+    if not TextEndsWith(Self.RRName, '.') then begin
         QName := Self.RRName + '.' + FullName;
      end else begin
          QName := Self.RRName;
@@ -1649,7 +1649,7 @@ From: http://www.its.uq.edu.au/DMT/RFC/rfc1035.html#MINFO_RR
 begin
   if Length(FAnswer) = 0 then begin
      SetLength(Result, 0);
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then
+     if not TextEndsWith(Self.RRName, '.') then
      begin
        QName := Self.RRName + '.' + FullName;
      end
@@ -1711,7 +1711,7 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
+    if not TextEndsWith(Self.RRName, '.') then begin
         QName := Self.RRName + '.' + FullName;
      end else begin
          QName := Self.RRName;
@@ -1735,12 +1735,10 @@ begin
   RRData := nil;
   if Length(FAnswer) = 0 then begin
      SetLength(Result, 0);
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then
+     if not TextEndsWith(Self.RRName, '.') then
      begin
        QName := Self.RRName + '.' + FullName;
-     end
-     else
-     begin
+     end else begin
        QName := Self.RRName;
      end;
      RRData := DomainNameToDNSStr((Self.NewName));
@@ -1785,7 +1783,7 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
+    if not TextEndsWith(Self.RRName, '.') then begin
         QName := Self.RRName + '.' + FullName;
      end else begin
          QName := Self.RRName;
@@ -1809,23 +1807,19 @@ var
 begin
   if Length(FAnswer) = 0 then begin
      SetLength(Result, 0);
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then
+     if not TextEndsWith(Self.RRName, '.') then
      begin
        QName := Self.RRName + '.' + FullName;
-     end
-     else
-     begin
+     end else begin
        QName := Self.RRName;
      end;
      Pref := Sys.StrToInt(Self.Preference);
      RRData := ToBytes(SmallInt(Pref));
-     if Copy(Self.Exchange, Length(Self.Exchange),1) <> '.' then
+     if not TextEndsWith(Self.Exchange, '.') then
      begin
         AppendBytes(RRData, DomainNameToDNSStr(Self.Exchange + '.' + FullName));
-     end
-     else
-     begin
-       AppendBytes(RRData, DomainNameToDNSStr((Self.Exchange)));
+     end else begin
+       AppendBytes(RRData, DomainNameToDNSStr(Self.Exchange));
      end;
      Result := DomainNameToDNSStr((QName));
      AppendBytes(Result, ToBytes(GStack.HostToNetwork(Word(TypeCode_MX))));
@@ -1877,11 +1871,11 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
-        QName := Self.RRName + '.' + FullName;
-     end else begin
-         QName := Self.RRName;
-     end;
+    if not TextEndsWith(Self.RRName, '.') then begin
+      QName := Self.RRName + '.' + FullName;
+    end else begin
+      QName := Self.RRName;
+    end;
   end;
 
   if QName = FullName then
@@ -1901,12 +1895,10 @@ begin
   RRData := nil;
   if Length(FAnswer) = 0 then begin
      SetLength(Result, 0);
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then
+     if not TextEndsWith(Self.RRName, '.') then
      begin
        QName := Self.RRName + '.' + FullName;
-     end
-     else
-     begin
+     end else begin
        QName := Self.RRName;
      end;
      RRData := DomainNameToDNSStr((Self.NSDName));
@@ -1951,11 +1943,11 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
-        QName := Self.RRName + '.' + FullName;
-     end else begin
-         QName := Self.RRName;
-     end;
+    if not TextEndsWith(Self.RRName, '.') then begin
+      QName := Self.RRName + '.' + FullName;
+    end else begin
+      QName := Self.RRName;
+    end;
   end;
 
   if QName = FullName then
@@ -1975,12 +1967,10 @@ begin
   RRData := nil;
   if Length(FAnswer) = 0 then begin
      SetLength(Result, 0);
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then
+     if not TextEndsWith(Self.RRName, '.') then
      begin
        QName := Self.RRName + '.' + FullName;
-     end
-     else
-     begin
+     end else begin
        QName := Self.RRName;
      end;
      RRData := DomainNameToDNSStr(Self.PTRDName);
@@ -2025,11 +2015,11 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
-        QName := Self.RRName + '.' + FullName;
-     end else begin
-         QName := Self.RRName;
-     end;
+    if not TextEndsWith(Self.RRName, '.') then begin
+      QName := Self.RRName + '.' + FullName;
+    end else begin
+      QName := Self.RRName;
+    end;
   end;
 
   if QName = FullName then
@@ -2048,12 +2038,10 @@ var
 begin
   if Length(FAnswer) = 0 then begin
      SetLength(Result, 0);
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then
+     if not TextEndsWith(Self.RRName, '.') then
      begin
        QName := Self.RRName + '.' + FullName;
-     end
-     else
-     begin
+     end else begin
        QName := Self.RRName;
      end;
 
@@ -2182,11 +2170,11 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
-        QName := Self.RRName + '.' + FullName;
-     end else begin
-         QName := Self.RRName;
-     end;
+    if not TextEndsWith(Self.RRName, '.') then begin
+      QName := Self.RRName + '.' + FullName;
+    end else begin
+      QName := Self.RRName;
+    end;
   end;
 
   if QName = FullName then
@@ -2210,12 +2198,10 @@ begin
   RRData := nil;
   if Length(Self.FAnswer) = 0 then begin
      SetLength(Result, 0);
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then
+     if not TextEndsWith(Self.RRName, '.') then
      begin
        QName := Self.RRName + '.' + FullName;
-     end
-     else
-     begin
+     end else begin
        QName := Self.RRName;
      end;
      RRData := IPAddrToDNSStr(Self.Address);
@@ -2260,11 +2246,11 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
-        QName := Self.RRName + '.' + FullName;
-     end else begin
-         QName := Self.RRName;
-     end;
+    if not TextEndsWith(Self.RRName, '.') then begin
+      QName := Self.RRName + '.' + FullName;
+    end else begin
+      QName := Self.RRName;
+    end;
   end;
 
   if QName = FullName then
@@ -2284,12 +2270,10 @@ begin
   RRData := nil;
   if Length(self.FAnswer) = 0 then begin
      SetLength(Result, 0);
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then
+     if not TextEndsWith(Self.RRName, '.') then
      begin
        QName := Self.RRName + '.' + FullName;
-     end
-     else
-     begin
+     end else begin
        QName := Self.RRName;
      end;
 
@@ -2334,11 +2318,11 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
-        QName := Self.RRName + '.' + FullName;
-     end else begin
-         QName := Self.RRName;
-     end;
+    if not TextEndsWith(Self.RRName, '.') then begin
+      QName := Self.RRName + '.' + FullName;
+    end else begin
+      QName := Self.RRName;
+    end;
   end;
 
   if QName = FullName then
@@ -2359,12 +2343,10 @@ begin
   RRData := nil;
   if Length(FAnswer) = 0 then begin
      SetLength(Result, 0);
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then
+     if not TextEndsWith(Self.RRName, '.') then
      begin
        QName := Self.RRName + '.' + FullName;
-     end
-     else
-     begin
+     end else begin
        QName := Self.RRName;
      end;
      Result := NormalStrToDNSStr((QName));
@@ -2408,11 +2390,11 @@ begin
   Result := '';
   QName := Self.RRName + '.';
   if QName <> FullName then begin
-     if Copy(Self.RRName, Length(Self.RRName),1) <> '.' then begin
-        QName := Self.RRName + '.' + FullName;
-     end else begin
-         QName := Self.RRName;
-     end;
+    if not TextEndsWith(Self.RRName, '.') then begin
+      QName := Self.RRName + '.' + FullName;
+    end else begin
+      QName := Self.RRName;
+    end;
   end;
 
   if QName = FullName then

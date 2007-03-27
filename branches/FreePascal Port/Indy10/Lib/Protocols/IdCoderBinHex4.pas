@@ -330,7 +330,7 @@ begin
     LOut[LM] := LOut[LM+LN];
   end;
   SetLength(LOut, LForkLength);
-  FStream.Write(LOut, LForkLength);
+  TIdStreamHelper.Write(FStream, LOut, LForkLength);
 end;
 
 { TIdEncoderBinHex4 }
@@ -487,7 +487,7 @@ begin
     end;
     LOut[64] := 13;
     LOut[65] := 10;
-    ADestStream.Write(LOut, 64+2);
+    TIdStreamHelper.Write(ADestStream, LOut, 64 + 2);
   end;
   LRemainder := Length(LOutgoing) mod 64;
   if LRemainder > 0 then begin
@@ -498,7 +498,7 @@ begin
     end;
     LOut[LRemainder] := 13;
     LOut[LRemainder+1] := 10;
-    ADestStream.Write(LOut, LRemainder+2);
+    TIdStreamHelper.Write(ADestStream, LOut, LRemainder + 2);
   end;
 end;
 

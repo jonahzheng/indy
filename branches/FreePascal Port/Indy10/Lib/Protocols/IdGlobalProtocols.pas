@@ -65,7 +65,7 @@
   network byte order functions.  They should be used for embedding values in
   some Internet Protocols such as FSP, SNTP, and maybe others.
 
-  Rev 1.25    12/3/2004 3:16:20 PM  DSiders
+    Rev 1.25    12/3/2004 3:16:20 PM  DSiders
   Fixed assignment error in MakeTempFilename.
 
   Rev 1.24    12/1/2004 4:40:42 AM  JPMugaas
@@ -87,10 +87,10 @@
   Rev 1.19    10/26/2004 10:07:02 PM  JPMugaas
   Updated refs.
 
-  Rev 1.18    10/13/2004 7:48:52 PM  DSiders
+    Rev 1.18    10/13/2004 7:48:52 PM  DSiders
   Modified GetUniqueFilename to pass correct argument type to tempnam function.
 
-  Rev 1.17    10/6/2004 11:39:48 PM  DSiders
+    Rev 1.17    10/6/2004 11:39:48 PM  DSiders
   Modified MakeTempFilename to use GetUniqueFilename.  File extensions are
   omitted on Linux.
   Modified GetUniqueFilename to use tempnam function on Linux.  Validates path
@@ -1083,9 +1083,9 @@ begin
     {Day of Week}
     if StrToDay(Copy(Value, 1, 3)) > 0 then begin
       //workaround in case a space is missing after the initial column
-      if (Copy(Value,4,1)=',') and (Copy(Value,5,1)<>' ') then
+      if (Copy(Value, 4, 1) = ',') and (Copy(Value, 5, 1) <> ' ') then
       begin
-        Insert(' ',Value,5);
+        Insert(' ', Value, 5);
       end;
       Fetch(Value);
       Value := Sys.TrimLeft(Value);
@@ -1229,7 +1229,7 @@ begin
   //  1234 56 78  90 12 34
   //  ---------- ---------
   //  1998 11 07  08 52 15
-      LYear := Sys.StrToInt( Copy( LBuffer,1,4),0);
+      LYear := Sys.StrToInt(Copy( LBuffer,1,4),0);
       LMonth := Sys.StrToInt(Copy(LBuffer,5,2),0);
       LDay := Sys.StrToInt(Copy(LBuffer,7,2),0);
 
@@ -1287,15 +1287,14 @@ var
 begin
   repeat
     EndOfCurrentString := Pos(BreakString, BaseString);
-    if (EndOfCurrentString = 0) then
-    begin
-      StringList.add(BaseString);
-    end
-    else
-      StringList.add(Copy(BaseString, 1, EndOfCurrentString - 1));
-    delete(BaseString, 1, EndOfCurrentString + Length(BreakString) - 1); //Copy(BaseString, EndOfCurrentString + length(BreakString), length(BaseString) - EndOfCurrentString);
+    if EndOfCurrentString = 0 then begin
+      StringList.Add(BaseString);
+    end else begin
+      StringList.Add(Copy(BaseString, 1, EndOfCurrentString - 1));
+    end;
+    Delete(BaseString, 1, EndOfCurrentString + Length(BreakString) - 1); //Copy(BaseString, EndOfCurrentString + length(BreakString), length(BaseString) - EndOfCurrentString);
   until EndOfCurrentString = 0;
-  result := StringList;
+  Result := StringList;
 end;
 
 procedure CommaSeparatedToStringList(AList: TIdStrings; const Value:string);
@@ -1419,16 +1418,16 @@ end;
 {$ELSE} 
    {$ifdef win32_or_win64_or_winCE}
 function TempPath: {$IFDEF UNICODE}WideString{$ELSE}String{$ENDIF}; 
-var 
-  i: Integer; 
-  LBuf: array[0..MAX_PATH] of {$IFDEF UNICODE}WideChar{$ELSE}Char{$ENDIF}; 
-begin 
-  i := GetTempPath(MAX_PATH, LBuf); 
-  SetString(Result, LBuf, i); 
-  Result := Sys.IncludeTrailingPathDelimiter(Result); 
-end; 
+var
+	i: integer;
+begin
+  SetLength(Result, MAX_PATH);
+  i := GetTempPath(Length(Result), PChar(Result));
+  SetLength(Result, i);
+  Result := Sys.IncludeTrailingPathDelimiter(Result);
+end;
   {$endif}
-{$ENDIF} 
+{$ENDIF}
 
 function MakeTempFilename(const APath: String = ''): string;
 var
@@ -1511,10 +1510,10 @@ begin
   LFQE := AExt;
 
   // period is optional in the extension... force it
-  if AExt <> '' then
+  if LFQE <> '' then
   begin
-    if AExt[1] <> '.' then begin
-      LFQE := '.' + AExt;
+    if LFQE[1] <> '.' then begin
+      LFQE := '.' + LFQE;
     end;
   end;
 
@@ -2663,13 +2662,13 @@ begin
   end;
 end;
 
-constructor TIdMimeTable.Create(const Autofill: boolean);
+constructor TIdMimeTable.Create(const AutoFill: Boolean);
 begin
   inherited Create;
   FLoadTypesFromOS := True;
   FFileExt := TIdStringList.Create;
   FMIMEList := TIdStringList.Create;
-  if Autofill then begin
+  if AutoFill then begin
     BuildCache;
   end;
 end;
@@ -2851,10 +2850,10 @@ begin
     Result := APath;
   end else begin
     Result := '';    {Do not Localize}
-    LPreserveTrail := (Copy(APath, Length(APath), 1) = APathDelim) or (Length(APath) = 0);
+    LPreserveTrail := (Length(APath) = 0) or TextEndsWith(APath, APathDelim);
     LWork := ABasePath;
     // If LWork = '' then we just want it to be APath, no prefixed /    {Do not Localize}
-    if (Length(LWork) > 0) and (Copy(LWork, Length(LWork), 1) <> APathDelim) then begin
+    if (Length(LWork) > 0) and (not TextEndsWith(LWork, APathDelim)) then begin
       LWork := LWork + APathDelim;
     end;
     LWork := LWork + APath;
@@ -2864,17 +2863,17 @@ begin
         if LWork[i] = APathDelim then begin
           if i = 1 then begin
             Result := APathDelim;
-          end else if Copy(Result, Length(Result), 1) <> APathDelim then begin
+          end else if not TextEndsWith(Result, APathDelim) then begin
             Result := Result + LWork[i];
           end;
         end else if LWork[i] = '.' then begin    {Do not Localize}
           // If the last character was a PathDelim then the . is a relative path modifier.
           // If it doesnt follow a PathDelim, its part of a filename
-          if (Copy(Result, Length(Result), 1) = APathDelim) and (Copy(LWork, i, 2) = '..') then begin    {Do not Localize}
+          if TextEndsWith(Result, APathDelim) and (Copy(LWork, i, 2) = '..') then begin    {Do not Localize}
             // Delete the last PathDelim
             Delete(Result, Length(Result), 1);
             // Delete up to the next PathDelim
-            while (Length(Result) > 0) and (Copy(Result, Length(Result), 1) <> APathDelim) do begin
+            while (Length(Result) > 0) and (not TextEndsWith(Result, APathDelim)) do begin
               Delete(Result, Length(Result), 1);
             end;
             // Skip over second .
@@ -2890,8 +2889,7 @@ begin
     end;
     // Sometimes .. semantics can put a PathDelim on the end
     // But dont modify if it is only a PathDelim and nothing else, or it was there to begin with
-    if (Result <> APathDelim) and (Copy(Result, Length(Result), 1) = APathDelim)
-     and (LPreserveTrail = False) then begin
+    if (Result <> APathDelim) and TextEndsWith(Result, APathDelim) and (not LPreserveTrail) then begin
       Delete(Result, Length(Result), 1);
     end;
   end;
@@ -3098,7 +3096,7 @@ begin
     Result := AHeader;
   end else begin
     Result := Copy(AHeader, 1, LPos-1);
-    LS := Copy(AHeader, LPos, MAXINT);
+    LS := Copy(AHeader, LPos, MaxInt);
     //See if there is a following ; that is not within quotes...
     //LPos := Pos(';', LS);
     for LPos := 1 to Length(LS) do begin
@@ -3107,13 +3105,13 @@ begin
         LInQuotes := not LInQuotes;
       end;
       if ((LS[LPos] = ';') and (LInQuotes = False)) then begin
-        Result := Result + Copy(LS, LPos+1, MAXINT);
+        Result := Result + Copy(LS, LPos+1, MaxInt);
         Exit;
       end;
     end;
     Result := Sys.Trim(Result);
-    if Result[Length(Result)] = ';' then begin
-      Result := Copy(Result, 1, Length(Result)-1);
+    if TextEndsWith(Result, ';') then begin
+      Delete(Result, Length(Result), 1);
     end;
   end;
 end;
@@ -3123,9 +3121,9 @@ end;
 function TIdInterfacedObject._AddRef: Integer;
 begin
   {$IFDEF DOTNET}
-  result := 1;
+  Result := 1;
   {$ELSE}
-  result := inherited _AddRef;
+  Result := inherited _AddRef;
   {$ENDIF}
 end;
 
