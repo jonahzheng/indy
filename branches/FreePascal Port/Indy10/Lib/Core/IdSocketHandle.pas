@@ -374,6 +374,7 @@ begin
   Reset;
   FClientPortMin := 0;
   FClientPortMax := 0;
+  FIPVersion := ID_DEFAULT_IP_VERSION;
   if Assigned(ACollection) then begin
     Port := TIdSocketHandles(ACollection).DefaultPort;
   end;
