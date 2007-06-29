@@ -229,7 +229,11 @@ const
   FD_SETSIZE = FD_MAXFDSET;
   __FD_SETSIZE = FD_MAXFDSET;
 const
+  {$ifdef DARWIN}
+  Id_MSG_NOSIGNAL = SO_NOSIGPIPE;
+  {$else}
   Id_MSG_NOSIGNAL = MSG_NOSIGNAL;
+  {$endif}
   ESysEPIPE = ESysEPIPE;
 
 constructor TIdStackUnix.Create;
