@@ -1711,49 +1711,84 @@ function IndySetLocalTime(Value: TDateTime): Boolean;
   {$IFDEF USEINLINE}inline;{$ENDIF}
 {$ELSE}
 var
-   dSysTime: TSystemTime;
-   buffer: DWord;
-   tkp, tpko: TTokenPrivileges;
-   hToken: THandle;
+  dSysTime: TSystemTime;
+  buffer: DWord;
+  tkp, tpko: TTokenPrivileges;
+  hToken: THandle;
 {$ENDIF}
 begin
   Result := False;
+
   {$IFDEF LINUX}
   //TODO: Implement SetTime for Linux. This call is not critical.
   {$ENDIF}
+
   {$IFDEF DOTNET}
   //TODO: Figure out how to do this
   {$ENDIF}
+
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   {I admit that this routine is a little more complicated than the one
-  in Indy 8.0.  However, this routine does support Windows NT privillages
+  in Indy 8.0.  However, this routine does support Windows NT privileges
   meaning it will work if you have administrative rights under that OS
-
+ 
   Original author Kerry G. Neighbour with modifications and testing
   from J. Peter Mugaas}
     {$IFNDEF WINCE}
+  // RLebeau 2/1/2008: MSDN says that SetLocalTime() does the adjustment
+  // automatically, so why is it being done manually?
   if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then
   begin
     if not Windows.OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY, hToken) then begin
       Exit;
     end;
-    Windows.LookupPrivilegeValue(nil, 'SE_SYSTEMTIME_NAME', tkp.Privileges[0].Luid);    {Do not Localize}
+    if not Windows.LookupPrivilegeValue(nil, 'SeSystemtimePrivilege', tkp.Privileges[0].Luid) then     {Do not Localize}
+    begin
+      Windows.CloseHandle(hToken);
+      Exit;
+    end;
     tkp.PrivilegeCount := 1;
     tkp.Privileges[0].Attributes := SE_PRIVILEGE_ENABLED;
-    if not Windows.AdjustTokenPrivileges(hToken, FALSE, tkp, sizeof(tkp), tpko, buffer) then begin
+    if not Windows.AdjustTokenPrivileges(hToken, FALSE, tkp, SizeOf(tkp), tpko, buffer) then
+    begin
+      Windows.CloseHandle(hToken);
       Exit;
     end;
   end;
     {$ENDIF}
+ 
   DateTimeToSystemTime(Value, dSysTime);
-    {$IFDEF FPC}
-  Result := Windows.SetLocalTime(@dSysTime);
-    {$ELSE}
-  Result := Windows.SetLocalTime(dSysTime);
-    {$ENDIF}
+  Result := Windows.SetLocalTime({$IFDEF FPC}@dSysTime{$ELSE}dSysTime{$ENDIF});
+ 
+  if Result then
+  begin
+    // RLebeau 2/1/2008: According to MSDN:
+    //
+    // "The system uses UTC internally. Therefore, when you call SetLocalTime(),
+    // the system uses the current time zone information to perform the conversion,
+    // including the daylight saving time setting. Note that the system uses the
+    // daylight saving time setting of the current time, not the new time you are
+    // setting. Therefore, to ensure the correct result, call SetLocalTime() a
+    // second time, now that the first call has updated the daylight saving time
+    // setting."
+    //
+    // TODO: adjust the Time manually so only 1 call to SetLocalTime() is needed...
+ 
+    if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then
+    begin
+      Windows.SetLocalTime({$IFDEF FPC}@dSysTime{$ELSE}dSysTime{$ENDIF});
+      // Windows 2000+ will broadcast WM_TIMECHANGE automatically...
+      if Win32MajorVersion < 5 then begin // Windows 2000 = v5.0
+        SendMessage(HWND_BROADCAST, WM_TIMECHANGE, 0, 0);
+      end;
+    end else begin
+      SendMessage(HWND_BROADCAST, WM_TIMECHANGE, 0, 0);
+    end;
+  end;
+ 
     {$IFNDEF WINCE}
-  {Undo the Process Privillage change we had done for the set time
-  and close the handle that was allocated}
+  {Undo the Process Privilege change we had done for the
+  set time and close the handle that was allocated}
   if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then
   begin
     Windows.AdjustTokenPrivileges(hToken, False, tpko, SizeOf(tpko), tkp, Buffer);
