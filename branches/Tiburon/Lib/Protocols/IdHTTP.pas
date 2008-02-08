@@ -1280,7 +1280,12 @@ begin
 
   FHTTPProto.BuildAndSendRequest(URL);
 
-  if PosInStrArray(ARequest.Method, [Id_HTTPMethodPost, Id_HTTPMethodPut], False) > -1 then
+  // RLebeau 1/31/2008: in order for TIdWebDAV to post data correctly, don't
+  // restrict which HTTP methods can post (except logically for GET and HEAD),
+  // especially since TIdCustomHTTP.PrepareRequest() does not differentiate when
+  // setting up the 'Content-Length' header ...
+  //if PosInStrArray(ARequest.Method, [Id_HTTPMethodPost, Id_HTTPMethodPut], False) > -1 then
+  if ARequest.Source <> nil then
   begin
     IOHandler.Write(ARequest.Source, 0, False);
   end;
