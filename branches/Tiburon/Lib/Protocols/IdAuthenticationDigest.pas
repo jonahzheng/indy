@@ -74,6 +74,7 @@ type
     FQopOptions: TStringList;
     FOther: TStringList;
     function DoNext: TIdAuthWhatsNext; override;
+    function GetSteps: Integer; override;
   public
     destructor Destroy; override;
     function Authentication: String; override;
@@ -111,6 +112,7 @@ var
   LstrA1, LstrA2, LstrCNonce, LstrResponse: string;
 begin
   Result := '';    {do not localize}
+
   case FCurrentStep of
     0:
       begin
@@ -143,7 +145,7 @@ begin
         LstrResponse := LstrResponse + LstrA2;
         LstrResponse := ResultString(LStrResponse);
 
-        Result := Result + 'Digest ' + {do not localize}
+        Result := 'Digest ' + {do not localize}
           'username="' + Username + '", ' + {do not localize}
           'realm="' + FRealm + '", ' +  {do not localize}
           'nonce="' + FNonce + '", ' + {do not localize}
@@ -170,8 +172,8 @@ end;
 
 function RemoveQuote(const aStr:string):string;
 begin
-  if (Length(aStr)>=2) and (aStr[1]='"') and (astr[Length(aStr)]='"') then begin
-    Result := Copy(aStr, 2, Length(astr)-2)
+  if (Length(aStr) >= 2) and (aStr[1] = '"') and (aStr[Length(aStr)] = '"') then begin
+    Result := Copy(aStr, 2, Length(aStr)-2);
   end else begin
     Result := aStr;
   end;
@@ -194,6 +196,7 @@ begin
         end else begin
           FDomain.Clear;
         end;
+
         if not Assigned(FQopOptions) then begin
           FQopOptions := TStringList.Create;
         end else begin
@@ -250,6 +253,11 @@ begin
         end;
       end;
   end;
+end;
+
+function TIdDigestAuthentication.GetSteps: Integer;
+begin
+  Result := 1;
 end;
 
 initialization
