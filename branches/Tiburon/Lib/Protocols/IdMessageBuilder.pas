@@ -20,6 +20,7 @@ type
     constructor Create; virtual;
     destructor Destroy; override;
     //
+    procedure Clear; virtual;
     procedure FillMessage(AMsg: TIdMessage);
     function NewMessage(AOwner: TComponent = nil): TIdMessage;
     //
@@ -39,6 +40,9 @@ type
   public
     constructor Create; override;
     destructor Destroy; override;
+    //
+    procedure Clear; override;
+    //
     property Html: TStrings read FHtml write SetHtml;
     property HtmlFiles: TStrings read FHtmlFiles write SetHtmlFiles;
   end;
@@ -55,6 +59,9 @@ type
   public
     constructor Create; override;
     destructor Destroy; override;
+    //
+    procedure Clear; override;
+    //
     property Rtf: TStrings read FRtf write SetRtf;
     property RtfType: TIdMessageBuilderRtfType read FType write FType;
   end;
@@ -98,6 +105,13 @@ begin
       ContentType := GetMIMETypeFromFile(FileName);
     end;
   end;
+end;
+
+procedure TIdCustomMessageBuilder.Clear;
+begin
+  FAttachments.Clear;
+  FPlainText.Clear;
+  FSubject := '';
 end;
 
 procedure TIdCustomMessageBuilder.FillMessage(AMsg: TIdMessage);
@@ -183,6 +197,13 @@ begin
   FHtml.Free;
   FHtmlFiles.Free;
   inherited Destroy;
+end;
+
+procedure TIdMessageBuilderHtml.Clear;
+begin
+  FHtml.Clear;
+  FHtmlFiles.Clear;
+  inherited Clear;
 end;
 
 procedure TIdMessageBuilderHtml.InternalFill(AMsg: TIdMessage);
@@ -359,6 +380,12 @@ destructor TIdMessageBuilderRtf.Destroy;
 begin
   FRtf.Free;
   inherited Destroy;
+end;
+
+procedure TIdMessageBuilderRtf.Clear;
+begin
+  FRtf.Clear;
+  inherited Clear;
 end;
 
 procedure TIdMessageBuilderRtf.InternalFill(AMsg: TIdMessage);
