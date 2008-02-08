@@ -49,7 +49,9 @@
 unit IdAntiFreezeBase;
 
 interface
+
 {$I IdCompilerDefines.inc}
+
 uses
   IdBaseComponent;
 
@@ -93,13 +95,11 @@ implementation
 
 uses
   //facilitate inlining only.
-  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-     {$IFDEF USEINLINE}
+  {$IFDEF USEINLINE}
+    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Windows,
-     {$ENDIF}
-  {$ENDIF}
-  {$IFDEF DOTNET}
-    {$IFDEF USEINLINE}
+    {$ENDIF}
+    {$IFDEF DOTNET}
   System.Threading,
     {$ENDIF}
   {$ENDIF}
