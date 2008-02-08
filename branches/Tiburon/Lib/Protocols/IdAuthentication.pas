@@ -82,7 +82,7 @@ type
     procedure Reset; virtual;
 
     function Authentication: String; virtual; abstract;
-    function KeepAlive: Boolean; virtual; abstract;
+    function KeepAlive: Boolean; virtual;
     function Next: TIdAuthWhatsNext;
 
     property AuthParams: TIdHeaderList read FAuthParams write SetAuthParams;
@@ -102,10 +102,7 @@ type
     function GetSteps: Integer; override;  // this function determines the number of steps that this
                                            // Authtentication needs take to suceed;
   public
-    constructor Create; override;
     function Authentication: String; override;
-    function KeepAlive: Boolean; override;
-    procedure Reset; override;
 
     property Realm: String read FRealm write FRealm;
   end;
@@ -199,6 +196,11 @@ begin
   Result := '';  {Do not Localize}
 end;
 
+function TIdAuthentication.KeepAlive: Boolean;
+begin
+  Result := False;
+end;
+
 function TIdAuthentication.Next: TIdAuthWhatsNext;
 begin
   Result := DoNext;
@@ -206,7 +208,7 @@ end;
 
 procedure TIdAuthentication.Reset;
 begin
-  // 
+  FCurrentStep := 0;
 end;
 
 function TIdAuthentication.GetPassword: String;
@@ -235,12 +237,6 @@ begin
 end;
 
 { TIdBasicAuthentication }
-
-constructor TIdBasicAuthentication.Create;
-begin
-  inherited Create;
-  FCurrentStep := 0;
-end;
 
 function TIdBasicAuthentication.Authentication: String;
 begin
@@ -276,17 +272,6 @@ begin
   end else begin
     Result := wnFail;
   end;
-end;
-
-function TIdBasicAuthentication.KeepAlive: Boolean;
-begin
-  Result := False;
-end;
-
-procedure TIdBasicAuthentication.Reset;
-begin
-  inherited Reset;
-  FCurrentStep := 0;
 end;
 
 function TIdBasicAuthentication.GetSteps: Integer;
