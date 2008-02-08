@@ -234,6 +234,7 @@ type
     procedure BeforeRun; override;
     procedure Run; override;
     procedure DoException(AException: Exception); override;
+    procedure SetTask(AValue: TIdTask);
   public
     // Defaults because
     // Must always create suspended so task can be set
@@ -246,7 +247,7 @@ type
     //
     // Must be writeable because tasks are often created after thread or
     // thread is pooled
-    property Task: TIdTask read FTask write FTask;
+    property Task: TIdTask read FTask write SetTask;
   end;
 
   TIdThreadClass = class of TIdThread;
@@ -586,6 +587,14 @@ procedure TIdThreadWithTask.Run;
 begin
   if not FTask.DoRun then begin
     Stop;
+  end;
+end;
+
+procedure TIdThreadWithTask.SetTask(AValue: TIdTask);
+begin
+  if FTask <> AValue then begin
+    FreeAndNil(FTask);
+    FTask := AValue;
   end;
 end;
 
