@@ -62,7 +62,6 @@ Type
     constructor Create; override;
     function Authentication: String; override;
     function KeepAlive: Boolean; override;
-    procedure Reset; override;
   end;
 
 implementation
@@ -162,12 +161,6 @@ begin
   end;
 end;
 
-procedure TIdNTLMAuthentication.Reset;
-begin
-  inherited Reset;
-  FCurrentStep := 0;
-end;
-
 function TIdNTLMAuthentication.KeepAlive: Boolean;
 begin
   Result := True;
@@ -190,8 +183,7 @@ begin
    begin
      FDomain := Copy(Username, 1, i - 1);
      FUser := Copy(Username, i + 1, Length(UserName));
-   end
-   else
+   end else
    begin
      FDomain := ' ';         {do not localize}
      FUser := UserName;
@@ -204,4 +196,3 @@ initialization
 finalization
   UnregisterAuthenticationMethod('NTLM');                         {do not localize}
 end.
-
