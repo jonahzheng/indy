@@ -295,7 +295,6 @@ type
     destructor Destroy;override;
     function Authentication: string; override;
     function KeepAlive: Boolean; override;
-    procedure Reset; override;
     property Domain: String read GetDomain write SetDomain;
   end;
 
@@ -315,8 +314,7 @@ var
 
 { ESSPIException }
 
-class function ESSPIException.GetErrorMessageByNo
-  (aErrorNo: LongWord): string;
+class function ESSPIException.GetErrorMessageByNo(aErrorNo: LongWord): string;
 begin
   case HRESULT(aErrorNo) of
     SEC_E_OK: Result := RSHTTPSSPISuccess;
@@ -374,7 +372,6 @@ begin
       Result := RSHTTPSSPIIncompleteCredentialNotInit;
     SEC_E_BUFFER_TOO_SMALL:
       Result := RSHTTPSSPIBufferTooSmall;
-
     SEC_I_INCOMPLETE_CREDENTIALS:
       Result := RSHTTPSSPIIncompleteCredentialsInit;
     SEC_I_RENEGOTIATE:
@@ -406,8 +403,8 @@ begin
   end;
 end;
 
-constructor ESSPIException.CreateError
-  (AFailedFuncName: string; AErrorNo: LongInt = SEC_E_OK);
+constructor ESSPIException.CreateError(AFailedFuncName: string;
+  AErrorNo: LongInt = SEC_E_OK);
 begin
   if AErrorNo = SEC_E_OK then begin
     inherited Create(AFailedFuncName);
@@ -530,6 +527,12 @@ end;
 
 { TSSPIPackage }
 
+constructor TSSPIPackage.Create(aPSecPkginfo: PSecPkgInfo);
+begin
+  inherited Create;
+  fPSecPkginfo := aPSecPkginfo;
+end;
+
 function TSSPIPackage.getPSecPkgInfo: PSecPkgInfo;
 begin
   if not Assigned(fPSecPkginfo) then begin
@@ -546,12 +549,6 @@ end;
 function TSSPIPackage.getName: string;
 begin
   Result := StrPas(getPSecPkgInfo^.Name);
-end;
-
-constructor TSSPIPackage.Create(aPSecPkginfo: PSecPkgInfo);
-begin
-  inherited Create;
-  fPSecPkginfo := aPSecPkginfo;
 end;
 
 { TCustomSSPIPackage }
@@ -581,6 +578,14 @@ begin
 end;
 
 { TSSPICredentials }
+
+constructor TSSPICredentials.Create(aPackage: TSSPIPackage);
+begin
+  inherited Create;
+  fPackage := aPackage;
+  fUse := scuOutBound;
+  fAcquired := False;
+end;
 
 procedure TSSPICredentials.CheckAcquired;
 begin
@@ -650,14 +655,6 @@ begin
   end;
 end;
 
-constructor TSSPICredentials.Create(aPackage: TSSPIPackage);
-begin
-  inherited Create;
-  fPackage := aPackage;
-  fUse := scuOutBound;
-  fAcquired := False;
-end;
-
 destructor TSSPICredentials.Destroy;
 begin
   Release;
@@ -671,8 +668,8 @@ begin
   Acquire(aUse, '', '', '');          {Do not translate}
 end;
 
-procedure TSSPIWinNTCredentials.Acquire
-  (aUse: TSSPICredentialsUse; aDomain, aUserName, aPassword: string);
+procedure TSSPIWinNTCredentials.Acquire(aUse: TSSPICredentialsUse;
+  aDomain, aUserName, aPassword: string);
 var
   ai: SEC_WINNT_AUTH_IDENTITY;
   pai: PVOID;
@@ -690,7 +687,9 @@ begin
     end;
     pai := @ai;
   end else
+  begin
     pai := nil;
+  end;
   DoAcquire(nil, nil, pai);
 end;
 
@@ -731,8 +730,7 @@ begin
   fHasHandle := True;
 end;
 
-function TSSPIContext.DoInitialize
-  (aTokenSourceName: PChar;
+function TSSPIContext.DoInitialize(aTokenSourceName: PChar;
   var aIn, aOut: SecBufferDesc;
   const errorsToIgnore: array of SECURITY_STATUS): SECURITY_STATUS;
 var
@@ -931,8 +929,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TIndySSPINTLMClient.SetCredentials
-  (aDomain, aUserName, aPassword: string);
+procedure TIndySSPINTLMClient.SetCredentials(aDomain, aUserName, aPassword: string);
 begin
   fCredentials.Acquire(scuOutBound, aDomain, aUserName, aPassword);
 end;
@@ -947,8 +944,7 @@ begin
   fContext.GenerateInitialChallenge('', Result);
 end;
 
-function TIndySSPINTLMClient.UpdateAndBuildType3Message
-  (aServerType2Message: string): string;
+function TIndySSPINTLMClient.UpdateAndBuildType3Message(aServerType2Message: string): string;
 begin
   fContext.UpdateAndGenerateReply(aServerType2Message, Result);
 end;
@@ -1039,12 +1035,6 @@ begin
         FCurrentStep := 4;
       end;
   end;
-end;
-
-procedure TIdSSPINTLMAuthentication.Reset;
-begin
-  inherited Reset;
-  FCurrentStep := 0;
 end;
 
 function TIdSSPINTLMAuthentication.KeepAlive: Boolean;
