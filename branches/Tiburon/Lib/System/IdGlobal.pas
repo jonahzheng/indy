@@ -1200,6 +1200,25 @@ const
   {$ENDIF}
 {$ENDIF}
 
+{$IFNDEF DOTNET}
+  {$IFDEF TEncoding}
+
+// The object returned by TEncoding.GetEncoder() is not garbage-collected
+// in Win32 like with System.Text.Encoding.GetEncoding() in .NET, so it
+// has to be freed manually
+
+// TODO: use of TEncoding is not entirely thread-safe!!!  There is a race
+// condition the first time each of the various properties is accessed.
+// This is not uncommon practice in VCL classes.  Perhaps access them in
+// 'initialization' to force their allocation before the user's code begins
+// running?
+
+var
+  Id8BitEncoder: SysUtils.TEncoding = nil;
+
+  {$ENDIF}
+{$ENDIF}
+
 implementation
 
 uses
@@ -1397,9 +1416,6 @@ end;
 // This is not uncommon practice in VCL classes.  Perhaps access them in
 // 'initialization' to force their allocation before the user's code begins
 // running?
-
-var
-  Id8BitEncoder: SysUtils.TEncoding = nil;
 
 function GetEncoder(AEncoding: TIdEncoding): SysUtils.TEncoding;
 {$IFDEF USEINLINE}inline;{$ENDIF}
