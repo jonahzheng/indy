@@ -717,6 +717,15 @@ begin
   end;
 end;
 
+{$IFDEF UNICODESTRING}
+//This is an ugly hack that's required because a short does not seem to be acceptable
+//to Tiburon's Assert function.
+procedure AssertClassName(const ABool : Boolean; AString : String); inline;
+begin
+  Assert(ABool, AString);
+end;
+{$ENDIF}
+
 procedure TIdCustomTCPServer.TerminateAllThreads;
 var
   i: Integer;
@@ -732,7 +741,11 @@ begin
       for i := 0 to Count - 1 do begin
         LContext := TIdContext(Items[i]);
         Assert(LContext<>nil);
+        {$IFDEF UNICODESTRING}
+        AssertClassName(LContext.Connection<>nil, LContext.ClassName);
+        {$ELSE}
         Assert(LContext.Connection<>nil, LContext.ClassName);
+        {$ENDIF}
         // RLebeau: allow descendants to perform their own cleanups before
         // closing the connection.  FTP, for example, needs to abort an
         // active data transfer on a separate asociated connection
