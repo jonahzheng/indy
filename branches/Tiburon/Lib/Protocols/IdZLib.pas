@@ -53,8 +53,8 @@ type
     FStrmPos: Integer;
     FOnProgress: TNotifyEvent;
     FZRec: TZStreamRec;
-    FBuffer: array [Word] of Char;
-    FNameBuffer: array [0..255] of Char;
+    FBuffer: array [Word] of AnsiChar;
+    FNameBuffer: array [0..255] of AnsiChar;
     FGZHeader : IdZLibHeaders.gz_header;
     FStreamType : TZStreamType;
   protected
@@ -242,7 +242,7 @@ begin
         P := OutBuf;
         Inc(OutBytes, 256);
         ReallocMem(OutBuf, OutBytes);
-        strm.next_out := PChar(PtrUInt(OutBuf) + (PtrUInt(strm.next_out) - PtrUInt(P)));
+        strm.next_out := PAnsiChar(PtrUInt(OutBuf) + (PtrUInt(strm.next_out) - PtrUInt(P)));
         strm.avail_out := 256;
       end;
     finally
@@ -299,7 +299,7 @@ end;
 
 function TryStreamType(var strm: TZStreamRec; gzheader: PgzHeaderRec; const AWinBitsValue : Integer): boolean;
 var
-  InitBuf: PChar;
+  InitBuf: PAnsiChar;
   InitIn : TIdC_UINT;
 begin
     InitBuf := strm.next_in;
@@ -326,8 +326,9 @@ end;
 //strm should not contain an initialized inflate
 function  CheckInitInflateStream(var strm: TZStreamRec; gzheader: gz_headerp): TZStreamType; overload;
 var
-  InitBuf: PChar;
+  InitBuf: PAnsiChar;
   InitIn : integer;
+  
   function LocalTryStreamType(AStreamType: TZStreamType): boolean;
   begin
     DCheck(inflateInitEx(strm, AStreamType));
@@ -376,7 +377,7 @@ const
   StepSize = 20; //one step be enough, but who knows...
 var
   N       : TIdC_UINT;
-  Buff    : PChar;
+  Buff    : PAnsiChar;
   UseBuffer: boolean;
 begin
   Buff := DMAOfStream(InStream, N);
@@ -411,10 +412,10 @@ type
   TZBack = record
     InStream  : TStream;
     OutStream : TStream;
-    InMem     : PChar; //direct memory access
+    InMem     : PAnsiChar; //direct memory access
     InMemSize : TIdC_UINT;
-    ReadBuf   : array[word] of char;
-    Window    : array[0..WindowSize] of char;
+    ReadBuf   : array[word] of AnsiChar;
+    Window    : array[0..WindowSize] of AnsiChar;
   end;
 
 function Strm_in_func(BackObj: PZBack; var buf: PByte): Integer; cdecl;
@@ -561,9 +562,10 @@ const
   BufSize = 65536;
 var
   strm   : TZStreamRec;
-  InBuf, OutBuf : PChar;
+  InBuf, OutBuf : PAnsiChar;
   UseInBuf, UseOutBuf : boolean;
   LastOutCount : TIdC_UINT;
+
   procedure WriteOut;
   begin
     if UseOutBuf then
@@ -656,7 +658,7 @@ const
   BufSize = 65536;
 var
   strm   : z_stream;
-  InBuf, OutBuf : PChar;
+  InBuf, OutBuf : PAnsiChar;
   UseInBuf, UseOutBuf : boolean;
   LastOutCount : TIdC_UINT;
 
@@ -792,7 +794,7 @@ begin
         P := OutBuf;
         Inc(OutBytes, BufInc);
         ReallocMem(OutBuf, OutBytes);
-        strm.next_out := PChar(PtrUInt(OutBuf) + (PtrUInt(strm.next_out) - PtrUInt(P)));
+        strm.next_out := PAnsiChar(PtrUInt(OutBuf) + (PtrUInt(strm.next_out) - PtrUInt(P)));
         strm.avail_out := BufInc;
       end;
     finally
@@ -1049,7 +1051,7 @@ end;
 function TDecompressionStream.IdSeek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64;
 var
   I: Integer;
-  Buf: array [0..4095] of Char;
+  Buf: array [0..4095] of AnsiChar;
   LOffset : Int64;
 begin
   if (AOffset = 0) and (AOrigin = soBeginning) then
