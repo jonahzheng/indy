@@ -403,7 +403,11 @@ type
   function BreakApart(BaseString, BreakString: string; StringList: TStrings): TStrings;
   function LongWordToFourChar(AValue : LongWord): string;
   function CharRange(const AMin, AMax : Char): String;
-  Function CharToHex(const APrefix : String; const c : AnsiChar) : shortstring;
+{$IFDEF UNICODESTRING}
+Function CharToHex(const APrefix : String; const c : AnsiChar) : String;
+{$ELSE}
+Function CharToHex(const APrefix : String; const c : AnsiChar) : ShortString;
+{$ENDIF}
   procedure CommaSeparatedToStringList(AList: TStrings; const Value:string);
   function CompareDateTime(const ADateTime1, ADateTime2 : TDateTime) : Integer;
   {
@@ -547,6 +551,7 @@ uses
     {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  Messages,
   Registry,
   {$ENDIF}
   {$IFDEF DOTNET}
@@ -771,7 +776,11 @@ begin
   {$ENDIF}
 end;
 
-Function CharToHex(const APrefix : String; const c : AnsiChar) : shortstring;
+{$IFDEF UNICODESTRING}
+Function CharToHex(const APrefix : String; const c : AnsiChar) : String;
+{$ELSE}
+Function CharToHex(const APrefix : String; const c : AnsiChar) : ShortString;
+{$ENDIF}
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   SetLength(Result,2);
