@@ -778,7 +778,11 @@ type
   //This is called whenever there is a failure to retreive the time zone information
   EIdFailedToRetreiveTimeZoneInfo = class(EIdException);
 
+  {$IFDEF UNICODESTRING}
+  TIdBytes = TBytes;
+  {$ELSE}
   TIdBytes = array of Byte;
+  {$ENDIF}
   TIdPort = Word;
   //We don't have a native type that can hold an IPv6 address.
   TIdIPv6Address = array [0..7] of word;
@@ -1567,7 +1571,11 @@ begin
   {$IFDEF DOTNET_OR_TEncoding}
   LChars[0] := AChar;
   LChars[1] := #0;
+    {$IFDEF DOTNET}
   Result := GetEncoder(enUTF8).GetBytes(LChars, 0, 1, VDest, AIndex);
+    {$ELSE}
+  Result := GetEncoder(enUTF8).GetBytes(@LChars, 0, 1, VDest, AIndex);
+    {$ENDIF}
   {$ELSE}
   LWC := LongWord(AChar);
   if LWC <= $7F then
@@ -1631,7 +1639,11 @@ function CalcBytesForUTF8Char(const AChar: Char): Integer;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 var
   {$IFDEF TEncoding}
+    {$IFDEF DOTNET}
   LChars: array[0..0] of Char;
+    {$ELSE}
+  LChars: TWideCharArray;
+    {$ENDIF}
   {$ELSE}
   LWC: LongWord;
   {$ENDIF}
@@ -1642,8 +1654,15 @@ begin
     to calculate the necessary byte count? }
   {$ENDIF}
   {$IFDEF TEncoding}
+
+    {$IFDEF DOTNET}
   LChars[0] := AChar;
   Result := GetEncoder(enUTF8).GetByteCount(LChars, 0, 1);
+    {$ELSE}
+  SetLength(LChars,1);
+  LChars[0] := AChar;
+  Result := GetEncoder(enUTF8).GetByteCount(LChars, 0, 1);
+    {$ENDIF}
   {$ELSE}
   LWC := LongWord(AChar);
   if LWC <= $7F then begin
@@ -1720,7 +1739,11 @@ end;
 function UTF8BytesToChar(const ABytes: TIdBytes; const AIndex, ALength: Integer): Char;
 var
   {$IFDEF DOTNET_OR_TEncoding}
+    {$IFDEF DOTNET}
   LChars: array[0..1] of Char;
+    {$ELSE}
+  LChars: TWideCharArray;
+    {$ENDIF}
   {$ELSE}
   I: Integer;
   LCh: WideChar;
@@ -1731,6 +1754,9 @@ begin
   // by BytesToChar() so use them as-is here...
 
   {$IFDEF DOTNET_OR_TEncoding}
+    {$IFNDEF DOTNET}
+  SetLength(LChars,2);
+    {$ENDIF}
   if GetEncoder(enUTF8).GetChars(ABytes, AIndex, ALength, LChars, 0) > 0 then
   begin
     Result := LChars[0];
@@ -2086,9 +2112,10 @@ begin
   begin
     {$IFDEF UNICODESTRING}
     if AEncoding = en7Bit then begin
-      VDest[ADestIndex] := Byte(ASource and $7F);
+      VDest[ADestIndex] := Ord(ASource) and $7F; //Byte(ASource and $7F);
     end else begin
-      VDest[ADestIndex] := Byte(ASource and $FF);
+      VDest[ADestIndex] := Ord(ASource) and $FF;
+    //  VDest[ADestIndex] := Byte(ASource and $FF);
     end;
     {$ELSE}
     VDest[ADestIndex] := Byte(ASource);

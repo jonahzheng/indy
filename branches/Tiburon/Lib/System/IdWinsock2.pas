@@ -4955,6 +4955,11 @@ function FixupStub(hDll: THandle; const AName: string): Pointer;
 {$IFDEF UNICODE_NOT_NO_UNICODESTRING}
 var
   LName: WideString;
+{$ELSE}
+    {$IFDEF UNICODESTRING}
+var
+    LName : AnsiString;
+    {$ENDIF}
 {$ENDIF}
 begin
   if hDll = 0 then begin
@@ -4964,7 +4969,12 @@ begin
   LName := AName;
   Result := Windows.GetProcAddress(hDll, PWideChar(LName));
   {$ELSE}
+    {$IFDEF UNICODESTRING}
+    LName := AName;
+    Result := Windows.GetProcAddress(hDll, PAnsiChar(LName));
+    {$ELSE}
   Result := Windows.GetProcAddress(hDll, PChar(AName));
+    {$ENDIF}
   {$ENDIF}
   if Result = nil then begin
     raise EIdWinsockStubError.Build(WSAEINVAL, RSWinsockCallError, [AName]);
@@ -5548,7 +5558,7 @@ begin
   Result := WSALookupServiceBeginW(qsRestrictions, dwControlFlags, hLookup);
 end;
 
-function Stub_WSALookupServiceBegin(var qsRestrictions: {$IFDEF UNDER_CE}TWSAQuerySetW{$ELSE}TWSAQuerySet{$ENDIF}; const dwControlFlags: DWORD; var hLookup: THandle): Integer; stdcall;
+function Stub_WSALookupServiceBegin(var qsRestrictions: {$IFDEF UNICODE}TWSAQuerySetW{$ELSE}TWSAQuerySet{$ENDIF}; const dwControlFlags: DWORD; var hLookup: THandle): Integer; stdcall;
 begin
   {$IFDEF UNICODE}
   @WSALookupServiceBegin := FixupStub(hWinSockDll, 'WSALookupServiceBeginW'); {Do not Localize}

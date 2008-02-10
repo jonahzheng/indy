@@ -855,7 +855,7 @@ begin
 end;
 
 procedure TIdStackWindows.WSGetSockOpt(ASocket: TIdStackSocketHandle;
-  Alevel, AOptname: Integer; AOptval: PChar; var AOptlen: Integer);
+  Alevel, AOptname: Integer; AOptval: PAnsiChar; var AOptlen: Integer);
 begin
   CheckForSocketError(getsockopt(ASocket, ALevel, AOptname, AOptval, AOptlen));
 end;
@@ -1100,7 +1100,7 @@ end;
 function TIdStackWindows.HostByName(const AHostName: string;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string;
 var
-  LPa: PChar;
+  LPa: PAnsiChar;
   LSa: TInAddr;
   {$IFNDEF WINCE}
   LHost: PHostEnt;
