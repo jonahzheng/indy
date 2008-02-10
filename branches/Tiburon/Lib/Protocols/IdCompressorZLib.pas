@@ -107,7 +107,7 @@ procedure TIdCompressorZLib.InternalDecompressStream(
 {Note that much of this is taken from the ZLibEx unit and adapted to use the IOHandler}
 var
   zresult  : Integer;
-  outBuffer: Array [0..bufferSize-1] of Char;
+  outBuffer: Array [0..bufferSize-1] of AnsiChar;
   inSize   : Integer;
   outSize  : Integer;
   LBuf : TIdBytes;
@@ -214,8 +214,8 @@ var
   LCompressRec : TZStreamRec;
 
   zresult  : Integer;
-  inBuffer : Array [0..bufferSize-1] of Char;
-  outBuffer: Array [0..bufferSize-1] of Char;
+  inBuffer : Array [0..bufferSize-1] of AnsiChar;
+  outBuffer: Array [0..bufferSize-1] of AnsiChar;
   inSize   : Integer;
   outSize  : Integer;
 begin
