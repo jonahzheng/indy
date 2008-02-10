@@ -34,6 +34,17 @@
 {.$DEFINE USEFASTMM4}
 {$UNDEF USEFASTMM4}
 
+// Make sure the following is $DEFINE'd only for Tiburon onwards as specified
+// further below.  The VCL is fully Uncidoe, where the 'String' type maps to
+// System.UnicodeString, not System.AnsiString
+{$UNDEF UNICODESTRING}
+
+// Make sure the following are $DEFINE'd only for suitable environments
+// as specified further below.  This works in conjunction with the
+// UNICODESTRING define above.
+{$UNDEF UNICODE_BUT_NO_UNICODESTRING}
+{$UNDEF TEncoding}
+
 // Delphi 4
 {$IFDEF VER120}
   {$DEFINE VCL4ORABOVE}
@@ -246,8 +257,10 @@
 
 {
 BDS 2007 NET personality uses VER190 instead of 185.
+Delphi 2008 also uses VER190 as well
 }
-//Delphi 12 - Delphi 2007
+//Delphi 12 - Delphi .NET 2007
+//Delphi 13 - Delphi 2008 (Tiburon)
 {$IFDEF VER190}
   {$DEFINE USEINLINE}
   {$DEFINE VCL4ORABOVE}
@@ -259,8 +272,6 @@ BDS 2007 NET personality uses VER190 instead of 185.
   {$DEFINE VCL10ORABOVE}
   {$DEFINE VCL11ORABOVE}
   {$DEFINE VCL12ORABOVE}
-  {$DEFINE VCL12}
-  {$DEFINE DELPHI12}
   {$DEFINE OPTIONALPARAMS}
   {$DEFINE SAMETEXT}
   {$DEFINE ALLOW_NAMED_THREADS}
@@ -268,6 +279,37 @@ BDS 2007 NET personality uses VER190 instead of 185.
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
   {$DEFINE CPU32}
+  {$IFNDEF CIL}
+    //Delphi 2008 (Tiburon)
+    {$DEFINE UNICODESTRING} // 'String' type is Unicode
+    {$DEFINE TEncoding}
+    {$DEFINE DOTNET_OR_TEncoding}
+    {$DEFINE VCL13ORABOVE}
+    {$DEFINE VCL13}
+    {$DEFINE DELPHI13}
+    {$IFNDEF IDFREEONFINAL}
+      {$DEFINE REGISTER_EXPECTED_MEMORY_LEAK}
+    {$ENDIF}
+    {$DEFINE WIDGETVCLLIKE} // LCL included.
+    {$DEFINE WIDGETVCLLIKEORKYLIX}
+    {$DEFINE WIDGETVCL}
+    {$DEFINE VCL60PLUS}
+  {$ELSE}
+    //Delphi 12 - Delphi 2007
+    {$DEFINE VCL12}
+    {$DEFINE DELPHI12}
+  {$ENDIF}
+{$ENDIF}
+
+{$IFDEF UNICODESTRING}
+  //Delphi 2008 and later are UNICODE ONLY
+  {$IFNDEF UNICODE}
+    {$DEFINE UNICODE}
+  {$ENDIF}
+{$ELSE}
+  {$IFDEF UNICODE}
+    {$DEFINE UNICODE_BUT_NO_UNICODESTRING}
+  {$ENDIF}
 {$ENDIF}
 
 //Delphi.NET
@@ -277,6 +319,7 @@ BDS 2007 NET personality uses VER190 instead of 185.
   {$DEFINE ENDIAN_LITTLE}
   {$DEFINE CPU32}
   {$DEFINE WIDGETWINFORMS}
+  {$DEFINE DOTNET_OR_TEncoding}
   // Platform specific conditional. Used for platform specific code.
   {$DEFINE DOTNET}
   //differences in DotNET Framework versions.
@@ -421,9 +464,9 @@ word to an 8 bit byteee and an 8 bit byte feild named sa_len was added.
   {$DEFINE REQUIRES_PROPER_ALIGNMENT}
 {$ENDIF}
 
-  //Do NOT remove these IFDEF's.  They are here because InterlockedExchange
-  //only handles 32bit values.  Some Operating Systems may have 64bit  
-  // THandles.  This is not always tied to the platform architecture.
+// Do NOT remove these IFDEF's.  They are here because InterlockedExchange
+// only handles 32bit values.  Some Operating Systems may have 64bit  
+// THandles.  This is not always tied to the platform architecture.
 
 {$IFDEF AMIGA}
   {$DEFINE THANDLECPUBITS}
@@ -510,3 +553,4 @@ word to an 8 bit byteee and an 8 bit byte feild named sa_len was added.
     {$ENDIF}
   {$ENDIF}
 {$ENDIF}
+
