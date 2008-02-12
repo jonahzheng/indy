@@ -344,7 +344,11 @@ const
 type
   //WinceCE only has WideString functions for files.
   {$IFDEF WINCE}
+    {$IFDEF UNICODESTRING}
+  TIdFileName = UnicodeString;
+    {$ELSE}
   TIdFileName = WideString;
+    {$ENDIF}
   {$ELSE}
   TIdFileName = String;
   {$ENDIF}
@@ -403,11 +407,8 @@ type
   function BreakApart(BaseString, BreakString: string; StringList: TStrings): TStrings;
   function LongWordToFourChar(AValue : LongWord): string;
   function CharRange(const AMin, AMax : Char): String;
-{$IFDEF UNICODESTRING}
-Function CharToHex(const APrefix : String; const c : AnsiChar) : String;
-{$ELSE}
-Function CharToHex(const APrefix : String; const c : AnsiChar) : ShortString;
-{$ENDIF}
+  function CharToHex(const APrefix : String; const AChar : Char;
+    const AEncoding : TIdEncoding = en7Bit) : String;
   procedure CommaSeparatedToStringList(AList: TStrings; const Value:string);
   function CompareDateTime(const ADateTime1, ADateTime2 : TDateTime) : Integer;
   {
@@ -424,7 +425,6 @@ Function CharToHex(const APrefix : String; const c : AnsiChar) : ShortString;
     var VDest: TIdBytes; const ADestIndex: Integer);
   procedure CopyTIdNetworkWord(const ASource: Word;
     var VDest: TIdBytes; const ADestIndex: Integer);
-  //Wince only has WideString functions so this might as well be a widestring.
   function CopyFileTo(const Source, Destination: TIdFileName): Boolean;
   function DomainName(const AHost: String): String;
   function EnsureMsgIDBrackets(const AMsgID: String): String;
@@ -459,7 +459,7 @@ Function CharToHex(const APrefix : String; const c : AnsiChar) : ShortString;
   function IsValidIP(const S: String): Boolean;
 
   function MakeTempFilename(const APath: String = ''): string;
-  procedure MoveChars(const ASource:ShortString;ASourceStart:integer;var ADest:ShortString;ADestStart, ALen:integer);
+  procedure MoveChars(const ASource: ShortString; ASourceStart: integer; var ADest: ShortString; ADestStart, ALen: integer);
   function OrdFourByteToLongWord(AByte1, AByte2, AByte3, AByte4 : Byte): LongWord;
   procedure LongWordToOrdFourByte(const AValue: LongWord; var VByte1, VByte2, VByte3, VByte4 : Byte);
 
@@ -694,7 +694,7 @@ end;
 
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
 var
-  ATempPath: string;
+  ATempPath: TIdFileName;
 {$ENDIF}
 
 function StartsWith(const ANSIStr, APattern : String) : Boolean;
@@ -758,7 +758,8 @@ begin
 end;
 
 // BGO: TODO: Move somewhere else
-procedure MoveChars(const ASource:ShortString;ASourceStart:integer;var ADest:ShortString;ADestStart, ALen:integer);
+procedure MoveChars(const ASource: ShortString; ASourceStart: integer;
+  var ADest: ShortString; ADestStart, ALen: integer);
 {$IFDEF DOTNET}
 var
   a: Integer;
@@ -776,17 +777,11 @@ begin
   {$ENDIF}
 end;
 
-{$IFDEF UNICODESTRING}
-Function CharToHex(const APrefix : String; const c : AnsiChar) : String;
-{$ELSE}
-Function CharToHex(const APrefix : String; const c : AnsiChar) : ShortString;
-{$ENDIF}
+function CharToHex(const APrefix : String; const AChar : Char;
+  const AEncoding : TIdEncoding = en7Bit) : String;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
-  SetLength(Result,2);
-  Result[1] := IdHexDigits[byte(c) shr 4];
-  Result[2] := IdHexDigits[byte(c) AND $0F];
-  Result := APrefix + Result;
+  Result := APrefix + ToHex(ToBytes(AChar, AEncoding));
 end;
 
 function LongWordToFourChar(AValue : LongWord): string;
@@ -1377,7 +1372,7 @@ begin
   Result := CopyFile(PWideChar(Source), PWideChar(Destination), True);
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64}
-  Result := CopyFile(PChar(Source), PChar(Destination), true);
+  Result := CopyFile(PChar(Source), PChar(Destination), True);
   {$ENDIF}
   {$IFNDEF APICOPYFILETO}
   //mostly from  http://delphi.about.com/od/fileio/a/untypedfiles.htm
@@ -1421,21 +1416,27 @@ begin
 end;
 
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-function TempPath: {$IFDEF UNICODE}WideString{$ELSE}String{$ENDIF}; 
+function TempPath: TIdFileName;
 var
   i: Integer;
 begin
   SetLength(Result, MAX_PATH);
-  i := GetTempPath(Length(Result),  {$IFDEF UNICODE}PWideChar{$ELSE}PChar{$ENDIF}(Result));
-  SetLength(Result, i);
-  Result := IndyIncludeTrailingPathDelimiter(Result);
+  i := GetTempPath(MAX_PATH, {$IFDEF UNICODE}PWideChar{$ELSE}PChar{$ENDIF}(Result));
+  if i > 0 then
+  begin
+    SetLength(Result, i);
+    Result := IndyIncludeTrailingPathDelimiter(Result);
+  end else
+  begin
+    Result := '';
+  end;
 end;
 {$ENDIF}
 
-function MakeTempFilename(const APath: String = ''): string;
+function MakeTempFilename(const APath: TIdFileName = ''): TIdFileName;
 var
-  lPath: string;
-  lExt: string;
+  lPath: TIdFileName;
+  lExt: TIdFileName;
 begin
   lPath := APath;
 
@@ -1449,18 +1450,12 @@ begin
   if lPath = '' then begin
     lPath := ATempPath;
   end;
-  {$ENDIF}
-
-  {$IFDEF DOTNET}
-  if lPath = '' then
-  begin
-    {$IFDEF DOTNET1_1}
-    lPath := System.IO.GetTempPath;
-    {$ENDIF}
-    {$IFDEF DOTNET2_OR_ABOVE}
+  {$ELSE}
+    {$IFDEF DOTNET}
+  if lPath = '' then begin
     lPath := System.IO.Path.GetTempPath;
-    {$ENDIF}
   end;
+    {$ENDIF}
   {$ENDIF}
 
   Result := GetUniqueFilename(lPath, 'Indy', lExt);
