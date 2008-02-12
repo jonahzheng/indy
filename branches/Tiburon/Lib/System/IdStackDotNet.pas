@@ -160,8 +160,7 @@ interface
 uses
   Classes,
   IdGlobal, IdStack, IdStackConsts,
-  System.Collections,
-   System.IO, System.Net, System.Net.Sockets;
+  System.Collections, System.IO, System.Net, System.Net.Sockets;
 
 type
   TIdSocketListDotNet = class(TIdSocketList)
@@ -277,7 +276,7 @@ var
 implementation
 
 uses
-  IdException;
+  IdException, IdResourceStrings;
 
 const
   IdIPFamily : array[TIdIPVersion] of AddressFamily = (AddressFamily.InterNetwork, AddressFamily.InterNetworkV6);
