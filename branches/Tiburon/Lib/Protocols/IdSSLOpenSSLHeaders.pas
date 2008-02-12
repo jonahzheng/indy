@@ -3639,7 +3639,7 @@ type
   PUShort   =^Word;
   {$IFNDEF FPC}
      {$IFNDEF VCL11ORABOVE}
-  PPChar    =^PChar;
+  PPChar    =^PAnsiChar;
      {$ENDIF}
   {$ENDIF}
   PPByte    =^PByte;
@@ -3663,7 +3663,7 @@ type
   time_t   = TIdC_LONG;
   STACK = record
     num : TIdC_INT; //int num;
-    data : PChar;  //char **data;
+    data : PAnsiChar;  //char **data;
     sorted : TIdC_INT;//int sorted;
     num_alloc : TIdC_INT; //int num_alloc;
     comp : function (_para1:PPchar; _para2:PPchar):  TIdC_INT; cdecl;
@@ -3732,10 +3732,10 @@ type
   //rand.h
   RAND_METHOD = record
     seed : procedure (const buf : Pointer; num : TIdC_INT) cdecl;
-    bytes : function(const buf : PChar; num : TIdC_INT) : TIdC_INT cdecl;
+    bytes : function(const buf : PAnsiChar; num : TIdC_INT) : TIdC_INT cdecl;
     cleanup : procedure cdecl;
     add : procedure (const buf : Pointer; num : TIdC_INT; entropy : TIdC_DOUBLE) cdecl;
-    pseudorand : function(buf : PChar; num : TIdC_INT) : TIdC_INT cdecl;
+    pseudorand : function(buf : PAnsiChar; num : TIdC_INT) : TIdC_INT cdecl;
     status : function : TIdC_INT cdecl;
   end;
 
@@ -3923,15 +3923,15 @@ type
   PPRSA =^PRSA;
 
   RSA_METHOD = record
-    name : PChar;
-    rsa_pub_enc : function (flen : TIdC_INT; const from : PChar;
-      _to : PChar; rsa : PRSA; padding : TIdC_INT) : TIdC_INT; cdecl;
-    rsa_pub_dec : function (flen : TIdC_INT; const from : PChar;
-      _to : PChar; rsa : PRSA; padding : TIdC_INT) : TIdC_INT; cdecl;
-    rsa_priv_enc : function (flen : TIdC_INT; const from : PChar;
-      _to : PChar; rsa : PRSA; padding : TIdC_INT) : TIdC_INT; cdecl;
-    rsa_priv_dec : function (flen : TIdC_INT; const from : PChar;
-       _to : PChar; rsa : PRSA; padding : TIdC_INT) : TIdC_INT; cdecl;
+    name : PAnsiChar;
+    rsa_pub_enc : function (flen : TIdC_INT; const from : PAnsiChar;
+      _to : PAnsiChar; rsa : PRSA; padding : TIdC_INT) : TIdC_INT; cdecl;
+    rsa_pub_dec : function (flen : TIdC_INT; const from : PAnsiChar;
+      _to : PAnsiChar; rsa : PRSA; padding : TIdC_INT) : TIdC_INT; cdecl;
+    rsa_priv_enc : function (flen : TIdC_INT; const from : PAnsiChar;
+      _to : PAnsiChar; rsa : PRSA; padding : TIdC_INT) : TIdC_INT; cdecl;
+    rsa_priv_dec : function (flen : TIdC_INT; const from : PAnsiChar;
+       _to : PAnsiChar; rsa : PRSA; padding : TIdC_INT) : TIdC_INT; cdecl;
     rsa_mod_exp : function (r0 : PBIGNUM; const I : PBIGNUM;
       rsa : PRSA; ctx : PBN_CTX) : TIdC_INT cdecl; // Can be null /
     bn_mod_exp : function (r : PBIGNUM; const a : PBIGNUM;
@@ -3940,7 +3940,7 @@ type
     init : function (rsa : PRSA) : TIdC_INT; cdecl; // called at new
     finish : function (rsa : PRSA) : TIdC_INT; cdecl; // called at free
     flags : TIdC_INT; // RSA_METHOD_FLAG_* things
-    app_data : PChar;   // may be needed!
+    app_data : PAnsiChar;   // may be needed!
     // New sign and verify functions: some libraries don't allow arbitrary data
     // to be signed/verified: this allows them to be used. Note: for this to work
     // the RSA_public_decrypt() and RSA_private_encrypt() should *NOT* be used
@@ -3948,10 +3948,10 @@ type
     // compatibility this functionality is only enabled if the RSA_FLAG_SIGN_VER
     // option is set in 'flags'.
     //
-    rsa_sign : function (_type : TIdC_INT; const m : PChar; m_length : TIdC_UINT;
-      sigret : PChar; siglen : PIdC_UINT; const rsa : PRSA) : TIdC_INT; cdecl;
-    rsa_verify : function(dtype : TIdC_INT; const m : PChar; m_length : PIdC_UINT;
-      sigbuf : PChar; siglen : PIdC_UINT; const rsa :PRSA) : TIdC_INT; cdecl;
+    rsa_sign : function (_type : TIdC_INT; const m : PAnsiChar; m_length : TIdC_UINT;
+      sigret : PAnsiChar; siglen : PIdC_UINT; const rsa : PRSA) : TIdC_INT; cdecl;
+    rsa_verify : function(dtype : TIdC_INT; const m : PAnsiChar; m_length : PIdC_UINT;
+      sigbuf : PAnsiChar; siglen : PIdC_UINT; const rsa :PRSA) : TIdC_INT; cdecl;
     // If this callback is NULL, the builtin software RSA key-gen will be used.
     // This is for behavioural compatibility whilst the code gets rewired, but
     // one day it would be nice to assume there are no such things as "builtin
@@ -3986,7 +3986,7 @@ type
     _method_mod_q : PBN_MONT_CTX;
 
     // all BIGNUM values are actually in the following data, if it is not NULL
-    bignum_data : PChar;
+    bignum_data : PAnsiChar;
     blinding : PBN_BLINDING;
     mt_blinding : PBN_BLINDING;
   end;
@@ -3996,17 +3996,17 @@ type
   {$IFNDEF OPENSSL_NO_DH}
   PDH = ^DH;
   DH_METHOD = record
-    name : PChar;
+    name : PAnsiChar;
     // Methods here
     generate_key : function (dh : PDH) : TIdC_INT; cdecl;
-    compute_key : function (key : PChar; const pub_key : PBIGNUM; dh : PDH) : TIdC_INT; cdecl;
+    compute_key : function (key : PAnsiChar; const pub_key : PBIGNUM; dh : PDH) : TIdC_INT; cdecl;
     bn_mod_exp : function (const dh : PDH; r : PBIGNUM; const e : PBIGNUM;
       const p : PBIGNUM; const m : PBIGNUM; ctx : PBN_CTX;
       m_ctx : PBN_MONT_CTX) : TIdC_INT; cdecl;  // Can be null
     init : function (dh : PDH) : TIdC_INT; cdecl;
     finish : function (dh : PDH) : TIdC_INT; cdecl;
     flags : TIdC_INT;
-    app_data : PChar;
+    app_data : PAnsiChar;
     // If this is non-NULL, it will be used to generate parameters
     generate_params : function(dh : PDH; prime_len, generator : TIdC_INT; cb : PBN_GENCB) : TIdC_INT; cdecl;
   end;
@@ -4038,7 +4038,7 @@ type
     _method_mod_q : BN_MONT_CTX;
 
     // all BIGNUM values are actually in the following data, if it is not NULL
-    bignum_data : PChar;
+    bignum_data : PAnsiChar;
     blinding : PBN_BLINDING;
     mt_blinding : PBN_BLINDING;
   end;
@@ -4054,10 +4054,10 @@ type
   PDSA_SIG = ^DSA_SIG;
   PDSA = ^DSA;
   DSA_METHOD = record
-    name : PChar;
-    dsa_do_sign : function (const dgst : PChar; dlen : TIdC_INT; dsa : PDSA) : PDSA_SIG; cdecl;
+    name : PAnsiChar;
+    dsa_do_sign : function (const dgst : PAnsiChar; dlen : TIdC_INT; dsa : PDSA) : PDSA_SIG; cdecl;
     dsa_sign_setup : function (dsa : PDSA; ctx_in : BN_CTX; kinvp, rp : PPBN_CTX) : TIdC_INT; cdecl;
-    dsa_do_verify : function(dgst : PChar; dgst_len : TIdC_INT;
+    dsa_do_verify : function(dgst : PAnsiChar; dgst_len : TIdC_INT;
       sig : PDSA_SIG; dsa : PDSA) : TIdC_INT; cdecl;
     dsa_mod_exp : function(dsa : PDSA; rr, a1, p1,
        a2, p2, m : PBIGNUM; ctx : PBN_CTX;
@@ -4067,9 +4067,9 @@ type
     init : function (dsa : PDSA) : TIdC_INT; cdecl;
     finish : function (dsa : PDSA) : TIdC_INT; cdecl;
     flags : TIdC_INT;
-    app_data : PChar;
+    app_data : PAnsiChar;
     // If this is non-NULL, it is used to generate DSA parameters
-     dsa_paramgen : function (dsa : PDSA; bits : TIdC_INT; seed : PChar;
+     dsa_paramgen : function (dsa : PDSA; bits : TIdC_INT; seed : PAnsiChar;
        seed_len : TIdC_INT; counter_ret : PIdC_INT; h_ret : PIdC_ULONG;
        cb : PBN_GENCB ) : TIdC_INT; cdecl;
 
@@ -4125,7 +4125,7 @@ type
   PPEC_POINT = ^PEC_POINT;
   EC_builtin_curve = record
     nid : TIdC_INT;
-    comment : PChar;
+    comment : PAnsiChar;
   end;
   PEC_KEY = ^EC_KEY;
   EC_KEY = record
@@ -4209,9 +4209,9 @@ type
   
   //conf.h
   CONF_VALUE = record
-    section : PChar;
-    name : PChar;
-    value : PChar;
+    section : PAnsiChar;
+    name : PAnsiChar;
+    value : PAnsiChar;
   end;
   PCONF_VALUE = ^CONF_VALUE;
   {$IFDEF DEBUG_SAFESTACK}
@@ -4228,15 +4228,15 @@ type
   //* This is used to contain a list of bit names */
   BIT_STRING_BITNAME = record
     bitnum : TIdC_INT;
-    lname : PChar;
-    sname : PChar;
+    lname : PAnsiChar;
+    sname : PAnsiChar;
   end;
   PBIT_STRING_BITNAME = ^BIT_STRING_BITNAME;
   PPBIT_STRING_BITNAME = ^PBIT_STRING_BITNAME;
 
   buf_mem_st = record
     length : TIdC_INT; // current number of bytes
-    data : PChar;
+    data : PAnsiChar;
     max: TIdC_INT; // size of buffer
   end;
   BUF_MEM = buf_mem_st;
@@ -4266,10 +4266,10 @@ type
   PSTACK_OF_ASN1_VALUE = PSTACK;
   {$ENDIF}
   ASN1_OBJECT = record
-    sn, ln : PChar;
+    sn, ln : PAnsiChar;
     nid    : TIdC_INT;
     length : TIdC_INT;
-    data   : PChar;
+    data   : PAnsiChar;
     flags  : TIdC_INT; // Should we free this one
   end;
   PASN1_OBJECT = ^ASN1_OBJECT;
@@ -4288,7 +4288,7 @@ type
   asn1_string_st = record
     length : TIdC_INT;
     _type : TIdC_INT;
-    data : PChar;
+    data : PAnsiChar;
     { The value of the following field depends on the type being
       held.  It is mostly being used for BIT_STRING so if the
       input data has a non-zero 'unused bits' value, it will be
@@ -4388,7 +4388,7 @@ type
 
   ASN1_TYPE = record 
     case Integer of 
-      0:  (ptr: PChar); 
+      0:  (ptr: PAnsiChar); 
       1:  (boolean: ASN1_BOOLEAN); 
       2:  (asn1_string: PASN1_STRING); 
       3:  (_object: PASN1_OBJECT); 
@@ -4426,15 +4426,15 @@ type
   {$ENDIF}
          
   ASN1_CTX = record
-    p : PChar;         // work char pointer
+    p : PAnsiChar;         // work char pointer
     eos : TIdC_INT;    // end of sequence read for indefinite encoding
     error : TIdC_INT;  // error code to use when returning an error
     inf : TIdC_INT;    // constructed if 0x20, indefinite is 0x21
     tag : TIdC_INT;    // tag from last 'get object'
     xclass : TIdC_INT; // class from last 'get object'
     slen : TIdC_LONG;  // length of last 'get object'
-    max : PChar;       // largest value of p allowed
-    q : PChar;         // temporary variable
+    max : PAnsiChar;       // largest value of p allowed
+    q : PAnsiChar;         // temporary variable
     pp : PPChar;       // variable
     line : TIdC_INT;   // used in error processing
   end;
@@ -4460,7 +4460,7 @@ type
   PPASN1_HEADER = ^PASN1_HEADER;
 
   ASN1_ENCODING = record
-    enc: PChar;
+    enc: PAnsiChar;
     len: TIdC_LONG;
     modified: TIdC_INT;
   end;
@@ -4509,7 +4509,7 @@ type
     tag : TIdC_LONG;      // tag, not used if no tagging
     offset : TIdC_ULONG;  // Offset of this field in structure
     {$IFNDEF NO_ASN1_FIELD_NAMES}
-    field_name : PChar;   // Field name
+    field_name : PAnsiChar;   // Field name
     {$ENDIF}
     item : PASN1_ITEM_EXP; // Relevant ASN1_ITEM or ASN1_ADB
   end;
@@ -4522,7 +4522,7 @@ type
     funcs : Pointer;              // functions that handle this type
     size : TIdC_LONG;             // Structure size (usually)
     {$IFNDEF NO_ASN1_FIELD_NAMES}
-    sname : PChar;    // Structure name
+    sname : PAnsiChar;    // Structure name
     {$ENDIF}
   end;
 
@@ -4566,7 +4566,7 @@ type
   PEVP_PKEY = ^EVP_PKEY;
   EVP_PKEY_union = record
     case byte of
-      0: (ptr : PChar);
+      0: (ptr : PAnsiChar);
       {$IFNDEF OPENSSL_NO_RSA}
       1: (rsa : PRSA);    // RSA
       {$ENDIF}
@@ -4618,15 +4618,15 @@ type
     flags : TIdC_ULONG;
     init : function (ctx : PEVP_MD_CTX) : TIdC_INT; cdecl;
     update : function (ctx : PEVP_MD_CTX; data : Pointer; count : size_t):TIdC_INT; cdecl;
-    _final : function (ctx : PEVP_MD_CTX; md : PChar) : TIdC_INT; cdecl;
+    _final : function (ctx : PEVP_MD_CTX; md : PAnsiChar) : TIdC_INT; cdecl;
     copy : function (_to : PEVP_MD_CTX; from : PEVP_MD_CTX ) : TIdC_INT; cdecl;
     cleanup : function(ctx : PEVP_MD_CTX) : TIdC_INT; cdecl;
 
     // FIXME: prototype these some day
-    sign : function(_type : TIdC_INT; m : PChar; m_length : TIdC_UINT;
-      sigret : PChar; siglen : TIdC_UINT; key : Pointer) : TIdC_INT; cdecl;
-    verify : function(_type : TIdC_INT; m : PChar; m_length : PChar;
-      sigbuf : PChar; siglen : TIdC_UINT; key : Pointer) : TIdC_INT; cdecl;
+    sign : function(_type : TIdC_INT; m : PAnsiChar; m_length : TIdC_UINT;
+      sigret : PAnsiChar; siglen : TIdC_UINT; key : Pointer) : TIdC_INT; cdecl;
+    verify : function(_type : TIdC_INT; m : PAnsiChar; m_length : PAnsiChar;
+      sigbuf : PAnsiChar; siglen : TIdC_UINT; key : Pointer) : TIdC_INT; cdecl;
     required_pkey_type : array [0..4] of TIdC_INT; // EVP_PKEY_xxx
 
     block_size : TIdC_INT;
@@ -4643,8 +4643,8 @@ type
     key_len : TIdC_INT; // Default value for variable length ciphers
     iv_len : TIdC_INT;
     flags : TIdC_UINT; // Various flags
-    init : function (ctx : PEVP_CIPHER_CTX; key : PChar; iv : PChar; enc : TIdC_INT): TIdC_INT; cdecl;
-    do_cipher : function (ctx : PEVP_CIPHER_CTX; _out : PChar; _in : PChar; inl : TIdC_UINT) : TIdC_INT; cdecl;
+    init : function (ctx : PEVP_CIPHER_CTX; key : PAnsiChar; iv : PAnsiChar; enc : TIdC_INT): TIdC_INT; cdecl;
+    do_cipher : function (ctx : PEVP_CIPHER_CTX; _out : PAnsiChar; _in : PAnsiChar; inl : TIdC_UINT) : TIdC_INT; cdecl;
     cleanup : function (_para1 : PEVP_CIPHER_CTX): TIdC_INT; cdecl; // cleanup ctx
     ctx_size : TIdC_INT;  // how big ctx->cipher_data needs to be
     set_asn1_parameters : function (_para1 : PEVP_CIPHER_CTX;
@@ -4774,10 +4774,10 @@ type
 
   X509V3_EXT_I2V = function (method : PV3_EXT_METHOD; ext : Pointer; extlist : PSTACK_OF_CONF_VALUE) : PSTACK_OF_CONF_VALUE; cdecl;
   X509V3_EXT_V2I = function (method : Pv3_ext_method; ctx : PV3_EXT_CTX; values : PSTACK_OF_CONF_VALUE): Pointer; cdecl;
-  X509V3_EXT_I2S = function (method : Pv3_ext_method; ext : Pointer) : PChar; cdecl;
-  X509V3_EXT_S2I = function (method : Pv3_ext_method; ctx : Pv3_ext_ctx; const str : PChar): Pointer; cdecl;
+  X509V3_EXT_I2S = function (method : Pv3_ext_method; ext : Pointer) : PAnsiChar; cdecl;
+  X509V3_EXT_S2I = function (method : Pv3_ext_method; ctx : Pv3_ext_ctx; const str : PAnsiChar): Pointer; cdecl;
   X509V3_EXT_I2R = function (method : Pv3_ext_method; ext : Pointer; _out : PBIO; indent : TIdC_INT) : TIdC_INT; cdecl;
-  X509V3_EXT_R2I = function (method : Pv3_ext_method; ctx : Pv3_ext_ctx; const str : PChar): Pointer; cdecl;
+  X509V3_EXT_R2I = function (method : Pv3_ext_method; ctx : Pv3_ext_ctx; const str : PAnsiChar): Pointer; cdecl;
 
   V3_EXT_METHOD = record
     ext_nid : TIdC_INT;
@@ -4818,9 +4818,9 @@ type
   PPSTACK_OF_X509V3_EXT_METHOD = ^PSTACK_OF_X509V3_EXT_METHOD;
 
   X509V3_CONF_METHOD = record
-    get_string : function(db : Pointer; section, value : PChar) : PChar; cdecl;
-    get_section : function(db : Pointer; section : PChar) : PSTACK_OF_CONF_VALUE; cdecl;
-    free_string : procedure(db : Pointer; _string : PChar); cdecl;
+    get_string : function(db : Pointer; section, value : PAnsiChar) : PAnsiChar; cdecl;
+    get_section : function(db : Pointer; section : PAnsiChar) : PSTACK_OF_CONF_VALUE; cdecl;
+    free_string : procedure(db : Pointer; _string : PAnsiChar); cdecl;
     free_section : procedure (db : Pointer; section : PSTACK_OF_CONF_VALUE);
   end;
   V3_EXT_CTX = record
@@ -4863,7 +4863,7 @@ type
 
   GENERAL_NAME_union = record
     case byte of
-      0 : (ptr : PChar);
+      0 : (ptr : PAnsiChar);
       1 : (otherName : POTHERNAME); // otherName
       2 : (rfc822Name : PASN1_IA5STRING);
       3 : (dNSName : PASN1_IA5STRING);
@@ -5086,8 +5086,8 @@ type
     flags : TIdC_INT;
     check_purpose : function(const _para1 : Px509_purpose; const _para2 : PX509;
       para3 : TIdC_INT) : TIdC_INT; cdecl;
-    name : PChar;
-    sname : PChar;
+    name : PAnsiChar;
+    sname : PAnsiChar;
     usr_data : Pointer;
   end;
   {$IFDEF DEBUG_SAFESTACK}
@@ -5119,7 +5119,7 @@ type
 
   x509_object_union = record
     case byte of
-      0: (ptr : PChar);
+      0: (ptr : PAnsiChar);
       1: (_x509 : Px509);
       2: (crl : PX509_CRL);
       3: (pkey : PEVP_PKEY);
@@ -5199,7 +5199,7 @@ type
     {$IFNDEF OPENSSL_NO_BUFFER}
     bytes : PBUF_MEM;
     {$else}
-    bytes : PChar;
+    bytes : PAnsiChar;
     {$ENDIF}
     hash : TIdC_ULONG; // Keep the hash around for lookups
   end;
@@ -5236,7 +5236,7 @@ type
 
   x509_attributes_union = record
     case Byte of
-      $FF :(Ptr : PChar);
+      $FF :(Ptr : PAnsiChar);
       0 : (_set: PSTACK_OF_ASN1_TYPE); // 0
       1  : (_single: PASN1_TYPE);
   end;
@@ -5293,7 +5293,7 @@ type
     signature : PASN1_BIT_STRING;
     valid : TIdC_INT;
     references : TIdC_INT;
-    name : PChar;
+    name : PAnsiChar;
     ex_data : CRYPTO_EX_DATA;
     // These contain copies of various extension values
     ex_pathlen : TIdC_LONG;
@@ -5401,22 +5401,22 @@ type
   {$ENDIF}
 
   X509_LOOKUP_METHOD = record
-    name : PChar;
+    name : PAnsiChar;
     new_item : function (ctx : PX509_LOOKUP): TIdC_INT; cdecl;
     free : procedure (ctx : PX509_LOOKUP); cdecl;
     init : function(ctx : PX509_LOOKUP) : TIdC_INT; cdecl;
     shutdown : function(ctx : PX509_LOOKUP) : TIdC_INT; cdecl;
-    ctrl: function(ctx : PX509_LOOKUP; cmd : TIdC_INT; argc : PChar; argl : TIdC_LONG; out ret : PChar ) : TIdC_INT; cdecl;
+    ctrl: function(ctx : PX509_LOOKUP; cmd : TIdC_INT; argc : PAnsiChar; argl : TIdC_LONG; out ret : PAnsiChar ) : TIdC_INT; cdecl;
     get_by_subject: function(ctx : PX509_LOOKUP; _type : TIdC_INT; name : PX509_NAME; ret : X509_OBJECT ) : TIdC_INT; cdecl;
     get_by_issuer_serial : function(ctx : PX509_LOOKUP; _type : TIdC_INT; name : PX509_NAME; serial : PASN1_INTEGER; ret : PX509_OBJECT) : TIdC_INT; cdecl;
-    get_by_fingerprint : function (ctx : PX509_LOOKUP; _type : TIdC_INT; bytes : PChar; len : TIdC_INT; ret : PX509_OBJECT): TIdC_INT; cdecl;
-    get_by_alias : function(ctx : PX509_LOOKUP; _type : TIdC_INT; str : PChar; ret : PX509_OBJECT) : TIdC_INT; cdecl;
+    get_by_fingerprint : function (ctx : PX509_LOOKUP; _type : TIdC_INT; bytes : PAnsiChar; len : TIdC_INT; ret : PX509_OBJECT): TIdC_INT; cdecl;
+    get_by_alias : function(ctx : PX509_LOOKUP; _type : TIdC_INT; str : PAnsiChar; ret : PX509_OBJECT) : TIdC_INT; cdecl;
   end;
   PX509_LOOKUP_METHOD      = ^X509_LOOKUP_METHOD;
   PPX509_LOOKUP_METHOD     = ^PX509_LOOKUP_METHOD;
 
   X509_VERIFY_PARAM = record
-    name : PChar;
+    name : PAnsiChar;
     check_time : time_t;          // Time to use
     inh_flags : TIdC_ULONG;       // Inheritance flags
     flags : TIdC_ULONG;           // Various verify flags
@@ -5440,7 +5440,7 @@ type
     init : TIdC_INT;              // have we been started
     skip : TIdC_INT;              // don't use us.
     method : PX509_LOOKUP_METHOD; // the functions
-    method_data : PChar;          // method data
+    method_data : PAnsiChar;          // method data
     store_ctx : PX509_STORE;      // who owns us
   end;
 
@@ -5477,7 +5477,7 @@ type
     trust : TIdC_INT;
     flags : TIdC_INT;
     check_trust : function(_para1 : PX509_TRUST; para2 : PX509; _para3 : TIdC_INT) : TIdC_INT; cdecl;
-    name : PChar;
+    name : PAnsiChar;
     arg1 : TIdC_INT;
     arg2 : Pointer;
   end;
@@ -5518,7 +5518,7 @@ type
     x_pkey : PX509_PKEY;
     enc_cipher: EVP_CIPHER_INFO;
     enc_len: TIdC_INT;
-    enc_data: PChar;
+    enc_data: PAnsiChar;
     references: TIdC_INT;
   end;
   PX509_INFO       = ^X509_INFO;
@@ -5671,7 +5671,7 @@ type
 
   //PEVP_PBE_KEYGEN          = Pointer;
 
-  ppem_password_cb = function (buf : PChar; size : TIdC_INT; rwflag : TIdC_INT; userdata : Pointer) : TIdC_INT; cdecl;
+  ppem_password_cb = function (buf : PAnsiChar; size : TIdC_INT; rwflag : TIdC_INT; userdata : Pointer) : TIdC_INT; cdecl;
 
   PEM_ENCODE_SEAL_CTX   = record
     encode : EVP_ENCODE_CTX;
@@ -5724,7 +5724,7 @@ type
   des_cblocks     = array[0..7] of byte;
   //des_cblocks     = Integer;
 
-  TIdSslLockingCallback = procedure (mode, n : TIdC_INT; Afile : PChar; line : TIdC_INT) cdecl;
+  TIdSslLockingCallback = procedure (mode, n : TIdC_INT; Afile : PAnsiChar; line : TIdC_INT) cdecl;
   TIdSslIdCallback = function: TIdC_ULONG cdecl;
     
 {  X509_REQ = record
@@ -5860,7 +5860,7 @@ type
     // all encryption/message digests are applied to the 'contents',
     // leaving out the 'type' field.
     case Integer of
-      0 : (ptr : PChar);
+      0 : (ptr : PAnsiChar);
       // NID_pkcs7_data
       1 : (data : PASN1_OCTET_STRING);
       // NID_pkcs7_signed
@@ -5877,7 +5877,7 @@ type
   PKCS7 = record
     // The following is non NULL if it contains ASN1 encoding of
     // this structure
-    asn1 : PChar;
+    asn1 : PAnsiChar;
     length : TIdC_LONG;
 
 //#define PKCS7_S_HEADER  0
@@ -5925,15 +5925,15 @@ type
   //bio.h
   //http://www.openssl.org/docs/crypto/bio.html
   PBIO_METHOD = ^BIO_METHOD;
-  Pbio_info_cb = procedure (_para1 : PBIO; _para2 : TIdC_INT; _para3 : PChar;
+  Pbio_info_cb = procedure (_para1 : PBIO; _para2 : TIdC_INT; _para3 : PAnsiChar;
      _para4 : TIdC_INT; _para5, _para6 : TIdC_LONG);
   BIO_METHOD = record
     _type : TIdC_INT;
-    name : PChar;
-    bwrite : function(_para1 : PBIO; _para2 : PChar; _para3 : TIdC_INT) : TIdC_INT; cdecl;
-    bread : function(_para1: PBIO; _para2: PChar; _para3: TIdC_INT) : TIdC_INT; cdecl;
-    bputs : function (_para1 : PBIO; _para2 : PChar) : TIdC_INT; cdecl;
-    bgets : function (_para1 : PBIO; _para2 : PChar; _para3 : TIdC_INT) : TIdC_INT; cdecl;
+    name : PAnsiChar;
+    bwrite : function(_para1 : PBIO; _para2 : PAnsiChar; _para3 : TIdC_INT) : TIdC_INT; cdecl;
+    bread : function(_para1: PBIO; _para2: PAnsiChar; _para3: TIdC_INT) : TIdC_INT; cdecl;
+    bputs : function (_para1 : PBIO; _para2 : PAnsiChar) : TIdC_INT; cdecl;
+    bgets : function (_para1 : PBIO; _para2 : PAnsiChar; _para3 : TIdC_INT) : TIdC_INT; cdecl;
     ctrl : function (_para1 : PBIO; _para2 : TIdC_INT; _para3 : TIdC_LONG; _para4 : Pointer) : TIdC_LONG; cdecl;
     create : function(_para1 : PBIO) : TIdC_INT; cdecl;
     destroy : function (_para1 : PBIO) : TIdC_INT; cdecl;
@@ -5943,9 +5943,9 @@ type
   BIO = record
     method : PBIO_METHOD;
     // bio, mode, argp, argi, argl, ret
-    callback : function (_para1 : PBIO; _para2 : TIdC_INT; _para3 : PChar;
+    callback : function (_para1 : PBIO; _para2 : TIdC_INT; _para3 : PAnsiChar;
        _para4 : TIdC_INT; _para5, _para6 : TIdC_LONG) : TIdC_LONG; cdecl;
-    cb_arg : PChar; // first argument for the callback
+    cb_arg : PAnsiChar; // first argument for the callback
     init : TIdC_INT;
     shutdown : TIdC_INT;
     flags : TIdC_INT;  // extra storage
@@ -5965,15 +5965,15 @@ type
 
   COMP_METHOD = record
     _type : TIdC_INT; // NID for compression library
-    name : PChar; // A text string to identify the library
+    name : PAnsiChar; // A text string to identify the library
     init : function (ctx : PCOMP_CTX) : TIdC_INT; cdecl;
     finish : procedure (ctx : PCOMP_CTX); cdecl;
     compress : function (ctx : PCOMP_CTX;
-      _out : PChar; olen : TIdC_UINT;
-      _in : PChar; ilen : TIdC_UINT) : TIdC_INT; cdecl;
+      _out : PAnsiChar; olen : TIdC_UINT;
+      _in : PAnsiChar; ilen : TIdC_UINT) : TIdC_INT; cdecl;
     expand : function  (ctx : PCOMP_CTX;
-      _out : PChar; olen : TIdC_UINT;
-      _in : PChar; ilen : TIdC_UINT) : TIdC_INT; cdecl;
+      _out : PAnsiChar; olen : TIdC_UINT;
+      _in : PAnsiChar; ilen : TIdC_UINT) : TIdC_INT; cdecl;
     // The following two do NOTHING, but are kept for backward compatibility
     ctrl : function : TIdC_INT; cdecl;
     callback_ctrl : function : TIdC_INT; cdecl;
@@ -6013,7 +6013,7 @@ type
   PSSL_CIPHER   = ^SSL_CIPHER;
   SSL_CIPHER = record
     valid : TIdC_INT;
-    name: PChar;  // text name
+    name: PAnsiChar;  // text name
     id: TIdC_ULONG; // id, 4 bytes, first is version
     algorithms: TIdC_ULONG; // what ciphers are used
     algo_strength: TIdC_ULONG; // strength and export flags
@@ -6058,9 +6058,9 @@ type
     // The cert is the certificate used to establish this connection
     sess_cert :  PSESS_CERT;
     {$IFNDEF OPENSSL_NO_TLSEXT}
-    tlsext_hostname : PChar;
+    tlsext_hostname : PAnsiChar;
  //* RFC4507 info */
-    tlsext_tick : PChar;//* Session ticket */
+    tlsext_tick : PAnsiChar;//* Session ticket */
     tlsext_ticklen : size_t;//* Session ticket length */ 
     tlsext_tick_lifetime_hint : TIdC_LONG;//* Session lifetime hint in seconds */
     {$ENDIF}
@@ -6123,11 +6123,11 @@ type
 
   SSL_COMP = record
     id : TIdC_INT;
-    name : PChar;
+    name : PAnsiChar;
     {$IFNDEF OPENSSL_NO_COMP}
     method : PCOMP_METHOD;
     {$ELSE}
-    method : PChar;
+    method : PAnsiChar;
     {$ENDIF}
   end;
 
@@ -6268,7 +6268,7 @@ type
 //     unsigned char *data, int len,
 //     void *arg);
   PSSL_tlsext_debug_cb = procedure (s : PSSL; client_server : TIdC_INT; 
-    _type : TIdC_INT; data : PChar; len : TIdC_INT;
+    _type : TIdC_INT; data : PAnsiChar; len : TIdC_INT;
     arg : Pointer); cdecl;
 
   SSL = record
@@ -6288,9 +6288,9 @@ type
     wbio : PBIO; // used by SSL_write
     bbio : PBIO; // used during session-id reuse to concatenate messages
     {$ELSE}
-    rbio : PChar; // used by SSL_read
-    wbio : PChar; // used by SSL_write
-    bbio : PChar;
+    rbio : PAnsiChar; // used by SSL_read
+    wbio : PAnsiChar; // used by SSL_write
+    bbio : PAnsiChar;
     {$ENDIF}
     // This holds a variable that indicates what we were doing
     // when a 0 or -1 is returned.  This is needed for
@@ -6330,7 +6330,7 @@ type
     init_off : TIdC_INT;    // amount read/written
 
     // used internally to point at a raw packet
-    packet : PChar;
+    packet : PAnsiChar;
     packet_length : TIdC_UINT;
 
     s2 : Pssl2_state;   // SSLv2 variables
@@ -6365,7 +6365,7 @@ type
     {$IFNDEF OPENSSL_NO_COMP}
     expand : PCOMP_CTX;             // uncompress
     {$ELSE}
-    expand : PChar;
+    expand : PAnsiChar;
     {$ENDIF}
 
     enc_write_ctx : PEVP_CIPHER_CTX;   // cryptographic state
@@ -6373,7 +6373,7 @@ type
     {$IFNDEF OPENSSL_NO_COMP}
     compress : PCOMP_CTX;              // compression
     {$ELSE}
-    compress : PChar;
+    compress : PAnsiChar;
     {$ENDIF}
 
     // session info
@@ -6432,7 +6432,7 @@ type
 //     unsigned char *data, int len,
 //     void *arg);
     tlsext_debug_arg : Pointer;
-    tlsext_hostname : PChar;
+    tlsext_hostname : PAnsiChar;
     servername_done : TIdC_INT;   //* no further mod of servername 
                        //   0 : call the servername extension callback.
                        //   1 : prepare 2, allow last ack just after in server callback.
@@ -6470,22 +6470,22 @@ type
     // buffer raw data
     rbuf_left : TIdC_INT;
     rbuf_offs : TIdC_INT;
-    rbuf : PChar;
-    wbuf : PChar;
+    rbuf : PAnsiChar;
+    wbuf : PAnsiChar;
 
-    write_ptr : PChar; // used to point to the start due to 2/3 byte header. */
+    write_ptr : PAnsiChar; // used to point to the start due to 2/3 byte header. */
 
     padding : TIdC_UINT;
     rlength : TIdC_UINT; // passed to ssl2_enc
     ract_data_length : TIdC_INT; // Set when things are encrypted.
     wlength : TIdC_UINT; // passed to ssl2_enc
     wact_data_length : TIdC_INT; // Set when things are decrypted.
-    ract_data : PChar;
-    wact_data : PChar;
-    mac_data : PChar;
+    ract_data : PAnsiChar;
+    wact_data : PAnsiChar;
+    mac_data : PAnsiChar;
 
-    read_key : PChar;
-    write_key : PChar;
+    read_key : PAnsiChar;
+    write_key : PAnsiChar;
 
     // Stuff specifically to do with this SSL session
     challenge_length : TIdC_UINT;
@@ -6517,15 +6517,15 @@ type
     {*r *}  _type : TIdC_INT;   // type of record
     {*rw*}  length : TIdC_UINT; // How many bytes available
     {*r *}  off : TIdC_UINT;    // read/write offset into 'buf'
-    {*rw*}  data : PChar;       // pointer to the record data
-    {*rw*}  input : PChar;      // where the decode bytes are
-    {*r *}  comp : PChar;       // only used with decompression - malloc()ed
+    {*rw*}  data : PAnsiChar;       // pointer to the record data
+    {*rw*}  input : PAnsiChar;      // where the decode bytes are
+    {*r *}  comp : PAnsiChar;       // only used with decompression - malloc()ed
     {*r *}  epoch : TIdC_ULONG; // epoch number, needed by DTLS1
     {*r *}  seq_num : PQ_64BIT; // sequence number, needed by DTLS1
   end;
   PSSL3_BUFFER = ^SSL3_BUFFER;
   SSL3_BUFFER = record
-    buf : PChar;            // at least SSL3_RT_MAX_PACKET_SIZE bytes,
+    buf : PAnsiChar;            // at least SSL3_RT_MAX_PACKET_SIZE bytes,
                             // see ssl3_setup_buffers()
     len : size_t;           // buffer size
     offset : TIdC_INT;      // where to 'copy from'
@@ -6556,9 +6556,9 @@ type
 
     // storage for Alert/Handshake protocol data received but not
     // yet processed by ssl3_read_bytes:
-    alert_fragment : array [0..1] of PChar;
+    alert_fragment : array [0..1] of PAnsiChar;
     alert_fragment_len : TIdC_UINT;
-    handshake_fragment : array [0..3] of PChar;
+    handshake_fragment : array [0..3] of PAnsiChar;
     handshake_fragment_len : TIdC_UINT;
 
     // partial write - check the numbers match
@@ -6628,14 +6628,14 @@ type
     tmp_use_rsa_tmp : TIdC_INT;
 
     tmp_key_block_length : TIdC_INT;
-    tmp_key_block : PChar;
+    tmp_key_block : PAnsiChar;
 
     tmp_new_sym_enc : PEVP_CIPHER;
     tmp_new_hash : PEVP_MD;
     {$IFNDEF OPENSSL_NO_COMP}
     tmp_new_compression : PSSL_COMP;
     {$ELSE}
-    tmp_new_compression : PChar;
+    tmp_new_compression : PAnsiChar;
     {$ENDIF}
     tmp_cert_request : TIdC_INT;
   end;
@@ -6665,7 +6665,7 @@ type
   PDTLS1_BITMAP = ^DTLS1_BITMAP;
 
   hm_header = record
-    _type : PChar;
+    _type : PAnsiChar;
     msg_len : TIdC_ULONG;
     seq : TIdC_USHORT;
     frag_off : TIdC_ULONG;
@@ -6673,7 +6673,7 @@ type
     is_ccs : TIdC_UINT;
   end;
   ccs_header_st = record
-    _type : PChar;
+    _type : PAnsiChar;
     seq : TIdC_USHORT;
   end;
   dtls1_timeout_st = record
@@ -6694,7 +6694,7 @@ type
 
   hm_fragment = record
     msg_header : hm_header;
-    fragment : PChar;
+    fragment : PAnsiChar;
   end;
 
   DTLS1_STATE = record
@@ -6757,12 +6757,12 @@ type
   TCRYPTO_set_mem_functions_r = function (ptr : Pointer; size : size_t) : Pointer; cdecl;
   TCRYPTO_set_mem_functions_f = procedure (ptr : Pointer); cdecl;
 
-  TCRYPTO_set_mem_ex_functions_m = function(size : size_t; const c : PChar; i : TIdC_INT) : Pointer cdecl;
-  TCRYPTO_set_mem_ex_functions_r = function(ptr : Pointer; size : size_t; const c : PChar; i : TIdC_INT) : Pointer; cdecl;
+  TCRYPTO_set_mem_ex_functions_m = function(size : size_t; const c : PAnsiChar; i : TIdC_INT) : Pointer cdecl;
+  TCRYPTO_set_mem_ex_functions_r = function(ptr : Pointer; size : size_t; const c : PAnsiChar; i : TIdC_INT) : Pointer; cdecl;
   TCRYPTO_set_mem_ex_functions_f = procedure (ptr : Pointer); cdecl;
 
-  Tset_mem_debug_functions_m = procedure (addr : Pointer; num : TIdC_INT; const _file : PChar; line, before_p : TIdC_INT) cdecl;
-  Tset_mem_debug_functions_r = procedure (addr1, addr2 : Pointer; num : TIdC_INT; const _file : PChar; line, before_p : TIdC_INT); cdecl;
+  Tset_mem_debug_functions_m = procedure (addr : Pointer; num : TIdC_INT; const _file : PAnsiChar; line, before_p : TIdC_INT) cdecl;
+  Tset_mem_debug_functions_r = procedure (addr1, addr2 : Pointer; num : TIdC_INT; const _file : PAnsiChar; line, before_p : TIdC_INT); cdecl;
   Tset_mem_debug_functions_f = procedure (addr : Pointer; before_p : TIdC_INT); cdecl;
   Tset_mem_debug_functions_so = procedure (bits : TIdC_LONG); cdecl;
   Tset_mem_debug_functions_go = function : TIdC_LONG; cdecl;
@@ -6777,13 +6777,13 @@ var
   IdSslEvpCleanup : procedure cdecl = nil;
 
   //SSL Version function
-  IdSslSSLeay_version : function(_type : TIdC_INT) : PChar; cdecl = nil;
+  IdSslSSLeay_version : function(_type : TIdC_INT) : PAnsiChar; cdecl = nil;
   //CRYPTO_set_mem_ex_functions
   IdSslCryptoSetMemFunctions : function(
     m: TCRYPTO_set_mem_functions_m;
     r: TCRYPTO_set_mem_functions_r;
     f: TCRYPTO_set_mem_functions_f): TIdC_INT; cdecl = nil;
-  IdSslCryptoMalloc : function(num: TIdC_INT; const _file: PChar; line: TIdC_INT): Pointer; cdecl = nil;
+  IdSslCryptoMalloc : function(num: TIdC_INT; const _file: PAnsiChar; line: TIdC_INT): Pointer; cdecl = nil;
   IdSslCryptoFree : procedure(ptr : Pointer); cdecl = nil;
   IdSslCryptoMemLeaks : procedure(b:PBIO); cdecl = nil;
   IdSslCryptoMemCtrl : function(mode: TIdC_INT): TIdC_INT; cdecl = nil;
@@ -6795,14 +6795,14 @@ var
       so : Tset_mem_debug_functions_so;
       go : Tset_mem_debug_functions_go); cdecl = nil;
 
-  IdSslCryptoDbgMalloc : procedure(addr: Pointer; num: TIdC_INT; const _file: PChar; line, before: TIdC_INT); cdecl = nil;
-  IdSslCryptoDbgRealloc : procedure(arrd1, addr2: Pointer; num: TIdC_INT; const _file: PChar; line, before: TIdC_INT); cdecl = nil;
+  IdSslCryptoDbgMalloc : procedure(addr: Pointer; num: TIdC_INT; const _file: PAnsiChar; line, before: TIdC_INT); cdecl = nil;
+  IdSslCryptoDbgRealloc : procedure(arrd1, addr2: Pointer; num: TIdC_INT; const _file: PAnsiChar; line, before: TIdC_INT); cdecl = nil;
   IdSslCryptoDbgFree : procedure(addr: Pointer; before: TIdC_INT); cdecl = nil;
   IdSslCryptoDbgSetOptions : procedure(bits: TIdC_LONG); cdecl = nil;
   IdSslCryptoDbgGetOptions : function: TIdC_LONG; cdecl = nil;
 
   IdSslSkNewNull : function: PSTACK; cdecl = nil;
-  IdSslSkPush : function(st: PSTACK; data: PChar): TIdC_INT; cdecl = nil;
+  IdSslSkPush : function(st: PSTACK; data: PAnsiChar): TIdC_INT; cdecl = nil;
 
   IdSslRsaFree : procedure(rsa: PRSA); cdecl = nil;
   //This function is depreciated.
@@ -6814,20 +6814,20 @@ var
   IdSslBioSMem : function: PBIO_METHOD; cdecl = nil;
   IdSslBioSFile : function: PBIO_METHOD; cdecl = nil;
   IdSslBioCtrl : function(bp: PBIO; cmd: TIdC_INT; larg: TIdC_LONG; parg: Pointer): TIdC_LONG; cdecl = nil;
-  IdSslBioNewFile : function(const filename: PChar; const mode: PChar): PBIO; cdecl = nil;
-  IdSslBioPutS : function(b: PBIO; const txt: PChar): TIdC_INT; cdecl = nil;
+  IdSslBioNewFile : function(const filename: PAnsiChar; const mode: PAnsiChar): PBIO; cdecl = nil;
+  IdSslBioPutS : function(b: PBIO; const txt: PAnsiChar): TIdC_INT; cdecl = nil;
   IdSslBioRead : function(b: PBIO; data: Pointer; len: TIdC_INT): TIdC_INT; cdecl = nil;
   IdSslBioWrite : function(b: PBIO; const buf: Pointer; len: TIdC_INT): TIdC_INT; cdecl = nil;
 
   IdSslPemWriteBioX509Req : function(bp: PBIO; x: PX509_REQ): TIdC_INT; cdecl = nil;
   {$IFNDEF OPENSSL_NO_BIO}
   IdSslPemWriteBioPKCS8PrivateKey : function(bp: PBIO; key: PEVP_PKEY; enc: PEVP_CIPHER;
-    kstr: PChar; klen: TIdC_INT; cb: ppem_password_cb; u: Pointer): TIdC_INT; cdecl = nil;
-  IdSslPemAsn1WriteBio : function(i2d: D2I_OF_void; const name: PChar;
-    bp: PBIO; x: PChar; const enc: PEVP_CIPHER; kstr: PChar; klen: TIdC_INT;
+    kstr: PAnsiChar; klen: TIdC_INT; cb: ppem_password_cb; u: Pointer): TIdC_INT; cdecl = nil;
+  IdSslPemAsn1WriteBio : function(i2d: D2I_OF_void; const name: PAnsiChar;
+    bp: PBIO; x: PAnsiChar; const enc: PEVP_CIPHER; kstr: PAnsiChar; klen: TIdC_INT;
     cb: ppem_password_cb; u: Pointer):TIdC_INT cdecl = nil;
-  IdSslPemAsn1ReadBio : function(d2i: D2I_OF_void; const name: PChar; bp: PBIO;
-      var x: Pointer; cb: ppem_password_cb; u:PChar): Pointer; cdecl = nil;
+  IdSslPemAsn1ReadBio : function(d2i: D2I_OF_void; const name: PAnsiChar; bp: PBIO;
+      var x: Pointer; cb: ppem_password_cb; u:PAnsiChar): Pointer; cdecl = nil;
   {$ENDIF}
 
   IdSslPemReadBioPrivateKey : function(bio: PBIO; var x: PEVP_PKEY; cb: ppem_password_cb; u: Pointer): PEVP_PKEY; cdecl = nil;
@@ -6838,9 +6838,9 @@ var
   IdSslEvpPKeyFree : procedure(pkey: PEVP_PKEY); cdecl = nil;
 
   {$IFNDEF OPENSSL_NO_RSA}
-  IdSslEvpPKeyAssign : function(pkey: PEVP_MD; _type: TIdC_INT; key: PChar): TIdC_INT; cdecl = nil;
+  IdSslEvpPKeyAssign : function(pkey: PEVP_MD; _type: TIdC_INT; key: PAnsiChar): TIdC_INT; cdecl = nil;
   {$ENDIF}
-  IdSslEvpGetDigestByName : function(const name: PChar): PEVP_MD; cdecl = nil;
+  IdSslEvpGetDigestByName : function(const name: PAnsiChar): PEVP_MD; cdecl = nil;
 
   IdSslAsn1IntegerSet : function(a: PASN1_INTEGER; v: TIdC_LONG): TIdC_INT; cdecl = nil;
   IdSslAsn1IntegerGet : function(a: PASN1_INTEGER) : TIdC_LONG; cdecl = nil;
@@ -6861,8 +6861,8 @@ var
   IdSslX509ReqNew : function():PX509_REQ cdecl = nil;
   IdSslX509ReqFree : procedure(x:PX509_REQ) cdecl = nil;
   IdSslX509ToX509Req : function(x: PX509; pkey: PEVP_PKEY; const md: PEVP_MD): PX509_REQ; cdecl = nil;
-  IdSslX509NameAddEntryByTxt : function(name: PX509_NAME; const field: PChar; _type: TIdC_INT;
-    const bytes: PChar; len, loc, _set: TIdC_INT): TIdC_INT; cdecl = nil;
+  IdSslX509NameAddEntryByTxt : function(name: PX509_NAME; const field: PAnsiChar; _type: TIdC_INT;
+    const bytes: PAnsiChar; len, loc, _set: TIdC_INT): TIdC_INT; cdecl = nil;
   IdSslX509SetVersion : function(x: PX509; version: TIdC_LONG): TIdC_INT; cdecl = nil;
   IdSslX509GetSerialNumber : function(x: PX509): PASN1_INTEGER; cdecl = nil;
   IdSslX509GmTimeAdj : function(s: PASN1_TIME; adj: TIdC_LONG): PASN1_TIME; cdecl = nil;
@@ -6873,22 +6873,22 @@ var
   IdSslX509Sign : function(x: PX509; pkey: PEVP_PKEY; const md: PEVP_MD): TIdC_INT; cdecl = nil;
   IdSslX509ReqSign : function(x: PX509_REQ; pkey: PEVP_PKEY; const md: PEVP_MD): TIdC_INT; cdecl = nil;
   IdSslX509ReqAddExtensions : function(req: PX509_REQ; exts: PSTACK_OF_X509_EXTENSION): TIdC_INT; cdecl = nil;
-  IdSslX509V3ExtConfNid : function(conf: PLHASH; ctx: PX509V3_CTX; ext_nid: TIdC_INT; value: PChar): PX509_EXTENSION; cdecl = nil;
+  IdSslX509V3ExtConfNid : function(conf: PLHASH; ctx: PX509V3_CTX; ext_nid: TIdC_INT; value: PAnsiChar): PX509_EXTENSION; cdecl = nil;
   IdSslX509ExtensionCreateByNid : function(ex: PPX509_EXTENSION; nid: TIdC_INT;
     crit: TIdC_INT; data: PASN1_OCTET_STRING): PX509_EXTENSION; cdecl = nil;
   IdSslX509V3SetCtx : procedure(ctx: PX509V3_CTX; issuer, subject: PX509; req: PX509_REQ; crl: PX509_CRL; flags: TIdC_INT); cdecl = nil;
   IdSslX509ExtensionFree : procedure(ex: PX509_EXTENSION); cdecl = nil;
   IdSslX509AddExt : function(cert: PX509; ext: PX509_EXTENSION; loc: TIdC_INT): TIdC_INT; cdecl = nil;
-  IdSslCtxSetCipherList : function(_para1: PSSL_CTX; const str: PChar): TIdC_INT; cdecl = nil;
+  IdSslCtxSetCipherList : function(_para1: PSSL_CTX; const str: PAnsiChar): TIdC_INT; cdecl = nil;
   IdSslCtxNew : function(meth: PSSL_METHOD): PSSL_CTX; cdecl = nil;
   IdSslCtxFree : procedure(_para1: PSSL_CTX); cdecl = nil;
   IdSslSetFd : function(s: PSSL; fd: TIdC_INT): TIdC_INT; cdecl = nil;
-  IdSslCtxUsePrivateKeyFile : function(ctx: PSSL_CTX; const _file: PChar; _type: TIdC_INT): TIdC_INT; cdecl = nil;
+  IdSslCtxUsePrivateKeyFile : function(ctx: PSSL_CTX; const _file: PAnsiChar; _type: TIdC_INT): TIdC_INT; cdecl = nil;
   IdSslCtxUsePrivateKey : function(ctx: PSSL_CTX; pkey: PEVP_PKEY): TIdC_INT; cdecl = nil;
   IdSslCtxUseCertificate : function(ctx: PSSL_CTX; x: PX509): TIdC_INT; cdecl = nil;
-  IdSslCtxUseCertificateFile : function(ctx: PSSL_CTX; const _file: PChar; _type: TIdC_INT): TIdC_INT;cdecl = nil;
+  IdSslCtxUseCertificateFile : function(ctx: PSSL_CTX; const _file: PAnsiChar; _type: TIdC_INT): TIdC_INT;cdecl = nil;
   IdSslLoadErrorStrings : procedure; cdecl = nil;
-  IdSslStateStringLong : function(s: PSSL): PChar; cdecl = nil;
+  IdSslStateStringLong : function(s: PSSL): PAnsiChar; cdecl = nil;
   IdSslGetPeerCertificate : function(s: PSSL): PX509; cdecl = nil;
   IdSslCtxSetVerify : procedure(ctx: PSSL_CTX; mode: TIdC_INT; callback: TSSL_CTX_set_verify_callback); cdecl = nil;
   IdSslCtxSetVerifyDepth : procedure(ctx: PSSL_CTX; depth: TIdC_INT); cdecl = nil;
@@ -6926,13 +6926,13 @@ var
   IdSslSetConnectState : procedure(s: PSSL); cdecl = nil;
   IdSslSetAcceptState : procedure(s: PSSL); cdecl = nil;
   IdSslSetShutdown : procedure(ssl: PSSL; mode: TIdC_INT); cdecl = nil;
-  IdSslCtxLoadVerifyLocations : function(ctx: PSSL_CTX; const CAfile: PChar; const CApath: PChar): TIdC_INT; cdecl = nil;
+  IdSslCtxLoadVerifyLocations : function(ctx: PSSL_CTX; const CAfile: PAnsiChar; const CApath: PAnsiChar): TIdC_INT; cdecl = nil;
   IdSslGetSession : function(const ssl: PSSL): PSSL_SESSION; cdecl = nil;
   IdSslAddSslAlgorithms : function: TIdC_INT; cdecl = nil;
   // IdSslSetAppData : function(s: PSSL; arg: Pointer): Integer; cdecl = nil;
   // IdSslGetAppData : function(s: PSSL): Pointer; cdecl = nil;
-  IdSslSessionGetId : function(const s: PSSL_SESSION; id: PPChar; length: PIdC_INT): PChar; cdecl = nil;
-  IdSslX509NameOneline : function(a: PX509_NAME; buf: PChar; size: TIdC_INT): PChar; cdecl = nil;
+  IdSslSessionGetId : function(const s: PSSL_SESSION; id: PPChar; length: PIdC_INT): PAnsiChar; cdecl = nil;
+  IdSslX509NameOneline : function(a: PX509_NAME; buf: PAnsiChar; size: TIdC_INT): PAnsiChar; cdecl = nil;
   IdSslX509NameHash : function(x: PX509_NAME): TIdC_ULONG; cdecl = nil;
   IdSslX509SetIssuerName : function(x: PX509; name: PX509_NAME): TIdC_INT; cdecl = nil;
   IdSslX509GetIssuerName : function(a: PX509): PX509_NAME; cdecl = nil;
@@ -6941,8 +6941,8 @@ var
   IdSslOBJObj2Nid  : function (const o: PASN1_OBJECT): TIdC_INT; cdecl = nil;
 
   IdSslOBJNid2Obj : function (n : TIdC_INT) : PASN1_OBJECT; cdecl = nil;
-  IdSslOBJNid2ln : function (n : TIdC_INT) : PChar; cdecl = nil;
-   IdSslOBJNid2sn : function (n : TIdC_INT) : PChar; cdecl = nil;
+  IdSslOBJNid2ln : function (n : TIdC_INT) : PAnsiChar; cdecl = nil;
+   IdSslOBJNid2sn : function (n : TIdC_INT) : PAnsiChar; cdecl = nil;
 
   IdSslX509Digest : function(const data: PX509; const _type: PEVP_MD;
       md: PByte; var len: TIdC_UINT): TIdC_INT; cdecl = nil;
@@ -6979,33 +6979,33 @@ var
   IdSSL_set_ex_data: function(ssl: PSSL; idx: TIdC_INT; data: Pointer): TIdC_INT; cdecl = nil;
   IdSSL_get_ex_data: function(ssl: PSSL; idx: TIdC_INT): Pointer; cdecl = nil;
 
-  IdSSLPKCS12Create: function(pass, name: PChar; pkey: PEVP_PKEY; cert : PX509;
+  IdSSLPKCS12Create: function(pass, name: PAnsiChar; pkey: PEVP_PKEY; cert : PX509;
     ca: PSTACK_OF_X509; nid_key, nid_cert, iter, mac_iter, keytype : TIdC_INT) : PPKCS12; cdecl = nil;
 
   IdSSLI2dPKCS12Bio: function(b: PBIO; p12: PPKCS12) : TIdC_INT; cdecl = nil;
 
   IdSSLPKCS12Free: procedure(p12: PPKCS12); cdecl = nil;
-  IdSSLLoadClientCAFile: function(const _file: PChar): PSTACK_OF_X509_NAME; cdecl = nil;
+  IdSSLLoadClientCAFile: function(const _file: PAnsiChar): PSTACK_OF_X509_NAME; cdecl = nil;
   IdSSLCtxSetClientCAList: procedure(ctx: PSSL_CTX; list: PSTACK_OF_X509_NAME); cdecl = nil;
   IdSSLCtxSetDefaultVerifyPaths: function(ctx: PSSL_CTX): TIdC_INT; cdecl = nil;
   IdSSLCtxSetSessionIdContext: function(ctx: PSSL_CTX; const sid_ctx: PByte; sid_ctx_len: TIdC_UINT): TIdC_INT; cdecl = nil;
 
-  IdSSLCipherDescription: function(_para1: PSSL_CIPHER; buf: PChar; size: TIdC_INT): PChar; cdecl = nil;
+  IdSSLCipherDescription: function(_para1: PSSL_CIPHER; buf: PAnsiChar; size: TIdC_INT): PAnsiChar; cdecl = nil;
 
   IdSSLGetCurrentCipher: function(const s: PSSL): PSSL_CIPHER; cdecl = nil;
-  IdSSLCipherGetName: function(const c: PSSL_CIPHER): PChar; cdecl = nil;
-  IdSSLCipherGetVersion: function(const c: PSSL_CIPHER): PChar; cdecl = nil;
+  IdSSLCipherGetName: function(const c: PSSL_CIPHER): PAnsiChar; cdecl = nil;
+  IdSSLCipherGetVersion: function(const c: PSSL_CIPHER): PAnsiChar; cdecl = nil;
   IdSSLCipherGetBits: function(const c: PSSL_CIPHER; var alg_bits: TIdC_INT): TIdC_INT; cdecl = nil;
 
   //experimental
-  IdSSLERR_error_string_n: procedure(e: TIdC_ULONG; buf: PChar; len : size_t); cdecl = nil;
+  IdSSLERR_error_string_n: procedure(e: TIdC_ULONG; buf: PAnsiChar; len : size_t); cdecl = nil;
   IdSSLERR_get_err : function: TIdC_ULONG; cdecl = nil;
   IdSSLERR_peek_err : function: TIdC_ULONG; cdecl = nil;
   IdSSLERR_clear_error : procedure; cdecl = nil;
-  IdSSLERR_error_string : function (e: TIdC_ULONG; buf: PChar): PChar; cdecl = nil;
-  IdSSLERR_lib_error_string : function(e : TIdC_ULONG): PChar; cdecl = nil;
-  IdSSLERR_func_error_string : function(e : TIdC_ULONG): PChar; cdecl = nil;
-  IdSSLERR_reason_error_string : function(e : TIdC_ULONG): PChar; cdecl = nil;
+  IdSSLERR_error_string : function (e: TIdC_ULONG; buf: PAnsiChar): PAnsiChar; cdecl = nil;
+  IdSSLERR_lib_error_string : function(e : TIdC_ULONG): PAnsiChar; cdecl = nil;
+  IdSSLERR_func_error_string : function(e : TIdC_ULONG): PAnsiChar; cdecl = nil;
+  IdSSLERR_reason_error_string : function(e : TIdC_ULONG): PAnsiChar; cdecl = nil;
   IdSSLERR_load_ERR_strings : procedure; cdecl = nil;
   IdSSLERR_load_crypto_strings : procedure; cdecl = nil;
   IdSSLERR_free_strings : procedure; cdecl = nil;
@@ -7049,12 +7049,12 @@ function IdSslCtxGetVersion(ctx: PSSL_CTX): TIdC_INT;
 function IdSslBioSetClose(b: PBio; c: TIdC_LONG): TIdC_LONG;
 procedure IdSslBioGetMemPtr(b: PBIO; pp: Pointer);
 function IdSslBioPending(b: PBIO): TIdC_LONG;
-function IdSslPemWriteBio(b: PBIO; x: PChar): TIdC_INT;
-function IdSslPemReadBio(bp: PBIO; x: Pointer; cb: ppem_password_cb; u: PChar): PX509;
+function IdSslPemWriteBio(b: PBIO; x: PAnsiChar): TIdC_INT;
+function IdSslPemReadBio(bp: PBIO; x: Pointer; cb: ppem_password_cb; u: PAnsiChar): PX509;
 function IdSslMalloc(aSize: TIdC_INT): Pointer;
 procedure IdSslMemCheck(const aEnabled: Boolean);
 {$IFNDEF OPENSSL_NO_RSA}
-function IdSslEvpPKeyAssignRsa(pkey: PEVP_MD; rsa: PChar): TIdC_INT;
+function IdSslEvpPKeyAssignRsa(pkey: PEVP_MD; rsa: PAnsiChar): TIdC_INT;
 {$ENDIF}
 function IdSslX509ReqGetSubjectName(x: PX509_REQ): PX509_NAME;
 //function IdSslX509ReqGetSubjectName(x:PX509_REQ):PASN1_BIT_STRING;
@@ -7063,9 +7063,9 @@ procedure IdSslX509V3SetCtxNoDb(ctx: X509V3_CTX);
 function IdSslMASN1StringLength(x : PASN1_STRING): TIdC_INT;
 procedure IdSslMASN1StringLengthSet(x : PASN1_STRING; n : TIdC_INT);
 function IdSslMASN1StringType(x : PASN1_STRING) : TIdC_INT;
-function IdSslMASN1StringData(x : PASN1_STRING) : PChar;
+function IdSslMASN1StringData(x : PASN1_STRING) : PAnsiChar;
 
-function ErrMsg(AErr : TIdC_ULONG) : string;
+function ErrMsg(AErr : TIdC_ULONG) : AnsiString;
 
 implementation
 
@@ -9383,9 +9383,9 @@ them in case we use them later.}
   {CH gl_POLICY_CONSTRAINTS_it = 'POLICY_CONSTRAINTS_it'; } {Do not localize}
   {$ENDIF}
 
-function LoadFunction(const FceName: String; const ACritical : Boolean = True): Pointer;
+function LoadFunction(const FceName: AnsiString; const ACritical : Boolean = True): Pointer;
 begin
-  Result := GetProcAddress(hIdSSL, PChar(FceName));
+  Result := GetProcAddress(hIdSSL, PAnsiChar(FceName));
   if ACritical then
   begin
     if Result = nil then begin
@@ -9394,9 +9394,9 @@ begin
   end;
 end;
 
-function LoadFunctionCLib(const FceName:String;  const ACritical : Boolean = True): Pointer;
+function LoadFunctionCLib(const FceName:AnsiString;  const ACritical : Boolean = True): Pointer;
 begin
-  Result := GetProcAddress(hIdCrypto, PChar(FceName));
+  Result := GetProcAddress(hIdCrypto, PAnsiChar(FceName));
   if ACritical then
   begin
     if Result = nil then begin
@@ -9406,12 +9406,12 @@ begin
 end;
 
 // remove this function, it is not used
-function ErrMsg(AErr : TIdC_ULONG) : string;
+function ErrMsg(AErr : TIdC_ULONG) : AnsiString;
 var
-  LString: String;
+  LString: AnsiString;
 Begin
   SetLength(LString, 300);
-  IdSSLOpenSSLHeaders.IdSSLERR_error_string_n(AErr, PChar(LString), 300);
+  IdSSLOpenSSLHeaders.IdSSLERR_error_string_n(AErr, PAnsiChar(LString), 300);
   Result := LString;
 end;
 
@@ -9831,7 +9831,7 @@ begin
   Result := x^._type;
 end;
 
-function IdSslMASN1StringData(x : PASN1_STRING) : PChar;
+function IdSslMASN1StringData(x : PASN1_STRING) : PAnsiChar;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := x^.data;
@@ -9996,13 +9996,13 @@ begin
   Result := IdSslBioCtrl(b, OPENSSL_BIO_CTRL_PENDING, 0, nil);
 end;
 
-function IdSslPemReadBio(bp: PBIO; x: Pointer; cb: ppem_password_cb; u: PChar): PX509;
+function IdSslPemReadBio(bp: PBIO; x: Pointer; cb: ppem_password_cb; u: PAnsiChar): PX509;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := IdSslPemAsn1ReadBio(@IdSslD2iX509, OPENSSL_PEM_STRING_X509, bp, x, nil, nil);
 end;
 
-function IdSslPemWriteBio(b: PBIO; x: PChar): TIdC_INT;
+function IdSslPemWriteBio(b: PBIO; x: PAnsiChar): TIdC_INT;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Assert(b<>nil);
@@ -10033,7 +10033,7 @@ begin
 end;
 
 {$IFNDEF OPENSSL_NO_RSA}
-function IdSslEvpPKeyAssignRsa(pkey: PEVP_MD; rsa: PChar): TIdC_INT;
+function IdSslEvpPKeyAssignRsa(pkey: PEVP_MD; rsa: PAnsiChar): TIdC_INT;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := IdSslEvpPKeyAssign(pkey, OPENSSL_EVP_PKEY_RSA, rsa);

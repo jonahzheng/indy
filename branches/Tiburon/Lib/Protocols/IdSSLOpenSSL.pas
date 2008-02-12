@@ -263,7 +263,7 @@ type
     fVerifyDepth: Integer;
     fVerifyMode: TIdSSLVerifyModeSet;
     //fVerifyFile,
-    fVerifyDirs, fCipherList: String;
+    fVerifyDirs, fCipherList: AnsiString;
     procedure AssignTo(ASource: TPersistent); override;
   public
     constructor Create;
@@ -276,8 +276,8 @@ type
     property VerifyMode: TIdSSLVerifyModeSet read fVerifyMode write fVerifyMode;
     property VerifyDepth: Integer read fVerifyDepth write fVerifyDepth;
 //    property VerifyFile: String read fVerifyFile write fVerifyFile;
-    property VerifyDirs: String read fVerifyDirs write fVerifyDirs;
-    property CipherList: String read fCipherList write fCipherList;
+    property VerifyDirs: AnsiString read fVerifyDirs write fVerifyDirs;
+    property CipherList: AnsiString read fCipherList write fCipherList;
   public
     // procedure Assign(ASource: TPersistent); override;
   end;
@@ -286,12 +286,12 @@ type
   protected
     fMethod: TIdSSLVersion;
     fMode: TIdSSLMode;
-    fsRootCertFile, fsCertFile, fsKeyFile: String;
+    fsRootCertFile, fsCertFile, fsKeyFile: AnsiString;
     fVerifyDepth: Integer;
     fVerifyMode: TIdSSLVerifyModeSet;
 //    fVerifyFile: String;
     fVerifyDirs: String;
-    fCipherList: String;
+    fCipherList: AnsiString;
     fContext: PSSL_CTX;
     fStatusInfoOn: Boolean;
 //    fPasswordRoutineOn: Boolean;
@@ -318,9 +318,9 @@ type
  // published
     property Method: TIdSSLVersion read fMethod write fMethod;
     property Mode: TIdSSLMode read fMode write fMode;
-    property RootCertFile: String read fsRootCertFile write fsRootCertFile;
-    property CertFile: String read fsCertFile write fsCertFile;
-    property KeyFile: String read fsKeyFile write fsKeyFile;
+    property RootCertFile: AnsiString read fsRootCertFile write fsRootCertFile;
+    property CertFile: AnsiString read fsCertFile write fsCertFile;
+    property KeyFile: AnsiString read fsKeyFile write fsKeyFile;
 //    property VerifyMode: TIdSSLVerifyModeSet read GetVerifyMode write SetVerifyMode;
     property VerifyMode: TIdSSLVerifyModeSet read fVerifyMode write fVerifyMode;
     property VerifyDepth: Integer read fVerifyDepth write fVerifyDepth;
@@ -622,12 +622,12 @@ var
   LockVerifyCB: TIdCriticalSection = nil;
   CallbackLockList: TThreadList = nil;
 
-function GetErrorMessage(const AErr : TIdC_ULONG) : String;
+function GetErrorMessage(const AErr : TIdC_ULONG) : AnsiString;
 var
-  LErrMsg: array [0..160] of char;
+  LErrMsg: array [0..160] of AnsiChar;
 begin
   IdSSLERR_error_string(AErr, @LErrMsg);
-  result := StrPas(@LErrMsg);
+  result := StrPas(PAnsiChar(@LErrMsg));
 end;
 
 function PasswordCallback(buf:PChar; size:TIdC_INT; rwflag:TIdC_INT; userdata: Pointer):TIdC_INT; cdecl;
@@ -727,7 +727,7 @@ begin
   Result := DT - TimeZoneBias{ / (24 * 60)};
 end;
 
-procedure SslLockingCallback(mode, n : TIdC_INT; Afile : PChar; line : TIdC_INT) cdecl;
+procedure SslLockingCallback(mode, n : TIdC_INT; Afile : PAnsiChar; line : TIdC_INT) cdecl;
 var
   Lock: TIdCriticalSection;
 begin
@@ -1475,7 +1475,7 @@ procedure TIdSSLContext.InitContext(CtxMode: TIdSSLCtxMode);
 var
   SSLMethod: PSSL_METHOD;
   error: TIdC_INT;
-  pCipherList, pRootCertFile: PChar;
+  pCipherList, pRootCertFile: PAnsiChar;
 
 //  pCAname: PSTACK_X509_NAME;
 begin
@@ -1539,7 +1539,7 @@ begin
   //f_SSL_CTX_set_tmp_rsa_callback(hSSLContext, @RSACallback);
 
   if fCipherList <> '' then begin    {Do not Localize}
-    pCipherList := StrNew(PChar(fCipherList));
+    pCipherList := StrNew(PAnsiChar(fCipherList));
     error := IdSslCtxSetCipherList(fContext, pCipherList);
     StrDispose(pCipherList);
   end
@@ -1560,7 +1560,7 @@ begin
 
   // CA list
   if RootCertFile <> '' then begin    {Do not Localize}
-    pRootCertFile := StrNew(PChar(RootCertFile));
+    pRootCertFile := StrNew(PAnsiChar(RootCertFile));
     IdSSLCtxSetClientCAList(fContext, IdSSLLoadClientCAFile(pRootCertFile));
     StrDispose(pRootCertFile);
   end
@@ -1661,11 +1661,11 @@ end;
 
 function TIdSSLContext.LoadRootCert: Boolean;
 var
-  pStr: PChar;
+  pStr: PAnsiChar;
   error: Integer;
 //  pDirs : PChar;
 begin
-  pStr := StrNew(PChar(RootCertFile));
+  pStr := StrNew(PAnsiChar(RootCertFile));
 {  if fVerifyDirs <> '' then begin
     pDirs := StrNew(PChar(fVerifyDirs));
     error := IdSslCtxLoadVerifyLocations(
@@ -1692,10 +1692,10 @@ end;
 
 function TIdSSLContext.LoadCert: Boolean;
 var
-  pStr: PChar;
+  pStr: PAnsiChar;
   error: Integer;
 begin
-  pStr := StrNew(PChar(CertFile));
+  pStr := StrNew(PAnsiChar(CertFile));
   error := IdSslCtxUseCertificateFile(
                  fContext,
                  pStr,
@@ -1710,12 +1710,12 @@ end;
 
 function TIdSSLContext.LoadKey: Boolean;
 var
-  pStr: PChar;
+  pStr: PAnsiChar;
   error: Integer;
 begin
   Result := True;
 
-  pStr := StrNew(PChar(fsKeyFile));
+  pStr := StrNew(PAnsiChar(fsKeyFile));
   error := IdSslCtxUsePrivateKeyFile(
                  fContext,
                  pStr,
@@ -1997,13 +1997,13 @@ end;
 
 function TIdX509Name.CertInOneLine: String;
 var
-  LOneLine: Array[0..2048] of Char;
+  LOneLine: Array[0..2048] of AnsiChar;
 begin
   if FX509Name = nil then begin
     Result := '';    {Do not Localize}
   end
   else begin
-    Result := StrPas(IdSslX509NameOneline(FX509Name, PChar(@LOneLine), sizeof(LOneLine)));
+    Result := StrPas(IdSslX509NameOneline(FX509Name, PAnsiChar(@LOneLine), sizeof(LOneLine)));
   end;
 end;
 
