@@ -1470,7 +1470,12 @@ begin
   begin
     VChar := fValue[0];
     Result := True;
+    {$IFDEF DOTNET2_OR_ABOVE}
     fDecoder.Reset;
+    {$ELSE}
+    // RLebeau: is there another way to reset the Decoder under .NET 1.x?
+    fDecoder := System.Text.Encoding.UTF8.GetDecoder;
+    {$ENDIF}
   end;
 end;
 
