@@ -4964,7 +4964,11 @@ begin
   LName := AName; // convert to Ansi
   Result := Windows.GetProcAddress(hDll, PAnsiChar(LName));
   {$ELSE}
+    {$IFDEF UNDER_CE}
+  Result := Windows.GetProcAddress(hDll, PWideChar(AName));
+    {$ELSE}
   Result := Windows.GetProcAddress(hDll, PAnsiChar(AName));
+    {$ENDIF}
   {$ENDIF}
   if Result = nil then begin
     raise EIdWinsockStubError.Build(WSAEINVAL, RSWinsockCallError, [AName]);
