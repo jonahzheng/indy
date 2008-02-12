@@ -1762,7 +1762,7 @@ begin
  
   DateTimeToSystemTime(Value, dSysTime);
   Result := Windows.SetLocalTime({$IFDEF FPC}@dSysTime{$ELSE}dSysTime{$ENDIF});
- 
+  {$IFNDEF WINCE}
   if Result then
   begin
     // RLebeau 2/1/2008: According to MSDN:
@@ -1776,7 +1776,7 @@ begin
     // setting."
     //
     // TODO: adjust the Time manually so only 1 call to SetLocalTime() is needed...
- 
+
     if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then
     begin
       Windows.SetLocalTime({$IFDEF FPC}@dSysTime{$ELSE}dSysTime{$ENDIF});
@@ -1788,8 +1788,7 @@ begin
       SendMessage(HWND_BROADCAST, WM_TIMECHANGE, 0, 0);
     end;
   end;
- 
-    {$IFNDEF WINCE}
+
   {Undo the Process Privilege change we had done for the
   set time and close the handle that was allocated}
   if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then
