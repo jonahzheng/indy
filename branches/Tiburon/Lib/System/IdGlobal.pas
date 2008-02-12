@@ -1411,16 +1411,6 @@ end;
 {$ELSE}
   {$IFDEF TEncoding}
 
-// The object returned by TEncoding.GetEncoder() is not garbage-collected
-// in Win32 like with System.Text.Encoding.GetEncoding() in .NET, so it
-// has to be freed manually
-
-// TODO: use of TEncoding is not entirely thread-safe!!!  There is a race
-// condition the first time each of the various properties is accessed.
-// This is not uncommon practice in VCL classes.  Perhaps access them in
-// 'initialization' to force their allocation before the user's code begins
-// running?
-
 function GetEncoder(AEncoding: TIdEncoding): SysUtils.TEncoding;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
@@ -1562,20 +1552,23 @@ end;
 function EncodeCharToUTF8(const AChar: Char; var VDest: TIdBytes; const AIndex: Integer): Integer;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 var
-  {$IFDEF DOTNET_OR_TEncoding}
+  {$IFDEF DOTNET}
   LChars : array[0..1] of Char;
   {$ELSE}
+    {$IFDEF TEncoding}
+  LChars : TWideCharArray;
+    {$ELSE}
   LWC: LongWord;
+    {$ENDIF}
   {$ENDIF}
 begin
   {$IFDEF DOTNET_OR_TEncoding}
+    {$IFDEF TEncoding}
+  SetLength(LChars, 2);
+    {$ENDIF}
   LChars[0] := AChar;
   LChars[1] := #0;
-    {$IFDEF DOTNET}
   Result := GetEncoder(enUTF8).GetBytes(LChars, 0, 1, VDest, AIndex);
-    {$ELSE}
-  Result := GetEncoder(enUTF8).GetBytes(@LChars, 0, 1, VDest, AIndex);
-    {$ENDIF}
   {$ELSE}
   LWC := LongWord(AChar);
   if LWC <= $7F then
@@ -1638,14 +1631,14 @@ end;
 function CalcBytesForUTF8Char(const AChar: Char): Integer;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 var
-  {$IFDEF TEncoding}
-    {$IFDEF DOTNET}
+  {$IFDEF DOTNET}
   LChars: array[0..0] of Char;
-    {$ELSE}
-  LChars: TWideCharArray;
-    {$ENDIF}
   {$ELSE}
+    {$IFDEF TEncoding}
+  LChars: TWideCharArray;
+    {$ELSE}
   LWC: LongWord;
+    {$ENDIF}
   {$ENDIF}
 begin
   {$IFDEF DOTNET2_OR_ABOVE}
@@ -1653,16 +1646,12 @@ begin
     method to get an Encoder object that can be called in a loop
     to calculate the necessary byte count? }
   {$ENDIF}
-  {$IFDEF TEncoding}
-
-    {$IFDEF DOTNET}
-  LChars[0] := AChar;
-  Result := GetEncoder(enUTF8).GetByteCount(LChars, 0, 1);
-    {$ELSE}
-  SetLength(LChars,1);
-  LChars[0] := AChar;
-  Result := GetEncoder(enUTF8).GetByteCount(LChars, 0, 1);
+  {$IFDEF DOTNET_OR_TEncoding}
+    {$IFDEF TEncoding}
+  SetLength(LChars, 1);
     {$ENDIF}
+  LChars[0] := AChar;
+  Result := GetEncoder(enUTF8).GetByteCount(LChars, 0, 1);
   {$ELSE}
   LWC := LongWord(AChar);
   if LWC <= $7F then begin
@@ -1738,24 +1727,24 @@ end;
 
 function UTF8BytesToChar(const ABytes: TIdBytes; const AIndex, ALength: Integer): Char;
 var
-  {$IFDEF DOTNET_OR_TEncoding}
-    {$IFDEF DOTNET}
+  {$IFDEF DOTNET}
   LChars: array[0..1] of Char;
-    {$ELSE}
-  LChars: TWideCharArray;
-    {$ENDIF}
   {$ELSE}
+    {$IFDEF TEncoding}
+  LChars: TWideCharArray;
+    {$ELSE}
   I: Integer;
   LCh: WideChar;
   Temp: String; // RLebeau: using a string to support Wide->Ansi conversion
+    {$ENDIF}
   {$ENDIF}
 begin
   // RLebeau: AIndex and ALength have already been validated/calculated
   // by BytesToChar() so use them as-is here...
 
   {$IFDEF DOTNET_OR_TEncoding}
-    {$IFNDEF DOTNET}
-  SetLength(LChars,2);
+    {$IFDEF TEncoding}
+  SetLength(LChars, 2);
     {$ENDIF}
   if GetEncoder(enUTF8).GetChars(ABytes, AIndex, ALength, LChars, 0) > 0 then
   begin
@@ -2112,10 +2101,9 @@ begin
   begin
     {$IFDEF UNICODESTRING}
     if AEncoding = en7Bit then begin
-      VDest[ADestIndex] := Ord(ASource) and $7F; //Byte(ASource and $7F);
+      VDest[ADestIndex] := Ord(ASource) and $7F;
     end else begin
       VDest[ADestIndex] := Ord(ASource) and $FF;
-    //  VDest[ADestIndex] := Byte(ASource and $FF);
     end;
     {$ELSE}
     VDest[ADestIndex] := Byte(ASource);

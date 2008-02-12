@@ -4952,29 +4952,19 @@ end;
 
 function FixupStub(hDll: THandle; const AName: string): Pointer;
 {$IFDEF USEINLINE}inline;{$ENDIF}
-{$IFDEF UNICODE_NOT_NO_UNICODESTRING}
+{$IFDEF UNICODESTRING}
 var
-  LName: WideString;
-{$ELSE}
-    {$IFDEF UNICODESTRING}
-var
-    LName : AnsiString;
-    {$ENDIF}
+  LName : AnsiString;
 {$ENDIF}
 begin
   if hDll = 0 then begin
     raise EIdWinsockStubError.Build(WSANOTINITIALISED, RSWinsockCallError, [AName]);
   end;
-  {$IFDEF UNICODE_NOT_NO_UNICODESTRING}
-  LName := AName;
-  Result := Windows.GetProcAddress(hDll, PWideChar(LName));
+  {$IFDEF UNICODESTRING}
+  LName := AName; // convert to Ansi
+  Result := Windows.GetProcAddress(hDll, PAnsiChar(LName));
   {$ELSE}
-    {$IFDEF UNICODESTRING}
-    LName := AName;
-    Result := Windows.GetProcAddress(hDll, PAnsiChar(LName));
-    {$ELSE}
-  Result := Windows.GetProcAddress(hDll, PChar(AName));
-    {$ENDIF}
+  Result := Windows.GetProcAddress(hDll, PAnsiChar(AName));
   {$ENDIF}
   if Result = nil then begin
     raise EIdWinsockStubError.Build(WSAEINVAL, RSWinsockCallError, [AName]);
@@ -5512,7 +5502,7 @@ begin
 end;
 
 function Stub_WSAAddressToString(lpsaAddress: PSockAddr; const dwAddressLength: DWORD; const lpProtocolInfo: LPWSAPROTOCOL_INFO;
-  const lpszAddressString: PChar; var lpdwAddressStringLength: DWORD): Integer; stdcall;
+  const lpszAddressString: {$IFDEF UNICODE}PWideChar{$ELSE}PAnsiChar{$ENDIF}; var lpdwAddressStringLength: DWORD): Integer; stdcall;
 begin
   {$IFDEF UNICODE}
   @WSAAddressToString := FixupStub(hWinSockDll, 'WSAAddressToStringW'); {Do not Localize}
@@ -5534,9 +5524,9 @@ begin
   Result := WSAStringToAddressW(AddressString, AddressFamily, lpProtocolInfo, lpAddress, lpAddressLength);
 end;
 
-function Stub_WSAStringToAddress (const AddressString: PChar; const AddressFamily: Integer;
-  const lpProtocolInfo: LPWSAProtocol_Info; var lpAddress: TSockAddr;
-  var lpAddressLength: Integer): Integer; stdcall;
+function Stub_WSAStringToAddress (const AddressString: {$IFDEF UNICODE}PWideChar{$ELSE}PAnsiChar{$ENDIF};
+  const AddressFamily: Integer; const lpProtocolInfo: LPWSAProtocol_Info;
+  var lpAddress: TSockAddr; var lpAddressLength: Integer): Integer; stdcall;
 begin
   {$IFDEF UNICODE}
   @WSAStringToAddress := FixupStub(hWinSockDll, 'WSAStringToAddressW'); {Do not Localize}
@@ -5694,7 +5684,8 @@ begin
 end;
 
 function Stub_WSAGetServiceClassNameByClassId(const lpServiceClassId: PGUID;
-  lpszServiceClassName: PChar; var lpdwBufferLength: DWORD): Integer; stdcall;
+  lpszServiceClassName: {$IFDEF UNICODE}PWideChar{$ELSE}PAnsiChar{$ENDIF};
+  var lpdwBufferLength: DWORD): Integer; stdcall;
 begin
   {$IFDEF UNICODE}
   @WSAGetServiceClassNameByClassId := FixupStub(hWinSockDll, 'WSAGetServiceClassNameByClassIdW'); {Do not Localize}
