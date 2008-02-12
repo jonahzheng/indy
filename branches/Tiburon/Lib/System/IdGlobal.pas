@@ -4653,8 +4653,10 @@ var
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     {$IFDEF UNICODE_BUT_NO_UNICODESTRING}
   LS, LSub: WideString;
-    {$ENDIF}
+  P1, P2: PWideChar;
+    {$ELSE}
     P1, P2: PChar;
+     {$ENDIF}
   {$ENDIF}
 begin
   LLen := Length(SubS);
@@ -4689,8 +4691,10 @@ var
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     {$IFDEF UNICODE_BUT_NO_UNICODESTRING}
   LS, LSubS: WideString;
-    {$ENDIF}
+  P1, P2: PWideChar;
+    {$ELSE}
   P1, P2: PChar;
+    {$ENDIF}
   {$ENDIF}
 begin
   LLen := Length(SubS);
