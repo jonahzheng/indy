@@ -457,8 +457,7 @@ type
   function IsLeadChar(ACh : Char):Boolean;
   function IsTopDomain(const AStr: string): Boolean;
   function IsValidIP(const S: String): Boolean;
-
-  function MakeTempFilename(const APath: String = ''): string;
+  function MakeTempFilename(const APath: TIdFileName = ''): TIdFileName;
   procedure MoveChars(const ASource: ShortString; ASourceStart: integer; var ADest: ShortString; ADestStart, ALen: integer);
   function OrdFourByteToLongWord(AByte1, AByte2, AByte3, AByte4 : Byte): LongWord;
   procedure LongWordToOrdFourByte(const AValue: LongWord; var VByte1, VByte2, VByte3, VByte4 : Byte);
