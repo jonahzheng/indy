@@ -1762,7 +1762,8 @@ begin
  
   DateTimeToSystemTime(Value, dSysTime);
   Result := Windows.SetLocalTime({$IFDEF FPC}@dSysTime{$ELSE}dSysTime{$ENDIF});
-  {$IFNDEF WINCE}
+
+    {$IFNDEF WINCE}
   if Result then
   begin
     // RLebeau 2/1/2008: According to MSDN:
@@ -2984,7 +2985,7 @@ end;
 function IsLeadChar(ACh : Char):Boolean;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
-  {$IFDEF DOTNET}
+  {$IFDEF DOTNET_OR_TEncoding}
   Result := False;
   {$ELSE}
   Result := ACh in LeadBytes;
