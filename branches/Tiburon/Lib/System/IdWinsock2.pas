@@ -4950,7 +4950,14 @@ begin
   end;
 end;
 
-function FixupStub(hDll: THandle; const AName: string): Pointer;
+{ IMPORTANT!!!
+
+WindowsCE only has a Unicode (WideChar) version of GetProcAddress.  We could use
+a version of GetProcAddress in the FreePascal dynlibs unit but that does a
+conversion from ASCII to Unicode which might not be necessary since most calls
+pass a constant anyway.
+}
+function FixupStub(hDll: THandle; const AName:{$IFDEF UNDER_CE}WideString{$ELSE}string{$ENDIF}): Pointer;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 {$IFDEF UNICODESTRING}
 var
