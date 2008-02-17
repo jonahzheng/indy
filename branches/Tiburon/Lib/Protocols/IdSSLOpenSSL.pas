@@ -238,12 +238,12 @@ type
 
   TEVP_MD = record
     Length: TIdC_UINT;
-    MD: Array[0..OPENSSL_EVP_MAX_MD_SIZE-1] of Char;
+    MD: Array[0..OPENSSL_EVP_MAX_MD_SIZE-1] of AnsiChar;
   end;
 
   TByteArray = record
     Length: Integer;
-    Data: PChar;
+    Data: PAnsiChar;
   End;
 
   TIdSSLIOHandlerSocketOpenSSL = class;
@@ -630,7 +630,7 @@ begin
   result := StrPas(PAnsiChar(@LErrMsg));
 end;
 
-function PasswordCallback(buf:PChar; size:TIdC_INT; rwflag:TIdC_INT; userdata: Pointer):TIdC_INT; cdecl;
+function PasswordCallback(buf:PAnsiChar; size:TIdC_INT; rwflag:TIdC_INT; userdata: Pointer):TIdC_INT; cdecl;
 var
   Password: String;
   IdSSLContext: TIdSSLContext;
@@ -650,7 +650,7 @@ begin
     end;
 
     size := Length(Password);
-    StrLCopy(buf, PChar(Password + #0), size + 1);
+    StrLCopy(buf, PAnsiChar(Password + #0), size + 1);
     Result := size;
   finally
     LockPassCB.Leave;
@@ -978,7 +978,7 @@ begin
       Result := Result + ':';    {Do not Localize}
     end;
     Result := Result + IndyFormat('%.2x', [Byte(AMD.MD[I])]);  {do not localize}
-end;
+  end;
 end;
 
 function VerifyCallback(Ok: TIdC_INT; ctx: PX509_STORE_CTX): TIdC_INT; cdecl;
@@ -1589,17 +1589,17 @@ end;
 {
 function TIdSSLContext.LoadVerifyLocations(FileName: String; Dirs: String): Boolean;
 var
-  pFileName, pDirs : PChar;
+  pFileName, pDirs : PAnsiChar;
 begin
   Result := False;
 
   pFileName := nil;
   pDirs := nil;
   if FileName <> '' then begin
-    pFileName := StrNew(PChar(FileName));
+    pFileName := StrNew(PAnsiChar(FileName));
   end;
   if Dirs <> '' then begin
-    pDirs := StrNew(PChar(Dirs));
+    pDirs := StrNew(PAnsiChar(Dirs));
   end;
 
   If (pDirs<>nil) or (pFileName<>nil) Then begin
@@ -1663,11 +1663,11 @@ function TIdSSLContext.LoadRootCert: Boolean;
 var
   pStr: PAnsiChar;
   error: Integer;
-//  pDirs : PChar;
+//  pDirs : PAnsiChar;
 begin
   pStr := StrNew(PAnsiChar(RootCertFile));
 {  if fVerifyDirs <> '' then begin
-    pDirs := StrNew(PChar(fVerifyDirs));
+    pDirs := StrNew(PAnsiChar(fVerifyDirs));
     error := IdSslCtxLoadVerifyLocations(
                    fContext,
                    pStr,
@@ -1979,7 +1979,7 @@ end;
 
 procedure TIdSSLSocket.SetCipherList(CipherList: String);
 //var
-//  tmpPStr: PChar;
+//  tmpPStr: PAnsiChar;
 begin
 {
   fCipherList := CipherList;
@@ -2337,7 +2337,7 @@ end;
 
 function TIdSSLCipher.GetDescription;
 var
-  Buf: Array[0..1024] of Char;
+  Buf: Array[0..1024] of AnsiChar;
 begin
   Result := StrPas(IdSSLCipherDescription(IdSSLGetCurrentCipher(FSSLSocket.fSSL), @Buf[0], SizeOf(Buf)-1));
 end;

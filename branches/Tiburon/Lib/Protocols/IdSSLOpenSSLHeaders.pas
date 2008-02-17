@@ -3493,10 +3493,10 @@ type
     PID: TIdC_UINT;
     err_flags : array [0..OPENSSL_ERR_NUM_ERRORS - 1] of TIdC_INT;
     err_buffer: array[0..OPENSSL_ERR_NUM_ERRORS-1] of TIdC_UINT;
-    err_data : array [0..OPENSSL_ERR_NUM_ERRORS -1] of PChar;
+    err_data : array [0..OPENSSL_ERR_NUM_ERRORS -1] of PAnsiChar;
     err_data_flags : array [0..OPENSSL_ERR_NUM_ERRORS -1] of TIdC_INT;
     
-    err_file: array[0..OPENSSL_ERR_NUM_ERRORS-1] of PChar;
+    err_file: array[0..OPENSSL_ERR_NUM_ERRORS-1] of PAnsiChar;
     err_line: array[0..OPENSSL_ERR_NUM_ERRORS-1] of TIdC_INT;
     
     top: TIdC_INT;
