@@ -250,7 +250,7 @@ type
   TIdSSLCipher = class;
 
   TCallbackEvent  = procedure(Msg: String) of object;
-  TPasswordEvent  = procedure(var Password: String) of object;
+  TPasswordEvent  = procedure(var Password: AnsiString) of object;
   TVerifyPeerEvent  = function(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean of object;
   TIOHandlerNotify = procedure(ASender: TIdSSLIOHandlerSocketOpenSSL) of object;
 
@@ -368,7 +368,7 @@ type
     procedure SetPassThrough(const Value: Boolean); override;
     procedure DoBeforeConnect(ASender: TIdSSLIOHandlerSocketOpenSSL); virtual;
     procedure DoStatusInfo(Msg: String); virtual;
-    procedure DoGetPassword(var Password: String); virtual;
+    procedure DoGetPassword(var Password: AnsiString); virtual;
     function DoVerifyPeer(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean; virtual;
     function RecvEnc(var VBuffer: TIdBytes): Integer; override;
     function SendEnc(const ABuffer: TIdBytes; const AOffset, ALength: Integer): Integer; override;
@@ -412,7 +412,7 @@ type
     //procedure CreateSSLContext;
     //
     procedure DoStatusInfo(Msg: String); virtual;
-    procedure DoGetPassword(var Password: String); virtual;
+    procedure DoGetPassword(var Password: AnsiString); virtual;
     function DoVerifyPeer(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean; virtual;
     procedure InitComponent; override;
   public
@@ -632,7 +632,7 @@ end;
 
 function PasswordCallback(buf:PAnsiChar; size:TIdC_INT; rwflag:TIdC_INT; userdata: Pointer):TIdC_INT; cdecl;
 var
-  Password: String;
+  Password: AnsiString;
   IdSSLContext: TIdSSLContext;
 begin
   LockPassCB.Enter;
@@ -1164,7 +1164,7 @@ begin
     fOnStatusInfo(Msg);
 end;
 
-procedure TIdServerIOHandlerSSLOpenSSL.DoGetPassword(var Password: String);
+procedure TIdServerIOHandlerSSLOpenSSL.DoGetPassword(var Password: AnsiString);
 begin
   if Assigned(fOnGetPassword) then
     fOnGetPassword(Password);
@@ -1388,7 +1388,7 @@ begin
     fOnStatusInfo(Msg);
 end;
 
-procedure TIdSSLIOHandlerSocketOpenSSL.DoGetPassword(var Password: String);
+procedure TIdSSLIOHandlerSocketOpenSSL.DoGetPassword(var Password: AnsiString);
 begin
   if Assigned(fOnGetPassword) then
     fOnGetPassword(Password);
