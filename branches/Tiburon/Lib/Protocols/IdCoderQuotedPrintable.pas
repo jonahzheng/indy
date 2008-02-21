@@ -261,7 +261,7 @@ var
   SourceLine: AnsiString;
   CurrentPos: Integer;
 
-  procedure WriteToString(const s: ShortString);
+  procedure WriteToString(const s: String);
   var
     SLen: Integer;
   begin
