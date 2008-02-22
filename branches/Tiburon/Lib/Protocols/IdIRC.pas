@@ -449,6 +449,12 @@ begin
   if not IsDesignTime then begin
     AssignIRCClientCommands;
   end;
+
+  // RLebeau 2/21/08: for the IRC protocol, RFC 2812 section 2.4 says that
+  // clients are not allowed to issue numeric replies for server-issued
+  // commands.  Added the PerformReplies property so TIdIRC can specify
+  // that behavior.  
+  CommandHandlers.PerformReplies := False;
 end;
 
 destructor TIdIRC.Destroy;
