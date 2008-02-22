@@ -138,8 +138,10 @@ unit IdCommandHandlers;
 }
 
 interface
+
 {$I IdCompilerDefines.inc}
 //Put FPC into Delphi mode
+
 uses
   Classes,
   IdBaseComponent, IdComponent, IdReply, IdGlobal,
@@ -192,9 +194,7 @@ type
   public
     function Check(const AData: string; AContext: TIdContext): boolean; virtual;
     procedure DoCommand(const AData: string; AContext: TIdContext; AUnparsedParams: string); virtual;
-    constructor Create(
-      ACollection: TCollection
-      ); override;
+    constructor Create(ACollection: TCollection); override;
     destructor Destroy; override;
 //    function GetNamePath: string; override;
     function NameIs(const ACommand: string): Boolean;
@@ -230,6 +230,7 @@ type
     FOnAfterCommandHandler: TIdAfterCommandHandlerEvent;
     FOnBeforeCommandHandler: TIdBeforeCommandHandlerEvent;
     FOnCommandHandlersException: TIdCommandHandlersExceptionEvent;
+    FPerformReplies: Boolean;
     FReplyClass: TIdReplyClass;
     FReplyTexts: TIdReplies;
     //
@@ -250,17 +251,15 @@ type
       AExceptionReply: TIdReply = nil;
       ACommandHandlerClass: TIdCommandHandlerClass = nil
       ); reintroduce;
-    function HandleCommand(
-      AContext: TIdContext;
-      var VCommand: string
-      ): Boolean;
-      virtual;
+    function HandleCommand(AContext: TIdContext; var VCommand: string): Boolean; virtual;
     //
     property Base: TIdComponent read FBase;
     property Items[AIndex: Integer]: TIdCommandHandler read GetItem write SetItem;
     // OwnedBy is used so as not to conflict with Owner in D6
- //   property OwnedBy: TIdPersistent read GetOwnedBy;
-    property ReplyClass : TIdReplyClass read FReplyClass;
+    //property OwnedBy: TIdPersistent read GetOwnedBy;
+    property PerformReplies: Boolean read FPerformReplies write FPerformReplies;
+    property ReplyClass: TIdReplyClass read FReplyClass;
+    property ReplyTexts: TIdReplies read FReplyTexts;
     //
     property OnAfterCommandHandler: TIdAfterCommandHandlerEvent read FOnAfterCommandHandler
      write FOnAfterCommandHandler;
@@ -269,7 +268,6 @@ type
      write FOnBeforeCommandHandler;
     property OnCommandHandlersException: TIdCommandHandlersExceptionEvent read FOnCommandHandlersException
       write FOnCommandHandlersException;
-    property ReplyTexts: TIdReplies read FReplyTexts;
   end;
 
   { TIdCommand }
@@ -307,7 +305,9 @@ type
   end;//TIdCommand
 
 implementation
-uses SysUtils;
+
+uses
+  SysUtils;
 
 { TIdCommandHandlers }
 
@@ -326,6 +326,7 @@ begin
   end;
   FBase := ABase;
   FExceptionReply := AExceptionReply;
+  FPerformReplies := True;  // RLebeau: default to legacy behavior
   FReplyClass := AReplyClass;
   FReplyTexts := AReplyTexts;
 end;
@@ -335,10 +336,8 @@ begin
   Result := TIdCommandHandler(inherited Add);
 end;
 
-function TIdCommandHandlers.HandleCommand(
-  AContext: TIdContext;
-  var VCommand: string
-  ): Boolean;
+function TIdCommandHandlers.HandleCommand(AContext: TIdContext;
+  var VCommand: string): Boolean;
 var
   i, j: Integer;
 begin
@@ -422,7 +421,13 @@ begin
         SplitColumns(AUnparsedParams, Params, Self.FParamDelimiter);
       end;
     end;
-    PerformReply := True;
+
+    // RLebeau 2/21/08: for the IRC protocol, RFC 2812 section 2.4 says that
+    // clients are not allowed to issue numeric replies for server-issued
+    // commands.  Added the PerformReplies property so TIdIRC can specify
+    // that behavior.  
+    PerformReply := Self.PerformReplies;
+
     try
       if (LCommand.Reply.Code ='')  and (Self.NormalReply.Code<>'') then begin
         if Reply.Code = '' then begin
@@ -522,9 +527,7 @@ begin
   end;
 end;
 
-constructor TIdCommandHandler.Create(
-  ACollection: TCollection
-  );
+constructor TIdCommandHandler.Create(ACollection: TCollection);
 begin
   inherited Create(ACollection);
 
