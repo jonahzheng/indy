@@ -150,10 +150,12 @@ end;
 
 procedure TIdDecoder.Decode(const AIn: string);
 var
-  LStream: TStringStream;
+  LStream: TMemoryStream;
 begin
-  LStream := TStringStream.Create(AIn);
+  LStream := TMemoryStream.Create;
   try
+    IdGlobal.WriteStringToStream(LStream,AIn);
+    LStream.Position := 0;
     Decode(LStream);
   finally
     FreeAndNil(LStream);
@@ -163,9 +165,9 @@ end;
 class function TIdDecoder.DecodeString(const AIn: string): string;
 var
   LDecoder: TIdDecoder;
-  LStream: TStringStream;
+  LStream: TMemoryStream;
 begin
-  LStream := TStringStream.Create(AIn);
+  LStream := TMemoryStream.Create;
   try
     LDecoder := Create(nil);
     try
@@ -175,7 +177,8 @@ begin
       finally
         LDecoder.DecodeEnd;
       end;
-      Result := LStream.DataString;
+      LStream.Position := 0;
+      Result := IdGlobal.ReadStringFromStream(LStream,-1,en8bit);
     finally
       FreeAndNil(LDecoder);
     end;
@@ -188,11 +191,13 @@ end;
 
 function TIdEncoder.Encode(const AIn: string): string;
 var
-  LStream: TStringStream;
+  LStream: TMemoryStream;
 begin
   if AIn<>'' then  begin
-    LStream := TStringStream.Create(AIn);
+    LStream := TMemoryStream.Create;
     try
+      IdGlobal.WriteStringToStream(LStream,AIn);
+      LStream.Position := 0;
       Result := Encode(LStream);
     finally
       FreeAndNil(LStream);
@@ -204,10 +209,12 @@ end;
 
 procedure TIdEncoder.Encode(const AIn: string; ADestStrings: TStrings);
 var
-  LStream: TStringStream;
+  LStream: TMemoryStream;
 begin
-  LStream := TStringStream.Create(AIn);
+  LStream := TMemoryStream.Create;
   try
+    IdGlobal.WriteStringToStream(LStream,AIn,en8bit);
+    LStream.Position := 0;
     Encode(LStream, ADestStrings);
   finally
     FreeAndNil(LStream);
@@ -216,10 +223,12 @@ end;
 
 procedure TIdEncoder.Encode(const AIn: string; ADestStream: TStream);
 var
-  LStream: TStringStream;
+  LStream: TMemoryStream;
 begin
-  LStream := TStringStream.Create(AIn);
+  LStream := TMemoryStream.Create;
   try
+    IdGlobal.WriteStringToStream(LStream,AIn,en8bit);
+    LStream.Position := 0;
     Encode(LStream, ADestStream);
   finally
     FreeAndNil(LStream);
@@ -228,12 +237,13 @@ end;
 
 function TIdEncoder.Encode(ASrcStream: TStream; const ABytes: Integer = -1) : string;
 var
-  LStream: TStringStream;
+  LStream: TMemoryStream;
 begin
-  LStream := TStringStream.Create('');
+  LStream := TMemoryStream.Create;
   try
     Encode(ASrcStream, LStream, ABytes);
-    Result := LStream.DataString;
+    LStream.Position := 0;
+    Result := IdGlobal.ReadStringFromStream(LStream,-1,en8Bit);
   finally
     FreeAndNil(LStream);
   end;
@@ -241,10 +251,10 @@ end;
 
 procedure TIdEncoder.Encode(ASrcStream: TStream; ADestStrings: TStrings; const ABytes: Integer = -1);
 var
-  LStream: TStringStream;
+  LStream: TMemoryStream;
 begin
   ADestStrings.Clear;
-  LStream := TStringStream.Create('');
+  LStream := TMemoryStream.Create;
   try
     Encode(ASrcStream, LStream, ABytes);
     LStream.Position := 0;
