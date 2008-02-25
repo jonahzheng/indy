@@ -666,6 +666,11 @@ const
   DEF_PORT_ANY = 0;
 
 type
+  {$IFDEF UNICODESTRING}
+  TIdBytes = TBytes;
+  {$ELSE}
+  TIdBytes = array of Byte;
+  {$ENDIF}
   {$IFNDEF DOTNET}
     {$IFNDEF FPC}
       //needed so that in FreePascal, we can use pointers of different sizes
@@ -684,7 +689,21 @@ type
       {$ENDIF}
      {$ENDIF}
   {$ENDIF}
+{
+JPM - TIdAnsiStringStream is just to save some typing.  We can't use TStringStream
+so we need a replacement that's good enough for our use.  DataString and the create
+constructor will use WriteStringToStream and ReadStringFromStream with en8bit encoding.
 
+}
+  TIdAnsiStringStream = class(TMemoryStream)
+  protected
+    function GetDataString : AnsiString;
+  public
+    constructor Create; overload;
+    constructor Create(const AString : String); overload;
+    constructor Create(const ABytes : TIdBytes); overload;
+    property DataString : AnsiString read GetDataString;
+  end;
   TIdEncoding = (enDefault, en7Bit, enUTF8, en8Bit);
 
   TIdAppendFileStream = class(TFileStream)
@@ -778,11 +797,6 @@ type
   //This is called whenever there is a failure to retreive the time zone information
   EIdFailedToRetreiveTimeZoneInfo = class(EIdException);
 
-  {$IFDEF UNICODESTRING}
-  TIdBytes = TBytes;
-  {$ELSE}
-  TIdBytes = array of Byte;
-  {$ENDIF}
   TIdPort = Word;
   //We don't have a native type that can hold an IPv6 address.
   TIdIPv6Address = array [0..7] of word;
@@ -1830,6 +1844,54 @@ begin
   {$ELSE}
   FillChar(VBytes[0], ACount, AValue);
   {$ENDIF}
+end;
+
+function TIdAnsiStringStream.GetDataString : AnsiString;
+{$IFDEF DOTNET}
+var LPos : Int64;
+{$ELSE}
+var LSize : Int64;
+{$ENDIF}
+begin
+  {$IFDEF DOTNET}
+  LPos := Position;
+  try
+    Position := 0;
+    Result := ReadStringFromStream(Self,-1,en8bit);
+  finally
+    Position := LPos;
+  end;
+  {$ELSE}
+  LSize := Self.Size;
+  if LSize > 0 then begin
+{}
+    SetLength(Result,LSize);
+    Move(Memory^,Result[1],LSize);
+  //  Result := AnsiString(Memory^);
+   // Result := PAnsiChar(Self.Memory);
+  end else begin
+    Result := '';
+  end;
+  {$ENDIF}
+end;
+
+constructor TIdAnsiStringStream.Create;
+begin
+  inherited Create;
+end;
+
+constructor TIdAnsiStringStream.Create(const AString : String);
+begin
+  inherited Create;
+  WriteStringToStream(Self,AString,en8bit);
+  Position := 0;
+end;
+
+constructor TIdAnsiStringStream.Create(const ABytes : TIdBytes);
+begin
+  inherited Create;
+  WriteTIdBytesToStream(Self,Abytes);
+  Position := 0;
 end;
 
 constructor TIdFileCreateStream.Create(const AFile : String);

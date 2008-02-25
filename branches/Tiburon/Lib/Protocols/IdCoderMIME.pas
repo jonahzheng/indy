@@ -83,7 +83,7 @@ end;
 
 procedure TIdDecoderMIMELineByLine.DecodeEnd;
 var
-  LStream: TStringStream;
+  LStream: TIdAnsiStringStream;
   LPos: Integer;
 begin
   if FLeftFromLastTime <> '' then begin
@@ -93,7 +93,7 @@ begin
       FLeftFromLastTime[LPos] := FFillChar;
       Inc(LPos);
     end;
-    LStream := TStringStream.Create(FLeftFromLastTime);
+    LStream := TIdAnsiStringStream.Create(FLeftFromLastTime);
     try
       inherited Decode(LStream);
     finally
@@ -108,7 +108,7 @@ procedure TIdDecoderMIMELineByLine.Decode(ASrcStream: TStream; const ABytes: Int
 var
   LMod, LDiv: integer;
   LIn: string;
-  LStream: TStringStream;
+  LStream: TIdAnsiStringStream;
 begin
   LIn := FLeftFromLastTime + ReadStringFromStream(ASrcStream, ABytes);
   LMod := Length(LIn) mod 4;
@@ -119,7 +119,7 @@ begin
   end else begin
     FLeftFromLastTime := '';
   end;
-  LStream := TStringStream.Create(LIn);
+  LStream := TIdAnsiStringStream.Create(LIn);
   try
     inherited Decode(LStream, ABytes);
   finally

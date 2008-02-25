@@ -773,7 +773,7 @@ end;
 
 procedure TIdCustomHTTP.Post(AURL: string; ASource: TStrings; AResponseContent: TStream);
 var
-  LParams: TStringStream;
+  LParams: TIdAnsiStringStream;
 begin
   Assert(ASource<>nil);
   Assert(AResponseContent<>nil);
@@ -782,7 +782,7 @@ begin
   if (Request.ContentType = '') or (TextIsSame(Request.ContentType, 'text/html')) then {do not localize}
     Request.ContentType := 'application/x-www-form-urlencoded'; {do not localize}
 
-  LParams := TStringStream.Create(SetRequestParams(ASource));
+  LParams := TIdAnsiStringStream.Create(SetRequestParams(ASource));
   try
     Post(AURL, LParams, AResponseContent);
   finally
@@ -792,11 +792,11 @@ end;
 
 function TIdCustomHTTP.Post(AURL: string; ASource: TStrings): string;
 var
-  LResponse: TStringStream;
+  LResponse: TIdAnsiStringStream;
 begin
   Assert(ASource<>nil);
 
-  LResponse := TStringStream.Create('');
+  LResponse := TIdAnsiStringStream.Create('');
   try
     Post(AURL, ASource, LResponse);
   finally
@@ -807,11 +807,11 @@ end;
 
 function TIdCustomHTTP.Post(AURL: string; ASource: TStream): string;
 var
-  LResponse: TStringStream;
+  LResponse: TIdAnsiStringStream;
 begin
   Assert(ASource<>nil);
 
-  LResponse := TStringStream.Create('');
+  LResponse := TIdAnsiStringStream.Create('');
   try
     Post(AURL, ASource, LResponse);
   finally
@@ -830,11 +830,11 @@ end;
 
 function TIdCustomHTTP.Put(AURL: string; ASource: TStream): string;
 var
-  LResponse: TStringStream;
+  LResponse: TIdAnsiStringStream;
 begin
   Assert(ASource<>nil);
 
-  LResponse := TStringStream.Create('');   {do not localize}
+  LResponse := TIdAnsiStringStream.Create('');   {do not localize}
   try
     Put(AURL, ASource, LResponse);
   finally
@@ -850,9 +850,9 @@ end;
 
 function TIdCustomHTTP.Trace(AURL: string): string;
 var
-  Stream: TStringStream;
+  Stream: TIdAnsiStringStream;
 begin
-  Stream := TStringStream.Create('');  {do not localize}
+  Stream := TIdAnsiStringStream.Create('');  {do not localize}
   try
     Trace(AURL, Stream);
     Result := Stream.DataString;
@@ -1792,10 +1792,10 @@ function TIdHTTPProtocol.ProcessResponse(AIgnoreReplies: array of SmallInt): TId
     AUnexpectedContentTimeout: Integer = IdTimeoutDefault);
   var
     i: Integer;
-    LTempResponse: TStringStream;
+    LTempResponse: TIdAnsiStringStream;
     LTempStream: TStream;
   begin
-    LTempResponse := TStringStream.Create('');
+    LTempResponse := TIdAnsiStringStream.Create('');
     LTempStream := Response.ContentStream;
     Response.ContentStream := LTempResponse;
     try

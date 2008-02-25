@@ -1390,7 +1390,7 @@ end;
 
 procedure TIdFTP.List(ADest: TStrings; const ASpecifier: string = ''; ADetails: Boolean = True);      {do not localize}
 var
-  LDest: TStringStream;
+  LDest: TIdAnsiStringStream;
   LTrans : TIdFTPTransferType;
 begin
   if FCanUseMLS then begin
@@ -1406,7 +1406,7 @@ begin
     Self.TransferType := ftASCII;
   end;
   try
-    LDest := TStringStream.Create('');
+    LDest := TIdAnsiStringStream.Create('');
     try
       InternalGet(Trim(iif(ADetails, 'LIST', 'NLST') + ' ' + ASpecifier), LDest); {do not localize}
       FreeAndNil(FDirectoryListing);
@@ -2676,9 +2676,9 @@ end;
 
 procedure TIdFTP.ExtListDir(ADest: TStrings = nil; const ADirectory: string = '');
 var
-  LDest: TStringStream;
+  LDest: TIdAnsiStringStream;
 begin
-  LDest := TStringStream.Create('');
+  LDest := TIdAnsiStringStream.Create('');
   try
     InternalGet(Trim('MLSD ' + ADirectory), LDest);  {do not localize}
     FreeAndNil(FDirectoryListing);
