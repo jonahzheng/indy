@@ -425,9 +425,14 @@ begin
     // RLebeau 2/21/08: for the IRC protocol, RFC 2812 section 2.4 says that
     // clients are not allowed to issue numeric replies for server-issued
     // commands.  Added the PerformReplies property so TIdIRC can specify
-    // that behavior.  
-    PerformReply := Self.PerformReplies;
-
+    // that behavior.
+    if Assigned(Self.Collection) then
+    begin
+      if Self.Collection is TIdCommandHandlers then
+      begin
+        PerformReply := TIdCommandHandlers(Collection).PerformReplies;
+      end;
+    end;
     try
       if (LCommand.Reply.Code ='')  and (Self.NormalReply.Code<>'') then begin
         if Reply.Code = '' then begin
