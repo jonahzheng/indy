@@ -382,7 +382,13 @@ type
     function _AddRef: Integer;
     function _Release: Integer;
   end;
-
+  {$UNDEF ANSICHARTOHEX}
+  {$IFDEF UNICODESTRING}
+     {$DEFINE ANSICHARTOHEX}
+  {$ENDIF}
+  {$IFDEF DOTNET}
+     {$DEFINE ANSICHARTOHEX}
+  {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   TIdWin32Type = (Win32s,
     WindowsNT40PreSP6Workstation, WindowsNT40PreSP6Server, WindowsNT40PreSP6AdvancedServer,
@@ -408,8 +414,8 @@ type
   function LongWordToFourChar(AValue : LongWord): string;
   function CharRange(const AMin, AMax : Char): String;
   function CharToHex(const APrefix : String; const AChar : Char;
-    const AEncoding : TIdEncoding = en7Bit) : String;  {$IFDEF UNICODESTRING}overload;{$ENDIF}
-  {$IFDEF UNICODESTRING}
+    const AEncoding : TIdEncoding = en7Bit) : String;  {$IFDEF ANSICHARTOHEX}overload;{$ENDIF}
+  {$IFDEF ANSICHARTOHEX}
   function CharToHex(const APrefix : String; const AChar : AnsiChar) : String; overload;
   {$ENDIF}
   procedure CommaSeparatedToStringList(AList: TStrings; const Value:string);
@@ -719,7 +725,7 @@ begin
 {
 From: http://homepages.borland.com/efg2lab/Library/UseNet/1999/0309b.txt
  }
-   //  Result := EncodeDate(1970, 1, 1) + (UnixDateTime / 86400); {86400=No. of secs. per day}
+ //   Result := EncodeDate(1970, 1, 1) + (UnixDateTime / 86400); {86400=No. of secs. per day}
 end;
 
 function DateTimeToUnix(ADateTime: TDateTime): LongWord;
@@ -786,7 +792,8 @@ begin
   Result := APrefix + ToHex(ToBytes(AChar, AEncoding));
 end;
 
-{$IFDEF UNICODESTRING}
+
+{$IFDEF ANSICHARTOHEX}
 {Done this way for QuotedPrintable in TIburon.  Sometimes, the one above might be overkill}
 function CharToHex(const APrefix : String; const AChar : AnsiChar) : String; overload;
 {$IFDEF USEINLINE} inline; {$ENDIF}
