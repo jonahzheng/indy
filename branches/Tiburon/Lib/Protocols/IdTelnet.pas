@@ -205,8 +205,8 @@ type
     procedure HandleIncomingData;
   public
     constructor Create(AClient: TIdTelnet); reintroduce;
-    property  Client: TIdTelnet read FClient;
-  End; //TIdTelnetReadThread
+    property Client: TIdTelnet read FClient;
+  end; //TIdTelnetReadThread
 
   TIdTelnet = class(TIdTCPClientCustom)
   protected
@@ -277,9 +277,8 @@ uses
 
 constructor TIdTelnetReadThread.Create(AClient: TIdTelnet);
 begin
-  inherited Create(False);
   FClient := AClient;
-  FreeOnTerminate := FALSE; //other way TRUE
+  inherited Create(False);
 end;
 
 procedure TIdTelnetReadThread.Run;
