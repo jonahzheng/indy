@@ -650,7 +650,7 @@ begin
     end;
 
     size := Length(Password);
-    StrLCopy(buf, PAnsiChar(Password + #0), size + 1);
+    StrLCopy(buf, PAnsiChar(Password + AnsiChar(#0)), size + 1);
     Result := size;
   finally
     LockPassCB.Leave;
