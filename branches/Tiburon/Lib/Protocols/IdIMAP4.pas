@@ -2766,7 +2766,7 @@ begin
         FreeAndNil(LHelper);
       end;
       {Delete the file, don't need it anymore...}
-      DeleteFile(LTempPathname);
+      SysUtils.DeleteFile(LTempPathname);
       if GetInternalResponse(LastCmdCounter, [IMAP4Commands[cmdAppend]], False) = IMAP_OK then begin
         Result := True;
       end;
