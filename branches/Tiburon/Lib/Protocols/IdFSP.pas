@@ -553,7 +553,7 @@ var
   LDestStream: TStream;
 begin
   if ACanOverwrite and (not AResume) then begin
-    DeleteFile(ADestFile);
+    SysUtils.DeleteFile(ADestFile);
     LDestStream := TIdFileCreateStream.Create(ADestFile);
   end
   else if (not ACanOverwrite) and AResume then begin
