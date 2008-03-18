@@ -4,6 +4,7 @@ interface
 {$i IdCompilerDefines.inc}
 uses
   Classes,
+  SysUtils, //here to facilitate inline expansion
    IdSASL, IdSASLUserPass, IdUserPassProvider, IdException;
 
 type
@@ -31,7 +32,7 @@ function CalcDigestResponse(const AUserName, APassword, ARealm, ANonce, ACNonce 
   const  AQop, ADigestURI : String; const AAuthzid : String = '') : String;
 
 implementation
-uses IdGlobal, IdHash, IdHashMessageDigest, IdResourceStringsProtocols, SysUtils;
+uses IdGlobal, IdHash, IdHashMessageDigest, IdResourceStringsProtocols;
 
 const
   SASL_DIGEST_METHOD = 'AUTHENTICATE:';  {do not localize}
