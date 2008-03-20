@@ -208,7 +208,6 @@ begin
   if code < 0 then begin
     raise ECompressionError.CreateError(code);
   end;
-//    raise ECompressionError.Create('error'); //!!
 end;
 
 function DCheck(code: Integer): Integer;
@@ -216,8 +215,9 @@ function DCheck(code: Integer): Integer;
 begin
   Result := code;
   if code < 0 then begin
+  begin
     raise EDecompressionError.CreateError(code);
- //   raise EDecompressionError.Create('error');  //!!
+  end;
   end;
 end;
 
@@ -302,13 +302,14 @@ var
   InitBuf: PAnsiChar;
   InitIn : TIdC_UINT;
 begin
-    InitBuf := strm.next_in;
-    InitIn  := strm.avail_in;
+  InitBuf := strm.next_in;
+  InitIn  := strm.avail_in;
   DCheck(inflateInit2_(strm, AWinBitsValue, zlib_version,SizeOf(TZStreamRec) ));
 
   if (AWinBitsValue = GZIP_WINBITS) and (gzheader <> nil) then
+  begin
     DCheck(inflateGetHeader(strm, gzheader^));
-
+  end;
   Result := inflate(strm, Z_BLOCK) = Z_OK;
   DCheck(inflateEnd(strm));
 
@@ -316,9 +317,9 @@ begin
   begin
     exit;
   end;
-      //rollback
-      strm.next_in  := InitBuf;
-      strm.avail_in := InitIn;
+  //rollback
+  strm.next_in  := InitBuf;
+  strm.avail_in := InitIn;
 end;
 
 //tries to get the stream info
@@ -334,12 +335,16 @@ var
     DCheck(inflateInitEx(strm, AStreamType));
 
     if (AStreamType = zsGZip) and (gzheader <> nil) then
+    begin
       DCheck(inflateGetHeader(strm, gzheader^));
-
+    end;
     Result := inflate(strm, Z_BLOCK) = Z_OK;
     DCheck(inflateEnd(strm));
 
-    if Result then exit;
+    if Result then
+    begin
+      exit;
+    end;
     //rollback
     strm.next_in  := InitBuf;
     strm.avail_in := InitIn;
@@ -383,12 +388,15 @@ begin
   Buff := DMAOfStream(InStream, N);
   UseBuffer := Buff = nil;
   if UseBuffer then
+  begin
     GetMem(Buff, StepSize);
+  end;
   try
     repeat
       if UseBuffer then
+      begin
         Inc(N, InStream.Read(Buff[N], StepSize));
-
+      end;
       Result := GetStreamType(Buff, N, gzheader, HeaderSize);
       //do we need more data?
       //N mod StepSize <> 0 means no more data available
@@ -548,7 +556,9 @@ begin
   Result := true;
   AStream.Size := ACapacity;
   if AStream.InheritsFrom(TMemoryStream) then
+  begin
     AStream.Size := TMemStreamHack(AStream).Capacity;
+  end;
 end;
 
 procedure IndyCompressStream(InStream, OutStream: TStream;
@@ -602,11 +612,14 @@ begin
   UseInBuf := strm.next_in = nil;
 
   if UseInBuf then
+  begin
     GetMem(InBuf, BufSize);
-
+  end;
   UseOutBuf := not ( CanResizeDMAStream(OutStream));
-  if UseOutBuf then GetMem(OutBuf, BufSize);
-
+  if UseOutBuf then
+  begin
+    GetMem(OutBuf, BufSize);
+  end;
   CCheck(deflateInit2_(strm, level, Z_DEFLATED, WinBits,MemLevel,Stratagy,zlib_version, SizeOf(TZStreamRec)));
   try
     repeat
@@ -672,7 +685,9 @@ var
     end
     else
     begin
-      if (strm.avail_out = 0) then ExpandStream(OutStream, OutStream.Size + BufSize);
+      if (strm.avail_out = 0) then begin
+        ExpandStream(OutStream, OutStream.Size + BufSize);
+      end;
       TIdStreamHelper.Seek(OutStream, LastOutCount - strm.avail_out, soCurrent);
       strm.next_out  := DMAOfStream(OutStream, strm.avail_out);
       //because we can't really know how much resize is increasing!
@@ -693,11 +708,14 @@ begin
   UseInBuf := strm.next_in = nil;
 
   if UseInBuf then
+  begin
     GetMem(InBuf, BufSize);
-
+  end;
   UseOutBuf := not (UseDirectOut and CanResizeDMAStream(OutStream));
-  if UseOutBuf then GetMem(OutBuf, BufSize);
-
+  if UseOutBuf then
+  begin
+    GetMem(OutBuf, BufSize);
+  end;
   CCheck(deflateInitEx(strm, Levels[level], StreamType));
   try
     repeat
@@ -708,10 +726,14 @@ begin
           strm.avail_in := InStream.Read(InBuf^, BufSize);
           strm.next_in  := InBuf;
         end;
-        if strm.avail_in = 0 then break;
+        if strm.avail_in = 0 then
+        begin
+          break;
+        end;
       end;
-      if strm.avail_out = 0 then WriteOut;
-
+      if strm.avail_out = 0 then begin
+        WriteOut;
+      end;
       CCheck(deflate(strm, Z_NO_FLUSH));
     until false;
 
@@ -778,9 +800,13 @@ begin
   FillChar(strm, sizeof(strm), 0);
   BufInc := (InBytes + 255) and not 255;
   if OutEstimate = 0 then
+  begin
     OutBytes := BufInc
+  end
   else
+  begin
     OutBytes := OutEstimate;
+  end;
   GetMem(OutBuf, OutBytes);
   try
     strm.next_in := InBuf;
@@ -821,7 +847,9 @@ begin
   DCheck(inflateInit(strm));
   try
     if DCheck(inflate(strm, Z_FINISH)) <> Z_STREAM_END then
+    begin
       raise EZlibError.CreateRes(@sTargetBufferTooSmall);
+    end;
   finally
     DCheck(inflateEnd(strm));
   end;
