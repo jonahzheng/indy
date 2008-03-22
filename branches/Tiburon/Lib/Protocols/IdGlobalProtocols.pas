@@ -420,6 +420,7 @@ type
   {$ENDIF}
   procedure CommaSeparatedToStringList(AList: TStrings; const Value:string);
   function CompareDateTime(const ADateTime1, ADateTime2 : TDateTime) : Integer;
+  function ContentTypeStrToEncoding (const aContentEncoding: string): TIdEncoding;
   {
   These are for handling binary values that are in Network Byte order.  They call
   ntohs, ntols, htons, and htons which are required by SNTP and FSP
@@ -3169,6 +3170,24 @@ begin
     end;
   end;
 end;
+
+function ContentTypeStrToEncoding (const aContentEncoding: string): TIdEncoding;
+//TODO:  Figure out what should happen with Unicode content type.
+begin
+  if Pos ('charset=utf-8', lowercase(aContentEncoding)) > 0 then
+  begin
+    Result := enUTF8;
+  end
+  else
+  begin
+{JPM - I have decided to temporarily make this en8bit because I'm concerned
+about how binary files will be handled by the en7bit encoder (where there may
+be 8bit byte-values.  In addition, there are numerous charsets for various
+languages and code that does some special mapping for them would be a mess.}
+    Result := en8bit; //en7Bit;
+  end;
+end;
+
 
 { TIdInterfacedObject }
 

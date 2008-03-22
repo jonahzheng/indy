@@ -2027,7 +2027,8 @@ begin
     Get(AURL, LStream, AIgnoreReplies);
     LStream.Position := 0;
     // This is here instead of a TStringStream for .net conversions?
-    Result := ReadStringFromStream(LStream);
+    Result := ReadStringFromStream(LStream, -1,
+      ContentTypeStrToEncoding(Response.FContentType));
   finally
     FreeAndNil(LStream);
   end;
