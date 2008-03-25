@@ -4050,7 +4050,7 @@ begin
       // do just a byte to byte copy with no translation. VCL uses ANSI or MBCS.
       // With MBCS we still map 1:1
       SetLength(Result, LLength);
-      CopyTIdString(AValue, AIndex, Result, 0, LLength);
+      CopyTIdString(AValue, AIndex, Result, 0, LLength,AEncoding);
     end;
   end else begin
     SetLength(Result, 0);
