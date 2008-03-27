@@ -2299,13 +2299,37 @@ procedure CopyTIdString(const ASource: String; const ASourceIndex: Integer;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 var
   LLength: Integer;
+  {$IFDEF DOTNET_OR_TEncoding}
+  i : Integer;
+  {$ENDIF}
 begin
   EIdException.IfTrue(AEncoding = enDefault, 'No encoding specified.'); {do not localize}
   LLength := IndyLength(ASource, ALength, ASourceIndex);
   if LLength > 0 then
   begin
     {$IFDEF DOTNET_OR_TEncoding}
-    GetEncoder(AEncoding).GetBytes(ASource, ASourceIndex{$IFDEF DOTNET}-1{$ENDIF}, LLength, VDest, ADestIndex);
+    if AEncoding = en8bit then
+    begin
+{
+IMPORTANT!!!!
+
+For en8bit, the chars from $80-$9F will wind up being translated to Unicode byte values
+and not back to the original $80-$9F values.  That might be a good thing if you have a string
+that you want to print but that doesn't work too well for when the string is
+binary data.   The benefit of the Windows 1252 code page is that you always get
+charactors you can print.
+
+The routine itself could probably be optimized but I'm not sure how.
+}
+      for i := ASourceIndex to LLength do
+      begin
+        VDest[ i - 1] := Ord( ASource[ i]) and $FF;
+      end;
+    end
+    else
+    begin
+      GetEncoder(AEncoding).GetBytes(ASource, ASourceIndex{$IFDEF DOTNET}-1{$ENDIF}, LLength, VDest, ADestIndex);
+    end;
     {$ELSE}
     // TODO: support UTF8
     if AEncoding = enUTF8 then begin
@@ -4349,13 +4373,34 @@ function BytesToString(const AValue: TIdBytes; const AStartIndex: Integer;
   const ALength: Integer = -1; const AEncoding: TIdEncoding = en7Bit): string; overload;
 var
   LLength: Integer;
+  {$IFDEF DOTNET_OR_TEncoding}
+  i : Integer;
+  {$ENDIF}
 begin
   EIdException.IfTrue(AEncoding = enDefault, 'No encoding specified.'); {do not localize}
   LLength := IndyLength(AValue, ALength, AStartIndex);
   if LLength > 0 then
   begin
     {$IFDEF DOTNET_OR_TEncoding}
-    Result := GetEncoder(AEncoding).GetString(AValue, AStartIndex, LLength);
+    {
+    IMPORTANT!!!
+
+   We do not use the TEncoding interface at all for en8bit.  The Windows-1252
+    code page translates bytes from range #80-#9F to Unicode so that you can
+    display them.  Unfortunately, that behavior creates problems for non-printable
+    binary (9bit) data where translation to displayable strings is not desirable.
+    }
+    if AEncoding = en8bit then
+    begin
+      SetLength( Result, LLength);
+      for i := AStartIndex to LLength - 1 do begin
+        Result[ i + 1] := Char(AValue[ i]);
+      end;
+    end
+    else
+    begin
+      Result := GetEncoder(AEncoding).GetString(AValue, AStartIndex, LLength);
+    end;
     {$ELSE}
     if AEncoding = enUTF8 then begin
       Result := UTF8BytesToString(AValue, AStartIndex, LLength);
