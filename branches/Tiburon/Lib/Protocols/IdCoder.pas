@@ -196,7 +196,7 @@ begin
   if AIn<>'' then  begin
     LStream := TMemoryStream.Create;
     try
-      IdGlobal.WriteStringToStream(LStream,AIn);
+      IdGlobal.WriteStringToStream(LStream,AIn, en8bit);
       LStream.Position := 0;
       Result := Encode(LStream);
     finally
