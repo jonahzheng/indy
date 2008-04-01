@@ -52,8 +52,10 @@ unit IdIPMCastServer;
 }
 
 interface
+
 {$I IdCompilerDefines.inc}
 //Put FPC into Delphi mode
+
 uses
   IdComponent,
   IdGlobal,
@@ -124,7 +126,7 @@ end;
 
 destructor TIdIPMCastServer.Destroy;
 begin
-	Active := False;
+  Active := False;
   inherited Destroy;
 end;
 
@@ -132,16 +134,18 @@ procedure TIdIPMCastServer.CloseBinding;
 begin
   //Multicast.IMRMultiAddr := GBSDStack.StringToTIn4Addr(FMulticastGroup);
   //Hope the following is correct for StringToTIn4Addr(), should be checked...
-  if FBinding<>nil then
-    begin
-    GStack.DropMulticastMembership(FBinding.Handle,FMulticastGroup,FBinding.IP,FBinding.IPVersion);
-    FreeAndNil(FBinding);
+  if Assigned(FBinding) then
+  begin
+    if FBinding.HandleAllocated then begin
+      GStack.DropMulticastMembership(FBinding.Handle, FMulticastGroup, FBinding.IP, FBinding.IPVersion);
     end;
+    FreeAndNil(FBinding);
+  end;
 end;
 
 function TIdIPMCastServer.GetActive: Boolean;
 begin
-  Result := inherited GetActive or (Assigned(FBinding) and FBinding.HandleAllocated);
+  Result := (inherited GetActive) or (Assigned(FBinding) and FBinding.HandleAllocated);
 end;
 
 function TIdIPMCastServer.GetBinding: TIdSocketHandle;
@@ -150,11 +154,11 @@ begin
     FBinding := TIdSocketHandle.Create(nil);
   end;
   if not FBinding.HandleAllocated then begin
-{$IFDEF LINUX}
+    {$IFDEF LINUX}
     FBinding.AllocateSocket(LongInt(Id_SOCK_DGRAM));
-{$ELSE}
+    {$ELSE}
     FBinding.AllocateSocket(Id_SOCK_DGRAM);
-{$ENDIF}
+    {$ENDIF}
     FBinding.Bind;
     //Multicast.IMRMultiAddr :=  GBSDStack.StringToTIn4Addr(FMulticastGroup);
     //Hope the following is correct for StringToTIn4Addr(), should be checked...
@@ -192,7 +196,7 @@ end;
 
 procedure TIdIPMCastServer.SetTTL(const AValue: Byte);
 begin
-  if (FTimeToLive <> AValue) then begin
+  if FTimeToLive <> AValue then begin
     FTimeToLive := AValue;
     ApplyTimeToLive;
   end;
