@@ -213,8 +213,9 @@ type
     FBinding: TIdSocketHandle;
     FLastSocketError: Integer;
     FExceptionMessage: string;
-  public
     procedure Execute; override;
+  public
+    constructor Create(ABinding: TIdSocketHandle); reintroduce;
     property Terminated;
   end;
 
@@ -237,9 +238,7 @@ procedure TIdIOHandlerStack.ConnectClient;
       ATimeout := IdTimeoutInfinite;
     end;
     LInfinite := ATimeout = IdTimeoutInfinite;
-    with TIdConnectThread.Create(True) do try
-      FBinding := Binding;
-      Resume;
+    with TIdConnectThread.Create(Binding) do try
       // IndySleep
       if TIdAntiFreezeBase.ShouldUse then begin
         LSleepTime := IndyMin(GAntiFreeze.IdleTimeOut, 125);
@@ -252,22 +251,22 @@ procedure TIdIOHandlerStack.ConnectClient;
       end;
 
       while ATimeout > LSleepTime do begin
-        IndySleep(LSleepTime);
-
-        if LInfinite then begin
-          ATimeout := LSleepTime + 1;
-        end else begin
-          ATimeout := ATimeout - LSleepTime;
-        end;
-
-        TIdAntiFreezeBase.DoProcess;
         if Terminated then begin
           ATimeout := 0;
           Break;
         end;
+
+        IndySleep(LSleepTime);
+
+        if not LInfinite then begin
+          ATimeout := ATimeout - LSleepTime;
+        end;
+
+        TIdAntiFreezeBase.DoProcess;
       end;
+
       IndySleep(ATimeout);
-      //
+
       if Terminated then begin
         if FExceptionMessage <> '' then begin
           if FLastSocketError <> 0 then begin
@@ -400,6 +399,12 @@ begin
 end;
 
 { TIdConnectThread }
+
+constructor TIdConnectThread.Create(ABinding: TIdSocketHandle);
+begin
+  FBinding := ABinding;
+  inherited Create(False);
+end;
 
 procedure TIdConnectThread.Execute;
 begin
