@@ -2194,6 +2194,11 @@ begin
   end;
 
   FCanUseMLS := UseMLIS and (IsExtSupported('MLSD') or IsExtSupported('MLST')); {do not localize}
+  if IsExtSupported('UTF8') then begin
+    SendCmd('OPTS UTF8 ON');
+    IOHandler.DefStringEncoding := enUTF8;
+  end;
+
   ExtractFeatFacts('LANG', FLangsSupported); {do not localize}
 
   if FClientInfo.GetClntOutput <> '' then begin
