@@ -793,7 +793,7 @@ constructor will use WriteStringToStream and ReadStringFromStream with en8bit en
   EIdCorruptServicesFile = class(EIdException);
   EIdEndOfStream = class(EIdException);
   EIdInvalidIPv6Address = class(EIdException);
-
+  EIdNoEncodingSpecified = class(EIdException);
   //This is called whenever there is a failure to retreive the time zone information
   EIdFailedToRetreiveTimeZoneInfo = class(EIdException);
 
@@ -1177,8 +1177,13 @@ function Ticks: LongWord;
 procedure ToDo;
 function TwoByteToWord(AByte1, AByte2: Byte): Word;
 
+//This raises an exception if the AEncoding parameter is enDefault
+
+procedure ValidEncoding(const AEncoding : TIdEncoding); {$IFDEF USEINLINE}inline;{$ENDIF}
+
 var
   IndyPos: TPosProc = nil;
+
 
 type
   {
@@ -1252,6 +1257,11 @@ uses
 var
   GIdPorts: TList = nil;
 {$ENDIF}
+
+procedure ValidEncoding(const AEncoding : TIdEncoding); {$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  EIdNoEncodingSpecified.IfTrue(AEncoding=enDefault,RSNoEncodingSpecified);
+end;
 
 {$IFDEF UNIX}
 function HackLoad(const ALibName : String; const ALibVersions : array of String) : HMODULE;
@@ -2161,7 +2171,7 @@ end;
 procedure CopyTIdChar(const ASource: Char; var VDest: TIdBytes; const ADestIndex: Integer;
   const AEncoding: TIdEncoding = en7Bit);
 begin
-  EIdException.IfTrue(AEncoding = enDefault, 'No encoding specified.'); {do not localize}
+  ValidEncoding(AEncoding);
   if AEncoding = enUTF8 then begin
     EncodeCharToUTF8(ASource, VDest, ADestIndex);
   end else
@@ -2303,7 +2313,7 @@ var
   i : Integer;
   {$ENDIF}
 begin
-  EIdException.IfTrue(AEncoding = enDefault, 'No encoding specified.'); {do not localize}
+  ValidEncoding(AEncoding);
   LLength := IndyLength(ASource, ALength, ASourceIndex);
   if LLength > 0 then
   begin
@@ -4063,7 +4073,7 @@ function ToBytes(const AValue: string; const ALength: Integer; const AIndex: Int
 var
   LLength: Integer;
 begin
-  EIdException.IfTrue(AEncoding = enDefault, 'No encoding specified.'); {do not localize}
+  ValidEncoding(AEncoding);
   LLength := IndyLength(AValue, ALength, AIndex);
   if LLength > 0 then
   begin
@@ -4083,7 +4093,7 @@ end;
 
 function ToBytes(const AValue: Char; const AEncoding: TIdEncoding = en7Bit): TIdBytes; overload;
 begin
-  EIdException.IfTrue(AEncoding = enDefault, 'No encoding specified.'); {do not localize}
+  ValidEncoding(AEncoding);
   if AEncoding = enUTF8 then begin
     Result := CharToUTF8Bytes(AValue);
   end else
@@ -4183,7 +4193,7 @@ procedure ToBytesF(var Bytes: TIdBytes; const AValue: Char; const AEncoding: TId
 var
   LLength: Integer;
 begin
-  EIdException.IfTrue(AEncoding = enDefault, 'No encoding specified.'); {do not localize}
+  ValidEncoding(AEncoding);
   if AEncoding = enUTF8 then begin
     LLength := CalcBytesForUTF8Char(AValue);
   end else begin
@@ -4263,7 +4273,7 @@ function BytesToChar(const AValue: TIdBytes; var VChar: Char; const AIndex: Inte
 var
   LLength: Integer;
 begin
-  EIdException.IfTrue(AEncoding = enDefault, 'No encoding specified.'); {do not localize}
+  ValidEncoding(AEncoding);
   if AEncoding = enUTF8 then
   begin
     LLength := CalcBytesOfUTF8Char(AValue, AIndex);
@@ -4377,7 +4387,7 @@ var
   i : Integer;
   {$ENDIF}
 begin
-  EIdException.IfTrue(AEncoding = enDefault, 'No encoding specified.'); {do not localize}
+  ValidEncoding(AEncoding);
   LLength := IndyLength(AValue, ALength, AStartIndex);
   if LLength > 0 then
   begin
@@ -4476,8 +4486,7 @@ var
 
 begin
   Result := 0;
-
-  EIdException.IfTrue(AEncoding = enDefault, 'No encoding specified.'); {do not localize}
+  ValidEncoding(AEncoding);
   StartPos := AStream.Position;
 
   // don't raise an exception here, backwards compatibility for now
@@ -4657,7 +4666,7 @@ procedure AppendString(var VBytes: TIdBytes; const AStr: String; ALength: Intege
 var
   LOldLen: Integer;
 begin
-  EIdException.IfTrue(AEncoding = enDefault, 'No encoding specified.'); {do not localize}
+  ValidEncoding(AEncoding);
   if ALength < 0 then begin
     if AEncoding = enUTF8 then begin
       ALength := CalcBytesForUTF8String(AStr, 1, Length(AStr));

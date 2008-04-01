@@ -109,6 +109,7 @@ resourcestring
   RSNotAllBytesSent = 'Not all bytes sent.';
   RSPackageSizeTooBig = 'Package Size Too Big.';
   RSSetSizeExceeded = 'Set Size Exceeded.';
+  RSNoEncodingSpecified = 'No encoding specified.';
   {CH RSStreamNotEnoughBytes = 'Not enough bytes read from stream.'; }
   RSEndOfStream = 'End of stream: Class %s at %d';
 
