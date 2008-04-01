@@ -487,7 +487,7 @@ begin
   if IsValidIPv4MulticastGroup(AGroupIP) then
   begin
     GBSDStack.TranslateStringToTInAddr(AGroupIP, LIP4.IMRMultiAddr, Id_IPv4);
-    LIP4.IMRInterface.S_addr := Id_INADDR_ANY;
+    GBSDStack.TranslateStringToTInAddr(ALocalIP, LIP4.IMRInterface, Id_IPv4);
     GBSDStack.SetSocketOption(AHandle, Id_IPPROTO_IP, ASockOpt, PAnsiChar(@LIP4), SizeOf(LIP4));
   end
   else if IsValidIPv6MulticastGroup(AGroupIP) then
