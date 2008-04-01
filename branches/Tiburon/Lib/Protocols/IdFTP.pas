@@ -1186,6 +1186,10 @@ begin
       FHost := LHost;
       FPort := LPort;
     end;
+
+    // RLebeau: must not send/receive UTF-8 before negotiating for it...
+    IOHandler.DefStringEncoding := en8Bit;
+
     // RLebeau: RFC 959 says that the greeting can be preceeded by a 1xx
     // reply and that the client should wait for the 220 reply when this 
     // happens.  Also, the RFC says that 120 should be used, but some
@@ -2061,6 +2065,7 @@ begin
     FResumeTested := False;
     FSystemDesc := '';
     FTransferType := Id_TIdFTP_TransferType;
+    IOHandler.DefStringEncoding := en8Bit;
     if FUsingSFTP and (FUseTLS <> utUseImplicitTLS) then begin
       (IOHandler as TIdSSLIOHandlerSocketBase).PassThrough := True;
       FUsingSFTP := False;
@@ -2170,6 +2175,8 @@ begin
 end;
 
 procedure TIdFTP.IssueFEAT;
+var
+  LClnt: String;
 begin
   //Feat data
 
@@ -2194,17 +2201,27 @@ begin
   end;
 
   FCanUseMLS := UseMLIS and (IsExtSupported('MLSD') or IsExtSupported('MLST')); {do not localize}
-  if IsExtSupported('UTF8') then begin
-    SendCmd('OPTS UTF8 ON');
-    IOHandler.DefStringEncoding := enUTF8;
-  end;
-
   ExtractFeatFacts('LANG', FLangsSupported); {do not localize}
 
-  if FClientInfo.GetClntOutput <> '' then begin
+  // send the CLNT command before sending the OPTS UTF8 command.
+  // some servers need this in order to work around a bug in
+  // Microsoft Internet Explorer's UTF-8 handling
+  LClnt := FClientInfo.ClntOutput;
+  if LClnt <> '' then begin
     if IsExtSupported('CLNT') then begin {do not localize}
-      SendCmd('CLNT '+ FClientInfo.GetClntOutput);  {do not localize}
+      SendCmd('CLNT '+ LClnt);  {do not localize}
     end;
+  end;
+
+  if IsExtSupported('UTF8') then begin {do not localize}
+    // tring draft-ietf-ftpext-utf-8-option-00.txt first...
+    if SendCmd('OPTS UTF-8 NLST') <> 200 then begin {do not localize}
+      // trying Microsoft IE extension next...
+      if SendCmd('OPTS UTF8 ON') <> 200 then begin {do not localize}
+        Exit;
+      end;
+    end;
+    IOHandler.DefStringEncoding := enUTF8;
   end;
 end;
 
@@ -2878,7 +2895,7 @@ begin
         IdFTPListParseBase.ParseListing(FListResult, FDirectoryListing, MLST);
       end else begin
         CheckListParseCapa(FListResult, FDirectoryListing, FDirFormat,
-	  FListParserClass, SystemDesc, TIdFTPListResult(FListResult).Details);
+          FListParserClass, SystemDesc, TIdFTPListResult(FListResult).Details);
       end;
     end;
   finally
