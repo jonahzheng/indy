@@ -1388,10 +1388,10 @@ begin
   Result := True; // or you'll get an exception
   {$ENDIF}
   {$IFDEF WINCE}
-  Result := CopyFile(PWideChar(Source), PWideChar(Destination), True);
+  Result := CopyFile(PWideChar(Source), PWideChar(Destination), False);
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64}
-  Result := CopyFile(PChar(Source), PChar(Destination), True);
+  Result := CopyFile(PChar(Source), PChar(Destination), False);
   {$ENDIF}
   {$IFNDEF APICOPYFILETO}
   //mostly from  http://delphi.about.com/od/fileio/a/untypedfiles.htm
