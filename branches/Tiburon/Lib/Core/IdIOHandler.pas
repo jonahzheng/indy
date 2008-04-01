@@ -413,8 +413,8 @@ const
   // S.G. 6/4/2004: Maximum number of lines captured
   // S.G. 6/4/2004: Default to "unlimited"
   Id_IOHandler_MaxCapturedLines = -1;
-  ID_DEFENCODING = en7bit;
-  
+  Id_IOHandler_DefEncoding = en7bit;
+
 type
 
   EIdIOHandler = class(EIdException);
@@ -469,9 +469,7 @@ type
     procedure BufferRemoveNotify(ASender: TObject; ABytes: Integer);
     function GetDestination: string; virtual;
     procedure InitComponent; override;
-    procedure InterceptReceive(
-      var VBuffer: TIdBytes
-      );
+    procedure InterceptReceive(var VBuffer: TIdBytes);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure PerformCapture(const ADest: TObject; out VLineCount: Integer;
      const ADelim: string; AIsRFCMessage: Boolean; const AEncoding: TIdEncoding = enDefault); virtual;
@@ -646,7 +644,7 @@ type
     property ReadTimeout: Integer read FReadTimeOut write FReadTimeOut default IdTimeoutDefault;
     property ReadLnTimedout: Boolean read FReadLnTimedout ;
     property WriteBufferThreshhold: Integer read FWriteBufferThreshhold;
-    property DefStringEncoding : TIdEncoding read  FDefStringEncoding write SetDefStringEncoding default ID_DEFENCODING;
+    property DefStringEncoding : TIdEncoding read FDefStringEncoding write SetDefStringEncoding default Id_IOHandler_DefEncoding;
     //
     // Events
     //
@@ -689,11 +687,21 @@ var
   GIOHandlerClassDefault: TIdIOHandlerClass = nil;
   GIOHandlerClassList: TList = nil;
 
+function iif(const AEncoding, ADefEncoding: TIdEncoding): TIdEncoding; overload;
+{$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  if AEncoding = enDefault then begin
+    Result := ADefEncoding;
+  end else begin
+    Result := AEncoding;
+  end;
+end;
+
 { TIdIOHandler }
 
 procedure TIdIOHandler.Close;
 //do not do FInputBuffer.Clear; here.
-//it breaks reading when remote connection does a disconnect 
+//it breaks reading when remote connection does a disconnect
 begin
   try
     if Intercept <> nil then begin
@@ -754,8 +762,11 @@ end;
 
 procedure TIdIOHandler.SetDefStringEncoding(const AEncoding: TIdEncoding);
 begin
-  ValidEncoding(AEncoding);
-  FDefStringEncoding := AEncoding;
+  if FDefStringEncoding <> AEncoding then
+  begin
+    ValidEncoding(AEncoding);
+    FDefStringEncoding := AEncoding;
+  end;
 end;
 
 class function TIdIOHandler.MakeDefaultIOHandler(AOwner: TComponent = nil): TIdIOHandler;
@@ -854,14 +865,7 @@ end;
 procedure TIdIOHandler.Write(const AOut: string; const AEncoding: TIdEncoding = enDefault);
 begin
   if AOut <> '' then begin
-    if AEncoding = enDefault then
-    begin
-      Write(ToBytes(AOut, -1, 1, FDefStringEncoding ));
-    end
-    else
-    begin
-      Write(ToBytes(AOut, -1, 1, AEncoding));
-    end;
+    Write(ToBytes(AOut, -1, 1, iif(AEncoding, FDefStringEncoding)));
   end;
 end;
 
@@ -872,14 +876,7 @@ end;
 
 procedure TIdIOHandler.Write(AValue: Char; const AEncoding: TIdEncoding = enDefault);
 begin
-  if AEncoding = enDefault then
-  begin
-    Write(ToBytes(AValue,FDefStringEncoding));
-  end
-  else
-  begin
-    Write(ToBytes(AValue, AEncoding));
-  end;
+  Write(ToBytes(AValue, iif(AEncoding, FDefStringEncoding)));
 end;
 
 procedure TIdIOHandler.Write(AValue: LongWord; AConvert: Boolean = True);
@@ -947,14 +944,7 @@ var
 begin
   if ABytes > 0 then begin
     ReadBytes(LBytes, ABytes, False);
-    if AEncoding = enDefault then
-    begin
-      Result :=  BytesToString(LBytes, 0, ABytes, FDefStringEncoding);
-    end
-    else
-    begin
-      Result := BytesToString(LBytes, 0, ABytes, AEncoding);
-    end;
+    Result := BytesToString(LBytes, 0, ABytes, iif(AEncoding, FDefStringEncoding));
   end else begin
     Result := '';
   end;
@@ -990,21 +980,13 @@ var
   LBytes: TIdBytes;
   LCh: WideChar;
   Temp: String;
-  LEnc : TIdEncoding;
+  LEncoding : TIdEncoding;
 begin
-  LEnc := AEncoding;
-  if LEnc = enDefault then
-  begin
-    LEnc := FDefStringEncoding;
-  end;
-  {
-  ReadBytes(LBytes, 1, False);
-  Result := BytesToChar(LBytes, 0, 1, AEncoding);
-  }
-  ValidEncoding(AEncoding);
+  LEncoding := iif(AEncoding, FDefStringEncoding);
+
   ReadBytes(LBytes, 1, False);
 
-  if LEnc <> enUTF8 then
+  if LEncoding <> enUTF8 then
   begin
     // For VCL we just do a byte to byte copy with no translation. VCL uses ANSI or MBCS.
     // With MBCS we still map 1:1
@@ -1085,13 +1067,9 @@ var
   LSize: Integer;
   LTermPos: Integer;
   LReadLnStartTime: LongWord;
-  LEnc : TIdEncoding;
+  LEncoding : TIdEncoding;
 begin
-  LEnc := AEncoding;
-  if LEnc = enDefault then
-  begin
-    LEnc := FDefStringEncoding
-  end;
+  LEncoding := iif(AEncoding, FDefStringEncoding);
   if AMaxLineLength < 0 then begin
     AMaxLineLength := MaxLineLength;
   end;
@@ -1108,7 +1086,7 @@ begin
     LInputBufferSize := FInputBuffer.Size;
     if LInputBufferSize > 0 then begin
       if LSize < LInputBufferSize then begin
-        LTermPos := FInputBuffer.IndexOf(ATerminator, LSize, LEnc);
+        LTermPos := FInputBuffer.IndexOf(ATerminator, LSize, LEncoding);
       end else begin
         LTermPos := -1;
       end;
@@ -1117,14 +1095,14 @@ begin
     if (AMaxLineLength > 0) and (LTermPos > AMaxLineLength) then begin
       EIdReadLnMaxLineLengthExceeded.IfTrue(MaxLineAction = maException, RSReadLnMaxLineLengthExceeded);
       FReadLnSplit := True;
-      Result := FInputBuffer.Extract(AMaxLineLength, LEnc);
+      Result := FInputBuffer.Extract(AMaxLineLength, LEncoding);
       Exit;
     // ReadFromSource blocks - do not call unless we need to
     end else if LTermPos = -1 then begin
       if (AMaxLineLength > 0) and (LSize > AMaxLineLength) then begin
         EIdReadLnMaxLineLengthExceeded.IfTrue(MaxLineAction = maException, RSReadLnMaxLineLengthExceeded);
         FReadLnSplit := True;
-        Result := FInputBuffer.Extract(AMaxLineLength, LEnc);
+        Result := FInputBuffer.Extract(AMaxLineLength, LEncoding);
         Exit;
       end;
       // ReadLn needs to call this as data may exist in the buffer, but no EOL yet disconnected
@@ -1143,7 +1121,7 @@ begin
     end;
   until LTermPos > -1;
   // Extract actual data
-  Result := FInputBuffer.Extract(LTermPos + Length(ATerminator), LEnc);
+  Result := FInputBuffer.Extract(LTermPos + Length(ATerminator), LEncoding);
   if (ATerminator = LF) and (LTermPos > 0) then begin
     if Result[LTermPos] = CR then begin
       Dec(LTermPos);
@@ -1578,14 +1556,7 @@ end;
 
 function TIdIOHandler.InputBufferAsString(const AEncoding: TIdEncoding = enDefault): string;
 begin
-  if AEncoding = enDefault then
-  begin
-    Result := FInputBuffer.Extract(FInputBuffer.Size, FDefStringEncoding );
-  end
-  else
-  begin
-    Result := FInputBuffer.Extract(FInputBuffer.Size, AEncoding);
-  end;
+  Result := FInputBuffer.Extract(FInputBuffer.Size, iif(AEncoding, FDefStringEncoding));
 end;
 
 function TIdIOHandler.AllData(const AEncoding: TIdEncoding = enDefault): string;
@@ -1659,14 +1630,7 @@ begin
       if LStrings <> nil then begin
         LStrings.Add(s);
       end else if LStream <> nil then begin
-        if AEncoding = enDefault then
-        begin
-          WriteStringToStream(LStream, s+EOL, FDefStringEncoding);
-        end
-        else
-        begin
-          WriteStringToStream(LStream, s+EOL, AEncoding);
-        end;
+        WriteStringToStream(LStream, s+EOL, iif(AEncoding, FDefStringEncoding));
       end;
     until False;
   finally EndWork(wmRead); end;
@@ -1747,30 +1711,25 @@ function TIdIOHandler.WaitFor(const AString: string; ARemoveFromBuffer: Boolean 
 var
   LBytes: TIdBytes;
   LPos: Integer;
-  LEnc : TIdEncoding;
+  LEncoding : TIdEncoding;
 begin
   Result := '';
-  LEnc := AEncoding;
-  if LEnc = enDefault then
-  begin
-     LEnc := AEncoding;
-  end;
-  LBytes := ToBytes(AString, LEnc);
+  LEncoding := iif(AEncoding, FDefStringEncoding);
+  LBytes := ToBytes(AString, LEncoding);
   LPos := 0;
   repeat
     if CheckForDataOnSource(250) then begin
       LPos := InputBuffer.IndexOf(LBytes, LPos);
       if LPos <> -1 then begin
         if ARemoveFromBuffer and AInclusive then begin
-          Result := InputBuffer.Extract(LPos+Length(LBytes), AEncoding);
+          Result := InputBuffer.Extract(LPos+Length(LBytes), LEncoding);
         end else begin
-          if AInclusive then begin
-            Result := InputBuffer.Extract(LPos, LEnc) + AString;
-          end else begin
-            Result := InputBuffer.Extract(LPos, LEnc);
-          end;
+          Result := InputBuffer.Extract(LPos, LEncoding);
           if ARemoveFromBuffer then begin
             InputBuffer.Remove(Length(LBytes));
+          end;
+          if AInclusive then begin
+            Result := Result + AString;
           end;
         end;
         Break;
@@ -1913,7 +1872,7 @@ begin
   FLargeStream := False;
   FReadTimeOut := IdTimeoutDefault;
   FInputBuffer := TIdBuffer.Create(BufferRemoveNotify);
-  DefStringEncoding := ID_DEFENCODING;
+  DefStringEncoding := Id_IOHandler_DefEncoding;
 end;
 
 procedure TIdIOHandler.WriteBufferFlush;
