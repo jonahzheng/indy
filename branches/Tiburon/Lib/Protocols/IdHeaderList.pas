@@ -74,7 +74,6 @@ type
   TIdHeaderList = class(TStringList)
   protected
     FNameValueSeparator : String;
-    FCaseSensitive : Boolean;
     FUnfoldLines : Boolean;
     FFoldLines : Boolean;
     FFoldLinesLength : Integer;
@@ -113,8 +112,6 @@ type
     { This is the separator we need to separate the name from the value }
     property NameValueSeparator : String read FNameValueSeparator
       write FNameValueSeparator;
-    { Should the names be tested in a case-senstive manner. }
-    property CaseSensitive : Boolean read FCaseSensitive write FCaseSensitive;
     { Should we unfold lines so that continuation header data is returned as
     well}
     property UnfoldLines : Boolean read FUnfoldLines write FUnfoldLines;
@@ -155,7 +152,6 @@ constructor TIdHeaderList.Create;
 begin
   inherited Create;
   FNameValueSeparator := ': ';    {Do not Localize}
-  FCaseSensitive := False;
   FUnfoldLines := True;
   FFoldLines := True;
   { 78 was specified by a message draft available at
@@ -243,14 +239,13 @@ var
   p : Integer;
 begin
   Result := Get(ALine);
-  if not FCaseSensitive then begin
-    Result := UpperCase(Result);
-  end;
+
   {We trim right to remove space to accomodate header errors such as
 
   Message-ID:<asdf@fdfs
   }
   P := IndyPos(TrimRight(FNameValueSeparator), Result);
+
   Result := Copy(Result, 1, P - 1);
 end;
 
