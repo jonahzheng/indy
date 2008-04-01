@@ -1323,7 +1323,14 @@ begin
   if AByteCount > 0 then begin
     // Read from stack until we have enough data
     while FInputBuffer.Size < AByteCount do begin
-      ReadFromSource(False);
+      // RLebeau: in case the other party disconnects
+      // after all of the bytes were transmitted ok.
+      // No need to throw an exception just yet...
+      if ReadFromSource(False) > 0 then begin
+        if FInputBuffer.Size >= AByteCount then begin
+          Break; // we have enough data now
+        end;
+      end;
       CheckForDisconnect(True, True);
     end;
     FInputBuffer.ExtractToBytes(VBuffer, AByteCount, AAppend);
