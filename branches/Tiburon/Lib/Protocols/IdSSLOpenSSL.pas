@@ -228,6 +228,7 @@ const
   
 type
   TIdX509 = class;
+
   TULong = packed record
     case Byte of
       0: (B1,B2,B3,B4: Byte);
@@ -259,7 +260,6 @@ type
     fsRootCertFile, fsCertFile, fsKeyFile: String;
     fMethod: TIdSSLVersion;
     fMode: TIdSSLMode;
-
     fVerifyDepth: Integer;
     fVerifyMode: TIdSSLVerifyModeSet;
     //fVerifyFile,
@@ -389,7 +389,6 @@ type
     procedure Open; override;
 
     property SSLSocket: TIdSSLSocket read fSSLSocket write fSSLSocket;
-    property PassThrough: Boolean read fPassThrough write SetPassThrough;
 
     property OnBeforeConnect: TIOHandlerNotify read fOnBeforeConnect write fOnBeforeConnect;
     property SSLContext: TIdSSLContext read fSSLContext write fSSLContext;
@@ -566,6 +565,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
 
   EIdOpenSSLError = class(EIdException);
   TIdOpenSSLAPISSLError = class of EIdOpenSSLAPISSLError;
+
   EIdOpenSSLAPISSLError = class(EIdOpenSSLError)
   protected
     FErrorCode : TIdC_INT;
@@ -576,6 +576,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     property ErrorCode : TIdC_INT read FErrorCode;
     property RetCode : TIdC_INT read FRetCode;
   end;
+
   TIdOpenSSLAPICryptoError = class of EIdOpenSSLAPICryptoError;
   EIdOpenSSLAPICryptoError = class(EIdOpenSSLError)
   protected
@@ -584,6 +585,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     class procedure RaiseException(const AMsg : String = '');
     property ErrorCode : TIdC_ULONG read FErrorCode;
   end;
+
   EIdOSSLCouldNotLoadSSLLibrary = class(EIdOpenSSLError);
   EIdOSSLModeNotSet = class(EIdOpenSSLError);
   EIdOSSLGetMethodError = class(EIdOpenSSLError);
@@ -630,7 +632,7 @@ begin
   result := StrPas(PAnsiChar(@LErrMsg));
 end;
 
-function PasswordCallback(buf:PAnsiChar; size:TIdC_INT; rwflag:TIdC_INT; userdata: Pointer):TIdC_INT; cdecl;
+function PasswordCallback(buf: PAnsiChar; size: TIdC_INT; rwflag: TIdC_INT; userdata: Pointer): TIdC_INT; cdecl;
 var
   Password: AnsiString;
   IdSSLContext: TIdSSLContext;
@@ -649,9 +651,12 @@ begin
       TIdServerIOHandlerSSLOpenSSL(IdSSLContext.Parent).DoGetPassword(Password);
     end;
 
-    size := Length(Password);
-    StrLCopy(buf, PAnsiChar(Password + AnsiChar(#0)), size + 1);
-    Result := size;
+    FillChar(buf^, size, 0);
+
+    StrPLCopy(buf, Password, size);
+    Result := Length(Password);
+
+    buf[size-1] := #0; // RLebeau: truncate the password if needed
   finally
     LockPassCB.Leave;
   end;
@@ -961,16 +966,17 @@ begin
   Result := '';
   for i := 0 to (ALen - 1) do
   begin
-    if I<>0 then
+    if I <> 0 then
     begin
       Result := Result + ':';    {Do not Localize}
     end;
-    Result := Result +  IndyFormat('%.2x', [Byte(Pointer(PtrInt(APtr)+I)^)]);
+    Result := Result + IndyFormat('%.2x', [Byte(Pointer(PtrInt(APtr)+I)^)]);
   end;
 end;
 
-function MDAsString(AMD : TEVP_MD) : String;
-var I : Integer;
+function MDAsString(const AMD : TEVP_MD) : String;
+var
+  I : Integer;
 begin
   Result := '';
   for I := 0 to AMD.Length - 1 do begin
@@ -1082,7 +1088,6 @@ begin
     inherited AssignTo(ASource);
 end;
 
-
 ///////////////////////////////////////////////////////
 //   TIdServerIOHandlerSSLOpenSSL
 ///////////////////////////////////////////////////////
@@ -1136,26 +1141,25 @@ function TIdServerIOHandlerSSLOpenSSL.Accept(ASocket: TIdSocketHandle;
   // This is a thread and not a yarn. Its the listener thread.
   AListenerThread: TIdThread; AYarn: TIdYarn ): TIdIOHandler;
 var
-  tmpIdCIOpenSSL: TIdSSLIOHandlerSocketOpenSSL;
+  LIO: TIdSSLIOHandlerSocketOpenSSL;
 begin
   Assert(ASocket<>nil);
   Assert(fSSLContext<>nil);
 
-  tmpIdCIOpenSSL := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-  tmpIdCIOpenSSL.PassThrough := True;
-  tmpIdCIOpenSSL.Open;
-  if tmpIdCIOpenSSL.Binding.Accept(ASocket.Handle) then begin
+  LIO := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
+  LIO.PassThrough := True;
+  LIO.Open;
+  if LIO.Binding.Accept(ASocket.Handle) then begin
     //we need to pass the SSLOptions for the socket from the server
-    FreeAndNil(tmpIdCIOpenSSL.fxSSLOptions);
-    tmpIdCIOpenSSL.IsPeer := True;
-    tmpIdCIOpenSSL.fxSSLOptions := fxSSLOptions;
-    tmpIdCIOpenSSL.fSSLSocket := TIdSSLSocket.Create(self);
-    tmpIdCIOpenSSL.fSSLContext := fSSLContext;
-    Result := tmpIdCIOpenSSL;
+    FreeAndNil(LIO.fxSSLOptions);
+    LIO.IsPeer := True;
+    LIO.fxSSLOptions := fxSSLOptions;
+    LIO.fSSLSocket := TIdSSLSocket.Create(self);
+    LIO.fSSLContext := fSSLContext;
   end else begin
-    Result := nil;
-    FreeAndNil(tmpIdCIOpenSSL);
+    FreeAndNil(LIO);
   end;
+  Result := LIO;
 end;
 
 procedure TIdServerIOHandlerSSLOpenSSL.DoStatusInfo(Msg: String);
@@ -1184,7 +1188,7 @@ var
 begin
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   LIO.PassThrough := True;
-  LIO.OnGetPassword := OnGetPassword;
+  LIO.OnGetPassword := DoGetPassword;
 
   //todo memleak here - setting IsPeer causes SSLOptions to not free
   LIO.IsPeer := True;
@@ -1207,7 +1211,7 @@ var
 begin
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   LIO.PassThrough := True;
-  LIO.OnGetPassword := OnGetPassword;
+  LIO.OnGetPassword := DoGetPassword;
 
   //todo memleak here - setting IsPeer causes SSLOptions to not free
   LIO.IsPeer := True;
@@ -1235,7 +1239,7 @@ begin
   LIO.SSLOptions.Assign(SSLOptions);
 //  LIO.SSLContext := SSLContext;
   LIO.SSLContext := nil;//SSLContext.Clone; // BGO: clone does not work, it must be either NIL, or SSLContext
-  LIO.OnGetPassword := OnGetPassword;
+  LIO.OnGetPassword := DoGetPassword;
   Result := LIO;
 end;
 
@@ -1434,9 +1438,9 @@ var
 begin
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   LIO.SSLOptions.Assign( SSLOptions );
-  LIO.OnStatusInfo := OnStatusInfo;
-  LIO.OnGetPassword := OnGetPassword;
-  LIO.OnVerifyPeer := OnVerifyPeer;
+  LIO.OnStatusInfo := DoStatusInfo;
+  LIO.OnGetPassword := DoGetPassword;
+  LIO.OnVerifyPeer := DoVerifyPeer;
   Result := LIO;
 end;
 
@@ -1475,8 +1479,6 @@ procedure TIdSSLContext.InitContext(CtxMode: TIdSSLCtxMode);
 var
   SSLMethod: PSSL_METHOD;
   error: TIdC_INT;
-  pCipherList, pRootCertFile: PAnsiChar;
-
 //  pCAname: PSTACK_X509_NAME;
 begin
   // Destroy the context first
@@ -1512,21 +1514,18 @@ begin
   if RootCertFile <> '' then begin    {Do not Localize}
     if not LoadRootCert then begin
        EIdOSSLLoadingRootCertError.RaiseException(RSSSLLoadingRootCertError);
-    //  raise EIdOSSLLoadingRootCertError.Create(RSSSLLoadingRootCertError);
     end;
   end;
 
   if CertFile <> '' then begin    {Do not Localize}
     if not LoadCert then begin
       EIdOSSLLoadingCertError.RaiseException(RSSSLLoadingCertError);
-     // raise EIdOSSLLoadingCertError.Create(RSSSLLoadingCertError);
     end;
   end;
 
   if KeyFile <> '' then begin    {Do not Localize}
     if not LoadKey then begin
       EIdOSSLLoadingKeyError.RaiseException(RSSSLLoadingKeyError);
-   //   raise EIdOSSLLoadingKeyError.Create(RSSSLLoadingKeyError);
     end;
   end;
 
@@ -1539,13 +1538,12 @@ begin
   //f_SSL_CTX_set_tmp_rsa_callback(hSSLContext, @RSACallback);
 
   if fCipherList <> '' then begin    {Do not Localize}
-    pCipherList := StrNew(PAnsiChar(fCipherList));
-    error := IdSslCtxSetCipherList(fContext, pCipherList);
-    StrDispose(pCipherList);
+    error := IdSslCtxSetCipherList(fContext, PAnsiChar(fCipherList));
   end
   else begin
     error := IdSslCtxSetCipherList(fContext, OPENSSL_SSL_DEFAULT_CIPHER_LIST);
   end;
+
   if error <= 0 then begin
     EIdOSSLLoadingKeyError.RaiseException(RSSSLSettingCipherError);
   end;
@@ -1560,9 +1558,7 @@ begin
 
   // CA list
   if RootCertFile <> '' then begin    {Do not Localize}
-    pRootCertFile := StrNew(PAnsiChar(RootCertFile));
-    IdSSLCtxSetClientCAList(fContext, IdSSLLoadClientCAFile(pRootCertFile));
-    StrDispose(pRootCertFile);
+    IdSSLCtxSetClientCAList(fContext, IdSSLLoadClientCAFile(PAnsiChar(RootCertFile)));
   end
 end;
 
@@ -1588,35 +1584,22 @@ begin
 end;
 {
 function TIdSSLContext.LoadVerifyLocations(FileName: String; Dirs: String): Boolean;
-var
-  pFileName, pDirs : PAnsiChar;
 begin
   Result := False;
 
-  pFileName := nil;
-  pDirs := nil;
-  if FileName <> '' then begin
-    pFileName := StrNew(PAnsiChar(FileName));
-  end;
-  if Dirs <> '' then begin
-    pDirs := StrNew(PAnsiChar(Dirs));
+  if (Dirs <> '') or (FileName <> '') then begin
+    if IdSslCtxLoadVerifyLocations(fContext, PAnsiChar(FileName), PAnsiChar(Dirs)) <= 0 then begin
+      raise EIdOSSLCouldNotLoadSSLLibrary.Create(RSOSSLCouldNotLoadSSLLibrary);
+    end;
   end;
 
-  If (pDirs<>nil) or (pFileName<>nil) Then begin
-    If IdSslCtxLoadVerifyLocations(fContext, pFileName, pDirs)<=0 Then Begin
-      raise EIdOSSLCouldNotLoadSSLLibrary.Create(RSOSSLCouldNotLoadSSLLibrary);
-      exit;
-    End;
-  end;
-  StrDispose(pFileName);
-  StrDispose(pDirs);
-  Result:=True;
-End;
+  Result := True;
+end;
 }
 function TIdSSLContext.SetSSLMethod: PSSL_METHOD;
 begin
   if fMode = sslmUnassigned then begin
-  	raise EIdOSSLModeNotSet.create(RSOSSLModeNotSet);
+    raise EIdOSSLModeNotSet.create(RSOSSLModeNotSet);
   end;
   case fMethod of
     sslvSSLv2:
@@ -1660,79 +1643,40 @@ begin
 end;
 
 function TIdSSLContext.LoadRootCert: Boolean;
-var
-  pStr: PAnsiChar;
-  error: Integer;
-//  pDirs : PAnsiChar;
 begin
-  pStr := StrNew(PAnsiChar(RootCertFile));
 {  if fVerifyDirs <> '' then begin
-    pDirs := StrNew(PAnsiChar(fVerifyDirs));
-    error := IdSslCtxLoadVerifyLocations(
+    Result := IdSslCtxLoadVerifyLocations(
                    fContext,
-                   pStr,
-                   pDirs);
-    StrDispose(pDirs);
+                   PAnsiChar(RootCertFile),
+                   PAnsiChar(fVerifyDirs)) > 0;
   end
   else begin
 }
-    error := IdSslCtxLoadVerifyLocations(
+    Result := IdSslCtxLoadVerifyLocations(
                    fContext,
-                   pStr,
-                   nil);
+                   PAnsiChar(RootCertFile),
+                   nil) > 0;
 {  end;}
-  if error <= 0 then begin
-    Result := False
-  end else begin
-    Result := True;
-  end;
-
-  StrDispose(pStr);
 end;
 
 function TIdSSLContext.LoadCert: Boolean;
-var
-  pStr: PAnsiChar;
-  error: Integer;
 begin
-  pStr := StrNew(PAnsiChar(CertFile));
-  error := IdSslCtxUseCertificateFile(
+  Result := IdSslCtxUseCertificateFile(
                  fContext,
-                 pStr,
-                 OPENSSL_SSL_FILETYPE_PEM);
-  if error <= 0 then
-    Result := False
-  else
-    Result := True;
-
-  StrDispose(pStr);
+                 PAnsiChar(CertFile),
+                 OPENSSL_SSL_FILETYPE_PEM) > 0;
 end;
 
 function TIdSSLContext.LoadKey: Boolean;
-var
-  pStr: PAnsiChar;
-  error: Integer;
 begin
-  Result := True;
-
-  pStr := StrNew(PAnsiChar(fsKeyFile));
-  error := IdSslCtxUsePrivateKeyFile(
+  Result := IdSslCtxUsePrivateKeyFile(
                  fContext,
-                 pStr,
-                 OPENSSL_SSL_FILETYPE_PEM);
-
-  if error <= 0 then begin
-    Result := False;
-  end else begin
-    error := IdSslCtxCheckPrivateKeyFile(fContext);
-    if error <= 0 then begin
-      Result := False;
-    end;
+                 PAnsiChar(fsKeyFile),
+                 OPENSSL_SSL_FILETYPE_PEM) > 0;
+  if Result then begin
+    Result := IdSslCtxCheckPrivateKeyFile(fContext) > 0;
   end;
-
-  StrDispose(pStr);
 end;
-
 
 //////////////////////////////////////////////////////////////
 
@@ -1742,13 +1686,13 @@ begin
   Result.StatusInfoOn := StatusInfoOn;
 //    property PasswordRoutineOn: Boolean read fPasswordRoutineOn write fPasswordRoutineOn;
   Result.VerifyOn := VerifyOn;
-  Result.Method:=Method;
-  Result.Mode:=Mode;
-  Result.RootCertFile:= RootCertFile;
-  Result.CertFile:=CertFile;
-  Result.KeyFile:=KeyFile;
-  Result.VerifyMode:=VerifyMode;
-  Result.VerifyDepth:= VerifyDepth;
+  Result.Method := Method;
+  Result.Mode := Mode;
+  Result.RootCertFile := RootCertFile;
+  Result.CertFile := CertFile;
+  Result.KeyFile := KeyFile;
+  Result.VerifyMode := VerifyMode;
+  Result.VerifyDepth := VerifyDepth;
 
 end;
 
@@ -1843,10 +1787,10 @@ begin
   fSSL := IdSslNew(fSSLContext.fContext);
   if fSSL = nil then exit;
 
-  error := IdSslSetAppData(fSSL, self);
+  error := IdSslSetAppData(fSSL, Self);
   if error <= 0 then begin
     EIdOSSLDataBindingError.RaiseException(fSSL, error, RSSSLDataBindingError);
-    exit;
+    Exit;
   end;
 
   IdSslSetFd(fSSL, pHandle);
@@ -1861,7 +1805,7 @@ begin
                'bits = ' + IntToStr(Cipher.Bits) + '; ' +    {Do not Localize}
                'version = ' + Cipher.Version + '; ';    {Do not Localize}
 
-  if (fParent is TIdServerIOHandlerSSLOpenSSL) then begin
+  if fParent is TIdServerIOHandlerSSLOpenSSL then begin
     (fParent as TIdServerIOHandlerSSLOpenSSL).DoStatusInfo(StatusStr);
   end;
 
@@ -1885,11 +1829,12 @@ begin
 
   error :=  IdSslSetFd(fSSL, pHandle);
   if error <= 0 then begin
-    EIdOSSLFDSetError.RaiseException(fSSL,error,RSSSLFDSetError);
+    EIdOSSLFDSetError.RaiseException(fSSL, error, RSSSLFDSetError);
   end;
+
   error := IdSslConnect(fSSL);
   if error <= 0 then begin
-    EIdOSSLConnectError.RaiseException(fSSL,error,RSSSLConnectError);
+    EIdOSSLConnectError.RaiseException(fSSL, error, RSSSLConnectError);
   end;
 
   StatusStr := 'Cipher: name = ' + Cipher.Name + '; ' +    {Do not Localize}
@@ -1897,7 +1842,7 @@ begin
                'bits = ' + IntToStr(Cipher.Bits) + '; ' +    {Do not Localize}
                'version = ' + Cipher.Version + '; ';    {Do not Localize}
 
-  if (fParent is TIdSSLIOHandlerSocketOpenSSL) then begin
+  if fParent is TIdSSLIOHandlerSocketOpenSSL then begin
     (fParent as TIdSSLIOHandlerSocketOpenSSL).DoStatusInfo(StatusStr);
   end;
 
@@ -1983,9 +1928,9 @@ procedure TIdSSLSocket.SetCipherList(CipherList: String);
 begin
 {
   fCipherList := CipherList;
-  fCipherList_Ch:=True;
-  aCipherList:=aCipherList+#0;
-  If hSSL<>nil Then f_SSL_set_cipher_list(hSSL, @aCipherList[1]);
+  fCipherList_Ch := True;
+  aCipherList := aCipherList+#0;
+  if hSSL <> nil then f_SSL_set_cipher_list(hSSL, @aCipherList[1]);
 }
 end;
 
@@ -1997,13 +1942,13 @@ end;
 
 function TIdX509Name.CertInOneLine: String;
 var
-  LOneLine: Array[0..2048] of AnsiChar;
+  LOneLine: array[0..2048] of AnsiChar;
 begin
   if FX509Name = nil then begin
     Result := '';    {Do not Localize}
   end
   else begin
-    Result := StrPas(IdSslX509NameOneline(FX509Name, PAnsiChar(@LOneLine), sizeof(LOneLine)));
+    Result := StrPas(IdSslX509NameOneline(FX509Name, PAnsiChar(@LOneLine), SizeOf(LOneLine)));
   end;
 end;
 
@@ -2050,18 +1995,8 @@ begin
 end;
 
 function TIdX509Fingerprints.GetMD5AsString: String;
-var
-//  I: Integer;
-  LEVP_MD: TEVP_MD;
 begin
-  LEVP_MD := MD5;
-{  for I := 0 to EVP_MD.Length - 1 do begin
-    if I <> 0 then begin
-      Result := Result + ':';    {Do not Localize}
-{    end;
-    Result := Result + Sys.Format('%.2x', [Byte(EVP_MD.MD[I])]);  {do not localize}
-{  end;      }
-  Result := MDAsString(LEVP_MD);
+  Result := MDAsString(MD5);
 end;
 
 function TIdX509Fingerprints.GetSHA1: TEVP_MD;
@@ -2070,127 +2005,87 @@ begin
 end;
 
 function TIdX509Fingerprints.GetSHA1AsString: String;
-var
-  LEVP_MD : TEVP_MD;
 begin
-  LEVP_MD := SHA1;
-  Result := MDAsString(LEVP_MD);
+  Result := MDAsString(SHA1);
 end;
 
 function TIdX509Fingerprints.GetSHA224 : TEVP_MD;
 begin
-  if Assigned(IdSslEvpSHA224) then
-  begin
-   IdSslX509Digest(FX509, IdSslEvpSHA224, PByte(@Result.MD), Result.Length);
-  end
-  else
-  begin
-    FillChar(Result,SizeOf(Result),0);
+  if Assigned(IdSslEvpSHA224) then begin
+    IdSslX509Digest(FX509, IdSslEvpSHA224, PByte(@Result.MD), Result.Length);
+  end else begin
+    FillChar(Result, SizeOf(Result), 0);
   end;
 end;
 
 function TIdX509Fingerprints.GetSHA224AsString : String;
-var
-  LEVP_MD : TEVP_MD;
 begin
-  LEVP_MD := SHA224;
-  if Assigned(IdSslEvpSHA224) then
-  begin
-    Result := MDAsString(LEVP_MD);
-  end
-  else
-  begin
+  if Assigned(IdSslEvpSHA224) then begin
+    Result := MDAsString(SHA224);
+  end else begin
     Result := '';
   end;
 end;
 
 function TIdX509Fingerprints.GetSHA256 : TEVP_MD;
 begin
-  if Assigned(IdSslEvpSHA256) then
-  begin
+  if Assigned(IdSslEvpSHA256) then begin
     IdSslX509Digest(FX509, IdSslEvpSHA256, PByte(@Result.MD), Result.Length);
-  end
-  else
-  begin
-    FillChar(Result,SizeOf(Result),0);
+  end else begin
+    FillChar(Result, SizeOf(Result), 0);
   end;
 end;
 
 function TIdX509Fingerprints.GetSHA256AsString : String;
-var
-  LEVP_MD : TEVP_MD;
 begin
-  if Assigned(IdSslEvpSHA256) then
-  begin
-    LEVP_MD := SHA256;
-    Result := MDAsString(LEVP_MD);
-  end
-  else
-  begin
+  if Assigned(IdSslEvpSHA256) then begin
+    Result := MDAsString(SHA256);
+  end else begin
     Result := '';
   end;
 end;
 
 function TIdX509Fingerprints.GetSHA386 : TEVP_MD;
 begin
-  if Assigned(IdSslEvpSHA386) then
-  begin
+  if Assigned(IdSslEvpSHA386) then begin
     IdSslX509Digest(FX509, IdSslEvpSHA386, PByte(@Result.MD), Result.Length);
-  end
-  else
-  begin
-    FillChar(Result,SizeOf(Result),0);
+  end else begin
+    FillChar(Result, SizeOf(Result), 0);
   end;
 end;
 
 function TIdX509Fingerprints.GetSHA386AsString : String;
-var
-  LEVP_MD : TEVP_MD;
 begin
-  if Assigned(IdSslEvpSHA386) then
-  begin
-    LEVP_MD := SHA386;
-    Result := MDAsString(LEVP_MD);
-  end
-  else
-  begin
+  if Assigned(IdSslEvpSHA386) then begin
+    Result := MDAsString(SHA386);
+  end else begin
     Result := '';
   end;
 end;
 
 function TIdX509Fingerprints.GetSHA512 : TEVP_MD;
 begin
-  if Assigned(IdSslEvpSHA512) then
-  begin
+  if Assigned(IdSslEvpSHA512) then begin
     IdSslX509Digest(FX509, IdSslEvpSHA512, PByte(@Result.MD), Result.Length);
-  end
-  else
-  begin
-    FillChar(Result,SizeOf(Result),0);
+  end else begin
+    FillChar(Result, SizeOf(Result), 0);
   end;
 end;
 
 function TIdX509Fingerprints.GetSHA512AsString : String;
-var
-  LEVP_MD : TEVP_MD;
 begin
-  if Assigned(IdSslEvpSHA512) then
-  begin
-    LEVP_MD := SHA512;
-    Result := MDAsString(LEVP_MD);
-  end
-  else
-  begin
+  if Assigned(IdSslEvpSHA512) then begin
+    Result := MDAsString(SHA512);
+  end else begin
     Result := '';
   end;
 end;
-
 
 { TIdX509SigInfo }
 
 function TIdX509SigInfo.GetSignature: String;
 begin
- Result := BytesToHexString( FX509^.signature^.data, FX509^.signature^.length);
+  Result := BytesToHexString(FX509^.signature^.data, FX509^.signature^.length);
 end;
 
 function TIdX509SigInfo.GetSigType: TIdC_INT;
@@ -2237,12 +2132,11 @@ function TIdX509.GetSerialNumber: String;
 var
   LSN : PASN1_INTEGER;
 begin
-  if FX509<>nil then
+  if FX509 <> nil then
   begin
     LSN := IdSslX509GetSerialNumber(FX509);
-    Result := BytesToHexString(LSN.data,LSN.length);
-  end
-  else
+    Result := BytesToHexString(LSN.data, LSN.length);
+  end else
   begin
     Result := '';
   end;
@@ -2258,8 +2152,7 @@ var
   Lx509_name: PX509_NAME;
 Begin
   if not Assigned(FSubject) then begin
-    if FX509<>nil then
-    begin
+    if FX509 <> nil then begin
       Lx509_name := IdSslX509GetSubjectName(FX509);
     end else begin
       Lx509_name := nil;
@@ -2271,16 +2164,15 @@ end;
 
 function TIdX509.RIssuer: TIdX509Name;
 var
-  lx509_name: PX509_NAME;
+  Lx509_name: PX509_NAME;
 begin
   if not Assigned(FIssuer) then begin
-    if FX509<>nil then
-    begin
-      lx509_name := IdSslX509GetIssuerName(FX509);
+    if FX509 <> nil then begin
+      Lx509_name := IdSslX509GetIssuerName(FX509);
     end else begin
-      lx509_name := nil;
+      Lx509_name := nil;
     end;
-    FIssuer := TIdX509Name.Create(lx509_name);
+    FIssuer := TIdX509Name.Create(Lx509_name);
   End;
   Result := FIssuer;
 end;
@@ -2291,12 +2183,8 @@ begin
 end;
 
 function TIdX509.RFingerprintAsString: String;
-var
-  LEVP_MD: TEVP_MD;
 begin
-  Result := '';
-  LEVP_MD := Fingerprint;
-  Result := MDAsString(LEVP_MD);
+  Result := MDAsString(Fingerprint);
 end;
 
 function TIdX509.RnotBefore: TDateTime;
@@ -2326,7 +2214,6 @@ end;
 constructor TIdSSLCipher.Create(AOwner: TIdSSLSocket);
 begin
   inherited Create;
-
   FSSLSocket := AOwner;
 end;
 
@@ -2358,20 +2245,16 @@ begin
 end;
 
 { EIdOpenSSLAPICryptoError }
-class procedure EIdOpenSSLAPICryptoError.RaiseException(
-  const AMsg : String = '');
+class procedure EIdOpenSSLAPICryptoError.RaiseException(const AMsg : String = '');
 var
   LException : EIdOpenSSLAPICryptoError;
   LErr : TIdC_ULONG;
 begin
   LErr := IdSSLERR_get_err;
-  if AMsg <> '' then
-  begin
-    LException := Create( AMsg + sLineBreak+ GetErrorMessage(LErr) );
-  end
-  else
-  begin
-    LException := Create( GetErrorMessage(LErr) );
+  if AMsg <> '' then begin
+    LException := Create(AMsg + sLineBreak + GetErrorMessage(LErr));
+  end else begin
+    LException := Create(GetErrorMessage(LErr));
   end;
   LException.FErrorCode := LErr;
   raise LException;
@@ -2381,25 +2264,22 @@ end;
 
 class procedure EIdOpenSSLAPISSLError.RaiseException(s: PSSL;
   const ARetCode: TIdC_INT; const AMsg: String);
-var LErr : TIdC_INT;
+var
+  LErr : TIdC_INT;
   LException : EIdOpenSSLAPISSLError;
 begin
-  LErr := IdSslGetError(s,ARetCode);
-  if AMsg <> '' then
-  begin
-    LException := Create( AMsg + sLineBreak+ GetErrorMessage(LErr) );
-  end
-  else
-  begin
-    LException := Create( GetErrorMessage(LErr) );
+  LErr := IdSslGetError(s, ARetCode);
+  if AMsg <> '' then begin
+    LException := Create(AMsg + sLineBreak + GetErrorMessage(LErr));
+  end else begin
+    LException := Create(GetErrorMessage(LErr));
   end;
   raise LException;
 end;
 
 initialization
-
   RegisterSSL('OpenSSL','Indy Pit Crew',                                  {do not localize}
-    'Copyright (c) 1993 - 2004'#10#13 +                                     {do not localize}
+    'Copyright © 1993 - 2004'#10#13 +                                     {do not localize}
     'Chad Z. Hower (Kudzu) and the Indy Pit Crew. All rights reserved.',  {do not localize}
     'Open SSL Support DLL Delphi and C++Builder interface',               {do not localize}
     'http://www.indyproject.org/'#10#13 +                                 {do not localize}
@@ -2411,7 +2291,6 @@ initialization
   SSLIsLoaded := TIdThreadSafeBoolean.Create;
 
 finalization
-
   UnLoadOpenSSLLibrary;
   //free the lock last as unload makes calls that use it
   FreeAndNil(SSLIsLoaded);
