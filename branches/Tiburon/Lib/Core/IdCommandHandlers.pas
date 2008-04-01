@@ -210,7 +210,7 @@ type
     property Name: string read FName write FName;
     property NormalReply: TIdReply read FNormalReply write SetNormalReply;
     property ParamDelimiter: Char read FParamDelimiter write FParamDelimiter;
-    property ParseParams: Boolean read FParseParams write FParseParams default IdParseParamsDefault;
+    property ParseParams: Boolean read FParseParams write FParseParams;
     property Response: TStrings read FResponse write SetResponse;
     property Tag: Integer read FTag write FTag;
     //
@@ -230,6 +230,7 @@ type
     FOnAfterCommandHandler: TIdAfterCommandHandlerEvent;
     FOnBeforeCommandHandler: TIdBeforeCommandHandlerEvent;
     FOnCommandHandlersException: TIdCommandHandlersExceptionEvent;
+    FParseParamsDef: Boolean;
     FPerformReplies: Boolean;
     FReplyClass: TIdReplyClass;
     FReplyTexts: TIdReplies;
@@ -257,6 +258,7 @@ type
     property Items[AIndex: Integer]: TIdCommandHandler read GetItem write SetItem;
     // OwnedBy is used so as not to conflict with Owner in D6
     //property OwnedBy: TIdPersistent read GetOwnedBy;
+    property ParseParamsDefault: Boolean read FParseParamsDef write FParseParamsDef;
     property PerformReplies: Boolean read FPerformReplies write FPerformReplies;
     property ReplyClass: TIdReplyClass read FReplyClass;
     property ReplyTexts: TIdReplies read FReplyTexts;
@@ -326,6 +328,7 @@ begin
   end;
   FBase := ABase;
   FExceptionReply := AExceptionReply;
+  FParseParamsDef := IdParseParamsDefault;
   FPerformReplies := True;  // RLebeau: default to legacy behavior
   FReplyClass := AReplyClass;
   FReplyTexts := AReplyTexts;
@@ -545,7 +548,7 @@ begin
   FEnabled := IdEnabledDefault;
   FName := ClassName + IntToStr(ID);
   FParamDelimiter := #32;
-  FParseParams := IdParseParamsDefault;
+  FParseParams := TIdCommandHandlers(ACollection).ParseParamsDefault;
   FResponse := TStringList.Create;
   FDescription := TStringList.Create;
 
