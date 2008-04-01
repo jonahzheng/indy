@@ -807,7 +807,6 @@ type
     constructor Create(APASV: Boolean; AControlContext: TIdFTPServerContext; const ARequirePASVFromSameIP : Boolean; AServer : TIdFTPServer); reintroduce;
     destructor Destroy; override;
     procedure InitOperation(const AConnectMode : Boolean = False);
-    procedure SetPortParameters(const AIP: string; const APort: TIdPort; const AIPVersion: TIdIPVersion);
     property PeerIP : String read GetPeerIP;
     property PeerPort : TIdPort read GetPeerPort;
     property Stopped : Boolean read FStopped write FStopped;
@@ -920,8 +919,6 @@ type
     FAnonymousAccounts: TStrings;
     FAllowAnonymousLogin: Boolean;
     FAnonymousPassStrictCheck: Boolean;
-    FCmdHandlerList: TIdCommandHandler;
-    FCmdHandlerNlst: TIdCommandHandler;
 //    FEmulateSystem: TIdFTPSystems;
     FPASVBoundPortMin : TIdPort;
     FPASVBoundPortMax : TIdPort;
@@ -1115,7 +1112,8 @@ type
     procedure SetUseTLS(AValue: TIdUseTLS); override;
     procedure InitializeCommandHandlers; override;
     procedure ListDirectory(ASender: TIdFTPServerContext; ADirectory: string;
-      ADirContents: TStrings; ADetails: Boolean; const ACmd : String = 'LIST'; const ASwitches : String = ''); {do not localize}
+      ADirContents: TStrings; ADetails: Boolean; const ACmd : String = 'LIST';
+      const ASwitches : String = ''); {do not localize}
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure SetAnonymousAccounts(const AValue: TStrings);
     procedure SetUserAccounts(const AValue: TIdCustomUserManager);
@@ -1287,7 +1285,7 @@ const
      );
 
   //SSCN, OPTS MODE Z EXTRA, and OPTS UTF8 states
-  STATES : array [0..1] of string =
+  OnOffStates : array [0..1] of string =
     ('ON', {do not localize}
      'OFF' {do not localize}
      );
@@ -1798,15 +1796,13 @@ begin
   LCmd.ExceptionReply.NumericCode := 550;
   LCmd.Description.Text := 'Syntax: PWD (return current directory)'; {do not localize}
   //LIST [<SP> <pathname>] <CRLF>
-  FCmdHandlerList := CommandHandlers.Add;
-  LCmd := FCmdHandlerList;
+  LCmd := CommandHandlers.Add;
   LCmd.Command := 'LIST';    {Do not Localize}
   LCmd.OnCommand := CommandLIST;
   LCmd.ExceptionReply.NumericCode := 450;
   LCmd.Description.Text := 'Syntax: LIST [ <sp> path-name ]'; {do not localize}
   //NLST [<SP> <pathname>] <CRLF>
-  FCmdHandlerNlst := CommandHandlers.Add;
-  LCmd := FCmdHandlerNlst;
+  LCmd := CommandHandlers.Add;
   LCmd.Command := 'NLST';    {Do not Localize}
   LCmd.OnCommand := CommandLIST;
   LCmd.ExceptionReply.NumericCode := 450;
@@ -2266,7 +2262,8 @@ begin
 end;
 
 procedure TIdFTPServer.ListDirectory(ASender: TIdFTPServerContext; ADirectory: string;
-  ADirContents: TStrings; ADetails: Boolean; const ACmd : String = 'LIST'; const ASwitches : String = ''); {do not localize}
+  ADirContents: TStrings; ADetails: Boolean; const ACmd : String = 'LIST';
+  const ASwitches : String = ''); {do not localize}
 var
   LDirectoryList: TIdFTPListOutput;
   LPathSep: string;
@@ -2635,6 +2632,7 @@ begin
   LContext := ASender.Context as TIdFTPServerContext;
   if LContext.IsAuthenticated(ASender) then begin
     LContext.ReInitialize;
+    LContext.Connection.IOHandler.DefStringEncoding := en8Bit;
     ASender.Reply.SetReply(220, RSFTPServiceOpen);
     if (FUseTLS in ExplicitTLSVals) then
     begin
@@ -2649,8 +2647,9 @@ end;
 
 procedure TIdFTPServer.CommandPORT(ASender: TIdCommand);
 var
-  LLo, LHi: Integer;
-  LParm, IP : string;
+  LLo, LHi : Integer;
+  LPort: TIdPort;
+  LParm, LIP : string;
   LContext : TIdFTPServerContext;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
@@ -2669,22 +2668,22 @@ begin
     end;
     LContext.FPASV := False;
     LParm := ASender.UnparsedParams;
-    IP := '';    {Do not Localize}
+    LIP := '';    {Do not Localize}
     { h1 }
-    IP := IP + Fetch(LParm, ',') + '.';    {Do not Localize}
+    LIP := LIP + Fetch(LParm, ',') + '.';    {Do not Localize}
     { h2 }
-    IP := IP + Fetch(LParm, ',') + '.';    {Do not Localize}
+    LIP := LIP + Fetch(LParm, ',') + '.';    {Do not Localize}
     { h3 }
-    IP := IP + Fetch(LParm, ',') + '.';    {Do not Localize}
+    LIP := LIP + Fetch(LParm, ',') + '.';    {Do not Localize}
     { h4 }
-    IP := IP + Fetch(LParm, ',');          {Do not Localize}
+    LIP := LIP + Fetch(LParm, ',');          {Do not Localize}
     { p1 }
     LLo := IndyStrToInt(Fetch(LParm, ','));    {Do not Localize}
     { p2 }
     LHi := IndyStrToInt(LParm);
-    LContext.FDataPort := TIdPort((LLo * 256) + LHi);
+    LPort := TIdPort((LLo * 256) + LHi);
     if LContext.UserSecurity.NoReservedRangePORT and
-      ((LContext.FDataPort > 0) and (LContext.FDataPort <= 1024)) then
+      ((LPort > 0) and (LPort <= 1024)) then
     begin
       LContext.FDataPort := 0;
       LContext.FDataPortDenied := True;
@@ -2693,7 +2692,7 @@ begin
     end;
     {//BGO}
     if LContext.UserSecurity.FRequirePORTFromSameIP and
-      (IP <> LContext.Binding.PeerIP) then
+      (LIP <> LContext.Binding.PeerIP) then
     begin
       LContext.FDataPort := 0;
       LContext.FDataPortDenied := True;
@@ -2702,7 +2701,12 @@ begin
     end;
     {//BGO}
     LContext.CreateDataChannel(False);
-    LContext.FDataChannel.SetPortParameters(IP, LContext.FDataPort, ID_IPv4);
+    with TIdTCPClient(LContext.FDataChannel.FDataChannel) do begin
+      Host := LIP;
+      Port := LPort;
+      IPVersion := Id_IPv4;
+    end;
+    LContext.FDataPort := LPort;
     CmdCommandSuccessful(ASender, 200);
   end;
 end;
@@ -3174,7 +3178,7 @@ begin
           LSwitches := DeletRSwitch(LSwitches);
         end;
         ListDirectory(LContext, DoProcessPath(LContext, LPath), LStream,
-        ASender.CommandHandler = FCmdHandlerList, ASender.CommandHandler.Command,
+          TextIsSame(ASender.CommandHandler.Command, 'LIST'), ASender.CommandHandler.Command,
           LSwitches);
         LSendData := True;
       finally
@@ -3217,7 +3221,7 @@ const
 var
   LMemStream: TStream;
   LContext : TIdFTPServerContext;
-  LCmdQueue : TStringList; 
+  LCmdQueue : TStringList;
   LLine : String;
   LStrm : TStream;
 
@@ -3303,21 +3307,28 @@ var
   var
     i : Integer;
     LM : TStream;
+    LEncoding: TIdEncoding;
   begin
     //for loops will execute at least once triggering an out of range error.
     //write nothing if AStrings is empty.
     if AStrings.Count < 1 then begin
       Exit;
     end;
+    if (PosInStrArray(ASender.CommandHandler.Command, ['LIST', 'NLST'], False) > -1)
+     and AContext.NLSTUtf8 then begin
+      LEncoding := enUTF8;
+    end else begin
+      LEncoding := en8Bit;
+    end;
     if AContext.DataMode = dmDeflate then
     begin
       LM := TMemoryStream.Create;
       try
         for i := 0 to AStrings.Count-1 do begin
-          WriteStringToStream(LM, AStrings[i]+ EOL);
+          WriteStringToStream(LM, AStrings[i]+ EOL, LEncoding);
         end;
         LM.Position := 0;
-        WriteToStream(AContext, ACmdQueue, LM,True);
+        WriteToStream(AContext, ACmdQueue, LM, True);
       finally
         FreeAndNil(LM);
       end;
@@ -3327,7 +3338,7 @@ var
     begin
       if AContext.FDataChannel.FDataChannel.IOHandler.Connected then
       begin
-        AContext.FDataChannel.FDataChannel.IOHandler.WriteLn(AStrings[i]);
+        AContext.FDataChannel.FDataChannel.IOHandler.WriteLn(AStrings[i], LEncoding);
         if ((i mod 10) = 0) and (i <> (AStrings.Count-1)) then
         begin
           if AContext.FDataChannel.FDataChannel.IOHandler.Connected then begin
@@ -3387,8 +3398,8 @@ begin
                     LMemStream := TMemoryStream.Create;
                     try
                       ReadFromStream(LContext, LCmdQueue, LStrm);
-        //TODO;
-        //              SplitLines(LMemStream.Memory, LMemStream.Size, TStrings(LContext.FDataChannel.FData));
+                      //TODO;
+                     // SplitLines(LMemStream.Memory, LMemStream.Size, TStrings(LContext.FDataChannel.FData));
                     finally
                       FreeAndNil(LMemStream);
                     end;
@@ -3908,7 +3919,11 @@ begin
       Exit;
     end;
     LContext.CreateDataChannel(False);
-    LContext.FDataChannel.SetPortParameters(LIP, LContext.FDataPort, LIPVersion);
+    with TIdTCPClient(LContext.FDataChannel.FDataChannel) do begin
+      Host := LIP;
+      Port := LContext.FDataPort;
+      IPVersion := LIPVersion;
+    end;
     CmdCommandSuccessful(ASender, 200);
   end;
 end;
@@ -3968,10 +3983,15 @@ begin
     end;
     LIP := LContext.Connection.Socket.Binding.IP;
     LBPort := FDefaultDataPort;
+
+    // RLebeau: TODO - only passing 1 port around is not allowing the
+    // PASVBoundPortMin/Max properties to be utilized correctly...
     DoOnPASVBeforeBind(LContext, LIP, LBPort, LIPVersion);
     LContext.CreateDataChannel(True);
-    LContext.FDataChannel.SetPortParameters(LIP, LBPort, LIPVersion);
     with TIdSimpleServer(LContext.FDataChannel.FDataChannel) do begin
+      BoundIP := LIP;
+      BoundPort := LBPort;
+      IPVersion := LIPVersion;
       BeginListen;
       LBPort := Binding.Port;
       LIP := Binding.IP;
@@ -4270,6 +4290,7 @@ procedure TIdFTPServer.DoConnect(AContext: TIdContext);
 var
   LGreeting : TIdReplyRFC;
 begin
+  AContext.Connection.IOHandler.DefStringEncoding := en8Bit;
   if AContext.Connection.IOHandler is TIdSSLIOHandlerSocketBase then begin
     if FUseTLS = utUseImplicitTLS then begin
       TIdSSLIOHandlerSocketBase(AContext.Connection.IOHandler).PassThrough := False;
@@ -4327,7 +4348,8 @@ begin
     end;
     LStream := TStringList.Create;
     try
-      ListDirectory(LContext, DoProcessPath(LContext, ASender.UnparsedParams), LStream, ASender.CommandHandler = FCmdHandlerList,'MLSD'); {Do not translate}
+      ListDirectory(LContext, DoProcessPath(LContext, ASender.UnparsedParams),
+        LStream, TextIsSame(ASender.CommandHandler.Command, 'LIST'), 'MLSD'); {Do not translate}
       LSendData := True;
     finally
       if LSendData then
@@ -5635,7 +5657,7 @@ begin
     end else
     begin
       //set state
-      case PosInStrArray(ASender.Params[0], STATES, False) of
+      case PosInStrArray(ASender.Params[0], OnOffStates, False) of
         0 : //'ON'
         begin
           LContext.SSCNOn := True;
@@ -5644,7 +5666,7 @@ begin
         1 : //'OFF'
         begin
           LContext.SSCNOn := False;
-          ASender.Reply.SetReply(200,REPLY_SSCN_OFF);
+          ASender.Reply.SetReply(200, REPLY_SSCN_OFF);
         end;
       else
         ASender.Reply.SetReply(504,  RSFTPInvalidForParam);
@@ -5781,10 +5803,15 @@ begin
     VIP := LContext.Connection.Socket.Binding.IP;
     VPort := FDefaultDataPort;
     VIPVersion := LContext.Connection.Socket.IPVersion;
+
+    // RLebeau: TODO - only passing 1 port around is not allowing the
+    // PASVBoundPortMin/Max properties to be utilized correctly...
     DoOnPASVBeforeBind(LContext, VIP, VPort, VIPVersion);
     LContext.CreateDataChannel(True);
-    LContext.FDataChannel.SetPortParameters(VIP, VPort, VIPVersion);
     with TIdSimpleServer(LContext.FDataChannel.FDataChannel) do begin
+      BoundIP := VIP;
+      BoundPort := VPort;
+      IPVersion := VIPVersion;
       BeginListen;
       VPort := Binding.Port;
       VIP := Binding.IP;
@@ -5811,8 +5838,6 @@ begin
 end;
 
 function TIdFTPServer.ReadCommandLine(AContext: TIdContext): string;
-const
-  cEncoding: array[Boolean] of TIdEncoding = (en8Bit, enUTF8);
 var
   i : Integer;
   State: TIdFTPTelnetState;
@@ -6052,7 +6077,7 @@ begin
     end;
   end;
 
-  Result := BytesToString(LLine, 0, MaxInt, cEncoding[LContext.UseUtf8]);
+  Result := BytesToString(LLine, 0, MaxInt, LContext.Connection.IOHandler.DefStringEncoding);
 end;
 
 procedure TIdFTPServer.DoReplyUnknownCommand(AContext: TIdContext; ALine: string);
@@ -6316,7 +6341,7 @@ begin
             end;
           end;
       4 : begin  //'EXTRA') - not implemented - just do syntax check
-            if PosInStrArray(LOptVal, STATES, False) > -1 then begin
+            if PosInStrArray(LOptVal, OnOffStates, False) > -1 then begin
               LError := False;
             end;
           end;
@@ -6352,38 +6377,40 @@ var
 begin
   LContext := ASender.Context as TIdFTPServerContext;
   s := Trim(ASender.UnparsedParams);
-  if s = '' then
+
+  if TextIsSame(ASender.CommandHandler.Command, 'UTF-8') then
   begin
-    // not sure if this is accurate.  The parameter
-    // of both OPTS UTF8 and OPTS UTF-8 is optional
-    LContext.NLSTUtf8 := False;
-    LContext.UseUtf8 := False;
+    // OPTS UTF-8 <NLST>
+    // http://www.ietf.org/proceedings/02nov/I-D/draft-ietf-ftpext-utf-8-option-00.txt
+    if s = '' then begin
+      LContext.NLSTUtf8 := False; // disable UTF-8 over data connection
+    end
+    else if TextIsSame(s, 'NLST') then begin
+      LContext.NLSTUtf8 := True; // enable UTF-8 over data connection
+    end else begin
+      SyntaxError(ASender);
+      Exit;
+    end;
+    // enable UTF-8 over control connection
+    LContext.Connection.IOHandler.DefStringEncoding := enUTF8;
   end else
   begin
-    if TextIsSame(ASender.CommandHandler.Command, 'UTF-8') then
-    begin
-      if not TextIsSame(s, 'NLST') then
-      begin
-        SyntaxError(ASender);
-        Exit;
-      end;
-      LContext.NLSTUtf8 := True;
-    end else
-    begin
-      case PosInStrArray(s, STATES, False) of
-        0: begin
-             LContext.NLSTUtf8 := True;
-             LContext.UseUtf8 := True;
-           end;
-        1: begin
-             LContext.UseUtf8 := False;
-           end;
-        else
-          begin
-            SyntaxError(ASender);
-            Exit;
+    // OPTS UTF8 <ON|OFF>
+    // non-standard Microsoft IE implementation!!!!
+    case PosInStrArray(s, OnOffStates, False) of
+      0: begin // 'ON'
+           LContext.NLSTUtf8 := True;
+           LContext.Connection.IOHandler.DefStringEncoding := enUTF8;
          end;
-      end;
+      1: begin // 'OFF'
+           LContext.NLSTUtf8 := False;
+           LContext.Connection.IOHandler.DefStringEncoding := en8Bit;
+         end;
+      else
+        begin
+          SyntaxError(ASender);
+          Exit;
+       end;
     end;
   end;
   ASender.Reply.NumericCode := 200;
@@ -6549,18 +6576,37 @@ begin
   FControlContext := AControlContext;
   FServer := AServer;
 
+  // RLebeau: do not set both BoundPortMin/Max and BoundPort at the same time.
+  // If they are all non-zero, BoundPort will take priority in TIdSocketHandle.
+  // The DefaultDataPort property should not be assigned to zero in order to
+  // support Active-mode transfers, but doing so will cause BoundPortMin/Max
+  // to be ignored for Passive-mode transfers.  So assign them in an either-or
+  // manner.
+
   if APASV then begin
     FDataChannel := TIdSimpleServer.Create(nil);
     with TIdSimpleServer(FDataChannel) do begin
       BoundIP := FControlContext.Connection.Socket.Binding.IP;
-      BoundPort := AServer.DefaultDataPort;
-      BoundPortMin := AServer.PASVBoundPortMin;
-      BoundPortMax := AServer.PASVBoundPortMax;
+      if (AServer.PASVBoundPortMin <> 0) and (AServer.PASVBoundPortMax <> 0) then
+      begin
+        BoundPortMin := AServer.PASVBoundPortMin;
+        BoundPortMax := AServer.PASVBoundPortMax;
+      end else begin
+        BoundPort := AServer.DefaultDataPort;
+      end;
+      IPVersion := FControlContext.Connection.Socket.Binding.IPVersion;
       OnBeforeBind := AControlContext.PortOnBeforeBind;
       OnAfterBind := AControlContext.PortOnAfterBind;
     end;
   end else begin
     FDataChannel := TIdTCPClient.Create(nil);
+    //the TCPClient for the dataport must be bound to a default port
+    with TIdTCPClient(FDataChannel) do
+    begin
+      BoundIP := FControlContext.Connection.Socket.Binding.IP;
+      BoundPort := AServer.DefaultDataPort;
+      IPVersion := FControlContext.Connection.Socket.Binding.IPVersion;
+    end;
   end;
 
   if AControlContext.Server.IOHandler is TIdServerIOHandlerSSLBase then begin
@@ -6569,31 +6615,21 @@ begin
     end else begin
       LIO := TIdServerIOHandlerSSLBase(AServer.IOHandler).MakeFTPSvrPort;
     end;
-    (LIO as TIdSSLIOHandlerSocketBase).PassThrough := true;
+    (LIO as TIdSSLIOHandlerSocketBase).PassThrough := True;
     // always uses a ssl iohandler, but passthrough is true...
   end else
   begin
-    FDataChannel.IOHandler := FServer.IOHandler.MakeClientIOHandler( nil );
-    LIO := FDataChannel.IOHandler as TIdIOHandlerSocket;
+    LIO := FServer.IOHandler.MakeClientIOHandler(nil) as TIdIOHandlerSocket;
   end;
+
   LIO.OnBeforeBind := AControlContext.PortOnBeforeBind;
   LIO.OnAfterBind := AControlContext.PortOnAfterBind;
-  LIO.BoundIP := TIdIOHandlerSocket(FControlContext.Connection.IOHandler).Binding.IP;
-  LIO.IPVersion := TIdIOHandlerSocket(FControlContext.Connection.IOHandler).Binding.IPVersion;
   FDataChannel.IOHandler := LIO;
-
-  //we have to do it this way because the TCPClient for the dataport
-  //must be bound to a default port
-  LIO.BoundPort := AServer.DefaultDataPort;
-  if APASV then begin
-    LIO.BoundPortMin := AServer.PASVBoundPortMin;
-    LIO.BoundPortMax := AServer.PASVBoundPortMax;
-  end;
 
   if LIO is TIdSSLIOHandlerSocketBase then begin
     case AControlContext.DataProtection of
       ftpdpsClear: begin
-          TIdSSLIOHandlerSocketBase(LIO).PassThrough := true;
+          TIdSSLIOHandlerSocketBase(LIO).PassThrough := True;
         end;
       ftpdpsPrivate: begin
           FNegotiateTLS := True;
@@ -6700,25 +6736,6 @@ end;
 procedure TIdDataChannel.SetOKReply(const AValue: TIdReplyRFC);
 begin
   FOKReply.Assign(AValue);
-end;
-
-procedure TIdDataChannel.SetPortParameters(const AIP: string;
-  const APort: TIdPort; const AIPVersion: TIdIPVersion);
-begin
-  if FDataChannel is TIdTCPClient then
-  begin
-    with TIdTCPClient(FDataChannel) do begin
-      Host := AIP;
-      Port := APort;
-      IPVersion := AIPVersion;
-    end;
-  end else begin
-    with TIdSimpleServer(FDataChannel) do begin
-      BoundIP := AIP;
-      BoundPort := APort;
-      IPVersion := AIPVersion;
-    end;
-  end;
 end;
 
 procedure TIdFTPServerContext.PortOnAfterBind(ASender: TObject);
