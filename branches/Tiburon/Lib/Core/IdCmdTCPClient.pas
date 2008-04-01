@@ -96,7 +96,9 @@ unit IdCmdTCPClient;
 }
 
 interface
+
 {$I IdCompilerDefines.inc}
+
 uses
   IdContext,
   IdException,
@@ -144,6 +146,7 @@ type
     procedure DoAfterCommandHandler(ASender: TIdCommandHandlers; AContext: TIdContext);
     procedure DoBeforeCommandHandler(ASender: TIdCommandHandlers; var AData: string;
       AContext: TIdContext);
+    procedure DoReplyUnknownCommand(AContext: TIdContext; ALine: string); virtual;
     procedure InitComponent; override;
     procedure SetCommandHandlers(AValue: TIdCommandHandlers);
     procedure SetExceptionReply(AValue: TIdReply);
@@ -166,10 +169,10 @@ type
 
 implementation
 
-uses IdReplyRFC, SysUtils;
+uses
+  IdReplyRFC, SysUtils;
 
 type
-
   TIdContextAccess = class(TIdContext)
   end;
 
@@ -193,7 +196,9 @@ end;
 procedure TIdCmdTCPClientListeningThread.Run;
 begin
   FRecvData := FClient.IOHandler.ReadLn;
-  FClient.CommandHandlers.HandleCommand(FContext, FRecvData);
+  if not FClient.CommandHandlers.HandleCommand(FContext, FRecvData) then begin
+    FClient.DoReplyUnknownCommand(FContext, FRecvData);
+  end;
   //Synchronize(?);
   FClient.IOHandler.CheckForDisconnect;
 end;
@@ -248,6 +253,10 @@ begin
   if Assigned(OnBeforeCommandHandler) then begin
     OnBeforeCommandHandler(Self, AData, AContext);
   end;
+end;
+
+procedure TIdCmdTCPClient.DoReplyUnknownCommand(AContext: TIdContext; ALine: string);
+begin
 end;
 
 procedure TIdCmdTCPClient.InitComponent;
