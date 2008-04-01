@@ -437,8 +437,8 @@ type
   protected
     FSize: Int64;
     FData: string;
-    FFileName: string;
-    FLocalFileName : string; //suggested file name for local file
+    FFileName: WideString;
+    FLocalFileName : WideString; //suggested file name for local file
     FSizeAvail : Boolean;
     FModifiedAvail : Boolean;
     FModifiedDate: TDateTime;
@@ -458,7 +458,7 @@ type
     //The format veries amoung systems.  This is only provided for people
     //wanting to display a "permission column in their FTP listing
     //property set methods
-    procedure SetFileName(const AValue : String);
+    procedure SetFileName(const AValue : WideString);
     //may be used by some descendent classes
     property ModifiedDateGMT : TDateTime read FModifiedDateGMT write FModifiedDateGMT;
   public
@@ -470,8 +470,8 @@ type
     property Size: Int64 read FSize write FSize;
     property ModifiedDate: TDateTime read FModifiedDate write FModifiedDate;
 
-    property FileName: string read FFileName write SetFileName;
-    property LocalFileName : string read FLocalFileName write FLocalFileName;
+    property FileName: WideString read FFileName write SetFileName;
+    property LocalFileName : WideString read FLocalFileName write FLocalFileName;
     property ItemType: TIdDirItemType read FItemType write FItemType;
     property SizeAvail : Boolean read FSizeAvail write FSizeAvail;
     property ModifiedAvail : Boolean read FModifiedAvail write FModifiedAvail;
@@ -580,7 +580,7 @@ begin
   end;
 end;
 
-procedure TIdFTPListItem.SetFileName(const AValue: String);
+procedure TIdFTPListItem.SetFileName(const AValue: WideString);
 var
   i : Integer;
   LDoLowerCase : Boolean;

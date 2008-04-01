@@ -211,7 +211,7 @@ const
 implementation
 
 uses
-  IdFTPCommon, IdFTPListTypes, IdGlobal, IdGlobalProtocols,
+  IdFTPCommon, IdFTPListTypes, IdGlobal, IdGlobalProtocols, IdHeaderCoderUTF8,
   IdResourceStringsProtocols, IdStrings, SysUtils;
 
 type
@@ -492,7 +492,7 @@ begin
   LI := AItem as TIdMLSTFTPListItem;
   LFacts := TStringList.Create;
   try
-    LI.FileName := ParseFacts(AItem.Data, LFacts);
+    LI.FileName := TIdHeaderCoderUTF8.Decode( 'UTF-8',ParseFacts(AItem.Data, LFacts));
     LI.LocalFileName := AItem.FileName;
 
     LBuffer := LFacts.Values['type']; {do not localize}
