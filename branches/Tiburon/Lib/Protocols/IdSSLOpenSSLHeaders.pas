@@ -120,13 +120,15 @@ LLIA -DOPENSSL_NO_SEED -DOPENSSL_NO_RC5 -DOPENSSL_NO_MDC2 -DOPENSSL_NO_TLSEXT
 interface
 
 {$i IdCompilerDefines.inc}
+
 {$WRITEABLECONST OFF}
+
 {$IFNDEF FPC}
   {$IFDEF WIN32}
-  {$ALIGN OFF}
+    {$ALIGN OFF}
   {$ELSE}
-  {$message error alignment!}
-  {$ENDIF}  
+    {$message error alignment!}
+  {$ENDIF}
 {$ELSE}
   {$packrecords C}
 {$ENDIF}
@@ -679,12 +681,12 @@ const
   OPENSSL_ASN1_STRFLGS_ESC_MSB = 4;
   OPENSSL_ASN1_STRFLGS_ESC_QUOTE = 8;
 
-  OPENSSL_ASN1_STRFLGS_UTF8_CONVERT =  $10;
-  OPENSSL_ASN1_STRFLGS_IGNORE_TYPE =  $20;
-  OPENSSL_ASN1_STRFLGS_SHOW_TYPE    =  $40;
-  OPENSSL_ASN1_STRFLGS_DUMP_ALL     =  $80;
+  OPENSSL_ASN1_STRFLGS_UTF8_CONVERT = $10;
+  OPENSSL_ASN1_STRFLGS_IGNORE_TYPE = $20;
+  OPENSSL_ASN1_STRFLGS_SHOW_TYPE = $40;
+  OPENSSL_ASN1_STRFLGS_DUMP_ALL = $80;
   OPENSSL_ASN1_STRFLGS_DUMP_UNKNOWN = $100;
-  OPENSSL_ASN1_STRFLGS_DUMP_DER     = $200;
+  OPENSSL_ASN1_STRFLGS_DUMP_DER = $200;
   OPENSSL_ASN1_STRFLGS_RFC2253  = OPENSSL_ASN1_STRFLGS_ESC_2253 or
                                   OPENSSL_ASN1_STRFLGS_ESC_CTRL or
                                   OPENSSL_ASN1_STRFLGS_ESC_MSB or
@@ -1412,7 +1414,7 @@ const
   OPENSSL_SHA384_DIGEST_LENGTH = 48;
   OPENSSL_SHA512_DIGEST_LENGTH = 64;
     {$IFNDEF OPENSSL_NO_SHA512}
-  OPENSSL_SHA512_CBLOCK =(OPENSSL_SHA_LBLOCK*8);
+  OPENSSL_SHA512_CBLOCK = (OPENSSL_SHA_LBLOCK*8);
     {$ENDIF}
   {$ENDIF}
 
@@ -3495,12 +3497,10 @@ type
     err_buffer: array[0..OPENSSL_ERR_NUM_ERRORS-1] of TIdC_UINT;
     err_data : array [0..OPENSSL_ERR_NUM_ERRORS -1] of PAnsiChar;
     err_data_flags : array [0..OPENSSL_ERR_NUM_ERRORS -1] of TIdC_INT;
-    
     err_file: array[0..OPENSSL_ERR_NUM_ERRORS-1] of PAnsiChar;
     err_line: array[0..OPENSSL_ERR_NUM_ERRORS-1] of TIdC_INT;
-    
     top: TIdC_INT;
-    Bottom: TIdC_INT;
+    bottom: TIdC_INT;
   end; // record
 
 const
@@ -3620,7 +3620,7 @@ const
 
 type
   UInteger        = Longint;
-  PUInteger   =^UInteger;
+  PUInteger       =^UInteger;
   PFunction       = Pointer;
   {$IFNDEF FPC}
      {$IFNDEF VCL11ORABOVE}
@@ -3639,7 +3639,7 @@ type
   PUShort   =^Word;
   {$IFNDEF FPC}
      {$IFNDEF VCL11ORABOVE}
-  PPChar    =^PAnsiChar;
+  PPAnsiChar    =^PAnsiChar;
      {$ENDIF}
   {$ENDIF}
   PPByte    =^PByte;
@@ -3650,23 +3650,24 @@ type
 //In Pascal, this is not a problem since Delphi and FreePascla have this in some form.
   {$IFDEF FPC}
   PQ_64BIT = QWord;
-  size_t = ptruint;
+  size_t = PtrUInt;
   {$ELSE}
-  size_t = LongWord;
   PQ_64BIT = Int64;
+  size_t = LongWord;
   {$ENDIF}
+  {$NODEFINE size_t}
 
 // RLebeau - the following value was conflicting with iphlpapi.h under C++Builder
 // (and possibly other headers) so using the HPPEMIT further above as a workaround
 
   {$EXTERNALSYM time_t}
-  time_t   = TIdC_LONG;
+  time_t	  = TIdC_LONG;
   STACK = record
     num : TIdC_INT; //int num;
     data : PAnsiChar;  //char **data;
     sorted : TIdC_INT;//int sorted;
     num_alloc : TIdC_INT; //int num_alloc;
-    comp : function (_para1:PPchar; _para2:PPchar):  TIdC_INT; cdecl;
+    comp : function (_para1: PPAnsiChar; _para2: PPAnsiChar):  TIdC_INT; cdecl;
     //int (*comp)(const char * const *, const char * const *);
   end;
   PSTACK          = ^STACK;
@@ -3761,11 +3762,11 @@ type
   PBN_LONG = ^BN_LONG;
   PBN_ULONG = ^BN_ULONG;
   BIGNUM = record
-    d : PBN_ULONG; // Pointer to an array of 'BN_BITS2' bit chunks.
-    top : TIdC_INT; // Index of last used d +1.
+    d : PBN_ULONG;	// Pointer to an array of 'BN_BITS2' bit chunks.
+    top : TIdC_INT;	// Index of last used d +1.
     // The next are internal book keeping for bn_expand.
-    dmax : TIdC_INT; // Size of the d array.
-    neg : TIdC_INT; // one if the number is negative
+    dmax : TIdC_INT;	// Size of the d array.
+    neg : TIdC_INT;	// one if the number is negative
     flags : TIdC_INT;
   end;
   PBIGNUM = ^BIGNUM;
@@ -3804,9 +3805,9 @@ type
   BN_cb_2 = function (p1, p2 : TIdC_INT; p3 : PBN_GENCB): TIdC_INT; cdecl;
   BN_GENCB_union = record
     case Integer of
-      // if(ver==1) - handles old style callbacks
+    		// if(ver==1) - handles old style callbacks
         0 : (cb_1 : BN_cb_1);
-  // if(ver==2) - new callback style
+		// if(ver==2) - new callback style
         1 : (cb_2 : BN_cb_2);
   end;
   BN_GENCB = record
@@ -4102,7 +4103,7 @@ type
     // functional reference if 'meth' is ENGINE-provided
     engine : PENGINE;
   end;
-  PPDSA =^PDSA;
+  PPDSA = ^PDSA;
   {$ENDIF}
 
   // ec.h
@@ -4248,9 +4249,9 @@ type
   //asn1.h
 
   //#define I2D_OF(type) int (*)(type *,unsigned char **)
-  I2D_OF_void = function(_para1 : Pointer; _para2 : PPChar) : TIdC_INT; cdecl; 
+  I2D_OF_void = function(_para1 : Pointer; _para2 : PPAnsiChar) : TIdC_INT; cdecl; 
   //D2I_OF(type) type *(*)(type **,const unsigned char **,long)
-  D2I_OF_void = function (var _para1 : Pointer; const _para2 : PPChar; _para3 : TIdC_LONG) : Pointer; cdecl; 
+  D2I_OF_void = function (var _para1 : Pointer; const _para2 : PPAnsiChar; _para3 : TIdC_LONG) : Pointer; cdecl; 
   // This is just an opaque pointer
   ASN1_VALUE = record
   end;
@@ -4435,7 +4436,7 @@ type
     slen : TIdC_LONG;  // length of last 'get object'
     max : PAnsiChar;       // largest value of p allowed
     q : PAnsiChar;         // temporary variable
-    pp : PPChar;       // variable
+    pp : PPAnsiChar;       // variable
     line : TIdC_INT;   // used in error processing
   end;
   PASN1_CTX = ^ASN1_CTX;
@@ -4522,7 +4523,7 @@ type
     funcs : Pointer;              // functions that handle this type
     size : TIdC_LONG;             // Structure size (usually)
     {$IFNDEF NO_ASN1_FIELD_NAMES}
-    sname : PAnsiChar;    // Structure name
+    sname : PAnsiChar;		  // Structure name
     {$ENDIF}
   end;
 
@@ -4552,7 +4553,7 @@ type
 
   ASN1_ADB_TABLE = record
     flags : TIdC_LONG;            // Various flags
-    offset : TIdC_LONG;           // Offset of selector field
+    offset : TIdC_LONG;	          // Offset of selector field
     app_items : PPSTACK_OF_ASN1_ADB_TABLE; // Application defined items
     tbl : PASN1_ADB_TABLE;        // Table of possible types
     tblcount : TIdC_LONG;         // Number of entries in tbl
@@ -4667,7 +4668,7 @@ type
     num : TIdC_INT;     // used by cfb/ofb mode
     app_data : Pointer; // application stuff
     key_len : TIdC_INT; // May change for variable length cipher
-    flags : TIdC_ULONG; // Various flags
+    flags : TIdC_ULONG;	// Various flags
     cipher_data : Pointer; // per EVP data
     final_used : TIdC_INT;
     block_mask : TIdC_INT;
@@ -4687,7 +4688,7 @@ type
                        // the length is adjusted up each time a longer
                        // line is decoded
     enc_data:array [0..79] of char;
-    line_num: TIdC_INT; // number read on current line
+    line_num: TIdC_INT;	// number read on current line
     expect_nl: TIdC_INT;
   end;
   PEVP_ENCODE_CTX = ^EVP_ENCODE_CTX;
@@ -4769,8 +4770,8 @@ type
   //
   X509V3_EXT_NEW = function: Pointer; cdecl;
   X509V3_EXT_FREE = procedure(_para1 : Pointer); cdecl;
-  X509V3_EXT_D2I = function(_para1 : Pointer; const _para2 : PPChar; para3 : TIdC_LONG): Pointer; cdecl;
-  X509V3_EXT_I2D = function (_para1 : Pointer; _para2 : PPChar) : TIdC_INT; cdecl;
+  X509V3_EXT_D2I = function(_para1 : Pointer; const _para2 : PPAnsiChar; para3 : TIdC_LONG): Pointer; cdecl;
+  X509V3_EXT_I2D = function (_para1 : Pointer; _para2 : PPAnsiChar) : TIdC_INT; cdecl;
 
   X509V3_EXT_I2V = function (method : PV3_EXT_METHOD; ext : Pointer; extlist : PSTACK_OF_CONF_VALUE) : PSTACK_OF_CONF_VALUE; cdecl;
   X509V3_EXT_V2I = function (method : Pv3_ext_method; ctx : PV3_EXT_CTX; values : PSTACK_OF_CONF_VALUE): Pointer; cdecl;
@@ -5103,7 +5104,7 @@ type
   //x509.h
   X509_HASH_DIR_CTX = record
     num_dirs : TIDC_INT;
-    dirs : PPChar;
+    dirs : PPAnsiChar;
     dirs_type : PIdC_INT;
     num_dirs_alloced : TIdC_INT;
   end;
@@ -5112,7 +5113,7 @@ type
   X509_CERT_FILE_CTX = record
     num_paths : TIdC_INT;  // number of paths to files or directories
     num_alloced : TIdC_INT;
-    paths : PPChar;  // the list of paths or directories
+    paths : PPAnsiChar;  // the list of paths or directories
     path_type : TIdC_INT;
   end;
   PX509_CERT_FILE_CTX = ^X509_CERT_FILE_CTX;
@@ -5282,7 +5283,7 @@ type
     trust : PSTACK_OF_ASN1_OBJECT;  // trusted uses
     reject : PSTACK_OF_ASN1_OBJECT; // rejected uses
     alias : PASN1_UTF8STRING;       // "friendly name"
-    keyid : PASN1_OCTET_STRING;     // key id of private key
+    keyid : PASN1_OCTET_STRING;	    // key id of private key
     other : PSTACK_OF_X509_ALGOR;   // other unspecified info
   end;
   PX509_CERT_AUX = ^X509_CERT_AUX;
@@ -5693,8 +5694,8 @@ type
   PSSL_COMP = ^SSL_COMP;
   // PASN1_UTCTIME     = Pointer;
 
-//GREGOR - spremenjana deklaracija ker se tolï¿½e
-//  Phostent   = Pointer;
+//GREGOR - spremenjana deklaracija ker se tolèe
+//  Phostent	  = Pointer;
   Phostent2   = Pointer;
 //END GREGOR
 { This should cause problems, but I will solve them ONLY if they came ...      }
@@ -5751,9 +5752,51 @@ type
   PPCERT = ^PCERT;
   PCERT = ^CERT;
   CERT = record
+    // Current active set
+    key : PCERT_PKEY; // ALWAYS points to an element of the pkeys array
+                      // Probably it would make more sense to store
+                      // an index, not a pointer.
+
+    // The following masks are for the key and auth
+    // algorithms that are supported by the certs below
+    valid : TIdC_INT;
+    mask : TIdC_ULONG;
+    export_mask : TIdC_ULONG;
+    {$IFNDEF OPENSSL_NO_RSA}
+    rsa_tmp : PRSA;
+    rsa_tmp_cb : function (ssl : PSSL; is_export : TIdC_INT; keysize : TIdC_INT) : PRSA; cdecl;
+    {$ENDIF}
+    {$IFNDEF OPENSSL_NO_DH}
+    dh_tmp : PDH;
+    dh_tmp_cb : function (ssl : PSSL; is_export : TIdC_INT; keysize : TIdC_INT) : PDH; cdecl;
+    {$ENDIF}
+    {$IFDEF OPENSSL_NO_ECDH}
+    ecdh_tmp : PEC_KEY;
+    // Callback for generating ephemeral ECDH keys
+    ecdh_tmp_cb : function (ssl : PSSL; is_export : TIdC_INT; keysize : TIdC_INT) : PEC_KEY; cdecl;
+    {$ENDIF}
+    pkeys : array [0..OPENSSL_SSL_PKEY_NUM - 1] of CERT_PKEY;
+    references : TIdC_INT; // >1 only if SSL_copy_session_id is used
   end;
 
   SESS_CERT = record
+    cert_chain : PSTACK_OF_X509; // as received from peer (not for SSL2)
+    // The 'peer_...' members are used only by clients.
+    peer_cert_type : TIdC_INT;
+    peer_key : PCERT_PKEY; // points to an element of peer_pkeys (never NULL!)
+    peer_pkeys : array [0..OPENSSL_SSL_PKEY_NUM - 1] of  CERT_PKEY;
+    // Obviously we don't have the private keys of these,
+    // so maybe we shouldn't even use the CERT_PKEY type here.
+    {$IFNDEF OPENSSL_NO_RSA}
+    peer_rsa_tmp : PRSA; // not used for SSL 2
+    {$ENDIF}
+    {$IFNDEF OPENSSL_NO_DH}
+    peer_dh_tmp : PDH; // not used for SSL 2
+    {$ENDIF}
+    {$IFNDEF OPENSSL_NO_ECDH}
+    ecdh_tmp : PEC_KEY;
+    {$ENDIF}
+    references : TIdC_INT; // actually always 1 at the moment
   end;
 
   //pkcs7.h
@@ -6010,7 +6053,7 @@ type
   {$ENDIF}
 
   //ssl.h
-  PSSL_CIPHER   = ^SSL_CIPHER;
+  PSSL_CIPHER = ^SSL_CIPHER;
   SSL_CIPHER = record
     valid : TIdC_INT;
     name: PAnsiChar;  // text name
@@ -6028,7 +6071,7 @@ type
   STACK_OF_SSL_CIPHER = record
     _stack: STACK;
   end;
-  PSTACK_OF_SSL_CIPHER =^STACK_OF_SSL_CIPHER;
+  PSTACK_OF_SSL_CIPHER = ^STACK_OF_SSL_CIPHER;
   {$ELSE}
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_SSL_CIPHER = PSTACK;
@@ -6049,10 +6092,10 @@ type
     // the appropriate context. It is up to the application to set this,
     // via SSL_new
     sid_ctx_length: TIdC_UINT;
-    sid_ctx:Array[0..OPENSSL_SSL_MAX_SID_CTX_LENGTH-1] of Byte;
+    sid_ctx: array[0..OPENSSL_SSL_MAX_SID_CTX_LENGTH-1] of Byte;
     {$IFNDEF OPENSSL_NO_KRB5}
     krb5_client_princ_len: TIdC_UINT;
-    krb5_client_princ: Array[0..OPENSSL_SSL_MAX_KRB5_PRINCIPAL_LENGTH-1] of Byte;
+    krb5_client_princ: array[0..OPENSSL_SSL_MAX_KRB5_PRINCIPAL_LENGTH-1] of Byte;
     {$ENDIF}
     not_resumable: TIdC_INT;
     // The cert is the certificate used to establish this connection
@@ -6141,9 +6184,9 @@ type
   PSTACK_OF_COMP = PSTACK;
   {$ENDIF}
 
-  //int (*tlsext_servername_callback)(SSL*, int *, void *);
   PSSL_CTEX_tlsext_servername_callback = function(ssl : PSSL; Para1 : TIdC_INT; Para2 : Pointer) : TIdC_INT; cdecl;
   PSSL_CTX_info_callback = procedure (const ssl : PSSL; _type, val : TIdC_INT); cdecl; // used if SSL's info_callback is NULL
+
   SSL_CTX = record
     method: PSSL_METHOD;
     cipher_list: PSTACK_OF_SSL_CIPHER;
@@ -6231,32 +6274,31 @@ type
     msg_callback : procedure (write_p, version, content_type : TIdC_INT; const buf : Pointer; len : size_t; ssl : PSSL; arg : Pointer); cdecl;
     msg_callback_arg : Pointer;
 
-   verify_mode : TIdC_INT;
-   sid_ctx_length : TIdC_UINT;
-   sid_ctx : array[0..OPENSSL_SSL_MAX_SID_CTX_LENGTH - 1] of char;
-   default_verify_callback : function(ok : TIdC_INT; ctx : PX509_STORE_CTX) : TIdC_INT; cdecl; // called 'verify_callback' in the SSL
+    verify_mode : TIdC_INT;
+    sid_ctx_length : TIdC_UINT;
+    sid_ctx : array[0..OPENSSL_SSL_MAX_SID_CTX_LENGTH - 1] of AnsiChar;
+    default_verify_callback : function(ok : TIdC_INT; ctx : PX509_STORE_CTX) : TIdC_INT; cdecl; // called 'verify_callback' in the SSL
 
-   // Default generate session ID callback.
-   generate_session_id : PGEN_SESSION_CB;
+    // Default generate session ID callback.
+    generate_session_id : PGEN_SESSION_CB;
 
-   param : PX509_VERIFY_PARAM;
+    param : PX509_VERIFY_PARAM;
 
-  {$IFDEF OMITTHIS}
-   purpose : TIdC_INT;  // Purpose setting
-   trust : TIdC_INT;    // Trust setting
-  {$ENDIF}
+    {$IFDEF OMITTHIS}
+    purpose : TIdC_INT;  // Purpose setting
+    trust : TIdC_INT;    // Trust setting
+    {$ENDIF}
 
-   quiet_shutdown : TIdC_INT;
-  {$IFNDEF OPENSSL_NO_TLSEXT}
+    quiet_shutdown : TIdC_INT;
+    {$IFNDEF OPENSSL_NO_TLSEXT}
 //* TLS extensions servername callback */
-  tlsext_servername_callback : PSSL_CTEX_tlsext_servername_callback;
-  //int (*tlsext_servername_callback)(SSL*, int *, void *);
-  tlsext_servername_arg : Pointer;
-  //* RFC 4507 session ticket keys */
-  tlsext_tick_key_name : array [0..(16-1)] of char;
-  tlsext_tick_hmac_key : array [0..(16-1)] of char;
-  tlsext_tick_aes_key : array [0..(16-1)] of char;
-{$ENDIF}
+    tlsext_servername_callback : PSSL_CTEX_tlsext_servername_callback;
+    tlsext_servername_arg : Pointer;
+    //* RFC 4507 session ticket keys */
+    tlsext_tick_key_name : array [0..(16-1)] of AnsiChar;
+    tlsext_tick_hmac_key : array [0..(16-1)] of AnsiChar;
+    tlsext_tick_aes_key : array [0..(16-1)] of AnsiChar;
+    {$ENDIF}
   end;
 
   PSSL2_STATE = ^SSL2_STATE;
@@ -6264,9 +6306,6 @@ type
   PDTLS1_STATE = ^DTLS1_STATE;
 
 //* TLS extension debug callback */
-//    void (*tlsext_debug_cb)(SSL *s, int client_server, int type,
-//     unsigned char *data, int len,
-//     void *arg);
   PSSL_tlsext_debug_cb = procedure (s : PSSL; client_server : TIdC_INT; 
     _type : TIdC_INT; data : PAnsiChar; len : TIdC_INT;
     arg : Pointer); cdecl;
@@ -6279,9 +6318,9 @@ type
 
     method : PSSL_METHOD; //* SSLv3 */
 
-  // There are 2 BIO's even though they are normally both the
-  // same.  This is so data can be read and written to different
-  // handlers
+    // There are 2 BIO's even though they are normally both the
+    // same.  This is so data can be read and written to different
+    // handlers
 
     {$IFNDEF OPENSSL_NO_BIO}
     rbio : PBIO; // used by SSL_read
@@ -6425,12 +6464,9 @@ type
     first_packet : TIdC_INT;
     client_version : TIdC_INT; // what was passed, used for
     // SSLv3/TLS rollback check
-{$IFNDEF OPENSSL_NO_TLSEXT}
-//* TLS extension debug callback */
+    {$IFNDEF OPENSSL_NO_TLSEXT}
+    //* TLS extension debug callback */
     tlsext_debug_cb : PSSL_tlsext_debug_cb;
-//    void (*tlsext_debug_cb)(SSL *s, int client_server, int type,
-//     unsigned char *data, int len,
-//     void *arg);
     tlsext_debug_arg : Pointer;
     tlsext_hostname : PAnsiChar;
     servername_done : TIdC_INT;   //* no further mod of servername 
@@ -6438,7 +6474,7 @@ type
                        //   1 : prepare 2, allow last ack just after in server callback.
                        //   2 : don't call servername callback, no ack in server hello
                        //*/
-  //* RFC4507 session ticket expected to be received or sent */
+    //* RFC4507 session ticket expected to be received or sent */
     tlsext_ticket_expected : TIdC_INT;
     initial_ctx : PSSL_CTX; //* initial ctx, used to store sessions */
    {$DEFINE session_ctx} 
@@ -6549,7 +6585,7 @@ type
     empty_fragment_done : TIdC_INT;
 
     rbuf : PSSL3_BUFFER;    //* read IO goes into here */
-    wbuf : PSSL3_BUFFER; //* write IO goes into here */
+    wbuf : PSSL3_BUFFER;	//* write IO goes into here */
 
     rrec : PSSL3_RECORD;    //* each decoded record goes in here */
     wrec : PSSL3_RECORD;    //* goes out from here */
@@ -6931,7 +6967,7 @@ var
   IdSslAddSslAlgorithms : function: TIdC_INT; cdecl = nil;
   // IdSslSetAppData : function(s: PSSL; arg: Pointer): Integer; cdecl = nil;
   // IdSslGetAppData : function(s: PSSL): Pointer; cdecl = nil;
-  IdSslSessionGetId : function(const s: PSSL_SESSION; id: PPChar; length: PIdC_INT): PAnsiChar; cdecl = nil;
+  IdSslSessionGetId : function(const s: PSSL_SESSION; id: PPAnsiChar; length: PIdC_INT): PAnsiChar; cdecl = nil;
   IdSslX509NameOneline : function(a: PX509_NAME; buf: PAnsiChar; size: TIdC_INT): PAnsiChar; cdecl = nil;
   IdSslX509NameHash : function(x: PX509_NAME): TIdC_ULONG; cdecl = nil;
   IdSslX509SetIssuerName : function(x: PX509; name: PX509_NAME): TIdC_INT; cdecl = nil;
@@ -7044,7 +7080,7 @@ function IdSslCRLGetRevoked(x : PX509_CRL) : PSTACK_OF_X509_REVOKED;
 
 procedure IdSslCtxSetInfoCallback(ctx: PSSL_CTX; cb: PSSL_CTX_info_callback);
 function IdSslCtxSetOptions(ctx: PSSL_CTX; op: TIdC_INT): TIdC_LONG;
-function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPChar; length: PIdC_INT) : TIdC_UINT;
+function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPAnsiChar; length: PIdC_INT) : TIdC_UINT;
 function IdSslCtxGetVersion(ctx: PSSL_CTX): TIdC_INT;
 function IdSslBioSetClose(b: PBio; c: TIdC_LONG): TIdC_LONG;
 procedure IdSslBioGetMemPtr(b: PBIO; pp: Pointer);
@@ -7101,7 +7137,6 @@ var
   // LIBEAY functions - open SSL 0.9.6a
   IdSslRandScreen : procedure; cdecl = nil;
   {$ENDIF}
-
 
 { This constant's are used twice. First time in Load function and second time  }  {Do not localize}
 { in function WhichFailedToLoad. I belive that this reduce size of final       }
@@ -8288,7 +8323,6 @@ them in case we use them later.}
   {CH fn_EVP_seed_ofb = 'EVP_seed_ofb'; } {Do not localize}
   {$ENDIF}
 
-
   {CH fn_SSLeay_add_all_algorithms = 'SSLeay_add_all_algorithms'; }  {Do not localize}
   {CH fn_SSLeay_add_all_ciphers = 'SSLeay_add_all_ciphers'; }  {Do not localize}
   {CH fn_SSLeay_add_all_digests = 'SSLeay_add_all_digests'; }  {Do not localize}
@@ -9344,7 +9378,7 @@ them in case we use them later.}
   {CH fn_RAND_poll = 'RAND_poll'; } {Do not localize}
   {$IFDEF SYS_WIN}
   //GREGOR
-  fn_RAND_screen = 'RAND_screen';   {Do not localize}
+  fn_RAND_screen = 'RAND_screen';  {Do not localize}
   {CH fn_RAND_event = 'RAND_event'; } {Do not localize}
   {$ENDIF}
 
@@ -9356,7 +9390,7 @@ them in case we use them later.}
   fn_ERR_error_string = 'ERR_error_string';  {Do not localize}
   fn_ERR_error_string_n = 'ERR_error_string_n';  {Do not localize}
   fn_ERR_lib_error_string = 'ERR_lib_error_string';  {Do not localize}
-  fn_ERR_func_error_string = 'ERR_func_error_string';  {Do not localize}
+  fn_ERR_func_error_string = 'ERR_func_error_string'; {Do not localize}
   fn_ERR_reason_error_string = 'ERR_reason_error_string'; {Do not localize}
   fn_ERR_load_ERR_strings = 'ERR_load_ERR_strings'; {Do not localize}
   fn_ERR_free_strings = 'ERR_free_strings'; {do not localize}
@@ -9394,7 +9428,7 @@ begin
   end;
 end;
 
-function LoadFunctionCLib(const FceName:AnsiString;  const ACritical : Boolean = True): Pointer;
+function LoadFunctionCLib(const FceName: AnsiString; const ACritical : Boolean = True): Pointer;
 begin
   Result := GetProcAddress(hIdCrypto, PAnsiChar(FceName));
   if ACritical then
@@ -9412,7 +9446,7 @@ var
 Begin
   SetLength(LString, 300);
   IdSSLOpenSSLHeaders.IdSSLERR_error_string_n(AErr, PAnsiChar(LString), 300);
-  Result := LString;
+  Result := PAnsiChar(LString);
 end;
 
 function Load: Boolean;
@@ -9420,40 +9454,38 @@ begin
   Result := True;
 
   Assert(FFailedFunctionLoadList<>nil);
-
   FFailedFunctionLoadList.Clear;
+
   {$IFDEF KYLIXCOMPAT}
   // Workaround that is required under Linux (changed RTLD_GLOBAL with RTLD_LAZY Note: also work with LoadLibrary())
   if hIdCrypto = 0 then begin
-    hIdCrypto := HackLoad(SSLCLIB_DLL_name,SSLDLLVers);
+    hIdCrypto := HackLoad(SSLCLIB_DLL_name, SSLDLLVers);
   end;
   if hIdSSL = 0 then begin
-    hIdSSL := HackLoad(SSL_DLL_name,SSLDLLVers);
+    hIdSSL := HackLoad(SSL_DLL_name, SSLDLLVers);
   end;
   {$ELSE}
     {$IFDEF FPC}
-       {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-       //On Windows, you should use SafeLoadLibrary because
-       //the LoadLibrary API call messes with the FPU control word.
+      {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  //On Windows, you should use SafeLoadLibrary because
+  //the LoadLibrary API call messes with the FPU control word.
   if hIdCrypto = 0 then begin
     hIdCrypto := SafeLoadLibrary(SSLCLIB_DLL_name);
   end;
   if hIdSSL = 0 then begin
     hIdSSL := SafeLoadLibrary(SSL_DLL_name);
-  end
-  else
-  begin
+  end else begin
     Exit;
   end;
-       {$ENDIF}
-       {$IFDEF USEBASEUNIX}
+      {$ENDIF}
+      {$IFDEF USEBASEUNIX}
   if hIdCrypto = 0 then begin
-   hIdCrypto := HMODULE(HackLoad(SSLCLIB_DLL_name,SSLDLLVers));
+   hIdCrypto := HMODULE(HackLoad(SSLCLIB_DLL_name, SSLDLLVers));
   end;
   if hIdSSL = 0 then begin
-    hIdSSL := HMODULE(HackLoad(SSL_DLL_name,SSLDLLVers));
+    hIdSSL := HMODULE(HackLoad(SSL_DLL_name, SSLDLLVers));
   end;
-        {$ENDIF}
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
   {$IFNDEF FPC}
@@ -9468,6 +9500,7 @@ begin
   end;
     {$ENDIF}
   {$ENDIF}
+
   @IdSslCtxSetCipherList := LoadFunction(fn_SSL_CTX_set_cipher_list);
   @IdSslCtxNew := LoadFunction(fn_SSL_CTX_new);
   @IdSslCtxFree := LoadFunction(fn_SSL_CTX_free);
@@ -9773,18 +9806,14 @@ begin
   tz_hour := 0;
   tz_min := 0;
 
-  if (time_str[13] = '-' ) or (time_str[13] = '+') then begin    {Do not Localize}
-    if time_str[13] = '-' then begin    {Do not Localize}
-       tz_dir := -1;
-    end else begin
-       tz_dir := 1;
-    end;
+  if CharIsInSet(time_str, 13, '-+') then begin    {Do not Localize}
+    tz_dir := iif(time_str[13] = '-', -1, 1);    {Do not Localize}
 
     for i := 14 to 18 do begin  // Check if numbers are numbers
       if i = 16 then begin
         Continue;
       end;
-      if (time_str[i] > '9' ) or (time_str[i] < '0') then begin {Do not Localize}
+      if (time_str[i] > '9') or (time_str[i] < '0') then begin {Do not Localize}
         Exit;
       end;
     end;
@@ -9962,7 +9991,7 @@ begin
   Result := IdSslCtxCtrl(ctx, OPENSSL_SSL_CTRL_OPTIONS, op, nil);
 end;
 
-function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPChar; length: PIdC_INT) : TIdC_UINT;
+function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPAnsiChar; length: PIdC_INT) : TIdC_UINT;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Assert(s<>nil);
@@ -10053,5 +10082,3 @@ finalization
   FreeAndNil(FFailedFunctionLoadList);
 
 end.
-
-
