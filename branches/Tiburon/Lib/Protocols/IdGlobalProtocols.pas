@@ -464,7 +464,9 @@ type
   function IsBinary(const AChar : Char) : Boolean;
   function IsHex(const AChar : Char) : Boolean;
   function IsHostname(const S: String): Boolean;
+  {$IFNDEF UNICODESTRING}
   function IsLeadChar(ACh : Char):Boolean;
+  {$ENDIF}
   function IsTopDomain(const AStr: string): Boolean;
   function IsValidIP(const S: String): Boolean;
   function MakeTempFilename(const APath: TIdFileName = ''): TIdFileName;
@@ -3002,6 +3004,7 @@ begin
   {$ENDIF}
 end;
 
+{$IFNDEF UNICODESTRING}
 function IsLeadChar(ACh : Char):Boolean;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
@@ -3011,6 +3014,7 @@ begin
   Result := ACh in LeadBytes;
   {$ENDIF}
 end;
+{$ENDIF}
 
 function IdGetDefaultCharSet: TIdCharSet;
 {$IFDEF USEINLINE}inline;{$ENDIF}
