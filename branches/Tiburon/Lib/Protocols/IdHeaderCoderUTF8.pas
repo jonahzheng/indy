@@ -54,9 +54,11 @@ begin
 
   {$ELSE}
   {$IFDEF VCL6ORABOVE}
-
+    {$IFDEF UNICODESTRING}
+  Result := System.UTF8ToUnicodeString(AData);
+    {$ELSE}
   Result := System.UTF8Decode(AData);
-
+    {$ENDIF}
   {$ELSE}
 
   LCount := Length(AData);
