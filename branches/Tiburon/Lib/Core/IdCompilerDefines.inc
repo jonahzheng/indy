@@ -260,7 +260,6 @@ BDS 2007 NET personality uses VER190 instead of 185.
 Delphi 2008 also uses VER190 as well
 }
 //Delphi 12 - Delphi .NET 2007
-//Delphi 13 - Delphi 2008 (Tiburon)
 {$IFDEF VER190}
   {$DEFINE USEINLINE}
   {$DEFINE VCL4ORABOVE}
@@ -279,30 +278,51 @@ Delphi 2008 also uses VER190 as well
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
   {$DEFINE CPU32}
-  {$IFNDEF CIL}
-    //Delphi 2008 (Tiburon)
-    {$DEFINE UNICODESTRING} // 'String' type is Unicode
-    {$DEFINE TEncoding}
-    {$DEFINE DOTNET_OR_TEncoding}
-    {$DEFINE VCL13ORABOVE}
-    {$DEFINE VCL13}
-    {$DEFINE DELPHI13}
-    {$IFNDEF IDFREEONFINAL}
-      {$DEFINE REGISTER_EXPECTED_MEMORY_LEAK}
-    {$ENDIF}
-    {$DEFINE WIDGETVCLLIKE} // LCL included.
-    {$DEFINE WIDGETVCLLIKEORKYLIX}
-    {$DEFINE WIDGETVCL}
-    {$DEFINE VCL60PLUS}
-  {$ELSE}
+  {$IFDEF CIL}
     //Delphi 12 - Delphi 2007
     {$DEFINE VCL12}
     {$DEFINE DELPHI12}
   {$ENDIF}
 {$ENDIF}
 
+//Delphi 13 - Delphi 2008 (Tiburon)
+{$IFDEF VER200}
+  {$DEFINE UNICODESTRING} // 'String' type is Unicode now
+  {$DEFINE TEncoding}
+  {$DEFINE DOTNET_OR_TEncoding}
+  {$DEFINE USEINLINE}
+  {$DEFINE VCL4ORABOVE}
+  {$DEFINE VCL5ORABOVE}
+  {$DEFINE VCL6ORABOVE}
+  {$DEFINE VCL7ORABOVE}
+  {$DEFINE VCL8ORABOVE}
+  {$DEFINE VCL9ORABOVE}
+  {$DEFINE VCL10ORABOVE}
+  {$DEFINE VCL11ORABOVE}
+  {$DEFINE VCL12ORABOVE}
+  {$DEFINE VCL13ORABOVE}
+  {$DEFINE VCL13}
+  {$DEFINE DELPHI13}
+  {$DEFINE OPTIONALPARAMS}
+  {$DEFINE SAMETEXT}
+  {$DEFINE ALLOW_NAMED_THREADS}
+  {$IFNDEF IDFREEONFINAL}
+    {$DEFINE REGISTER_EXPECTED_MEMORY_LEAK}
+  {$ENDIF}
+  {$DEFINE TFormatSettings}
+  {$DEFINE CPUI386}
+  {$DEFINE ENDIAN_LITTLE}
+  {$DEFINE CPU32}
+  {$IFNDEF CIL}
+    {$DEFINE WIDGETVCLLIKE} // LCL included.
+    {$DEFINE WIDGETVCLLIKEORKYLIX}
+    {$DEFINE WIDGETVCL}
+    {$DEFINE VCL60PLUS}
+  {$ENDIF}
+{$ENDIF}
+
 {$IFDEF UNICODESTRING}
-  //Delphi 2008 and later are UNICODE ONLY
+  //Delphi 2008 and later are UNICODE only!
   {$IFNDEF UNICODE}
     {$DEFINE UNICODE}
   {$ENDIF}
@@ -325,8 +345,8 @@ Delphi 2008 also uses VER190 as well
   //differences in DotNET Framework versions.
   {$IFDEF VCL11ORABOVE}
     {$DEFINE DOTNET2}
-     {$DEFINE DOTNET1_1ORABOVE}
-     {$DEFINE DOTNET2_OR_ABOVE}
+    {$DEFINE DOTNET1_1ORABOVE}
+    {$DEFINE DOTNET2_OR_ABOVE}
   {$ELSE}
     {$DEFINE DOTNET1_1}
     {$DEFINE DOTNET1_1_OR_ABOVE}
@@ -451,7 +471,7 @@ Delphi 2008 also uses VER190 as well
 
 {
 BSD 4.4 introduced a minor API change.  sa_family was changed from a 16bit
-word to an 8 bit byteee and an 8 bit byte feild named sa_len was added.
+word to an 8 bit byte and an 8 bit byte field named sa_len was added.
 }
 {$IFDEF FREEBSD}
    {$DEFINE SOCK_HAS_SINLEN}
