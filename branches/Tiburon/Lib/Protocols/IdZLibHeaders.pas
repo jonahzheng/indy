@@ -15,8 +15,11 @@ different platforms in one file.
 }
 
 interface
+
 {$i IdCompilerDefines.inc}
+
 {$WRITEABLECONST OFF}
+
 {$IFNDEF FPC}
   {$IFDEF WIN32}
 {
@@ -29,26 +32,23 @@ the C++ objects are compiled appropriately.
 
 The only things that still are cdecl are the callback functions.
 }
-   {$DEFINE STATICLOAD}
-   {$ELSE}
-     {$IFDEF LINUX}
-     // ???
-     {$ELSE}
-     {$message error alignment!}
-     {$ENDIF}
-   {$ENDIF}
+    {$DEFINE STATICLOAD}
+  {$ELSE}
+    {$IFDEF LINUX}
+      // ???
+    {$ELSE}
+      {$message error alignment!}
+    {$ENDIF}
+  {$ENDIF}
 {$ELSE}
   {$packrecords C}
 {$ENDIF}
 
+uses
+  IdCTypes
 {$IFNDEF STATICLOAD}
-uses
-  IdCTypes,
-  IdException;
-{$ELSE}
-uses
-  IdCTypes;
-{$ENDIF}
+  , IdException
+{$ENDIF};
 
 const
   ZLIB_VERSION = '1.2.3';
@@ -495,7 +495,7 @@ begin
   end;
 end;
   
-function FixupStub(hDll: THandle; const AName: string): Pointer;
+function FixupStub(hDll: THandle; const AName: AnsiString): Pointer;
 begin
   if hDll = 0 then begin
     EIdZLibStubError.Build(Format(RSZLibCallError, [AName]), 0);
@@ -823,18 +823,20 @@ end;
 
 function inflateInit2(var strm: z_stream; windowBits: TIdC_INT): TIdC_INT;
 begin
-  if not Assigned(strm.zalloc) then
+  if not Assigned(strm.zalloc) then begin
     strm.zalloc := zlibAllocMem;
-  if not Assigned(strm.zfree)  then
+  end;
+  if not Assigned(strm.zfree) then begin
     strm.zfree  := zlibFreeMem;
-  Result := inflateInit2_(strm, windowBits, ZLIB_VERSION, sizeof(z_stream));
+  end;
+  Result := inflateInit2_(strm, windowBits, ZLIB_VERSION, SizeOf(z_stream));
 end;
 
 function inflateBackInit(var strm: z_stream;
-                         windowBits: TIdC_INT; window: PAnsiChar): TIdC_INT;
+  windowBits: TIdC_INT; window: PAnsiChar): TIdC_INT;
 begin
   Result := inflateBackInit_(strm, windowBits, window,
-                             ZLIB_VERSION, sizeof(z_stream));
+                             ZLIB_VERSION, SizeOf(z_stream));
 end;
 
 
@@ -896,9 +898,9 @@ begin
     hZLib := SafeLoadLibrary(libzlib);
     {$ELSE}
       {$IFDEF UNIX}
-    hZLib := HackLoad(libzlib,libvers);
+    hZLib := HackLoad(libzlib, libvers);
       {$ELSE}
-      hZLib := LoadLibrary(libzlib);
+    hZLib := LoadLibrary(libzlib);
       {$ENDIF}
     {$ENDIF}
     Result := Loaded;
@@ -925,7 +927,9 @@ end;
 initialization
   InitializeStubs;
   Load;
+
 finalization
   Unload;
 {$ENDIF}
+
 end.
