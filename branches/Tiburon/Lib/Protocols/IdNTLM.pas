@@ -50,13 +50,13 @@ uses
   {$IFNDEF DOTNET}, IdSSLOpenSSLHeaders{$ENDIF};
 
 type
-{$IFDEF DOTNET}
-  ProtocolArray = array [1..8] of char;
-  padArray2 = array[0..1] of byte;
-  padArray3 = Array[0..2] of byte;
-  padArray7 = Array[0..6] of byte;
-  padArray8 = Array[0..7] of byte;
-  nonceArray = Array[1..8] of char;
+  {$IFDEF DOTNET}
+  ProtocolArray = array [1..8] of Char;
+  padArray2 = array[0..1] of Byte;
+  padArray3 = Array[0..2] of Byte;
+  padArray7 = Array[0..6] of Byte;
+  padArray8 = Array[0..7] of Byte;
+  nonceArray = Array[1..8] of Char;
 
   ntlm_base = class(TIdStruct)
   protected
@@ -180,9 +180,9 @@ type
   end;
 {$ELSE}
   type_1_message_header = packed record
-    protocol: array [0..7] of Char;     // 'N', 'T', 'L', 'M', 'S', 'S', 'P', '\0'    {Do not Localize}
+    protocol: array [0..7] of AnsiChar; // 'N', 'T', 'L', 'M', 'S', 'S', 'P', '\0'    {Do not Localize}
     _type: Byte;                        // 0x01
-    pad  : packed Array[1..3] of byte;  // 0x0
+    pad  : packed Array[1..3] of Byte;  // 0x0
     flags: Word;                        // 0xb203
     pad2 : packed Array[1..2] of Byte;  // 0x0
     dom_len1: Word;                     // domain string length
@@ -195,19 +195,19 @@ type
   end;
 
   type_2_message_header = packed record
-    protocol: packed array [1..8] of Char;      // 'N', 'T', 'L', 'M', 'S', 'S', 'P', #0    {Do not Localize}
+    protocol: packed array [1..8] of AnsiChar;  // 'N', 'T', 'L', 'M', 'S', 'S', 'P', #0    {Do not Localize}
     _type: Byte;                                // $2
-    Pad  : packed Array[1..7] of byte;          // 0x0
+    Pad  : packed Array[1..7] of Byte;          // 0x0
     msg_len: Word;                              // 0x28
-    Pad2 : packed Array [1..2] of byte;         // 0x0
+    Pad2 : packed Array [1..2] of Byte;         // 0x0
     flags: word;                                // 0x8201
-    Pad3: Packed array [1..2] of byte;          // 0x0
+    Pad3: Packed array [1..2] of Byte;          // 0x0
     nonce: Array[1..8] of char;                 // nonce
-    pad4: packed Array[1..8] of byte            // 0x0
+    pad4: packed Array[1..8] of Byte            // 0x0
   end;
 
   type_3_message_header = packed record
-    protocol: array [1..8] of Char;     // 'N', 'T', 'L', 'M', 'S', 'S', 'P', '\0'    {Do not Localize}
+    protocol: array [1..8] of AnsiChar; // 'N', 'T', 'L', 'M', 'S', 'S', 'P', '\0'    {Do not Localize}
     _type: LongWord;                    // 0x03
 
     lm_resp_len1: Word;                 // LanManager response length (always 0x18)
@@ -238,8 +238,8 @@ type
 
   Pdes_key_schedule = ^des_key_schedule;
 
-function BuildType1Message(ADomain, AHost: String): String;
-function BuildType3Message(ADomain, AHost, AUsername: WideString; APassword, ANonce: String): String;
+function BuildType1Message(const ADomain, AHost: String): String;
+function BuildType3Message(const ADomain, AHost, AUsername: {$IFDEF UNICODESTRING}UnicodeString{$ELSE}WideString{$ENDIF}; APassword, ANonce: String): String;
 {$ENDIF}
 
 function NTLMFunctionsLoaded : Boolean;
@@ -259,19 +259,19 @@ uses
 
 procedure GetDomain(const AUserName : String; var VUserName, VDomain : String);
 {$IFDEF USEINLINE} inline; {$ENDIF}
-var i : Integer;
+var
+  i: Integer;
 begin
-   i := Pos('\', AUsername);
-   if i > -1 then
-   begin
-     VDomain := Copy(AUsername, 1, i - 1);
-     VUserName := Copy(AUsername, i + 1, Length(AUserName));
-   end
-   else
-   begin
-     VDomain := ' ';         {do not localize}
-     VUserName := AUserName;
-   end;
+  i := Pos('\', AUsername);
+  if i > -1 then
+  begin
+    VDomain := Copy(AUsername, 1, i - 1);
+    VUserName := Copy(AUsername, i + 1, Length(AUserName));
+  end else
+  begin
+    VDomain := ' ';         {do not localize}
+    VUserName := AUserName;
+  end;
 end;
 
 {$IFDEF DOTNET}
@@ -339,22 +339,22 @@ Const
   Magic: des_cblock = ($4B, $47, $53, $21, $40, $23, $24, $25 );
 
 //* setup LanManager password */
-function SetupLanManagerPassword(APassword, nonce: String): String;
-Var
-  lm_hpw: array[1..21] of Char;
-  lm_pw: array[1..14] of Char;
+function SetupLanManagerPassword(const APassword, ANonce: String): String;
+var
+  lm_hpw: array[1..21] of AnsiChar;
+  lm_pw: array[1..14] of AnsiChar;
   idx, len: Integer;
   ks: des_key_schedule;
-  lm_resp: array [1..24] of Char;
+  lm_resp: array [1..24] of AnsiChar;
+  lPassword: String;
 begin
-  APassword := Copy(UpperCase(APassword), 1, 14);
-  len := Length(APassword);
-  if (len > 0) then begin
-    Move(APassword[1], lm_pw, len);
+  lPassword := Copy(UpperCase(APassword), 1, 14);
+  len := Length(lPassword);
+  if len > 0 then begin
+    Move(lPassword[1], lm_pw, len);
   end;
   if len < 14 then begin
-    for idx := len + 1 to 14 do
-    begin
+    for idx := len + 1 to 14 do begin
       lm_pw[idx] := #0;
     end;
   end;
@@ -369,29 +369,39 @@ begin
 
   FillChar(lm_hpw[17], 5, 0);
 
-  calc_resp(PDes_cblock(@lm_hpw[1]), nonce, Pdes_key_schedule(@lm_resp[1]));
+  calc_resp(PDes_cblock(@lm_hpw[1]), ANonce, Pdes_key_schedule(@lm_resp[1]));
 
-  result := lm_resp;
+  Result := lm_resp;
 end;
 
-function BuildUnicode(S: String): string;
-Var
+function BuildUnicode(const S: String): AnsiString;
+{$IFNDEF UNICODESTRING}
+var
   i: integer;
-  S1: String;
+{$ENDIF}
 begin
-  S1 := S;
-  for i := 1 to Length(S) do
-    Insert(#0, S1, i * 2);
-  result := S1;
+  Result := '';
+  if S = '' then begin
+    Exit;
+  end;
+  SetLength(Result, Length(S) * SizeOf(WideChar));
+  {$IFDEF UNICODESTRING}
+  Move(S[1], Result[1], Length(Result));
+  {$ELSE}
+  for i := 1 to Length(S) do begin
+    Result[i*2-1] := S[i];
+    Result[i*2] := #0;
+  end;
+  {$ENDIF}
 end;
 
 //* create NT hashed password */
-function CreateNTPassword(APassword, nonce: String): String;
+function CreateNTPassword(const APassword, ANonce: String): String;
 var
-  nt_pw: String;
-  nt_hpw: array [1..21] of Char;
+  nt_pw: AnsiString;
+  nt_hpw: array [1..21] of AnsiChar;
   nt_hpw128: TIdBytes;
-  nt_resp: array [1..24] of Char;
+  nt_resp: array [1..24] of AnsiChar;
 begin
   nt_pw := BuildUnicode(APassword);
 
@@ -405,15 +415,15 @@ begin
   Move(nt_hpw128[0], nt_hpw[1], 16);
   FillChar(nt_hpw[17], 5, 0);
 
-  calc_resp(pdes_cblock(@nt_hpw[1]), nonce, Pdes_key_schedule(@nt_resp[1]));
+  calc_resp(pdes_cblock(@nt_hpw[1]), ANonce, Pdes_key_schedule(@nt_resp[1]));
 
   Result := nt_resp;
 end;
 
-function BuildType1Message(ADomain, AHost: String): String;
+function BuildType1Message(const ADomain, AHost: String): String;
 Var
   Type_1_Message: type_1_message_header;
-  S: String;
+  buf: TIdBytes;
 begin
   FillChar(Type_1_Message, SizeOf(Type_1_Message), #0);
   with Type_1_Message do
@@ -424,103 +434,109 @@ begin
     flags := $b207; //was $A000B207;     //b203;
 
     dom_len1 := Length(ADomain);
-    dom_len2 := Length(ADomain);
+    dom_len2 := dom_len1;
     // dom_off := 0;
     dom_off := Length(AHost) + 32;
 
     host_len1 := Length(AHost);
-    host_len2 := Length(AHost);
+    host_len2 := host_len1;
     host_off := 32;
   end;
 
-  SetLength(S, SizeOf(Type_1_Message));
-  UniqueString(S);
-  Move(Type_1_Message, S[1], SizeOf(Type_1_Message));
-  with TIdEncoderMIME.Create do try
-    result := Encode(S + UpperCase(AHost) + UpperCase(ADomain));
-  finally Free; end;
+  buf := RawToBytes(Type_1_Message, SizeOf(Type_1_Message));
+  AppendString(buf, UpperCase(AHost));
+  AppendString(buf, UpperCase(ADomain));
+
+  Result := TIdEncoderMIME.EncodeBytes(buf);
 end;
 
-function BuildType3Message(ADomain, AHost, AUsername: WideString; APassword, ANonce: String): String;
-Var
+function BuildType3Message(const ADomain, AHost, AUsername: {$IFDEF UNICODESTRING}UnicodeString{$ELSE}WideString{$ENDIF};
+  APassword, ANonce: String): String;
+var
   type3: type_3_message_header;
-  S: String;
+  buf: TIdBytes;
   lm_password: String;
   nt_password: String;
+  lDomain: AnsiString;
+  lHost: AnsiString;
+  lUsername: AnsiString;
 begin
   lm_password := SetupLanManagerPassword(APassword, ANonce);
   nt_password := CreateNTPassword(APassword, ANonce);
 
-  ADomain := BuildUnicode(UpperCase(ADomain));
-  AHost := BuildUnicode(UpperCase(AHost));
-  AUsername := BuildUnicode(AUsername);
+  lDomain := BuildUnicode(UpperCase(ADomain));
+  lHost := BuildUnicode(UpperCase(AHost));
+  lUsername := BuildUnicode(AUsername);
 
   with Type3 do begin
     protocol := 'NTLMSSP'#0;    {Do not Localize}
     _type := 3;
     lm_resp_len1 := $18;// S.G. 12/7/2002: was: Length(lm_password);  (from BugID 577895)
     lm_resp_len2 := $18;// S.G. 12/7/2002: was: Length(lm_password);  (from BugID 577895)
-    lm_resp_off := Length(ADomain) + Length(AUsername) + Length(AHost) + $40;
+    lm_resp_off := Length(lDomain) + Length(lUsername) + Length(lHost) + $40;
 
     nt_resp_len1 := $18;// S.G. 12/7/2002: was: Length(nt_password);  (from BugID 577895)
     nt_resp_len2 := $18;// S.G. 12/7/2002: was: Length(nt_password);  (from BugID 577895)
-    nt_resp_off := Length(ADomain) + Length(AUsername) + Length(AHost) + Length(lm_password) + $40;
+    nt_resp_off := Length(lDomain) + Length(lUsername) + Length(lHost) + Length(lm_password) + $40;
 
-    dom_len1 := Length(ADomain);
-    dom_len2 := Length(ADomain);
+    dom_len1 := Length(lDomain);
+    dom_len2 := dom_len1;
     dom_off := $40;
 
-    user_len1 := Length(AUsername);
-    user_len2 := Length(AUsername);
-    user_off := Length(ADomain) + $40;
+    user_len1 := Length(lUsername);
+    user_len2 := user_len1;
+    user_off := Length(lDomain) + $40;
 
-    host_len1 := Length(AHost);
-    host_len2 := Length(AHost);
-    host_off := Length(ADomain) + Length(AUsername) + $40;
+    host_len1 := Length(lHost)*SizeOf(Char);
+    host_len2 := host_len1;
+    host_off := Length(lDomain) + Length(lUsername) + $40;
     zero := 0;
 
-    msg_len := SIZEOf(Type3) + Length(ADomain) + Length(AUsername) + Length(Ahost) + Length(lm_password) + Length(nt_password);
+    msg_len := SizeOf(Type3) + Length(lDomain) + Length(lUsername) + Length(lHost) + Length(lm_password) + Length(nt_password);
     flags := $018205; // S.G. 12/7/2002: was: flags := $A0808205;  (from BugID 577895 and packet trace)
   end;
 
-  SetLength(S, SizeOf(Type3));
-  Move(Type3, S[1], SizeOf(Type3));
-  with TIdEncoderMIME.Create do try
-    result := Encode(S + ADomain + AUsername + AHost + lm_password + nt_password);
-  finally Free; end;
+  buf := RawToBytes(Type3, SizeOf(Type3));
+  AppendString(buf, lDomain);
+  AppendString(buf, lUsername);
+  AppendString(buf, lHost);
+  AppendString(buf, lm_password);
+  AppendString(buf, nt_password);
+
+  Result := TIdEncoderMIME.EncodeBytes(buf);
 end;
 
 {$ELSE}
-procedure BytesToCharArray(const ABytes : TIdBytes; var VArray : Array of char; const AIndex : Integer=0);
-var i, ll, lh : Integer;
+procedure BytesToCharArray(const ABytes : TIdBytes; var VArray : Array of Char; const AIndex : Integer = 0);
+var
+  i, ll, lh : Integer;
 begin
-   ll :=  Low(VArray);
-   lh := High(Varray);
-  for i := ll to lh do
-  begin
-    VArray[i] := Char(Abytes[ (i - ll)+ AIndex]);
+  ll :=  Low(VArray);
+  lh := High(Varray);
+  for i := ll to lh do begin
+    VArray[i] := Char(ABytes[ (i - ll)+ AIndex]);
   end;
 end;
 
-procedure BytesToByteArray(const ABytes : TIdBytes; var VArray : Array of byte; const AIndex : Integer=0);
-var i, ll, lh : Integer;
+procedure BytesToByteArray(const ABytes : TIdBytes; var VArray : Array of Byte; const AIndex : Integer = 0);
+var
+  i, ll, lh : Integer;
 begin
-   ll :=  Low(VArray);
-   lh := High(Varray);
-  for i := ll to lh do
-  begin
-    VArray[i] := Abytes[ (i - ll)+ AIndex];
+  ll :=  Low(VArray);
+  lh := High(Varray);
+  for i := ll to lh do begin
+    VArray[i] := ABytes[ (i - ll)+ AIndex];
   end;
 end;
 
-procedure ByteArrayToBytes(const VArray : array of byte; const ABytes : TIdBytes; const AIndex : Integer=0);
-var i, ll, lh : Integer;
+procedure ByteArrayToBytes(const VArray : array of Byte; const ABytes : TIdBytes; const AIndex : Integer = 0);
+var
+  i, ll, lh : Integer;
 begin
-   ll :=  Low(VArray);
-   lh := High(Varray);
-  for i := ll to lh do
-  begin
-    Abytes[ (i - ll)+ AIndex] := VArray[i];
+  ll :=  Low(VArray);
+  lh := High(Varray);
+  for i := ll to lh do begin
+    ABytes[ (i - ll)+ AIndex] := VArray[i];
   end;
 end;
 
@@ -530,7 +546,7 @@ begin
 end;
 
 procedure ntlm_base.ReadStruct(const ABytes : TIdBytes; var VIndex : LongWord);
-var 
+var
   i : Integer;
 begin
   inherited ReadStruct(ABytes,VIndex);
@@ -538,21 +554,19 @@ begin
   begin
     fprotocol[i] := Char(ABytes[i+VIndex]);
   end;
-  Inc(VIndex,Length(fprotocol));
-
+  Inc(VIndex, Length(fprotocol));
 end;
 
 procedure ntlm_base.WriteStruct(var VBytes : TIdBytes; var VIndex : LongWord);
-var LEnc : System.Text.Encoding;
- LLen : Integer;
- LBytes : TIdBytes;
+var
+  LLen : Integer;
+  LBytes : TIdBytes;
 begin
   inherited WriteStruct(VBytes,VIndex);
-  LEnc := System.Text.ASCIIEncoding.Create;
-  LBytes :=  LEnc.GetBytes(fprotocol);
+  LBytes := System.Text.ASCIIEncoding.GetBytes(fprotocol);
   LLen := Length(fprotocol);
-  CopyTIdBytes(LBytes,VIndex,VBytes,VIndex, LLen);
-  Inc(VIndex,LLen);
+  CopyTIdBytes(LBytes, VIndex, VBytes, VIndex, LLen);
+  Inc(VIndex, LLen);
 end;
 
 function type_1_message_header.GetBytesLen: LongWord;
@@ -561,71 +575,66 @@ begin
 end;
 
 procedure type_1_message_header.ReadStruct(const ABytes : TIdBytes; var VIndex : LongWord);
-var i : Integer;
 {
-    f_type : Byte;
-    fpad : padArray3;
-    fflags : Word;
-    fpad2 : padArray2;
-    fdom_len1 : Word;
-    fdom_len2 : Word;
-    fdom_off : LongWord;
-    fhost_len1 : Word;
-    fhost_len2 : Word;
-    fhost_off : LongWord;
+var
+  f_type : Byte;
+  fpad : padArray3;
+  fflags : Word;
+  fpad2 : padArray2;
+  fdom_len1 : Word;
+  fdom_len2 : Word;
+  fdom_off : LongWord;
+  fhost_len1 : Word;
+  fhost_len2 : Word;
+  fhost_off : LongWord;
 }
 begin
-  inherited ReadStruct(ABytes,VIndex);
+  inherited ReadStruct(ABytes, VIndex);
   f_type := ABytes[VIndex];
   Inc(VIndex);
-
-  i := Length(fpad);
-  BytesToByteArray(ABytes,fpad,i);
-  Inc(VIndex,i);
-  fflags := IdGlobal.BytesToWord(ABytes,i);
-  Inc(VIndex,2);
-  i := Length(fpad2);
-  BytesToByteArray(ABytes,fpad2,i);
-  Inc(VIndex,i);
-  fdom_len1 := IdGlobal.BytesToWord(ABytes,i);
-  Inc(VIndex,2);
-  fdom_len2 := IdGlobal.BytesToWord(ABytes,i);
-  Inc(VIndex,2);
-  fdom_off := IdGlobal.BytesToLongWord(ABytes,i);
-  Inc(VIndex,4);
-  fhost_len1 := IdGlobal.BytesToWord(ABytes,i);
-  Inc(VIndex,2);
-  fhost_len2 := IdGlobal.BytesToWord(ABytes,i);
-  Inc(VIndex,2);
-  fhost_off := IdGlobal.BytesToLongWord(ABytes,i);
-  Inc(VIndex,4);
+  BytesToByteArray(ABytes, fpad, VIndex);
+  Inc(VIndex, Length(fpad));
+  fflags := IdGlobal.BytesToWord(ABytes, VIndex);
+  Inc(VIndex, 2);
+  BytesToByteArray(ABytes, fpad2, VIndex);
+  Inc(VIndex, Length(fpad2));
+  fdom_len1 := IdGlobal.BytesToWord(ABytes, VIndex);
+  Inc(VIndex, 2);
+  fdom_len2 := IdGlobal.BytesToWord(ABytes, VIndex);
+  Inc(VIndex, 2);
+  fdom_off := IdGlobal.BytesToLongWord(ABytes, VIndex);
+  Inc(VIndex, 4);
+  fhost_len1 := IdGlobal.BytesToWord(ABytes, VIndex);
+  Inc(VIndex, 2);
+  fhost_len2 := IdGlobal.BytesToWord(ABytes, VIndex);
+  Inc(VIndex, 2);
+  fhost_off := IdGlobal.BytesToLongWord(ABytes, VIndex);
+  Inc(VIndex, 4);
 end;
 
 procedure type_1_message_header.WriteStruct(var VBytes : TIdBytes; var VIndex : LongWord);
-var i : Integer;
 begin
-  inherited WriteStruct(VBytes,VIndex);
+  inherited WriteStruct(VBytes, VIndex);
   VBytes[VIndex] := f_type;
   Inc(VIndex);
-  ByteArrayToBytes(fpad,VBytes,VIndex);
-  Inc(VIndex,i);
-  CopyTIdWord(fflags,VBytes,VIndex);
-  Inc(VIndex,2);
-  i := Length(fpad2);
-  ByteArrayToBytes(fpad2,VBytes,VIndex);
-  Inc(VIndex,i);
-  CopyTIdWord(fdom_len1,VBytes,VIndex);
-  Inc(VIndex,2);
-  CopyTIdWord(fdom_len2,VBytes,VIndex);
-  Inc(VIndex,2);
-  CopyTIdLongWord(fdom_off,VBytes,VIndex);
-  Inc(VIndex,4);
-  CopyTIdWord(fhost_len1,VBytes,VIndex);
-  Inc(VIndex,2);
-  CopyTIdWord(fhost_len2,VBytes,VIndex);
-  Inc(VIndex,2);
-  CopyTIdLongWord(fhost_off,VBytes,VIndex);
-  Inc(VIndex,4);
+  ByteArrayToBytes(fpad, VBytes, VIndex);
+  Inc(VIndex, Length(fpad));
+  CopyTIdWord(fflags, VBytes, VIndex);
+  Inc(VIndex, 2);
+  ByteArrayToBytes(fpad2, VBytes, VIndex);
+  Inc(VIndex, Length(fpad2));
+  CopyTIdWord(fdom_len1, VBytes, VIndex);
+  Inc(VIndex, 2);
+  CopyTIdWord(fdom_len2, VBytes, VIndex);
+  Inc(VIndex, 2);
+  CopyTIdLongWord(fdom_off, VBytes, VIndex);
+  Inc(VIndex, 4);
+  CopyTIdWord(fhost_len1, VBytes, VIndex);
+  Inc(VIndex, 2);
+  CopyTIdWord(fhost_len2, VBytes, VIndex);
+  Inc(VIndex, 2);
+  CopyTIdLongWord(fhost_off, VBytes, VIndex);
+  Inc(VIndex, 4);
 end;
 
 function type_2_message_header.GetBytesLen: LongWord;
@@ -633,74 +642,45 @@ begin
 end;
 
 procedure type_2_message_header.ReadStruct(const ABytes : TIdBytes; var VIndex : LongWord);
-var i : Integer;
 begin
-  inherited ReadStruct(ABytes,VIndex);
+  inherited ReadStruct(ABytes, VIndex);
   f_type := ABytes[VIndex];
   Inc(VIndex);
-  i := Length(fpad);
-  BytesToByteArray(ABytes,fpad,i);
-  Inc(VIndex,i);
-  fmsg_len := IdGlobal.BytesToWord(ABytes,i);
-  Inc(VIndex,2);
-   i := Length(fpad2);
-  BytesToByteArray(ABytes, fPad2,i);
-  Inc(VIndex,i);
-  fflags := IdGlobal.BytesToWord(ABytes,i);
-  Inc(VIndex,2);
-
-  i := Length(fpad3);
-  BytesToByteArray(ABytes, fPad3,i);
-  Inc(VIndex,i);
-
-  for i := 1 to Length(fnonce) do
-  begin
-    fnonce[i] := Char(ABytes[i+VIndex]);
-  end;
-  Inc(VIndex,Length(fnonce));
-
-  i := Length(fpad4);
-  BytesToByteArray(ABytes, fPad4,i);
-  Inc(VIndex,i);
+  BytesToByteArray(ABytes, fpad, VIndex);
+  Inc(VIndex, Length(fpad));
+  fmsg_len := IdGlobal.BytesToWord(ABytes, VIndex);
+  Inc(VIndex, 2);
+  BytesToByteArray(ABytes, fPad2, VIndex);
+  Inc(VIndex, Length(fpad2));
+  fflags := IdGlobal.BytesToWord(ABytes, VIndex);
+  Inc(VIndex, 2);
+  BytesToByteArray(ABytes, fPad3, VIndex);
+  Inc(VIndex, Length(fpad3));
+  BytesToCharArray(ABytes, fnonce, VIndex);
+  Inc(VIndex, Length(fnonce));
+  BytesToByteArray(ABytes, fPad4, VIndex);
+  Inc(VIndex, Length(fpad4));
 end;
 
 procedure type_2_message_header.WriteStruct(var VBytes : TIdBytes; var VIndex : LongWord);
-var i : Integer;
 begin
-   inherited WriteStruct(VBytes,VIndex);
-   VBytes[VIndex] := f_type;
+  inherited WriteStruct(VBytes, VIndex);
+  VBytes[VIndex] := f_type;
   Inc(VIndex);
-   i := Length(fpad);
-   ByteArrayToBytes(fPad,VBytes,i);
-   Inc(VIndex, i);
-
-   CopyTIdWord( fmsg_len,VBytes,i);
-   Inc(VIndex,2);
-
-   i := Length(fPad2);
-   ByteArrayToBytes(fPad2,VBytes,i);
-   Inc(VIndex, i);
-
-   CopyTIdWord( fflags,VBytes,i);
-   Inc(VIndex,2);
-
-   i := Length(fPad3);
-   ByteArrayToBytes(fPad3,VBytes,i);
-
-
-   i := Length((fnonce);
-  CopyTIdBytes((fnonce,VIndex,VBytes,VIndex, LLen);
-  Inc(VIndex,LLen);
-
-   Inc(VIndex, i);
-
-    for i := 1 to Length(fnonce) do
-    begin
-       fnonce[i] := Char(VBytes[i+VIndex]);
-    end;
-   i := Length(fPad4);
-   ByteArrayToBytes(fPad4,VBytes,i);
-   Inc(VIndex, i);
+  ByteArrayToBytes(fPad, VBytes, VIndex);
+  Inc(VIndex, Length(fpad));
+  CopyTIdWord(fmsg_len, VBytes, VIndex);
+  Inc(VIndex, 2);
+  ByteArrayToBytes(fPad2, VBytes, VIndex);
+  Inc(VIndex, Length(fPad2));
+  CopyTIdWord(fflags, VBytes, VIndex);
+  Inc(VIndex, 2);
+  ByteArrayToBytes(fPad3, VBytes, VIndex);
+  Inc(VIndex, Length(fPad3));
+  CharArrayToBytes(fnonce, VBytes, VIndex);
+  Inc(VIndex, Length(fnonce));
+  ByteArrayToBytes(fPad4, VBytes, VIndex);
+  Inc(VIndex, Length(fPad4));
 end;
 
 function type_3_message_header.GetBytesLen: LongWord;
@@ -709,7 +689,8 @@ end;
 
 procedure type_3_message_header.ReadStruct(const ABytes : TIdBytes; var VIndex : LongWord);
 begin
-{      _type: LongWord;                    // 0x03
+{
+    _type: LongWord;                    // 0x03
 
     lm_resp_len1: Word;                 // LanManager response length (always 0x18)
     lm_resp_len2: Word;                 // LanManager response length (always 0x18)
@@ -738,7 +719,7 @@ begin
     }
 end;
 
-procedure type_3_message_header.WriteStruct(var VBytes : TIdBytes; var VIndex : LongWord);  
+procedure type_3_message_header.WriteStruct(var VBytes : TIdBytes; var VIndex : LongWord);
 begin
 {
     _type: LongWord;                    // 0x03
