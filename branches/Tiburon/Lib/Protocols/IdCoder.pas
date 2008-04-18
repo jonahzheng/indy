@@ -112,6 +112,8 @@ type
     class function EncodeString(const AIn: string): string; overload;
     class procedure EncodeString(const AIn: string; ADestStrings: TStrings); overload;
     class procedure EncodeString(const AIn: string; ADestStream: TStream); overload;
+
+    class function EncodeBytes(const ABytes: TIdBytes): string;
   end;
 
   TIdEncoderClass = class of TIdEncoder;
@@ -127,6 +129,7 @@ type
     procedure Decode(ASrcStream: TStream; const ABytes: Integer = -1); overload; virtual; abstract;
 
     class function DecodeString(const AIn: string): string;
+    class function DecodeBytes(const AIn: string): TIdBytes;
   end;
 
   TIdDecoderClass = class of TIdDecoder;
@@ -179,6 +182,32 @@ begin
       end;
       LStream.Position := 0;
       Result := IdGlobal.ReadStringFromStream(LStream,-1,en8bit);
+    finally
+      FreeAndNil(LDecoder);
+    end;
+  finally
+    FreeAndNil(LStream);
+  end;
+end;
+
+class function TIdDecoder.DecodeBytes(const AIn: string): TIdBytes;
+var
+  LDecoder: TIdDecoder;
+  LStream: TMemoryStream;
+begin
+  Result := nil;
+  LStream := TMemoryStream.Create;
+  try
+    LDecoder := Create(nil);
+    try
+      LDecoder.DecodeBegin(LStream);
+      try
+        LDecoder.Decode(AIn);
+      finally
+        LDecoder.DecodeEnd;
+      end;
+      LStream.Position := 0;
+      ReadTIdBytesFromStream(LStream, Result, -1);
     finally
       FreeAndNil(LDecoder);
     end;
@@ -291,6 +320,29 @@ begin
     Encode(AIn, ADestStream);
   finally
     Free;
+  end;
+end;
+
+class function TIdEncoder.EncodeBytes(const ABytes: TIdBytes): string;
+var
+  LStream: TMemoryStream;
+begin
+  if ABytes <> nil then begin
+    LStream := TMemoryStream.Create;
+    try
+      IdGlobal.WriteTIdBytesToStream(LStream, ABytes);
+      LStream.Position := 0;
+      with Create(nil) do
+      try
+        Result := Encode(LStream);
+      finally
+        Free;
+      end;
+    finally
+      FreeAndNil(LStream);
+    end;
+  end else begin
+    Result := '';
   end;
 end;
 
