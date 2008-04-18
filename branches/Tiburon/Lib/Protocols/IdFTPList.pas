@@ -416,6 +416,7 @@ unit IdFTPList;
 }
 
 interface
+
 {$i IdCompilerDefines.inc}
 
 uses
@@ -430,6 +431,8 @@ type
   TIdDirItemType = (ditDirectory, ditFile, ditSymbolicLink, ditSymbolicLinkDir,
     ditBlockDev, ditCharDev, ditFIFO, ditSocket);
 
+  TIdFTPFileName = {$IFDEF UNICODESTRING}String{$ELSE}WideString{$ENDIF};
+
   TIdFTPListItems = class;
 
   // TIdFTPListItem stores an item in the FTP directory listing
@@ -437,8 +440,8 @@ type
   protected
     FSize: Int64;
     FData: string;
-    FFileName: WideString;
-    FLocalFileName : WideString; //suggested file name for local file
+    FFileName: TIdFTPFileName;
+    FLocalFileName : TIdFTPFileName; //suggested file name for local file
     FSizeAvail : Boolean;
     FModifiedAvail : Boolean;
     FModifiedDate: TDateTime;
@@ -458,7 +461,7 @@ type
     //The format veries amoung systems.  This is only provided for people
     //wanting to display a "permission column in their FTP listing
     //property set methods
-    procedure SetFileName(const AValue : WideString);
+    procedure SetFileName(const AValue : TIdFTPFileName);
     //may be used by some descendent classes
     property ModifiedDateGMT : TDateTime read FModifiedDateGMT write FModifiedDateGMT;
   public
@@ -470,8 +473,8 @@ type
     property Size: Int64 read FSize write FSize;
     property ModifiedDate: TDateTime read FModifiedDate write FModifiedDate;
 
-    property FileName: WideString read FFileName write SetFileName;
-    property LocalFileName : WideString read FLocalFileName write FLocalFileName;
+    property FileName: TIdFTPFileName read FFileName write SetFileName;
+    property LocalFileName : TIdFTPFileName read FLocalFileName write FLocalFileName;
     property ItemType: TIdDirItemType read FItemType write FItemType;
     property SizeAvail : Boolean read FSizeAvail write FSizeAvail;
     property ModifiedAvail : Boolean read FModifiedAvail write FModifiedAvail;
@@ -580,7 +583,7 @@ begin
   end;
 end;
 
-procedure TIdFTPListItem.SetFileName(const AValue: WideString);
+procedure TIdFTPListItem.SetFileName(const AValue: TIdFTPFileName);
 var
   i : Integer;
   LDoLowerCase : Boolean;
