@@ -1838,16 +1838,19 @@ end;
 
 // TODO: add an AIndex parameter
 procedure FillBytes(var VBytes : TIdBytes; const ACount : Integer; const AValue : Byte);
-{$IFNDEF DOTNET}
+{$IFNDEF DOTNET_OR_TEncoding}
   {$IFDEF USEINLINE}inline;{$ENDIF}
 {$ELSE}
 var
   I: Integer;
 {$ENDIF}
 begin
-  {$IFDEF DOTNET}
+  // RLebeau: FillChar() is bad to use on Tiburon for filling byte buffers
+  // as it is actually designed for filling character buffers instead. Now
+  // that Char maps to WideChar, this causes problems for FillChar().
+  {$IFDEF DOTNET_OR_TEncoding}
   //System.&Array.Clear(VBytes, 0, ACount);
-  // RLebeau: use the AValue byte instead
+  // RLebeau: use the AValue byte instead.
   for I := 0 to ACount-1 do begin
     VBytes[I] := AValue;
   end;
@@ -1867,18 +1870,15 @@ begin
   LPos := Position;
   try
     Position := 0;
-    Result := ReadStringFromStream(Self,-1,en8bit);
+    Result := ReadStringFromStream(Self, -1, en8bit);
   finally
     Position := LPos;
   end;
   {$ELSE}
   LSize := Self.Size;
   if LSize > 0 then begin
-{}
-    SetLength(Result,LSize);
-    Move(Memory^,Result[1],LSize);
-  //  Result := AnsiString(Memory^);
-   // Result := PAnsiChar(Self.Memory);
+    SetLength(Result, LSize);
+    Move(Memory^, Result[1], LSize);
   end else begin
     Result := '';
   end;
@@ -1893,14 +1893,14 @@ end;
 constructor TIdAnsiStringStream.Create(const AString : String);
 begin
   inherited Create;
-  WriteStringToStream(Self,AString,en8bit);
+  WriteStringToStream(Self, AString, en8bit);
   Position := 0;
 end;
 
 constructor TIdAnsiStringStream.Create(const ABytes : TIdBytes);
 begin
   inherited Create;
-  WriteTIdBytesToStream(Self,Abytes);
+  WriteTIdBytesToStream(Self, ABytes);
   Position := 0;
 end;
 
@@ -4771,7 +4771,7 @@ var
   LS, LSub: WideString;
   P1, P2: PWideChar;
     {$ELSE}
-    P1, P2: PChar;
+  P1, P2: PChar;
      {$ENDIF}
   {$ENDIF}
 begin
