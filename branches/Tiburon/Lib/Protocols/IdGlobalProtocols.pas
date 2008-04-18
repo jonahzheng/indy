@@ -495,7 +495,7 @@ type
   function UnixDateTimeToDelphiDateTime(UnixDateTime: LongWord): TDateTime;
   function DateTimeToUnix(ADateTime: TDateTime): LongWord;
 
-  function TwoCharToWord(AChar1, AChar2: Char):Word;
+  function TwoCharToWord(AChar1, AChar2: Char): Word;
   function UpCaseFirst(const AStr: string): string;
   function UpCaseFirstWord(const AStr: string): string;
   function GetUniqueFileName(const APath, APrefix, AExt : String) : String;
@@ -824,10 +824,10 @@ function StrToWord(const Value: String): Word;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   if Length(Value) > 1 then begin
-    {$IFDEF DOTNET}
+    {$IFDEF DOTNET_Or_TEncoding}
     Result := TwoCharToWord(Value[1], Value[2]);
     {$ELSE}
-    Result := Word(Pointer(@Value[1])^);
+    Result := Word(Pointer(Value)^);
     {$ENDIF}
   end else begin
     Result := 0;
@@ -837,7 +837,7 @@ end;
 function WordToStr(const Value: Word): String;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
-  {$IFDEF DOTNET}
+  {$IFDEF DOTNET_Or_TEncoding}
   Result := BytesToString(ToBytes(Value));
   {$ELSE}
   SetLength(Result, SizeOf(Value));
@@ -870,13 +870,13 @@ begin
   VByte4 := LValue[3];
 end;
 
-function TwoCharToWord(AChar1,AChar2: Char):Word;
+function TwoCharToWord(AChar1, AChar2: Char): Word;
 //Since Replys are returned as Strings, we need a rountime to convert two
 // characters which are a 2 byte U Int into a two byte unsigned integer
 var
   LWord: TIdBytes;
 begin
-  SetLength(LWord,2);
+  SetLength(LWord, 2);
   LWord[0] := Ord(AChar1);
   LWord[1] := Ord(AChar2);
   Result := BytesToWord(LWord);
@@ -1693,11 +1693,7 @@ begin
   Result := -OffsetFromUTC;
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-    {$IFNDEF WINCE}
-  case GetTimeZoneInformation(ATimeZone) of
-    {$ELSE}
-  case GetTimeZoneInformation(@ATimeZone) of
-    {$ENDIF}
+  case GetTimeZoneInformation({$IFDEF WINCE}@{$ENDIF}ATimeZone) of
     TIME_ZONE_ID_DAYLIGHT:
       Result := ATimeZone.Bias + ATimeZone.DaylightBias;
     TIME_ZONE_ID_STANDARD:
@@ -1783,7 +1779,7 @@ begin
     {$ENDIF}
  
   DateTimeToSystemTime(Value, dSysTime);
-  Result := Windows.SetLocalTime({$IFDEF FPC}@dSysTime{$ELSE}dSysTime{$ENDIF});
+  Result := Windows.SetLocalTime({$IFDEF FPC}@{$ENDIF}dSysTime);
 
     {$IFNDEF WINCE}
   if Result then
@@ -1802,7 +1798,7 @@ begin
 
     if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then
     begin
-      Windows.SetLocalTime({$IFDEF FPC}@dSysTime{$ELSE}dSysTime{$ENDIF});
+      Windows.SetLocalTime({$IFDEF FPC}@{$ENDIF}dSysTime);
       // Windows 2000+ will broadcast WM_TIMECHANGE automatically...
       if Win32MajorVersion < 5 then begin // Windows 2000 = v5.0
         SendMessage(HWND_BROADCAST, WM_TIMECHANGE, 0, 0);
@@ -2981,8 +2977,7 @@ begin
   if GetHostname(@LHost[1], 255) <> -1 then
   begin
     i := IndyPos(#0, LHost);
-    SetLength(Result, i - 1);
-    Move(LHost, Result[1], i - 1);
+    SetString(Result, @LHost[1], i-1);
   end;
     {$ELSE}
   Result := Unix.GetHostName;
@@ -3008,7 +3003,7 @@ end;
 function IsLeadChar(ACh : Char):Boolean;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
-  {$IFDEF DOTNET_OR_TEncoding}
+  {$IFDEF DOTNET}
   Result := False;
   {$ELSE}
   Result := ACh in LeadBytes;
