@@ -119,9 +119,17 @@ type
     var AData: string; AContext: TIdContext) of object;
 
   { Listening Thread }
+
+  TIdCmdClientContext = class(TIdContext)
+  protected
+    FClient: TIdCmdTCPClient;
+  public
+    property Client: TIdCmdTCPClient read FClient;
+  end;
+  
   TIdCmdTCPClientListeningThread = class(TIdThread)
   protected
-    FContext: TIdContext;
+    FContext: TIdCmdClientContext;
     FClient: TIdCmdTCPClient;
     FRecvData: String;
     //
@@ -181,7 +189,8 @@ type
 constructor TIdCmdTCPClientListeningThread.Create(AClient: TIdCmdTCPClient);
 begin
   FClient := AClient;
-  FContext := TIdContext.Create(AClient, nil, nil);
+  FContext := TIdCmdClientContext.Create(AClient, nil, nil);
+  FContext.FClient := AClient;
   TIdContextAccess(FContext).FOwnsConnection := False;
   //
   inherited Create(False);
