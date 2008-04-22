@@ -431,7 +431,7 @@ begin
   FillChar(Type_1_Message, SizeOf(Type_1_Message), #0);
   with Type_1_Message do
   begin
-    StrPLCopy(protocol, cProtocolStr, 8);
+    StrPLCopy(@protocol[1], cProtocolStr, 8);
     _type := 1;
     // S.G. 12/7/2002: Changed the flag to $B207 (from BugID 577895 and packet trace)
     flags := $b207; //was $A000B207;     //b203;
@@ -472,7 +472,7 @@ begin
   lUsername := BuildUnicode(AUsername);
 
   with Type3 do begin
-    StrPLCopy(protocol, cProtocolStr, 8);
+    StrPLCopy(@protocol[1], cProtocolStr, 8);
     _type := 3;
     lm_resp_len1 := $18;// S.G. 12/7/2002: was: Length(lm_password);  (from BugID 577895)
     lm_resp_len2 := $18;// S.G. 12/7/2002: was: Length(lm_password);  (from BugID 577895)
