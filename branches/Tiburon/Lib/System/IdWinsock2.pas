@@ -4959,20 +4959,11 @@ pass a constant anyway.
 }
 function FixupStub(hDll: THandle; const AName:{$IFDEF UNDER_CE}WideString{$ELSE}string{$ENDIF}): Pointer;
 {$IFDEF USEINLINE}inline;{$ENDIF}
-{$IFDEF UNICODESTRING}
-var
-  LName : AnsiString;
-{$ENDIF}
 begin
   if hDll = 0 then begin
     raise EIdWinsockStubError.Build(WSANOTINITIALISED, RSWinsockCallError, [AName]);
   end;
-  {$IFDEF UNICODESTRING}
-  LName := AName; // convert to Ansi
-  Result := Windows.GetProcAddress(hDll, PAnsiChar(LName));
-  {$ELSE}
-  Result := Windows.GetProcAddress(hDll, {$IFDEF UNDER_CE}PWideChar{$ELSE}PAnsiChar{$ENDIF}(AName));
-  {$ENDIF}
+  Result := Windows.GetProcAddress(hDll, {$IFDEF UNDER_CE}PWideChar{$ELSE}PChar{$ENDIF}(AName));
   if Result = nil then begin
     raise EIdWinsockStubError.Build(WSAEINVAL, RSWinsockCallError, [AName]);
   end;
