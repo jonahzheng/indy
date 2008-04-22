@@ -5052,7 +5052,12 @@ function IndyRegisterExpectedMemoryLeak(AAddress: Pointer): Boolean;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
   {$IFDEF VCL10ORABOVE}
-  Result := System.RegisterExpectedMemoryLeak(AAddress);
+  // RLebeau 4/21/08: not quite sure what the difference is between the
+  // SysRegisterExpectedMemoryLeak() and RegisterExpectedMemoryLeak()
+  // functions in the System unit, but calling RegisterExpectedMemoryLeak()
+  // is causing stack overflows when FastMM is not active, so call
+  // SysRegisterExpectedMemoryLeak() instead...
+  Result := System.SysRegisterExpectedMemoryLeak(AAddress);
   {$ELSE}
     {$IFDEF USEFASTMM4}
   Result := FastMM4.RegisterExpectedMemoryLeak(AAddress);
