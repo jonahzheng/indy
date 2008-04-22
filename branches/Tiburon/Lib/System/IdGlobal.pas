@@ -1115,19 +1115,20 @@ function IPv4ToOctal(const AIPAddress: string): string;
 procedure IPv6ToIdIPv6Address(const AIPAddress: String; var VAddress: TIdIPv6Address); overload;
 procedure IPv6ToIdIPv6Address(const AIPAddress: String; var VAddress: TIdIPv6Address; var VErr : Boolean); overload;
 function IsAlpha(const AChar: Char): Boolean; overload;
-function IsAlpha(const AString: String): Boolean; overload;
+function IsAlpha(const AString: String; const ALength: Integer = -1; const AIndex: Integer = 1): Boolean; overload;
 function IsAlphaNumeric(const AChar: Char): Boolean; overload;
-function IsAlphaNumeric(const AString: String): Boolean; overload;
+function IsAlphaNumeric(const AString: String; const ALength: Integer = -1; const AIndex: Integer = 1): Boolean; overload;
 function IsASCII(const AByte: Byte): Boolean; overload;
 function IsASCII(const ABytes: TIdBytes): Boolean; overload;
 function IsASCIILDH(const AByte: Byte): Boolean; overload;
 function IsASCIILDH(const ABytes: TIdBytes): Boolean; overload;
 function IsHexidecimal(const AChar: Char): Boolean; overload;
-function IsHexidecimal(const AString: string): Boolean; overload;
+function IsHexidecimal(const AString: string; const ALength: Integer = -1; const AIndex: Integer = 1): Boolean; overload;
 function IsNumeric(const AChar: Char): Boolean; overload;
 function IsNumeric(const AString: string): Boolean; overload;
+function IsNumeric(const AString: string; const ALength: Integer; const AIndex: Integer = 1): Boolean; overload;
 function IsOctal(const AChar: Char): Boolean; overload;
-function IsOctal(const AString: string): Boolean; overload;
+function IsOctal(const AString: string; const ALength: Integer = -1; const AIndex: Integer = 1): Boolean; overload;
 {$IFNDEF DOTNET}
 function InterlockedExchangeTHandle(var VTarget : THandle; const AValue : PtrUInt) : THandle;
 {$ENDIF}
@@ -2732,19 +2733,23 @@ end;
 function IsAlpha(const AChar: Char): Boolean;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
+  // TODO: under Tiburon and later, use TCharacter.IsLetter() instead
+
   // Do not use IsCharAlpha or IsCharAlphaNumeric - they are Win32 routines
   Result := ((AChar >= 'a') and (AChar <= 'z')) or ((AChar >= 'A') and (AChar <= 'Z')); {Do not Localize}
 end;
 
-function IsAlpha(const AString: String): Boolean;
+function IsAlpha(const AString: String; const ALength: Integer = -1; const AIndex: Integer = 1): Boolean;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 var
   i: Integer;
+  LLen: Integer;
 begin
   Result := False;
-  if AString <> '' then begin
-    for i := 1 to Length(AString) do begin
-      if not IsAlpha(AString[i]) then begin
+  LLen := IndyLength(AString, ALength, AIndex);
+  if LLen > 0 then begin
+    for i := 0 to LLen-1 do begin
+      if not IsAlpha(AString[AIndex+i]) then begin
         Exit;
       end;
     end;
@@ -2759,15 +2764,17 @@ begin
   Result := IsAlpha(AChar) or IsNumeric(AChar);
 end;
 
-function IsAlphaNumeric(const AString: String): Boolean;
+function IsAlphaNumeric(const AString: String; const ALength: Integer = -1; const AIndex: Integer = 1): Boolean;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 var
   i: Integer;
+  LLen: Integer;
 begin
   Result := False;
-  if AString <> '' then begin
-    for i := 1 to Length(AString) do begin
-      if not IsAlphaNumeric(AString[i]) then begin
+  LLen := IndyLength(AString, ALength, AIndex);
+  if LLen > 0 then begin
+    for i := 0 to LLen-1 do begin
+      if not IsAlphaNumeric(AString[AIndex+i]) then begin
         Exit;
       end;
     end;
@@ -2781,15 +2788,17 @@ begin
   Result := (AChar >= '0') and (AChar <= '7') {Do not Localize}
 end;
 
-function IsOctal(const AString: string): Boolean; overload;
+function IsOctal(const AString: string; const ALength: Integer = -1; const AIndex: Integer = 1): Boolean; overload;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 var
   i: Integer;
+  LLen: Integer;
 begin
   Result := False;
-  if AString <> '' then begin
-    for i := 1 to Length(AString) do begin
-      if not IsOctal(AString[i]) then begin
+  LLen := IndyLength(AString, ALength, AIndex);
+  if LLen > 0 then begin
+    for i := 0 to LLen-1 do begin
+      if not IsOctal(AString[AIndex+i]) then begin
         Exit;
       end;
     end;
@@ -2800,20 +2809,22 @@ end;
 function IsHexidecimal(const AChar: Char): Boolean; overload;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
-  Result := ((AChar >= '0') and (AChar <= '9')) {Do not Localize}
+  Result := IsNumeric(AChar)
    or ((AChar >= 'A') and (AChar <= 'F')) {Do not Localize}
    or ((AChar >= 'a') and (AChar <= 'f')); {Do not Localize}
 end;
 
-function IsHexidecimal(const AString: string): Boolean; overload;
+function IsHexidecimal(const AString: string; const ALength: Integer = -1; const AIndex: Integer = 1): Boolean; overload;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 var
   i: Integer;
+  LLen: Integer;
 begin
   Result := False;
-  if AString <> '' then begin
-    for i := 1 to Length(AString) do begin
-      if not IsHexidecimal(AString[i]) then begin
+  LLen := IndyLength(AString, ALength, AIndex);
+  if LLen > 0 then begin
+    for i := 0 to LLen-1 do begin
+      if not IsHexidecimal(AString[AIndex+i]) then begin
         Exit;
       end;
     end;
@@ -2832,9 +2843,28 @@ begin
 end;
 {$HINTS ON}
 
+function IsNumeric(const AString: string; const ALength: Integer; const AIndex: Integer = 1): Boolean;
+var
+  I: Integer;
+  LLen: Integer;
+begin
+  Result := False;
+  LLen := IndyLength(AString, ALength, AIndex);
+  if LLen > 0 then begin
+    for I := 0 to LLen-1 do begin
+      if not IsNumeric(AString[AIndex+i]) then begin
+        Exit;
+      end;
+    end;
+    Result := True;
+  end;
+end;
+
 function IsNumeric(const AChar: Char): Boolean;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
+  // TODO: under Tiburon and later, use TCharacter.IsDigit() instead
+
   // Do not use IsCharAlpha or IsCharAlphaNumeric - they are Win32 routines
   Result := (AChar >= '0') and (AChar <= '9'); {Do not Localize}
 end;
