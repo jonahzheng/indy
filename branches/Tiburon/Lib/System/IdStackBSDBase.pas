@@ -379,8 +379,15 @@ function TIdStackBSDBase.NewSocketHandle(const ASocketType:TIdSocketType;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION;
   const AOverlapped: Boolean = False): TIdStackSocketHandle;
 begin
-  Result := CheckForSocketError(WSSocket(IdIPFamily[AIPVersion], ASocketType,
-    AProtocol, AOverlapped));
+  // RLebeau 04/17/2008: Don't use CheckForSocketError() here.  It expects
+  // an Integer error code, not a TSocket handle.  When WSSocket() fails,
+  // it returns Id_INVALID_SOCKET.  Although that is technically the same
+  // value as Id_SOCKET_ERROR, passing Id_INVALID_SOCKET to CheckForSocketError()
+  // causes a range check error to be raised.
+  Result := WSSocket(IdIPFamily[AIPVersion], ASocketType, AProtocol, AOverlapped);
+  if Result = Id_INVALID_SOCKET then begin
+    RaiseLastSocketError;
+  end;
 end;
 
 constructor TIdStackBSDBase.Create;
