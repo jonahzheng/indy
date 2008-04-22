@@ -119,8 +119,8 @@ begin
 end;
 
 function TIdNTLMAuthentication.Authentication: String;
-Var
-  S: String;
+var
+  buf: TIdBytes;
   Type2: type_2_message_header;
 begin
   Result := '';    {do not localize}
@@ -145,16 +145,11 @@ begin
         end;
 
         with TIdDecoderMIME.Create do try
-          S := DecodeString(FNTLMInfo);
+          buf := DecodeBytes(FNTLMInfo);
         finally Free; end;
+        BytesToRaw(buf, Type2, SizeOf(Type2));
 
-        Move(S[1], type2, SizeOf(type2));
-        Delete(S, 1, SizeOf(type2));
-
-        S := Type2.Nonce;
-
-        S := BuildType3Message(FDomain, FHost, FUser, Password, Type2.Nonce);
-        Result := 'NTLM ' + S;    {do not localize}
+        Result := 'NTLM ' + BuildType3Message(FDomain, FHost, FUser, Password, Type2.Nonce); {do not localize}
 
         FCurrentStep := 2;
       end;
