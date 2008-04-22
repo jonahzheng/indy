@@ -110,14 +110,13 @@ type
     fLoadPending, fIsAvailable: Boolean;
     fPFunctionTable: PSecurityFunctionTableA;
     fDLLHandle: THandle;
-    procedure releaseFunctionTable;
-    procedure checkAvailable;
-    function getFunctionTable: SecurityFunctionTableA;
+    procedure ReleaseFunctionTable;
+    procedure CheckAvailable;
+    function GetFunctionTable: SecurityFunctionTableA;
   public
-    class procedure RaiseIfError(
-      aStatus: SECURITY_STATUS; aFunctionName: string);
+    class procedure RaiseIfError(aStatus: SECURITY_STATUS; const aFunctionName: string);
     function IsAvailable: Boolean;
-    property FunctionTable: SecurityFunctionTableA read getFunctionTable;
+    property FunctionTable: SecurityFunctionTableA read GetFunctionTable;
   public
     constructor Create;
     destructor Destroy; override;
@@ -128,12 +127,12 @@ type
   TSSPIPackage = class(TObject)
   private
     fPSecPkginfo: PSecPkgInfo;
-    function getPSecPkgInfo: PSecPkgInfo;
-    function getMaxToken: ULONG;
-    function getName: string;
+    function GetPSecPkgInfo: PSecPkgInfo;
+    function GetMaxToken: ULONG;
+    function GetName: AnsiString;
   public
-    property MaxToken: ULONG read getMaxToken;
-    property Name: string read getName;
+    property MaxToken: ULONG read GetMaxToken;
+    property Name: AnsiString read GetName;
   public
     constructor Create(aPSecPkginfo: PSecPkgInfo);
   end;
@@ -142,7 +141,7 @@ type
   private
     fInfo: PSecPkgInfo;
   public
-    constructor Create(aPkgName: string);
+    constructor Create(const aPkgName: AnsiString);
     destructor Destroy; override;
   end;
 
@@ -162,8 +161,8 @@ type
     fUse: TSSPICredentialsUse;
     fAcquired: Boolean;
     fExpiry: TimeStamp;
-    function getHandle: PCredHandle;
-    procedure setUse(aValue: TSSPICredentialsUse);
+    function GetHandle: PCredHandle;
+    procedure SetUse(aValue: TSSPICredentialsUse);
   protected
     procedure CheckAcquired;
     procedure CheckNotAcquired;
@@ -172,8 +171,8 @@ type
   public
     procedure Release;
     property Package: TSSPIPackage read fPackage;
-    property Handle: PCredHandle read getHandle;
-    property Use: TSSPICredentialsUse read fUse write setUse;
+    property Handle: PCredHandle read GetHandle;
+    property Use: TSSPICredentialsUse read fUse write SetUse;
     property Acquired: Boolean read fAcquired;
   public
     constructor Create(aPackage: TSSPIPackage);
@@ -185,11 +184,9 @@ type
   TSSPIWinNTCredentials = class(TSSPICredentials)
   protected
   public
-    procedure Acquire(
-      aUse: TSSPICredentialsUse); overload;
-    procedure Acquire(
-      aUse: TSSPICredentialsUse; aDomain,
-      aUserName, aPassword: string); overload;
+    procedure Acquire(aUse: TSSPICredentialsUse); overload;
+    procedure Acquire(aUse: TSSPICredentialsUse;
+      const aDomain, aUserName, aPassword: string); overload;
   end;
 
   { TSSPIContext }
@@ -200,17 +197,15 @@ type
     fHandle: CtxtHandle;
     fHasHandle: Boolean;
     fExpiry: TimeStamp;
-    function getHandle: PCtxtHandle;
-    function getExpiry: TimeStamp;
-    procedure updateHasContextAndCheckForError(
+    function GetHandle: PCtxtHandle;
+    function GetExpiry: TimeStamp;
+    procedure UpdateHasContextAndCheckForError(
       const aFuncResult: SECURITY_STATUS; const aFuncName: string;
       const aErrorsToIgnore: array of SECURITY_STATUS);
   protected
     procedure CheckHasHandle;
     procedure CheckCredentials;
-    function DoInitialize(
-      aTokenSourceName: PChar;
-      var aIn, aOut: SecBufferDesc;
+    function DoInitialize(aTokenSourceName: PAnsiChar; var aIn, aOut: SecBufferDesc;
       const errorsToIgnore: array of SECURITY_STATUS): SECURITY_STATUS;
     procedure DoRelease; virtual;
     function GetRequestedFlags: ULONG; virtual; abstract;
@@ -220,9 +215,9 @@ type
   public
     procedure Release;
     property Credentials: TSSPICredentials read fCredentials;
-    property Handle: PCtxtHandle read getHandle;
+    property Handle: PCtxtHandle read GetHandle;
     property Authenticated: Boolean read GetAuthenticated;
-    property Expiry: TimeStamp read getExpiry;
+    property Expiry: TimeStamp read GetExpiry;
   public
     constructor Create(aCredentials: TSSPICredentials);
     destructor Destroy; override;
@@ -238,8 +233,7 @@ type
   protected
     procedure DoRelease; override;
     function GetAuthenticated: Boolean; override;
-    function DoUpdateAndGenerateReply(
-      var aIn, aOut: SecBufferDesc;
+    function DoUpdateAndGenerateReply(var aIn, aOut: SecBufferDesc;
       const aErrorsToIgnore: array of SECURITY_STATUS
       ): SECURITY_STATUS; virtual; abstract;
   public
@@ -255,13 +249,12 @@ type
   protected
     function GetRequestedFlags: ULONG; override;
     procedure SetEstablishedFlags(aFlags: ULONG); override;
-    function DoUpdateAndGenerateReply(
-      var aIn, aOut: SecBufferDesc;
+    function DoUpdateAndGenerateReply(var aIn, aOut: SecBufferDesc;
       const aErrorsToIgnore: array of SECURITY_STATUS
       ): SECURITY_STATUS; override;
   public
-    function GenerateInitialChallenge(
-      const aTargetName: string; var aToPeerToken: string): Boolean;
+    function GenerateInitialChallenge(const aTargetName: string;
+      var aToPeerToken: string): Boolean;
   public
     constructor Create(aCredentials: TSSPICredentials);
   end;
@@ -272,10 +265,10 @@ type
     fCredentials: TSSPIWinNTCredentials;
     fContext: TSSPIClientConnectionContext;
   public
-    procedure SetCredentials(aDomain, aUserName, aPassword: string);
+    procedure SetCredentials(const aDomain, aUserName, aPassword: string);
     procedure SetCredentialsAsCurrentUser;
     function InitAndBuildType1Message: string;
-    function UpdateAndBuildType3Message(aServerType2Message: string): string;
+    function UpdateAndBuildType3Message(const aServerType2Message: string): string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -292,7 +285,7 @@ type
     function DoNext: TIdAuthWhatsNext; override;
   public
     constructor Create; override;
-    destructor Destroy;override;
+    destructor Destroy; override;
     function Authentication: string; override;
     function KeepAlive: Boolean; override;
     property Domain: String read GetDomain write SetDomain;
@@ -310,14 +303,15 @@ uses
   IdHeaderList;
 
 var
-  g: TSSPIInterface;
+  g: TSSPIInterface = nil;
 
 { ESSPIException }
 
 class function ESSPIException.GetErrorMessageByNo(aErrorNo: LongWord): string;
 begin
   case HRESULT(aErrorNo) of
-    SEC_E_OK: Result := RSHTTPSSPISuccess;
+    SEC_E_OK:
+      Result := RSHTTPSSPISuccess;
     SEC_E_INSUFFICIENT_MEMORY:
       Result := RSHTTPSSPINotEnoughMem;
     SEC_E_INVALID_HANDLE:
@@ -403,7 +397,7 @@ begin
   end;
 end;
 
-constructor ESSPIException.CreateError(AFailedFuncName: string;
+constructor ESSPIException.CreateError(const AFailedFuncName: string;
   AErrorNo: LongInt = SEC_E_OK);
 begin
   if AErrorNo = SEC_E_OK then begin
@@ -416,28 +410,28 @@ end;
 
 { TSSPIInterface }
 
-procedure TSSPIInterface.releaseFunctionTable;
+procedure TSSPIInterface.ReleaseFunctionTable;
 begin
   if fPFunctionTable <> nil then begin
     fPFunctionTable := nil;
   end;
 end;
 
-procedure TSSPIInterface.checkAvailable;
+procedure TSSPIInterface.CheckAvailable;
 begin
   if not IsAvailable then begin
     raise ESSPIInterfaceInitFailed.Create(RSHTTPSSPIInterfaceInitFailed);
   end;
 end;
 
-function TSSPIInterface.getFunctionTable: SecurityFunctionTableA;
+function TSSPIInterface.GetFunctionTable: SecurityFunctionTableA;
 begin
-  checkAvailable;
+  CheckAvailable;
   Result := fPFunctionTable^;
 end;
 
 class procedure TSSPIInterface.RaiseIfError
-  (aStatus: SECURITY_STATUS; aFunctionName: string);
+  (aStatus: SECURITY_STATUS; const aFunctionName: string);
 begin
   if not SEC_SUCCESS(aStatus) then begin
     raise ESSPIException.CreateError(aFunctionName, aStatus);
@@ -446,7 +440,7 @@ end;
 
 function TSSPIInterface.IsAvailable: Boolean;
 
-  procedure loadDLL;
+  procedure LoadDLL;
   const
     SECURITY_DLL_NT = 'security.dll';    {Do not translate}
     SECURITY_DLL_95 = 'secur32.dll';   {Do not translate}
@@ -465,8 +459,8 @@ function TSSPIInterface.IsAvailable: Boolean;
       dllName := SECURITY_DLL_NT;
     { load SSPI dll }
     //In Windows, you should use SafeLoadLibrary instead of the LoadLibrary API
-    //call because LoadLibrary messes with the FPU control word.    
-    fDLLHandle := SafeLoadLibrary(@dllName[1]);
+    //call because LoadLibrary messes with the FPU control word.
+    fDLLHandle := SafeLoadLibrary(dllName);
     if fDLLHandle > 0 then begin
       { get InitSecurityInterface entry point
         and call it to fetch SPPI function table}
@@ -482,7 +476,7 @@ function TSSPIInterface.IsAvailable: Boolean;
           Assigned(FreeCredentialHandle) and
           Assigned(AcquireCredentialsHandleA) and
           Assigned(InitializeSecurityContextA) and
-        Assigned(AcceptSecurityContext) and
+          Assigned(AcceptSecurityContext) and
           Assigned(ImpersonateSecurityContext) and
           Assigned(RevertSecurityContext) and
           Assigned(QueryContextAttributesA) and
@@ -490,10 +484,12 @@ function TSSPIInterface.IsAvailable: Boolean;
           Assigned(VerifySignature);
         {$IFDEF SET_ENCRYPT_IN_FT_WITH_GETPROCADDRESS_FUDGE}
         { fudge for Encrypt/DecryptMessage }
-        if (not Assigned(EncryptMessage)) and (GetProcAddress(fDLLHandle, ENCRYPT_MESSAGE) <> nil) then
+        if not Assigned(EncryptMessage) then begin
           EncryptMessage := GetProcAddress(fDLLHandle, ENCRYPT_MESSAGE);
-        if (not Assigned(DecryptMessage)) and (GetProcAddress(fDLLHandle, DECRYPT_MESSAGE) <> nil) then
+        end;
+        if not Assigned(DecryptMessage) then begin
           DecryptMessage := GetProcAddress(fDLLHandle, DECRYPT_MESSAGE);
+        end;
         {$ENDIF}
       end;
     end;
@@ -502,8 +498,8 @@ function TSSPIInterface.IsAvailable: Boolean;
 begin
   if not fIsAvailable then begin
     if fLoadPending then begin
-      releaseFunctionTable;
-      loadDLL;
+      ReleaseFunctionTable;
+      LoadDLL;
       fLoadPending := False;
     end;
   end;
@@ -520,7 +516,7 @@ end;
 
 destructor TSSPIInterface.Destroy;
 begin
-  releaseFunctionTable;
+  ReleaseFunctionTable;
   FreeLibrary(fDLLHandle);
   inherited Destroy;
 end;
@@ -533,7 +529,7 @@ begin
   fPSecPkginfo := aPSecPkginfo;
 end;
 
-function TSSPIPackage.getPSecPkgInfo: PSecPkgInfo;
+function TSSPIPackage.GetPSecPkgInfo: PSecPkgInfo;
 begin
   if not Assigned(fPSecPkginfo) then begin
     raise ESSPIException.Create(RSHTTPSSPINoPkgInfoSpecified);
@@ -541,22 +537,22 @@ begin
   Result := fPSecPkginfo;
 end;
 
-function TSSPIPackage.getMaxToken: ULONG;
+function TSSPIPackage.GetMaxToken: ULONG;
 begin
-  Result := getPSecPkgInfo^.cbMaxToken;
+  Result := GetPSecPkgInfo^.cbMaxToken;
 end;
 
-function TSSPIPackage.getName: string;
+function TSSPIPackage.GetName: AnsiString;
 begin
-  Result := StrPas(getPSecPkgInfo^.Name);
+  Result := StrPas(GetPSecPkgInfo^.Name);
 end;
 
 { TCustomSSPIPackage }
 
-constructor TCustomSSPIPackage.Create(aPkgName: string);
+constructor TCustomSSPIPackage.Create(const aPkgName: AnsiString);
 begin
   g.RaiseIfError(
-    g.FunctionTable.QuerySecurityPackageInfoA(PChar(aPkgName), @fInfo),
+    g.FunctionTable.QuerySecurityPackageInfoA(PAnsiChar(aPkgName), @fInfo),
     'QuerySecurityPackageInfoA');   {Do not translate}
   inherited Create(fInfo);
 end;
@@ -641,13 +637,13 @@ begin
   end;
 end;
 
-function TSSPICredentials.getHandle: PCredHandle;
+function TSSPICredentials.GetHandle: PCredHandle;
 begin
   CheckAcquired;
   Result := @fHandle;
 end;
 
-procedure TSSPICredentials.setUse(aValue: TSSPICredentialsUse);
+procedure TSSPICredentials.SetUse(aValue: TSSPICredentialsUse);
 begin
   if fUse <> aValue then begin
     CheckNotAcquired;
@@ -669,7 +665,7 @@ begin
 end;
 
 procedure TSSPIWinNTCredentials.Acquire(aUse: TSSPICredentialsUse;
-  aDomain, aUserName, aPassword: string);
+  const aDomain, aUserName, aPassword: string);
 var
   ai: SEC_WINNT_AUTH_IDENTITY;
   pai: PVOID;
@@ -708,7 +704,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TSSPIContext.updateHasContextAndCheckForError(
+procedure TSSPIContext.UpdateHasContextAndCheckForError(
   const aFuncResult: SECURITY_STATUS; const aFuncName: string;
   const aErrorsToIgnore: array of SECURITY_STATUS);
 var
@@ -730,7 +726,7 @@ begin
   fHasHandle := True;
 end;
 
-function TSSPIContext.DoInitialize(aTokenSourceName: PChar;
+function TSSPIContext.DoInitialize(aTokenSourceName: PAnsiChar;
   var aIn, aOut: SecBufferDesc;
   const errorsToIgnore: array of SECURITY_STATUS): SECURITY_STATUS;
 var
@@ -751,8 +747,7 @@ begin
     GetRequestedFlags, 0, SECURITY_NATIVE_DREP, tmp2, 0,
     @fHandle, @aOut, @r, @fExpiry
     );
-  updateHasContextAndCheckForError(
-    Result, 'InitializeSecurityContextA', errorsToIgnore); {Do not translate}
+  UpdateHasContextAndCheckForError(Result, 'InitializeSecurityContextA', errorsToIgnore); {Do not translate}
   SetEstablishedFlags(r);
 end;
 
@@ -779,18 +774,18 @@ end;
 
 procedure TSSPIContext.CheckCredentials;
 begin
-  if (not Assigned(Credentials)) or (not Credentials.Acquired) then begi
+  if (not Assigned(Credentials)) or (not Credentials.Acquired) then begin
     raise ESSPIException.Create(RSHTTPSSPIDoAuquireCredentialHandle);
   end;
 end;
 
-function TSSPIContext.getExpiry: TimeStamp;
+function TSSPIContext.GetExpiry: TimeStamp;
 begin
   CheckHasHandle;
   Result := fExpiry;
 end;
 
-function TSSPIContext.getHandle: PCtxtHandle;
+function TSSPIContext.GetHandle: PCtxtHandle;
 begin
   CheckHasHandle;
   Result := @fHandle;
@@ -814,14 +809,35 @@ function TCustomSSPIConnectionContext.UpdateAndGenerateReply
   (const aFromPeerToken: string; var aToPeerToken: string): Boolean;
 var
   fOutBuff: SecBuffer;
+  {$IFDEF UNICODESTRING}
+  lFromToken, lToToken: AnsiString;
+  {$ENDIF}
 begin
   Result := False;
+
+  {$IFDEF UNICODESTRING}
+  lFromToken := aFromPeerToken;
+  lToToken := aToPeerToken;
+  {$ENDIF}
+
   { check credentials }
   CheckCredentials;
   { prepare input buffer }
+
+  {$IFDEF UNICODESTRING}
+  fInBuff.cbBuffer := Length(lFromToken);
+  {$ELSE}
   fInBuff.cbBuffer := Length(aFromPeerToken);
+  {$ENDIF}
+
   //Assert(Length(aFromPeerToken)>0);
-  if Length(aFromPeerToken)>0 then fInBuff.pvBuffer := @(aFromPeerToken[1]);
+  if fInBuff.cbBuffer > 0 then begin
+    {$IFDEF UNICODESTRING}
+    fInBuff.pvBuffer := @lFromToken[1];
+    {$ELSE}
+    fInBuff.pvBuffer := @aFromPeerToken[1];
+    {$ENDIF}
+  end;
 
   { prepare output buffer }
   fOutBuff.BufferType := SECBUFFER_TOKEN;
@@ -853,7 +869,12 @@ begin
       (fOutBuff.cbBuffer > 0);
     if Result then begin
       with fOutBuff do begin
-        SetString(aToPeerToken, PChar(pvBuffer), cbBuffer);
+        {$IFDEF UNICODESTRING}
+        SetString(lToToken, PAnsiChar(pvBuffer), cbBuffer);
+        aToPeerToken := lToToken;
+        {$ELSE}
+        SetString(aToPeerToken, PAnsiChar(pvBuffer), cbBuffer);
+        {$ENDIF}
       end;
     end;
   finally
@@ -899,8 +920,17 @@ end;
 function TSSPIClientConnectionContext.DoUpdateAndGenerateReply
   (var aIn, aOut: SecBufferDesc;
   const aErrorsToIgnore: array of SECURITY_STATUS): SECURITY_STATUS;
+{$IFDEF UNICODESTRING}
+var
+  lTargetName: AnsiString;
+{$ENDIF}
 begin
-  Result := DoInitialize(PChar(fTargetName), aIn, aOut, []);
+  {$IFDEF UNICODESTRING}
+  lTargetName := fTargetName;
+  Result := DoInitialize(PAnsiChar(lTargetName), aIn, aOut, []);
+  {$ELSE}
+  Result := DoInitialize(PAnsiChar(fTargetName), aIn, aOut, []);
+  {$ENDIF}
 end;
 
 function TSSPIClientConnectionContext.GenerateInitialChallenge
@@ -929,7 +959,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TIndySSPINTLMClient.SetCredentials(aDomain, aUserName, aPassword: string);
+procedure TIndySSPINTLMClient.SetCredentials(const aDomain, aUserName, aPassword: string);
 begin
   fCredentials.Acquire(scuOutBound, aDomain, aUserName, aPassword);
 end;
@@ -944,7 +974,7 @@ begin
   fContext.GenerateInitialChallenge('', Result);
 end;
 
-function TIndySSPINTLMClient.UpdateAndBuildType3Message(aServerType2Message: string): string;
+function TIndySSPINTLMClient.UpdateAndBuildType3Message(const aServerType2Message: string): string;
 begin
   fContext.UpdateAndGenerateReply(aServerType2Message, Result);
 end;
