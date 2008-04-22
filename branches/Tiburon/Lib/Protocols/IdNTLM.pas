@@ -180,7 +180,7 @@ type
   end;
 {$ELSE}
   type_1_message_header = packed record
-    protocol: array [0..7] of AnsiChar; // 'N', 'T', 'L', 'M', 'S', 'S', 'P', '\0'    {Do not Localize}
+    protocol: array [1..8] of AnsiChar; // 'N', 'T', 'L', 'M', 'S', 'S', 'P', '\0'    {Do not Localize}
     _type: Byte;                        // 0x01
     pad  : packed Array[1..3] of Byte;  // 0x0
     flags: Word;                        // 0xb203
@@ -256,6 +256,9 @@ uses
   IdHash,
   IdHashMessageDigest,
   IdCoderMIME;
+
+const
+  cProtocolStr: AnsiString = 'NTLMSSP'#0; {Do not Localize}
 
 procedure GetDomain(const AUserName : String; var VUserName, VDomain : String);
 {$IFDEF USEINLINE} inline; {$ENDIF}
@@ -421,14 +424,14 @@ begin
 end;
 
 function BuildType1Message(const ADomain, AHost: String): String;
-Var
+var
   Type_1_Message: type_1_message_header;
   buf: TIdBytes;
 begin
   FillChar(Type_1_Message, SizeOf(Type_1_Message), #0);
   with Type_1_Message do
   begin
-    protocol := 'NTLMSSP'#0;    {Do not Localize}
+    StrPLCopy(protocol, cProtocolStr, 8);
     _type := 1;
     // S.G. 12/7/2002: Changed the flag to $B207 (from BugID 577895 and packet trace)
     flags := $b207; //was $A000B207;     //b203;
@@ -469,7 +472,7 @@ begin
   lUsername := BuildUnicode(AUsername);
 
   with Type3 do begin
-    protocol := 'NTLMSSP'#0;    {Do not Localize}
+    StrPLCopy(protocol, cProtocolStr, 8);
     _type := 3;
     lm_resp_len1 := $18;// S.G. 12/7/2002: was: Length(lm_password);  (from BugID 577895)
     lm_resp_len2 := $18;// S.G. 12/7/2002: was: Length(lm_password);  (from BugID 577895)
