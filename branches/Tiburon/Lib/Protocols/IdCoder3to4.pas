@@ -186,7 +186,7 @@ type
     FFillChar: Char;
     function InternalDecode(const ABuffer: TIdBytes): TIdBytes;
   public
-    class procedure ConstructDecodeTable(const ACodingTable: AnsiString; var ADecodeArray: TIdDecodeTable);
+    class procedure ConstructDecodeTable(const ACodingTable: string; var ADecodeArray: TIdDecodeTable);
     procedure Decode(ASrcStream: TStream; const ABytes: Integer = -1); override;
   published
     property FillChar: Char read FFillChar write FFillChar;
@@ -199,7 +199,7 @@ uses
 
 { TIdDecoder4to3 }
 
-class procedure TIdDecoder4to3.ConstructDecodeTable(const ACodingTable: AnsiString;
+class procedure TIdDecoder4to3.ConstructDecodeTable(const ACodingTable: string;
   var ADecodeArray: TIdDecodeTable);
 var
   i: integer;
