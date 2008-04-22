@@ -292,12 +292,21 @@ type
   TIdServerThreadExceptionEvent = procedure(AContext: TIdContext; AException: Exception) of object;
   TIdServerThreadEvent = procedure(AContext: TIdContext) of object;
 
+  TIdServerContext = class(TIdContext)
+  protected
+    FServer: TIdCustomTCPServer;
+  public
+    property Server: TIdCustomTCPServer read FServer;
+  end;
+
+  TIdServerContextClass = class of TIdServerContext;
+
   TIdCustomTCPServer = class(TIdComponent)
   protected
     FActive: Boolean;
     FScheduler: TIdScheduler;
     FBindings: TIdSocketHandles;
-    FContextClass: TIdContextClass;
+    FContextClass: TIdServerContextClass;
     FImplicitScheduler: Boolean;
     FImplicitIOHandler: Boolean;
     FIntercept: TIdServerIntercept;
@@ -359,7 +368,7 @@ type
     procedure StopListening;
     //
     property Contexts: TThreadList read FContexts;
-    property ContextClass: TIdContextClass read FContextClass write FContextClass;
+    property ContextClass: TIdServerContextClass read FContextClass write FContextClass;
     property ImplicitIOHandler: Boolean read FImplicitIOHandler;
     property ImplicitScheduler: Boolean read FImplicitScheduler;
   published
@@ -407,7 +416,7 @@ begin
   end;
 end;
 
-procedure TIdCustomTCPServer.ContextCreated(AContext:TIdContext);
+procedure TIdCustomTCPServer.ContextCreated(AContext: TIdContext);
 begin
 //
 end;
@@ -785,7 +794,7 @@ begin
   inherited InitComponent;
   FBindings := TIdSocketHandles.Create(Self);
   FContexts := TThreadList.Create;
-  FContextClass := TIdContext;
+  FContextClass := TIdServerContext;
   //
   FTerminateWaitTime := 5000;
   FListenQueue := IdListenQueueDefault;
@@ -891,7 +900,7 @@ type
 
 procedure TIdListenerThread.Run;
 var
-  LContext: TIdContext;
+  LContext: TIdServerContext;
   LIOHandler: TIdIOHandler;
   LPeer: TIdTCPConnection;
   LYarn: TIdYarn;
@@ -930,6 +939,7 @@ begin
 
     // Create and init context
     LContext := Server.FContextClass.Create(LPeer, LYarn, Server.Contexts);
+    LContext.FServer := Server;
     // We set these instead of having the context call them directly
     // because they are protected methods. Also its good to keep
     // Context indepent of the server as well.
