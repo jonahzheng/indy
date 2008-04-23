@@ -773,7 +773,7 @@ end;
 
 procedure TIdCustomHTTP.Post(AURL: string; ASource: TStrings; AResponseContent: TStream);
 var
-  LParams: TIdAnsiStringStream;
+  LParams: TMemoryStream;
 begin
   Assert(ASource<>nil);
   Assert(AResponseContent<>nil);
@@ -782,8 +782,10 @@ begin
   if (Request.ContentType = '') or (TextIsSame(Request.ContentType, 'text/html')) then {do not localize}
     Request.ContentType := 'application/x-www-form-urlencoded'; {do not localize}
 
-  LParams := TIdAnsiStringStream.Create(SetRequestParams(ASource));
+  LParams := TMemoryStream.Create;
   try
+    WriteStringToStream(LParams, SetRequestParams(ASource));
+    LParams.Position := 0;
     Post(AURL, LParams, AResponseContent);
   finally
     FreeAndNil(LParams);
@@ -792,30 +794,32 @@ end;
 
 function TIdCustomHTTP.Post(AURL: string; ASource: TStrings): string;
 var
-  LResponse: TIdAnsiStringStream;
+  LResponse: TMemoryStream;
 begin
   Assert(ASource<>nil);
 
-  LResponse := TIdAnsiStringStream.Create('');
+  LResponse := TMemoryStream.Create;
   try
     Post(AURL, ASource, LResponse);
+    LResponse.Position := 0;
+    Result := ReadStringFromStream(LResponse, -1, ContentTypeStrToEncoding(Response.FContentType));
   finally
-    result := LResponse.DataString;
     FreeAndNil(LResponse);
   end;
 end;
 
 function TIdCustomHTTP.Post(AURL: string; ASource: TStream): string;
 var
-  LResponse: TIdAnsiStringStream;
+  LResponse: TMemoryStream;
 begin
   Assert(ASource<>nil);
 
-  LResponse := TIdAnsiStringStream.Create('');
+  LResponse := TMemoryStream.Create;
   try
     Post(AURL, ASource, LResponse);
+    LResponse.Position := 0;
+    Result := ReadStringFromStream(LResponse, -1, ContentTypeStrToEncoding(Response.FContentType));
   finally
-    result := LResponse.DataString;
     FreeAndNil(LResponse);
   end;
 end;
@@ -830,15 +834,16 @@ end;
 
 function TIdCustomHTTP.Put(AURL: string; ASource: TStream): string;
 var
-  LResponse: TIdAnsiStringStream;
+  LResponse: TMemoryStream;
 begin
   Assert(ASource<>nil);
 
-  LResponse := TIdAnsiStringStream.Create('');   {do not localize}
+  LResponse := TMemoryStream.Create;
   try
     Put(AURL, ASource, LResponse);
+    LResponse.Position := 0;
+    Result := ReadStringFromStream(LResponse, -1, ContentTypeStrToEncoding(Response.FContentType));
   finally
-    result := LResponse.DataString;
     FreeAndNil(LResponse);
   end;
 end;
@@ -850,14 +855,15 @@ end;
 
 function TIdCustomHTTP.Trace(AURL: string): string;
 var
-  Stream: TIdAnsiStringStream;
+  LResponse: TMemoryStream;
 begin
-  Stream := TIdAnsiStringStream.Create('');  {do not localize}
+  LResponse := TMemoryStream.Create;
   try
-    Trace(AURL, Stream);
-    Result := Stream.DataString;
+    Trace(AURL, LResponse);
+    LResponse.Position := 0;
+    Result := ReadStringFromStream(LResponse, -1, ContentTypeStrToEncoding(Response.FContentType));
   finally
-    FreeAndNil(Stream);
+    FreeAndNil(LResponse);
   end;
 end;
 
@@ -1792,10 +1798,10 @@ function TIdHTTPProtocol.ProcessResponse(AIgnoreReplies: array of SmallInt): TId
     AUnexpectedContentTimeout: Integer = IdTimeoutDefault);
   var
     i: Integer;
-    LTempResponse: TIdAnsiStringStream;
+    LTempResponse: TMemoryStream;
     LTempStream: TStream;
   begin
-    LTempResponse := TIdAnsiStringStream.Create('');
+    LTempResponse := TMemoryStream.Create;
     LTempStream := Response.ContentStream;
     Response.ContentStream := LTempResponse;
     try
@@ -1807,7 +1813,8 @@ function TIdHTTPProtocol.ProcessResponse(AIgnoreReplies: array of SmallInt): TId
           end;
         end;
       end;
-      raise EIdHTTPProtocolException.CreateError(AResponseCode, FHTTP.ResponseText, LTempResponse.DataString);
+      raise EIdHTTPProtocolException.CreateError(AResponseCode, FHTTP.ResponseText,
+        ReadStringFromStream(LTempResponse, -1, ContentTypeStrToEncoding(FHTTP.Response.FContentType)));
     finally
       Response.ContentStream := LTempStream;
       FreeAndNil(LTempResponse);
