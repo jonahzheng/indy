@@ -180,7 +180,7 @@ type
 
 const
   //Note the 7th characeter is a ' which is represented in a string as ''
-  GBinHex4CodeTable: string = '!"#$%&''()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr';    {Do not Localize}
+  GBinHex4CodeTable: AnsiString = '!"#$%&''()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr';    {Do not Localize}
   GBinHex4IdentificationString: string = '(This file must be converted with BinHex 4.0)';             {Do not Localize}
 
 type

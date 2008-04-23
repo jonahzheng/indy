@@ -167,29 +167,29 @@ type
 
   TIdEncoder3to4 = class(TIdEncoder)
   protected
-    FCodingTable: string;
-    FFillChar: Char;
+    FCodingTable: AnsiString;
+    FFillChar: AnsiChar;
     function InternalEncode(const ABuffer: TIdBytes): TIdBytes;
   public
     procedure Encode(ASrcStream: TStream; ADestStream: TStream; const ABytes: Integer = -1); override;
   published
-    property CodingTable: string read FCodingTable;
-    property FillChar: Char read FFillChar write FFillChar;
+    property CodingTable: AnsiString read FCodingTable;
+    property FillChar: AnsiChar read FFillChar write FFillChar;
   end;
 
   TIdEncoder3to4Class = class of TIdEncoder3to4;
 
   TIdDecoder4to3 = class(TIdDecoder)
   protected
-    FCodingTable: string;
+    FCodingTable: AnsiString;
     FDecodeTable: TIdDecodeTable;
-    FFillChar: Char;
+    FFillChar: AnsiChar;
     function InternalDecode(const ABuffer: TIdBytes): TIdBytes;
   public
-    class procedure ConstructDecodeTable(const ACodingTable: string; var ADecodeArray: TIdDecodeTable);
+    class procedure ConstructDecodeTable(const ACodingTable: AnsiString; var ADecodeArray: TIdDecodeTable);
     procedure Decode(ASrcStream: TStream; const ABytes: Integer = -1); override;
   published
-    property FillChar: Char read FFillChar write FFillChar;
+    property FillChar: AnsiChar read FFillChar write FFillChar;
   end;
 
 implementation
@@ -199,7 +199,7 @@ uses
 
 { TIdDecoder4to3 }
 
-class procedure TIdDecoder4to3.ConstructDecodeTable(const ACodingTable: string;
+class procedure TIdDecoder4to3.ConstructDecodeTable(const ACodingTable: AnsiString;
   var ADecodeArray: TIdDecodeTable);
 var
   i: integer;
@@ -242,7 +242,7 @@ var
   LInLimit: Integer;
   LInPos: Integer;
   LWhole : LongWord;
-  LFillChar: Char; // local copy of FFillChar
+  LFillChar: AnsiChar; // local copy of FFillChar
 begin
   SetLength(LInBytes, 4);
   SetLength(LWorkBytes, SizeOf(LongWord));
@@ -301,11 +301,11 @@ begin
     // estimated.
 
     // Must check 3 before 4, if 3 is FillChar, 4 will also be FillChar
-    if LInBytes[2] = Ord(LFillChar) then begin
+    if LInBytes[2] = Byte(LFillChar) then begin
       LEmptyBytes := 2;
       Break;
     end
-    else if LInBytes[3] = Ord(LFillChar) then begin
+    else if LInBytes[3] = Byte(LFillChar) then begin
       LEmptyBytes := 1;
       Break;
     end;
@@ -389,16 +389,16 @@ begin
 
     //possible to do a better assert than this?
     Assert(Length(FCodingTable)>0);
-    Result[LLen]     := Ord(FCodingTable[((LIn1 shr 2) and 63) + 1]);
-    Result[LLen + 1] := Ord(FCodingTable[(((LIn1 shl 4) or (LIn2 shr 4)) and 63) + 1]);
-    Result[LLen + 2] := Ord(FCodingTable[(((LIn2 shl 2) or (LIn3 shr 6)) and 63) + 1]);
-    Result[LLen + 3] := Ord(FCodingTable[(Ord(LIn3) and 63) + 1]);
+    Result[LLen]     := Byte(FCodingTable[((LIn1 shr 2) and 63) + 1]);
+    Result[LLen + 1] := Byte(FCodingTable[(((LIn1 shl 4) or (LIn2 shr 4)) and 63) + 1]);
+    Result[LLen + 2] := Byte(FCodingTable[(((LIn2 shl 2) or (LIn3 shr 6)) and 63) + 1]);
+    Result[LLen + 3] := Byte(FCodingTable[(LIn3 and 63) + 1]);
     Inc(LLen, 4);
 
     if LSize < 3 then begin
-      Result[LLen-1] := Ord(FillChar);
+      Result[LLen-1] := Byte(FillChar);
       if LSize = 1 then begin
-         Result[LLen-2] := Ord(FillChar);
+         Result[LLen-2] := Byte(FillChar);
       end;
     end;
   end;
