@@ -1076,6 +1076,9 @@ uses
 
 const
   cIPVersions: array[TIdIPVersion] of String = ('1', '2'); {do not localize}
+  {$IFDEF TEncoding}
+  cFTPEncodings: array[Boolean] of TIdEncoding = (en8Bit, enUtf8);
+  {$ENDIF}
 
 type
   TIdFTPListResult = class(TStringList)
@@ -1394,7 +1397,7 @@ end;
 
 procedure TIdFTP.List(ADest: TStrings; const ASpecifier: string = ''; ADetails: Boolean = True);      {do not localize}
 var
-  LDest: TIdAnsiStringStream;
+  LDest: TMemoryStream;
   LTrans : TIdFTPTransferType;
 begin
   if FCanUseMLS then begin
@@ -1410,12 +1413,17 @@ begin
     Self.TransferType := ftASCII;
   end;
   try
-    LDest := TIdAnsiStringStream.Create('');
+    LDest := TMemoryStream.Create;
     try
       InternalGet(Trim(iif(ADetails, 'LIST', 'NLST') + ' ' + ASpecifier), LDest); {do not localize}
       FreeAndNil(FDirectoryListing);
       LDest.Position := 0;
-      FListResult.Text := LDest.DataString;
+      {$IFDEF TEncoding}
+      FListResult.LoadFromStream(LDest, GetEncoder(IOHandler.DefStringEncoding));
+      {$ELSE}
+      // TODO - perform decoding when UTF-8 is enabled on the data connection...
+      FListResult.LoadFromStream(LDest);
+      {$ENDIF}
       with TIdFTPListResult(FListResult) do begin
         FDetails := ADetails;
         FUsedMLS := False;
@@ -2214,10 +2222,10 @@ begin
   end;
 
   if IsExtSupported('UTF8') then begin {do not localize}
-    // tring draft-ietf-ftpext-utf-8-option-00.txt first...
-    if SendCmd('OPTS UTF-8 NLST') <> 200 then begin {do not localize}
-      // trying Microsoft IE extension next...
-      if SendCmd('OPTS UTF8 ON') <> 200 then begin {do not localize}
+    // trying non-standard UTF-8 extension first, many servers use this...
+    if SendCmd('OPTS UTF8 ON') <> 200 then begin {do not localize}
+      // trying draft-ietf-ftpext-utf-8-option-00.txt first...
+      if SendCmd('OPTS UTF-8 NLST') <> 200 then begin {do not localize}
         Exit;
       end;
     end;
@@ -2698,14 +2706,19 @@ end;
 
 procedure TIdFTP.ExtListDir(ADest: TStrings = nil; const ADirectory: string = '');
 var
-  LDest: TIdAnsiStringStream;
+  LDest: TMemoryStream;
 begin
-  LDest := TIdAnsiStringStream.Create('');
+  LDest := TMemoryStream.Create;
   try
     InternalGet(Trim('MLSD ' + ADirectory), LDest);  {do not localize}
     FreeAndNil(FDirectoryListing);
     DoOnRetrievedDir;
-    FListResult.Text := LDest.DataString;
+    {$IFDEF TEncoding}
+    FListResult.LoadFromStream(LDest, GetEncoder(IOHandler.DefStringEncoding));
+    {$ELSE}
+    // TODO - perform decoding when UTF-8 is enabled on the data connection...
+    FListResult.LoadFromStream(LDest);
+    {$ENDIF}
     with TIdFTPListResult(FListResult) do begin
       FDetails := True;
       FUsedMLS := True;
