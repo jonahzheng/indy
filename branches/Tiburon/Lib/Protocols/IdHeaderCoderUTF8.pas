@@ -137,11 +137,7 @@ begin
 
   {$ELSE}
   {$IFDEF VCL6ORABOVE}
-    {$IFDEF UNICODESTRING}
-  Result := System.UnicodeToUTF8String(AData);
-    {$ELSE}
   Result := System.UTF8Encode(AData);
-    {$ENDIF}
   {$ELSE}
 
   // RLebeau: need to convert to actual Unicode first.
