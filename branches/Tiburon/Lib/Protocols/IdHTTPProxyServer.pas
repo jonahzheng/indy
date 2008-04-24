@@ -120,6 +120,7 @@ uses
   IdCmdTCPServer,
   IdCommandHandlers,
   IdContext,
+  IdCustomTCPServer, //for TIdServerContext
   IdYarn;
 
 const
@@ -129,7 +130,7 @@ type
   TIdHTTPProxyTransferMode = ( tmFullDocument, tmStreaming );
   TIdHTTPProxyTransferSource = ( tsClient, tsServer );
 
-  TIdHTTPProxyServerContext = class(TIdContext)
+  TIdHTTPProxyServerContext = class(TIdServerContext)
   protected
     FHeaders: TIdHeaderList;
     FCommand: String;

@@ -136,7 +136,7 @@ type
   EIdSocksSvrUnexpectedClose = class(EIdSocksSvrException);
   EIdSocksSvrPeerMismatch = class(EIdSocksSvrException);
 
-  TIdSocksServerContext = class(TIdContext)
+  TIdSocksServerContext = class(TIdServerContext)
   protected
     FIPVersion: TIdIPVersion;
     FUsername: string;

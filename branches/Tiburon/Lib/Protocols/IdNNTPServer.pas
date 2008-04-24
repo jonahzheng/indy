@@ -215,7 +215,7 @@ type
 
   TIdNNTPLookupType = (ltLookupError, ltLookupByMsgId, ltLookupByMsgNo);
 
-  TIdNNTPContext = class(TIdContext)
+  TIdNNTPContext = class(TIdServerContext)
   protected
     FAuthenticated : Boolean;
     FAuthenticator: string;

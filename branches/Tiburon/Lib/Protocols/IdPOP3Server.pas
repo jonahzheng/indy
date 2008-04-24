@@ -222,7 +222,7 @@ const
   ERR = '-ERR';   {do not localize}
 
 type
-  TIdPOP3ServerContext = class(TIdContext)
+  TIdPOP3ServerContext = class(TIdServerContext)
   protected
     // what needs to be stored...
     fUsername : String;

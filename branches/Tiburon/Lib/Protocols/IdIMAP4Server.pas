@@ -225,6 +225,7 @@ uses
   IdCmdTCPServer,
   IdContext,
   IdCommandHandlers,
+  IdCustomTCPServer, //for TIdServerContext
   IdException,
   IdExplicitTLSClientServerBase,
   IdIMAP4, //For some defines like TIdIMAP4ConnectionState
@@ -276,7 +277,7 @@ type
   end;
 
   { custom IMAP4 context }
-  TIdIMAP4PeerContext = class(TIdContext)
+  TIdIMAP4PeerContext = class(TIdServerContext)
   protected
     FConnectionState : TIdIMAP4ConnectionState;
     FLoginName: string;

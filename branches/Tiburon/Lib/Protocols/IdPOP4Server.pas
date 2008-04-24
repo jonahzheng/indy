@@ -27,6 +27,7 @@ uses
   IdCmdTCPServer,
   IdCommandHandlers,
   IdContext,
+  IdCustomTCPServer, //for TIdServerContext
   IdEMailAddress,
   IdException,
   IdExplicitTLSClientServerBase,
@@ -70,7 +71,7 @@ type
     property OnUserLogin : TOnUserLoginEvent read FOnUserLogin write FOnUserLogin;
     property DefaultPort default IdPORT_POP3;
   end;
-  TIdPOP4ServerContext = class(TIdContext)
+  TIdPOP4ServerContext = class(TIdServerContext)
   protected
     FPipeLining : Boolean;
     FState :TIdPOP4ServerState;
@@ -94,7 +95,7 @@ type
   end;
 
 implementation
-uses IdResourceStringsProtocols, IdGlobal, IdCoderMIME, IdSSL, SysUtils;
+uses IdResourceStringsProtocols, IdCoderMIME, IdGlobal, IdGlobalProtocols, IdSSL, SysUtils;
 
 { TIdPOP4Server }
 

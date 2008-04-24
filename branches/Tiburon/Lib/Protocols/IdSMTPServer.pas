@@ -59,6 +59,7 @@ uses
   IdCmdTCPServer,
   IdCommandHandlers,
   IdContext,
+  IdCustomTCPServer, //for TIdServerContext
   IdEMailAddress,
   IdException,
   IdExplicitTLSClientServerBase,
@@ -232,7 +233,7 @@ type
 
   TIdSMTPState = (idSMTPNone, idSMTPHelo, idSMTPMail, idSMTPRcpt, idSMTPData);
 
-  TIdSMTPServerContext = class(TIdContext)
+  TIdSMTPServerContext = class(TIdServerContext)
   protected
     FSMTPState: TIdSMTPState;
     FFrom: string;

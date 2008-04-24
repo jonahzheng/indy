@@ -128,7 +128,7 @@ uses
 type
   TIdMappedPortTCP = class;
 
-  TIdMappedPortContext = class(TIdContext)
+  TIdMappedPortContext = class(TIdServerContext)
   protected
     FOutboundClient: TIdTCPConnection;//was TIdTCPClient
     FReadList: TIdSocketList;
