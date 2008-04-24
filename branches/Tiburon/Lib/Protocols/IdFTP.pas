@@ -1869,6 +1869,7 @@ begin
   FDataChannel.IOHandler.SendBufferSize := IOHandler.SendBufferSize;
   FDataChannel.IOHandler.RecvBufferSize := IOHandler.RecvBufferSize;
   FDataChannel.IOHandler.LargeStream := True;
+ // FDataChannel.IOHandler.DefStringEncoding := en8bit;
   FDataChannel.WorkTarget := Self;
 end;
 
@@ -2713,6 +2714,7 @@ begin
     InternalGet(Trim('MLSD ' + ADirectory), LDest);  {do not localize}
     FreeAndNil(FDirectoryListing);
     DoOnRetrievedDir;
+    LDest.Position := 0;
     {$IFDEF TEncoding}
     FListResult.LoadFromStream(LDest, GetEncoder(IOHandler.DefStringEncoding));
     {$ELSE}
