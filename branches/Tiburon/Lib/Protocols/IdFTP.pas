@@ -647,7 +647,7 @@ const
   DEF_Id_TIdFTP_Implicit = False;
   DEF_Id_FTP_UseExtendedDataPort = False;
   DEF_Id_TIdFTP_UseExtendedData = False;
-  DEF_Id_TIdFTP_UseMIS = False;
+  DEF_Id_TIdFTP_UseMIS = True;
   DEF_Id_FTP_UseCCC = False;
   DEF_Id_FTP_AUTH_CMD = tAuto;
   DEF_Id_FTP_ListenTimeout = 10000; // ten seconds
