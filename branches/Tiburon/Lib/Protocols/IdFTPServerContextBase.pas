@@ -34,12 +34,12 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  IdContext;
+  IdCustomTCPServer;
 
 type
   TIdFTPUserType = (utNone, utAnonymousUser, utNormalUser);
 
-  TIdFTPServerContextBase = class(TIdContext)
+  TIdFTPServerContextBase = class(TIdServerContext)
   protected
     FUserType: TIdFTPUserType;
     FAuthenticated: Boolean;
