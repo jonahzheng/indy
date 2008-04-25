@@ -1128,8 +1128,10 @@ function IndyMax(const AValueOne, AValueTwo: Int64): Int64; overload;
 function IndyMax(const AValueOne, AValueTwo: LongInt): LongInt; overload;
 function IndyMax(const AValueOne, AValueTwo: Word): Word; overload;
 function IPv4MakeLongWordInRange(const AInt: Int64; const A256Power: Integer): LongWord;
-{$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
+{$IFNDEF DOTNET}
+  {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
 function IndyRegisterExpectedMemoryLeak(AAddress: Pointer): Boolean;
+  {$ENDIF}
 {$ENDIF}
 {$IFDEF UNIX}
 function HackLoad(const ALibName : String; const ALibVersions : array of String) : HMODULE;
@@ -1580,7 +1582,9 @@ var
 begin
   {$IFDEF DOTNET_OR_TEncoding}
     {$IFDEF TEncoding}
+      {$IFNDEF DOTNET}
   SetLength(LChars, 2);
+      {$ENDIF}
     {$ENDIF}
   LChars[0] := AChar;
   LChars[1] := #0;
@@ -1664,7 +1668,9 @@ begin
   {$ENDIF}
   {$IFDEF DOTNET_OR_TEncoding}
     {$IFDEF TEncoding}
+      {$IFNDEF DOTNET}
   SetLength(LChars, 1);
+      {$ENDIF}
     {$ENDIF}
   LChars[0] := AChar;
   Result := GetEncoder(enUTF8).GetByteCount(LChars, 0, 1);
@@ -1760,7 +1766,9 @@ begin
 
   {$IFDEF DOTNET_OR_TEncoding}
     {$IFDEF TEncoding}
+      {$IFNDEF DOTNET}
   SetLength(LChars, 2);
+      {$ENDIF}
     {$ENDIF}
   if GetEncoder(enUTF8).GetChars(ABytes, AIndex, ALength, LChars, 0) > 0 then
   begin
@@ -5018,7 +5026,8 @@ begin
   Result := True;
 end;
 
-{$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
+{$IFNDEF DOTNET}
+  {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
 function IndyRegisterExpectedMemoryLeak(AAddress: Pointer): Boolean;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
@@ -5037,6 +5046,7 @@ begin
     {$ENDIF}
   {$ENDIF}
 end;
+  {$ENDIF}
 {$ENDIF}
 
 initialization
@@ -5056,7 +5066,9 @@ finalization
   FreeAndNil(GIdPorts);
   {$ENDIF}
   {$IFDEF TEncoding}
+    {$IFNDEF DOTNET}
   FreeAndNil(Id8BitEncoder);
+    {$ENDIF}
   {$ENDIF}
 
 end.

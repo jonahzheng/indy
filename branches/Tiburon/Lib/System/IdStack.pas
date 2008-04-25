@@ -870,8 +870,10 @@ initialization
     TIdStackDotNet;
     {$ENDIF}
   GStackCriticalSection := TIdCriticalSection.Create;
-  {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
+  {$IFNDEF DOTNET}
+    {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
   IndyRegisterExpectedMemoryLeak(GStackCriticalSection);
+    {$ENDIF}
   {$ENDIF}
 finalization
   // Dont Free. If shutdown is from another Init section, it can cause GPF when stack
