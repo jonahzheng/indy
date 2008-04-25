@@ -895,7 +895,7 @@ begin
 end;
 
 type
-  TIdContextAccess = class(TIdContext)
+  TIdContextAccess = class(TIdServerContext)
   end;
 
 procedure TIdListenerThread.Run;

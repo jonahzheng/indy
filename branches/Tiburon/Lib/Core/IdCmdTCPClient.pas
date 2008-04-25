@@ -181,7 +181,7 @@ uses
   IdReplyRFC, SysUtils;
 
 type
-  TIdContextAccess = class(TIdContext)
+  TIdContextAccess = class(TIdCmdClientContext)//class(TIdContext)
   end;
 
 { Listening Thread }
