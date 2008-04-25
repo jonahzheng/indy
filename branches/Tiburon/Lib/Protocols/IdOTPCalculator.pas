@@ -63,6 +63,7 @@ uses
   
 type
   TIdOTPCalculator = class
+  public
     class function GenerateKeyMD4(const ASeed: string; const APassword: string; const ACount: Integer): Int64;
     class function GenerateKeyMD5(const ASeed: string; const APassword: string; const ACount: Integer): Int64;
     class function GenerateKeySHA1(const ASeed: string; const APassword: string; const ACount: Integer): Int64;
