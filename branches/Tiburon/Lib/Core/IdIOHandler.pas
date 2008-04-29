@@ -1122,6 +1122,21 @@ begin
   until LTermPos > -1;
   // Extract actual data
   Result := FInputBuffer.Extract(LTermPos + Length(ATerminator), LEncoding);
+  {
+  IMPORTANT!!!
+
+   When encoding from UTF8 to Unicode or ASCII, you will not always get the same
+   number of bytes that you input so you may have to recalculate LTermPos since
+   that was based on the number of bytes in the input stream.  If do not do this,
+   you will probably get an incorrect result or a range check error since the
+   string is shorter then the original buffer position.
+
+   JPM
+   }
+  if (LEncoding = enUTF8) and (LTermPos > Length(Result)) then
+  begin
+    LTermPos := Length(Result);
+  end;
   if (ATerminator = LF) and (LTermPos > 0) then begin
     if Result[LTermPos] = CR then begin
       Dec(LTermPos);
