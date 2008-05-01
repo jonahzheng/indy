@@ -895,7 +895,7 @@ begin
 end;
 
 type
-  TIdContextAccess = class(TIdServerContext)
+  TIdServerContextAccess = class(TIdServerContext)
   end;
 
 procedure TIdListenerThread.Run;
@@ -957,7 +957,7 @@ begin
       // RLebeau 1/11/07: TIdContext owns the Peer by default so
       // take away ownership here so the Peer is not freed twice
       if LContext <> nil then begin
-        TIdContextAccess(LContext).FOwnsConnection := False;
+        TIdServerContextAccess(LContext).FOwnsConnection := False;
       end;
       FreeAndNil(LContext);
       FreeAndNil(LPeer);
