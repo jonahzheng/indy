@@ -658,57 +658,57 @@ type
   //the "type" fact to be several different things.
   //
   //http://www.ietf.org/internet-drafts/draft-ietf-ftpext-mlst-16.txt
-  TIdOnMLST = procedure(ASender : TIdFTPServerContext; const APath: string;
+  TIdOnMLST = procedure(ASender : TIdFTPServerContext; const APath: TIdFTPFileName;
     ADirectoryListing: TIdFTPListOutput) of object;
   //data port binding events
   TOnDataPortBind = procedure(ASender : TIdFTPServerContext) of object;
   //note that the CHMOD value is now a VAR because we also want to support a "MFF UNIX.mode="
   //to do the same thing as a chmod.  MFF is to "Modify a file fact".
-  TOnSetATTRIB = procedure(ASender: TIdFTPServerContext; var VAttr : Cardinal; const AFileName : String; var VAUth : Boolean) of object;
+  TOnSetATTRIB = procedure(ASender: TIdFTPServerContext; var VAttr : Cardinal; const AFileName : TIdFTPFileName; var VAUth : Boolean) of object;
   //Note that VAuth : Boolean is used because you may want to deny permission for
   //users to change their Unix permissions or UMASK - which is done in anonymous FTP
   TOnSiteUMASK = procedure(ASender: TIdFTPServerContext; var VUMASK : Integer; var VAUth : Boolean) of object;
   //note that the CHMOD value is now a VAR because we also want to support a "MFF UNIX.mode="
   //to do the same thing as a chmod.  MFF is to "Modify a file fact".
-  TOnSiteCHMOD = procedure(ASender: TIdFTPServerContext; var APermissions : Integer; const AFileName : String; var VAUth : Boolean) of object;
+  TOnSiteCHMOD = procedure(ASender: TIdFTPServerContext; var APermissions : Integer; const AFileName : TIdFTPFileName; var VAUth : Boolean) of object;
   //chown as an option can specify group
-  TOnSiteCHOWN = procedure(ASender: TIdFTPServerContext; var AOwner, AGroup : String; const AFileName : String; var VAUth : Boolean) of object;
+  TOnSiteCHOWN = procedure(ASender: TIdFTPServerContext; var AOwner, AGroup : String; const AFileName : TIdFTPFileName; var VAUth : Boolean) of object;
 
-  TOnSiteCHGRP = procedure(ASender: TIdFTPServerContext; var AGroup : String; const AFileName : String; var VAUth : Boolean) of object;
+  TOnSiteCHGRP = procedure(ASender: TIdFTPServerContext; var AGroup : String; const AFileName : TIdFTPFileName; var VAUth : Boolean) of object;
 
-  TOnCustomPathProcess = procedure(ASender: TIdFTPServerContext; var VPath : String) of object;
+  TOnCustomPathProcess = procedure(ASender: TIdFTPServerContext; var VPath : TIdFTPFileName) of object;
   //
   TOnFTPUserLoginEvent = procedure(ASender: TIdFTPServerContext; const AUsername, APassword: string;
     var AAuthenticated: Boolean) of object;
   TOnAfterUserLoginEvent = procedure(ASender: TIdFTPServerContext) of object;
 
-  TOnDirectoryEvent = procedure(ASender: TIdFTPServerContext; var VDirectory: string) of object;
-  TOnGetFileSizeEvent = procedure(ASender: TIdFTPServerContext; const AFilename: string;
+  TOnDirectoryEvent = procedure(ASender: TIdFTPServerContext; var VDirectory: TIdFTPFileName) of object;
+  TOnGetFileSizeEvent = procedure(ASender: TIdFTPServerContext; const AFilename: TIdFTPFileName;
     var VFileSize: Int64) of object;
-  TOnGetFileDateEvent = procedure(ASender: TIdFTPServerContext; const AFilename: string;
+  TOnGetFileDateEvent = procedure(ASender: TIdFTPServerContext; const AFilename: TIdFTPFileName;
     var VFileDate: TDateTime) of object;
     //note we have to use a switches parameter because LIST in practice can have both a path and some
     //some switches such as -R for recursive.
-  TOnListDirectoryEvent = procedure(ASender: TIdFTPServerContext; const APath: string;
+  TOnListDirectoryEvent = procedure(ASender: TIdFTPServerContext; const APath: TIdFTPFileName;
     ADirectoryListing: TIdFTPListOutput; const ACmd : String; const ASwitches : String) of object;
-  TOnCustomListDirectoryEvent = procedure(ASender: TIdFTPServerContext; const APath: string;
+  TOnCustomListDirectoryEvent = procedure(ASender: TIdFTPServerContext; const APath: TIdFTPFileName;
     ADirectoryListing: TStrings; const ACmd : String; const ASwitches : String) of object;
 
-  TOnFileEvent = procedure(ASender: TIdFTPServerContext; const APathName: string) of object;
-  TOnCheckFileEvent = procedure(ASender: TIdFTPServerContext; const APathName: string; var VExist : Boolean) of object;
-  TOnRenameFileEvent = procedure(ASender: TIdFTPServerContext; const ARenameFromFile, ARenameToFile: string) of object;
-  TOnRetrieveFileEvent = procedure(ASender: TIdFTPServerContext; const AFileName: string;
+  TOnFileEvent = procedure(ASender: TIdFTPServerContext; const APathName: TIdFTPFileName) of object;
+  TOnCheckFileEvent = procedure(ASender: TIdFTPServerContext; const APathName: TIdFTPFileName; var VExist : Boolean) of object;
+  TOnRenameFileEvent = procedure(ASender: TIdFTPServerContext; const ARenameFromFile, ARenameToFile: TIdFTPFileName) of object;
+  TOnRetrieveFileEvent = procedure(ASender: TIdFTPServerContext; const AFileName: TIdFTPFileName;
     var VStream: TStream) of object;
-  TOnStoreFileEvent = procedure(ASender: TIdFTPServerContext; const AFileName: string;
+  TOnStoreFileEvent = procedure(ASender: TIdFTPServerContext; const AFileName: TIdFTPFileName;
     AAppend: Boolean; var VStream: TStream) of object;
-  TOnCombineFiles = procedure(ASender: TIdFTPServerContext; const ATargetFileName: string;
+  TOnCombineFiles = procedure(ASender: TIdFTPServerContext; const ATargetFileName: TIdFTPFileName;
     AParts : TStrings) of object;
-  TOnCheckSumFile = procedure(ASender: TIdFTPServerContext; const AFileName : String; var VStream : TStream) of object;
-  TOnCacheChecksum = procedure(ASender: TIdFTPServerContext; const AFileName : String; var VCheckSum : String) of object;
-  TOnVerifyChecksum = procedure(ASender: TIdFTPServerContext; const AFileName : String; const ACheckSum : String) of object;
-  TOnSetFileDateEvent = procedure(ASender: TIdFTPServerContext; const AFileName : String; var AFileTime : TDateTime) of object;
+  TOnCheckSumFile = procedure(ASender: TIdFTPServerContext; const AFileName : TIdFTPFileName; var VStream : TStream) of object;
+  TOnCacheChecksum = procedure(ASender: TIdFTPServerContext; const AFileName : TIdFTPFileName; var VCheckSum : String) of object;
+  TOnVerifyChecksum = procedure(ASender: TIdFTPServerContext; const AFileName : TIdFTPFileName; const ACheckSum : String) of object;
+  TOnSetFileDateEvent = procedure(ASender: TIdFTPServerContext; const AFileName : TIdFTPFileName; var AFileTime : TDateTime) of object;
   //This is just to be efficient with the SITE UTIME command and for setting the windows.lastaccesstime fact
-  TOnSiteUTIME = procedure(ASender: TIdFTPServerContext; const AFileName : String;
+  TOnSiteUTIME = procedure(ASender: TIdFTPServerContext; const AFileName : TIdFTPFileName;
     var VLastAccessTime, VLastModTime, VCreateDate : TDateTime;
     var VAUth : Boolean) of object;
 
@@ -3309,17 +3309,40 @@ var
     LM : TStream;
     LEncoding: TIdEncoding;
   begin
+     LEncoding := en8bit;
     //for loops will execute at least once triggering an out of range error.
     //write nothing if AStrings is empty.
     if AStrings.Count < 1 then begin
       Exit;
     end;
-    if (PosInStrArray(ASender.CommandHandler.Command, ['LIST', 'NLST'], False) > -1)
+{    if (PosInStrArray(ASender.CommandHandler.Command, ['LIST', 'NLST'], False) > -1)
      and AContext.NLSTUtf8 then begin
       LEncoding := enUTF8;
     end else begin
       LEncoding := en8Bit;
+    end;   }
+    {
+    IMPORTANT!!!
+
+    I didn't like the code from above because if LIST data is sent as en8bit,
+    you have a FTP list that is unparsable by some FTP clients.
+
+    If UTF8 OPTS OFF, you should send the data as en7bit for the LIST and NLST
+    commands.  That way, unprintable charactors are returned as ?.  While the
+    file name is not valid, at least, there some thing that looks better than
+    binary junk.
+    }
+    if (PosInStrArray(ASender.CommandHandler.Command, ['LIST', 'NLST','MLSD'], False) > -1) then
+    begin
+      if AContext.NLSTUtf8 then begin
+        LEncoding := enUTF8;
+      end
+      else
+      begin
+        LENcoding := en7bit;
+      end;
     end;
+
     if AContext.DataMode = dmDeflate then
     begin
       LM := TMemoryStream.Create;
@@ -3478,6 +3501,7 @@ var
   LSwitches, LPath : String;
   i : Integer;
   LContext : TIdFTPServerContext;
+  LEncoding : TIdEncoding;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
   LActAsList := (ASender.Params.Count > 0);
@@ -3535,6 +3559,15 @@ begin
         //is written using WriteStrings and I found that with Reply.SetReply, a stat
         //reply could throw off a FTP client.
         LContext.Connection.IOHandler.WriteLn(IndyFormat('213-%s', [RSFTPDataConnToOpen])); {Do not Localize}
+    {    if TIdFTPServerContext(ASender.Context).NLSTUtf8 then
+        begin
+          LEncoding := enUTF8;
+        end
+        else
+        begin
+          LEncoding := en7bit;
+        end;
+        LContext.Connection.IOHandler.Write(LStream,LEncoding); }
         LContext.Connection.IOHandler.Write(LStream);
         ASender.PerformReply := True;
         ASender.Reply.SetReply(213, RSFTPCmdEndOfStat);

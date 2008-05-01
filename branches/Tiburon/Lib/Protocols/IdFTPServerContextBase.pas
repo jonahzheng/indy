@@ -34,7 +34,7 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  IdCustomTCPServer;
+  IdCustomTCPServer, IdFTPList;
 
 type
   TIdFTPUserType = (utNone, utAnonymousUser, utNormalUser);
@@ -44,8 +44,8 @@ type
     FUserType: TIdFTPUserType;
     FAuthenticated: Boolean;
     FALLOSize: Integer;
-    FCurrentDir: string;
-    FHomeDir: string;
+    FCurrentDir: TIdFTPFileName;
+    FHomeDir: TIdFTPFileName;
     FUsername: string;
     FPassword: string;
     FRESTPos: Integer;
@@ -56,8 +56,8 @@ type
   public
     property Authenticated: Boolean read FAuthenticated write FAuthenticated;
     property ALLOSize: Integer read FALLOSize write FALLOSize;
-    property CurrentDir: string read FCurrentDir write FCurrentDir;
-    property HomeDir: string read FHomeDir write FHomeDir;
+    property CurrentDir: TIdFTPFileName read FCurrentDir write FCurrentDir;
+    property HomeDir: TIdFTPFileName read FHomeDir write FHomeDir;
     property Password: string read FPassword write FPassword;
     property Username: string read FUsername write FUsername;
     property UserType: TIdFTPUserType read FUserType write FUserType;
