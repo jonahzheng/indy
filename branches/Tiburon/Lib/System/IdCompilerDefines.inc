@@ -35,8 +35,8 @@
 {$UNDEF USEFASTMM4}
 
 // Make sure the following is $DEFINE'd only for Tiburon onwards as specified
-// further below.  The VCL is fully Uncidoe, where the 'String' type maps to
-// System.UnicodeString, not System.AnsiString
+// further below.  The VCL is fully Unicode, where the 'String' type maps to
+// System.UnicodeString, not System.AnsiString anymore
 {$UNDEF UNICODESTRING}
 
 // Make sure the following are $DEFINE'd only for suitable environments
@@ -574,3 +574,8 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$ENDIF}
 {$ENDIF}
 
+{$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
+  {$IFDEF DOTNET}
+    {$UNDEF REGISTER_EXPECTED_MEMORY_LEAK}
+  {$ENDIF}
+{$ENDIF}
