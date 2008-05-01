@@ -922,7 +922,7 @@ var
 begin
   Result := 0;
   if IdSslUCTTimeDecode(UCTTime, year, month, day, hour, min, sec, tz_h, tz_m) > 0 Then Begin
-    Result := EncodeDate(year, month, day) + EncodeDate(hour, min, sec);
+    Result := EncodeDate(year, month, day) + EncodeTime(hour, min, sec, 0);
     AddMins(Result, tz_m);
     AddHrs(Result, tz_h);
     Result := GetLocalTime(Result);
