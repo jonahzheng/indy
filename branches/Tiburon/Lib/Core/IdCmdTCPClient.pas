@@ -181,7 +181,7 @@ uses
   IdReplyRFC, SysUtils;
 
 type
-  TIdContextAccess = class(TIdCmdClientContext)//class(TIdContext)
+  TIdCmdClientContextAccess = class(TIdCmdClientContext)
   end;
 
 { Listening Thread }
@@ -191,7 +191,7 @@ begin
   FClient := AClient;
   FContext := TIdCmdClientContext.Create(AClient, nil, nil);
   FContext.FClient := AClient;
-  TIdContextAccess(FContext).FOwnsConnection := False;
+  TIdCmdClientContextAccess(FContext).FOwnsConnection := False;
   //
   inherited Create(False);
 end;
