@@ -291,7 +291,7 @@ ENDTRACE TCPIP    F      80       1      1 1999-07-28 12:24:01 TCM191
     if LCols.Count > 0 then
     begin
       //date
-      if IsNumeric(Copy(LCols[0], 1, 3)) then
+      if IsNumeric(LCols[0], 3) then
       begin
         // vm.sc.edu date stamps yyyy-mm-dd
         LI.ModifiedDate := DateYYMMDD(LCols[0]);
