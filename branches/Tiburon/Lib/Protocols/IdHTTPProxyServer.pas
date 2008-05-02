@@ -117,6 +117,7 @@ uses
   IdGlobal,
   IdHeaderList,
   IdTCPConnection,
+  IdCustomTCPServer,
   IdCmdTCPServer,
   IdCommandHandlers,
   IdContext,
@@ -240,7 +241,7 @@ begin
     ADest.IOHandler.WriteLn(AContext.Command + ' ' + AContext.Document + ' HTTP/1.0'); {Do not Localize}
   end;
   ADest.IOHandler.Write(AContext.Headers);
-  ADest.IOHandler.WriteLn('');
+  ADest.IOHandler.WriteLn;
 
   LSize := IndyStrToInt(AContext.Headers.Values['Content-Length'], -1) ; {Do not Localize}
 
@@ -343,7 +344,7 @@ begin
     try
       LContext.Connection.IOHandler.WriteLn('HTTP/1.0 200 Connection established'); {do not localize}
       LContext.Connection.IOHandler.WriteLn('Proxy-agent: Indy-Proxy/1.1'); {do not localize}
-      LContext.Connection.IOHandler.WriteLn('');
+      LContext.Connection.IOHandler.WriteLn;
 
       LContext.Connection.IOHandler.ReadTimeout := 100;
       LContext.FOutboundClient.IOHandler.ReadTimeout := 100;
