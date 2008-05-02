@@ -110,6 +110,7 @@
 unit IdReplyIMAP4;
 
 interface
+
 {$i IdCompilerDefines.inc}
 
 uses
@@ -173,8 +174,6 @@ type
     {CC: The following decides if AValue is a valid command sequence number
     like C41...}
     function IsItAValidSequenceNumber(const AValue: string): Boolean;
-    {CC2: The following determines if AText consists only of digits...}
-    function IsItANumber(const AValue: string): Boolean;
     //
     //SERVER-SIDE (TIdIMAP4Server) FUNCTIONS...
     function ParseRequest(ARequest: string): Boolean;
@@ -246,27 +245,14 @@ begin
   raise EIdReplyIMAP4Error.CreateError('Default RaiseReply error'); {do not localize}
 end;
 
-function TIdReplyIMAP4.IsItANumber(const AValue: string): Boolean;
-var
-  LN: integer;
-begin
-  for LN := 1 to Length(AValue) do begin
-    if not IsNumeric(AValue[LN]) then begin
-      Result := False;
-      Exit;
-    end;
-  end;
-  Result := True;
-end;
-
 {CC: The following decides if AValue is a valid command sequence number like C41...}
 function TIdReplyIMAP4.IsItAValidSequenceNumber(const AValue: string): Boolean;
 begin
   {CC: Cannot be a C or a digit on its own...}
   {CC: Must start with a C...}
-  if (Length(AValue) >= 2) and (AValue[1] = 'C') then begin
+  if (Length(AValue) >= 2) and CharEquals(AValue, 1, 'C') then begin
     {CC: Check if other characters are digits...}
-    Result := IsItANumber(Copy(AValue, 2, MaxInt));
+    Result := IsNumeric(AValue, -1, 2);
   end else begin
     Result := False;
   end;
@@ -490,8 +476,8 @@ begin
   servers (e.g. Courier) where there were no matches to the search.}
   LPos := Pos(' ', ALine); {Do not Localize}
   if LPos > 0 then begin
-    if IsItANumber(Copy(ALine, 1, LPos-1)) then begin
-      ALine := Copy(ALine, LPos+1, MAXINT);
+    if IsNumeric(ALine, LPos-1) then begin
+      ALine := Copy(ALine, LPos+1, MaxInt);
     end;
     {If there was a relative message number, it is now stripped from LLine.}
     {The first word in LLine is the one that may hold our expected response.}
