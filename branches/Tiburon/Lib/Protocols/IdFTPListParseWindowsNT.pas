@@ -159,18 +159,16 @@ begin
       end;
       sSize := StringReplace(TrimLeft(Copy(SData, 20, 19)), ',', '', [rfReplaceAll]);    {Do not Localize}
       //VM/BFS does share the date/time format as MS-DOS for the first two columns
-  //    if ((CharIsInSet(SData, 3, ['/', '-'])) and (CharIsInSet(SData, 6, ['/', '-']))) then
+  //    if CharIsInSet(SData, 3, '/-') and CharIsInSet(SData, 6, '/-') then
       if IsMMDDYY(Copy(SData, 1, 8), '-') or IsMMDDYY(Copy(SData, 1, 8), '/') then
       begin
         if sDir = '<DIR>' then begin {do not localize}
           Result := not IsVMBFS(SData);
         end
-        else
+        else if (sDir = '') and (IndyStrToInt64(sSize, -1) <> -1) then
         begin
-          if (sDir = '') and (IndyStrToInt64(sSize, -1) <> -1) then begin
           //may be a file - see if we can get the size if sDir is empty
-            Result := not IsVMBFS(SData);
-          end;
+          Result := not IsVMBFS(SData);
         end;
       end
       else if IsYYYYMMDD(SData) then
@@ -224,7 +222,7 @@ begin
   //Note that there is quite a bit of duplicate code in this if.
   //That is because there are two similar forms but the dates are in
   //different forms and have to be processed differently.
-  if IsNumeric(Copy(AItem.Data, 1, 4)) and (not IsNumeric(Copy(AItem.Data, 5, 1))) then
+  if IsNumeric(AItem.Data, 4) and (not IsNumeric(AItem.Data, 1, 5)) then
   begin
     LModified := Copy(AItem.Data, 1, 4) + '/' +  {do not localize}
                  Copy(AItem.Data, 6, 2) + '/' +  {do not localize}
