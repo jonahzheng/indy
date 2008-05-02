@@ -3315,31 +3315,21 @@ var
     if AStrings.Count < 1 then begin
       Exit;
     end;
-{    if (PosInStrArray(ASender.CommandHandler.Command, ['LIST', 'NLST'], False) > -1)
-     and AContext.NLSTUtf8 then begin
-      LEncoding := enUTF8;
-    end else begin
-      LEncoding := en8Bit;
-    end;   }
     {
     IMPORTANT!!!
 
-    I didn't like the code from above because if LIST data is sent as en8bit,
-    you have a FTP list that is unparsable by some FTP clients.
-
-    If UTF8 OPTS OFF, you should send the data as en7bit for the LIST and NLST
-    commands.  That way, unprintable charactors are returned as ?.  While the
-    file name is not valid, at least, there some thing that looks better than
-    binary junk.
+    If LIST data is sent as en8bit, you have a FTP list that is unparsable by
+    some FTP clients.  If UTF8 OPTS OFF, you should send the data as en7bit
+    for the LIST and NLST commands.  That way, unprintable charactors are
+    returned as ?.  While the file name is not valid, at least, there some
+    thing that looks better than binary junk.
     }
-    if (PosInStrArray(ASender.CommandHandler.Command, ['LIST', 'NLST','MLSD'], False) > -1) then
+    if PosInStrArray(ASender.CommandHandler.Command, ['LIST', 'NLST', 'MLSD'], False) > -1 then
     begin
       if AContext.NLSTUtf8 then begin
         LEncoding := enUTF8;
-      end
-      else
-      begin
-        LENcoding := en7bit;
+      end else begin
+        LEncoding := en7bit;
       end;
     end;
 
