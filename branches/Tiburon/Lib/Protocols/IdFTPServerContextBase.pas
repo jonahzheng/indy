@@ -51,7 +51,6 @@ type
     FRESTPos: Integer;
     FRNFR: string;
     FNLSTUtf8: Boolean;
-    FUseUtf8: Boolean;
     procedure ReInitialize; virtual;
   public
     property Authenticated: Boolean read FAuthenticated write FAuthenticated;
@@ -64,7 +63,6 @@ type
     property RESTPos: Integer read FRESTPos write FRESTPos;
     property RNFR: string read FRNFR write FRNFR;
     property NLSTUtf8: Boolean read FNLSTUtf8 write FNLSTUtf8;
-    property UseUtf8: Boolean read FUseUtf8 write FUseUtf8;
   end;
 
 implementation
@@ -83,7 +81,6 @@ begin
   FRESTPos := 0;
   FRNFR := '';    {Do not Localize}
   FNLSTUtf8 := False;
-  FUseUtf8 := False;
 end;
 
 end.
