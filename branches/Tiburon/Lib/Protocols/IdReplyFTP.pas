@@ -74,6 +74,7 @@
 unit IdReplyFTP;
 
 interface
+
 {$i IdCompilerDefines.inc}
 
 uses
@@ -181,7 +182,7 @@ begin
   if not Result then begin
     //"     Version wu-2.6.2-11.73.1"  is not a end of reply
     //"211 End of status" is the end of a reply
-    Result := IsNumeric(Copy(ALine,1,3)) and (Copy(ALine, 4, 1) = ' ');
+    Result := IsNumeric(ALine, 3) and CharEquals(ALine, 4, ' ');
   end;
 end;
 
