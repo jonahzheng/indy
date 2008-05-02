@@ -270,7 +270,7 @@ begin
         //e.g. **NONE**
         //Documented in: Communications Server for z/OS V1R2 TCP/IP Implementation Guide Volume 2: UNIX Applications
         //URL: http://www.redbooks.ibm.com/pubs/pdfs/redbooks/sg245228.pdf
-        if IsNumeric(s[2][1]) then
+        if IsNumeric(s[2], 1, 1) then
         begin
           LI.ModifiedDate := MVSDate(s[2]);
           LI.ModifiedAvail := True;
@@ -437,7 +437,7 @@ begin
     begin
       AItem.FileName := s[0];
       //in some particianed data sets, dates are missing.
-      if (s.Count > 7) and (s[3] <> '') and IsNumeric(s[3][1]) and (IndyPos('/', s[3]) > 0) then
+      if (s.Count > 7) and (s[3] <> '') and IsNumeric(s[3], 1, 1) and (IndyPos('/', s[3]) > 0) then
       begin
         AItem.ModifiedDate := MVSDate(s[3]);
         //    Name     VV.MM  Created     Changed     Size  Init   Mod   Id
@@ -470,7 +470,7 @@ begin
       SplitColumns(AListing[0], s);
       Result := (s.Count > 2) and (PosInStrArray(Trim(s[2]), MVS_JES_Status) > -1);
       if Result and (s.Count > 3) then begin
-        Result := IsNumeric(s[3]) or (s[3][1] = '-');
+        Result := IsNumeric(s[3]) or CharEquals(s[3], 1, '-');
       end;
       if not Result then begin
         Result := IsMVS_JESNoJobsMsg(AListing[0]);
