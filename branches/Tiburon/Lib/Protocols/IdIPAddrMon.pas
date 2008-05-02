@@ -87,6 +87,7 @@ unit IdIPAddrMon;
 }
 
 interface
+
 {$i IdCompilerDefines.inc}
 
 uses
@@ -124,14 +125,13 @@ type
     FOnStatusChanged: TIdIPAddrMonEvent;
 
     procedure SetActive(Value: Boolean);
-    procedure SetAdapterCount(const Value: Integer);
-    procedure SetBusy(const Value: Boolean);
     procedure SetInterval(Value: Cardinal);
     procedure GetAdapterAddresses;
     procedure DoStatusChanged;
 
   protected
     procedure InitComponent; override;
+
   public
     destructor Destroy; override;
     procedure CheckAdapters(Sender: TObject);
@@ -140,12 +140,11 @@ type
   published
     property Thread: TIdIPAddrMonThread read FThread;
     property Active: Boolean read FActive write SetActive;
-    property Busy: Boolean read FBusy write SetBusy;
+    property Busy: Boolean read FBusy write FBusy;
     property Interval: Cardinal read FInterval write SetInterval default IdIPAddrMonInterval;
-    property AdapterCount: Integer read FAdapterCount write SetAdapterCount;
+    property AdapterCount: Integer read FAdapterCount write FAdapterCount;
     property IPAddresses: TStrings read FIPAddresses;
     property OnStatusChanged: TIdIPAddrMonEvent read FOnStatusChanged write FOnStatusChanged;
-
   end;
 
 implementation
@@ -162,7 +161,7 @@ uses
 
 procedure TIdIPAddrMon.InitComponent;
 begin
-  inherited;
+  inherited InitComponent;
 
   FInterval := IdIPAddrMonInterval;
   FActive := False;
@@ -196,9 +195,8 @@ begin
     Exit;
   end;
 
+  Busy := True;
   try
-    Busy := True;
-
     try
       GetAdapterAddresses;
 
@@ -209,29 +207,26 @@ begin
       begin
         DoStatusChanged;
       end;
-
     except
       // eat any exception
     end;
-
   finally
     Busy := False;
   end;
-
 end;
 
 procedure TIdIPAddrMon.DoStatusChanged;
 var
-    iOldCount: Integer;
-    iNewCount: Integer;
-    iAdapter: Integer;
-    sOldIP: string;
-    sNewIP: string;
+  iOldCount: Integer;
+  iNewCount: Integer;
+  iAdapter: Integer;
+  sOldIP: string;
+  sNewIP: string;
 begin
 
-  if (not Assigned(FOnStatusChanged)) then
+  if not Assigned(FOnStatusChanged) then
   begin
-    exit;
+    Exit;
   end;
 
   // figure out the change... new, removed, or altered IP for adapter(s)
@@ -239,7 +234,7 @@ begin
   iNewCount := FIPAddresses.Count;
 
   // find the new adapter IP address
-  if (iOldCount < iNewCount) then
+  if iOldCount < iNewCount then
   begin
     sOldIP := '<unknown>';  {do not localize}
 
@@ -247,7 +242,7 @@ begin
     begin
       sNewIP := FIPAddresses[iAdapter];
 
-      if (FPreviousIPAddresses.IndexOf(sNewIP) = -1) then
+      if FPreviousIPAddresses.IndexOf(sNewIP) = -1 then
       begin
         FOnStatusChanged(Self, iAdapter, sOldIP, sNewIP);
       end;
@@ -255,7 +250,7 @@ begin
   end
 
   // find the missing adapter IP address
-  else if (iOldCount > iNewCount) then
+  else if iOldCount > iNewCount then
   begin
     sNewIP := '<unknown>';  {do not localize}
 
@@ -263,7 +258,7 @@ begin
     begin
       sOldIP := FPreviousIPAddresses[iAdapter];
 
-      if (FIPAddresses.IndexOf(sOldIP) = -1) then
+      if FIPAddresses.IndexOf(sOldIP) = -1 then
       begin
         FOnStatusChanged(Self, iAdapter, sOldIP, sNewIP);
       end;
@@ -278,7 +273,7 @@ begin
       sOldIP := FPreviousIPAddresses[iAdapter];
       sNewIP := FIPAddresses[iAdapter];
 
-      if (sOldIP <> sNewIP) then
+      if sOldIP <> sNewIP then
       begin
         FOnStatusChanged(Self, iAdapter, sOldIP, sNewIP);
       end;
@@ -289,17 +284,16 @@ end;
 
 procedure TIdIPAddrMon.ForceCheck;
 begin
-  CheckAdapters(Nil);
+  CheckAdapters(nil);
 end;
 
 procedure TIdIPAddrMon.SetActive(Value: Boolean);
 begin
-
   if Value <> FActive then
   begin
     FActive := Value;
 
-    if (FActive) then
+    if FActive then
     begin
       // get initial addresses at start-up and allow display in IDE
       GetAdapterAddresses;
@@ -317,8 +311,7 @@ begin
           FInterval := Self.Interval;
           Start;
         end;
-      end
-      else
+      end else
       begin
         if FThread <> nil then begin
           FThread.TerminateAndWaitFor;
@@ -327,71 +320,48 @@ begin
       end;
     end;
   end;
-
 end;
 
 procedure TIdIPAddrMon.SetInterval(Value: Cardinal);
 begin
-
-  if Value <> FInterval then
-  begin
-    FInterval := Value;
-  end;
-
-  if Assigned(FThread) then
-  begin
+  FInterval := Value;
+  if Assigned(FThread) then begin
     FThread.FInterval := FInterval;
   end;
-
 end;
 
 procedure TIdIPAddrMonThread.Run;
 var
   lInterval: Integer;
 begin
-
   lInterval := FInterval;
-
-  while (lInterval > 0) do
+  while lInterval > 0 do
   begin
     // force a check for terminated every .5 sec
     if lInterval > 500 then
     begin
       IndySleep(500);
-      lInterval := lInterval - 500
-    end
-
-    else
+      lInterval := lInterval - 500;
+    end else
     begin
       IndySleep(lInterval);
       LInterval := 0;
     end;
-
     if Terminated then
     begin
-      exit;
+      Exit;
     end;
   end;
 
   // interval has elapsed... fire the thread timer event
   Synchronize(DoTimerEvent);
-
 end;
 
 procedure TIdIPAddrMonThread.DoTimerEvent;
 begin
-  if Assigned(FOnTimerEvent) then
+  if Assigned(FOnTimerEvent) then begin
     FOnTimerEvent(FOwner);
-end;
-
-procedure TIdIPAddrMon.SetAdapterCount(const Value: Integer);
-begin
-  FAdapterCount := Value;
-end;
-
-procedure TIdIPAddrMon.SetBusy(const Value: Boolean);
-begin
-  FBusy := Value;
+  end;
 end;
 
 procedure TIdIPAddrMon.GetAdapterAddresses;
