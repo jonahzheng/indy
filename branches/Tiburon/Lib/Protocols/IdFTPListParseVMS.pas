@@ -287,7 +287,7 @@ begin
         //on the UCX VMS server, the file size might not be reported.  Probably the file owner
         if not TextStartsWith(LCols[0], '[') then {do not localize}
         begin
-          if not IsNumeric(LCols[0][1]) then
+          if not IsNumeric(LCols[0], 1, 1) then
           begin
             //the server probably reported an error in the FTP list such as no permission
             //we need to stop right there.
