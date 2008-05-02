@@ -222,6 +222,7 @@ interface
 uses
   Classes,
   IdAssignedNumbers,
+  IdCustomTCPServer,
   IdCmdTCPServer,
   IdContext,
   IdCommandHandlers,
