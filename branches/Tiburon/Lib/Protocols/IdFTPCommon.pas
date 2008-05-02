@@ -760,7 +760,7 @@ begin
   LPos := 1;
   for i := 1 to Length(AData) do begin
     LPos := i;
-    if (not IsNumeric(AData[i])) and (AData[i] <> ',') then begin
+    if (not IsNumeric(AData[i])) and (not CharEquals(AData, i, ',')) then begin
       Break;
     end;
   end;
@@ -1170,12 +1170,12 @@ function IsYYYYMMDD(const AData : String) : Boolean;
 begin
   Result := CharIsInSet(AData, 5, '/-') and CharIsInSet(AData, 8, '/-');
   if Result then begin
-    Result := IsNumeric(Copy(AData, 1, 4)) and IsNumeric(Copy(AData, 6, 2)) and IsNumeric(Copy(AData, 9, 2));
+    Result := IsNumeric(AData, 4) and IsNumeric(AData, 2, 6) and IsNumeric(AData, 2, 9);
   end;
   if not Result then begin
     Result := CharIsInSet(AData, 3, CDATE_PART_SEP) and CharIsInSet(AData, 6, CDATE_PART_SEP);
     if Result then begin
-      Result := IsNumeric(Copy(AData, 1, 2)) and IsNumeric(Copy(AData, 4, 2)) and IsNumeric(Copy(AData, 7, 2));
+      Result := IsNumeric(AData, 2) and IsNumeric(AData, 2, 4) and IsNumeric(AData, 2, 7);
     end;
   end;
 end;
@@ -1979,7 +1979,7 @@ begin
    if s.Count > 4 then begin
      Result := (s[2] = 'F') or (s[2] = 'D');
      if Result then begin
-       Result := IsNumeric(s[4]) or (s[4] <> '-');
+       Result := IsNumeric(s[4]) or (s[4] = '-');
      end;
     end;
   finally
