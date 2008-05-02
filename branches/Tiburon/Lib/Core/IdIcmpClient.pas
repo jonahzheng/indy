@@ -143,7 +143,7 @@ type
 
   TIdCustomIcmpClient = class(TIdRawClient)
   protected
-    FStartTime : Cardinal; //this is a fallabk if no packet is returned
+    FStartTime : LongWord; //this is a fallabk if no packet is returned
     FPacketSize : Integer;
     FBufReceive: TIdBytes;
     FBufIcmp: TIdBytes;
@@ -323,7 +323,7 @@ end;
 function TIdCustomIcmpClient.Receive(ATimeOut: Integer): TReplyStatus;
 var
   BytesRead : Integer;
-  TripTime: Cardinal;
+  TripTime: LongWord;
 begin
   Result := FReplyStatus;
   FillBytes(FBufReceive, Length(FBufReceive), 0);
@@ -334,7 +334,7 @@ begin
       Break;
     end;
     TripTime := GetTickDiff(FStartTime, Ticks);
-    ATimeOut := Cardinal(ATimeOut) - TripTime; // compute new timeout value
+    ATimeOut := ATimeOut - Integer(TripTime); // compute new timeout value
     FReplyStatus.MsRoundTripTime := TripTime;
     FReplyStatus.Msg := RSICMPTimeout;
     // We caught a response that wasn't meant for this thread - so we must
@@ -654,7 +654,7 @@ function TIdCustomIcmpClient.DecodeIPv6Packet(BytesRead: LongWord): Boolean;
 var
   LIdx : LongWord;
   LIcmp : TIdicmp6_hdr;
-  RTTime : Cardinal;
+  RTTime : LongWord;
   LActualSeqID : Word;
 begin
   LIdx := 0;
