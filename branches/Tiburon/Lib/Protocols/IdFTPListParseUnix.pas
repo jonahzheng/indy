@@ -187,6 +187,7 @@ implementation
 
 uses
   IdGlobal, IdFTPCommon, IdGlobalProtocols,
+  IdHeaderCoderUTF8,  //here so we can decode UTF8 filenames
   SysUtils;
 
 { TIdFTPLPUnix }
@@ -480,8 +481,7 @@ begin
       pusSize: begin
         //Ericsson - Switch FTP returns empty owner
         //Do not apply Ericson patch to Unitree
-        if (CharIsInSet(LData, 1, CharRange('A', 'Z') + CharRange('a', 'z'))) {do not localize}
-          and (GetIdent <> UNITREE) then
+        if IsAlpha(LData, 1, 1) and (GetIdent <> UNITREE) then
         begin
           LSize := LGroup;
           LGroup := LOwner;
@@ -706,9 +706,8 @@ begin
     end;
   end;
 
-   LI.FileName := LName;
-  // BytesToString(ToBytes( LName,en8bit),en8bit);
-  //LName;
+  LI.FileName := TIdHeaderCoderUTF8.Decode('UTF-8', LName);
+
   Result := True;
 end;
 
