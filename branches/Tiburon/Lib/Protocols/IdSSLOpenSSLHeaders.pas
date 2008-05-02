@@ -9417,9 +9417,9 @@ them in case we use them later.}
   {CH gl_POLICY_CONSTRAINTS_it = 'POLICY_CONSTRAINTS_it'; } {Do not localize}
   {$ENDIF}
 
-function LoadFunction(const FceName: AnsiString; const ACritical : Boolean = True): Pointer;
+function LoadFunction(const FceName: string; const ACritical : Boolean = True): Pointer;
 begin
-  Result := GetProcAddress(hIdSSL, PAnsiChar(FceName));
+  Result := GetProcAddress(hIdSSL, PChar(FceName));
   if ACritical then
   begin
     if Result = nil then begin
@@ -9428,9 +9428,9 @@ begin
   end;
 end;
 
-function LoadFunctionCLib(const FceName: AnsiString; const ACritical : Boolean = True): Pointer;
+function LoadFunctionCLib(const FceName: string; const ACritical : Boolean = True): Pointer;
 begin
-  Result := GetProcAddress(hIdCrypto, PAnsiChar(FceName));
+  Result := GetProcAddress(hIdCrypto, PChar(FceName));
   if ACritical then
   begin
     if Result = nil then begin
@@ -9776,17 +9776,19 @@ function IdSslUCTTimeDecode(UCTtime : PASN1_UTCTIME; var year, month, day, hour,
   var tz_hour, tz_min: Integer): Integer;
 var
   i, tz_dir: Integer;
-  time_str: String;
+  time_str: AnsiString;
 begin
-  SetLength(time_str, UCTtime^.length);
-  Move(UCTtime^.data[0], time_str[1], UCTtime^.length);
-
   Result := 1;
+
+  if UCTtime^.length < 12 then begin
+    Exit;
+  end;
+
+  SetString(time_str, UCTtime^.data, UCTtime^.length);
+
   // Check if first 12 chars are numbers
-  for i := 1 to 12 do begin
-    if (time_str[i] > '9') or (time_str[i] < '0') then begin {Do not Localize}
-      Exit;
-    end;
+  if not IsNumeric(time_str, 12) then begin
+    Exit;
   end;
 
   // Convert time from string to number
@@ -9807,13 +9809,13 @@ begin
   tz_min := 0;
 
   if CharIsInSet(time_str, 13, '-+') then begin    {Do not Localize}
-    tz_dir := iif(time_str[13] = '-', -1, 1);    {Do not Localize}
+    tz_dir := iif(CharEquals(time_str, 13, '-'), -1, 1);    {Do not Localize}
 
     for i := 14 to 18 do begin  // Check if numbers are numbers
       if i = 16 then begin
         Continue;
       end;
-      if (time_str[i] > '9') or (time_str[i] < '0') then begin {Do not Localize}
+      if not IsNumeric(time_str[i]) then begin
         Exit;
       end;
     end;
