@@ -281,7 +281,7 @@ begin
   end;
   s := TrimLeft(s);
   s2 := Fetch(s);
-  if not IsNumeric(Copy(s2, 1, 2)) then
+  if not IsNumeric(s2, 2) then
   begin
     s := TrimLeft(s);
     s2 := Fetch(s);
