@@ -5343,7 +5343,7 @@ begin
     LWord := Copy(ALine, 1, LPos-1);
   end;
   //Look for (optional) message number next...
-  if TIdReplyIMAP4(FLastCmdResult).IsItANumber(LWord) then begin
+  if IsNumeric(LWord) then begin
     FLineStruct.MessageNumber := LWord;
     ALine := Copy(ALine, LPos+1, MaxInt);
     LPos := Pos(' ', ALine);          {Do not Localize}
