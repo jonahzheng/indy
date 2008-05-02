@@ -532,22 +532,22 @@ begin
     // Read the PRI string
     // PRI must start with "less than" sign
     Buffer := '';    {Do not Localize}
-    if FRawMessage[StartPos] <> '<' then begin   {Do not Localize}
+    if not CharEquals(FRawMessage, StartPos, '<') then begin   {Do not Localize}
       raise EInvalidSyslogMessage.Create(RSInvalidSyslogPRI);
     end;
     repeat
       Inc(StartPos);
-      if FRawMessage[StartPos] = '>' then begin   {Do not Localize}
+      if CharEquals(FRawMessage, StartPos, '>') then begin   {Do not Localize}
         Break;
       end;
-      if not CharIsInSet(FRawMessage, StartPos, CharRange('0','9')) then begin   {Do not Localize}
+      if not IsNumeric(FRawMessage, 1, StartPos) then begin   {Do not Localize}
         raise EInvalidSyslogMessage.CreateFmt(RSInvalidSyslogPRINumber, [Buffer]);
       end;
       Buffer := Buffer + FRawMessage[StartPos];
     until StartPos = StartPosSave + 5;
 
     // PRI must end with "greater than" sign
-    if (FRawMessage[StartPos] <> '>') then begin   {Do not Localize}
+    if not CharEquals(FRawMessage, StartPos, '>') then begin   {Do not Localize}
       raise EInvalidSyslogMessage.Create(RSInvalidSyslogPRI);
     end;
     // Convert PRI to numerical value
