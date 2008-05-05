@@ -979,7 +979,7 @@ type
     function InternalPASV(ASender: TIdCommand; var VIP : String;
       var VPort: TIdPort; var VIPVersion : TIdIPVersion): Boolean;
     function DoSysType(ASender : TIdFTPServerContext) : String;
-    function DoProcessPath(ASender : TIdFTPServerContext; const APath: string): string;
+    function DoProcessPath(ASender : TIdFTPServerContext; const APath: TIdFTPFileName): TIdFTPFileName;
 
     function FTPNormalizePath(const APath: String) : String;
     function MLSFEATLine(const AFactMask : TIdMLSDAttrs; const AFacts : TIdFTPFactOutputs) : String;
@@ -1088,9 +1088,9 @@ type
     //
     procedure DoOnRenameFile(ASender: TIdFTPServerContext; const ARenameFromFile, ARenameToFile: string);
     procedure DoOnDeleteFile(ASender: TIdFTPServerContext; const APathName: string);
-    procedure DoOnChangeDirectory(AContext: TIdFTPServerContext; var VDirectory: string);
-    procedure DoOnMakeDirectory(AContext: TIdFTPServerContext; var VDirectory: string);
-    procedure DoOnRemoveDirectory(AContext: TIdFTPServerContext; var VDirectory: string);
+    procedure DoOnChangeDirectory(AContext: TIdFTPServerContext; var VDirectory: TIdFTPFileName);
+    procedure DoOnMakeDirectory(AContext: TIdFTPServerContext; var VDirectory: TIdFTPFileName);
+    procedure DoOnRemoveDirectory(AContext: TIdFTPServerContext; var VDirectory: TIdFTPFileName);
     procedure DoOnGetFileSize(ASender: TIdFTPServerContext; const AFilename: string; var VFileSize: Int64);
     procedure DoOnGetFileDate(ASender: TIdFTPServerContext; const AFilename: string; var VFileDate: TDateTime);
     procedure DoOnSetModifiedTime(AContext: TIdFTPServerContext; const AFileName : String; var VDateTime: TDateTime); overload;
@@ -2576,7 +2576,7 @@ end;
 
 procedure TIdFTPServer.CommandCWD(ASender: TIdCommand);
 var
-  s: string;
+  s: TIdFTPFileName;
   LContext : TIdFTPServerContext;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
@@ -2606,7 +2606,7 @@ end;
 
 procedure TIdFTPServer.CommandCDUP(ASender: TIdCommand);
 var
-  s: string;
+  s: TIdFTPFileName;
   LContext : TIdFTPServerContext;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
@@ -3085,7 +3085,7 @@ end;
 
 procedure TIdFTPServer.CommandRMD(ASender: TIdCommand);
 var
-  s: string;
+  s: TIdFTPFileName;
   LContext : TIdFTPServerContext;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
@@ -3106,7 +3106,7 @@ end;
 
 procedure TIdFTPServer.CommandMKD(ASender: TIdCommand);
 var
-  S: string;
+  S: TIdFTPFileName;
   LContext : TIdFTPServerContext;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
@@ -3834,7 +3834,7 @@ begin
   end;
 end;
 
-procedure TIdFTPServer.DoOnChangeDirectory(AContext: TIdFTPServerContext; var VDirectory: string);
+procedure TIdFTPServer.DoOnChangeDirectory(AContext: TIdFTPServerContext; var VDirectory: TIdFTPFileName);
 begin
   if Assigned(FFTPFileSystem) then begin
     FFTPFileSystem.ChangeDir(AContext, VDirectory);
@@ -3843,7 +3843,7 @@ begin
   end;
 end;
 
-procedure TIdFTPServer.DoOnRemoveDirectory(AContext: TIdFTPServerContext; var VDirectory: string);
+procedure TIdFTPServer.DoOnRemoveDirectory(AContext: TIdFTPServerContext; var VDirectory: TIdFTPFileName);
 begin
   if Assigned(FFTPFileSystem) then begin
     FFTPFileSystem.RemoveDirectory(AContext, VDirectory);
@@ -3852,7 +3852,7 @@ begin
   end;
 end;
 
-procedure TIdFTPServer.DoOnMakeDirectory(AContext: TIdFTPServerContext; var VDirectory: string);
+procedure TIdFTPServer.DoOnMakeDirectory(AContext: TIdFTPServerContext; var VDirectory: TIdFTPFileName);
 begin
   if Assigned(FFTPFileSystem) then begin
     FFTPFileSystem.MakeDirectory(AContext, VDirectory);
@@ -5569,7 +5569,7 @@ begin
   end;
 end;
 
-function TIdFTPServer.DoProcessPath(ASender: TIdFTPServerContext; const APath: string): string;
+function TIdFTPServer.DoProcessPath(ASender: TIdFTPServerContext; const APath: TIdFTPFileName): TIdFTPFileName;
 begin
   if FPathProcessing <> ftppCustom then
   begin
