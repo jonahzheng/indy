@@ -187,7 +187,9 @@ implementation
 
 uses
   IdGlobal, IdFTPCommon, IdGlobalProtocols,
+  {$IFNDEF UNICODESTRING}
   IdHeaderCoderUTF8,  //here so we can decode UTF8 filenames
+  {$ENDIF}
   SysUtils;
 
 { TIdFTPLPUnix }
@@ -706,7 +708,12 @@ begin
     end;
   end;
 
-  LI.FileName := TIdHeaderCoderUTF8.Decode('UTF-8', LName);
+  LI.FileName :=
+    {$IFDEF UNICODESTRING}
+    LName;
+    {$ELSE}
+    TIdHeaderCoderUTF8.Decode('UTF-8', LName);
+    {$ENDIF}
 
   Result := True;
 end;

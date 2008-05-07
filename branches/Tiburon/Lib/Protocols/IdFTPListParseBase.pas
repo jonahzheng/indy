@@ -211,7 +211,10 @@ const
 implementation
 
 uses
-  IdFTPCommon, IdFTPListTypes, IdGlobal, IdGlobalProtocols, IdHeaderCoderUTF8,
+  IdFTPCommon, IdFTPListTypes, IdGlobal, IdGlobalProtocols,
+  {$IFNDEF UNICODESTRING}
+  IdHeaderCoderUTF8,  //here so we can decode UTF8 filenames
+  {$ENDIF}
   IdResourceStringsProtocols, IdStrings, SysUtils;
 
 type
@@ -492,7 +495,13 @@ begin
   LI := AItem as TIdMLSTFTPListItem;
   LFacts := TStringList.Create;
   try
-    LI.FileName := TIdHeaderCoderUTF8.Decode('UTF-8', ParseFacts(AItem.Data, LFacts));
+
+    LI.FileName :=
+      {$IFDEF UNICODESTRING}
+      ParseFacts(AItem.Data, LFacts);
+      {$ELSE}
+      TIdHeaderCoderUTF8.Decode('UTF-8', ParseFacts(AItem.Data, LFacts));
+      {$ENDIF}
     LI.LocalFileName := AItem.FileName;
 
     LBuffer := LFacts.Values['type']; {do not localize}
