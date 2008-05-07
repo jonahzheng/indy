@@ -222,11 +222,10 @@ interface
 uses
   Classes,
   IdAssignedNumbers,
-  IdCustomTCPServer,
+  IdCustomTCPServer, //for TIdServerContext
   IdCmdTCPServer,
   IdContext,
   IdCommandHandlers,
-  IdCustomTCPServer, //for TIdServerContext
   IdException,
   IdExplicitTLSClientServerBase,
   IdIMAP4, //For some defines like TIdIMAP4ConnectionState
