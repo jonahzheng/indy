@@ -1574,7 +1574,7 @@ var
   LChars : array[0..1] of Char;
   {$ELSE}
     {$IFDEF TEncoding}
-  LChars : TWideCharArray;
+  LChars : TCharArray;
     {$ELSE}
   LWC: LongWord;
     {$ENDIF}
@@ -1655,7 +1655,7 @@ var
   LChars: array[0..0] of Char;
   {$ELSE}
     {$IFDEF TEncoding}
-  LChars: TWideCharArray;
+  LChars: TCharArray;
     {$ELSE}
   LWC: LongWord;
     {$ENDIF}
@@ -1753,7 +1753,7 @@ var
   LChars: array[0..1] of Char;
   {$ELSE}
     {$IFDEF TEncoding}
-  LChars: TWideCharArray;
+  LChars: TCharArray;
     {$ELSE}
   I: Integer;
   LCh: WideChar;
