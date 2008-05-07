@@ -117,11 +117,10 @@ uses
   IdGlobal,
   IdHeaderList,
   IdTCPConnection,
-  IdCustomTCPServer,
+  IdCustomTCPServer, //for TIdServerContext
   IdCmdTCPServer,
   IdCommandHandlers,
   IdContext,
-  IdCustomTCPServer, //for TIdServerContext
   IdYarn;
 
 const
