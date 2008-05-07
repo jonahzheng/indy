@@ -93,13 +93,9 @@ begin
       Inc(I);
       if (I+1) <= L then
       begin
-        if Copy(AData, I, 2) = '$B' then   {Do not Localize}
-        begin
-          isK := True;
-        end
-        else if Copy(AData, I, 2) = '(B' then    {Do not Localize}
-        begin
-          isK := False;
+        case PosInStrArray(Copy(AData, I, 2), ['$B', '(B']) of
+          0: isK := True;
+          1: isK := False;
         end;
         Inc(I, 2);   { TODO -oTArisawa : Check RFC 1468}
       end;
@@ -171,10 +167,10 @@ begin
         isK := False;
       end;
       T := T + AData[I];
-      INC(I);
+      Inc(I);
     end else
     begin
-      K1 := sj1_tbl[AData[I]];
+      K1 := sj1_tbl[AnsiChar(AData[I])];
       case K1 of
       0: Inc(I);    { invalid SBCS }
       2: Inc(I, 2); { invalid DBCS }
@@ -185,10 +181,10 @@ begin
             isK := True;
           end;
           { simple SBCS -> DBCS conversion                         }
-          K2 := kana_tbl[AData[I]];
-          if (I < L) and (Ord(AData[I+1]) AND $FE = $DE) then
+          K2 := kana_tbl[AnsiChar(AData[I])];
+          if (I < L) and ((Ord(AData[I+1]) and $FE) = $DE) then
           begin  { convert kana + voiced mark to voiced kana }
-            K3 := vkana_tbl[AData[I]];
+            K3 := vkana_tbl[AnsiChar(AData[I])];
             // This is an if and not a case because of a D8 bug, return to
             // case when d8 patch is released
             if AData[I+1] = #$DE then begin  { voiced }
@@ -206,8 +202,8 @@ begin
               end;
             end;
           end;
-          T := T + Chr(K2 SHR 8) + Chr(K2 AND $FF);
-          INC(I);
+          T := T + Chr(K2 shr 8) + Chr(K2 and $FF);
+          Inc(I);
         end;
       else { DBCS }
         if (I < L) then begin
@@ -218,7 +214,7 @@ begin
               T := T + desig_jis;
               isK := True;
             end;
-            T := T + Chr(K1 + K2 SHR 8) + Chr(K2 AND $FF);
+            T := T + Chr(K1 + K2 shr 8) + Chr(K2 and $FF);
           end;
         end;
         Inc(I, 2);
