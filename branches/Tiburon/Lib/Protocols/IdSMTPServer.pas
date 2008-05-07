@@ -56,11 +56,10 @@ interface
 uses
   Classes,
   IdAssignedNumbers,
-  IdCustomTCPServer,
+  IdCustomTCPServer, //for TIdServerContext
   IdCmdTCPServer,
   IdCommandHandlers,
   IdContext,
-  IdCustomTCPServer, //for TIdServerContext
   IdEMailAddress,
   IdException,
   IdExplicitTLSClientServerBase,
