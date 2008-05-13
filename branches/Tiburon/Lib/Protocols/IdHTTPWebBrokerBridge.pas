@@ -577,6 +577,10 @@ var
   LRequest: TIdHTTPAppRequest;
   LResponse: TIdHTTPAppResponse;
   LWebModule: TCustomWebDispatcher;
+  {$IFDEF VCL6ORABOVE}
+  WebRequestHandler: IWebRequestHandler;
+  {$ENDIF}
+  Handled: Boolean;
 begin
   LRequest := TIdHTTPAppRequest.Create(AThread, ARequestInfo, AResponseInfo); try
     LResponse := TIdHTTPAppResponse.Create(LRequest, AThread, ARequestInfo, AResponseInfo); try
@@ -584,10 +588,21 @@ begin
       AResponseInfo.FreeContentStream := False;
       // There are better ways in D6, but this works in D5
       LWebModule := FWebModuleClass.Create(nil) as TCustomWebDispatcher; try
-        if TWebDispatcherAccess(LWebModule).DispatchAction(LRequest, LResponse) then begin
-          if not LResponse.Sent then begin
-            LResponse.SendResponse;
+        {$IFDEF VCL6ORABOVE}
+        if Supports(LWebModule, IWebRequestHandler, WebRequestHandler) then begin
+          try
+            Handled := WebRequestHandler.HandleRequest(LRequest, LResponse);
+          finally
+            WebRequestHandler := nil;
           end;
+        end else begin
+          Handled := TWebDispatcherAccess(LWebModule).DispatchAction(LRequest, LResponse);
+        end;
+        {$ELSE}
+        Handled := TWebDispatcherAccess(LWebModule).DispatchAction(LRequest, LResponse);
+        {$ENDIF}
+        if Handled and (not LResponse.Sent) then begin
+          LResponse.SendResponse;
         end;
       finally FreeAndNil(LWebModule); end;
     finally FreeAndNil(LResponse); end;
