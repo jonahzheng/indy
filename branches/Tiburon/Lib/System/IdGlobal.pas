@@ -823,6 +823,7 @@ type
      {$ENDIF}
   {$ENDIF}
   TPosProc = function(const substr, str: String): LongInt;
+  TStrScanProc = function(Str: PChar; Chr: Char): PChar;
   TIdReuseSocket = (rsOSDependent, rsTrue, rsFalse);
 
   {$IFNDEF VCL6ORABOVE}
@@ -1172,7 +1173,7 @@ procedure ValidEncoding(const AEncoding : TIdEncoding); {$IFDEF USEINLINE}inline
 
 var
   IndyPos: TPosProc = nil;
-
+  IndyStrScan: TStrScanProc = nil;
 
 type
   {
@@ -3327,12 +3328,24 @@ begin
   Result := Pos(Substr, S);
 end;
 
+function SBStrScan(Str: PChar; Chr: Char): PChar;
+{$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  Result := SysUtils.StrScan(Str, Chr);
+end;
+
 {$IFNDEF DOTNET}
 //Don't rename this back to AnsiPos because that conceals a symbol in Windows
 function InternalAnsiPos(const Substr, S: string): LongInt;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
   Result := SysUtils.AnsiPos(Substr, S);
+end;
+
+function InternalAnsiStrScan(Str: PChar; Chr: Char): PChar;
+{$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  Result := SysUtils.AnsiStrScan(Str, Chr);
 end;
 {$ENDIF}
 
@@ -4851,12 +4864,30 @@ end;
 
 function CharPosInSet(const AString: string; const ACharPos: Integer; const ASet: String): Integer;
 {$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFNDEF DOTNET}
+var
+  LStart, LFound: PChar;
+{$ENDIF}
 begin
+  Result := 0;
   EIdException.IfTrue(ACharPos < 1, 'Invalid ACharPos');{ do not localize }
   if ACharPos <= Length(AString) then begin
-    Result := IndyPos(AString[ACharPos], ASet);
-  end else begin
-    Result := 0;
+    {$IFDEF DOTNET}
+    Result := ASet.IndexOf(AString[ACharPos]) + 1;
+    {$ELSE}
+    // RLebeau 5/8/08: Calling Pos() with a Char as input creates a temporary
+    // String.  Normally this is fine, but profiling reveils this to be a big
+    // bottleneck for code that makes a lot of calls to CharIsInSet(), so need
+    // to scan through ASet looking for the character without a conversion...
+    //
+    // Result := IndyPos(AString[ACharPos], ASet);
+    //
+    LStart := PChar(ASet);
+    LFound := IndyStrScan(LStart, AString[ACharPos]);
+    if LFound <> nil then begin
+      Result := (Integer(LFound) - Integer(LStart)) {$IFDEF UNICODESTRING}div SizeOf(Char){$ENDIF};
+    end;
+    {$ENDIF}
   end;
 end;
 
@@ -5053,20 +5084,21 @@ initialization
   // AnsiPos does not handle strings with #0 and is also very slow compared to Pos
   {$IFDEF DOTNET}
   IndyPos := SBPos;
+  IndyStrScan := SBStrScan;
   {$ELSE}
   if LeadBytes = [] then begin
     IndyPos := SBPos;
+    IndyStrScan := SBStrScan;
   end else begin
     IndyPos := InternalAnsiPos;
+    IndyStrScan := InternalAnsiStrScan;
   end;
   {$ENDIF}
 
 finalization
   {$IFNDEF DOTNET}
   FreeAndNil(GIdPorts);
-  {$ENDIF}
-  {$IFDEF TEncoding}
-    {$IFNDEF DOTNET}
+    {$IFDEF TEncoding}
   FreeAndNil(Id8BitEncoder);
     {$ENDIF}
   {$ENDIF}
