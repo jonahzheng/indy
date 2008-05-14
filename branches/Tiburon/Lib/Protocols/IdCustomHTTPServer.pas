@@ -165,9 +165,10 @@ uses
   IdAssignedNumbers,
   IdContext, IdException,
   IdGlobal, IdStack,
-  IdExceptionCore, IdGlobalProtocols, IdHeaderList, IdCustomTCPServer, IdTCPConnection, IdThread, IdCookie,
-  IdHTTPHeaderInfo, IdStackConsts,
-  IdBaseComponent;
+  IdExceptionCore, IdGlobalProtocols, IdHeaderList, IdCustomTCPServer,
+  IdTCPConnection, IdThread, IdCookie, IdHTTPHeaderInfo, IdStackConsts,
+  IdBaseComponent,
+  SysUtils;
 
 type
   // Enums
@@ -187,7 +188,7 @@ const
   GServerSoftware = gsIdProductName + '/' + gsIdVersion;    {Do not Localize}
   GContentType = 'text/html';    {Do not Localize}
   GSessionIDCookie = 'IDHTTPSESSIONID';    {Do not Localize}
-  HTTPRequestStrings: array[0..ord(high(THTTPCommandType))] of string = ('UNKNOWN', 'HEAD','GET','POST','DELETE','PUT','TRACE', 'OPTIONS'); {do not localize}
+  HTTPRequestStrings: array[0..Ord(High(THTTPCommandType))] of string = ('UNKNOWN', 'HEAD','GET','POST','DELETE','PUT','TRACE', 'OPTIONS'); {do not localize}
 
 type
   // Forwards
@@ -201,10 +202,13 @@ type
   TOnSessionEndEvent = procedure(Sender: TIdHTTPSession) of object;
   TOnSessionStartEvent = procedure(Sender: TIdHTTPSession) of object;
   TOnCreateSession = procedure(ASender:TIdContext;
-   var VHTTPSession: TIdHTTPSession) of object;
+    var VHTTPSession: TIdHTTPSession) of object;
   TOnCreatePostStream = procedure(AContext: TIdContext; AHeaders: TIdHeaderList; var VPostStream: TStream) of object;
-  TIdHTTPCommandEvent = procedure(AContext:TIdContext;
-   ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) of object;
+  TIdHTTPCommandEvent = procedure(AContext: TIdContext;
+    ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo) of object;
+  TIdHTTPCommandError = procedure(AContext: TIdContext;
+    ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo;
+    AException: Exception) of object;
   TIdHTTPInvalidSessionEvent = procedure(AContext: TIdContext;
     ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo;
     var VContinueProcessing: Boolean; const AInvalidSessionID: String) of object;
@@ -375,6 +379,7 @@ type
     FOnSessionStart: TOnSessionStartEvent;
     FOnCommandGet: TIdHTTPCommandEvent;
     FOnCommandOther: TIdHTTPCommandEvent;
+    FOnCommandError: TIdHTTPCommandError;
     FOnHeadersAvailable: TIdHTTPHeadersAvailableEvent;
     FOnHeadersBlocked: TIdHTTPHeadersBlockedEvent;
     FOnHeaderExpectations: TIdHTTPHeaderExpectationsEvent;
@@ -391,6 +396,8 @@ type
      AResponseInfo: TIdHTTPResponseInfo); virtual;
     procedure DoCommandOther(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo;
      AResponseInfo: TIdHTTPResponseInfo); virtual;
+    procedure DoCommandError(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo;
+      AResponseInfo: TIdHTTPResponseInfo; AException: Exception); virtual;
     procedure DoConnect(AContext: TIdContext); override;
     function DoHeadersAvailable(ASender: TIdContext; AHeaders: TIdHeaderList): Boolean; virtual;
     procedure DoHeadersBlocked(ASender: TIdContext; AHeaders: TIdHeaderList; var VResponseNo: Integer; var VResponseText, VContentText: String); virtual;
@@ -438,6 +445,7 @@ type
      default Id_TId_HTTPSessionTimeOut;
     property OnCommandOther: TIdHTTPCommandEvent read FOnCommandOther
      write FOnCommandOther;
+    property OnCommandError: TIdHTTPCommandError read FOnCommandError write FOnCommandError;
   end;
 
   TIdHTTPDefaultSessionList = Class(TIdHTTPCustomSessionList)
@@ -468,7 +476,7 @@ uses
   System.Threading,
     {$ENDIF}
   {$ENDIF}
-  IdCoderMIME, IdResourceStringsProtocols, IdURI, IdIOHandlerSocket, IdSSL, SysUtils;
+  IdCoderMIME, IdResourceStringsProtocols, IdURI, IdIOHandlerSocket, IdSSL;
 
 const
   SessionCapacity = 128;
@@ -606,6 +614,15 @@ procedure TIdCustomHTTPServer.DoCommandOther(AContext: TIdContext;
 begin
   if Assigned(FOnCommandOther) then begin
     FOnCommandOther(AContext, ARequestInfo, AResponseInfo);
+  end;
+end;
+
+procedure TIdCustomHTTPServer.DoCommandError(AContext: TIdContext; 
+  ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo;
+  AException: Exception);
+begin
+  if Assigned(FOnCommandError) then begin
+    FOnCommandError(AContext, ARequestInfo, AResponseInfo, AException);
   end;
 end;
 
@@ -920,6 +937,7 @@ begin
                   on E: Exception do begin
                     LResponseInfo.ResponseNo := 500;
                     LResponseInfo.ContentText := E.Message;
+                    DoCommandError(AContext, LRequestInfo, LResponseInfo, E);
                   end;
                 end;
               end;
@@ -1384,7 +1402,7 @@ begin
       ContentStream.Position := 0;
       IOHandler.Write(ContentStream);
     end else begin
-      FConnection.IOHandler.WriteLn('<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + ResponseText    {Do not Localize}
+      IOHandler.WriteLn('<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + ResponseText    {Do not Localize}
        + '</B></BODY></HTML>');    {Do not Localize}
     end;
     // Clear All - This signifies that WriteConent has been called.
