@@ -717,6 +717,7 @@ resourcestring
   RSFTPEPSVAllEntered = ' EPSV ALL sent, now only accepting EPSV connections';
   RSFTPNetProtNotSup = 'Network protocol not supported, use %s';
   RSFTPFileOpSuccess = 'File Operation Successful';
+  RSFTPIsAFile = '%s: Is a file.';
   RSFTPInvalidOps = 'Invalid %s options';
   RSFTPOptNotRecog = 'Option not recognized.';
   RSFTPPropNotNeg = 'Property can not be a negative number.';

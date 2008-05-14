@@ -645,7 +645,7 @@ const
   DEF_PATHPROCESSING = ftpOSDependent;
 
   {Do not change these as it could break some clients}
-  SYST_ID_UNIX = 'UNIX Type: L8';  {Do not translate}
+  SYST_ID_UNIX =  'UNIX Type: L8';  {Do not translate}
   SYST_ID_NT = 'Windows_NT';   {Do not translate}
 
 const AAlwaysValidOpts : array [0..2] of string =
@@ -725,8 +725,11 @@ type
   TIdOnBanner = procedure(ASender: TIdFTPServerContext; AGreeting : TIdReply) of object;
   //This is for EPSV and PASV support - do not change the values unless you
   //have an extremely compelling reason to do so.  This even is ONLY for those compelling case.
-  TIdOnPASV = procedure(ASender: TIdFTPServerContext; var VIP : String; var VPort : TIdPort; const AIPVer : TIdIPVersion) of object;
-
+  TIdOnPASV = procedure(ASender: TIdFTPServerContext; var VIP : String;
+    var VPort : TIdPort; const AIPVer : TIdIPVersion) of object;
+  TIdOnDirSizeInfo = procedure(ASender : TIdFTPServerContext;
+    const APathName : TIdFTPFileName;
+    var VIsAFile : Boolean; var VSpace : Int64) of object;
   TIdFTPServer = class;
   TIdFTPSecurityOptions = class(TPersistent)
   protected
@@ -956,7 +959,9 @@ type
     FOnSiteCHMOD : TOnSiteCHMOD;
     FOnSiteCHOWN : TOnSiteCHOWN;
     FOnSiteCHGRP : TOnSiteCHGRP;
-
+    FOnAvailDiskSpace : TIdOnDirSizeInfo;
+    FOnCompleteDirSize :  TIdOnDirSizeInfo;
+    FOnRemoveDirectoryAll: TOnDirectoryEvent;
     FOnCustomPathProcess : TOnCustomPathProcess;
 
     FOnDataPortBeforeBind : TOnDataPortBind;
@@ -1018,7 +1023,16 @@ type
     procedure CommandRNFR(ASender: TIdCommand);
     procedure CommandRNTO(ASender: TIdCommand);
     procedure CommandABOR(ASender: TIdCommand);
+    //AVBL from  Streamlined FTP Command Extensions
+   //      draft-peterson-streamlined-ftp-command-extensions-01.txt
+    procedure CommandAVBL(ASender: TIdCommand);
     procedure CommandDELE(ASender: TIdCommand);
+
+     //DSIZ from  Streamlined FTP Command Extensions
+   //      draft-peterson-streamlined-ftp-command-extensions-01.txt
+    procedure CommandDSIZ(ASender : TIdCommand);
+    procedure CommandRMDA(ASender : TIdCommand);
+
     procedure CommandRMD(ASender: TIdCommand);
     procedure CommandMKD(ASender: TIdCommand);
     procedure CommandPWD(ASender: TIdCommand);
@@ -1214,6 +1228,9 @@ type
     property OnPASVReply : TIdOnPASV read FOnPASVReply write FOnPASVReply;
     property OnMLST : TIdOnMLST read FOnMLST write FOnMLST;
     property OnSiteUTIME : TOnSiteUTIME read FOnSiteUTIME write FOnSiteUTIME;
+    property OnAvailDiskSpace : TIdOnDirSizeInfo read FOnAvailDiskSpace write FOnAvailDiskSpace;
+    property OnCompleteDirSize :  TIdOnDirSizeInfo read FOnCompleteDirSize write FOnCompleteDirSize;
+
     property SITECommands: TIdCommandHandlers read FSITECommands write SetSITECommands;
     property MLSDFacts : TIdMLSDAttrs read  FMLSDFacts write FMLSDFacts;
     property OnClientID : TIdOnClientID read FOnClientID write FOnClientID;
@@ -1241,11 +1258,11 @@ uses
 const
   //THese commands need some special treatment in the Indy 10 FTP Server help system
   //as they will not always work
-  HELP_SPEC_CMDS : array [0..18] of string =
+  HELP_SPEC_CMDS : array [0..21] of string =
     ('SIZE','MDTM',                                                 {do not localize}
      'AUTH','PBSZ','PROT','CCC','MIC','CONF','ENC', 'SSCN','CPSV',  {do not localize}
      'MFMT','MFF','MD5','MMD5','XCRC','XMD5','XSHA1',               {do not localize}
-     'COMB');                                                       {do not localize}
+     'COMB','AVBL','DSIZ','RMDA');                                                       {do not localize}
 
   //These commands must always be present even if not implemented
   //alt help topics and superscripts should be used sometimes.
@@ -1469,6 +1486,21 @@ var
           end;
         18 : //  'COMB');
           if Assigned(FOnCRCFile) or Assigned(FTPFileSystem) then
+          begin
+            Result := True;
+          end;
+        19 : //  AVBL
+          if Assigned(FOnAvailDiskSpace) then
+          begin
+            Result := True;
+          end;
+        20 : //  DSIZ
+          if Assigned(FOnCompleteDirSize) then
+          begin
+            Result := True;
+          end;
+        21 : // RMDA
+          if Assigned(FOnRemoveDirectoryAll) then
           begin
             Result := True;
           end;
@@ -2033,6 +2065,30 @@ begin
   LCmd.OnCommand := CommandCheckSum;
   LCmd.ExceptionReply.NumericCode := 550;
   LCmd.Description.Text := 'Syntax: XSHA1 "[filename]" [start] [finish]'; {do not localize}
+
+//commands from
+//      draft-peterson-streamlined-ftp-command-extensions-01.txt
+//http://tools.ietf.org/html/draft-peterson-streamlined-ftp-command-extensions-01#section-2.4
+  LCmd := CommandHandlers.Add;
+  LCmd.Command := 'AVBL';  {Do not localize}
+  LCmd.OnCommand := CommandAVBL;
+   LCmd.ExceptionReply.NumericCode := 500;
+   LCmd.Description.Text := 'Syntax: AVBL [<sp> dirpath] (returns the number of '+
+     'bytes available for uploading in the directory or current working directory)';
+
+  LCmd := CommandHandlers.Add;
+  LCmd.Command := 'DSIZ';  {Do not localize}
+  LCmd.OnCommand := CommandDSIZ;
+  LCmd.ExceptionReply.NumericCode := 500;
+  LCmd.Description.Text := 'DSIZ [<sp> dirpath] (returns the number of bytes '+
+     'in the directory or current working directory, including sub directories)';
+
+  LCmd := CommandHandlers.Add;
+  LCmd.Command := 'RMDA';
+  LCmd.OnCommand := CommandRMDA;
+  LCmd.ExceptionReply.NumericCode := 550;
+  LCmd.Description.Text := 'RMDA <sp> pathname (deletes (removes) the '+
+     'specified directory and it s contents)';
 
   //informal but we might want to support this anyway
   //CLNT
@@ -3487,6 +3543,7 @@ end;
 procedure TIdFTPServer.CommandSTAT(ASender: TIdCommand);
 var
   LStream: TStringList;
+
   LActAsList: boolean;
   LSwitches, LPath : String;
   i : Integer;
@@ -3549,7 +3606,7 @@ begin
         //is written using WriteStrings and I found that with Reply.SetReply, a stat
         //reply could throw off a FTP client.
         LContext.Connection.IOHandler.WriteLn(IndyFormat('213-%s', [RSFTPDataConnToOpen])); {Do not Localize}
-    {    if TIdFTPServerContext(ASender.Context).NLSTUtf8 then
+        if TIdFTPServerContext(ASender.Context).NLSTUtf8 then
         begin
           LEncoding := enUTF8;
         end
@@ -3557,8 +3614,10 @@ begin
         begin
           LEncoding := en7bit;
         end;
-        LContext.Connection.IOHandler.Write(LStream,LEncoding); }
-        LContext.Connection.IOHandler.Write(LStream);
+        for i := 0 to LStream.Count - 1 do
+        begin
+          LContext.Connection.IOHandler.WriteLn(LStream[i],LEncoding);
+        end;
         ASender.PerformReply := True;
         ASender.Reply.SetReply(213, RSFTPCmdEndOfStat);
       finally
@@ -3582,6 +3641,11 @@ begin
     SetRFCReplyFormat(ASender.Reply);
     ASender.Reply.NumericCode := 211;
     ASender.Reply.Text.Add(RSFTPCmdExtsSupportedStart); {Do not translate}
+    //AVBL
+    if Assigned(FOnAvailDiskSpace) then
+    begin
+      ASender.Reply.Text.Add('AVBL');
+    end;
     //AUTH
     if IOHandler is TIdServerIOHandlerSSLBase then begin
       if (FUseTLS <> utUseImplicitTLS) then begin
@@ -3606,7 +3670,11 @@ begin
       (ASender.Context.Connection.Socket.IPVersion = Id_IPv4) then begin
       ASender.Reply.Text.Add('CPSV');   {Do not translate}
     end;
-
+    //DSIZ
+    if Assigned(OnCompleteDirSize) then
+    begin
+      ASender.Reply.Text.Add('DSIZ'); {Do not localize}
+    end;
     //EPRT
     ASender.Reply.Text.Add('EPRT');    {Do not translate}
     //EPSV
@@ -3697,6 +3765,11 @@ begin
     end;
     //REST STREAM
     ASender.Reply.Text.Add('REST STREAM');  {Do not translate}
+    //RMDA
+    if Assigned(FOnRemoveDirectoryAll) then
+    begin
+      ASender.Reply.Text.Add('RMDA directoryname');  {Do not localize}
+    end;
     //SITE ZONE
     //Listing a SITE command in feature negotiation is unusual and
     //may be a little off-spec.  FTP Voyager scans this looking for
@@ -3780,7 +3853,14 @@ begin
       ASender.Reply.Text.Add('XMD5 "filename" SP EP');//filename;start;end');  {Do not Localize}
       ASender.Reply.Text.Add('XSHA1 "filename" SP EP');//filename;start;end');  {Do not Localize}
     end;
-    ASender.Reply.Text.Add('Compliance Level: 20020901 (IETF mlst-16)'); {Do not Localize}
+    //I'm doing things this way with complience level to match the current
+    //version of NcFTPD
+    LTmp := 'RFC 959 2389 ';
+    if UserSecurity.FInvalidPassDelay <> 0 then
+    begin
+      LTmp := LTmp + '2577 ';
+    end;
+    ASender.Reply.Text.Add(LTmp + '3659'); {Do not Localize}
     ASender.Reply.Text.Add(RSFTPCmdExtsSupportedEnd);
   end;
 end;
@@ -4155,6 +4235,99 @@ begin
   end else
   begin
     CmdSyntaxError(ASender);
+  end;
+end;
+
+procedure TIdFTPServer.CommandAVBL(ASender: TIdCommand);
+var
+  LContext : TIdFTPServerContext;
+  LIsFile : Boolean;
+  LSize : Int64;
+  LPath : String;
+begin
+  LIsFile := True;
+  LSize := 0;
+  LContext := ASender.Context as TIdFTPServerContext;
+  if LContext.IsAuthenticated(ASender) then
+  begin
+    if Assigned(FOnAvailDiskSpace) then
+    begin
+      LPath := DoProcessPath(LContext, ASender.UnparsedParams);
+      FOnAvailDiskSpace(LContext, LPath,LIsFile,LSize);
+      if LIsFile then
+      begin
+        ASender.Reply.SetReply(550,IndyFormat(RSFTPIsAFile,[LPath]));
+
+      end
+      else
+      begin
+         ASender.Reply.SetReply(213, IntToStr (LSize));
+      end;
+    end
+    else
+    begin
+      CmdNotImplemented(ASender);
+    end;
+  end else begin
+    ASender.Reply.SetReply(550, RSFTPFileActionNotTaken);
+  end;
+end;
+
+   //FOnCompleteDirSize
+procedure TIdFTPServer.CommandDSIZ(ASender : TIdCommand);
+var
+  LContext : TIdFTPServerContext;
+  LIsFile : Boolean;
+  LSize : Int64;
+  LPath : String;
+begin
+  LIsFile := True;
+  LSize := 0;
+  LContext := ASender.Context as TIdFTPServerContext;
+  if LContext.IsAuthenticated(ASender) then
+  begin
+    if Assigned(FOnCompleteDirSize) then
+    begin
+      LPath := DoProcessPath(LContext, ASender.UnparsedParams);
+      FOnCompleteDirSize(LContext, LPath,LIsFile,LSize);
+      if LIsFile then
+      begin
+        ASender.Reply.SetReply(550,IndyFormat(RSFTPIsAFile,[LPath]));
+
+      end
+      else
+      begin
+        ASender.Reply.SetReply(213, IntToStr (LSize));
+      end;
+    end
+    else
+    begin
+      CmdNotImplemented(ASender);
+    end;
+  end else begin
+    ASender.Reply.SetReply(550, RSFTPFileActionNotTaken);
+  end;
+end;
+
+procedure TIdFTPServer.CommandRMDA(ASender : TIdCommand);
+var
+  LContext : TIdFTPServerContext;
+  LPath : TIdFileName;
+begin
+  //FOnRemoveDirectoryAll: TOnDirectoryEvent;
+  LContext := ASender.Context as TIdFTPServerContext;
+  if LContext.IsAuthenticated(ASender) then
+  begin
+    if Assigned(FOnRemoveDirectoryAll) then
+    begin
+      LPath := DoProcessPath(LContext,ASender.UnparsedParams);
+      FOnRemoveDirectoryAll(LContext,  LPath);
+      ASender.Reply.SetReply(250, RSFTPFileActionCompleted);
+    end else begin
+      CmdNotImplemented(ASender);
+    end;
+  end else begin
+    ASender.Reply.SetReply(550, RSFTPFileActionNotTaken);
   end;
 end;
 
@@ -5866,7 +6039,7 @@ var
   State: TIdFTPTelnetState;
   lb : Byte;
   LContext: TIdFTPServerContext;
-  { Receive the line in 8-bit initially so that .NET can then
+  { Receive the line in 8-bit init\ially so that .NET can then
     decode any UTF-8 data into a Unicode string afterwards if
     needed }
   LLine: TIdBytes;
