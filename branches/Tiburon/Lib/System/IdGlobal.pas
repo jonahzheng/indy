@@ -823,7 +823,9 @@ type
      {$ENDIF}
   {$ENDIF}
   TPosProc = function(const substr, str: String): LongInt;
+  {$IFNDEF DOTNET}
   TStrScanProc = function(Str: PChar; Chr: Char): PChar;
+  {$ENDIF}
   TIdReuseSocket = (rsOSDependent, rsTrue, rsFalse);
 
   {$IFNDEF VCL6ORABOVE}
@@ -1173,8 +1175,10 @@ procedure ValidEncoding(const AEncoding : TIdEncoding); {$IFDEF USEINLINE}inline
 
 var
   IndyPos: TPosProc = nil;
+  {$IFNDEF DOTNET}
   IndyStrScan: TStrScanProc = nil;
-
+  {$ENDIF}
+  
 type
   {
   RLebeau 8/3/2007: This is probably not the best way to handle UTF-8,
@@ -1812,7 +1816,7 @@ begin
   LLength := CalcBytesForUTF8String(AStr, AIndex, ALength);
   SetLength(Result, LLength);
   {$IFDEF DOTNET_OR_TEncoding}
-  GetEncoder(enUTF8).GetBytes(AStr, AIndex, ALength, Result, 0);
+  GetEncoder(enUTF8).GetBytes(AStr, AIndex{$IFDEF DOTNET} - 1{$ENDIF}, ALength, Result, 0);
   {$ELSE}
   LLength := 0;
   for I := AIndex to ALength do begin
@@ -3328,11 +3332,13 @@ begin
   Result := Pos(Substr, S);
 end;
 
+{$IFNDEF DOTNET}
 function SBStrScan(Str: PChar; Chr: Char): PChar;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
   Result := SysUtils.StrScan(Str, Chr);
 end;
+{$ENDIF}
 
 {$IFNDEF DOTNET}
 //Don't rename this back to AnsiPos because that conceals a symbol in Windows
@@ -5084,7 +5090,7 @@ initialization
   // AnsiPos does not handle strings with #0 and is also very slow compared to Pos
   {$IFDEF DOTNET}
   IndyPos := SBPos;
-  IndyStrScan := SBStrScan;
+  //IndyStrScan := SBStrScan;
   {$ELSE}
   if LeadBytes = [] then begin
     IndyPos := SBPos;
