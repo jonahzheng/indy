@@ -26,6 +26,7 @@ package dclIndyProtocolsK3;
 {$IMPLICITBUILD OFF}
 
 requires
+  designide,
   IndyProtocolsK3,
   IndySystemK3,
   IndyCoreK3,

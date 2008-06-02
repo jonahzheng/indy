@@ -26,11 +26,8 @@ package dclIndyProtocols70;
 {$IMPLICITBUILD OFF}
 
 requires
-  rtl,
-  designide,
-  vclactnband,
-  vclx,
   vcl,
+  designide,
   IndyProtocols70,
   IndySystem70,
   IndyCore70,

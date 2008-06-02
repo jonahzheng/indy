@@ -26,6 +26,7 @@ package dclIndyProtocols110;
 {$IMPLICITBUILD OFF}
 
 requires
+  designide,
   IndyProtocols110,
   IndySystem110,
   IndyCore110,

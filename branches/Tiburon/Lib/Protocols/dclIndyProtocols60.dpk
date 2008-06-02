@@ -26,7 +26,7 @@ package dclIndyProtocols60;
 {$IMPLICITBUILD OFF}
 
 requires
-  Vcl,
+  vcl,
   designide,
   IndyProtocols60,
   IndySystem60,

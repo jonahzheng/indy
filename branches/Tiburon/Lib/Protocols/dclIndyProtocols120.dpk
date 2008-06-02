@@ -1,7 +1,6 @@
 package dclIndyProtocols120;
 
 {$R *.res}
-{$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
 {$DEBUGINFO ON}
@@ -27,6 +26,7 @@ package dclIndyProtocols120;
 {$IMPLICITBUILD OFF}
 
 requires
+  designide,
   IndyProtocols120,
   IndySystem120,
   IndyCore120,

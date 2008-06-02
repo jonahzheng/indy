@@ -269,6 +269,7 @@ uses
   IdRSH,
   IdRSHServer,
   IdSASLAnonymous,
+  IdSASLDigest,
   IdSASLExternal,
   IdSASLLogin,
   IdSASLOTP,
@@ -287,6 +288,7 @@ uses
   {$ENDIF}
   IdSNPP,
   IdSNTP,
+  IdSocksServer,
   {$IFDEF DOTNET2_OR_ABOVE}
   IdSSLDotNET,
   {$ENDIF}
@@ -404,6 +406,7 @@ uses
   {$R IconsDotNet\TIdSASL.bmp}
   {$R IconsDotNet\TIdSASLAnonymous.bmp}
   {$R IconsDotNet\TIdSASLCRAMMD5.bmp}
+  {$R IconsDotNet\TIdSASLDigest.bmp}
   {$R IconsDotNet\TIdSASLExternal.bmp}
   {$R IconsDotNet\TIdSASLList.bmp}
   {$R IconsDotNet\TIdSASLLogin.bmp}
@@ -424,7 +427,7 @@ uses
   {$R IconsDotNet\TIdSMTPServer.bmp}
   {$R IconsDotNet\TIdSNPP.bmp}
   {$R IconsDotNet\TIdSNTP.bmp}
-  {.$R IconsDotNet\TIdSocksServer.bmp}
+  {$R IconsDotNet\TIdSocksServer.bmp}
   {$R IconsDotNet\TIdSysLog.bmp}
   {$R IconsDotNet\TIdSysLogMessage.bmp}
   {$R IconsDotNet\TIdSyslogServer.bmp}
@@ -538,6 +541,7 @@ begin
    TIdRexecServer,
    TIdRSHServer,
    TIdSMTPServer,
+   TIdSocksServer,
    TIdSyslogServer,
    TIdSystatServer,
    TIdSystatUDPServer,
@@ -580,6 +584,7 @@ begin
    TIdSASLAnonymous,
    TIdSASLCRAMMD5,
    TIdSASLCRAMSHA1,
+   TIdSASLDigest,
    TIdSASLExternal,
    TIdSASLLogin,
    TIdSASLOTP,
@@ -694,7 +699,7 @@ begin
    TIdRexecServer,
    TIdRSHServer,
    TIdSMTPServer,
-//   TIdSocksServer,
+   TIdSocksServer,
    TIdSyslogServer,
    TIdSystatServer,
    TIdSystatUDPServer,
@@ -728,6 +733,7 @@ begin
   RegisterComponents(RSRegSASL+RSProt, [
    TIdSASLAnonymous,
    TIdSASLCRAMMD5,
+   TIdSASLDigest,
    TIdSASLExternal,
    TIdSASLLogin,
    TIdSASLOTP,

@@ -26,6 +26,8 @@ package dclIndyProtocols100Net;
 {$IMPLICITBUILD OFF}
 
 requires
+  System.Windows.Forms,
+  Borland.Studio.Vcl.Design,
   IndyProtocols100Net,
   IndySystem100Net,
   IndyCore100Net,
