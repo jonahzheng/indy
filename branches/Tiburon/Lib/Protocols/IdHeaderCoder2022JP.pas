@@ -36,7 +36,10 @@ const
     $0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,
     $0000,$0000,$0000);
 
-  sj1_tbl : array[#128..#255] of Byte = (
+  //for some reason, I get a "[DCC Error]
+  //IdHeaderCoder2022JP.pas(39): E2011
+  //Low bound exceeds high bound" with DotNET that doesn't happen in Win32.
+  sj1_tbl : array[128..255] of byte = (//#128..#255] of Byte = (
     $00,$21,$23,$25,$27,$29,$2B,$2D,$2F,$31,$33,$35,$37,$39,$3B,$3D,
     $3F,$41,$43,$45,$47,$49,$4B,$4D,$4F,$51,$53,$55,$57,$59,$5B,$5D,
     $00,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,
@@ -170,7 +173,7 @@ begin
       Inc(I);
     end else
     begin
-      K1 := sj1_tbl[AnsiChar(AData[I])];
+      K1 := sj1_tbl[Byte(AnsiChar(AData[I]))];
       case K1 of
       0: Inc(I);    { invalid SBCS }
       2: Inc(I, 2); { invalid DBCS }
