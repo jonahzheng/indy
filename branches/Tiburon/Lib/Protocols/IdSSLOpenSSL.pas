@@ -2274,6 +2274,8 @@ begin
   end else begin
     LException := Create(GetErrorMessage(LErr));
   end;
+  LException.FErrorCode := LErr;
+  LException.FRetCode := ARetCode;
   raise LException;
 end;
 
