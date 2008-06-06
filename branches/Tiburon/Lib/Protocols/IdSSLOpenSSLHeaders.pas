@@ -7125,6 +7125,11 @@ const
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   SSL_DLL_name       = 'ssleay32.dll';  {Do not localize}
+  //The following is a workaround for an alternative name for
+  //one of the OpenSSL .DLL's.  If you compile the .DLL's using
+  //mingw32, the SSL .dll might be named 'libssl32.dll' instead of
+  //ssleay32.dll like you would expect.
+  SSL_DLL_name_alt   = 'libssl32.dll';  {Do not localize}
   SSLCLIB_DLL_name   = 'libeay32.dll';  {Do not localize}
   {$ENDIF}
 var
@@ -9474,6 +9479,11 @@ begin
   end;
   if hIdSSL = 0 then begin
     hIdSSL := SafeLoadLibrary(SSL_DLL_name);
+    //This is a workaround for mingw32-compiled SSL .DLL which
+    //might be named 'libssl32.dll'.
+    if hIdSSL = 0 then begin
+      hIdSSL := SafeLoadLibrary(SSL_DLL_name_alt);
+    end;
   end else begin
     Exit;
   end;
