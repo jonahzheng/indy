@@ -564,6 +564,11 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
   end;
 
   EIdOpenSSLError = class(EIdException);
+  EIdOSSLCouldNotLoadSSLLibrary = class(EIdOpenSSLError);
+  EIdOSSLModeNotSet             = class(EIdOpenSSLError);
+  EIdOSSLGetMethodError         = class(EIdOpenSSLError);
+  EIdOSSLCreatingContextError   = class(EIdOpenSSLError);
+  
   TIdOpenSSLAPISSLError = class of EIdOpenSSLAPISSLError;
 
   EIdOpenSSLAPISSLError = class(EIdOpenSSLError)
@@ -586,13 +591,10 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     property ErrorCode : TIdC_ULONG read FErrorCode;
   end;
 
-  EIdOSSLCouldNotLoadSSLLibrary = class(EIdOpenSSLError);
-  EIdOSSLModeNotSet = class(EIdOpenSSLError);
-  EIdOSSLGetMethodError = class(EIdOpenSSLError);
-  EIdOSSLCreatingContextError = class(EIdOpenSSLError);
   EIdOSSLLoadingRootCertError = class(EIdOpenSSLAPICryptoError);
   EIdOSSLLoadingCertError = class(EIdOpenSSLAPICryptoError);
   EIdOSSLLoadingKeyError = class(EIdOpenSSLAPICryptoError);
+
   EIdOSSLSettingCipherError = class(EIdOpenSSLError);
   EIdOSSLFDSetError = class(EIdOpenSSLAPISSLError);
   EIdOSSLDataBindingError = class(EIdOpenSSLAPISSLError);
