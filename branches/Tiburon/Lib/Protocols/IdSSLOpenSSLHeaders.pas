@@ -9505,6 +9505,11 @@ begin
   end;
   if hIdSSL = 0 then begin
     hIdSSL := SafeLoadLibrary(SSL_DLL_name);
+    //This is a workaround for mingw32-compiled SSL .DLL which
+    //might be named 'libssl32.dll'.
+    if hIdSSL = 0 then begin
+      hIdSSL := SafeLoadLibrary(SSL_DLL_name_alt);
+    end;    
   end else begin
     Exit;
   end;
