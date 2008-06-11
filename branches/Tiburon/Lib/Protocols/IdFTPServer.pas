@@ -4293,7 +4293,7 @@ end;
 procedure TIdFTPServer.CommandRMDA(ASender : TIdCommand);
 var
   LContext : TIdFTPServerContext;
-  LPath : TIdFileName;
+  LPath : TIdFTPFileName;
 begin
   //FOnRemoveDirectoryAll: TOnDirectoryEvent;
   LContext := ASender.Context as TIdFTPServerContext;
@@ -4301,8 +4301,8 @@ begin
   begin
     if Assigned(FOnRemoveDirectoryAll) then
     begin
-      LPath := DoProcessPath(LContext,ASender.UnparsedParams);
-      FOnRemoveDirectoryAll(LContext,  LPath);
+      LPath := DoProcessPath(LContext, ASender.UnparsedParams);
+      FOnRemoveDirectoryAll(LContext, LPath);
       ASender.Reply.SetReply(250, RSFTPFileActionCompleted);
     end else begin
       CmdNotImplemented(ASender);
