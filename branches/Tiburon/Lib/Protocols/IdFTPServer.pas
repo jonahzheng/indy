@@ -645,7 +645,7 @@ const
   DEF_PATHPROCESSING = ftpOSDependent;
 
   {Do not change these as it could break some clients}
-  SYST_ID_UNIX =  'UNIX Type: L8';  {Do not translate}
+  SYST_ID_UNIX = 'UNIX Type: L8';  {Do not translate}
   SYST_ID_NT = 'Windows_NT';   {Do not translate}
 
 const AAlwaysValidOpts : array [0..2] of string =
@@ -3543,7 +3543,6 @@ end;
 procedure TIdFTPServer.CommandSTAT(ASender: TIdCommand);
 var
   LStream: TStringList;
-
   LActAsList: boolean;
   LSwitches, LPath : String;
   i : Integer;
@@ -3609,15 +3608,10 @@ begin
         if TIdFTPServerContext(ASender.Context).NLSTUtf8 then
         begin
           LEncoding := enUTF8;
-        end
-        else
-        begin
+        end else begin
           LEncoding := en7bit;
         end;
-        for i := 0 to LStream.Count - 1 do
-        begin
-          LContext.Connection.IOHandler.WriteLn(LStream[i],LEncoding);
-        end;
+        LContext.Connection.IOHandler.Write(LStream, False, LEncoding);
         ASender.PerformReply := True;
         ASender.Reply.SetReply(213, RSFTPCmdEndOfStat);
       finally
@@ -3856,8 +3850,7 @@ begin
     //I'm doing things this way with complience level to match the current
     //version of NcFTPD
     LTmp := 'RFC 959 2389 ';
-    if UserSecurity.FInvalidPassDelay <> 0 then
-    begin
+    if UserSecurity.FInvalidPassDelay <> 0 then begin
       LTmp := LTmp + '2577 ';
     end;
     ASender.Reply.Text.Add(LTmp + '3659'); {Do not Localize}
@@ -4254,18 +4247,12 @@ begin
     begin
       LPath := DoProcessPath(LContext, ASender.UnparsedParams);
       FOnAvailDiskSpace(LContext, LPath,LIsFile,LSize);
-      if LIsFile then
-      begin
-        ASender.Reply.SetReply(550,IndyFormat(RSFTPIsAFile,[LPath]));
-
-      end
-      else
-      begin
-         ASender.Reply.SetReply(213, IntToStr (LSize));
+      if LIsFile then begin
+        ASender.Reply.SetReply(550, IndyFormat(RSFTPIsAFile,[LPath]));
+      end else begin
+         ASender.Reply.SetReply(213, IntToStr(LSize));
       end;
-    end
-    else
-    begin
+    end else begin
       CmdNotImplemented(ASender);
     end;
   end else begin
@@ -4290,18 +4277,12 @@ begin
     begin
       LPath := DoProcessPath(LContext, ASender.UnparsedParams);
       FOnCompleteDirSize(LContext, LPath,LIsFile,LSize);
-      if LIsFile then
-      begin
-        ASender.Reply.SetReply(550,IndyFormat(RSFTPIsAFile,[LPath]));
-
-      end
-      else
-      begin
-        ASender.Reply.SetReply(213, IntToStr (LSize));
+      if LIsFile then begin
+        ASender.Reply.SetReply(550, IndyFormat(RSFTPIsAFile,[LPath]));
+      end else begin
+        ASender.Reply.SetReply(213, IntToStr(LSize));
       end;
-    end
-    else
-    begin
+    end else begin
       CmdNotImplemented(ASender);
     end;
   end else begin
@@ -6039,7 +6020,7 @@ var
   State: TIdFTPTelnetState;
   lb : Byte;
   LContext: TIdFTPServerContext;
-  { Receive the line in 8-bit init\ially so that .NET can then
+  { Receive the line in 8-bit initially so that .NET can then
     decode any UTF-8 data into a Unicode string afterwards if
     needed }
   LLine: TIdBytes;
