@@ -2286,9 +2286,9 @@ charactors you can print.
 
 The routine itself could probably be optimized but I'm not sure how.
 }
-      for i := ASourceIndex to LLength do
+      for i := 0 to LLength-1 do
       begin
-        VDest[ i - 1] := Ord( ASource[ i]) and $FF;
+        VDest[ADestIndex+i] := Ord(ASource[ASourceIndex+i]) and $FF;
       end;
     end
     else
