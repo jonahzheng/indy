@@ -6,24 +6,24 @@
 	<Import Project="$(TPADDONS)\tpaddons.Targets"/>
 	<ItemGroup>
 
-		<BuildTarget Include="dclIndyProtocols120.dpk">
+		<BuildTarget Include="IndyProtocols120.dpk">
 			<BuildAs>package</BuildAs>
 			<Language>delphi</Language>
 			<Platform>win32</Platform>
 		</BuildTarget>
 
-		<Compile Include="dclIndyProtocols120.dpk">
+		<Compile Include="IndyProtocols120.dpk">
 			<CompilerOptions>$(DCCSWTS) $(BCBSWTS)</CompilerOptions>
 		</Compile>
 
 		<ResourceFiles Include="
-				dclIndyProtocols120.rc
+				IndyProtocols120.rc
 		">
 			<TargetExtension>.res</TargetExtension>
 		</ResourceFiles>
 	</ItemGroup>
 	<Target Name="default" DependsOnTargets="mkdir;buildresources;BuildExtras;tpbuild"/>
 	<Target Name="BuildExtras">
-		<Exec Command="$(DCCEXE) -M -H -W -Z IdCompressionIntercept.pas -$d-l- -U$(DCUOUTDIR) $(DCCSWTS)"/>
+		<Exec Command="$(DCCEXE) -M -H -W -Z IdCompressionIntercept.pas -$d-l- $(DCCSWTS)"/>
 	</Target>
 </Project>
