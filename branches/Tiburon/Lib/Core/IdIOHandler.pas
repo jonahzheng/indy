@@ -1098,7 +1098,7 @@ begin
       Exit;
     // ReadFromSource blocks - do not call unless we need to
     end else if LTermPos = -1 then begin
-      if (AMaxLineLength > 0) and (LSize > AMaxLineLength) then begin
+      if (AMaxLineLength > 0) and (LStartPos > AMaxLineLength) then begin
         EIdReadLnMaxLineLengthExceeded.IfTrue(MaxLineAction = maException, RSReadLnMaxLineLengthExceeded);
         FReadLnSplit := True;
         Result := FInputBuffer.Extract(AMaxLineLength, LEncoding);
