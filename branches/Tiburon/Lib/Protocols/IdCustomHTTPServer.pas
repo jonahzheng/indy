@@ -642,9 +642,8 @@ begin
   // TODO: move this new logic into TIdCustomTCPServer directly somehow
   
   if AContext.Connection.IOHandler is TIdSSLIOHandlerSocketBase then begin
-    if DoQuerySSLPort(AContext.Connection.Socket.Binding.Port) then begin
-      TIdSSLIOHandlerSocketBase(AContext.Connection.IOHandler).PassThrough := False;
-    end;
+    TIdSSLIOHandlerSocketBase(AContext.Connection.IOHandler).PassThrough :=
+      not DoQuerySSLPort(AContext.Connection.Socket.Binding.Port);
   end;
   inherited DoConnect(AContext);
 end;
