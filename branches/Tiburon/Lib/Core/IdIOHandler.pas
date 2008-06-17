@@ -907,27 +907,26 @@ procedure TIdIOHandler.Write(AValue: TStrings; AWriteLinesCount: Boolean = False
   const AEncoding: TIdEncoding = enDefault);
 var
   i: Integer;
+  LEncoding: TIdEncoding;
 begin
-  WriteBufferOpen; try
+  LEncoding := AEncoding;
+  if LEncoding = enDefault then begin
+    LEncoding := FDefStringEncoding;
+  end;
+  WriteBufferOpen;
+  try
     if AWriteLinesCount then begin
       Write(AValue.Count);
     end;
-
     for i := 0 to AValue.Count - 1 do begin
-      if AEncoding=enDefault then
-      begin
-        WriteLn(AValue.Strings[i], FDefStringEncoding );
-      end
-      else
-      begin
-        WriteLn(AValue.Strings[i], AEncoding);
-      end;
+      WriteLn(AValue.Strings[i], LEncoding);
     end;
-
     // Kudzu: I had an except here and a close, but really even if error we should
     // write out whatever we have. Very doubtful any errors will occur in above
     // code anyways unless given bad input, which incurs bigger problems anyways.
-  finally WriteBufferClose; end;
+  finally
+    WriteBufferClose;
+  end;
 end;
 
 procedure TIdIOHandler.Write(AValue: SmallInt; AConvert: Boolean = True);
@@ -1064,7 +1063,7 @@ function TIdIOHandler.ReadLn(ATerminator: string; ATimeout: Integer = IdTimeoutD
   AMaxLineLength: Integer = -1; const AEncoding: TIdEncoding = enDefault): string;
 var
   LInputBufferSize: Integer;
-  LSize: Integer;
+  LStartPos: Integer;
   LTermPos: Integer;
   LReadLnStartTime: LongWord;
   LEncoding : TIdEncoding;
@@ -1080,17 +1079,17 @@ begin
   FReadLnSplit := False;
   FReadLnTimedOut := False;
   LTermPos := -1;
-  LSize := 0;
+  LStartPos := 0;
   LReadLnStartTime := Ticks;
   repeat
     LInputBufferSize := FInputBuffer.Size;
     if LInputBufferSize > 0 then begin
-      if LSize < LInputBufferSize then begin
-        LTermPos := FInputBuffer.IndexOf(ATerminator, LSize, LEncoding);
+      if LStartPos < LInputBufferSize then begin
+        LTermPos := FInputBuffer.IndexOf(ATerminator, LStartPos, LEncoding);
       end else begin
         LTermPos := -1;
       end;
-      LSize := LInputBufferSize;
+      LStartPos := IndyMax(LInputBufferSize-(Length(ATerminator)-1), 0);
     end;
     if (AMaxLineLength > 0) and (LTermPos > AMaxLineLength) then begin
       EIdReadLnMaxLineLengthExceeded.IfTrue(MaxLineAction = maException, RSReadLnMaxLineLengthExceeded);
