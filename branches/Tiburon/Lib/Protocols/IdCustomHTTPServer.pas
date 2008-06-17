@@ -215,7 +215,8 @@ type
   TIdHTTPHeadersAvailableEvent = procedure(AContext: TIdContext; AHeaders: TIdHeaderList; var VContinueProcessing: Boolean) of object;
   TIdHTTPHeadersBlockedEvent = procedure(AContext: TIdContext; AHeaders: TIdHeaderList; var VResponseNo: Integer; var VResponseText, VContentText: String) of object;
   TIdHTTPHeaderExpectationsEvent = procedure(AContext: TIdContext; const AExpectations: String; var VContinueProcessing: Boolean) of object;
-
+  TIdHTTPQuerySSLPortEvent = procedure(APort: TIdPort; var VUseSSL: Boolean) of object;
+  
   //objects
   EIdHTTPServerError = class(EIdException);
   EIdHTTPHeaderAlreadyWritten = class(EIdHTTPServerError);
@@ -383,6 +384,7 @@ type
     FOnHeadersAvailable: TIdHTTPHeadersAvailableEvent;
     FOnHeadersBlocked: TIdHTTPHeadersBlockedEvent;
     FOnHeaderExpectations: TIdHTTPHeaderExpectationsEvent;
+    FOnQuerySSLPort: TIdHTTPQuerySSLPortEvent;
     //
     FSessionCleanupThread: TIdThread;
     FMaximumHeaderLineCount: Integer;
@@ -402,6 +404,7 @@ type
     function DoHeadersAvailable(ASender: TIdContext; AHeaders: TIdHeaderList): Boolean; virtual;
     procedure DoHeadersBlocked(ASender: TIdContext; AHeaders: TIdHeaderList; var VResponseNo: Integer; var VResponseText, VContentText: String); virtual;
     function DoHeaderExpectations(ASender: TIdContext; const AExpectations: String): Boolean; virtual;
+    function DoQuerySSLPort(APort: TIdPort): Boolean; virtual;
     //
     function DoExecute(AContext:TIdContext): Boolean; override;
     //
@@ -446,6 +449,7 @@ type
     property OnCommandOther: TIdHTTPCommandEvent read FOnCommandOther
      write FOnCommandOther;
     property OnCommandError: TIdHTTPCommandError read FOnCommandError write FOnCommandError;
+    property OnQuerySSLPort: TIdHTTPQuerySSLPortEvent read FOnQuerySSLPort write FOnQuerySSLPort;
   end;
 
   TIdHTTPDefaultSessionList = Class(TIdHTTPCustomSessionList)
@@ -628,10 +632,29 @@ end;
 
 procedure TIdCustomHTTPServer.DoConnect(AContext: TIdContext);
 begin
+  // RLebeau 6/17/08: let the user decide whether to enable SSL in their
+  // own event handler.  Indy should not be making any assumptions about
+  // whether to implicitally force SSL on any given connection.  This
+  // prevents a single server from handling both SSL and non-SSL connections
+  // together.  The whole point of the PassThrough property is to allow
+  // per-connection SSL handling.
+  //
+  // TODO: move this new logic into TIdCustomTCPServer directly somehow
+  
   if AContext.Connection.IOHandler is TIdSSLIOHandlerSocketBase then begin
-    TIdSSLIOHandlerSocketBase(AContext.Connection.IOHandler).PassThrough:=false;
+    if DoQuerySSLPort(AContext.Connection.Socket.Binding.Port) then begin
+      TIdSSLIOHandlerSocketBase(AContext.Connection.IOHandler).PassThrough := False;
+    end;
   end;
   inherited DoConnect(AContext);
+end;
+
+function TIdCustomHTTPServer.DoQuerySSLPort(APort: TIdPort): Boolean;
+begin
+  Result := not Assigned(FOnQuerySSLPort);
+  if not Result then begin
+    FOnQuerySSLPort(APort, Result);
+  end;
 end;
 
 function TIdCustomHTTPServer.DoHeadersAvailable(ASender: TIdContext; AHeaders: TIdHeaderList): Boolean;
