@@ -124,6 +124,8 @@ var
   Type2: type_2_message_header;
 begin
   Result := '';    {do not localize}
+  SetLength(buf, 0);
+
   case FCurrentStep of
     1:
       begin
