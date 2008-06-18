@@ -330,7 +330,6 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    class function FindBoundary(const AContentType: string): string;
     procedure Push(ABoundary: string; AParentPart: integer);
     procedure Pop;
     procedure Clear;
@@ -449,7 +448,6 @@ type
     procedure LoadFromFile(const AFileName: string; const AHeadersOnly: Boolean = False);
     procedure LoadFromStream(AStream: TStream; const AHeadersOnly: Boolean = False);
 
-    function  ExtractCharSet(AContentType: string): string;
     procedure ProcessHeaders;
 
     procedure SaveToFile(const AFileName : string; const AHeadersOnly: Boolean = False);
@@ -563,35 +561,6 @@ begin
   FreeAndNil(FBoundaryList);
   FreeAndNil(FParentPartList);
   inherited;
-end;
-
-class function TIdMIMEBoundary.FindBoundary(const AContentType: string): string;
-var
-  s: string;
-begin
-  // Store in s and not Result because of Fetch semantics
-  s := AContentType;
-  //CC: Used to Fetch 'BOUNDARY=', but this failed for those with 'BOUNDARY ='
-  //Get FETCH to ignore case in searching for BoUnDaRy
-  Fetch(s, 'BOUNDARY', True, False); {do not localize}
-  if Length(s) > 0 then begin
-    s := Trim(s);
-    if TextStartsWith(s, '=') then begin       {do not localize}
-      s := Copy(s, 2, MaxInt);
-    end;
-    {CC: Fix suggested by Juergen Haible - some clients add a space after the boundary,
-    remove it by calling Trim(s)...}
-    s := Trim(s);
-    if TextStartsWith(s, '"') then begin {do not localize}
-      Delete(s, 1, 1);
-      Result := Fetch(s, '"'); {do not localize}
-    // Should never occur, and if so bigger problems but just in case we'll try
-    end else begin
-      Result := s;
-    end;
-  end else begin
-    Result := s;
-  end;
 end;
 
 function TIdMIMEBoundary.GetBoundary: string;
@@ -906,21 +875,6 @@ begin
   end;
 end;
 
-function TIdMessage.ExtractCharSet(AContentType: string): string;
-var
-  s: string;
-begin
-  s := UpperCase(AContentType);
-  Fetch(s, 'CHARSET='); {do not localize}
-  if TextStartsWith(s, '"') then begin {do not localize}
-    Delete(s, 1, 1);
-    Result := Fetch(s, '"'); {do not localize}
-  // Sometimes its not in quotes
-  end else begin
-    Result := Fetch(s, ';');   {do not localize}
-  end;
-end;
-
 procedure TIdMessage.ProcessHeaders;
 var
   LBoundary: string;
@@ -952,7 +906,7 @@ begin
   end else begin
     FContentType := Trim(Fetch(FContentType, ';'));  {do not localize}
   end;
-  FCharset := ExtractCharSet(Headers.Values['Content-Type']);  {do not localize}
+  FCharSet := ExtractHeaderSubItem(Headers.Values['Content-Type'], 'CHARSET');  {do not localize}
 
   ContentTransferEncoding := Headers.Values['Content-Transfer-Encoding']; {do not localize}
   ContentDisposition := Headers.Values['Content-Disposition'];  {do not localize}
@@ -982,7 +936,7 @@ begin
     Priority := GetMsgPriority(Headers.Values['Priority']); {do not localize}
   end;
   {Note that the following code ensures MIMEBoundary.Count is 0 for single-part MIME messages...}
-  LBoundary := MIMEBoundary.FindBoundary(Headers.Values['Content-Type']);  {do not localize}
+  LBoundary := ExtractHeaderSubItem(Headers.Values['Content-Type'], 'BOUNDARY');  {do not localize}
   if LBoundary <> '' then begin
     MIMEBoundary.Push(LBoundary, -1);
   end;
