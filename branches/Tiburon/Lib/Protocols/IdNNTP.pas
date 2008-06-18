@@ -263,7 +263,8 @@ type
     procedure ParseXHDRLine(ALine : String; out AMsg : String; out AHeaderData : String);
     procedure Post(AMsg: TIdMessage); overload;
     procedure Post(AStream: TStream); overload;
-    function SendCmd(AOut: string; const AResponse: Array of SmallInt; const AEncoding: TIdEncoding = en7bit): SmallInt; override;
+    function SendCmd(AOut: string; const AResponse: array of SmallInt;
+      const AEncoding: TIdEncoding = en7bit): SmallInt; override;
     function SelectArticle(AMsgNo: Integer): Boolean;
     procedure SelectGroup(AGroup: string);
     function TakeThis(AMsgID: string; AMsg: TStream): string;
@@ -370,15 +371,14 @@ end;
 
 function TIdNNTP.SendCmd(AOut: string; const AResponse: Array of SmallInt;
   const AEncoding: TIdEncoding = en7bit): SmallInt;
-
 begin
   // NOTE: Responses must be passed as arrays so that the proper inherited SendCmd is called
   // and a stack overflow is not caused.
-  Result := inherited SendCmd(AOut, []);
+  Result := inherited SendCmd(AOut, [], AEncoding);
   if (Result = 480) or (Result = 450) then
   begin
     SendAuth;
-    Result := inherited SendCmd(AOut, AResponse);
+    Result := inherited SendCmd(AOut, AResponse, AEncoding);
   end else begin
     CheckResponse(Result, AResponse);
   end;
