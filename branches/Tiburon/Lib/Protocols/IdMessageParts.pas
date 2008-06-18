@@ -161,9 +161,6 @@ type
 
   EIdCanNotCreateMessagePart = class(EIdMessageException);
 
-// Procs
-  function  ExtractHeaderSubItem(const AHeaderLine,ASubItem: String): String;
-
 implementation
 
 uses
@@ -227,7 +224,7 @@ end;
 
 function TIdMessagePart.GetCharSet(AHeader: string): String;
 begin
-  Result := ExtractHeaderSubItem(AHeader, 'CHARSET='); {do not localize}
+  Result := ExtractHeaderSubItem(AHeader, 'CHARSET'); {do not localize}
 end;
 
 function TIdMessagePart.ResolveContentType(AContentType: string): string;
@@ -392,22 +389,6 @@ end;
 procedure TIdMessageParts.SetItem(Index: Integer; const Value: TIdMessagePart);
 begin
   inherited SetItem(Index, Value);
-end;
-
-  // TODO: class function (used in TIdMessage too)
-function  ExtractHeaderSubItem(const AHeaderLine,ASubItem: String): String;
-var
-  S: String;
-begin
-  S := AHeaderLine;
-  FetchCaseInsensitive(S, ASubItem);    {do not localize}
-  if (S>'') and (S[1] = '"') then begin {do not localize}
-    Delete(s, 1, 1);
-    Result := Fetch(s, '"');            {do not localize}
-  // Sometimes its not in quotes
-  end else begin
-    Result := Fetch(s, ';');
-  end;
 end;
 
 end.
