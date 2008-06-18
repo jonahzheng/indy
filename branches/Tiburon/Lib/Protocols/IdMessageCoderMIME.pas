@@ -558,7 +558,7 @@ begin
     //CC: Need to detect on "multipart" rather than boundary, because only the
     //"multipart" bit will be visible later...
     if TextStartsWith(s, 'multipart/') then begin  {do not localize}
-      ABoundary := TIdMIMEBoundary.FindBoundary(s);
+      ABoundary := ExtractHeaderSubItem(s, 'BOUNDARY');  {do not localize}
       if Owner is TIdMessage then begin
         if Length(ABoundary) > 0 then begin
           TIdMessage(Owner).MIMEBoundary.Push(ABoundary, TIdMessage(Owner).MessageParts.Count);
