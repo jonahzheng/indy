@@ -461,29 +461,13 @@ var
   LValue: string;
   LPos: Integer;
 begin
-  LPos := IndyPos('FILENAME=', UpperCase(AContentDisposition));  {do not localize}
-  if LPos > 0 then begin
-    LValue := Trim(Copy(AContentDisposition, LPos + 9, MaxInt));
-  end else begin
-    LValue := ''; //FileName not found
-  end;
+  LValue := ExtractHeaderSubItem(AContentDisposition, 'FILENAME'); {do not localize}
   if Length(LValue) = 0 then begin
     // Get filename from Content-Type
-    LPos := IndyPos('NAME=', UpperCase(AContentType)); {do not localize}
-    if LPos > 0 then begin
-      LValue := Trim(Copy(AContentType, LPos + 5, MaxInt));    {do not localize}
-    end;
+    LValue := ExtractHeaderSubItem(AContentType, 'NAME'); {do not localize}
   end;
   if Length(LValue) > 0 then begin
-    if LValue[1] = '"' then begin    {do not localize}
-      // RLebeau - shouldn't this code use AnsiExtractQuotedStr() instead?
-      Fetch(LValue, '"');    {do not localize}
-      Result := Fetch(LValue, '"');    {do not localize}
-    end else begin
-      // RLebeau - just in case the name is not the last field in the line
-      Result := Fetch(LValue, ';'); {do not localize}
-    end;
-    Result := RemoveInvalidCharsFromFilename(DecodeHeader(Result));
+    Result := RemoveInvalidCharsFromFilename(DecodeHeader(LValue));
   end else begin
     Result := '';
   end;
