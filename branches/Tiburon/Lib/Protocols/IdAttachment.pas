@@ -148,7 +148,7 @@ End;//
 
 function TIdAttachment.GetContentTypeName: String;
 Begin
-  Result := ExtractHeaderSubItem(inherited GetContentType, 'NAME='); {do not localize}
+  Result := ExtractHeaderSubItem(inherited GetContentType, 'NAME'); {do not localize}
 End;//
 
 class function TIdAttachment.PartType: TIdMessagePartType;
