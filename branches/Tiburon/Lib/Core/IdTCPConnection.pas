@@ -405,20 +405,23 @@ type
     // GetInternalResponse is not in IOHandler as some protocols may need to
     // override it. It could be still moved and proxied from here, but at this
     // point it is here.
-    procedure GetInternalResponse; virtual;
+    procedure GetInternalResponse(const AEncoding: TIdEncoding = en7Bit); virtual;
     // Reads response using GetInternalResponse which each reply type can define
     // the behaviour. Then checks against expected Code.
     //
     // Seperate one for singles as one of the older Delphi compilers cannot
     // match a single number into an array. IIRC newer ones do.
-    function GetResponse(const AAllowedResponse: SmallInt = -1): SmallInt; overload;
-    function GetResponse(const AAllowedResponses: array of SmallInt): SmallInt; overload; virtual;
+    function GetResponse(const AAllowedResponse: SmallInt = -1;
+      const AEncoding: TIdEncoding = en7Bit): SmallInt; overload;
+    function GetResponse(const AAllowedResponses: array of SmallInt;
+      const AEncoding: TIdEncoding = en7Bit): SmallInt; overload; virtual;
     // No array type for strings as ones that use strings are usually bastard
     // protocols like POP3/IMAP which dont include proper substatus anyways.
     //
     // If a case can be made for some other condition this may be expanded
     // in the future
-    function GetResponse(const AAllowedResponse: string): string; overload; virtual;
+    function GetResponse(const AAllowedResponse: string;
+      const AEncoding: TIdEncoding = en7Bit): string; overload; virtual;
     //
     property Greeting: TIdReply read FGreeting write SetGreeting;
     // RaiseExceptionForCmdResult - Overload necesary as a exception as a default param doesnt work
@@ -426,9 +429,12 @@ type
     procedure RaiseExceptionForLastCmdResult(AException: TClassIdException);
      overload; virtual;
     // These are extended GetResponses, so see the comments for GetResponse
-    function SendCmd(AOut: string; const AResponse: SmallInt = -1): SmallInt; overload;
-    function SendCmd(AOut: string; const AResponse: array of SmallInt): SmallInt; overload; virtual;
-    function SendCmd(AOut: string; const AResponse: string): string; overload;
+    function SendCmd(AOut: string; const AResponse: SmallInt = -1;
+      const AEncoding: TIdEncoding = en7bit): SmallInt; overload;
+    function SendCmd(AOut: string; const AResponse: array of SmallInt;
+      const AEncoding: TIdEncoding = en7bit): SmallInt; overload; virtual;
+    function SendCmd(AOut: string; const AResponse: string;
+      const AEncoding: TIdEncoding = en7bit): string; overload;
     //
     procedure WriteHeader(AHeader: TStrings);
     procedure WriteRFCStrings(AStrings: TStrings);
@@ -550,9 +556,10 @@ begin
   end;
 end;
 
-function TIdTCPConnection.GetResponse(const AAllowedResponses: array of SmallInt): SmallInt;
+function TIdTCPConnection.GetResponse(const AAllowedResponses: array of SmallInt;
+  const AEncoding: TIdEncoding = en7Bit): SmallInt;
 begin
-  GetInternalResponse;
+  GetInternalResponse(AEncoding);
   Result := CheckResponse(LastCmdResult.NumericCode, AAllowedResponses);
 end;
 
@@ -567,12 +574,13 @@ begin
   LastCmdResult.RaiseReplyError;
 end;
 
-function TIdTCPConnection.SendCmd(AOut: string; const AResponse: Array of SmallInt): SmallInt;
+function TIdTCPConnection.SendCmd(AOut: string; const AResponse: Array of SmallInt;
+  const AEncoding: TIdEncoding = en7bit): SmallInt;
 begin
   CheckConnected;
   PrepareCmd(AOut);
-  IOHandler.WriteLn(AOut);
-  Result := GetResponse(AResponse);
+  IOHandler.WriteLn(AOut, AEncoding);
+  Result := GetResponse(AResponse, AEncoding);
 end;
 
 procedure TIdTCPConnection.Notification(AComponent: TComponent; Operation: TOperation);
@@ -660,13 +668,13 @@ begin
   end;
 end;
 
-function TIdTCPConnection.SendCmd(AOut: string; const AResponse: SmallInt)
- : SmallInt;
+function TIdTCPConnection.SendCmd(AOut: string; const AResponse: SmallInt = -1;
+  const AEncoding: TIdEncoding = en7bit): SmallInt;
 begin
   if AResponse < 0 then begin
-    Result := SendCmd(AOut, []);
+    Result := SendCmd(AOut, [], AEncoding);
   end else begin
-    Result := SendCmd(AOut, [AResponse]);
+    Result := SendCmd(AOut, [AResponse], AEncoding);
   end;
 end;
 
@@ -700,7 +708,7 @@ begin
   Result := AResponse;
 end;
 
-procedure TIdTCPConnection.GetInternalResponse;
+procedure TIdTCPConnection.GetInternalResponse(const AEncoding: TIdEncoding = en7Bit);
 var
   LLine: string;
   LResponse: TStringList;
@@ -711,7 +719,7 @@ begin
     // ones, but I do remember we changed this for a reason
     // RLebeau 9/14/06: this can happen in between lines of the reply as well
     repeat
-      LLine := IOHandler.ReadLnWait;
+      LLine := IOHandler.ReadLnWait(MaxInt, AEncoding);
       LResponse.Add(LLine);
     until FLastCmdResult.IsEndMarker(LLine);
     //Note that FormattedReply uses an assign in it's property set method.
@@ -725,27 +733,30 @@ begin
   IOHandler.WriteRFCStrings(AStrings, True);
 end;
 
-function TIdTCPConnection.GetResponse(const AAllowedResponse: SmallInt): SmallInt;
+function TIdTCPConnection.GetResponse(const AAllowedResponse: SmallInt = -1;
+  const AEncoding: TIdEncoding = en7bit): SmallInt;
 begin
   if AAllowedResponse < 0 then begin
-    Result := GetResponse([]);
+    Result := GetResponse([], AEncoding);
   end else begin
-    Result := GetResponse([AAllowedResponse]);
+    Result := GetResponse([AAllowedResponse], AEncoding);
   end;
 end;
 
-function TIdTCPConnection.GetResponse(const AAllowedResponse: string): string;
+function TIdTCPConnection.GetResponse(const AAllowedResponse: string;
+  const AEncoding: TIdEncoding = en7bit): string;
 begin
-  GetInternalResponse;
+  GetInternalResponse(AEncoding);
   Result := CheckResponse(LastCmdResult.Code, AAllowedResponse);
 end;
 
-function TIdTCPConnection.SendCmd(AOut: string; const AResponse: string): string;
+function TIdTCPConnection.SendCmd(AOut: string; const AResponse: string;
+  const AEncoding: TIdEncoding = en7bit): string;
 begin
   CheckConnected;
   PrepareCmd(AOut);
-  IOHandler.WriteLn(AOut);
-  Result := GetResponse(AResponse);
+  IOHandler.WriteLn(AOut, AEncoding);
+  Result := GetResponse(AResponse, AEncoding);
 end;
 
 function TIdTCPConnection.CheckResponse(const AResponse, AAllowedResponse: string): string;
@@ -804,8 +815,8 @@ end;
 
 procedure TIdTCPConnection.PrepareCmd(var aCmd: string);
 begin
-  //Leave this empty here.  It's for cases where we may need to override
-  //what is sent to a server in a transparent manner.
+  //Leave this empty here.  It's for cases where we may need to
+  // override what is sent to a server in a transparent manner.
 end;
 
 end.
