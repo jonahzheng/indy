@@ -420,7 +420,7 @@ type
   {$ENDIF}
   procedure CommaSeparatedToStringList(AList: TStrings; const Value:string);
   function CompareDateTime(const ADateTime1, ADateTime2 : TDateTime) : Integer;
-  function ContentTypeStrToEncoding (const aContentEncoding: string): TIdEncoding;
+  function ContentTypeStrToEncoding (const aContentType: string): TIdEncoding;
   {
   These are for handling binary values that are in Network Byte order.  They call
   ntohs, ntols, htons, and htons which are required by SNTP and FSP
@@ -438,6 +438,7 @@ type
   function CopyFileTo(const Source, Destination: TIdFileName): Boolean;
   function DomainName(const AHost: String): String;
   function EnsureMsgIDBrackets(const AMsgID: String): String;
+  function ExtractHeaderSubItem(const AHeaderLine,ASubItem: String): String;
   function FileSizeByName(const AFilename: TIdFileName): Int64;
 
   //MLIST FTP DateTime conversion functions
@@ -2879,6 +2880,37 @@ begin
   end;
 end;
 
+function ExtractHeaderSubItem(const AHeaderLine, ASubItem: String): String;
+var
+  s: string;
+begin
+  Result := '';
+  // TODO: separate 'name=value' pairs beforehand for more accurate matching!
+  // Store in s and not Result because of Fetch semantics
+  s := AHeaderLine;
+  //CC: Used to Fetch 'NAME=', but this failed for those with 'NAME ='
+  //Get FETCH to ignore case in searching for 'NaMe'
+  FetchCaseInsensitive(s, ASubItem); {do not localize}
+  if Length(s) > 0 then begin
+    s := Trim(s);
+    if TextStartsWith(s, '=') then begin       {do not localize}
+      s := Copy(s, 2, MaxInt);
+    end;
+    {CC: Fix suggested by Juergen Haible - some clients add a space after
+    the name, remove it by calling Trim(s)...}
+    s := Trim(s);
+    if TextStartsWith(s, '"') then begin {do not localize}
+      // RLebeau - shouldn't this code use AnsiExtractQuotedStr() instead?
+      Delete(s, 1, 1);
+      Result := Fetch(s, '"'); {do not localize}
+    // Should never occur, and if so bigger problems but just in case we'll try
+    end else begin
+      // RLebeau - just in case the name is not the last field in the line
+      Result := Fetch(s, ';'); {do not localize}
+    end;
+  end;
+end;
+
 function GetClockValue : Int64;
 {$IFDEF DOTNET}
   {$IFDEF USEINLINE} inline; {$ENDIF}
@@ -3170,21 +3202,24 @@ begin
   end;
 end;
 
-function ContentTypeStrToEncoding (const aContentEncoding: string): TIdEncoding;
+function ContentTypeStrToEncoding (const aContentType: string): TIdEncoding;
 //TODO:  Figure out what should happen with Unicode content type.
+var
+  LCharSet: String;
 begin
-  if Pos ('charset=utf-8', lowercase(aContentEncoding)) > 0 then
+  LCharSet := ExtractHeaderSubItem(aContentType, 'CHARSET');  {do not localize}
+  if LCharSet <> '' then
   begin
-    Result := enUTF8;
-  end
-  else
-  begin
-{JPM - I have decided to temporarily make this en8bit because I'm concerned
-about how binary files will be handled by the en7bit encoder (where there may
-be 8bit byte-values.  In addition, there are numerous charsets for various
-languages and code that does some special mapping for them would be a mess.}
-    Result := en8bit; //en7Bit;
+    if PosInStrArray(LCharSet, ['UTF-8', 'UTF8'], False) <> -1 then begin
+      Result := enUTF8;
+      Exit;
+    end;
   end;
+  {JPM - I have decided to temporarily make this en8bit because I'm concerned
+  about how binary files will be handled by the en7bit encoder (where there may
+  be 8bit byte-values.  In addition, there are numerous charsets for various
+  languages and code that does some special mapping for them would be a mess.}
+  Result := en8bit; //en7Bit;
 end;
 
 
