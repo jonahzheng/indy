@@ -7567,6 +7567,8 @@ var
 
   //SSL Version function
   IdSslSSLeay_version : function(_type : TIdC_INT) : PAnsiChar; cdecl = nil;
+  //SSLeay
+  IdSsleay : function : TIdC_LONG; cdecl;
   //CRYPTO_set_mem_ex_functions
   IdSslCryptoSetMemFunctions : function(
     m: TCRYPTO_set_mem_functions_m;
@@ -7898,6 +7900,8 @@ procedure IdSslMASN1StringLengthSet(x : PASN1_STRING; n : TIdC_INT);
 function IdSslMASN1StringType(x : PASN1_STRING) : TIdC_INT;
 function IdSslMASN1StringData(x : PASN1_STRING) : PAnsiChar;
 
+//
+
 function ErrMsg(AErr : TIdC_ULONG) : AnsiString;
 
 implementation
@@ -7968,7 +7972,7 @@ them in case we use them later.}
   {CH fn_sk_dup = 'sk_dup'; }  {Do not localize}
   {CH fn_sk_sort = 'sk_sort'; }  {Do not localize}
   fn_SSLeay_version = 'SSLeay_version';  {Do not localize}
-  {CH fn_SSLeay = 'SSLeay'; }  {Do not localize}
+  fn_SSLeay = 'SSLeay';   {Do not localize}
   {CH fn_CONF_set_default_method = 'CONF_set_default_method'; } {Do not localize}
   {CH fn_CONF_set_nconf = 'CONF_set_nconf'; } {Do not localize}
   {CH fn_CONF_load = 'CONF_load'; } {Do not localize}
@@ -10433,6 +10437,7 @@ begin
   @IdSslSessionGetId := LoadFunction(fn_SSL_SESSION_get_id,False);
   // CRYPTO LIB
   @IdSslSSLeay_version := LoadFunctionCLib(fn_SSLeay_version);
+  @IdSsleay := LoadFunctionCLib(fn_SSLeay);
   @IdSslX509NameOneline := LoadFunctionCLib(fn_X509_NAME_oneline);
   @IdSslX509NameHash := LoadFunctionCLib(fn_X509_NAME_hash);
   @IdSslX509SetIssuerName := LoadFunctionCLib(fn_X509_set_issuer_name);
@@ -10616,9 +10621,11 @@ var
 begin
   //this is a workaround for a known leak in the openssl library
   //present in 0.9.8a
-  LStack := IdSslCompGetCompressionMethods;
-  IdSslSkPopFree(LStack, @IdSslCryptoFree);
-
+  if IdSsleay = $0090801f then  //0x0090801fL
+  begin
+    LStack := IdSslCompGetCompressionMethods;
+    IdSslSkPopFree(LStack, @IdSslCryptoFree);
+  end;
   IdSslCryptoCleanupAllExData;
   IdSSLERR_free_strings;
   IdSslErrRemoveState(0);
