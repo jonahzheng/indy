@@ -101,7 +101,6 @@ type
     function GetActive: Boolean; virtual;
     procedure InitComponent; override;
     procedure SetActive(const Value: Boolean);
-    procedure SetBroadcastFlag(const AEnabled: Boolean; ABinding: TIdSocketHandle = nil);
     procedure SetBroadcastEnabled(const AValue: Boolean);
     function GetBinding: TIdSocketHandle; virtual; abstract;
     procedure Loaded; override;
@@ -121,8 +120,8 @@ type
     destructor Destroy; override;
     //
     property Binding: TIdSocketHandle read GetBinding;
-    procedure Broadcast(const AData: string; const APort: integer; const AIP: String = ''); overload;
-    procedure Broadcast(const AData: TIdBytes; const APort: integer; const AIP: String = ''); overload;
+    procedure Broadcast(const AData: string; const APort: TIdPort; const AIP: String = ''); overload;
+    procedure Broadcast(const AData: TIdBytes; const APort: TIdPort; const AIP: String = ''); overload;
     function ReceiveBuffer(var ABuffer : TIdBytes;
       var VPeerIP: string; var VPeerPort: TIdPort;
       AMSec: Integer = IdTimeoutDefault): integer; overload; virtual;
@@ -135,15 +134,15 @@ type
     function ReceiveString(var VPeerIP: string; var VPeerPort: TIdPort;
      const AMSec: Integer = IdTimeoutDefault): string;  overload;
     procedure Send(const AHost: string; const APort: TIdPort; const AData: string);
-    procedure SendBuffer(const AHost: string; const APort: TIdPort; const AIPVersion : TIdIPVersion; const ABuffer : TIdBytes); overload; virtual;
-    procedure SendBuffer(const AHost: string; const APort: TIdPort; const ABuffer : TIdBytes); overload; virtual;
+    procedure SendBuffer(const AHost: string; const APort: TIdPort; const AIPVersion: TIdIPVersion; const ABuffer : TIdBytes); overload; virtual;
+    procedure SendBuffer(const AHost: string; const APort: TIdPort; const ABuffer: TIdBytes); overload; virtual;
     //
     property ReceiveTimeout: Integer read FReceiveTimeout write FReceiveTimeout default IdTimeoutInfinite;
   published
     property Active: Boolean read GetActive write SetActive Default False;
     property BufferSize: Integer read FBufferSize write FBufferSize default ID_UDP_BUFFERSIZE;
     property BroadcastEnabled: Boolean read FBroadcastEnabled
-     write SetBroadcastEnabled Default False;
+     write SetBroadcastEnabled default False;
     property IPVersion: TIdIPVersion read GetIPVersion write SetIPVersion default ID_DEFAULT_IP_VERSION;
   end;
   EIdUDPException = Class(EIdException);
@@ -156,29 +155,21 @@ uses
 
 { TIdUDPBase }
 
-procedure TIdUDPBase.Broadcast(const AData: string; const APort: integer;
+procedure TIdUDPBase.Broadcast(const AData: string; const APort: TIdPort;
   const AIP: String = '');
 begin
-  Broadcast(ToBytes(AData), APort, AIP);
+  Binding.Broadcast(AData, APort, AIP);
 end;
 
-procedure TIdUDPBase.Broadcast(const AData: TIdBytes; const APort: integer;
+procedure TIdUDPBase.Broadcast(const AData: TIdBytes; const APort: TIdPort;
   const AIP: String = '');
-var
-  LIP: String;
 begin
-  LIP := Trim(AIP);
-  if LIP = '' then begin
-    LIP := '255.255.255.255'; {Do not Localize}
-  end;
-  SetBroadcastFlag(True);
-  SendBuffer(LIP, APort, AData);    {Do not Localize}
-  BroadcastEnabledChanged;
+  Binding.Broadcast(AData, APort, AIP);
 end;
 
 procedure TIdUDPBase.BroadcastEnabledChanged;
 begin
-  SetBroadcastFlag(BroadcastEnabled);
+  Binding.BroadcastEnabled := BroadcastEnabled;
 end;
 
 procedure TIdUDPBase.CloseBinding;
@@ -306,7 +297,7 @@ begin
   SendBuffer(AHost, APort, ToBytes(AData));
 end;
 
-procedure TIdUDPBase.SendBuffer(const AHost: string; const APort: TIdPort; const ABuffer : TIdBytes);
+procedure TIdUDPBase.SendBuffer(const AHost: string; const APort: TIdPort; const ABuffer: TIdBytes);
 begin
   SendBuffer(AHost, APort, IPVersion, ABuffer);
 end;
@@ -345,14 +336,6 @@ begin
       BroadcastEnabledChanged;
     end;
   end;
-end;
-
-procedure TIdUDPBase.SetBroadcastFlag(const AEnabled: Boolean; ABinding: TIdSocketHandle = nil);
-begin
-  if ABinding = nil then begin
-    ABinding := Binding;
-  end;
-  GStack.SetSocketOption(ABinding.Handle, Id_SOL_SOCKET, Id_SO_BROADCAST, iif(AEnabled, 1, 0));
 end;
 
 procedure TIdUDPBase.SetHost(const AValue: String);
