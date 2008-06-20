@@ -171,7 +171,7 @@ var
 begin
   if Assigned(FCurrentBinding) then begin
     for i := 0 to Bindings.Count - 1 do begin
-      SetBroadcastFlag(BroadcastEnabled, Bindings[i]);
+      Bindings[i].BroadcastEnabled := BroadcastEnabled;
     end;
   end;
 end;
