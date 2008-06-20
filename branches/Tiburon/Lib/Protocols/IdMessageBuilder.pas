@@ -10,7 +10,6 @@ type
   protected
     FAttachments: TStrings;
     FPlainText: TStrings;
-    FSubject: String;
     procedure AddAttachments(AMsg: TIdMessage);
     procedure InternalFill(AMsg: TIdMessage); virtual; abstract;
     procedure SetPlainText(AValue: TStrings);
@@ -26,7 +25,6 @@ type
     //
     property Attachments: TStrings read FAttachments write SetAttachments;
     property PlainText: TStrings read FPlainText write SetPlainText;
-    property Subject: String read FSubject write FSubject;
   end;
 
   TIdMessageBuilderHtml = class(TIdCustomMessageBuilder)
@@ -111,7 +109,6 @@ procedure TIdCustomMessageBuilder.Clear;
 begin
   FAttachments.Clear;
   FPlainText.Clear;
-  FSubject := '';
 end;
 
 procedure TIdCustomMessageBuilder.FillMessage(AMsg: TIdMessage);
@@ -124,7 +121,6 @@ begin
   //
   AMsg.ClearBody;
   AMsg.ContentType := '';
-  AMsg.Subject := FSubject;
 
   // let the message decide how to encode itself
   // based on what parts are added in InternalFill()
