@@ -165,8 +165,12 @@ type
     FOverLapped: Boolean;
     FIPVersion: TIdIPVersion;
     FConnectionHandle: TIdCriticalSection;
+    FBroadcastEnabled: Boolean;
     //
     function BindPortReserved: Boolean;
+    procedure BroadcastEnabledChanged;
+    procedure SetBroadcastEnabled(const AValue: Boolean);
+    procedure SetBroadcastFlag(const AEnabled: Boolean);
     procedure SetOverLapped(const AValue: Boolean);
     procedure SetHandle(AHandle: TIdStackSocketHandle);
     procedure SetIPVersion(const Value: TIdIPVersion);
@@ -178,6 +182,8 @@ type
     // Returns True if error was ignored (Matches iIgnore), false if no error occurred
     procedure Assign(Source: TPersistent); override;
     procedure Bind;
+    procedure Broadcast(const AData: string; const APort: TIdPort; const AIP: String = ''); overload;
+    procedure Broadcast(const AData: TIdBytes; const APort: TIdPort; const AIP: String = ''); overload;
     procedure CloseSocket; virtual;
     procedure Connect; virtual;
     constructor Create(ACollection: TCollection); override;
@@ -202,10 +208,11 @@ type
     //
     property HandleAllocated: Boolean read FHandleAllocated;
     property Handle: TIdStackSocketHandle read FHandle;
-    property OverLapped:boolean read FOverLapped write SetOverLapped;
+    property OverLapped: Boolean read FOverLapped write SetOverLapped;
     property PeerIP: string read FPeerIP;
     property PeerPort: TIdPort read FPeerPort;
   published
+    property BroadcastEnabled: Boolean read FBroadcastEnabled write SetBroadcastEnabled default False;
     property ClientPortMin : TIdPort read FClientPortMin write FClientPortMin default DEF_PORT_ANY;
     property ClientPortMax : TIdPort read FClientPortMax write FClientPortMax default DEF_PORT_ANY;
     property IP: string read FIP write FIP;
@@ -325,6 +332,33 @@ begin
   end;
 end;
 
+procedure TIdSocketHandle.Broadcast(const AData: string; const APort: TIdPort;
+  const AIP: String = '');
+begin
+  Broadcast(ToBytes(AData), APort, AIP);
+end;
+
+procedure TIdSocketHandle.Broadcast(const AData: TIdBytes; const APort: TIdPort;
+  const AIP: String = '');
+var
+  LIP: String;
+begin
+  LIP := Trim(AIP);
+  if LIP = '' then begin
+    LIP := '255.255.255.255'; {Do not Localize}
+  end else begin
+    LIP := GStack.ResolveHost(LIP, IPVersion);
+  end;
+  SetBroadcastFlag(True);
+  SendTo(LIP, APort, AData);
+  BroadcastEnabledChanged;
+end;
+
+procedure TIdSocketHandle.BroadcastEnabledChanged;
+begin
+  SetBroadcastFlag(FBroadcastEnabled);
+end;
+
 procedure TIdSocketHandle.SetPeer(const AIP: string; const APort: TIdPort; const AIPVersion : TIdIPVersion = ID_DEFAULT_IP_VERSION);
 begin
   FPeerIP := AIP;
@@ -337,6 +371,21 @@ begin
   FIP := AIP;
   FPort := APort;
   FIPVersion := AIPVersion;
+end;
+
+procedure TIdSocketHandle.SetBroadcastEnabled(const AValue: Boolean);
+begin
+  if FBroadCastEnabled <> AValue then begin
+    FBroadcastEnabled := AValue;
+    if HandleAllocated then begin
+      BroadcastEnabledChanged;
+    end;
+  end;
+end;
+
+procedure TIdSocketHandle.SetBroadcastFlag(const AEnabled: Boolean);
+begin
+  GStack.SetSocketOption(Handle, Id_SOL_SOCKET, Id_SO_BROADCAST, iif(AEnabled, 1, 0));
 end;
 
 procedure TIdSocketHandle.SetOverLapped(const AValue:boolean);
