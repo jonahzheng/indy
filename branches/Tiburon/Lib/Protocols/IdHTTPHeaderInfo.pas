@@ -89,9 +89,9 @@ type
     FContentRangeInstanceLength: Int64;
     FContentType: string;
     FContentVersion: string;
-    FCustomHeaders: TIdHeaderList;
     FDate: TDateTime;
     FExpires: TDateTime;
+    FETag: string;
     FLastModified: TDateTime;
     FPragma: string;
     FHasContentLength: Boolean;
@@ -102,7 +102,6 @@ type
     function GetOwner: TPersistent; override;
 
     procedure SetContentLength(const AValue: Int64);
-    procedure SetCustomHeaders(const AValue: TIdHeaderList);
     function GetHasContentRange: Boolean;
     function GetHasContentRangeInstance: Boolean;
   public
@@ -128,8 +127,8 @@ type
 
     property ContentType: string read FContentType write FContentType;
     property ContentVersion: string read FContentVersion write FContentVersion;
-    property CustomHeaders: TIdHeaderList read FCustomHeaders write SetCustomHeaders;
     property Date: TDateTime read FDate write FDate;
+    property ETag: string read FETag write FETag;
     property Expires: TDateTime read FExpires write FExpires;
     property LastModified: TDateTime read FLastModified write FLastModified;
     property Pragma: string read FPragma write FPragma;
@@ -169,6 +168,7 @@ type
     FAcceptCharSet: String;
     FAcceptEncoding: String;
     FAcceptLanguage: String;
+    FCustomHeaders: TIdHeaderList;
     FExpect: String;
     FFrom: String;
     FPassword: String;
@@ -183,9 +183,11 @@ type
     //
     procedure AssignTo(Destination: TPersistent); override;
     procedure ProcessHeaders; override;
+    procedure SetCustomHeaders(const AValue: TIdHeaderList);
     procedure SetHeaders; override;
   public
     //
+    constructor Create; override;
     procedure Clear; override;
     property Authentication: TIdAuthentication read FAuthentication write FAuthentication;
     destructor Destroy; override;
@@ -195,6 +197,7 @@ type
     property AcceptEncoding: String read FAcceptEncoding write FAcceptEncoding;
     property AcceptLanguage: String read FAcceptLanguage write FAcceptLanguage;
     property BasicAuthentication: boolean read FBasicByDefault write FBasicByDefault;
+    property CustomHeaders: TIdHeaderList read FCustomHeaders write SetCustomHeaders;
     property Host: String read FHost write FHost;
     property From: String read FFrom write FFrom;
     property Password: String read FPassword write FPassword;
@@ -248,7 +251,6 @@ begin
 
   FRawHeaders := TIdHeaderList.Create;
   FRawHeaders.FoldLength := 1024;
-  FCustomHeaders := TIdHeaderList.Create;
 
   Clear;
 end;
@@ -256,7 +258,6 @@ end;
 destructor TIdEntityHeaderInfo.Destroy;
 begin
   FreeAndNil(FRawHeaders);
-  FreeAndNil(FCustomHeaders);
   inherited Destroy;
 end;
 
@@ -277,6 +278,7 @@ begin
       FContentRangeStart:= Self.FContentRangeStart;
       FContentRangeInstanceLength := Self.FContentRangeInstanceLength;
       FDate := Self.FDate;
+      FETag := Self.FETag;
       FExpires := Self.FExpires;
       FLastModified := Self.FLastModified;
     end;
@@ -311,6 +313,7 @@ begin
   FContentRangeInstanceLength := 0;
   FDate := 0;
   FLastModified := 0;
+  FETag := '';
   FExpires := 0;
   FRawHeaders.Clear;
 end;
@@ -377,6 +380,7 @@ begin
       FExpires := GMTToLocalDateTime(lValue);
     end;
 
+    FETag := Values['ETag'];  {do not localize}
     FPragma := Values['Pragma'];  {do not localize}
   end;
 end;
@@ -425,6 +429,10 @@ begin
     begin
       Values['Date'] := DateTimeGMTToHttpStr(FDate); {do not localize}
     end;
+    if Length(FETag) > 0 then
+    begin
+      Values['ETag'] := FETag; {do not localize}
+    end;
     if FExpires > 0 then
     begin
       Values['Expires'] := DateTimeGMTToHttpStr(FExpires); {do not localize}
@@ -433,17 +441,7 @@ begin
     begin
       Values['Pragma'] := FPragma; {do not localize}
     end;
-    if FCustomHeaders.Count > 0 then
-    begin
-      // append custom headers
-      Text := Text + FCustomHeaders.Text;
-    end;
   end;
-end;
-
-procedure TIdEntityHeaderInfo.SetCustomHeaders(const AValue: TIdHeaderList);
-begin
-  FCustomHeaders.Assign(AValue);
 end;
 
 procedure TIdEntityHeaderInfo.SetContentLength(const AValue: Int64);
@@ -564,6 +562,12 @@ end;
 
 { TIdRequestHeaderInfo }
 
+constructor TIdRequestHeaderInfo.Create;
+begin
+  inherited Create;
+  FCustomHeaders := TIdHeaderList.Create;
+end;
+
 procedure TIdRequestHeaderInfo.ProcessHeaders;
 var
   lRangeHdr: String;
@@ -638,6 +642,11 @@ begin
   // FProxyConnection := '';
 
   inherited Clear;
+end;
+
+procedure TIdRequestHeaderInfo.SetCustomHeaders(const AValue: TIdHeaderList);
+begin
+  FCustomHeaders.Assign(AValue);
 end;
 
 procedure TIdRequestHeaderInfo.SetHeaders;
@@ -721,12 +730,19 @@ begin
         end;
       end;
     end;
+
+    if FCustomHeaders.Count > 0 then
+    begin
+      // append custom headers
+      Text := Text + FCustomHeaders.Text;
+    end;
   end;
 end;
 
 destructor TIdRequestHeaderInfo.Destroy;
 begin
   FreeAndNil(FAuthentication);
+  FreeAndNil(FCustomHeaders);
   inherited Destroy;
 end;
 
