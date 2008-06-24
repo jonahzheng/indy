@@ -1854,22 +1854,35 @@ function TIdSSLSocket.Recv(var ABuffer: TIdBytes): Integer;
 var
   err: Integer;
 begin
-  Result := IdSslRead(fSSL, @ABuffer[0], Length(ABuffer));
-  err := GetSSLError(Result);
-  if (err = OPENSSL_SSL_ERROR_WANT_READ) or (err = OPENSSL_SSL_ERROR_WANT_WRITE) then begin
+  repeat
     Result := IdSslRead(fSSL, @ABuffer[0], Length(ABuffer));
-  end;
+    if Result > 0 then begin
+      Exit;
+    end;
+    err := GetSSLError(Result);
+    if (err <> OPENSSL_SSL_ERROR_WANT_READ) and (err <> OPENSSL_SSL_ERROR_WANT_WRITE) then begin
+      Exit;
+    //      Result := IdSslRead(fSSL, @ABuffer[0], Length(ABuffer));
+    end;
+  until False;
 end;
 
 function TIdSSLSocket.Send(const ABuffer: TIdBytes; const AOffset, ALength: Integer): Integer;
 var
   err: Integer;
 begin
-  Result := IdSslWrite(fSSL, @ABuffer[AOffset], ALength);
-  err := GetSSLError(Result);
-  if (err = OPENSSL_SSL_ERROR_WANT_READ) or (err = OPENSSL_SSL_ERROR_WANT_WRITE) then begin
+  repeat
     Result := IdSslWrite(fSSL, @ABuffer[AOffset], ALength);
+    if Result > 0 then begin
+      Exit;
+    end;
+    err := GetSSLError(Result);
+
+  if (err <> OPENSSL_SSL_ERROR_WANT_READ) and (err <> OPENSSL_SSL_ERROR_WANT_WRITE) then begin
+    Exit;
+  //    Result := IdSslWrite(fSSL, @ABuffer[AOffset], ALength);
   end;
+  until False;
 end;
 
 function TIdSSLSocket.GetPeerCert: TIdX509;
