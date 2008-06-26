@@ -4130,10 +4130,10 @@ type
     flags : TIdC_INT;
   end;
   PBIGNUM = ^BIGNUM;
-  BN_CTX = record
+ // BN_CTX = record
     //This is defined internally.  I don't want to do anything with an internal structure.
-  end;
-  PBN_CTX = ^BN_CTX;
+ // end;
+  PBN_CTX = Pointer;//^BN_CTX;
   PPBN_CTX = ^PBN_CTX; 
   // Used for montgomery multiplication
   BN_MONT_CTX = record
@@ -4157,10 +4157,10 @@ type
     flags : TIdC_INT;
   end;
   PBN_MONT_CTX = ^BN_MONT_CTX;
-  BN_BLINDING = record
+//  BN_BLINDING = record
     //I can't locate any information about the record fields in this.
-  end;
-  PBN_BLINDING = ^BN_BLINDING;
+//  end;
+  PBN_BLINDING = pointer;//^BN_BLINDING;
   BN_RECP_CTX = record
     N : BIGNUM;  // the divisor
     Nr : BIGNUM; // the reciprocal
@@ -4272,10 +4272,10 @@ type
   {$ENDIF}
 
   //engiene.h
-  ENGINE = record
+//  ENGINE = record
     //I don't have any info about record fields.
-  end;
-  PENGINE = ^ENGINE;
+//  end;
+  PENGINE = Pointer;//^ENGINE;
 
   //crypto.h
   CRYPTO_EX_DATA = record
@@ -4285,9 +4285,9 @@ type
   PCRYPTO_EX_DATA = ^CRYPTO_EX_DATA;
 
   //evp.h
-  EVP_PBE_KEYGEN = record
-  end;
-  PEVP_PBE_KEYGEN = ^EVP_PBE_KEYGEN;
+//  EVP_PBE_KEYGEN = record
+//  end;
+  PEVP_PBE_KEYGEN = Pointer;//^EVP_PBE_KEYGEN;
 
   //rsa.h - struct rsa_st
   {$IFNDEF OPENSSL_NO_RSA}
@@ -4428,7 +4428,7 @@ type
   DSA_METHOD = record
     name : PAnsiChar;
     dsa_do_sign : function (const dgst : PAnsiChar; dlen : TIdC_INT; dsa : PDSA) : PDSA_SIG; cdecl;
-    dsa_sign_setup : function (dsa : PDSA; ctx_in : BN_CTX; kinvp, rp : PPBN_CTX) : TIdC_INT; cdecl;
+    dsa_sign_setup : function (dsa : PDSA; ctx_in : PBN_CTX; kinvp, rp : PPBN_CTX) : TIdC_INT; cdecl;
     dsa_do_verify : function(dgst : PAnsiChar; dgst_len : TIdC_INT;
       sig : PDSA_SIG; dsa : PDSA) : TIdC_INT; cdecl;
     dsa_mod_exp : function(dsa : PDSA; rr, a1, p1,
@@ -4479,30 +4479,30 @@ type
 
   // ec.h
   {$IFNDEF OPENSSL_NO_EC}
-  EC_METHOD = record
+ // EC_METHOD = record
     //The fields are internal to OpenSSL, they are not listed in the header.
-  end;
-  PEC_METHOD = ^EC_METHOD;
+ // end;
+  PEC_METHOD = Pointer;//^EC_METHOD;
   PPEC_METHOD = ^PEC_METHOD;
-  EC_GROUP = record
+ // EC_GROUP = record
     //The fields are internal to OpenSSL, they are not listed in the header.
-  end;
-  PEC_GROUP = ^EC_GROUP;
+//  end;
+  PEC_GROUP = Pointer;//^EC_GROUP;
   PPEC_GROUP = ^PEC_GROUP;
 
-  EC_POINT = record
+//  EC_POINT = record
     //The fields are internal to OpenSSL, they are not listed in the header.
-  end;
-  PEC_POINT = ^EC_POINT;
+//  end;
+  PEC_POINT = Pointer;//^EC_POINT;
   PPEC_POINT = ^PEC_POINT;
   EC_builtin_curve = record
     nid : TIdC_INT;
     comment : PAnsiChar;
   end;
-  PEC_KEY = ^EC_KEY;
-  EC_KEY = record
+  PEC_KEY = Pointer;//^EC_KEY;
+//  EC_KEY = record
     //The fields are internal to OpenSSL, they are not listed in the header.
-  end;
+//  end;
   PPEC_KEY = ^PEC_KEY;
   {$ENDIF}
 
@@ -4514,10 +4514,10 @@ type
   end;
   PECDSA_SIG = ^ECDSA_SIG;
   PPECDSA_SIG = ^PECDSA_SIG;
-  ECDH_METHOD = record
+//  ECDH_METHOD = record
     //defined interally, not through the header so use function to access members
-  end;
-  PECDH_METHOD = ^ECDH_METHOD;
+ // end;
+  PECDH_METHOD = Pointer;//^ECDH_METHOD;
   PPECDH_METHOD = ^PECDH_METHOD;
   {$ENDIF}
 
@@ -4624,9 +4624,9 @@ type
   //D2I_OF(type) type *(*)(type **,const unsigned char **,long)
   D2I_OF_void = function (var _para1 : Pointer; const _para2 : PPAnsiChar; _para3 : TIdC_LONG) : Pointer; cdecl; 
   // This is just an opaque pointer
-  ASN1_VALUE = record
-  end;
-  PASN1_VALUE = ^ASN1_VALUE;
+ // ASN1_VALUE = record
+ // end;
+  PASN1_VALUE = Pointer;//^ASN1_VALUE;
   PPASN1_VALUE = ^PASN1_VALUE;
   {$IFDEF DEBUG_SAFESTACK}
   STACK_OF_ASN1_VALUE = record
@@ -5197,16 +5197,16 @@ type
   PSTACK_OF_POLICYQUALINFO = PSTACK;
   {$ENDIF}
 
-  X509_POLICY_DATA = record
-  end;
-  PX509_POLICY_DATA = ^X509_POLICY_DATA;
+ // X509_POLICY_DATA = record
+ // end;
+  PX509_POLICY_DATA = Pointer;//^X509_POLICY_DATA;
 
-  X509_POLICY_REF = record
-  end;
-  PX509_POLICY_REF = ^X509_POLICY_REF;
-  X509_POLICY_CACHE = record
-  end;
-  PX509_POLICY_CACHE = ^X509_POLICY_CACHE;
+ // X509_POLICY_REF = record
+ // end;
+  PX509_POLICY_REF = Pointer;//^X509_POLICY_REF;
+ // X509_POLICY_CACHE = record
+ // end;
+  PX509_POLICY_CACHE = Pointer; //^X509_POLICY_CACHE;
 
   //x509v3.h
   //forward declarations from x509.h to make sure this compiles.
@@ -6375,16 +6375,16 @@ type
   POCSP_SERVICELOC = ^OCSP_SERVICELOC;
   PPOCSP_SERVICELOC = ^POCSP_SERVICELOC;
   //mdc2.h
-  MDC2_CTX = record
+  //MDC2_CTX = record
     //this is not defined in headers so it's best use functions in the API to access the structure.
-  end;
-  PMDC2_CTX = ^MDC2_CTX;
+  //end;
+  PMDC2_CTX = Pointer;//^MDC2_CTX;
 
   //tmdiff.h
-  MS_TM = record
+//  MS_TM = record
     //this is not defined in headers so it's best use functions in the API to access the structure.
-  end;
-  PMS_TM = ^MS_TM;
+ // end;
+  PMS_TM = Pointer;//^MS_TM;
   PPMS_TM = ^PMS_TM;
 
   //PEVP_PBE_KEYGEN          = Pointer;
@@ -6458,63 +6458,12 @@ type
 ///ssl_locl.h structs.  These are probably internal records so don't expose
 //their members as ssl_lock.h is not included in the headers
 //JPM
-  PSSL3_ENC_METHOD = ^SSL3_ENC_METHOD;
-  SSL3_ENC_METHOD = record
-  end;
-
-  CERT_PKEY = record
-  end;
-  PCERT_PKEY = ^CERT_PKEY;
-
+  PSSL3_ENC_METHOD = pointer;//^SSL3_ENC_METHOD;
+//  SSL3_ENC_METHOD = record
+//  end;
+  PCERT = pointer;
   PPCERT = ^PCERT;
-  PCERT = ^CERT;
-  CERT = record
-    // Current active set
-    key : PCERT_PKEY; // ALWAYS points to an element of the pkeys array
-                      // Probably it would make more sense to store
-                      // an index, not a pointer.
-
-    // The following masks are for the key and auth
-    // algorithms that are supported by the certs below
-    valid : TIdC_INT;
-    mask : TIdC_ULONG;
-    export_mask : TIdC_ULONG;
-    {$IFNDEF OPENSSL_NO_RSA}
-    rsa_tmp : PRSA;
-    rsa_tmp_cb : function (ssl : PSSL; is_export : TIdC_INT; keysize : TIdC_INT) : PRSA; cdecl;
-    {$ENDIF}
-    {$IFNDEF OPENSSL_NO_DH}
-    dh_tmp : PDH;
-    dh_tmp_cb : function (ssl : PSSL; is_export : TIdC_INT; keysize : TIdC_INT) : PDH; cdecl;
-    {$ENDIF}
-    {$IFDEF OPENSSL_NO_ECDH}
-    ecdh_tmp : PEC_KEY;
-    // Callback for generating ephemeral ECDH keys
-    ecdh_tmp_cb : function (ssl : PSSL; is_export : TIdC_INT; keysize : TIdC_INT) : PEC_KEY; cdecl;
-    {$ENDIF}
-    pkeys : array [0..OPENSSL_SSL_PKEY_NUM - 1] of CERT_PKEY;
-    references : TIdC_INT; // >1 only if SSL_copy_session_id is used
-  end;
-
-  SESS_CERT = record
-    cert_chain : PSTACK_OF_X509; // as received from peer (not for SSL2)
-    // The 'peer_...' members are used only by clients.
-    peer_cert_type : TIdC_INT;
-    peer_key : PCERT_PKEY; // points to an element of peer_pkeys (never NULL!)
-    peer_pkeys : array [0..OPENSSL_SSL_PKEY_NUM - 1] of  CERT_PKEY;
-    // Obviously we don't have the private keys of these,
-    // so maybe we shouldn't even use the CERT_PKEY type here.
-    {$IFNDEF OPENSSL_NO_RSA}
-    peer_rsa_tmp : PRSA; // not used for SSL 2
-    {$ENDIF}
-    {$IFNDEF OPENSSL_NO_DH}
-    peer_dh_tmp : PDH; // not used for SSL 2
-    {$ENDIF}
-    {$IFNDEF OPENSSL_NO_ECDH}
-    ecdh_tmp : PEC_KEY;
-    {$ENDIF}
-    references : TIdC_INT; // actually always 1 at the moment
-  end;
+  PSESS_CERT = pointer;
 
   //pkcs7.h
   PPKCS7 = ^PKCS7;
@@ -6671,7 +6620,7 @@ type
     iter : PASN1_INTEGER; // defaults to 1
   end;
   PPKCS12_MAC_DATA = ^PKCS12_MAC_DATA;
-  PSESS_CERT = ^SESS_CERT;
+ // PSESS_CERT = ^SESS_CERT;
   PPKCS12 = ^PKCS12;
   PKCS12 = record
     version : PASN1_INTEGER;
