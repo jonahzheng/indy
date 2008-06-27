@@ -579,3 +579,7 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
     {$UNDEF REGISTER_EXPECTED_MEMORY_LEAK}
   {$ENDIF}
 {$ENDIF}
+
+{$IFDEF DEBUG}
+  {$UNDEF USEINLINE}
+{$ENDIF}
