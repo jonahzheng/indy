@@ -1254,7 +1254,7 @@ var
 
 procedure ValidEncoding(const AEncoding : TIdEncoding); {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
-  EIdNoEncodingSpecified.IfTrue(AEncoding=enDefault,RSNoEncodingSpecified);
+  EIdNoEncodingSpecified.IfTrue(AEncoding = enDefault, RSNoEncodingSpecified);
 end;
 
 {$IFDEF UNIX}
@@ -4891,10 +4891,9 @@ begin
     LStart := PChar(ASet);
     LFound := IndyStrScan(LStart, AString[ACharPos]);
     if LFound <> nil then begin
-      //Strings are 1 based and if you compare pointer values, the first char
-      //in a PChar string is the same as the pointer for the PChar string.
-      //We do not want to return zero in that case.
-      Result := 1 + (Integer(LFound) - Integer(LStart)) {$IFDEF UNICODESTRING}div SizeOf(Char){$ENDIF};
+      // Strings are 1 based. If you compare pointer values, the result
+      // will be zero-based. We do not want to return zero in this case.
+      Result := 1 + ((PtrInt(LFound) - PtrInt(LStart)) {$IFDEF UNICODESTRING}div SizeOf(Char){$ENDIF});
     end;
     {$ENDIF}
   end;
