@@ -4891,7 +4891,10 @@ begin
     LStart := PChar(ASet);
     LFound := IndyStrScan(LStart, AString[ACharPos]);
     if LFound <> nil then begin
-      Result := (Integer(LFound) - Integer(LStart)) {$IFDEF UNICODESTRING}div SizeOf(Char){$ENDIF};
+      //Strings are 1 based and if you compare pointer values, the first char
+      //in a PChar string is the same as the pointer for the PChar string.
+      //We do not want to return zero in that case.
+      Result := 1 + (Integer(LFound) - Integer(LStart)) {$IFDEF UNICODESTRING}div SizeOf(Char){$ENDIF};
     end;
     {$ENDIF}
   end;
