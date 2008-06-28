@@ -268,6 +268,7 @@ begin
     with Destination as TIdEntityHeaderInfo do
     begin
       FRawHeaders.Assign(Self.FRawHeaders);
+      FCacheControl := Self.FCacheControl;
       FContentDisposition := Self.FContentDisposition;
       FContentEncoding := Self.FContentEncoding;
       FContentLanguage := Self.FContentLanguage;
@@ -282,8 +283,7 @@ begin
       FExpires := Self.FExpires;
       FLastModified := Self.FLastModified;
     end;
-  end
-  else
+  end else
   begin
     inherited AssignTo(Destination);
   end;
@@ -291,6 +291,7 @@ end;
 
 procedure TIdEntityHeaderInfo.Clear;
 begin
+  FCacheControl := '';
   FConnection := '';
   FContentVersion := '';
   FContentDisposition := '';
@@ -327,6 +328,7 @@ var
 begin
   with FRawHeaders do
   begin
+    FCacheControl := Values['Cache-control']; {do not localize}
     FConnection := Values['Connection']; {do not localize}
     FContentVersion := Values['Content-Version']; {do not localize}
     FContentDisposition := Values['Content-Disposition']; {do not localize}
