@@ -255,10 +255,7 @@
   {$ENDIF}
 {$ENDIF}
 
-{
-BDS 2007 NET personality uses VER190 instead of 185.
-Delphi 2008 also uses VER190 as well
-}
+// BDS 2007 NET personality uses VER190 instead of 185.
 //Delphi 12 - Delphi .NET 2007
 {$IFDEF VER190}
   {$DEFINE USEINLINE}
@@ -285,7 +282,7 @@ Delphi 2008 also uses VER190 as well
   {$ENDIF}
 {$ENDIF}
 
-//Delphi 13 - Delphi 2008 (Tiburon)
+//Delphi 13 - Delphi 2009 (Tiburon)
 {$IFDEF VER200}
   {$DEFINE UNICODESTRING} // 'String' type is Unicode now
   {$DEFINE TEncoding}
@@ -321,12 +318,10 @@ Delphi 2008 also uses VER190 as well
   {$ENDIF}
 {$ENDIF}
 
-{$IFDEF UNICODESTRING}
-  //Delphi 2008 and later are UNICODE only!
-  {$IFNDEF UNICODE}
-    {$DEFINE UNICODE}
-  {$ENDIF}
-{$ELSE}
+// Delphi 2009 and later are UNICODE only!
+// NOTE: Do not define UNICODE here.  The
+// compiler defines the symbol automatically.
+{$IFNDEF UNICODESTRING}
   {$IFDEF UNICODE}
     {$DEFINE UNICODE_BUT_NO_UNICODESTRING}
   {$ENDIF}
