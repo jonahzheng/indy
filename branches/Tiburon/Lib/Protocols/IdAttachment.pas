@@ -59,11 +59,9 @@ type
   protected
     FFileName: String;
 
-    function  GetContentDisposition: string; virtual;
+    function  GetContentDisposition: string; override;
     function  GetContentType: String; override;
     function  GetContentTypeName: String; virtual;
-    procedure SetContentDisposition(const Value: string); virtual;
-    procedure SetContentType(const Value: String); override;
   public
     // here the methods you have to override...
 
@@ -94,7 +92,6 @@ type
     procedure Assign(Source: TPersistent); override;
 
     property  FileName: String read FFileName write FFileName;
-    property  ContentDisposition: string read GetContentDisposition write SetContentDisposition;
     property  ContentTypeName: String read GetContentTypeName;
     class function PartType: TIdMessagePartType; override;
   end;
@@ -105,9 +102,6 @@ implementation
 
 uses
   IdGlobal, IdGlobalProtocols, SysUtils;
-
-const
-  SContentDisposition = 'Content-Disposition';  {do not localize}
 
 { TIdAttachment }
 
@@ -136,7 +130,7 @@ end;
 
 function TIdAttachment.GetContentDisposition: string;
 begin
-  Result := Headers.Values[SContentDisposition]; {do not localize}
+  Result := inherited GetContentDisposition;
   Result := Fetch(Result, ';');
 end;
 
@@ -200,16 +194,6 @@ begin
   finally
     CloseLoadStream;
   end;
-end;
-
-procedure TIdAttachment.SetContentDisposition(const Value: string);
-begin
-  Headers.Values[SContentDisposition] := Value;
-end;
-
-procedure TIdAttachment.SetContentType(const Value: String);
-begin
-  inherited SetContentType(Value); // TODO: what is here? must we add 'name='?
 end;
 
 end.
