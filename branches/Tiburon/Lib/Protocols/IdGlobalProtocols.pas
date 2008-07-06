@@ -382,13 +382,6 @@ type
     function _AddRef: Integer;
     function _Release: Integer;
   end;
-  {$UNDEF ANSICHARTOHEX}
-  {$IFDEF UNICODESTRING}
-     {$DEFINE ANSICHARTOHEX}
-  {$ENDIF}
-  {$IFDEF DOTNET}
-     {$DEFINE ANSICHARTOHEX}
-  {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   TIdWin32Type = (Win32s,
     WindowsNT40PreSP6Workstation, WindowsNT40PreSP6Server, WindowsNT40PreSP6AdvancedServer,
@@ -413,11 +406,6 @@ type
   function BreakApart(BaseString, BreakString: string; StringList: TStrings): TStrings;
   function LongWordToFourChar(AValue : LongWord): string;
   function CharRange(const AMin, AMax : Char): String;
-  function CharToHex(const APrefix : String; const AChar : Char;
-    const AEncoding : TIdEncoding = en7Bit) : String;  {$IFDEF ANSICHARTOHEX}overload;{$ENDIF}
-  {$IFDEF ANSICHARTOHEX}
-  function CharToHex(const APrefix : String; const AChar : AnsiChar) : String; overload;
-  {$ENDIF}
   procedure CommaSeparatedToStringList(AList: TStrings; const Value:string);
   function CompareDateTime(const ADateTime1, ADateTime2 : TDateTime) : Integer;
   function ContentTypeStrToEncoding (const aContentType: string): TIdEncoding;
@@ -788,23 +776,6 @@ begin
   Move(ASource[ASourceStart], ADest[ADestStart], ALen);
   {$ENDIF}
 end;
-
-function CharToHex(const APrefix : String; const AChar : Char;
-  const AEncoding : TIdEncoding = en7Bit) : String;
-{$IFDEF USEINLINE} inline; {$ENDIF}
-begin
-  Result := APrefix + ToHex(ToBytes(AChar, AEncoding));
-end;
-
-
-{$IFDEF ANSICHARTOHEX}
-{Done this way for QuotedPrintable in TIburon.  Sometimes, the one above might be overkill}
-function CharToHex(const APrefix : String; const AChar : AnsiChar) : String; overload;
-{$IFDEF USEINLINE} inline; {$ENDIF}
-begin
-  Result := APrefix + ByteToHex(Ord(AChar));
-end;
-{$ENDIF}
 
 function LongWordToFourChar(AValue : LongWord): string;
 {$IFDEF USEINLINE} inline; {$ENDIF}
