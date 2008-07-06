@@ -276,6 +276,11 @@ var
     CurrentPos := 1;
   end;
 
+  function CharToHex(const APrefix : String; const AChar : AnsiChar) : String;
+  begin
+    Result := APrefix + ByteToHex(Ord(AChar));
+  end;
+
 var
   I: Integer;
   LSourceSize: Integer;
