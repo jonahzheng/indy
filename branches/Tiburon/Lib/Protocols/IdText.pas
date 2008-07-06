@@ -51,7 +51,8 @@ type
   TIdText = class(TIdMessagePart)
   protected
     FBody: TStrings;
-    function  GetContentType: string; override; //Content-Type
+    function  GetContentDisposition: string; override;
+    function  GetContentType: string; override;
     procedure SetBody(const AStrs : TStrings); virtual;
     procedure SetContentType(const AValue: string); override;
     procedure SetCharSet(const AValue: String); virtual;
@@ -105,6 +106,14 @@ destructor TIdText.Destroy;
 begin
   FreeAndNil(FBody);
   inherited Destroy;
+end;
+
+function TIdText.GetContentDisposition: string;
+var
+  S: String;
+begin
+  S := inherited GetContentDisposition;
+  Result := Fetch(S, ';');  {do not localize}
 end;
 
 function TIdText.GetContentType: string;
