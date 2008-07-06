@@ -94,6 +94,7 @@ type
     FOnGetMessagePartStream: TOnGetMessagePartStream;
     FParentPart: Integer;
     //
+    function  GetContentDisposition: string; virtual;
     function  GetContentType: string; virtual;
     function  GetContentTransfer: string; virtual;
     function  GetContentID: string; virtual;
@@ -101,6 +102,7 @@ type
     function  GetContentDescription: string; virtual;
     function  GetMessageParts: TIdMessageParts;
     function  GetOwnerMessage: TPersistent;
+    procedure SetContentDisposition(const Value: string); virtual;
     procedure SetContentType(const Value: string); virtual;
     procedure SetContentTransfer(const Value: string); virtual;
     procedure SetExtraHeaders(const Value: TIdHeaderList);
@@ -121,6 +123,7 @@ type
     property OnGetMessagePartStream: TOnGetMessagePartStream read FOnGetMessagePartStream write FOnGetMessagePartStream;
     property Headers: TIdHeaderList read FHeaders;
   published
+    property ContentDisposition: string read GetContentDisposition write SetContentDisposition;
     property ContentTransfer: string read FContentTransfer write FContentTransfer;
     property ContentType: string read FContentType write FContentType;
     property CharSet: string read FCharSet write FCharSet;
@@ -200,6 +203,11 @@ begin
   FHeaders.Free;
   FExtraHeaders.Free;
   inherited Destroy;
+end;
+
+function TIdMessagePart.GetContentDisposition: string;
+begin
+  Result := Headers.Values['Content-Disposition']; {do not localize}
 end;
 
 function TIdMessagePart.GetContentID: string;
@@ -301,6 +309,11 @@ end;
 procedure TIdMessagePart.SetContentDescription(const Value: string);
 begin
   Headers.Values['Content-Description'] := Value; {do not localize}
+end;
+
+procedure TIdMessagePart.SetContentDisposition(const Value: string);
+begin
+  Headers.Values['Content-Disposition'] := Value; {do not localize}
 end;
 
 procedure TIdMessagePart.SetContentLocation(const Value: string);
