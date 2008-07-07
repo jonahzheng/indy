@@ -243,7 +243,7 @@ type
   end;
 
   TByteArray = record
-    Length: Integer;
+    Length: TIdC_INT;
     Data: PAnsiChar;
   End;
 
@@ -670,7 +670,9 @@ procedure InfoCallback(const sslSocket: PSSL; where, ret: TIdC_INT); cdecl;
 var
   IdSSLSocket: TIdSSLSocket;
   StatusStr : String;
+  LErr : Integer;
 begin
+  LErr := GStack.WSGetLastError;
   LockInfoCB.Enter;
   try
     IdSSLSocket := TIdSSLSocket(IdSslGetAppData(sslSocket));
@@ -687,7 +689,7 @@ begin
   finally
     LockInfoCB.Leave;
   end;
-
+  GStack.WSSetLastError(LErr);
 end;
 
 {function RSACallback(sslSocket: PSSL; e: Integer; KeyLength: Integer):PRSA; cdecl;
@@ -739,6 +741,7 @@ end;
 procedure SslLockingCallback(mode, n : TIdC_INT; Afile : PAnsiChar; line : TIdC_INT) cdecl;
 var
   Lock: TIdCriticalSection;
+
 begin
   Assert(CallbackLockList<>nil);
   Lock := nil;
@@ -784,12 +787,14 @@ begin
   end;
 end;
 
+{$IFNDEF WIN32_OR_WIN64}
 function _GetThreadID: TIdC_ULONG; cdecl;
 begin
   // TODO: Verify how well this will work with fibers potentially running from
   // thread to thread or many on the same thread.
   Result := TIdC_ULONG(CurrentThreadId);
 end;
+{$ENDIF}
 
 {$IFDEF IDOPENSSLMEMORY}
 function IdMalloc(num:Cardinal):Pointer cdecl;
@@ -867,8 +872,9 @@ begin
     PrepareOpenSSLLocking;
 
     IdSslSetLockingCallback(SslLockingCallback);
+     {$IFNDEF WIN32_OR_WIN64}
     IdSslSetIdCallback(_GetThreadID);
-
+    {$ENDIF}
     SSLIsLoaded.Value := True;
     Result := True;
   finally
