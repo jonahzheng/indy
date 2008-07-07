@@ -272,6 +272,7 @@ type
      const AOverlapped: Boolean = False): TIdStackSocketHandle; override;
     function WSTranslateSocketErrorMsg(const AErr: integer): string; override;
     function WSGetLastError: Integer; override;
+    procedure WSSetLastError(const AErr : Integer); override;
     procedure WSGetSockOpt(ASocket: TIdStackSocketHandle; Alevel, AOptname: Integer;
       AOptval: PAnsiChar; var AOptlen: Integer); override;
     //
@@ -627,6 +628,11 @@ end;
 function TIdStackWindows.WSGetLastError: Integer;
 begin
   Result := WSAGetLastError;
+end;
+
+procedure TIdStackWindows.WSSetLastError(const AErr : Integer);
+begin
+  WSASetLastError(AErr);
 end;
 
 function TIdStackWindows.WSSocket(AFamily, AStruct, AProtocol: Integer;

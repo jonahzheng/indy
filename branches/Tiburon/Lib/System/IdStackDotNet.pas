@@ -216,6 +216,7 @@ type
     procedure GetSocketName(ASocket: TIdStackSocketHandle; var VIP: string;
       var VPort: TIdPort; var VIPVersion: TIdIPVersion); override;
     function WSGetLastError: Integer; override;
+    procedure WSSetLastError(const AErr : Integer);  override;
     function  NewSocketHandle(const ASocketType: TIdSocketType;
       const AProtocol: TIdSocketProtocol;
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION;
@@ -512,6 +513,11 @@ end;
 function TIdStackDotNet.WSGetLastError: Integer;
 begin
   Result := LastSocketError;
+end;
+
+procedure TIdStackDotNet.WSSetLastError(const AErr : Integer);
+begin
+  LastSocketError := AErr;
 end;
 
 function TIdStackDotNet.NewSocketHandle(const ASocketType: TIdSocketType;
