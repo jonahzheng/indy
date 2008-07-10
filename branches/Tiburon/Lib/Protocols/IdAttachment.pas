@@ -57,8 +57,6 @@ uses
 type
   TIdAttachment = class(TIdMessagePart)
   protected
-    FFileName: String;
-
     function  GetContentDisposition: string; override;
     function  GetContentType: String; override;
     function  GetContentTypeName: String; virtual;
@@ -89,9 +87,6 @@ type
     procedure SaveToFile(const FileName: String); virtual;
     procedure SaveToStream(AStream: TStream); virtual;
 
-    procedure Assign(Source: TPersistent); override;
-
-    property  FileName: String read FFileName write FFileName;
     property  ContentTypeName: String read GetContentTypeName;
     class function PartType: TIdMessagePartType; override;
   end;
@@ -104,29 +99,6 @@ uses
   IdGlobal, IdGlobalProtocols, SysUtils;
 
 { TIdAttachment }
-
-procedure TIdAttachment.Assign(Source: TPersistent);
-var
-  mp: TIdAttachment;
-begin
-  if Source is TIdAttachment then begin
-    mp := TIdAttachment(Source);
-    {
-    ContentTransfer := mp.ContentTransfer;
-    ContentType := mp.ContentType;
-    ContentID := mp.ContentID;
-    ContentDisposition := mp.ContentDisposition;
-    }
-
-    // RLebeau 10/17/2003
-    Headers.Assign(mp.Headers);
-
-    ExtraHeaders.Assign(mp.ExtraHeaders);
-    FileName := mp.FileName;
-  end else begin
-    inherited;
-  end;
-end;
 
 function TIdAttachment.GetContentDisposition: string;
 begin
