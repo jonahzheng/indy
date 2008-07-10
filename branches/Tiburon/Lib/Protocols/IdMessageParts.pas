@@ -89,6 +89,7 @@ type
     FCharSet: string;
     FEndBoundary: string;
     FExtraHeaders: TIdHeaderList;
+    FFileName: String;
     FHeaders: TIdHeaderList;
     FIsEncoded: Boolean;
     FOnGetMessagePartStream: TOnGetMessagePartStream;
@@ -123,14 +124,15 @@ type
     property OnGetMessagePartStream: TOnGetMessagePartStream read FOnGetMessagePartStream write FOnGetMessagePartStream;
     property Headers: TIdHeaderList read FHeaders;
   published
+    property CharSet: string read FCharSet write FCharSet;
+    property ContentDescription: string read GetContentDescription write SetContentDescription;
     property ContentDisposition: string read GetContentDisposition write SetContentDisposition;
+    property ContentID: string read GetContentID write SetContentID;
+    property ContentLocation: string read GetContentLocation write SetContentLocation;
     property ContentTransfer: string read FContentTransfer write FContentTransfer;
     property ContentType: string read FContentType write FContentType;
-    property CharSet: string read FCharSet write FCharSet;
     property ExtraHeaders: TIdHeaderList read FExtraHeaders write SetExtraHeaders;
-    property ContentID: string read GetContentID write SetContentID;
-    property ContentDescription: string read GetContentDescription write SetContentDescription;
-    property ContentLocation: string read GetContentLocation write SetContentLocation;
+    property FileName: String read FFileName write FFileName;
     property ParentPart: integer read FParentPart write FParentPart;
   end;
 
@@ -179,8 +181,8 @@ begin
     mp := TIdMessagePart(Source);
     // RLebeau 10/17/2003
     Headers.Assign(mp.Headers);
-
     ExtraHeaders.Assign(mp.ExtraHeaders);
+    FileName := mp.FileName;
   end else begin
     inherited Assign(Source);
   end;
