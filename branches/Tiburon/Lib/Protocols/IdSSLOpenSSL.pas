@@ -234,7 +234,7 @@ type
       0: (B1,B2,B3,B4: Byte);
       1: (W1,W2: Word);
       2: (L1: Longint);
-      3: (C1: Cardinal);
+      3: (C1: LongWord);
   end;
 
   TEVP_MD = record
