@@ -587,7 +587,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
   protected
     FErrorCode : TIdC_ULONG;
   public
-    class procedure RaiseExceptionCode(const AErrCode :  TIdC_ULONG; const AMsg : String = '');
+    class procedure RaiseExceptionCode(const AErrCode : TIdC_ULONG; const AMsg : String = '');
     class procedure RaiseException(const AMsg : String = '');
     property ErrorCode : TIdC_ULONG read FErrorCode;
   end;
@@ -673,23 +673,26 @@ var
   LErr : Integer;
 begin
   LErr := GStack.WSGetLastError;
-  LockInfoCB.Enter;
   try
-    IdSSLSocket := TIdSSLSocket(IdSslGetAppData(sslSocket));
+    LockInfoCB.Enter;
+    try
+      IdSSLSocket := TIdSSLSocket(IdSslGetAppData(sslSocket));
 
-    StatusStr := IndyFormat(RSOSSLStatusString, [StrPas(IdSslStateStringLong(sslSocket))]);
+      StatusStr := IndyFormat(RSOSSLStatusString, [StrPas(IdSslStateStringLong(sslSocket))]);
 
-    if (IdSSLSocket.fParent is TIdSSLIOHandlerSocketOpenSSL) then begin
-      TIdSSLIOHandlerSocketOpenSSL(IdSSLSocket.fParent).DoStatusInfo(StatusStr);
-    end;
+      if (IdSSLSocket.fParent is TIdSSLIOHandlerSocketOpenSSL) then begin
+        TIdSSLIOHandlerSocketOpenSSL(IdSSLSocket.fParent).DoStatusInfo(StatusStr);
+      end;
 
-    if (IdSSLSocket.fParent is TIdServerIOHandlerSSLOpenSSL) then begin
-      TIdServerIOHandlerSSLOpenSSL(IdSSLSocket.fParent).DoStatusInfo(StatusStr);
+      if (IdSSLSocket.fParent is TIdServerIOHandlerSSLOpenSSL) then begin
+        TIdServerIOHandlerSSLOpenSSL(IdSSLSocket.fParent).DoStatusInfo(StatusStr);
+      end;
+    finally
+      LockInfoCB.Leave;
     end;
   finally
-    LockInfoCB.Leave;
+    GStack.WSSetLastError(LErr);
   end;
-  GStack.WSSetLastError(LErr);
 end;
 
 {function RSACallback(sslSocket: PSSL; e: Integer; KeyLength: Integer):PRSA; cdecl;
@@ -741,7 +744,6 @@ end;
 procedure SslLockingCallback(mode, n : TIdC_INT; Afile : PAnsiChar; line : TIdC_INT) cdecl;
 var
   Lock: TIdCriticalSection;
-
 begin
   Assert(CallbackLockList<>nil);
   Lock := nil;
@@ -872,7 +874,7 @@ begin
     PrepareOpenSSLLocking;
 
     IdSslSetLockingCallback(SslLockingCallback);
-     {$IFNDEF WIN32_OR_WIN64}
+    {$IFNDEF WIN32_OR_WIN64}
     IdSslSetIdCallback(_GetThreadID);
     {$ENDIF}
     SSLIsLoaded.Value := True;
@@ -931,7 +933,7 @@ var
   tz_m  : Integer;
 begin
   Result := 0;
-  if IdSslUCTTimeDecode(UCTTime, year, month, day, hour, min, sec, tz_h, tz_m) > 0 Then Begin
+  if IdSslUCTTimeDecode(UCTTime, year, month, day, hour, min, sec, tz_h, tz_m) > 0 then begin
     Result := EncodeDate(year, month, day) + EncodeTime(hour, min, sec, 0);
     AddMins(Result, tz_m);
     AddHrs(Result, tz_h);
@@ -2270,23 +2272,22 @@ end;
 
 { EIdOpenSSLAPICryptoError }
 class procedure EIdOpenSSLAPICryptoError.RaiseException(const AMsg : String = '');
-var
-  LErr : TIdC_ULONG;
 begin
-  LErr := IdSSLERR_get_err;
-  RaiseExceptionCode(LErr,AMsg);
+  RaiseExceptionCode(IdSSLERR_get_err(), AMsg);
 end;
 
 class procedure EIdOpenSSLAPICryptoError.RaiseExceptionCode(
   const AErrCode: TIdC_ULONG; const AMsg: String);
 var
+  LMsg: String;
   LException : EIdOpenSSLAPICryptoError;
 begin
   if AMsg <> '' then begin
-    LException := Create(AMsg + sLineBreak + GetErrorMessage(AErrCode));
+    LMsg := AMsg + sLineBreak + GetErrorMessage(AErrCode);
   end else begin
-    LException := Create(GetErrorMessage(AErrCode));
+    LMsg := GetErrorMessage(AErrCode);
   end;
+  LException := Create(LMsg);
   LException.FErrorCode := AErrCode;
   raise LException;
 end;
@@ -2304,7 +2305,7 @@ begin
   if AMsg <> '' then begin
     LErrStr := AMsg + sLineBreak;
   end else begin
-    LErrSTr := '';
+    LErrStr := '';
   end;
   LErr := IdSslGetError(s, ARetCode);
   case LErr of
@@ -2313,27 +2314,25 @@ begin
       LErrQueue := IdSSLERR_get_err;
       if LErrQueue = 0 then begin
         if ARetCode = 0 then begin
-          LException := Create(LErrStr+RSSSLEOFViolation);
+          LException := Create(LErrStr + RSSSLEOFViolation);
           LException.FErrorCode := LErr;
           LException.FRetCode := ARetCode;
           raise LException;
-        end else begin
+        end;
         {Note that if LErrQueue returns 0 and ARetCode = -1, there probably
-        is an eror in the underlying socket so you should raise a socket error}
-          if ARetCode = -1 then begin
-             GStack.RaiseLastSocketError;
-           // raise EIdException.Create(SysErrorMessage(GetLastError));
-          end;
+        is an error in the underlying socket so you should raise a socket error}
+        if ARetCode = -1 then begin
+          GStack.RaiseLastSocketError;
         end;
       end else begin
-        EIdOSSLUnderlyingCryptoError.RaiseExceptionCode(LErrQueue,LErrStr+AMsg);
+        EIdOSSLUnderlyingCryptoError.RaiseExceptionCode(LErrQueue, LErrStr + AMsg);
       end;
     end;
     OPENSSL_SSL_ERROR_SSL : begin
-      EIdOSSLUnderlyingCryptoError.RaiseException(LErrStr+AMsg);
+      EIdOSSLUnderlyingCryptoError.RaiseException(LErrStr + AMsg);
     end
   else
-    LException := Create(LErrStr+GetErrorMessage(LErr));
+    LException := Create(LErrStr + GetErrorMessage(LErr));
     LException.FErrorCode := LErr;
     LException.FRetCode := ARetCode;
     raise LException;
