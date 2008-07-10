@@ -34,8 +34,10 @@
 unit IdIPMCastBase;
 
 interface
+
 {$I IdCompilerDefines.inc}
 //here to flip FPC into Delphi mode
+
 uses
   IdComponent, IdException, IdGlobal, IdSocketHandle,
   IdStack;
@@ -59,7 +61,7 @@ type
     procedure SetActive(const Value: Boolean); virtual;
     procedure SetMulticastGroup(const Value: string); virtual;
     procedure SetPort(const Value: integer); virtual;
-    function GetIPVersion: TIdIPVersion;  virtual;
+    function GetIPVersion: TIdIPVersion; virtual;
     procedure SetIPVersion(const AValue: TIdIPVersion); virtual;
     //
     property Active: Boolean read GetActive write SetActive Default False;
@@ -68,7 +70,7 @@ type
     property IPVersion: TIdIPVersion read GetIPVersion write SetIPVersion default ID_DEFAULT_IP_VERSION;
     procedure InitComponent; override;
   public
-    function IsValidMulticastGroup(Value: string): Boolean;
+    function IsValidMulticastGroup(const Value: string): Boolean;
   published
   end;
 
@@ -88,7 +90,6 @@ uses
 
 { TIdIPMCastBase }
 
-
 function TIdIPMCastBase.GetIPVersion: TIdIPVersion;
 begin
   Result := FIPVersion;
@@ -106,32 +107,12 @@ begin
   Result := FDsgnActive;
 end;
 
-function TIdIPMCastBase.IsValidMulticastGroup(Value: string): Boolean;
+function TIdIPMCastBase.IsValidMulticastGroup(const Value: string): Boolean;
 begin
-  case Self.FIPVersion of
+  case FIPVersion of
      Id_IPv4 : Result := GStack.IsValidIPv4MulticastGroup(Value);
      Id_IPv6 : Result := GStack.IsValidIPv6MulticastGroup(Value);
   end;
-{var
-  ThisIP: string;
-  s1: string;
-  ip1: integer;
-begin
-  Result := false;
-
-  if not GStack.IsIP(Value) then
-  begin
-    Exit;
-  end;
-  ThisIP := Value;
-  s1 := Fetch(ThisIP, '.');    {Do not Localize}
-{  ip1 := IndyStrToInt(s1);
-
-  if ((ip1 < IPMCastLo) or (ip1 > IPMCastHi)) then
-  begin
-    Exit;
-  end;
-  Result := true;   }
 end;
 
 procedure TIdIPMCastBase.Loaded;
@@ -167,7 +148,6 @@ begin
   if AValue <> IPVersion then
   begin
     Active := False;
-
     FIPVersion := AValue;
     case AValue of
        Id_IPv4: FMulticastGroup := Id_IPMC_All_Systems;
@@ -183,8 +163,7 @@ begin
     begin
       Active := False;
       FMulticastGroup := Value;
-    end
-    else
+    end else
     begin
       Raise EIdMCastNotValidAddress.Create(RSIPMCastInvalidMulticastAddress);
     end;
