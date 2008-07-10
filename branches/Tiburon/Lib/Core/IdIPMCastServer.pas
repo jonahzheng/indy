@@ -161,8 +161,6 @@ begin
     {$ELSE}
     FBinding.AllocateSocket(Id_SOCK_DGRAM);
     {$ENDIF}
-
-
     FBinding.Bind;
     //Multicast.IMRMultiAddr :=  GBSDStack.StringToTIn4Addr(FMulticastGroup);
     //Hope the following is correct for StringToTIn4Addr(), should be checked...
@@ -177,7 +175,7 @@ procedure TIdIPMCastServer.MulticastBuffer(const AHost: string; const APort: Int
 begin
   // DS - if not IsValidMulticastGroup(FMulticastGroup) then
   EIdMCastNotValidAddress.IfFalse(IsValidMulticastGroup(AHost), RSIPMCastInvalidMulticastAddress);
-  Binding.SendTo(AHost, APort, ABuffer,FIPVersion);
+  Binding.SendTo(AHost, APort, ABuffer, Binding.IPVersion);
 end;
 
 procedure TIdIPMCastServer.Send(const AData: string);
