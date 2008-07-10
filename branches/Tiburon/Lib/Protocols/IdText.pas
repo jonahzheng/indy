@@ -81,15 +81,10 @@ const
 procedure TIdText.Assign(Source: TPersistent);
 begin
   if Source is TIdText then begin
-    with Source as TIdText do begin
-      // RLebeau 10/17/2003
-      Self.Headers.Assign(Headers);
-      Self.ExtraHeaders.Assign(ExtraHeaders);
-      Self.Body.Assign(Body);
-    end;
-  end else begin
-    inherited Assign(Source);
+    Body.Assign((Source as TIdText).Body);
   end;
+  // allow TIdMessagePart to copy the headers
+  inherited Assign(Source);
 end;
 
 constructor TIdText.Create(Collection: TIdMessageParts; ABody: TStrings = nil);
