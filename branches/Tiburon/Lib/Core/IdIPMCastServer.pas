@@ -93,6 +93,7 @@ type
     property Active;
     property Loopback: Boolean read FLoopback write SetLoopback default DEF_IMP_LOOPBACK;
     property MulticastGroup;
+    property IPVersion;
     property Port;
     property TimeToLive: Byte read FTimeToLive write SetTTL default DEF_IMP_TTL;
   end;
@@ -154,11 +155,14 @@ begin
     FBinding := TIdSocketHandle.Create(nil);
   end;
   if not FBinding.HandleAllocated then begin
+    FBinding.IPVersion := FIPVersion;
     {$IFDEF LINUX}
     FBinding.AllocateSocket(LongInt(Id_SOCK_DGRAM));
     {$ELSE}
     FBinding.AllocateSocket(Id_SOCK_DGRAM);
     {$ENDIF}
+
+
     FBinding.Bind;
     //Multicast.IMRMultiAddr :=  GBSDStack.StringToTIn4Addr(FMulticastGroup);
     //Hope the following is correct for StringToTIn4Addr(), should be checked...
@@ -173,7 +177,7 @@ procedure TIdIPMCastServer.MulticastBuffer(const AHost: string; const APort: Int
 begin
   // DS - if not IsValidMulticastGroup(FMulticastGroup) then
   EIdMCastNotValidAddress.IfFalse(IsValidMulticastGroup(AHost), RSIPMCastInvalidMulticastAddress);
-  Binding.SendTo(AHost, APort, ABuffer);
+  Binding.SendTo(AHost, APort, ABuffer,FIPVersion);
 end;
 
 procedure TIdIPMCastServer.Send(const AData: string);

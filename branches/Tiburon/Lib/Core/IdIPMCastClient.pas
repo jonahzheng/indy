@@ -98,6 +98,7 @@ type
     destructor Destroy; override;
     //
   published
+    property IPVersion;
     property Active;
     property Bindings: TIdSocketHandles read FBindings write SetBindings;
     property BufferSize: Integer read FBufferSize write FBufferSize default ID_UDP_BUFFERSIZE;
@@ -169,12 +170,14 @@ begin
   begin
     if Bindings.Count < 1 then begin
       if DefaultPort > 0 then begin
-        Bindings.Add;
+        Bindings.Add.IPVersion := FIPVersion;
+
       end else begin
         raise EIdMCastNoBindings.Create(RSNoBindingsSpecified);
       end;
     end;
     for i := 0 to Bindings.Count - 1 do begin
+
 {$IFDEF LINUX}
       Bindings[i].AllocateSocket(LongInt(Id_SOCK_DGRAM));
 {$ELSE}
@@ -274,14 +277,14 @@ begin
       if not Stopped then
       begin
         IncomingData := FServer.Bindings.BindingByHandle(TIdStackSocketHandle(LReadList[i]));
-        ByteCount := IncomingData.RecvFrom(LBuffer,PeerIP, PeerPort);
+        ByteCount := IncomingData.RecvFrom(LBuffer,PeerIP, PeerPort,IncomingData.IPVersion);
         if ByteCount = 0 then
         begin
           raise EIdUDPReceiveErrorZeroBytes.Create(RSIPMCastReceiveError0);
         end;
         SetLength(FBuffer,ByteCount);
         CopyTIdBytes(LBuffer,0,FBuffer,0,ByteCount);
-        IncomingData.SetPeer(PeerIP, PeerPort);
+        IncomingData.SetPeer(PeerIP, PeerPort,IncomingData.IPVersion);
         if FServer.ThreadedEvent then
         begin
           IPMCastRead;

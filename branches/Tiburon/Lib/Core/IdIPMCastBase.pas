@@ -50,6 +50,7 @@ type
     FDsgnActive: Boolean;
     FMulticastGroup: String;
     FPort: Integer;
+    FIPVersion: TIdIPVersion;
     //
     procedure CloseBinding; virtual; abstract;
     function GetActive: Boolean; virtual;
@@ -58,10 +59,13 @@ type
     procedure SetActive(const Value: Boolean); virtual;
     procedure SetMulticastGroup(const Value: string); virtual;
     procedure SetPort(const Value: integer); virtual;
+    function GetIPVersion: TIdIPVersion;  virtual;
+    procedure SetIPVersion(const AValue: TIdIPVersion); virtual;
     //
     property Active: Boolean read GetActive write SetActive Default False;
     property MulticastGroup: string read FMulticastGroup write SetMulticastGroup;
     property Port: Integer read FPort write SetPort;
+    property IPVersion: TIdIPVersion read GetIPVersion write SetIPVersion default ID_DEFAULT_IP_VERSION;
     procedure InitComponent; override;
   public
     function IsValidMulticastGroup(Value: string): Boolean;
@@ -73,6 +77,9 @@ type
   EIdMCastNotValidAddress = class(EIdMCastException);
   EIdMCastReceiveErrorZeroBytes = class(EIdMCastException);
 
+const
+  DEF_IPv6_MGROUP = 'FF01:0:0:0:0:0:0:1';
+
 implementation
 
 uses
@@ -81,10 +88,17 @@ uses
 
 { TIdIPMCastBase }
 
+
+function TIdIPMCastBase.GetIPVersion: TIdIPVersion;
+begin
+  Result := FIPVersion;
+end;
+
 procedure TIdIPMCastBase.InitComponent;
 begin
   inherited InitComponent;
   FMultiCastGroup := Id_IPMC_All_Systems;
+  FIPVersion := ID_DEFAULT_IP_VERSION;
 end;
 
 function TIdIPMCastBase.GetActive: Boolean;
@@ -93,7 +107,12 @@ begin
 end;
 
 function TIdIPMCastBase.IsValidMulticastGroup(Value: string): Boolean;
-var
+begin
+  case Self.FIPVersion of
+     Id_IPv4 : Result := GStack.IsValidIPv4MulticastGroup(Value);
+     Id_IPv6 : Result := GStack.IsValidIPv6MulticastGroup(Value);
+  end;
+{var
   ThisIP: string;
   s1: string;
   ip1: integer;
@@ -106,13 +125,13 @@ begin
   end;
   ThisIP := Value;
   s1 := Fetch(ThisIP, '.');    {Do not Localize}
-  ip1 := IndyStrToInt(s1);
+{  ip1 := IndyStrToInt(s1);
 
   if ((ip1 < IPMCastLo) or (ip1 > IPMCastHi)) then
   begin
     Exit;
   end;
-  Result := true;
+  Result := true;   }
 end;
 
 procedure TIdIPMCastBase.Loaded;
@@ -138,6 +157,21 @@ begin
     end
     else begin  // don't activate at designtime (or during loading of properties)    {Do not Localize}
       FDsgnActive := Value;
+    end;
+  end;
+end;
+
+
+procedure TIdIPMCastBase.SetIPVersion(const AValue: TIdIPVersion);
+begin
+  if AValue <> IPVersion then
+  begin
+    Active := False;
+
+    FIPVersion := AValue;
+    case AValue of
+       Id_IPv4: FMulticastGroup := Id_IPMC_All_Systems;
+       Id_IPv6: FMulticastGroup := DEF_IPv6_MGROUP;
     end;
   end;
 end;
