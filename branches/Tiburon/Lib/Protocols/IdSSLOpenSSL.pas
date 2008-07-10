@@ -672,6 +672,14 @@ var
   StatusStr : String;
   LErr : Integer;
 begin
+{
+You have to save the value of WSGetLastError as some Operating System API
+function calls will reset that value and we can't know what a programmer will
+do in this event.  We need the value of WSGetLastError so we can report
+an underlying socket error when the OpenSSL function returns.
+
+JPM.
+}
   LErr := GStack.WSGetLastError;
   try
     LockInfoCB.Enter;
