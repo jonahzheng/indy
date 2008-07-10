@@ -109,6 +109,8 @@ end;
 
 function TIdIPMCastBase.IsValidMulticastGroup(const Value: string): Boolean;
 begin
+//just here to prevent a warning from Delphi about an unitialized result
+  Result := False;
   case FIPVersion of
      Id_IPv4 : Result := GStack.IsValidIPv4MulticastGroup(Value);
      Id_IPv6 : Result := GStack.IsValidIPv6MulticastGroup(Value);
