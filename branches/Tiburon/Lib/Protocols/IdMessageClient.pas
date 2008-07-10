@@ -478,18 +478,6 @@ const
   SContentTransferEncoding = 'Content-Transfer-Encoding'; {do not localize}
   SThisIsMultiPartMessageInMIMEFormat = 'This is a multi-part message in MIME format'; {do not localize}
 
-function GenerateTextPartContentType(AContentType, ACharSet: String): String;
-Begin
-  //ContentType may contain the charset also, but CharSet overrides it if it is present...
-  if Length(ACharSet) > 0 then begin
-    AContentType := RemoveHeaderEntry(AContentType, 'charset');  {do not localize}
-  end;
-  Result := SContentType + ': '+AContentType; {do not localize}
-  if Length(ACharSet) > 0 then begin
-    Result := Result + ' ; charset="'+ACharSet+'"'; {do not localize}
-  end
-End;//
-
 function GetLongestLine(var ALine : String; const ADelim : String) : String;
 var
   i, fnd, delimLen : Integer;
@@ -699,6 +687,7 @@ var
             end;
           end;
         end;
+        LTxt.Filename := ADecoder.Filename;
         if TextStartsWith(LTxt.ContentType, 'multipart/') then begin {do not localize}
           LTxt.ParentPart := LPreviousParentPart;
         end else begin
@@ -920,21 +909,43 @@ var
     li, j: Integer;
     LQuotedPrintableEncoder: TIdEncoderQuotedPrintable;
     LHeaderCoder: TIdHeaderCoderClass;
+    LFileName: String;
   begin
     if ATextPart.ContentType = '' then begin
       ATextPart.ContentType := 'text/plain'; {do not localize}
     end;
     if ATextPart.ContentTransfer = '' then begin
       ATextPart.ContentTransfer := 'quoted-printable'; {do not localize}
-    end;
-    IOHandler.WriteLn(GenerateTextPartContentType(ATextPart.ContentType, ATextPart.CharSet));
-
-    if (PosInStrArray(ATextPart.ContentTransfer, ['quoted-printable', 'base64'], False) = -1) {do not localize}
+    end
+    else if (PosInStrArray(ATextPart.ContentTransfer, ['quoted-printable', 'base64'], False) = -1) {do not localize}
       and ATextPart.IsBodyEncodingRequired then
     begin
       ATextPart.ContentTransfer := '8bit';                    {do not localize}
     end;
+    if ATextPart.ContentDisposition = '' then begin
+      ATextPart.ContentDisposition := 'inline'; {do not localize}
+    end;
+
+    LFileName := EncodeHeader(ExtractFileName(ATextPart.FileName), '', HeaderEncoding, ISOCharSet); {do not localize}
+
+    //ContentType may contain the charset also, but CharSet overrides it if it is present...
+    if ATextPart.CharSet <> '' then begin
+      IOHandler.Write('Content-Type: ' + RemoveHeaderEntry(ATextPart.ContentType, 'charset')  {do not localize}
+         + '; charset="' + ATextPart.CharSet + '"'); {do not localize}
+    end else begin
+      IOHandler.Write('Content-Type: ' + ATextPart.ContentType); {do not localize}
+    end;
+    if LFileName <> '' then begin
+      IOHandler.Write(';' + EOL + '        name="' + LFileName + '"'); {do not localize}
+    end;
+    IOHandler.WriteLn;
+
     IOHandler.WriteLn(SContentTransferEncoding + ': ' + ATextPart.ContentTransfer); {do not localize}
+    IOHandler.WriteLn('Content-Disposition: ' + ATextPart.ContentDisposition); {do not localize}
+    if LFileName <> '' then begin
+      IOHandler.Write(';' + EOL + '        filename="' + LFileName + '"'); {do not localize}
+    end;
+    IOHandler.WriteLn;
 
     if ATextPart.ContentID <> '' then begin
       IOHandler.WriteLn('Content-ID: ' + ATextPart.ContentID);  {do not localize}
@@ -1178,29 +1189,38 @@ begin
                 LAttachment.ContentType := 'text/plain'; {do not localize}
               end;
             end;
+            LFileName := EncodeHeader(ExtractFileName(LAttachment.FileName), '', HeaderEncoding, ISOCharSet); {do not localize}
             if TextIsSame(LAttachment.ContentTransfer, 'binhex40') then begin   {do not localize}
               //This is special - you do NOT write out any Content-Transfer-Encoding
               //header!  We also have to write a Content-Type specified in RFC 1741
               //(overriding any ContentType present, if necessary).
               LAttachment.ContentType := 'application/mac-binhex40';            {do not localize}
-              IOHandler.Write('Content-Type: ' + LAttachment.ContentType + ';'); {do not localize}
+              IOHandler.Write('Content-Type: ' + LAttachment.ContentType); {do not localize}
               if LAttachment.CharSet <> '' then begin
-                IOHandler.Write(' charset="' + LAttachment.CharSet + '";'); {do not localize}
+                IOHandler.Write('; charset="' + LAttachment.CharSet + '"'); {do not localize}
               end;
-              IOHandler.WriteLn(EOL + '        name="' + EncodeHeader(ExtractFileName(LAttachment.FileName), '', HeaderEncoding, ISOCharSet) + '"'); {do not localize}
+              if LFileName <> '' then begin
+                IOHandler.Write(';' + EOL + '        name="' + LFileName + '"'); {do not localize}
+              end;
+              IOHandler.WriteLn;
             end
             else begin
               if LAttachment.CharSet <> '' then begin
-                IOHandler.WriteLn('Content-Type: ' + RemoveHeaderEntry(LAttachment.ContentType, 'charset')  {do not localize}
-                 + '; charset="' + LAttachment.CharSet + '";'); {do not localize}
+                IOHandler.Write('Content-Type: ' + RemoveHeaderEntry(LAttachment.ContentType, 'charset')  {do not localize}
+                 + '; charset="' + LAttachment.CharSet + '"'); {do not localize}
               end else begin
-                IOHandler.WriteLn('Content-Type: ' + LAttachment.ContentType + ';'); {do not localize}
+                IOHandler.Write('Content-Type: ' + LAttachment.ContentType); {do not localize}
               end;
-              LFileName := EncodeHeader(ExtractFileName(LAttachment.FileName), '', HeaderEncoding, ISOCharSet); {do not localize}
-              IOHandler.WriteLn('        name="' + LFileName + '"'); {do not localize}
+              if LFileName <> '' then begin
+                IOHandler.Write('        name="' + LFileName + '"'); {do not localize}
+              end;
+              IOHandler.WriteLn;
               IOHandler.WriteLn('Content-Transfer-Encoding: ' + LAttachment.ContentTransfer); {do not localize}
-              IOHandler.WriteLn('Content-Disposition: ' + LAttachment.ContentDisposition +';'); {do not localize}
-              IOHandler.WriteLn('        filename="' + LFileName + '"'); {do not localize}
+              IOHandler.WriteLn('Content-Disposition: ' + LAttachment.ContentDisposition); {do not localize}
+              if LFileName <> '' then begin
+                IOHandler.Write('        filename="' + LFileName + '"'); {do not localize}
+              end;
+              IOHandler.WriteLn;
             end;
             if LAttachment.ContentID <> '' then begin
               IOHandler.WriteLn('Content-ID: '+ LAttachment.ContentID); {Do not Localize}
