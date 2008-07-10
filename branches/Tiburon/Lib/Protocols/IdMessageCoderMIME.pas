@@ -459,7 +459,6 @@ end;
 function TIdMessageDecoderMIME.GetAttachmentFilename(const AContentType, AContentDisposition: string): string;
 var
   LValue: string;
-  LPos: Integer;
 begin
   LValue := ExtractHeaderSubItem(AContentDisposition, 'FILENAME'); {do not localize}
   if Length(LValue) = 0 then begin
