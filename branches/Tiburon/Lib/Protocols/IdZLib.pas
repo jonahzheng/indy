@@ -166,12 +166,12 @@ procedure DecompressToUserBuf(const InBuf: Pointer; InBytes: Integer;
 
 type
   EZlibError = class(Exception)
-  {JPM Additions, we need to be able to provide diangostic info
-  in an exception}
+  {JPM Additions, we need to be able to provide diagnostic info in an exception}
   protected
     FErrorCode : Integer;
   public
-    constructor CreateError(const AError : Integer);
+    class procedure RaiseException(const AError: Integer);
+    //
     property ErrorCode : Integer read FErrorCode;
   end;
   ECompressionError = class(EZlibError);
@@ -204,7 +204,7 @@ function CCheck(code: Integer): Integer;
 begin
   Result := code;
   if code < 0 then begin
-    raise ECompressionError.CreateError(code);
+    ECompressionError.RaiseException(code);
   end;
 end;
 
@@ -213,9 +213,7 @@ function DCheck(code: Integer): Integer;
 begin
   Result := code;
   if code < 0 then begin
-  begin
-    raise EDecompressionError.CreateError(code);
-  end;
+    EDecompressionError.RaiseException(code);
   end;
 end;
 
@@ -884,10 +882,13 @@ end;
 
 { EZlibError }
 
-constructor EZlibError.CreateError(const AError: Integer);
+class procedure EZlibError.RaiseException(const AError: Integer);
+var
+  LException: EZlibError;
 begin
-  inherited CreateFmt(sZLibError, [AError]);
-  FErrorCode := AError;
+  LException := CreateFmt(sZLibError, [AError]);
+  LException.FErrorCode := AError;
+  raise LException;
 end;
 
 // TCustomZlibStream
