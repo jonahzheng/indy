@@ -308,7 +308,7 @@ var
   LIP : String;
 begin
   LIP := GStack.ResolveHost(AHost, AIPVersion);
-  Binding.SendTo(LIP, APort, ABuffer);
+  Binding.SendTo(LIP, APort, ABuffer,AIPVersion);
 end;
 
 procedure TIdUDPBase.SetActive(const Value: Boolean);
