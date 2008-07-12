@@ -56,6 +56,7 @@ unit IdCookieManager;
 }
 
 interface
+
 {$i IdCompilerDefines.inc}
 
 uses
@@ -101,6 +102,79 @@ implementation
 uses
   IdGlobal, IdGlobalProtocols, SysUtils;
 
+function IsDomainMatch(const AHost, ADomain: String): Boolean;
+begin
+  {
+  Per RFC 2965:
+  
+  ...
+
+  Host names can be specified either as an IP address or a HDN string.
+  Sometimes we compare one host name with another.  (Such comparisons
+  SHALL be case-insensitive.)  Host A's name domain-matches host B's if
+
+    * their host name strings string-compare equal; or
+
+    * A is a HDN string and has the form NB, where N is a non-empty
+      name string, B has the form .B', and B' is a HDN string.  (So,
+      x.y.com domain-matches .Y.com but not Y.com.)
+
+  Note that domain-match is not a commutative operation: a.b.c.com
+  domain-matches .c.com, but not the reverse.
+  }
+  
+  if IsValidIP(AHost) then
+  begin
+    Result := AHost = ADomain;
+  end
+  else if IsHostName(AHost) then
+  begin
+    if CharEquals(ADomain, 1, '.') then begin
+      Result := TextEndsWith(AHost, ADomain);
+    end else
+    begin
+      Result := TextIsSame(AHost, ADomain);
+    end;
+  end
+  else begin
+    Result := False;
+  end;
+end;
+
+function IsRejectedCookie(ACookie: TIdCookieRFC2109; const AHost: string): Boolean;
+begin
+  {
+  Per RFC 2965:
+
+  ...
+
+  A user agent rejects (SHALL NOT store its information) if the Version
+  attribute is missing.  Moreover, a user agent rejects (SHALL NOT
+  store its information) if any of the following is true of the
+  attributes explicitly present in the Set-Cookie2 response header:
+
+    *  The value for the Path attribute is not a prefix of the
+       request-URI.
+
+    *  The value for the Domain attribute contains no embedded dots,
+       and the value is not .local.
+
+    *  The effective host name that derives from the request-host does
+       not domain-match the Domain attribute.
+
+    *  The request-host is a HDN (not IP address) and has the form HD,
+       where D is the value of the Domain attribute, and H is a string
+       that contains one or more dots.
+
+    *  The Port attribute has a "port-list", and the request-port was
+       not in the list.
+  }
+  
+  Result := not IsDomainMatch(AHost, ACookie.Domain);
+
+  // TODO: validate other attribute values as well
+end;
+
 { TIdCookieManager }
 
 destructor TIdCookieManager.Destroy;
@@ -131,7 +205,7 @@ begin
         // Search for cookies for this domain
         for i := 0 to LCookiesByDomain.Count - 1 do
         begin
-          if IndyPos(LCookiesByDomain[i], URL.Host) > 0 then
+          if IsDomainMatch(URL.Host, LCookiesByDomain.Strings[i]) then
           begin
             LCookieList := LCookiesByDomain.Objects[i] as TIdCookieList;
 
@@ -167,30 +241,24 @@ begin
 end;
 
 procedure TIdCookieManager.DoAdd(ACookie: TIdCookieRFC2109; ACookieText, AHost: String);
-Var
-  LDomain: String;
 begin
   ACookie.CookieText := ACookieText;
 
-  if Length(ACookie.Domain) = 0 then LDomain := AHost
-  else LDomain := ACookie.Domain;
+  if Length(ACookie.Domain) = 0 then begin
+    ACookie.Domain := AHost;
+  end;
 
-  ACookie.Domain := LDomain;
-
-  if ACookie.IsValidCookie(AHost) then
+  if not IsRejectedCookie(ACookie, AHost) then
   begin
     if DoOnNewCookie(ACookie) then
     begin
       FCookieCollection.AddCookie(ACookie);
-    end
-    else begin
-      ACookie.Collection := nil;
-      ACookie.Free;
+      Exit;
     end;
-  end
-  else begin
-    ACookie.Free;
+    ACookie.Collection := nil;
   end;
+
+  ACookie.Free;
 end;
 
 procedure TIdCookieManager.AddCookie(ACookie, AHost: String);
@@ -211,10 +279,10 @@ end;
 
 function TIdCookieManager.DoOnNewCookie(ACookie: TIdCookieRFC2109): Boolean;
 begin
-  result := true;
+  Result := True;
   if Assigned(FOnNewCookie) then
   begin
-    OnNewCookie(self, ACookie, result);
+    OnNewCookie(Self, ACookie, Result);
   end;
 end;
 
@@ -222,7 +290,7 @@ procedure TIdCookieManager.DoOnCreate;
 begin
   if Assigned(FOnCreate) then
   begin
-    OnCreate(self, FCookieCollection);
+    OnCreate(Self, FCookieCollection);
   end;
 end;
 
@@ -230,12 +298,12 @@ procedure TIdCookieManager.DoOnDestroy;
 begin
   if Assigned(FOnDestroy) then
   begin
-    OnDestroy(self, FCookieCollection);
+    OnDestroy(Self, FCookieCollection);
   end;
 end;
 
 procedure TIdCookieManager.CleanupCookieList;
-Var
+var
   S: String;
   i, j, LLastCount: Integer;
   LCookieList: TIdCookieList;
@@ -254,7 +322,7 @@ begin
           S := LCookieList.Cookies[j].Expires;
           if (Length(S) > 0) and (GMTToLocalDateTime(S) < Now) then
           begin
-            // The Cookie has exiered. It has to be removed from the collection
+            // The Cookie has expired. It has to be removed from the collection
             LLastCount := LCookieList.Count; // RLebeau
             LCookieList.Cookies[j].Free;
             // RLebeau - the cookie may already be removed from the list via
