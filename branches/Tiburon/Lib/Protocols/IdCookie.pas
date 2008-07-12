@@ -136,8 +136,6 @@ Type
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
 
-    function IsValidCookie(const AServerHost: String): Boolean; virtual;
-
     property CookieText: String read GetCookie write SetCookie;
     property ServerCookie: String read GetServerCookie;
     property ClientCookie: String read GetClientCookie;
@@ -320,29 +318,6 @@ begin
     FInternalVersion := TIdCookieRFC2109(Source).FInternalVersion;
   end else begin
     inherited Assign(Source);
-  end;
-end;
-
-function TIdNetscapeCookie.IsValidCookie(const AServerHost: String): Boolean;
-begin
-  if IsValidIP(AServerHost) then // true if Server host is IP and Domain is eq to ServerHost
-  begin
-    Result := AServerHost = FDomain;
-  end
-  else if IsHostName(AServerHost) then
-  begin
-    if IsHostName(FDomain) then
-    begin
-      //MSIE: if FDomain looks like "xxxx.yyyy.com", then AServerHost "zzzz.xxxx.yyyy.com" is valid
-      //also must allow 4.3.2.1=valid for domain=.2.1
-      Result := TextEndsWith(AServerHost, FDomain);
-    end
-    else begin
-      Result := TextIsSame(FDomain, DomainName(AServerHost));
-    end;
-  end
-  else begin
-    Result := TextIsSame(FDomain, DomainName(AServerHost));
   end;
 end;
 
