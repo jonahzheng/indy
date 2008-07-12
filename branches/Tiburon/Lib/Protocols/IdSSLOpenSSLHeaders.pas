@@ -436,14 +436,17 @@ except from configure script:
   {$ENDIF}
 {$ENDIF}
 
-// the following emit is a workaround to a name conflict
-// with Win32 API header files
+// the following emits are a workaround to a
+// name conflict with Win32 API header files
 (*$HPPEMIT '#include <time.h>'*)
 {$IFDEF OPENSSL_SYS_WIN32}
 (*$HPPEMIT '#undef X509_NAME'*)
 (*$HPPEMIT '#undef X509_EXTENSIONS'*)
 (*$HPPEMIT '#undef X509_CERT_PAIR'*)
 (*$HPPEMIT '#undef PKCS7_ISSUER_AND_SERIAL'*)
+(*$HPPEMIT '#undef OCSP_RESPONSE'*)
+(*$HPPEMIT '#undef OCSP_REQUEST'*)
+(*$HPPEMIT '#undef PKCS7_SIGNER_INFO'*)
 {$ENDIF}
 uses 
   {$IFDEF KYLIX}
