@@ -96,9 +96,12 @@ const
 type
   ESSPIException = class(Exception)
   public
+    // Params must be in this order to avoid conflict with CreateHelp
+    // constructor in CBuilder as CB does not differentiate constructors
+    // by name as Delphi does
+    constructor CreateError(const AErrorNo: Integer; const AFailedFuncName: string);
+    //
     class function GetErrorMessageByNo(AErrorNo: LongWord): string;
-  public
-    constructor CreateError(AFailedFuncName: string; AErrorNo: LongInt = SEC_E_OK);
   end;
 
   ESSPIInterfaceInitFailed = class(ESSPIException);
@@ -397,8 +400,7 @@ begin
   end;
 end;
 
-constructor ESSPIException.CreateError(const AFailedFuncName: string;
-  AErrorNo: LongInt = SEC_E_OK);
+constructor ESSPIException.CreateError(const AErrorNo: Integer; const AFailedFuncName: string);
 begin
   if AErrorNo = SEC_E_OK then begin
     inherited Create(AFailedFuncName);
@@ -430,11 +432,11 @@ begin
   Result := fPFunctionTable^;
 end;
 
-class procedure TSSPIInterface.RaiseIfError
-  (aStatus: SECURITY_STATUS; const aFunctionName: string);
+class procedure TSSPIInterface.RaiseIfError(aStatus: SECURITY_STATUS;
+  const aFunctionName: string);
 begin
   if not SEC_SUCCESS(aStatus) then begin
-    raise ESSPIException.CreateError(aFunctionName, aStatus);
+    raise ESSPIException.CreateError(aStatus, aFunctionName);
   end;
 end;
 
@@ -721,7 +723,7 @@ begin
     end;
   end;
   if doRaise then begin
-    raise ESSPIException.CreateError(aFuncName, aFuncResult);
+    raise ESSPIException.CreateError(aFuncResult, aFuncName);
   end;
   fHasHandle := True;
 end;
