@@ -136,7 +136,8 @@ type
   
   {$NODEFINE PPaddrinfo}
   PPaddrinfo = ^PAddrInfo;
-
+  {$NODEFINE PPaddrinfoW}
+  PPaddrinfoW = ^PAddrInfoW;
   {$IFNDEF UNDER_CE}
   {$EXTERNALSYM SOCKET_SECURITY_PROTOCOL}
   {$EXTERNALSYM SOCKET_SECURITY_PROTOCOL_DEFAULT}
@@ -201,7 +202,7 @@ type
   {$EXTERNALSYM LPFN_GETADDRINFO}
   LPFN_GETADDRINFO = function(NodeName: PAnsiChar; ServiceName: PAnsiChar; Hints: Paddrinfo; ppResult: PPaddrinfo): Integer; stdcall;
   {$EXTERNALSYM LPFN_GETADDRINFOW}
-  LPFN_GETADDRINFOW = function(NodeName: PWideChar; ServiceName: PWideChar; Hints: Paddrinfo; ppResult: PPaddrinfo): Integer; stdcall;
+  LPFN_GETADDRINFOW = function(NodeName: PWideChar; ServiceName: PWideChar; Hints: PaddrinfoW; ppResult: PPaddrinfoW): Integer; stdcall;
   {$EXTERNALSYM LPFN_GETNAMEINFO}
   LPFN_GETNAMEINFO = function(sa: psockaddr; salen: u_int; host: PAnsiChar; hostlen: u_int; serv: PAnsiChar; servlen: u_int; flags: Integer): Integer; stdcall;
   {$EXTERNALSYM LPFN_GETNAMEINFOW}

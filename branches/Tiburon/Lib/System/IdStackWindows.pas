@@ -1111,11 +1111,13 @@ var
   {$IFNDEF WINCE}
   LHost: PHostEnt;
   {$ENDIF}
-  Hints: TAddrInfo;
+
   {$IFDEF UNICODE}
   LAddrInfo: pAddrInfoW;
+  Hints: TAddrInfoW;
   {$ELSE}
   LAddrInfo: pAddrInfo;
+  Hints: TAddrInfo;
   {$ENDIF}
   RetVal: Integer;
   {$IFDEF UNICODESTRING}
@@ -1456,7 +1458,7 @@ begin
     SetLength(LControl, LSize);
 
     LMsgBuf.len := Length(VBuffer); // Length(VMsgData);
-    LMsgBuf.buf := @VBuffer[0]; // @VMsgData[0];
+    LMsgBuf.buf := PAnsiChar(@VBuffer[0]); // @VMsgData[0];
 
     FillChar(LMsg, SIZE_TWSAMSG, 0);
 
@@ -1464,7 +1466,7 @@ begin
     LMsg.dwBufferCount := 1;
 
     LMsg.Control.Len := LSize;
-    LMsg.Control.buf := @LControl[0];
+    LMsg.Control.buf := PAnsiChar(@LControl[0]);
 
     case AIPVersion of
       Id_IPv4:
