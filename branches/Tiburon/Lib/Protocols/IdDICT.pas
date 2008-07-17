@@ -61,8 +61,6 @@ uses
   IdDICTCommon, IdSASLCollection, IdTCPClient, IdTCPConnection;
 
 // TODO: MIME should be integrated into this.
-// TODO: SASL mechanism support needs to coded
-// TODO: This needs to be completely based on UTF8
 
 type
   TIdDICTAuthenticationType = (datDefault, datSASL);
@@ -129,9 +127,11 @@ var
 begin
   LBuf := '';
   FCapabilities.Clear;
+
   FServer := '';
   try
     inherited Connect;
+    IOHandler.DefStringEncoding := enUTF8;
     GetResponse(220);
     if LastCmdResult.Text.Count > 0 then
     begin
