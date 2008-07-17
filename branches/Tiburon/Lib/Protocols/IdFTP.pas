@@ -2192,7 +2192,8 @@ begin
   SendCmd('FEAT');  {do not localize}
   FCapabilities.Clear;
 
-  if LastCmdResult.NumericCode = 211 then
+  //Ipswitch's FTP WS-FTP Server may issue 221 as success
+  if LastCmdResult.NumericCode in [211,221] then
   begin
     FCapabilities.AddStrings(LastCmdResult.Text);
 
