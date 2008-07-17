@@ -427,10 +427,12 @@ type
     Window    : array[0..WindowSize] of AnsiChar;
   end;
 
-function Strm_in_func(BackObj: PZBack; var buf: PByte): Integer; cdecl;
+function Strm_in_func(opaque: Pointer; var buf: PByte): TIdC_UNSIGNED; cdecl;
 var
   S : TStream;
+  BackObj : PZBack;
 begin
+   BackObj := PZBack( opaque );
   S := BackObj.InStream; //help optimizations
   if BackObj.InMem <> nil then
   begin
@@ -445,14 +447,14 @@ begin
     TIdStreamHelper.Seek(S, Result, soCurrent);
   end else
   begin
-    buf    := @BackObj.ReadBuf;
+    buf    := PByte(@BackObj.ReadBuf);
     Result := S.Read(buf^, SizeOf(BackObj.ReadBuf));
   end;
 end;
 
-function Strm_out_func(BackObj: PZBack; buf: PByte; size: Integer): Integer; cdecl;
+function Strm_out_func(opaque: Pointer; buf: PByte; size: TIdC_UNSIGNED): TIdC_INT; cdecl;
 begin
-  Result := BackObj.OutStream.Write(buf^, size) - size;
+  Result := TIdC_INT(PZBack(opaque).OutStream.Write(buf^, size) - TIdC_SIGNED(size));
 end;
 
 procedure DecompressStream(InStream, OutStream: TStream);
@@ -471,7 +473,7 @@ begin
 
     //use our own function for reading
     strm.avail_in := Strm_in_func(BackObj, PByte(strm.next_in));
-    strm.next_out := @BackObj.Window;
+    strm.next_out := PAnsiChar(@BackObj.Window);
     strm.avail_out := 0;
 
     CheckInitInflateStream(strm, nil);
@@ -480,7 +482,8 @@ begin
     strm.avail_out := 0;
     DCheck(inflateBackInit(strm, MAX_WBITS, BackObj.Window));
     try
-      DCheck(inflateBack(strm, @Strm_in_func, BackObj, @Strm_out_func, BackObj));
+      DCheck(inflateBack(strm, Strm_in_func, BackObj, Strm_out_func, BackObj));
+    //  DCheck(inflateBack(strm, @Strm_in_func, BackObj, @Strm_out_func, BackObj));
       //seek back when unused data
       TIdStreamHelper.Seek(InStream, -strm.avail_in, soCurrent);
       //now trailer can be checked
@@ -511,7 +514,7 @@ begin
 
     //use our own function for reading
     strm.avail_in := Strm_in_func(BackObj, PByte(strm.next_in));
-    strm.next_out := @BackObj.Window;
+    strm.next_out := PAnsiChar(@BackObj.Window);
     strm.avail_out := 0;
 
     //note that you can not use a WinBits parameter greater than 32 with
@@ -537,7 +540,7 @@ begin
     DCheck(inflateBackInit_(strm,LWindowBits, BackObj.Window,
       zlib_version, SizeOf(TZStreamRec)));
     try
-      DCheck(inflateBack(strm, @Strm_in_func, BackObj, @Strm_out_func, BackObj));
+      DCheck(inflateBack(strm, Strm_in_func, BackObj, Strm_out_func, BackObj));
       //seek back when unused data
       TIdStreamHelper.Seek(InStream, -strm.avail_in, soCurrent);
       //now trailer can be checked
@@ -873,7 +876,7 @@ begin
   DCheck(inflateInit(strm));
   try
     if DCheck(inflate(strm, Z_FINISH)) <> Z_STREAM_END then begin
-      raise EZlibError.CreateRes(@sTargetBufferTooSmall);
+      raise EZlibError.Create(sTargetBufferTooSmall);
     end;
   finally
     DCheck(inflateEnd(strm));
@@ -985,12 +988,12 @@ end;
 
 function TCompressionStream.IdRead(var VBuffer: TIdBytes; AOffset, ACount: Longint): Longint;
 begin
-  raise ECompressionError.CreateRes(@sInvalidStreamOp);
+ raise ECompressionError.Create(sInvalidStreamOp);
 end;
 
 function TCompressionStream.IdWrite(const ABuffer: TIdBytes; AOffset, ACount: Longint): Longint;
 begin
-  FZRec.next_in := @ABuffer[AOffset];
+  FZRec.next_in := PAnsiChar(@ABuffer[AOffset]);
   FZRec.avail_in := ACount;
   if FStrm.Position <> FStrmPos then begin
     FStrm.Position := FStrmPos;
@@ -1015,7 +1018,7 @@ begin
   if (AOffset = 0) and (AOrigin = soCurrent) then begin
     Result := FZRec.total_in;
   end else begin
-    raise ECompressionError.CreateRes(@sInvalidStreamOp);
+    raise ECompressionError.Create(sInvalidStreamOp);
   end;
 end;
 
@@ -1075,7 +1078,7 @@ end;
 function TDecompressionStream.IdRead(var VBuffer: TIdBytes; AOffset,
   ACount: Integer): Longint;
 begin
-  FZRec.next_out := @VBuffer[AOffset];
+  FZRec.next_out := PAnsiChar(@VBuffer[AOffset]);
   FZRec.avail_out := ACount;
   if FStrm.Position <> FStrmPos then begin
     FStrm.Position := FStrmPos;
@@ -1104,7 +1107,7 @@ end;
 
 function TDecompressionStream.IdWrite(const ABuffer: TIdBytes; AOffset, ACount: Longint): Longint;
 begin
-  raise EDecompressionError.CreateRes(@sInvalidStreamOp);
+  raise EDecompressionError.Create(sInvalidStreamOp);
 end;
 
 function TDecompressionStream.IdSeek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64;
@@ -1137,7 +1140,8 @@ begin
     end;
   end else
   begin
-    raise EDecompressionError.CreateRes(@sInvalidStreamOp);
+   // raise EDecompressionError.CreateRes(@sInvalidStreamOp);
+   raise EDecompressionError.Create(sInvalidStreamOp);
   end;
   Result := FZRec.total_out;
 end;
