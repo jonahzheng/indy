@@ -7856,7 +7856,7 @@ function IdSslGetTlsExtStatusOcspResp(ssl : PSSL; arg : Pointer) : TIdC_LONG;
 function IdSslSetTlsExtStatusOcspResp(ssl : PSSL; arg : Pointer; arglen : TIdC_LONG) : TIdC_LONG;
 function IdSslSslCtxSetTlsExtServerNameCallback(ctx : PSSL_CTX; cb :SSL_callback_ctrl_fp):TIdC_LONG;
 {$ENDIF}
-function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPAnsiChar; length: PIdC_INT) : TIdC_UINT;
+//function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPAnsiChar; length: PIdC_INT) : TIdC_UINT;
 function IdSslCtxGetVersion(ctx: PSSL_CTX): TIdC_INT;
 function IdSslBioSetClose(b: PBio; c: TIdC_LONG): TIdC_LONG;
 procedure IdSslBioGetMemPtr(b: PBIO; pp: Pointer);
@@ -11179,15 +11179,14 @@ end;
 
 {$ENDIF}
 //
-
-function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPAnsiChar; length: PIdC_INT) : TIdC_UINT;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPAnsiChar; length: PIdC_INT) : TIdC_UINT;
+{$IFDEF USEINLINE inline; {$ENDIF
 begin
   Assert(s<>nil);
   id^ := @s.sid_ctx;
   Result := s.sid_ctx_length;
   Length^ := Result;
-end;
+end;             }
 
 function IdSslCtxGetVersion(ctx: PSSL_CTX):TIdC_INT;
 {$IFDEF USEINLINE} inline; {$ENDIF}
