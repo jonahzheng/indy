@@ -131,7 +131,7 @@ begin
   inSize := RawReadFromIOHandler(LBuf, AIOHandler, bufferSize);
   while inSize > 0 do
   begin
-    LZstream.next_in := @LBuf[0];
+    LZstream.next_in := PAnsiChar(@LBuf[0]);
     LZstream.avail_in := inSize;
     repeat
       LZstream.next_out := outBuffer;
