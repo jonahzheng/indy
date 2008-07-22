@@ -2908,11 +2908,14 @@ begin
     // Parse directory listing
     if FListResult.Count > 0 then begin
       if TIdFTPListResult(FListResult).UsedMLS then begin
+        FDirFormat := MLST;
         IdFTPListParseBase.ParseListing(FListResult, FDirectoryListing, MLST);
       end else begin
         CheckListParseCapa(FListResult, FDirectoryListing, FDirFormat,
           FListParserClass, SystemDesc, TIdFTPListResult(FListResult).Details);
       end;
+    end else begin
+      FDirFormat := '';
     end;
   finally
     DoOnDirParseEnd;
