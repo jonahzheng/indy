@@ -788,9 +788,16 @@ begin
     end;
     PAdrPtr := PAPInAddr(AHost^.h_address_list);
     i := 0;
-    while PAdrPtr^[i] <> nil do begin
-      AAddresses.Add(TranslateTInAddrToString(PAdrPtr^[I]^, Id_IPv4)); //BGO FIX
-      Inc(I);
+    if PAdrPtr^[i] <> nil then begin
+      AAddresses.BeginUpdate;
+      try
+        repeat
+          AAddresses.Add(TranslateTInAddrToString(PAdrPtr^[I]^, Id_IPv4)); //BGO FIX
+          Inc(I);
+        until PAdrPtr^[i] = nil;
+      finally
+        AAddresses.EndUpdate;
+      end;
     end;
     Exit;
   end;
@@ -812,10 +819,17 @@ begin
     if RetVal <> 0 then begin
       RaiseSocketError(gaiErrorToWsaError(RetVal));
     end;
-    while LAddrInfo <> nil do
+    if LAddrInfo <> nil then
     begin
-      AAddresses.Add(TranslateTInAddrToString(LAddrInfo^.ai_addr^.sin_addr, Id_IPv4));
-      LAddrInfo := LAddrInfo^.ai_next;
+      AAddresses.BeginUpdate;
+      try
+        repeat
+	  AAddresses.Add(TranslateTInAddrToString(LAddrInfo^.ai_addr^.sin_addr, Id_IPv4));
+          LAddrInfo := LAddrInfo^.ai_next;
+        until LAddrInfo = nil;
+      finally;
+        AAddresses.EndUpdate;
+      end;
     end;
   finally
     freeaddrinfo(LAddrInfo);

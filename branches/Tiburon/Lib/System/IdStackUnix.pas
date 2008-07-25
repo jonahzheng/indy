@@ -761,10 +761,15 @@ begin
   // to enumerate IPv6 addresses on a linux machine
   if ResolveName(LHostName, LI) = 0 then
   begin
-    for i := Low(LI) to High(LI) do
-    begin
-      //byte order conversion was done by resolveName
-      AAddresses.Add(HostAddrToStr(LI[i]));
+    AAddresses.BeginUpdate;
+    try
+      for i := Low(LI) to High(LI) do
+      begin
+        //byte order conversion was done by resolveName
+        AAddresses.Add(HostAddrToStr(LI[i]));
+      end;
+    finally
+      AAddresses.EndUpdate;
     end;
   end;
 end;

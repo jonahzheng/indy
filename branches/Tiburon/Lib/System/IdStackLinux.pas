@@ -765,9 +765,16 @@ begin
   end else begin
     LPAdrPtr := PAPInAddr(LAHost^.h_addr_list);
     Li := 0;
-    while LPAdrPtr^[Li] <> nil do begin
-      AAddresses.Add(TranslateTInAddrToString(LPAdrPtr^[Li]^, Id_IPv4));
-      Inc(Li);
+    if LPAdrPtr^[Li] <> nil then begin
+      AAddresses.BeginUpdate;
+      try
+        repeat
+          AAddresses.Add(TranslateTInAddrToString(LPAdrPtr^[Li]^, Id_IPv4));
+          Inc(Li);
+        until LPAdrPtr^[Li] = nil;
+      finally
+        AAddresses.EndUpdate;
+      end;
     end;
   end;
 end;
