@@ -240,7 +240,6 @@ type
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
   public
     constructor Create; override;
-    destructor Destroy; override;
     function CheckIPVersionSupport(const AIPVersion: TIdIPVersion): boolean; virtual; abstract;
     function Receive(ASocket: TIdStackSocketHandle; var VBuffer: TIdBytes): Integer; override;
     function Send(ASocket: TIdStackSocketHandle; const ABuffer: TIdBytes;
@@ -394,12 +393,6 @@ constructor TIdStackBSDBase.Create;
 begin
   inherited Create;
   GBSDStack := Self;
-end;
-
-destructor TIdStackBSDBase.Destroy;
-begin
-  FreeAndNil(FLocalAddresses);
-  inherited Destroy;
 end;
 
 function TIdStackBSDBase.Receive(ASocket: TIdStackSocketHandle;
