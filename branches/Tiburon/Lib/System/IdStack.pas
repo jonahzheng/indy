@@ -148,7 +148,8 @@ type
     FLastError: Integer;
   public
     // Params must be in this order to avoid conflict with CreateHelp
-    // constructor in CBuilder
+    // constructor in CBuilder as CB does not differentiate constructors
+    // by name as Delphi does
     constructor CreateError(const AErr: Integer; const AMsg: string); virtual;
     //
     property LastError: Integer read FLastError;
@@ -222,7 +223,6 @@ type
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string; virtual; abstract;
     function MakeCanonicalIPv6Address(const AAddr: string): string;
     function ReadHostName: string; virtual; abstract;
-    procedure PopulateLocalAddresses; virtual; abstract;
     function GetLocalAddress: string;
     function GetLocalAddresses: TStrings;
   public
@@ -234,6 +234,7 @@ type
     procedure Connect(const ASocket: TIdStackSocketHandle; const AIP: string;
               const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); virtual; abstract;
     constructor Create; virtual;
+    destructor Destroy; override;
     procedure Disconnect(ASocket: TIdStackSocketHandle); virtual; abstract;
     function IOControl(const s: TIdStackSocketHandle; const cmd: LongWord;
       var arg: LongWord): Integer; virtual; abstract;
@@ -328,6 +329,8 @@ type
     procedure WriteChecksum(s : TIdStackSocketHandle;
       var VBuffer : TIdBytes; const AOffset : Integer; const AIP : String;
       const APort : TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); virtual; abstract;
+    //
+    procedure AddLocalAddressesToList(AAddresses: TStrings); virtual; abstract;
     //
     // Properties
     //
@@ -443,6 +446,12 @@ begin
   inherited Create;
 end;
 
+destructor TIdStack.Destroy;
+begin
+  FreeAndNil(FLocalAddresses);
+  inherited Destroy;
+end;
+
 procedure TIdStack.IPVersionUnsupported;
 begin
   raise EIdIPVersionUnsupported.Create(RSIPVersionUnsupported);
@@ -478,7 +487,7 @@ begin
     FLocalAddresses := TStringList.Create;
   end;
   FLocalAddresses.Clear;
-  PopulateLocalAddresses;
+  AddLocalAddressesToList(FLocalAddresses);
   Result := FLocalAddresses;
 end;
 

@@ -126,7 +126,6 @@ type
     procedure SetLastError(const AError: Integer);
     function HostByName(const AHostName: string;
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string; override;
-    procedure PopulateLocalAddresses; override;
     function ReadHostName: string; override;
     function WSCloseSocket(ASocket: TIdStackSocketHandle): Integer; override;
     function WSRecv(ASocket: TIdStackSocketHandle; var ABuffer;
@@ -199,6 +198,8 @@ type
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
     function IOControl(const s: TIdStackSocketHandle; const cmd: LongWord;
       var arg: LongWord): Integer; override;
+
+    procedure AddLocalAddressesToList(AAddresses: TStrings); override;
   end;
 
   {$IFNDEF NOREDECLARE}
@@ -746,7 +747,7 @@ begin
   Result := LParts.QuadPart;
 end;
 
-procedure TIdStackUnix.PopulateLocalAddresses;
+procedure TIdStackUnix.AddLocalAddressesToList(AAddresses: TStrings);
 var
   LI : array of THostAddr;
   i : Integer;
@@ -758,13 +759,12 @@ begin
   end;
   // this won't get IPv6 addresses as I didn't find a way
   // to enumerate IPv6 addresses on a linux machine
-  FLocalAddresses.Clear;
   if ResolveName(LHostName, LI) = 0 then
   begin
     for i := Low(LI) to High(LI) do
     begin
       //byte order conversion was done by resolveName
-      FLocalAddresses.Add(HostAddrToStr(LI[i]));
+      AAddresses.Add(HostAddrToStr(LI[i]));
     end;
   end;
 end;

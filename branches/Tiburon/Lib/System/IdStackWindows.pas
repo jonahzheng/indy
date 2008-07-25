@@ -232,7 +232,6 @@ type
       const AOffset : Integer; const AIP : String; const APort : TIdPort);
     function HostByName(const AHostName: string;
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string; override;
-    procedure PopulateLocalAddresses; override;
     function ReadHostName: string; override;
     function WSCloseSocket(ASocket: TIdStackSocketHandle): Integer; override;
     function WSRecv(ASocket: TIdStackSocketHandle; var ABuffer;
@@ -305,6 +304,7 @@ type
       const AIP : String;
       const APort : TIdPort;
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
+    procedure AddLocalAddressesToList(AAddresses: TStrings); override;
   end;
 
 var
@@ -744,7 +744,7 @@ begin
   Result := LParts.QuadPart;
 end;
 
-procedure TIdStackWindows.PopulateLocalAddresses;
+procedure TIdStackWindows.AddLocalAddressesToList(AAddresses: TStrings);
 {$IFNDEF WINCE}
 type
   TaPInAddr = array[0..250] of PInAddr;
@@ -789,7 +789,7 @@ begin
     PAdrPtr := PAPInAddr(AHost^.h_address_list);
     i := 0;
     while PAdrPtr^[i] <> nil do begin
-      FLocalAddresses.Add(TranslateTInAddrToString(PAdrPtr^[I]^, Id_IPv4)); //BGO FIX
+      AAddresses.Add(TranslateTInAddrToString(PAdrPtr^[I]^, Id_IPv4)); //BGO FIX
       Inc(I);
     end;
     Exit;
@@ -814,7 +814,7 @@ begin
     end;
     while LAddrInfo <> nil do
     begin
-      FLocalAddresses.Add(TranslateTInAddrToString(LAddrInfo^.ai_addr^.sin_addr, Id_IPv4));
+      AAddresses.Add(TranslateTInAddrToString(LAddrInfo^.ai_addr^.sin_addr, Id_IPv4));
       LAddrInfo := LAddrInfo^.ai_next;
     end;
   finally

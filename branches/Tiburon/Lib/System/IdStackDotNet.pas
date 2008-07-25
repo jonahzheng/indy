@@ -196,7 +196,6 @@ type
     function ReadHostName: string; override;
     function HostByName(const AHostName: string;
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string; override;
-    procedure PopulateLocalAddresses; override;
     //internal IP Mutlicasting membership stuff
     procedure MembershipSockOpt(AHandle: TIdStackSocketHandle;
       const AGroupIP, ALocalIP : String; const ASockOpt : TIdSocketOption;
@@ -266,6 +265,7 @@ type
     procedure WriteChecksum(s : TIdStackSocketHandle; var VBuffer : TIdBytes;
       const AOffset : Integer; const AIP : String; const APort : TIdPort;
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
+    procedure AddLocalAddressesToList(AAddresses: TStrings); override;
   end;
  {$IFDEF DOTNET1_1}
   EIdNotSupportedInMicrosoftNET11 = class(EIdStackError);
@@ -987,7 +987,7 @@ begin
   {$ENDIF}
 end;
 
-procedure TIdStackDotNet.PopulateLocalAddresses;
+procedure TIdStackDotNet.AddLocalAddressesToList(AAddresses: TStrings);
 var
   {$IFDEF DOTNET1_1}
   LAddr : IPAddress;
@@ -1008,7 +1008,7 @@ begin
     begin
       //This may be returning various types of addresses.
       if LHost.AddressList[i].AddressFamily = AddressFamily.InterNetwork then begin
-        FLocalAddresses.Add(LHost.AddressList[i].ToString);
+        AAddresses.Add(LHost.AddressList[i].ToString);
       end;
     end;
   end;

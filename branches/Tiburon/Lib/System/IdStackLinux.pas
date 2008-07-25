@@ -108,7 +108,6 @@ type
     procedure SetLastError(Const AError : Integer);
     function HostByName(const AHostName: string;
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string; override;
-    procedure PopulateLocalAddresses; override;
     function ReadHostName: string; override;
     function WSCloseSocket(ASocket: TIdStackSocketHandle): Integer; override;
     function WSRecv(ASocket: TIdStackSocketHandle;
@@ -186,6 +185,7 @@ type
     function IOControl(const s: TIdStackSocketHandle; const cmd: LongWord;
       var arg: LongWord): Integer; override;
 
+    procedure AddLocalAddressesToList(AAddresses: TStrings); override;
   end;
 
   TLinger = record
@@ -746,7 +746,7 @@ begin
   Result := LParts.QuadPart;
 end;
 
-procedure TIdStackLinux.PopulateLocalAddresses;
+procedure TIdStackLinux.AddLocalAddressesToList(AAddresses: TStrings);
 type
   TaPInAddr = array[0..250] of PInAddr;
   PaPInAddr = ^TaPInAddr;
@@ -758,7 +758,6 @@ var
 begin
   // this won't get IPv6 addresses as I didn't find a way
   // to enumerate IPv6 addresses on a linux machine
-  FLocalAddresses.Clear;
   LHostName := HostName;
   LAHost := Libc.gethostbyname(PAnsiChar(LHostName));
   if LAHost = nil then begin
@@ -767,7 +766,7 @@ begin
     LPAdrPtr := PAPInAddr(LAHost^.h_addr_list);
     Li := 0;
     while LPAdrPtr^[Li] <> nil do begin
-      FLocalAddresses.Add(TranslateTInAddrToString(LPAdrPtr^[Li]^, Id_IPv4));
+      AAddresses.Add(TranslateTInAddrToString(LPAdrPtr^[Li]^, Id_IPv4));
       Inc(Li);
     end;
   end;
