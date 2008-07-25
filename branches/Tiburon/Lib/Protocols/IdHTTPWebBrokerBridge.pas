@@ -286,12 +286,13 @@ begin
     INDEX_RemoteHost      : Result := GetFieldByName('REMOTE_HOST');     {do not localize}
     INDEX_ScriptName      : Result := '';
     INDEX_ServerPort: begin
-      Result := FRequestInfo.Host;
-      Fetch(Result, ':');
-      if Length(Result) = 0 then begin
-        Result := IntToStr(TIdIOHandlerSocket(FThread.Connection.IOHandler).Binding.Port);
+      s := FRequestInfo.Host;
+      Fetch(s, ':');
+      if Length(s) = 0 then begin
+        s := IntToStr(FThread.Connection.Socket.Binding.Port);
         // Result := '80';
       end;
+      Result := s;
     end;
     INDEX_Content         : Result := FRequestInfo.UnparsedParams;
     INDEX_Connection      : Result := GetFieldByName('CONNECTION');      {do not localize}
