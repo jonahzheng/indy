@@ -1500,7 +1500,7 @@ var
   SSLMethod: PSSL_METHOD;
   error: TIdC_INT;
 //  pCAname: PSTACK_X509_NAME;
-  LOldMode : TIdC_INT;
+
 begin
   // Destroy the context first
   DestroyContext;
