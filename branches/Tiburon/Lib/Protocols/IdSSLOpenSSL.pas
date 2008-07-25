@@ -1500,6 +1500,7 @@ var
   SSLMethod: PSSL_METHOD;
   error: TIdC_INT;
 //  pCAname: PSTACK_X509_NAME;
+  LOldMode : TIdC_INT;
 begin
   // Destroy the context first
   DestroyContext;
@@ -1522,6 +1523,7 @@ begin
     raise EIdOSSLCreatingContextError.Create(RSSSLCreatingContextError);
   end;
 
+  IdSslCtxSetMode(fContext,OPENSSL_SSL_MODE_AUTO_RETRY);
   // assign a password lookup routine
 //  if PasswordRoutineOn then begin
     IdSslCtxSetDefaultPasswdCb(fContext, @PasswordCallback);
