@@ -3159,8 +3159,11 @@ const
   OPENSSL_SSL_MAX_SID_CTX_LENGTH = 32;
   OPENSSL_SSL_MAX_KRB5_PRINCIPAL_LENGTH = 256;
   OPENSSL_SSL_MAX_SSL_SESSION_ID_LENGTH = 32;
+
+  OPENSSL_SSL_MODE_ENABLE_PARTIAL_WRITE       = $00000001;
   OPENSSL_SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER = $00000002;
-  OPENSSL_SSL_MODE_ENABLE_PARTIAL_WRITE = $00000001;
+  OPENSSL_SSL_MODE_AUTO_RETRY                 = $00000004;
+  OPENSSL_SSL_MODE_NO_AUTO_CHAIN              = $00000008;
   OPENSSL_SSL_NOTHING = 1;
 
   OPENSSL_SSL_OP_MICROSOFT_SESS_ID_BUG = $00000001;
@@ -7671,6 +7674,7 @@ var
   IdSslRead : function(ssl: PSSL; buf: Pointer; num: TIdC_INT): TIdC_INT; cdecl = nil;
   IdSslPeek : function(ssl: PSSL; buf: Pointer; num: TIdC_INT): TIdC_INT; cdecl = nil;
   IdSslWrite : function(ssl: PSSL; const buf: Pointer; num: TIdC_INT): TIdC_INT; cdecl = nil;
+  //long  SSL_CTX_ctrl(SSL_CTX *ctx,int cmd, long larg, void *parg);
   IdSslCtxCtrl : function(ssl: PSSL_CTX; cmd: TIdC_INT; larg: TIdC_LONG; parg: Pointer): TIdC_LONG; cdecl = nil;
   //long	SSL_ctrl(SSL *ssl,int cmd, long larg, void *parg);
   IdSslCtrl : function(ssl : PSSL; cmd : TIdC_INT; larg : TIdC_LONG; parg : Pointer) : TIdC_LONG; cdecl = nil;
@@ -7817,10 +7821,11 @@ function IdX509CRLGetIssuer(x : PX509_CRL) : PX509_NAME;
 function IdSslCRLGetRevoked(x : PX509_CRL) : PSTACK_OF_X509_REVOKED;
 
 procedure IdSslCtxSetInfoCallback(ctx: PSSL_CTX; cb: PSSL_CTX_info_callback);
-function IdSslCtxSetOptions(ctx: PSSL_CTX; op: TIdC_INT): TIdC_LONG;
-function IdSslCtxSetMode(ctx : PSSL_CTX; op : TIdC_INT) : TIdC_LONG;
+//SSL_CTX_ctrl macros
+function IdSslCtxSetOptions(ctx: PSSL_CTX; op: TIdC_LONG): TIdC_LONG;
+function IdSslCtxSetMode(ctx : PSSL_CTX; op : TIdC_LONG) : TIdC_LONG;
 function IdSslCtxGetMode(ctx : PSSL_CTX) : TIdC_LONG;
-function IdSslSetMtu(ssl : PSSL; mtu : TIdC_INT) : TIdC_LONG;
+function IdSslSetMtu(ssl : PSSL; mtu : TIdC_LONG) : TIdC_LONG;
 function IdSslCtxSessNumber(ctx : PSSL_CTX) : TIdC_LONG;
 function IdSslCtxSessConnect(ctx : PSSL_CTX) : TIdC_LONG;
 function IdSslCtxSessConnectionGood(ctx : PSSL_CTX): TIdC_LONG;
@@ -7854,6 +7859,7 @@ function IdSslGetTlsextStatusIds(ssl : PSSL; arg : Pointer) : TIdC_LONG;
 function IdSslSetTlsExtStatusIds(ssl : PSSL; arg : Pointer) : TIdC_LONG;
 function IdSslGetTlsExtStatusOcspResp(ssl : PSSL; arg : Pointer) : TIdC_LONG;
 function IdSslSetTlsExtStatusOcspResp(ssl : PSSL; arg : Pointer; arglen : TIdC_LONG) : TIdC_LONG;
+//end  SSL_CTX_ctrl macros
 function IdSslSslCtxSetTlsExtServerNameCallback(ctx : PSSL_CTX; cb :SSL_callback_ctrl_fp):TIdC_LONG;
 {$ENDIF}
 //function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPAnsiChar; length: PIdC_INT) : TIdC_UINT;
@@ -10857,7 +10863,7 @@ end;
 // * they cannot be used to clear bits. */
 
 
-function IdSslCtxSetOptions(ctx: PSSL_CTX; op: TIdC_INT):TIdC_LONG;
+function IdSslCtxSetOptions(ctx: PSSL_CTX; op: TIdC_LONG):TIdC_LONG;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := IdSslCtxCtrl(ctx, OPENSSL_SSL_CTRL_OPTIONS, op, nil);
@@ -10872,7 +10878,7 @@ begin
 end;
 //#define SSL_set_options(ssl,op) \
 //	SSL_ctrl((ssl),SSL_CTRL_OPTIONS,(op),NULL)
-function IdSslSetOptions(ssl: PSSL; op : TIdC_Int): TIdC_LONG;
+function IdSslSetOptions(ssl: PSSL; op : TIdC_LONG): TIdC_LONG;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := IdSslCtrl(ssl,OPENSSL_SSL_CTRL_OPTIONS,op,nil);
@@ -10889,7 +10895,7 @@ end;
 
 //#define SSL_CTX_set_mode(ctx,op) \
 //	SSL_CTX_ctrl((ctx),SSL_CTRL_MODE,(op),NULL)
-function IdSslCtxSetMode(ctx : PSSL_CTX; op : TIdC_INT) : TIdC_LONG;
+function IdSslCtxSetMode(ctx : PSSL_CTX; op : TIdC_LONG) : TIdC_LONG;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := IdSslCtxCtrl(ctx, OPENSSL_SSL_CTRL_MODE, op,nil);
@@ -10905,7 +10911,7 @@ end;
 
 //#define SSL_set_mtu(ssl, mtu) \
 //        SSL_ctrl((ssl),SSL_CTRL_SET_MTU,(mtu),NULL)
-function IdSslSetMtu(ssl : PSSL; mtu : TIdC_INT) : TIdC_LONG;
+function IdSslSetMtu(ssl : PSSL; mtu : TIdC_LONG) : TIdC_LONG;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := IdSslCtrl(ssl,OPENSSL_SSL_CTRL_SET_MTU,mtu,nil);
