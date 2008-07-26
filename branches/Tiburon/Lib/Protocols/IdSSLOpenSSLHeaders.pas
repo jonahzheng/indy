@@ -7674,6 +7674,8 @@ var
   IdSslRead : function(ssl: PSSL; buf: Pointer; num: TIdC_INT): TIdC_INT; cdecl = nil;
   IdSslPeek : function(ssl: PSSL; buf: Pointer; num: TIdC_INT): TIdC_INT; cdecl = nil;
   IdSslWrite : function(ssl: PSSL; const buf: Pointer; num: TIdC_INT): TIdC_INT; cdecl = nil;
+  //int	SSL_pending(const SSL *s);
+  IdSslPending : function(ssl : PSSL) : TIdC_INT; cdecl;
   //long  SSL_CTX_ctrl(SSL_CTX *ctx,int cmd, long larg, void *parg);
   IdSslCtxCtrl : function(ssl: PSSL_CTX; cmd: TIdC_INT; larg: TIdC_LONG; parg: Pointer): TIdC_LONG; cdecl = nil;
   //long	SSL_ctrl(SSL *ssl,int cmd, long larg, void *parg);
@@ -10010,7 +10012,7 @@ them in case we use them later.}
   {CH fn_SSL_get_cipher_list = 'SSL_get_cipher_list'; }  {Do not localize}
   {CH fn_SSL_get_shared_ciphers = 'SSL_get_shared_ciphers'; }  {Do not localize}
   {CH fn_SSL_get_read_ahead = 'SSL_get_read_ahead'; }  {Do not localize}
-  {CH fn_SSL_pending = 'SSL_pending'; }  {Do not localize}
+  fn_SSL_pending = 'SSL_pending';  {Do not localize}
   {$IFNDEF OPENSSL_NO_SOCK}
   fn_SSL_set_fd = 'SSL_set_fd';  {Do not localize}
   {CH fn_SSL_set_rfd = 'SSL_set_rfd'; }  {Do not localize}
@@ -10389,6 +10391,7 @@ begin
   @IdSslConnect := LoadFunction(fn_SSL_connect);
   @IdSslRead := LoadFunction(fn_SSL_read);
   @IdSslPeek := LoadFunction(fn_SSL_peek);
+  @IdSslPending := LoadFunction(fn_SSL_pending);
   @IdSslWrite := LoadFunction(fn_SSL_write);
   @IdSslCtrl := LoadFunction(fn_SSL_ctrl);
   @IdSslCallbackCtrl := LoadFunction(fn_SSL_callback_ctrl);
