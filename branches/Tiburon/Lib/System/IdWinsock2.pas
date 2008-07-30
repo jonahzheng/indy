@@ -167,6 +167,7 @@ To deal with this, I use the FPC predefined FPC_REQUIRES_PROPER_ALIGNMENT.
     {$PACKRECORDS C}
   {$ENDIF}
 {$ELSE}
+   {$MINENUMSIZE 4}
   {$IFDEF REQUIRES_PROPER_ALIGNMENT}
    {$ALIGN ON}
   {$ELSE}
