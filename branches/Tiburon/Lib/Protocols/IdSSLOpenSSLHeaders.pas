@@ -4222,7 +4222,7 @@ type
   {$IFNDEF OPENSSL_NO_MD2}
   MD2_CTX = record
     num : TIdC_UINT;
-    data : array [0..OPENSSL_MD2_BLOCK - 1] of char;
+    data : array [0..OPENSSL_MD2_BLOCK - 1] of AnsiChar;
     cksm : array [0..OPENSSL_MD2_BLOCK - 1] of MD2_INT;
     state : array[0..OPENSSL_MD2_BLOCK -1] of MD2_INT;
   end;
@@ -5157,9 +5157,9 @@ type
     engine : PENGINE;   // functional reference if 'cipher' is ENGINE-provided
     encrypt: TIdC_INT;  // encrypt or decrypt
     buf_len : TIdC_INT; // number we have left
-    oiv : array [0..OPENSSL_EVP_MAX_IV_LENGTH-1] of char; // original iv
-    iv : array [0..OPENSSL_EVP_MAX_IV_LENGTH -1] of char; // working iv
-    buf : array [0..OPENSSL_EVP_MAX_BLOCK_LENGTH -1] of char; // saved partial block
+    oiv : array [0..OPENSSL_EVP_MAX_IV_LENGTH-1] of AnsiChar; // original iv
+    iv : array [0..OPENSSL_EVP_MAX_IV_LENGTH -1] of AnsiChar; // working iv
+    buf : array [0..OPENSSL_EVP_MAX_BLOCK_LENGTH -1] of AnsiChar; // saved partial block
     num : TIdC_INT;     // used by cfb/ofb mode
     app_data : Pointer; // application stuff
     key_len : TIdC_INT; // May change for variable length cipher
@@ -5167,12 +5167,12 @@ type
     cipher_data : Pointer; // per EVP data
     final_used : TIdC_INT;
     block_mask : TIdC_INT;
-    _final : array [0..OPENSSL_EVP_MAX_BLOCK_LENGTH-1] of char; // possible final block
+    _final : array [0..OPENSSL_EVP_MAX_BLOCK_LENGTH-1] of AnsiChar; // possible final block
   end;
 
   EVP_CIPHER_INFO = record
     cipher : PEVP_CIPHER;
-    iv : array [0..OPENSSL_EVP_MAX_IV_LENGTH -1] of char;
+    iv : array [0..OPENSSL_EVP_MAX_IV_LENGTH -1] of AnsiChar;
   end;
   PEVP_CIPHER_INFO = ^EVP_CIPHER_INFO;
   EVP_ENCODE_CTX = record
@@ -5182,7 +5182,7 @@ type
                        // length that is ok.  Once decoding begins,
                        // the length is adjusted up each time a longer
                        // line is decoded
-    enc_data:array [0..79] of char;
+    enc_data:array [0..79] of AnsiChar;
     line_num: TIdC_INT;	// number read on current line
     expect_nl: TIdC_INT;
   end;
@@ -5802,7 +5802,7 @@ type
     akid : PAUTHORITY_KEYID;
     policy_cache : PX509_POLICY_CACHE;
     {$IFNDEF OPENSSL_NO_SHA}
-    sha1_hash : array [0..OPENSSL_SHA_DIGEST_LENGTH-1] of char;
+    sha1_hash : array [0..OPENSSL_SHA_DIGEST_LENGTH-1] of AnsiChar;
     {$ENDIF}
     aux : PX509_CERT_AUX;
   end;
@@ -7142,7 +7142,7 @@ type
     // the session_id_context is used to ensure sessions are only reused
     // in the appropriate context
     sid_ctx_length : TIdC_UINT;
-    sid_ctx : array [0..OPENSSL_SSL_MAX_SID_CTX_LENGTH -1] of char;
+    sid_ctx : array [0..OPENSSL_SSL_MAX_SID_CTX_LENGTH -1] of AnsiChar;
 
     // This can also be in the session once a session is established
     session : PSSL_SESSION;
@@ -7256,11 +7256,11 @@ type
 
     // Stuff specifically to do with this SSL session
     challenge_length : TIdC_UINT;
-    challenge : array [0..OPENSSL_SSL2_MAX_CHALLENGE_LENGTH -1] of char;
+    challenge : array [0..OPENSSL_SSL2_MAX_CHALLENGE_LENGTH -1] of AnsiChar;
     conn_id_length : TIdC_UINT;
-    conn_id : array [0..OPENSSL_SSL2_MAX_CONNECTION_ID_LENGTH -1] of char;
+    conn_id : array [0..OPENSSL_SSL2_MAX_CONNECTION_ID_LENGTH -1] of AnsiChar;
     key_material_length : TIdC_UINT;
-    key_material : array[0..(OPENSSL_SSL2_MAX_KEY_MATERIAL_LENGTH*2)-1] of char;
+    key_material : array[0..(OPENSSL_SSL2_MAX_KEY_MATERIAL_LENGTH*2)-1] of AnsiChar;
 
     read_sequence : TIdC_ULONG;
     write_sequence : TIdC_ULONG;
@@ -7271,7 +7271,7 @@ type
     tmp_csl : TIdC_UINT;
     tmp_clear : TIdC_UINT;
     tmp_enc : TIdC_UINT;
-    tmp_ccl : array [0..OPENSSL_SSL2_MAX_CERT_CHALLENGE_LENGTH -1] of char;
+    tmp_ccl : array [0..OPENSSL_SSL2_MAX_CERT_CHALLENGE_LENGTH -1] of AnsiChar;
     tmp_cipher_spec_length : TIdC_UINT;
     tmp_session_id_length : TIdC_UINT;
     tmp_clen : TIdC_UINT;
@@ -7303,13 +7303,13 @@ type
     flags : TIdC_LONG;
     delay_buf_pop_ret : TIdC_INT;
 
-    read_sequence : array [0..7] of char;
-    read_mac_secret : array [0..OPENSSL_EVP_MAX_MD_SIZE -1] of char;
-    write_sequence : array [0..7] of char;
-    write_mac_secret : array [0..OPENSSL_EVP_MAX_MD_SIZE] of char;
+    read_sequence : array [0..7] of AnsiChar;
+    read_mac_secret : array [0..OPENSSL_EVP_MAX_MD_SIZE -1] of AnsiChar;
+    write_sequence : array [0..7] of AnsiChar;
+    write_mac_secret : array [0..OPENSSL_EVP_MAX_MD_SIZE] of AnsiChar;
 
-    server_random : array [0..OPENSSL_SSL3_RANDOM_SIZE - 1] of char;
-    client_random : array [0..OPENSSL_SSL3_RANDOM_SIZE -1] of char;
+    server_random : array [0..OPENSSL_SSL3_RANDOM_SIZE - 1] of AnsiChar;
+    client_random : array [0..OPENSSL_SSL3_RANDOM_SIZE -1] of AnsiChar;
 
     // flags for countermeasure against known-IV weakness
     need_empty_fragments : TIdC_INT;
@@ -7349,7 +7349,7 @@ type
     // we allow one fatal and one warning alert to be outstanding,
     // send close alert via the warning alert */
      alert_dispatch : TIdC_INT;
-     send_alert : array [0..1] of char;
+     send_alert : array [0..1] of AnsiChar;
 
     // This flag is set when we should renegotiate ASAP, basically when
     // there is no more data in the read or write buffers
@@ -7360,12 +7360,12 @@ type
     in_read_app_data : TIdC_INT;
 
     // actually only needs to be 16+20
-    tmp_cert_verify_md: array [0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of Char;
+    tmp_cert_verify_md: array [0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of AnsiChar;
 
     // actually only need to be 16+20 for SSLv3 and 12 for TLS
-    tmp_finish_md : array[0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of Char;
+    tmp_finish_md : array[0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of AnsiChar;
     tmp_finish_md_len : TIdC_INT;
-    tmp_peer_finish_md : array[0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of Char;
+    tmp_peer_finish_md : array[0..(OPENSSL_EVP_MAX_MD_SIZE*2)-1] of AnsiChar;
     tmp_peer_finish_md_len : TIdC_INT;
 
     tmp_message_size : TIdC_UINT;
@@ -7389,7 +7389,7 @@ type
     // used for certificate requests
     tmp_cert_req : TIdC_INT;
     tmp_ctype_num : TIdC_INT;
-    tmp_ctype : array [0..OPENSSL_SSL3_CT_NUMBER -1] of Char;
+    tmp_ctype : array [0..OPENSSL_SSL3_CT_NUMBER -1] of AnsiChar;
     tmp_ca_names : PSTACK_OF_X509_NAME;
 
     tmp_use_rsa_tmp : TIdC_INT;
@@ -7466,8 +7466,8 @@ type
 
   DTLS1_STATE = record
     send_cookie : TIdC_UINT;
-    cookie : array [0..OPENSSL_DTLS1_COOKIE_LENGTH - 1 ] of Char;
-    rcvd_cookie : array [0..OPENSSL_DTLS1_COOKIE_LENGTH -1] of Char;
+    cookie : array [0..OPENSSL_DTLS1_COOKIE_LENGTH - 1 ] of AnsiChar;
+    rcvd_cookie : array [0..OPENSSL_DTLS1_COOKIE_LENGTH -1] of AnsiChar;
     cookie_len : TIdC_UINT;
 
     // The current data and handshake epoch.  This is initially
@@ -7506,9 +7506,9 @@ type
 
     // storage for Alert/Handshake protocol data received but not
     // yet processed by ssl3_read_bytes:
-    alert_fragment : array [0..OPENSSL_DTLS1_AL_HEADER_LENGTH-1] of Char;
+    alert_fragment : array [0..OPENSSL_DTLS1_AL_HEADER_LENGTH-1] of AnsiChar;
     alert_fragment_len : TIdC_UINT;
-    handshake_fragment : array[0..OPENSSL_DTLS1_HM_HEADER_LENGTH -1] of Char;
+    handshake_fragment : array[0..OPENSSL_DTLS1_HM_HEADER_LENGTH -1] of AnsiChar;
     handshake_fragment_len : TIdC_UINT;
 
     retransmitting : TIdC_UINT;
