@@ -150,12 +150,18 @@ begin
 
   // Was not redeposited to pool, need to destroy it
   if LThread <> nil then begin
-    with LThread do begin
-      Terminate;
-      Resume;
-      WaitFor;
+    LThread.Terminate;
+    // RLebeau - ReleaseYarn() can be called in the context of
+    // the yarn's thread (when TIdThread.Cleanup() destroys the
+    // yarn between connnections), so have to check which context
+    // we're in here so as not to deadlock the thread!
+    if IsCurrentThread(LThread) then begin
+      LThread.FreeOnTerminate := True;
+    end else begin
+      LThread.Resume;
+      LThread.WaitFor;
+      FreeAndNil(LThread);
     end;
-    FreeAndNil(LThread);
   end;
 end;
 
