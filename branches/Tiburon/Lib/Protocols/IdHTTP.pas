@@ -1813,6 +1813,7 @@ function TIdHTTPProtocol.ProcessResponse(AIgnoreReplies: array of SmallInt): TId
           end;
         end;
       end;
+      LTempResponse.Position := 0;
       raise EIdHTTPProtocolException.CreateError(AResponseCode, FHTTP.ResponseText,
         ReadStringFromStream(LTempResponse, -1, ContentTypeStrToEncoding(FHTTP.Response.FContentType)));
     finally
