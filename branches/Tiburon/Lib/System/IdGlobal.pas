@@ -2550,7 +2550,7 @@ var
   sLocation: string;
   {$ENDIF}
 begin
-  {$IFDEF LINUX}
+  {$IFDEF UNIX}
   sLocation := '/etc/';  // assume Berkeley standard placement   {do not localize}
   {$ENDIF}
 
@@ -3494,7 +3494,7 @@ begin
 
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     {$IFDEF UNICODESTRING}
-  LName := AName; // convert to Ansi
+  LName := AnsiString(AName); // convert to Ansi
     {$ENDIF}
 
   with LThreadNameInfo do begin
