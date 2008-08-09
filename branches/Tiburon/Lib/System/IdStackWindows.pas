@@ -461,7 +461,7 @@ begin
       Id_IPv4:
         begin
           {$IFDEF UNICODESTRING}
-          LTemp := AAddress; // convert to Ansi
+          LTemp := AnsiString(AAddress); // convert to Ansi
           LAddr := inet_addr(PAnsiChar(LTemp));
           {$ELSE}
           LAddr := inet_addr(PAnsiChar(AAddress));
@@ -470,7 +470,7 @@ begin
           if Host = nil then begin
             CheckForSocketError(SOCKET_ERROR);
           end else begin
-            Result := Host^.h_name;
+            Result := String(Host^.h_name);
           end;
         end;
       Id_IPv6: begin
@@ -523,7 +523,10 @@ var
 begin
   SetLength(LStr, SIZE_HOSTNAME);
   gethostname(PAnsiChar(LStr), SIZE_HOSTNAME);
-  Result := PAnsiChar(LStr);
+  //we have to specifically type cast a PAnsiChar to a string for Tiburon.
+  //otherwise, we will get a warning about implicit typetast from AnsiString
+  //to string   Note that there is no Unicode version of gethostname.
+  Result := String(PAnsiChar(LStr));
 end;
 
 procedure TIdStackWindows.Listen(ASocket: TIdStackSocketHandle; ABackLog: Integer);
@@ -653,7 +656,7 @@ var
   {$ENDIF}
 begin
   {$IFDEF UNICODESTRING}
-  LTemp := AServiceName; // convert to Ansi
+  LTemp := AnsiString(AServiceName); // convert to Ansi
   ps := getservbyname(PAnsiChar(LTemp), nil);
   {$ELSE}
   ps := getservbyname(PAnsiChar(AServiceName), nil);
@@ -685,12 +688,18 @@ begin
     ps := getservbyport(htons(APortNumber), nil);
     if ps <> nil then
     begin
-      Result.Add(ps^.s_name);
+  //we have to specifically type cast a PAnsiChar to a string for Tiburon.
+  //otherwise, we will get a warning about implicit typetast from AnsiString
+  //to string   Note that there is no Unicode version of gethostname.
+      Result.Add(String(PAnsiChar(ps^.s_name)));
       i := 0;
       p := Pointer(ps^.s_aliases);
       while p[i] <> nil do
       begin
-        Result.Add(p[i]);
+  //we have to specifically type cast a PAnsiChar to a string for Tiburon.
+  //otherwise, we will get a warning about implicit typetast from AnsiString
+  //to string   Note that there is no Unicode version of gethostname.
+        Result.Add(String(PAnsiChar(p[i])));
         Inc(i);
       end;
     end;
@@ -778,7 +787,7 @@ begin
   if not GIdIPv6FuncsAvailable then
   begin
     {$IFDEF UNICODESTRING}
-    LTemp := LHostName; // convert to Ansi
+    LTemp := AnsiString(LHostName); // convert to Ansi
     AHost := gethostbyname(PAnsiChar(LTemp));
     {$ELSE}
     AHost := gethostbyname(PAnsiChar(LHostName));
@@ -1155,7 +1164,7 @@ begin
       Id_IPv4:
         begin
           {$IFDEF UNICODESTRING}
-          LTemp := AHostName; // convert to Ansi
+          LTemp := AnsiString(AHostName); // convert to Ansi
           LHost := IdWinsock2.gethostbyname(PAnsiChar(LTemp));
           {$ELSE}
           LHost := IdWinsock2.gethostbyname(PAnsiChar(AHostName));
