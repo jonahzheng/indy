@@ -10662,17 +10662,17 @@ begin
   SetString(time_str, UCTtime^.data, UCTtime^.length);
 
   // Check if first 12 chars are numbers
-  if not IsNumeric(time_str, 12) then begin
+  if not IsNumeric(String(time_str), 12) then begin
     Exit;
   end;
 
   // Convert time from string to number
-  year := IndyStrToInt(Copy(time_str, 1, 2)) + 1900;
-  month := IndyStrToInt(Copy(time_str, 3, 2));
-  day := IndyStrToInt(Copy(time_str, 5, 2));
-  hour := IndyStrToInt(Copy(time_str, 7, 2));
-  min := IndyStrToInt(Copy(time_str, 9, 2));
-  sec := IndyStrToInt(Copy(time_str, 11, 2));
+  year := IndyStrToInt(Copy(String(time_str), 1, 2)) + 1900;
+  month := IndyStrToInt(Copy(String(time_str), 3, 2));
+  day := IndyStrToInt(Copy(String(time_str), 5, 2));
+  hour := IndyStrToInt(Copy(String(time_str), 7, 2));
+  min := IndyStrToInt(Copy(String(time_str), 9, 2));
+  sec := IndyStrToInt(Copy(String(time_str), 11, 2));
 
   // Fix year. This function is Y2k but isn't compatible with Y2k5 :-(    {Do not Localize}
   if year < 1950 then begin
@@ -10683,20 +10683,20 @@ begin
   tz_hour := 0;
   tz_min := 0;
 
-  if CharIsInSet(time_str, 13, '-+') then begin    {Do not Localize}
-    tz_dir := iif(CharEquals(time_str, 13, '-'), -1, 1);    {Do not Localize}
+  if CharIsInSet(String(time_str), 13, '-+') then begin    {Do not Localize}
+    tz_dir := iif(CharEquals(String(time_str), 13, '-'), -1, 1);    {Do not Localize}
 
     for i := 14 to 18 do begin  // Check if numbers are numbers
       if i = 16 then begin
         Continue;
       end;
-      if not IsNumeric(time_str[i]) then begin
+      if not IsNumeric(String(time_str[i])) then begin
         Exit;
       end;
     end;
 
-    tz_hour := IndyStrToInt(Copy(time_str, 14, 15)) * tz_dir;
-    tz_min  := IndyStrToInt(Copy(time_str, 17, 18)) * tz_dir;
+    tz_hour := IndyStrToInt(String(Copy(time_str, 14, 15))) * tz_dir;
+    tz_min  := IndyStrToInt(String(Copy(time_str, 17, 18))) * tz_dir;
   end;
 end;
 

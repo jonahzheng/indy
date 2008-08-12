@@ -1135,15 +1135,15 @@ begin
   fSSLContext := TIdSSLContext.Create;
   with fSSLContext do begin
     Parent := Self;
-    RootCertFile := SSLOptions.RootCertFile;
-    CertFile := SSLOptions.CertFile;
-    KeyFile := SSLOptions.KeyFile;
+    RootCertFile := AnsiString(SSLOptions.RootCertFile);
+    CertFile := AnsiString(SSLOptions.CertFile);
+    KeyFile := AnsiString(SSLOptions.KeyFile);
 
     fVerifyDepth := SSLOptions.fVerifyDepth;
     fVerifyMode := SSLOptions.fVerifyMode;
     // fVerifyFile := SSLOptions.fVerifyFile;
-    fVerifyDirs := SSLOptions.fVerifyDirs;
-    fCipherList := SSLOptions.fCipherList;
+    fVerifyDirs := String(SSLOptions.fVerifyDirs);
+    fCipherList := AnsiString(SSLOptions.fCipherList);
 
     VerifyOn := Assigned(fOnVerifyPeer);
     StatusInfoOn := Assigned(fOnStatusInfo);
@@ -1382,15 +1382,15 @@ begin
     fSSLContext := TIdSSLContext.Create;
     with fSSLContext do begin
       Parent := Self;
-      RootCertFile := SSLOptions.RootCertFile;
-      CertFile := SSLOptions.CertFile;
-      KeyFile := SSLOptions.KeyFile;
+      RootCertFile := AnsiString(SSLOptions.RootCertFile);
+      CertFile := AnsiString(SSLOptions.CertFile);
+      KeyFile := AnsiString(SSLOptions.KeyFile);
 
       fVerifyDepth := SSLOptions.fVerifyDepth;
       fVerifyMode := SSLOptions.fVerifyMode;
       // fVerifyFile := SSLOptions.fVerifyFile;
-      fVerifyDirs := SSLOptions.fVerifyDirs;
-      fCipherList := SSLOptions.fCipherList;
+      fVerifyDirs := String(SSLOptions.fVerifyDirs);
+      fCipherList := AnsiString(SSLOptions.fCipherList);
 
       VerifyOn := Assigned(fOnVerifyPeer);
       StatusInfoOn := Assigned(fOnStatusInfo);
@@ -1984,7 +1984,7 @@ begin
     Result := '';    {Do not Localize}
   end
   else begin
-    Result := StrPas(IdSslX509NameOneline(FX509Name, PAnsiChar(@LOneLine), SizeOf(LOneLine)));
+    Result := String(StrPas(IdSslX509NameOneline(FX509Name, PAnsiChar(@LOneLine), SizeOf(LOneLine))));
   end;
 end;
 
@@ -2131,7 +2131,7 @@ end;
 
 function TIdX509SigInfo.GetSigTypeAsString: String;
 begin
-  Result := IdSslOBJNid2ln(SigType);
+  Result := String(IdSslOBJNid2ln(SigType));
 end;
 
 { TIdX509 }
@@ -2262,12 +2262,12 @@ function TIdSSLCipher.GetDescription;
 var
   Buf: Array[0..1024] of AnsiChar;
 begin
-  Result := StrPas(IdSSLCipherDescription(IdSSLGetCurrentCipher(FSSLSocket.fSSL), @Buf[0], SizeOf(Buf)-1));
+  Result := String(StrPas(IdSSLCipherDescription(IdSSLGetCurrentCipher(FSSLSocket.fSSL), PAnsiChar(@Buf[0]), SizeOf(Buf)-1)));
 end;
 
 function TIdSSLCipher.GetName:String;
 begin
-  Result := StrPas(IdSSLCipherGetName(IdSSLGetCurrentCipher(FSSLSocket.fSSL)));
+  Result := String(StrPas(IdSSLCipherGetName(IdSSLGetCurrentCipher(FSSLSocket.fSSL))));
 end;
 
 function TIdSSLCipher.GetBits:TIdC_INT;
@@ -2277,7 +2277,7 @@ end;
 
 function TIdSSLCipher.GetVersion:String;
 begin
-  Result := StrPas(IdSSLCipherGetVersion(IdSSLGetCurrentCipher(FSSLSocket.fSSL)));
+  Result := String(StrPas(IdSSLCipherGetVersion(IdSSLGetCurrentCipher(FSSLSocket.fSSL))));
 end;
 
 { EIdOpenSSLAPICryptoError }
@@ -2293,9 +2293,9 @@ var
   LException : EIdOpenSSLAPICryptoError;
 begin
   if AMsg <> '' then begin
-    LMsg := AMsg + sLineBreak + GetErrorMessage(AErrCode);
+    LMsg := AMsg + sLineBreak + String(GetErrorMessage(AErrCode));
   end else begin
-    LMsg := GetErrorMessage(AErrCode);
+    LMsg := String(GetErrorMessage(AErrCode));
   end;
   LException := Create(LMsg);
   LException.FErrorCode := AErrCode;
@@ -2342,7 +2342,7 @@ begin
       EIdOSSLUnderlyingCryptoError.RaiseException(LErrStr + AMsg);
     end
   else
-    LException := Create(LErrStr + GetErrorMessage(LErr));
+    LException := Create(LErrStr + String(GetErrorMessage(LErr)));
     LException.FErrorCode := LErr;
     LException.FRetCode := ARetCode;
     raise LException;
