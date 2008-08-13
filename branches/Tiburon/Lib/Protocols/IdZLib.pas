@@ -942,7 +942,13 @@ begin
   if StreamType = zsGZip then
   begin
     FGZHeader.time := ATime;
-    StrPLCopy(FGZHeader.name, AName, FGZHeader.name_max);
+    //zero-terminated file name
+    //RFC 1952
+    //                           The name must consist of ISO
+    //8859-1 (LATIN-1) characters; on operating systems using
+    //EBCDIC or any other character set for file names, the name
+    //must be translated to the ISO LATIN-1 character set.
+    StrPLCopy(FGZHeader.name, AnsiString(AName), FGZHeader.name_max);
     deflateSetHeader(FZRec, FGZHeader);
   end;
 end;
