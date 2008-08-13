@@ -253,7 +253,7 @@ end;
 class function TIdURI.URLDecode(ASrc: string): string;
 var
   i: Integer;
-  ESC: string[4];
+  ESC: string;//string[4];
   CharCode: Integer;
 begin
   Result := '';    {Do not Localize}
