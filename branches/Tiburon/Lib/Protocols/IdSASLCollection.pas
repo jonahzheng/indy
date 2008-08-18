@@ -115,7 +115,7 @@ end;
 function TIdSASLListEntry.GetDisplayName: String;
 begin
   if FSASL <> nil then begin
-    Result := FSASL.ServiceName;
+    Result := String(FSASL.ServiceName);
   end else begin
     Result := inherited GetDisplayName;
   end;
@@ -136,7 +136,7 @@ var
   S: String;
 begin
   Result := False;
-  AClient.SendCmd(ACmd + ' ' + ASASL.ServiceName, []);//[334, 504]);
+  AClient.SendCmd(ACmd + ' ' + String(ASASL.ServiceName), []);//[334, 504]);
   if CheckStrFail(AClient.LastCmdResult.Code, AOkReplies, AContinueReplies) then begin
     Exit; // this mechanism is not supported
   end;
@@ -365,7 +365,7 @@ begin
   For i := 0 to Count-1 do begin
     LEntry := Items[i];
     if LEntry.SASL <> nil then begin
-      if TextIsSame(LEntry.SASL.ServiceName, AServiceName) then begin
+      if TextIsSame(String(LEntry.SASL.ServiceName), AServiceName) then begin
         Result := LEntry.SASL;
         Exit;
       end;

@@ -164,7 +164,7 @@ begin
   for i := 0 to SASLList.Count -1 do begin
     if Assigned(SASLList[i].SASL) then
     begin
-      lbAssigned.Items.AddObject(SASLList[i].SASL.Name + ': ' + SASLList[i].SASL.ServiceName, SASLList[i]);
+      lbAssigned.Items.AddObject(SASLList[i].SASL.Name + ': ' + String(SASLList[i].SASL.ServiceName), SASLList[i]);
     end;
   end;
   lbAvailable.Clear;
@@ -174,7 +174,7 @@ begin
       if SASLList.IndexOfComp(TIdSASL(l[i])) < 0 then begin
         if Assigned(l[i]) then
         begin
-          lbAvailable.Items.AddObject(TIdSASL(l[i]).Name + ': ' + TIdSASL(l[i]).ServiceName, TIdSASL(l[i]));
+          lbAvailable.Items.AddObject(TIdSASL(l[i]).Name + ': ' + String(TIdSASL(l[i]).ServiceName), TIdSASL(l[i]));
         end;
       end;
     end;
