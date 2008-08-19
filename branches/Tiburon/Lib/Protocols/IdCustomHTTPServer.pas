@@ -874,7 +874,9 @@ begin
 
               // reset back to 0 before reading the string from the post stream
               LRequestInfo.PostStream.Position := 0;
-              LRequestInfo.FormParams := ReadStringFromStream(LRequestInfo.PostStream);
+              if TextIsSame(LRequestInfo.ContentType, 'application/x-www-form-urlencoded') then begin    {Do not Localize}
+                LRequestInfo.FormParams := ReadStringFromStream(LRequestInfo.PostStream);
+              end;
 
               // reset back to 0 for the OnCommand... event handler
               LRequestInfo.PostStream.Position := 0;
