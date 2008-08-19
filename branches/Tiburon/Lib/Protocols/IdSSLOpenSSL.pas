@@ -1135,9 +1135,16 @@ begin
   fSSLContext := TIdSSLContext.Create;
   with fSSLContext do begin
     Parent := Self;
+    {$IFDEF UNICODESTRING}
+    // explicit convert to Ansi
     RootCertFile := AnsiString(SSLOptions.RootCertFile);
     CertFile := AnsiString(SSLOptions.CertFile);
     KeyFile := AnsiString(SSLOptions.KeyFile);
+    {$ELSE}
+    RootCertFile := SSLOptions.RootCertFile;
+    CertFile := SSLOptions.CertFile;
+    KeyFile := SSLOptions.KeyFile;
+    {$ENDIF}
 
     fVerifyDepth := SSLOptions.fVerifyDepth;
     fVerifyMode := SSLOptions.fVerifyMode;
@@ -1382,10 +1389,16 @@ begin
     fSSLContext := TIdSSLContext.Create;
     with fSSLContext do begin
       Parent := Self;
+      {$IFDEF UNICODESTRING}
+      // explicit convert to Ansi
       RootCertFile := AnsiString(SSLOptions.RootCertFile);
       CertFile := AnsiString(SSLOptions.CertFile);
       KeyFile := AnsiString(SSLOptions.KeyFile);
-
+      {$ELSE}
+      RootCertFile := SSLOptions.RootCertFile;
+      CertFile := SSLOptions.CertFile;
+      KeyFile := SSLOptions.KeyFile;
+      {$ENDIF}
       fVerifyDepth := SSLOptions.fVerifyDepth;
       fVerifyMode := SSLOptions.fVerifyMode;
       // fVerifyFile := SSLOptions.fVerifyFile;
