@@ -933,6 +933,10 @@ end;
 constructor TCompressionStream.CreateEx(CompressionLevel: TCompressionLevel;
   Dest: TStream; const StreamType: TZStreamType;
   const AName: string = ''; ATime: Integer = 0);
+{$IFDEF UNICODESTRING}
+var
+  LName: AnsiString;
+{$ENDIF}
 begin
   inherited Create(Dest);
   FZRec.next_out := FBuffer;
@@ -948,7 +952,12 @@ begin
     //8859-1 (LATIN-1) characters; on operating systems using
     //EBCDIC or any other character set for file names, the name
     //must be translated to the ISO LATIN-1 character set.
-    StrPLCopy(FGZHeader.name, AnsiString(AName), FGZHeader.name_max);
+    {$IFDEF UNICODESTRING}
+    LName := AnsiString(AName); // explicit convert to Ansi
+    StrPLCopy(FGZHeader.name, LName, FGZHeader.name_max);
+    {$ELSE}
+    StrPLCopy(FGZHeader.name, AName, FGZHeader.name_max);
+    {$ENDIF}
     deflateSetHeader(FZRec, FGZHeader);
   end;
 end;
