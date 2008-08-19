@@ -122,7 +122,46 @@ type
 implementation
 
 uses
-  IdResourceStringsProtocols, IdGlobalProtocols, SysUtils;
+  IdResourceStringsProtocols, IdGlobalProtocols
+  {$IFDEF TCharacter},Character{$ENDIF}, SysUtils;
+
+{$IFDEF UNICODESTRING}
+// calculates character length, including surrogates
+function CalcUTF16CharLength(const AStr: string; const AIndex: Integer): Integer;
+{$IFDEF TCharacter}
+  {$IFDEF USEINLINE}inline;{$ENDIF}
+{$ELSE}
+var
+  W1, W2: WideChar;
+{$ENDIF}
+begin
+  {$IFDEF TCharacter}
+  TCharacter.ConvertToUtf32(AStr, AIndex, Result);
+  {$ELSE}
+  if (Index > Length(S)) or (Index < 1) then begin
+    raise EIdException.CreateResFmt(@RSUTF16IndexOutOfRange, [Index, Length(S)]);
+  end;
+  Result := 1;
+  W1 := S[Index];
+  if (W1 >= $D800) and (W1 <= $DFFF) then begin
+  begin
+    if W1 > $DBFF then begin
+      raise EIdException.CreateResFmt(@RSUTF16InvalidHighSurrogate, [Index]);
+    end;
+    if Index > Length(S) - 1 then begin
+      raise EIdException.CreateResFmt(@RSUTF16MissingLowSurrogate);
+    end;
+    W2 := S[Index+1];
+    if (W2 < $DC00) or (W2 > $DFFF) then begin
+      raise EIdException.CreateResFmt(@RSUTF16InvalidLowSurrogate, [Index+1]);
+    end;
+    Inc(Result);
+  end;
+  {$ENDIF}
+end;
+{$ENDIF}
+
+{ TIdURI }
 
 constructor TIdURI.Create(const AURI: string = '');    {Do not Localize}
 begin
@@ -253,7 +292,7 @@ end;
 class function TIdURI.URLDecode(ASrc: string): string;
 var
   i: Integer;
-  ESC: string;//string[4];
+  ESC: string;
   CharCode: Integer;
 begin
   Result := '';    {Do not Localize}
@@ -288,7 +327,7 @@ begin
         Inc(i, 5); // Then skip it.
         try
           CharCode := IndyStrToInt('$' + ESC);  {do not localize}
-          Result := Result + WideChar(CharCode);
+          Result := Result + {$IFDEF UNICODESTRING}Char{$ELSE}WideChar{$ENDIF}(CharCode);
         except end;
       end;
     end;
@@ -296,23 +335,39 @@ begin
 end;
 
 class function TIdURI.ParamsEncode(const ASrc: string): string;
-var
-  i: Integer;
 const
   UnsafeChars = '*#%<> []';  {do not localize}
+var
+  I: Integer;
+  {$IFDEF UNICODESTRING}
+  J, Len: Integer;
+  U: UTF8String;
+  {$ENDIF}
 begin
   Result := '';    {Do not Localize}
-  for i := 1 to Length(ASrc) do
+  I := 1;
+  while I <= Length(ASrc) do
   begin
     // S.G. 27/11/2002: Changed the parameter encoding: Even in parameters, a space
     // S.G. 27/11/2002: is much more likely to be meaning "space" than "this is
     // S.G. 27/11/2002: a new parameter"
     // S.G. 27/11/2002: ref: Message-ID: <3de30169@newsgroups.borland.com> borland.public.delphi.internet.winsock
     // S.G. 27/11/2002: Most low-ascii is actually Ok in parameters encoding.
-    if CharIsInSet(ASrc, i, UnsafeChars) or (not CharIsInSet(ASrc, i, CharRange(#33,#128))) then begin {do not localize}
-      Result := Result + '%' + IntToHex(Ord(ASrc[i]), 2);  {do not localize}
+    if CharIsInSet(ASrc, I, UnsafeChars) or (not CharIsInSet(ASrc, I, CharRange(#33,#128))) then begin {do not localize}
+      {$IFDEF UNICODESTRING}
+      Len := CalcUTF16CharLength(ASrc, I); // calculate length including surrogates
+      U := UTF8String(Copy(ASrc, I, Len)); // explicit Unicode->UTF8 conversion
+      Inc(I, Len);
+      for J := 1 to Length(U) do begin
+        Result := Result + '%' + IntToHex(Ord(U[J]), 2);  {do not localize}
+      end;
+      {$ELSE}
+      Result := Result + '%' + IntToHex(Ord(ASrc[I]), 2);  {do not localize}
+      Inc(I);
+      {$ENDIF}
     end else begin
-      Result := Result + ASrc[i];
+      Result := Result + ASrc[I];
+      Inc(I);
     end;
   end;
 end;
@@ -321,14 +376,30 @@ class function TIdURI.PathEncode(const ASrc: string): string;
 const
   UnsafeChars = '*#%<>+ []';  {do not localize}
 var
-  i: Integer;
+  I: Integer;
+  {$IFDEF UNICODESTRING}
+  J, Len: Integer;
+  U: UTF8String;
+  {$ENDIF}
 begin
   Result := '';    {Do not Localize}
-  for i := 1 to Length(ASrc) do begin
-    if CharIsInSet(ASrc, i, UnsafeChars) or (not CharIsInSet(ASrc, i, CharRange(#32, #127))) then begin
-      Result := Result + '%' + IntToHex(Ord(ASrc[i]), 2);  {do not localize}
+  I := 1;
+  while I <= Length(ASrc) do begin
+    if CharIsInSet(ASrc, I, UnsafeChars) or (not CharIsInSet(ASrc, I, CharRange(#32, #127))) then begin
+      {$IFDEF UNICODESTRING}
+      Len := CalcUTF16CharLength(ASrc, I); // calculate length including surrogates
+      U := UTF8String(Copy(ASrc, I, Len)); // explicit Unicode->UTF8 conversion
+      Inc(I, Len);
+      for J := 1 to Length(U) do begin
+        Result := Result + '%' + IntToHex(Ord(U[J]), 2);  {do not localize}
+      end;
+      {$ELSE}
+      Result := Result + '%' + IntToHex(Ord(ASrc[I]), 2);  {do not localize}
+      Inc(I);
+      {$ENDIF}
     end else begin
-      Result := Result + ASrc[i];
+      Result := Result + ASrc[I];
+      Inc(I);
     end;
   end;
 end;
