@@ -261,7 +261,7 @@ var
   SourceLine: AnsiString;
   CurrentPos: Integer;
 
-  procedure WriteToString(const s: String);
+  procedure WriteToString(const s: AnsiString);
   var
     SLen: Integer;
   begin
@@ -276,9 +276,13 @@ var
     CurrentPos := 1;
   end;
 
-  function CharToHex(const APrefix : String; const AChar : AnsiChar) : String;
+  function CharToHex(const AChar: AnsiChar): AnsiString;
   begin
-    Result := APrefix + ByteToHex(Ord(AChar));
+    {$IFDEF UNICODESTRING}
+    Result := '=' + AnsiString(ByteToHex(Ord(AChar))); {do not localize}
+    {$ELSE}
+    Result := '=' + ByteToHex(Ord(AChar)); {do not localize}
+    {$ENDIF}
   end;
 
 var
@@ -289,23 +293,27 @@ begin
   //ie while not eof
   LSourceSize := ASrcStream.Size;
   while ASrcStream.Position < LSourceSize do begin
+    {$IFDEF UNICODESTRING}
+    SourceLine := AnsiString(ReadLnFromStream(ASrcStream, -1, False)); // explicit convert to Ansi
+    {$ELSE}
     SourceLine := ReadLnFromStream(ASrcStream, -1, False);
+    {$ENDIF}
     CurrentPos := 1;
     for i := 1 to Length(SourceLine) do begin
       if not (SourceLine[i] in SafeChars) then
       begin
         if (SourceLine[i] in HalfSafeChars) then begin
           if i = Length(SourceLine) then begin
-            WriteToString(CharToHex('=', SourceLine[i]));
+            WriteToString(CharToHex(SourceLine[i]));
           end else begin
             WriteToString(SourceLine[i]);
           end;
         end else begin
-          WriteToString(CharToHex('=', SourceLine[i]));
+          WriteToString(CharToHex(SourceLine[i]));
         end;
       end
-      else if ((CurrentPos = 1) or (CurrentPos = 71)) and (SourceLine[i] = '.') then begin
-        WriteToString(CharToHex('=', SourceLine[i]));
+      else if ((CurrentPos = 1) or (CurrentPos = 71)) and (SourceLine[i] = '.') then begin {do not localize}
+        WriteToString(CharToHex(SourceLine[i]));
       end else begin
         WriteToString(SourceLine[i]);
       end;
