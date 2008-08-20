@@ -169,7 +169,7 @@ begin
     if Assigned(LDecoder) then
     begin
       repeat
-        if (Length(Trim(LLine)) = 0) or (LLine = LDecoder.FillChar) then begin
+        if (Length(Trim(LLine)) = 0) or (LLine = String(LDecoder.FillChar)) then begin
           // UUE: Comes on the line before end. Supposed to be `, but some put a
           // blank line instead
         end else begin
