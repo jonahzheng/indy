@@ -876,6 +876,13 @@ resourcestring
   { TIdURI exceptions }
   RSURINoProto                 = 'Protocol field is empty';
   RSURINoHost                  = 'Host field is empty';
+  {$IFNDEF TCharacter}
+  RSUTF16IndexOutOfRange       = 'UTF16 Index Out Of Range';
+  RSUTF16InvalidHighSurrogate  = 'UTF16 Invalid High Surrogate';
+
+  RSUTF16InvalidLowSurrogate   = 'UTF16 Invalid Low Surrogate';
+  RSUTF16MissingLowSurrogate   = 'UTF16 Missing Low Surrogate';
+  {$ENDIF}
 
   { TIdIOHandlerThrottle}
   RSIHTChainedNotAssigned      = 'You must chain this component to another I/O Handler before using it';

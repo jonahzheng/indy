@@ -118,6 +118,14 @@ type
   end;
 
   EIdURIException = class(EIdException);
+  {$IFNDEF TCharacter}
+  //for Tiburon, we simply use TCharacter.ConvertToUtf32
+  EIdUTF16Exception = class(EIdException);
+  EIdUTF16IndexOutOfRange = class(EIdUTF16Exception);
+  EIdUTF16InvalidHighSurrogate = class(EIdUTF16Exception);
+  EIdUTF16InvalidLowSurrogate = class(EIdUTF16Exception);
+  EIdUTF16MissingLowSurrogate = class(EIdUTF16Exception);
+  {$ENDIF}
 
 implementation
 
@@ -138,22 +146,22 @@ begin
   {$IFDEF TCharacter}
   TCharacter.ConvertToUtf32(AStr, AIndex, Result);
   {$ELSE}
-  if (Index > Length(S)) or (Index < 1) then begin
-    raise EIdException.CreateResFmt(@RSUTF16IndexOutOfRange, [Index, Length(S)]);
+  if (AIndex > Length(AStr)) or (AIndex < 1) then begin
+    raise EIdUTF16IndexOutOfRange.CreateResFmt(@RSUTF16IndexOutOfRange, [AIndex, Length(AStr)]);
   end;
   Result := 1;
-  W1 := S[Index];
+  W1 := AStr[AIndex];
   if (W1 >= $D800) and (W1 <= $DFFF) then begin
   begin
     if W1 > $DBFF then begin
-      raise EIdException.CreateResFmt(@RSUTF16InvalidHighSurrogate, [Index]);
+      raise EIdUTF16InvalidHighSurrogate.CreateResFmt(@RSUTF16InvalidHighSurrogate, [AIndex]);
     end;
-    if Index > Length(S) - 1 then begin
-      raise EIdException.CreateResFmt(@RSUTF16MissingLowSurrogate);
+    if AIndex > Length(AStr) - 1 then begin
+      raise EIdUTF16MissingLowSurrogate.CreateResFmt(@RSUTF16MissingLowSurrogate);
     end;
-    W2 := S[Index+1];
+    W2 := AStr[AIndex+1];
     if (W2 < $DC00) or (W2 > $DFFF) then begin
-      raise EIdException.CreateResFmt(@RSUTF16InvalidLowSurrogate, [Index+1]);
+      raise EIdUTF16InvalidLowSurrogate.CreateResFmt(@RSUTF16InvalidLowSurrogate, [AIndex+1]);
     end;
     Inc(Result);
   end;
