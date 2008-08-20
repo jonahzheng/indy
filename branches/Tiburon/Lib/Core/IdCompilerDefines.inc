@@ -286,6 +286,7 @@
 {$IFDEF VER200}
   {$DEFINE UNICODESTRING} // 'String' type is Unicode now
   {$DEFINE TEncoding}
+  {$DEFINE TCharacter}
   {$DEFINE DOTNET_OR_TEncoding}
   {$DEFINE USEINLINE}
   {$DEFINE VCL4ORABOVE}
