@@ -249,6 +249,9 @@ procedure GetDomain(const AUserName : String; var VUserName, VDomain : String);
 implementation
 
 uses
+  {$IFDEF UNICODESTRING}
+  AnsiStrings,
+  {$ENDIF}
   SysUtils,
   {$IFDEF DOTNET}
   System.Text,
@@ -322,13 +325,13 @@ end;
  * 8 byte plaintext is encrypted with each key and the resulting 24
  * bytes are stored in the results array.
  */}
-procedure calc_resp(keys: PDES_cblock; Anonce: String; results: Pdes_key_schedule);
+procedure calc_resp(keys: PDES_cblock; const ANonce: AnsiString; results: Pdes_key_schedule);
 Var
   ks: des_key_schedule;
   nonce: des_cblock;
 begin
   setup_des_key(keys^, ks);
-  move(ANonce[1], nonce, 8);
+  Move(ANonce[1], nonce, 8);
   iddes_ecb_encrypt(nonce, Pdes_cblock(results)^, ks, OPENSSL_DES_ENCRYPT);
 
   setup_des_key(PDES_cblock(Integer(keys) + 7)^, ks);
@@ -342,14 +345,14 @@ Const
   Magic: des_cblock = ($4B, $47, $53, $21, $40, $23, $24, $25 );
 
 //* setup LanManager password */
-function SetupLanManagerPassword(const APassword, ANonce: String): String;
+function SetupLanManagerPassword(const APassword, ANonce: AnsiString): TIdBytes;
 var
   lm_hpw: array[1..21] of AnsiChar;
   lm_pw: array[1..14] of AnsiChar;
   idx, len: Integer;
   ks: des_key_schedule;
   lm_resp: array [1..24] of AnsiChar;
-  lPassword: String;
+  lPassword: AnsiString;
 begin
   lPassword := Copy(UpperCase(APassword), 1, 14);
   len := Length(lPassword);
@@ -374,43 +377,45 @@ begin
 
   calc_resp(PDes_cblock(@lm_hpw[1]), ANonce, Pdes_key_schedule(@lm_resp[1]));
 
-  Result := lm_resp;
+  SetLength(Result, SizeOf(lm_resp));
+  Move(lm_resp[1], Result[0], SizeOf(lm_resp));
 end;
 
-function BuildUnicode(const S: String): AnsiString;
+function BuildUnicode(const S: String): TIdBytes;
 {$IFNDEF UNICODESTRING}
 var
   i: integer;
 {$ENDIF}
 begin
-  Result := '';
+  Result := nil;
   if S = '' then begin
     Exit;
   end;
   SetLength(Result, Length(S) * SizeOf(WideChar));
   {$IFDEF UNICODESTRING}
-  Move(S[1], Result[1], Length(Result));
+  Move(S[1], Result[0], Length(Result));
   {$ELSE}
-  for i := 1 to Length(S) do begin
-    Result[i*2-1] := S[i];
-    Result[i*2] := #0;
+  for i := 0 to Length(S)-1 do begin
+    Result[i*2] := S[i+1];
+    Result[(i*2)+1] := #0;
   end;
   {$ENDIF}
 end;
 
 //* create NT hashed password */
-function CreateNTPassword(const APassword, ANonce: String): String;
+function CreateNTPassword(const APassword, ANonce: String): TIdBytes;
 var
-  nt_pw: AnsiString;
   nt_hpw: array [1..21] of AnsiChar;
   nt_hpw128: TIdBytes;
   nt_resp: array [1..24] of AnsiChar;
 begin
-  nt_pw := BuildUnicode(APassword);
-
   with TIdHashMessageDigest4.Create do
   try
-    nt_hpw128 := HashString(nt_pw);
+    {$IFDEF UNICODESTRING}
+    nt_hpw128 := HashString(APassword);
+    {$ELSE}
+    nt_hpw128 := HashBytes(BuildUnicode(APassword));
+    {$ENDIF}
   finally
     Free;
   end;
@@ -418,16 +423,28 @@ begin
   Move(nt_hpw128[0], nt_hpw[1], 16);
   FillChar(nt_hpw[17], 5, 0);
 
-  calc_resp(pdes_cblock(@nt_hpw[1]), ANonce, Pdes_key_schedule(@nt_resp[1]));
+  calc_resp(pdes_cblock(@nt_hpw[1]),
+    {$IFDEF UNICODESTRING}
+    AnsiString(ANonce), // explicit convert to Ansi
+    {$ELSE}
+    ANonce,
+    {$ENDIF}
+    Pdes_key_schedule(@nt_resp[1]));
 
-  Result := nt_resp;
+  SetLength(Result, SizeOf(nt_resp));
+  Move(nt_resp[1], Result[0], SizeOf(nt_resp));
 end;
 
 function BuildType1Message(const ADomain, AHost: String): String;
 var
   Type_1_Message: type_1_message_header;
+  lDomain: TIdBytes;
+  lHost: TIdBytes;
   buf: TIdBytes;
 begin
+  lDomain := ToBytes(UpperCase(ADomain), en7Bit);
+  lHost := ToBytes(UpperCase(AHost), en7Bit);
+
   FillChar(Type_1_Message, SizeOf(Type_1_Message), #0);
   with Type_1_Message do
   begin
@@ -436,19 +453,19 @@ begin
     // S.G. 12/7/2002: Changed the flag to $B207 (from BugID 577895 and packet trace)
     flags := $b207; //was $A000B207;     //b203;
 
-    dom_len1 := Length(ADomain);
+    dom_len1 := Length(lDomain);
     dom_len2 := dom_len1;
     // dom_off := 0;
-    dom_off := Length(AHost) + 32;
+    dom_off := Length(lHost) + 32;
 
-    host_len1 := Length(AHost);
+    host_len1 := Length(lHost);
     host_len2 := host_len1;
     host_off := 32;
   end;
 
   buf := RawToBytes(Type_1_Message, SizeOf(Type_1_Message));
-  AppendString(buf, UpperCase(AHost));
-  AppendString(buf, UpperCase(ADomain));
+  AppendBytes(buf, lHost);
+  AppendBytes(buf, lDomain);
 
   Result := TIdEncoderMIME.EncodeBytes(buf);
 end;
@@ -458,13 +475,19 @@ function BuildType3Message(const ADomain, AHost, AUsername: {$IFDEF UNICODESTRIN
 var
   type3: type_3_message_header;
   buf: TIdBytes;
-  lm_password: String;
-  nt_password: String;
-  lDomain: AnsiString;
-  lHost: AnsiString;
-  lUsername: AnsiString;
+  lm_password: TIdBytes;
+  nt_password: TIdBytes;
+  lDomain: TIdBytes;
+  lHost: TIdBytes;
+  lUsername: TIdBytes;
 begin
-  lm_password := SetupLanManagerPassword(APassword, ANonce);
+  lm_password := SetupLanManagerPassword(
+    {$IFDEF UNICODESTRING}
+    AnsiString(APassword), AnsiString(ANonce) // explicit convert to Ansi
+    {$ELSE}
+    APassword, ANonce
+    {$ENDIF}
+  );
   nt_password := CreateNTPassword(APassword, ANonce);
 
   lDomain := BuildUnicode(UpperCase(ADomain));
@@ -490,7 +513,7 @@ begin
     user_len2 := user_len1;
     user_off := Length(lDomain) + $40;
 
-    host_len1 := Length(lHost)*SizeOf(Char);
+    host_len1 := Length(lHost);
     host_len2 := host_len1;
     host_off := Length(lDomain) + Length(lUsername) + $40;
     zero := 0;
@@ -500,11 +523,11 @@ begin
   end;
 
   buf := RawToBytes(Type3, SizeOf(Type3));
-  AppendString(buf, lDomain);
-  AppendString(buf, lUsername);
-  AppendString(buf, lHost);
-  AppendString(buf, lm_password);
-  AppendString(buf, nt_password);
+  AppendBytes(buf, lDomain);
+  AppendBytes(buf, lUsername);
+  AppendBytes(buf, lHost);
+  AppendBytes(buf, lm_password);
+  AppendBytes(buf, nt_password);
 
   Result := TIdEncoderMIME.EncodeBytes(buf);
 end;
