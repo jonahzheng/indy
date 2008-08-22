@@ -257,6 +257,7 @@ const
   //JPM - note that this value has to be little endian.  We precalculate
   //this for big endian machines.
   MSG1_FLAGS : Word = {$IFDEF ENDIAN_LITTLE}$b207 {$ELSE}$07B2 {$ENDIF};
+  MSG1_HOST_OFFS : LongWord =  {$IFDEF ENDIAN_LITTLE}$20 {$ELSE} 20000000{$ENDIF};
   // S.G. 12/7/2002: was: Length(lm_password);  (from BugID 577895)
   //JPM - ditto for this.
   MSG3_LM_RESP_LEN : Word = {$IFDEF ENDIAN_LITTLE}$18 {$ELSE}$1800 {$ENDIF};
@@ -482,7 +483,7 @@ begin
 
     host_len1 := HostToLittleEndian(Word(Length(lHost)));
     host_len2 := host_len1;
-    host_off := 32;
+    host_off := MSG1_HOST_OFFS;
   end;
 
   buf := RawToBytes(Type_1_Message, SizeOf(Type_1_Message));
