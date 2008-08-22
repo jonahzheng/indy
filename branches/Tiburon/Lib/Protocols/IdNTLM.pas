@@ -257,16 +257,17 @@ const
   //JPM - note that this value has to be little endian.  We precalculate
   //this for big endian machines.
   MSG1_FLAGS : Word = {$IFDEF ENDIAN_LITTLE}$b207 {$ELSE}$07B2 {$ENDIF};
-  MSG1_HOST_OFFS : LongWord =  {$IFDEF ENDIAN_LITTLE}$20 {$ELSE} 20000000{$ENDIF};
+  MSG1_HOST_OFFS : LongWord =  {$IFDEF ENDIAN_LITTLE}$20 {$ELSE} $20000000{$ENDIF};
   // S.G. 12/7/2002: was: Length(lm_password);  (from BugID 577895)
   //JPM - ditto for this.
   MSG3_LM_RESP_LEN : Word = {$IFDEF ENDIAN_LITTLE}$18 {$ELSE}$1800 {$ENDIF};
   // S.G. 12/7/2002: was: Length(nt_password);  (from BugID 577895)
   //JPM - ditto for this.
   MSG3_NT_RESP_LEN : Word = {$IFDEF ENDIAN_LITTLE}$18 {$ELSE}$1800 {$ENDIF};
-  MSG3_DOM_OFFS : LongWord = {$IFDEF ENDIAN_LITTLE}$40 {$ELSE} $40000000 {$ENDIF};
+  MSG3_DOM_OFFS : LongWord = {$IFDEF ENDIAN_LITTLE}$40 {$ELSE}$40000000 {$ENDIF};
   // S.G. 12/7/2002: was: flags := $A0808205;  (from BugID 577895 and packet trace)
-  MSG3_FLAGS : LongWord =  {$IFDEF ENDIAN_LITTLE}$018205 {$ELSE} $05820100{$ENDIF};
+  MSG3_FLAGS : LongWord =  {$IFDEF ENDIAN_LITTLE}$018205 {$ELSE}$05820100 {$ENDIF};
+  MSG3_TYPE : LongWord = {$IFDEF ENDIAN_LITTLE} 3 {$ELSE} $03000000 {$ENDIF};
 
 implementation
 
@@ -519,7 +520,7 @@ begin
 
   with Type3 do begin
     StrPLCopy(@protocol[1], cProtocolStr, 8);
-    _type := 3;
+    _type := MSG3_TYPE;
     lm_resp_len1 := MSG3_LM_RESP_LEN;
     lm_resp_len2 := MSG3_LM_RESP_LEN;
     lm_resp_off := HostToLittleEndian(LongWord(Length(lDomain) + Length(lUsername) + Length(lHost) + $40));
