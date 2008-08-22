@@ -246,6 +246,27 @@ function NTLMFunctionsLoaded : Boolean;
 
 procedure GetDomain(const AUserName : String; var VUserName, VDomain : String);
 
+  //IMPORTANT!!!
+  //
+  //NTLM is a funny protocol because it was designed for little endian machines.
+  //Some record values must be in little endian byte-orders.
+
+const
+  // S.G. 12/7/2002: Changed the flag to $B207 (from BugID 577895 and packet trace)
+  //was $A000B207;     //b203;
+  //JPM - note that this value has to be little endian.  We precalculate
+  //this for big endian machines.
+  MSG1_FLAGS : Word = {$IFDEF ENDIAN_LITTLE}$b207 {$ELSE}$07B2 {$ENDIF};
+  // S.G. 12/7/2002: was: Length(lm_password);  (from BugID 577895)
+  //JPM - ditto for this.
+  MSG3_LM_RESP_LEN : Word = {$IFDEF ENDIAN_LITTLE}$18 {$ELSE}$1800 {$ENDIF};
+  // S.G. 12/7/2002: was: Length(nt_password);  (from BugID 577895)
+  //JPM - ditto for this.
+  MSG3_NT_RESP_LEN : Word = {$IFDEF ENDIAN_LITTLE}$18 {$ELSE}$1800 {$ENDIF};
+  MSG3_DOM_OFFS : LongWord = {$IFDEF ENDIAN_LITTLE}$40 {$ELSE} $40000000 {$ENDIF};
+  // S.G. 12/7/2002: was: flags := $A0808205;  (from BugID 577895 and packet trace)
+  MSG3_FLAGS : LongWord =  {$IFDEF ENDIAN_LITTLE}$018205 {$ELSE} $05820100{$ENDIF};
+
 implementation
 
 uses
@@ -442,6 +463,7 @@ var
   lHost: TIdBytes;
   buf: TIdBytes;
 begin
+
   lDomain := ToBytes(UpperCase(ADomain), en7Bit);
   lHost := ToBytes(UpperCase(AHost), en7Bit);
 
@@ -451,14 +473,14 @@ begin
     StrPLCopy(@protocol[1], cProtocolStr, 8);
     _type := 1;
     // S.G. 12/7/2002: Changed the flag to $B207 (from BugID 577895 and packet trace)
-    flags := $b207; //was $A000B207;     //b203;
+    flags := MSG1_FLAGS; //was $A000B207;     //b203;
 
-    dom_len1 := Length(lDomain);
+    dom_len1 := HostToLittleEndian(Word(Length(lDomain)));
     dom_len2 := dom_len1;
     // dom_off := 0;
-    dom_off := Length(lHost) + 32;
+    dom_off := HostToLittleEndian(LongWord(Length(lHost) + 32));
 
-    host_len1 := Length(lHost);
+    host_len1 := HostToLittleEndian(Word(Length(lHost)));
     host_len2 := host_len1;
     host_off := 32;
   end;
@@ -497,29 +519,29 @@ begin
   with Type3 do begin
     StrPLCopy(@protocol[1], cProtocolStr, 8);
     _type := 3;
-    lm_resp_len1 := $18;// S.G. 12/7/2002: was: Length(lm_password);  (from BugID 577895)
-    lm_resp_len2 := $18;// S.G. 12/7/2002: was: Length(lm_password);  (from BugID 577895)
-    lm_resp_off := Length(lDomain) + Length(lUsername) + Length(lHost) + $40;
+    lm_resp_len1 := MSG3_LM_RESP_LEN;
+    lm_resp_len2 := MSG3_LM_RESP_LEN;
+    lm_resp_off := HostToLittleEndian(LongWord(Length(lDomain) + Length(lUsername) + Length(lHost) + $40));
 
-    nt_resp_len1 := $18;// S.G. 12/7/2002: was: Length(nt_password);  (from BugID 577895)
-    nt_resp_len2 := $18;// S.G. 12/7/2002: was: Length(nt_password);  (from BugID 577895)
-    nt_resp_off := Length(lDomain) + Length(lUsername) + Length(lHost) + Length(lm_password) + $40;
+    nt_resp_len1 := MSG3_NT_RESP_LEN;// S.G. 12/7/2002: was: Length(nt_password);  (from BugID 577895)
+    nt_resp_len2 := MSG3_NT_RESP_LEN;// S.G. 12/7/2002: was: Length(nt_password);  (from BugID 577895)
+    nt_resp_off := HostToLittleEndian(LongWord(Length(lDomain) + Length(lUsername) + Length(lHost) + Length(lm_password) + $40));
 
-    dom_len1 := Length(lDomain);
+    dom_len1 := HostToLittleEndian(Word(Length(lDomain)));
     dom_len2 := dom_len1;
-    dom_off := $40;
+    dom_off :=  MSG3_DOM_OFFS;
 
-    user_len1 := Length(lUsername);
+    user_len1 := HostToLittleEndian(Word(Length(lUsername)));
     user_len2 := user_len1;
-    user_off := Length(lDomain) + $40;
+    user_off := HostToLittleEndian(LongWord(Length(lDomain) + $40));
 
-    host_len1 := Length(lHost);
+    host_len1 := HostToLittleEndian(Word(Length(lHost)));
     host_len2 := host_len1;
-    host_off := Length(lDomain) + Length(lUsername) + $40;
+    host_off := HostToLittleEndian(LongWord(Length(lDomain) + Length(lUsername) + $40));
     zero := 0;
 
-    msg_len := SizeOf(Type3) + Length(lDomain) + Length(lUsername) + Length(lHost) + Length(lm_password) + Length(nt_password);
-    flags := $018205; // S.G. 12/7/2002: was: flags := $A0808205;  (from BugID 577895 and packet trace)
+    msg_len := HostToLittleEndian(LongWord(SizeOf(Type3) + Length(lDomain) + Length(lUsername) + Length(lHost) + Length(lm_password) + Length(nt_password)));
+    flags := MSG3_FLAGS;
   end;
 
   buf := RawToBytes(Type3, SizeOf(Type3));
