@@ -7548,7 +7548,7 @@ var
   //SSL Version function
   IdSslSSLeay_version : function(_type : TIdC_INT) : PAnsiChar; cdecl = nil;
   //SSLeay
-  IdSsleay : function : TIdC_LONG; cdecl;
+  IdSsleay : function : TIdC_ULONG; cdecl;
   //CRYPTO_set_mem_ex_functions
   IdSslCryptoSetMemFunctions : function(
     m: TCRYPTO_set_mem_functions_m;
