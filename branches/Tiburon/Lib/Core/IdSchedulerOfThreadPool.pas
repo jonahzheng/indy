@@ -142,7 +142,7 @@ begin
   inherited ReleaseYarn(AYarn);
 
   with FThreadPool.LockList do try
-    if (Count < PoolSize) and (LThread <> nil) then begin
+    if (Count < PoolSize) and (LThread <> nil) and (not LThread.Terminated) then begin
       Add(LThread);
       LThread := nil;
     end;
