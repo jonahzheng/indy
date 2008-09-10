@@ -3365,7 +3365,7 @@ var
     LM : TStream;
     LEncoding: TIdEncoding;
   begin
-     LEncoding := en8bit;
+    LEncoding := en8bit;
     //for loops will execute at least once triggering an out of range error.
     //write nothing if AStrings is empty.
     if AStrings.Count < 1 then begin
@@ -3605,8 +3605,7 @@ begin
         //is written using WriteStrings and I found that with Reply.SetReply, a stat
         //reply could throw off a FTP client.
         LContext.Connection.IOHandler.WriteLn(IndyFormat('213-%s', [RSFTPDataConnToOpen])); {Do not Localize}
-        if TIdFTPServerContext(ASender.Context).NLSTUtf8 then
-        begin
+        if TIdFTPServerContext(ASender.Context).NLSTUtf8 then begin
           LEncoding := enUTF8;
         end else begin
           LEncoding := en7bit;
@@ -4660,8 +4659,8 @@ begin
   if LContext.IsAuthenticated(ASender) then begin
     if Assigned(FOnSetModifiedTime) or Assigned(FTPFileSystem) then begin
       LFileName := ASender.UnparsedParams;
-      LFileName := DoProcessPath(LContext, LFileName);
       LTimeStr := Fetch(LFileName);
+      LFileName := DoProcessPath(LContext, LFileName);
       DoOnSetModifiedTime(LContext, LFileName, LTimeStr);
       ASender.Reply.SetReply(213, IndyFormat('Modify=%s %s', [LTimeStr, LFileName])); {Do not translate}
     end else begin
