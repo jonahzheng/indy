@@ -4627,7 +4627,7 @@ end;
 procedure TIdFTPServer.DoOnSetCreationTimeGMT(AContext: TIdFTPServerContext;
   const AFileName: String; var VDateTime: TDateTime);
 begin
-  if Assigned(FOnSetModifiedTime) then begin
+  if Assigned(FOnSetCreationTime) then begin
     FOnSetCreationTime(AContext, AFileName, VDateTime);
   end;
 end;
@@ -4646,7 +4646,7 @@ var
   LTime : TDateTime;
 begin
   LTime := FTPMLSToLocalDateTime(VDateTimeStr);
-  DoOnSetModifiedTime(AContext, AFileName, LTime);
+  DoOnSetCreationTime(AContext, AFileName, LTime);
   VDateTimeStr := FTPLocalDateTimeToMLS(LTime);
 end;
 
@@ -4676,7 +4676,7 @@ var
 begin
   LContext := TIdFTPServerContext(ASender.Context);
   if LContext.IsAuthenticated(ASender) then begin
-    if Assigned(FOnSetModifiedTime) or Assigned(FTPFileSystem) then
+    if Assigned(FOnSetCreationTime) or Assigned(FTPFileSystem) then
     begin
       LFileName := ASender.UnparsedParams;
       LFileName := DoProcessPath(LContext, LFileName);
@@ -4707,7 +4707,7 @@ begin
   LDummy := ''; //empty value for passing a var in case we need to do that
   LContext := TIdFTPServerContext(ASender.Context);
   //this may need to change if we make more facts to modify
-  if not Assigned(FOnSetModifiedTime) then
+  if not Assigned(FOnSetModifiedTime) and not Assigned(FOnSetCreationTime) then
   begin
     CmdSyntaxError(ASender);
     Exit;
@@ -4729,7 +4729,7 @@ begin
       end;
       if LFacts.Values['Create'] <> '' then    {Do not translate}
       begin
-         if Assigned(FOnSetModifiedTime) then
+         if Assigned(FOnSetCreationTime) then
          begin
            LValue := LFacts.Values['Create'];   {Do not translate}
            DoOnSetCreationTime(LContext, LFileName, LValue);
@@ -4789,12 +4789,9 @@ begin
           s := s + IndyFormat('Windows.lastaccesstime=%s;', [LValue]);
         end;
       end;
-      if s <> '' then
-      begin
-        s := s + ' ' + LFileName;
-        ASender.Reply.SetReply(213, s);
-      end else
-      begin
+      if s <> '' then begin
+        ASender.Reply.SetReply(213, s + ' ' + LFileName);
+      end else begin
         ASender.Reply.SetReply(504, IndyFormat(RSFTPParamError, ['MFF']));  {Do not translate}
       end;
     finally
@@ -5179,7 +5176,7 @@ where the timestamp is probably in based on the local time.
   LContext := ASender.Context as TIdFTPServerContext;
   if LContext.IsAuthenticated(ASender) then
   begin
-    if Assigned(OnSiteUTIME) or Assigned(OnSetModifiedTime) then
+    if Assigned(OnSiteUTIME) or Assigned(OnSetModifiedTime) or Assigned(OnSetCreationTime) then
     begin
       LDateCount := 0;
       LIdx := ASender.Params.Count - 1;
