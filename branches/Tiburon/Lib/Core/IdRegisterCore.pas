@@ -123,6 +123,13 @@ uses
   IdIcmpClient,
   {$ENDIF}
   IdSocks,
+  {$IFDEF TSelectionEditor}
+    {$IFDEF FPC}
+  PropEdits,
+    {$ELSE}
+  DesignIntf,
+    {$ENDIF}
+  {$ENDIF}
 
   IdDsnCoreResourceStrings,
   IdAntiFreeze,
@@ -150,7 +157,11 @@ uses
   IdIOHandlerStack,
   IdIntercept,
   IdTCPServer,
-  IdTCPClient;
+  IdTCPClient
+  {$IFDEF TSelectionEditor}
+  ,IdCoreSelectionEditors
+  {$ENDIF}
+  ;
 
 {$IFDEF DOTNET}
   {$R IconsDotNet\TIdAntiFreeze.bmp}
@@ -177,7 +188,7 @@ uses
   {$R IconsDotNet\TIdUDPServer.bmp}
   {$R IconsDotNet\TIdIPMCastClient.bmp}
   {$R IconsDotNet\TIdIPMCastServer.bmp}
-   {$R IconsDotNet\TIdSocksInfo.bmp}
+  {$R IconsDotNet\TIdSocksInfo.bmp}
 {$ELSE}
   {$IFNDEF FPC}
     {$IFDEF Borland}
@@ -190,7 +201,7 @@ uses
 
 procedure Register;
 begin
-  {$ifndef fpc}
+  {$IFNDEF FPC}
   RegisterComponents(RSRegIndyClients, [
    TIdTCPClient
    ,TIdUDPClient
@@ -228,7 +239,7 @@ begin
    TIdSchedulerOfThreadPool,
    TIdThreadComponent
   ]);
-  {$else}
+  {$ELSE}
   //This is a tempoary workaround for components not fitting on the palette
   //in Lazarus.  Unlike Delphi, Lazarus still does not have the ability to
   //scroll through a palette page.
@@ -269,6 +280,10 @@ begin
    TIdSchedulerOfThreadPool,
    TIdThreadComponent
   ]);
+  {$ENDIF}
+  {$IFDEF TSelectionEditor}
+  RegisterSelectionEditor(TIdTCPServer, TIdContextSelectionEditor);
+  RegisterSelectionEditor(TIdCmdTCPClient, TIdContextSelectionEditor);
   {$ENDIF}
 end;
 
