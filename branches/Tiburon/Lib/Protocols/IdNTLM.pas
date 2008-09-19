@@ -419,8 +419,8 @@ begin
   Move(S[1], Result[0], Length(Result));
   {$ELSE}
   for i := 0 to Length(S)-1 do begin
-    Result[i*2] := S[i+1];
-    Result[(i*2)+1] := #0;
+    Result[i*2] := Byte(S[i+1]);
+    Result[(i*2)+1] := Byte(#0);
   end;
   {$ENDIF}
 end;
