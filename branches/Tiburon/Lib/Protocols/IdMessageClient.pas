@@ -1212,12 +1212,14 @@ begin
                 IOHandler.Write('Content-Type: ' + LAttachment.ContentType); {do not localize}
               end;
               if LFileName <> '' then begin
+                IOHandler.WriteLn(';');
                 IOHandler.Write('        name="' + LFileName + '"'); {do not localize}
               end;
               IOHandler.WriteLn;
               IOHandler.WriteLn('Content-Transfer-Encoding: ' + LAttachment.ContentTransfer); {do not localize}
-              IOHandler.WriteLn('Content-Disposition: ' + LAttachment.ContentDisposition); {do not localize}
+              IOHandler.Write('Content-Disposition: ' + LAttachment.ContentDisposition); {do not localize}
               if LFileName <> '' then begin
+                IOHandler.WriteLn(';');
                 IOHandler.Write('        filename="' + LFileName + '"'); {do not localize}
               end;
               IOHandler.WriteLn;
