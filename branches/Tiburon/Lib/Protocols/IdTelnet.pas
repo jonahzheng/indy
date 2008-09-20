@@ -326,8 +326,7 @@ end;
 
 procedure TIdTelnet.InitComponent;
 begin
-  inherited;
-  Port := 23;
+  inherited InitComponent;
   State := tnsData;
   SentDoDont := #0;
   SentWillWont := #0;
