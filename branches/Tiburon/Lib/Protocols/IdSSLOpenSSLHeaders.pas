@@ -1468,8 +1468,8 @@ const
   OPENSSL_BF_ENCRYPT = 1;
   OPENSSL_BF_ROUNDS = 16;
   {$ENDIF}  
-  OPENSSL_EVP_BLOWFISH_KEY_SIZE = 16;
-  OPENSSL_EVP_CAST5_KEY_SIZE = 16;
+
+
   OPENSSL_EVP_F_D2I_PKEY = 100;
   OPENSSL_EVP_F_EVP_DECRYPTFINAL = 101;
   OPENSSL_EVP_F_EVP_MD_CTX_COPY = 110;
@@ -1525,9 +1525,31 @@ const
   OPENSSL_EVP_PK_DH = $0004;
   OPENSSL_EVP_PK_DSA = $0002;
   OPENSSL_EVP_PK_RSA = $0001;
+  OPENSSL_EVP_BLOWFISH_KEY_SIZE = 16;
+  OPENSSL_EVP_CAST5_KEY_SIZE = 16;
   OPENSSL_EVP_RC2_KEY_SIZE = 16;
   OPENSSL_EVP_RC4_KEY_SIZE = 16;
   OPENSSL_EVP_RC5_32_12_16_KEY_SIZE = 16;
+  OPENSSL_EVP_MD_CTX_FLAG_ONESHOT = $0001;
+  //* digest update will be called
+	//* once only */
+  OPENSSL_EVP_MD_CTX_FLAG_CLEANED	= $0002;
+  //* context has already been
+	//* cleaned */
+  OPENSSL_EVP_MD_CTX_FLAG_REUSE	=	$0004;
+  //* Don't free up ctx->md_data
+	//* in EVP_MD_CTX_cleanup */
+  OPENSSL_EVP_MD_CTX_FLAG_NON_FIPS_ALLOW = $0008;
+  //* Allow use of non FIPS digest
+	// * in FIPS mode */
+  OPENSSL_EVP_CTRL_INIT	= $0;
+  OPENSSL_EVP_CTRL_SET_KEY_LENGTH = $1;
+  OPENSSL_EVP_CTRL_GET_RC2_KEY_BITS	= $2;
+  OPENSSL_EVP_CTRL_SET_RC2_KEY_BITS = $3;
+  OPENSSL_EVP_CTRL_GET_RC5_ROUNDS	= $4;
+  OPENSSL_EVP_CTRL_SET_RC5_ROUNDS = $5;
+  OPENSSL_EVP_CTRL_RAND_KEY	= $6;
+
   OPENSSL_EVP_R_BAD_DECRYPT = 100;
   OPENSSL_EVP_R_BN_DECODE_ERROR = 112;
   OPENSSL_EVP_R_BN_PUBKEY_ERROR = 113;
@@ -3053,6 +3075,8 @@ const
   OPENSSL_SSL_F_SSL3_CONNECT = 132;
   OPENSSL_SSL_F_SSL3_CTRL = 213;
   OPENSSL_SSL_F_SSL3_CTX_CTRL = 133;
+  OPENSSL_SSL_F_SSL3_DO_CHANGE_CIPHER_SPEC = 279;
+
   OPENSSL_SSL_F_SSL3_ENC = 134;
   OPENSSL_SSL_F_SSL3_GET_CERTIFICATE_REQUEST = 135;
   OPENSSL_SSL_F_SSL3_GET_CERT_STATUS = 288;
@@ -3095,13 +3119,23 @@ const
   OPENSSL_SSL_F_SSL_CERT_NEW = 162;
   OPENSSL_SSL_F_SSL_CHECK_PRIVATE_KEY = 163;
   OPENSSL_SSL_F_SSL_CHECK_SERVERHELLO_TLSEXT = 274;
+  OPENSSL_SSL_F_SSL_CIPHER_PROCESS_RULESTR = 230;
+  OPENSSL_SSL_F_SSL_CIPHER_STRENGTH_SORT = 231;
+
   OPENSSL_SSL_F_SSL_CLEAR = 164;
   OPENSSL_SSL_F_SSL_COMP_ADD_COMPRESSION_METHOD = 165;
   OPENSSL_SSL_F_SSL_CREATE_CIPHER_LIST = 166;
+  OPENSSL_SSL_F_SSL_CTRL = 232;
+
   OPENSSL_SSL_F_SSL_CTX_CHECK_PRIVATE_KEY = 168;
   OPENSSL_SSL_F_SSL_CTX_NEW = 169;
+  OPENSSL_SSL_F_SSL_CTX_SET_CIPHER_LIST = 269;
+  OPENSSL_SSL_F_SSL_CTX_SET_CLIENT_CERT_ENGINE = 278;
+  OPENSSL_SSL_F_SSL_CTX_SET_PURPOSE = 226;
   OPENSSL_SSL_F_SSL_CTX_SET_SESSION_ID_CONTEXT = 219;
   OPENSSL_SSL_F_SSL_CTX_SET_SSL_VERSION = 170;
+  OPENSSL_SSL_F_SSL_CTX_SET_TRUST	= 229;
+
   OPENSSL_SSL_F_SSL_CTX_USE_CERTIFICATE = 171;
   OPENSSL_SSL_F_SSL_CTX_USE_CERTIFICATE_ASN1 = 172;
   OPENSSL_SSL_F_SSL_CTX_USE_CERTIFICATE_CHAIN_FILE = 220;
@@ -3299,6 +3333,8 @@ const
   OPENSSL_SSL_R_NO_CIPHERS_SPECIFIED = 183;
   OPENSSL_SSL_R_NO_CIPHER_LIST = 184;
   OPENSSL_SSL_R_NO_CIPHER_MATCH = 185;
+  OPENSSL_SSL_R_NO_CLIENT_CERT_METHOD	= 317;
+
   OPENSSL_SSL_R_NO_CLIENT_CERT_RECEIVED = 186;
   OPENSSL_SSL_R_NO_COMPRESSION_SPECIFIED = 187;
   OPENSSL_SSL_R_NO_METHOD_SPECIFIED = 188;
@@ -3440,7 +3476,8 @@ const
   OPENSSL_SSL_TXT_LOW = 'LOW';  {Do not localize}
   OPENSSL_SSL_TXT_MEDIUM = 'MEDIUM';  {Do not localize}
   OPENSSL_SSL_TXT_HIGH = 'HIGH';  {Do not localize}
-  
+  OPENSSL_SSL_TXT_FIPS = 'FIPS';  {Do not localize}
+
   OPENSSL_SSL_TXT_kFZA = 'kFZA';  {Do not localize}
   OPENSSL_SSL_TXT_aFZA = 'aFZA';  {Do not localize}
   OPENSSL_SSL_TXT_eFZA = 'eFZA';  {Do not localize}
@@ -3812,6 +3849,72 @@ const
   OPENSSL_X509v3_KU_KEY_ENCIPHERMENT = $0020;
   OPENSSL_X509v3_KU_NON_REPUDIATION = $0040;
   OPENSSL_X509v3_KU_UNDEF = $ffff;
+
+  OPENSSL_X509V3_EXT_DYNAMIC = $1;
+  OPENSSL_X509V3_EXT_CTX_DEP = $2;
+  OPENSSL_X509V3_EXT_MULTILINE = $4;
+
+  OPENSSL_GEN_OTHERNAME	= 0;
+  OPENSSL_GEN_EMAIL	= 1;
+  OPENSSL_GEN_DNS = 2;
+  OPENSSL_GEN_X400 = 3;
+  OPENSSL_GEN_DIRNAME = 4;
+  OPENSSL_GEN_EDIPARTY = 5;
+  OPENSSL_GEN_URI	= 6;
+  OPENSSL_GEN_IPADD = 7;
+  OPENSSL_GEN_RID = 8;
+
+  //* X509_PURPOSE stuff */
+
+  OPENSSL_EXFLAG_BCONS = $1;
+  OPENSSL_EXFLAG_KUSAGE	= $2;
+  OPENSSL_EXFLAG_XKUSAGE = $4;
+  OPENSSL_EXFLAG_NSCERT	= $8;
+
+  OPENSSL_EXFLAG_CA = $10;
+  //* Really self issued not necessarily self signed */
+  OPENSSL_EXFLAG_SI	= $20;
+  OPENSSL_EXFLAG_SS	= $20;
+  OPENSSL_EXFLAG_V1	= $40;
+  OPENSSL_EXFLAG_INVALID = $80;
+  OPENSSL_EXFLAG_SET = $100;
+  OPENSSL_EXFLAG_CRITICAL	= $200;
+  OPENSSL_EXFLAG_PROXY = $400;
+
+  OPENSSL_EXFLAG_INVALID_POLICY = $800;
+
+  OPENSSL_KU_DIGITAL_SIGNATURE = $0080;
+  OPENSSL_KU_NON_REPUDIATION	= $0040;
+  OPENSSL_KU_KEY_ENCIPHERMENT	= $0020;
+  OPENSSL_KU_DATA_ENCIPHERMENT = $0010;
+  OPENSSL_KU_KEY_AGREEMENT = $0008;
+  OPENSSL_KU_KEY_CERT_SIGN = $0004;
+  OPENSSL_KU_CRL_SIGN	= $0002;
+  OPENSSL_KU_ENCIPHER_ONLY = $0001;
+  OPENSSL_KU_DECIPHER_ONLY = $8000;
+
+  OPENSSL_NS_SSL_CLIENT	= $80;
+  OPENSSL_NS_SSL_SERVER	= $40;
+  OPENSSL_NS_SMIME = $20;
+  OPENSSL_NS_OBJSIGN = $10;
+  OPENSSL_NS_SSL_CA	= $04;
+  OPENSSL_NS_SMIME_CA	= $02;
+  OPENSSL_NS_OBJSIGN_CA = $01;
+  OPENSSL_NS_ANY_CA	= (OPENSSL_NS_SSL_CA or OPENSSL_NS_SMIME_CA or
+    OPENSSL_NS_OBJSIGN_CA);
+
+  OPENSSL_XKU_SSL_SERVER = $1;
+  OPENSSL_XKU_SSL_CLIENT = $2;
+  OPENSSL_XKU_SMIME	=	$4;
+  OPENSSL_XKU_CODE_SIGN	= $8;
+  OPENSSL_XKU_SGC	= $10;
+  OPENSSL_XKU_OCSP_SIGN = $20;
+  OPENSSL_XKU_TIMESTAMP = $40;
+  OPENSSL_XKU_DVCS = $80;
+
+  OPENSSL_X509_PURPOSE_DYNAMIC = $1;
+  OPENSSL_X509_PURPOSE_DYNAMIC_NAME = $2;
+
   OPENSSL__ATEXIT_SIZE = 32;
   OPENSSL__IOFBF = 0;
   OPENSSL__IOLBF = 1;
@@ -3927,7 +4030,9 @@ const
   OPENSSL_ERR_LIB_ECDSA = 42;
   OPENSSL_ERR_LIB_ECDH  = 43;
   OPENSSL_ERR_LIB_STORE = 44;
-  OPENSSL_ERR_LIB_CMS = 45;
+  OPENSSL_ERR_LIB_FIPS = 45;
+
+  OPENSSL_ERR_LIB_CMS = 46;
   OPENSSL_ERR_LIB_USER  = 128;
 
   // OS functions
@@ -3995,6 +4100,12 @@ const
   
   OPENSSL_DTLS1_VERSION = $FEFF;
   OPENSSL_DTLS1_BAD_VER = $0100;
+
+{$IFNDEF USETHIS}
+//* this alert description is not specified anywhere... */
+ DTLS1_AD_MISSING_HANDSHAKE_MESSAGE = 110;
+{$endif}
+
   OPENSSL_DTLS1_COOKIE_LENGTH = 32;
   OPENSSL_DTLS1_RT_HEADER_LENGTH = 13;
   OPENSSL_DTLS1_HM_HEADER_LENGTH = 12;
@@ -4002,7 +4113,13 @@ const
   OPENSSL_DTLS1_HM_FRAGMENT_RETRY = -3;
   //OpenSSL 0.9.8e defines this as OPENSSL_DTLS1_CCS_HEADER_LENGTH = 3;
   OPENSSL_DTLS1_CCS_HEADER_LENGTH = 1;
+
+{$ifdef DTLS1_AD_MISSING_HANDSHAKE_MESSAGE}
   OPENSSL_DTLS1_AL_HEADER_LENGTH = 7;
+{$else}
+  OPENSSL_DTLS1_AL_HEADER_LENGTH = 2;
+{$endif}
+
   OPENSSL_ERR_R_PROXY_LIB = OPENSSL_ERR_LIB_PROXY;
 //  OPENSSL_ERR_R_BIO_LIB = OPENSSL_ERR_LIB_BIO;
 //  OPENSSL_ERR_R_PKCS7_LIB = OPENSSL_ERR_LIB_PKCS7;
@@ -7042,6 +7159,11 @@ _des_cblock = DES_cblock
     purpose : TIdC_INT;  // Purpose setting
     trust : TIdC_INT;    // Trust setting
     {$ENDIF}
+    {$IFNDEF OPENSSL_ENGINE}
+	///* Engine to pass requests for client certs to
+	// */
+	  client_cert_engine : PENGINE;
+    {$ENDIF}
 
     quiet_shutdown : TIdC_INT;
     {$IFNDEF OPENSSL_NO_TLSEXT}
@@ -8270,6 +8392,8 @@ them in case we use them later.}
   {CH fn_HMAC_Update = 'HMAC_Update'; } {Do not localize}
   {CH fn_HMAC_Final = 'HMAC_Final'; } {Do not localize}
   {CH fn_HMAC = 'HMAC'; } {Do not localize}
+  {CH fn_HMAC_CTX_set_flags = 'HMAC_CTX_set_flags'; } {Do not localize}
+
   {$ENDIF}
   {$IFNDEF HEADER_TMDIFF_H}
   {CH fn_ms_time_new = 'ms_time_new'; } {Do not localize}
@@ -8475,8 +8599,12 @@ them in case we use them later.}
     {$IFNDEF OPENSSL_NO_BIO}
   {CH fn_RSA_print = 'RSA_print'; }  {Do not localize}
     {$ENDIF}
+    {$IFNDEF OPENSSL_NO_RC4}
+  {CH fn_i2d_RSA_NET = 'i2d_RSA_NET'; }{Do not localize}
+  {CH fn_d2i_RSA_NET = 'd2i_RSA_NET'; }{Do not localize}
   {CH fn_i2d_Netscape_RSA = 'i2d_Netscape_RSA'; }  {Do not localize}
   {CH fn_d2i_Netscape_RSA = 'd2i_Netscape_RSA'; }  {Do not localize}
+    {$ENDIF}
   {CH fn_d2i_Netscape_RSA_2 = 'd2i_Netscape_RSA_2'; }  {Do not localize}
   {CH fn_RSA_sign = 'RSA_sign'; }  {Do not localize}
   {CH fn_RSA_verify = 'RSA_verify'; }  {Do not localize}
@@ -10144,6 +10272,10 @@ them in case we use them later.}
   {$ENDIF}
   fn_SSL_CTX_use_PrivateKey_file = 'SSL_CTX_use_PrivateKey_file';  {Do not localize}
   fn_SSL_CTX_use_certificate_file = 'SSL_CTX_use_certificate_file';  {Do not localize}
+  {$ifndef OPENSSL_NO_ENGINE}
+  {CH fn_SSL_CTX_set_client_cert_engine = 'SSL_CTX_set_client_cert_engine'; } {Do not localize}
+  {$endif}
+
   {CH fn_SSL_CTX_use_certificate_chain_file = 'SSL_CTX_use_certificate_chain_file'; }  {Do not localize}
   fn_SSL_load_client_CA_file = 'SSL_load_client_CA_file';  {Do not localize}
   {CH fn_SSL_add_file_cert_subjects_to_stack = 'SSL_add_file_cert_subjects_to_stack'; }  {Do not localize}
@@ -10256,6 +10388,7 @@ them in case we use them later.}
   fn_SSL_get_session = 'SSL_get_session';  {Do not localize}
   {CH fn_SSL_get_SSL_CTX = 'SSL_get_SSL_CTX'; }  {Do not localize}
   {CH fn_SSL_set_SSL_CTX = 'SSL_set_SSL_CTX'; }  {Do not localize}
+  {CH fn_OPENSSL_isservice = 'OPENSSL_isservice'; }{Do not localize}
 
   {CH fn_SSL_set_info_callback = 'SSL_set_info_callback'; }  {Do not localize}
   {CH fn_SSL_state = 'SSL_state'; }  {Do not localize}
@@ -10341,16 +10474,51 @@ them in case we use them later.}
   {CH fn_ERR_load_RAND_strings = 'ERR_load_RAND_strings'; } {Do not localize}
   //experimental
   fn_ERR_get_error = 'ERR_get_error';  {Do not localize}
+{CH fn_ERR_get_error_line = 'ERR_get_error_line'; }  {Do not localize}
+{CH fn_ERR_get_error_line_data = 'ERR_get_error_line_data'; }  {Do not localize}
+
   fn_ERR_peek_error = 'ERR_peek_error';  {Do not localize}
+{CH fn_ERR_peek_error_line = 'ERR_peek_error_line'; } {Do not localize}
+{CH fn_ERR_peek_error_line_data = 'ERR_peek_error_line_data'; } {Do not localize}
+
+{CH fn_ERR_peek_last_error_line = 'ERR_peek_last_error_line'; } {Do not localize}
+{CH fn_ERR_peek_last_error_line_data = 'ERR_peek_last_error_line_data'; } {Do not localize}
+
   fn_ERR_clear_error = 'ERR_clear_error';  {Do not localize}
   fn_ERR_error_string = 'ERR_error_string';  {Do not localize}
   fn_ERR_error_string_n = 'ERR_error_string_n';  {Do not localize}
   fn_ERR_lib_error_string = 'ERR_lib_error_string';  {Do not localize}
-  fn_ERR_func_error_string = 'ERR_func_error_string'; {Do not localize}
+  fn_ERR_func_error_string = 'ERR_func_error_string';  {Do not localize}
   fn_ERR_reason_error_string = 'ERR_reason_error_string'; {Do not localize}
-  fn_ERR_load_ERR_strings = 'ERR_load_ERR_strings'; {Do not localize}
-  fn_ERR_free_strings = 'ERR_free_strings'; {do not localize}
-  fn_ERR_remove_state = 'ERR_remove_state'; {do not localize}
+
+{CH fn_ERR_print_errors_cb = 'ERR_print_errors_cb'; } {Do not localize}
+  {$IFNDEF OPENSSL_NO_FP_API}
+{CH fn_ERR_print_errors_fp = 'ERR_print_errors_fp'; }  {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_BIO}
+{CH fn_ERR_print_errors = 'ERR_print_errors'; }  {Do not localize}
+{CH fn_ERR_add_error_data = 'ERR_add_error_data'; }  {Do not localize}
+  {$ENDIF}
+
+  fn_ERR_load_ERR_strings = 'ERR_load_ERR_strings';  {Do not localize}
+  fn_ERR_free_strings = 'ERR_free_strings';  {do not localize}
+  fn_ERR_remove_state = 'ERR_remove_state';  {do not localize}
+{CH fn_ERR_unload_strings = 'ERR_unload_strings'; } {Do not localize}
+{CH fn_ERR_load_ERR_strings = 'ERR_load_ERR_strings'; } {Do not localize}
+{CH fn_ERR_load_crypto_strings = 'ERR_load_crypto_strings'; } {Do not localize}
+{CH fn_ERR_free_strings = 'ERR_free_strings'; } {Do not localize}
+
+{CH fn_ERR_remove_state = 'ERR_remove_state'; }  {Do not localize}
+{CH fn_ERR_get_state = 'ERR_get_state'; }  {Do not localize}
+
+  {$IFNDEF OPENSSL_NO_LHASH}
+{CH fn_ERR_get_string_table = 'ERR_get_string_table';  } {Do not localize}
+{CH fn_ERR_get_err_state_table = 'ERR_get_err_state_table'; } {Do not localize}
+{CH fn_ERR_release_err_state_table = 'ERR_release_err_state_table'; } {Do not localize}
+  {$ENDIF}
+{CH fn_ERR_get_next_error_library = 'ERR_get_next_error_library'; } {Do not localize}
+{CH fn_ERR_set_mark = 'ERR_set_mark'; } {Do not localize}
+{CH fn_ERR_pop_to_mark = 'ERR_pop_to_mark'; } {Do not localize}
 
   {$IFDEF OPENSSL_EXPORT_VAR_AS_FUNCTION}
   //These have a gl prefix because they may not be functions in some platforms.
