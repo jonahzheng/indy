@@ -189,7 +189,7 @@ type
 implementation
 
 uses
-  DateUtils, IdMessageClient, IdText, IdStreamVCL;
+  DateUtils, IdMessageClient, IdText, IdStream;
 
 const
   //Initial RTF-compression decode string...
@@ -1744,7 +1744,7 @@ end;
 
 procedure TIdCoderTNEF.Parse(const AIn: TIdAttachment; AMsg: TIdMessage; ALog: Boolean = False);
 var
-  LTempStream: TIdStream;
+  LTempStream: TStream;
 begin
   LTempStream := AIn.OpenLoadStream;
   try
@@ -2142,8 +2142,7 @@ begin
         end;
         if FDoLogging then begin
           DoLogFmt('  Copying %d bytes from offset %d to %d destlen %d',   {Do not localize}
-            [LCodeLength, LCodePosition, LOutIndex, LOutBufferSize]),
-	    False);
+            [LCodeLength, LCodePosition, LOutIndex, LOutBufferSize], False);
         end;
         for LTemp := 0 to LCodeLength-1 do begin
           Result[LOutIndex] := Result[LCodePosition+LTemp];         //GPFs here
@@ -2665,7 +2664,7 @@ begin
       IdTNEFAtpTriples: begin
         if FDoLogging then begin
           DoLogFmt('     ParseAttribute found AtpTriples type, %s, length: %d',  {Do not localize}
-	    [GetStringForAttribute(LAttribute), LLength]);
+	          [GetStringForAttribute(LAttribute), LLength]);
         end;
         Skip(LLength);
       end;
@@ -2679,15 +2678,15 @@ begin
       IdTNEFAtpText: begin
         if FDoLogging then begin
           DoLogFmt('     ParseAttribute found AtpText type, %s, length: %d',  {Do not localize}
-	    [GetStringForAttribute(LAttribute), LLength]);
+            [GetStringForAttribute(LAttribute), LLength]);
         end;
         Skip(LLength);
       end;
       IdTNEFAtpDate: begin
         if FDoLogging then begin
-	  DoLogFtm('     ParseAttribute found AtpDate type, %s, length: %d',  {Do not localize}
+	        DoLogFmt('     ParseAttribute found AtpDate type, %s, length: %d',  {Do not localize}
             [GetStringForAttribute(LAttribute), LLength]);
- 	end;
+ 	      end;
         Skip(LLength);
       end;
       IdTNEFAtpShort: begin
@@ -2700,41 +2699,41 @@ begin
         if FDoLogging then begin
           DoLogFmt('     ParseAttribute found AtpLong type, %s, length: %d',  {Do not localize}
             [GetStringForAttribute(LAttribute), LLength]);
-         end;
+        end;
         Skip(LLength);
       end;
       IdTNEFAtpByte: begin
         if FDoLogging then begin
-	  DoLogFmt('     ParseAttribute found AtpByte type, %s, length: %d',  {Do not localize}
-	    [GetStringForAttribute(LAttribute), LLength]);
-	end;
+	        DoLogFmt('     ParseAttribute found AtpByte type, %s, length: %d',  {Do not localize}
+	          [GetStringForAttribute(LAttribute), LLength]);
+	      end;
         Skip(LLength);
       end;
       IdTNEFAtpWord: begin
         if FDoLogging then begin
-	  DoLogFmt('     ParseAttribute found AtpWord type, %s, length: %d',  {Do not localize}
-	    [GetStringForAttribute(LAttribute), LLength]);
+	        DoLogFmt('     ParseAttribute found AtpWord type, %s, length: %d',  {Do not localize}
+	          [GetStringForAttribute(LAttribute), LLength]);
         end;
         Skip(LLength);
       end;
       IdTNEFAtpDWord: begin
         if FDoLogging then begin
-	  DoLogFmt('     ParseAttribute found AtpDWord type, %s, length: %d',  {Do not localize}
-	    [GetStringForAttribute(LAttribute), LLength]);
+          DoLogFmt('     ParseAttribute found AtpDWord type, %s, length: %d',  {Do not localize}
+	          [GetStringForAttribute(LAttribute), LLength]);
         end;
         Skip(LLength);
       end;
       IdTNEFAtpMax: begin
         if FDoLogging then begin
-	  DoLogFmt('     ParseAttribute found AtpMax type, %s, length: %d',  {Do not localize}
-	    [GetStringForAttribute(LAttribute), LLength]);
+	        DoLogFmt('     ParseAttribute found AtpMax type, %s, length: %d',  {Do not localize}
+	          [GetStringForAttribute(LAttribute), LLength]);
         end;
         Skip(LLength);
       end;
     else
       if FDoLogging then begin
         DoLogFmt('     ParseAttribute found unknown type, %s, length: %d',  {Do not localize}
-	  [GetStringForAttribute(LAttribute), LLength]);
+           [GetStringForAttribute(LAttribute), LLength]);
       end;
       Skip(LLength);
     end;
