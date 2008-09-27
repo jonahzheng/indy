@@ -41,14 +41,10 @@ implementation
 
 procedure TIdHMACSHA1.InitHash;
 begin
-  inherited;
-  FHash := TIdHashSHA1.Create;
   FHashSize := 20;
   FBlockSize := 64;
   FHashName := 'SHA1';
+  FHash := TIdHashSHA1.Create;
 end;
 
-initialization
-  // RLebeau: why do this?
-  TIdHMACSHA1.Create.Destroy;
 end.
