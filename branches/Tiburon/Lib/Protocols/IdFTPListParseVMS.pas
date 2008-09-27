@@ -275,10 +275,11 @@ begin
     //is reported in the File list.  Do not parse the line further.
     if LCols.Count > 0 then
     begin
-      if IsNumeric(LCols[0]) then
+      LBuffer := LCols[0];
+      LBuffer := Fetch(LBuffer, '/');
+      if IsNumeric(LBuffer) then
       begin
         //File Size
-        LBuffer := LCols[0];
         LI.NumberBlocks :=  IndyStrToInt(LBuffer, 0);
         LI.BlockSize := VMS_BLOCK_SIZE;
         LI.Size := IndyStrToInt(LBuffer, 0) * VMS_BLOCK_SIZE; //512 is the size of a VMS block
