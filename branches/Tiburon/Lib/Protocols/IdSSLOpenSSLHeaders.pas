@@ -50,7 +50,6 @@ unit IdSSLOpenSSLHeaders;
 {
 Note to self::
 ===== Win32 with mingw32 ====
-W:\openssl\openssl-0.9.8h>perl Configure mingw
 Configuring for mingw
     no-camellia     [default]  OPENSSL_NO_CAMELLIA (skip dir)
     no-cms          [default]  OPENSSL_NO_CMS (skip dir)
@@ -67,9 +66,7 @@ Configuring for mingw
     no-zlib-dynamic [default]
 IsMK1MF=1
 CC            =gcc
-CFLAG         =-DOPENSSL_THREADS  -DDSO_WIN32 -mno-cygwin -DL_ENDIA
-e-pointer -O3 -march=i486 -Wall -D_WIN32_WINNT=0x333 -DOPENSSL_BN_A
- -DOPENSSL_IA32_SSE2 -DSHA1_ASM -DMD5_ASM -DRMD160_ASM -DAES_ASM
+CFLAG         =-DOPENSSL_THREADS  -DDSO_WIN32 -mno-cygwin -DL_ENDIAN -fomit-frame-pointer -O3 -march=i486 -Wall -D_WIN32_WINNT=0x333 -DOPENSSL_BN_ASM_PART_WORDS -DOPENSSL_IA32_SSE2 -DSHA1_ASM -DMD5_ASM -DRMD160_ASM -DAES_ASM
 EX_LIBS       =-lwsock32 -lgdi32
 CPUID_OBJ     =x86cpuid-cof.o
 BN_ASM        =bn86-cof.o co86-cof.o
@@ -111,27 +108,23 @@ Generating makefile
 Generating DLL definition files
 Building the libraries
 Building OpenSSL
-
-OPTIONS= no-camellia no-cms no-gmp no-krb5 no-mdc2 no-montasm no-rc5 no-rfc3779 no-seed no-shared no-tlsext no-zlib no-zlib-dynamic
 =============================
 ===== Win64 ======
 Targeting Windows Server 2003 X64 RETAIL
 
 perl Configure VC-WIN64A
-
-W:\openssl\openssl-0.9.8h>perl Configure VC-WIN64A
 Configuring for VC-WIN64A
-    no-camellia     [default]  OPENSSL_NO_CAMELLIA (skip d
+    no-camellia     [default]  OPENSSL_NO_CAMELLIA (skip dir)
     no-cms          [default]  OPENSSL_NO_CMS (skip dir)
     no-gmp          [default]  OPENSSL_NO_GMP (skip dir)
-    no-krb5         [krb5-flavor not specified] OPENSSL_NO
+    no-krb5         [krb5-flavor not specified] OPENSSL_NO_KRB5
     no-mdc2         [default]  OPENSSL_NO_MDC2 (skip dir)
     no-montasm      [default]
     no-rc5          [default]  OPENSSL_NO_RC5 (skip dir)
-    no-rfc3779      [default]  OPENSSL_NO_RFC3779 (skip di
+    no-rfc3779      [default]  OPENSSL_NO_RFC3779 (skip dir)
     no-seed         [default]  OPENSSL_NO_SEED (skip dir)
     no-shared       [default]
-    no-tlsext       [default]  OPENSSL_NO_TLSEXT (skip dir
+    no-tlsext       [default]  OPENSSL_NO_TLSEXT (skip dir)
     no-zlib         [default]
     no-zlib-dynamic [default]
 IsMK1MF=1
@@ -159,29 +152,21 @@ RC4_CHUNK is unsigned long long
 
 Configured for VC-WIN64A.
 
-W:\openssl\openssl-0.9.8h>ms\do_win64a
-
 W:\openssl\openssl-0.9.8h>perl util\mkfiles.pl  1>MINFO
 
 W:\openssl\openssl-0.9.8h>perl ms\uplink.pl win64a  1>ms\uptable.asm
 
 W:\openssl\openssl-0.9.8h>ml64 -c -Foms\uptable.obj ms\uptable.asm
-Microsoft (R) Macro Assembler (AMD64) Version 8.00.40310.39
-Copyright (C) Microsoft Corporation.  All rights reserved.
-
  Assembling: ms\uptable.asm
 
 W:\openssl\openssl-0.9.8h>perl util\mk1mf.pl no-asm VC-WIN64A  1>ms\nt.mak
 
-W:\openssl\openssl-0.9.8h>perl util\mk1mf.pl dll no-asm VC-WIN64A  1>ms\ntdll.ma
-k
+W:\openssl\openssl-0.9.8h>perl util\mk1mf.pl dll no-asm VC-WIN64A  1>ms\ntdll.mak
 
 W:\openssl\openssl-0.9.8h>perl util\mkdef.pl 32 libeay  1>ms\libeay32.def
 
 W:\openssl\openssl-0.9.8h>perl util\mkdef.pl 32 ssleay  1>ms\ssleay32.def
-
-OPTIONS= no-camellia no-cms no-gmp no-krb5 no-mdc2 no-montasm no-rc5 no-rfc3779 no-seed no-shared no-tlsext no-zlib no-zlib-dynamic
-
+Building OpenSSL
 }
 
 interface
@@ -213,7 +198,7 @@ that generates apporpriate make files with the appropriate defines.  If you do
 custom compiles of OpenSSL or if it's compiled differently that what I assume,
 you will need to add or deactivate the defines.
 
-my $default_depflags = "-DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_CMS -DOPENSSL_NO_GMP -DOPENSSL_NO_MDC2 -DOPENSSL_NO_RC5 -DOPENSSL_NO_RFC3779 -DOPENSSL_NO_SEED -DOPENSSL_NO_TLSEXT ";
+my $default_depflags = "-DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_CAPIENG -DOPENSSL_NO_CMS -DOPENSSL_NO_GMP -DOPENSSL_NO_MDC2 -DOPENSSL_NO_RC5 -DOPENSSL_NO_RFC3779 -DOPENSSL_NO_SEED -DOPENSSL_NO_TLSEXT ";
 
 my $x86_gcc_des="DES_PTR DES_RISC1 DES_UNROLL";
 
@@ -230,7 +215,6 @@ except from configure script:
 #endif
 
 }
-
 
 //# Win64 targets, WIN64I denotes IA-64 and WIN64A - AMD64
 //"VC-WIN64I","cl::::WIN64I::SIXTY_FOUR_BIT RC4_CHUNK_LL DES_INT EXPORT_VAR_AS_FN:${no_asm}:win32",
@@ -282,8 +266,9 @@ except from configure script:
 //##### MacOS X (a.k.a. Rhapsody or Darwin) setup
 //"rhapsody-ppc-cc","cc:-O3 -DB_ENDIAN::(unknown):MACOSX_RHAPSODY::BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:${no_asm}::",
 //"darwin-ppc-cc","cc:-arch ppc -O3 -DB_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::osx_ppc32.o::::::::::dlfcn:darwin-shared:-fPIC -fno-common:-arch ppc -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
-//"darwin64-ppc-cc","cc:-arch ppc64 -O3 -DB_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:ppccpuid_osx64.o:osx_ppc64.o osx_ppc64-mont.o:::::sha1-ppc_osx64.o sha256-ppc_osx64.o sha512-ppc_osx64.o:::::dlfcn:darwin-shared:-fPIC -fno-common:-arch ppc64 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
-//"darwin-i386-cc","cc:-arch i386 -O3 -fomit-frame-pointer -fno-common::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:${no_asm}:dlfcn:darwin-shared:-fPIC -fno-common:-arch i386 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
+//"darwin64-ppc-cc","cc:-arch ppc64 -O3 -DB_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::osx_ppc64.o::::::::::dlfcn:darwin-shared:-fPIC -fno-common:-arch ppc64 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
+//"darwin-i386-cc","cc:-arch i386 -O3 -fomit-frame-pointer -DL_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:${no_asm}:dlfcn:darwin-shared:-fPIC -fno-common:-arch i386 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
+//"debug-darwin-i386-cc","cc:-arch i386 -g3 -DL_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:${no_asm}:dlfcn:darwin-shared:-fPIC -fno-common:-arch i386 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
 //"darwin64-x86_64-cc","cc:-arch x86_64 -O3 -fomit-frame-pointer -DL_ENDIAN -DMD32_REG_T=int -Wall::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK BF_PTR2 DES_INT DES_UNROLL:${no_asm}:dlfcn:darwin-shared:-fPIC -fno-common:-arch x86_64 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
 //"debug-darwin-ppc-cc","cc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG -DB_ENDIAN -g -Wall -O::-D_REENTRANT:MACOSX::BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::osx_ppc32.o::::::::::dlfcn:darwin-shared:-fPIC -fno-common:-dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
 
@@ -308,8 +293,6 @@ except from configure script:
 
 //##### Compaq Non-Stop Kernel (Tandem)
 //"tandem-c89","c89:-Ww -D__TANDEM -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED=1 -D_TANDEM_SOURCE -DB_ENDIAN::(unknown):::THIRTY_TWO_BIT:::",
-
-//OPTIONS= no-camellia no-cms no-gmp no-krb5 no-mdc2 no-montasm no-rc5 no-rfc3779 no-seed no-shared no-tlsext no-zlib no-zlib-dynamic
 
 
 
@@ -342,6 +325,7 @@ except from configure script:
   {$DEFINE OPENSSL_NO_RFC3779}
   {$DEFINE OPENSSL_NO_SEED}
   {$DEFINE OPENSSL_NO_TLSEXT}
+  {$DEFINE OPENSSL_NO_CAPIENG}
 {$ENDIF}
 
 {$IFDEF WINCE}
@@ -360,7 +344,8 @@ except from configure script:
   {$DEFINE EXPORT_VAR_AS_FN}
    {$DEFINE OPENSSL_NO_RFC3779}
   {$DEFINE OPENSSL_NO_SEED}
-  {$DEFINE OPENSSL_NO_TLSEXT}  
+  {$DEFINE OPENSSL_NO_TLSEXT}
+  {$DEFINE OPENSSL_NO_CAPIENG}
 {$ENDIF}
 
 {$IFDEF WIN64}
@@ -389,7 +374,8 @@ except from configure script:
   {$DEFINE OPENSSL_NO_GMP}
  {$DEFINE OPENSSL_NO_RFC3779}   
   {$DEFINE OPENSSL_NO_SEED}
-  {$DEFINE OPENSSL_NO_TLSEXT}  
+  {$DEFINE OPENSSL_NO_TLSEXT}
+  {$DEFINE OPENSSL_NO_CAPIENG}
 {$ENDIF}
 
 {$IFDEF UNIX}
@@ -403,6 +389,7 @@ except from configure script:
   {$DEFINE OPENSSL_NO_SEED}
    {$DEFINE OPENSSL_NO_RFC3779}  
   {$DEFINE OPENSSL_NO_TLSEXT}
+  {$DEFINE OPENSSL_NO_CAPIENG}
 {$ENDIF}
 
 //#if (defined(OPENSSL_NO_RSA) || defined(OPENSSL_NO_MD5)) && !defined(OPENSSL_NO_SSL2)
@@ -1176,9 +1163,28 @@ const
   OPENSSL_CRYPTO_EX_INDEX_SSL_SESSION = 3;
   OPENSSL_CRYPTO_EX_INDEX_X509_STORE = 4;
   OPENSSL_CRYPTO_EX_INDEX_X509_STORE_CTX = 5;
+  OPENSSL_CRYPTO_EX_INDEX_RSA = 6;
+  OPENSSL_CRYPTO_EX_INDEX_DSA	= 7;
+  OPENSSL_CRYPTO_EX_INDEX_DH = 8;
+  OPENSSL_CRYPTO_EX_INDEX_ENGINE = 9;
+  OPENSSL_CRYPTO_EX_INDEX_X509 = 10;
+  OPENSSL_CRYPTO_EX_INDEX_UI = 11;
+  OPENSSL_CRYPTO_EX_INDEX_ECDSA	= 12;
+  OPENSSL_CRYPTO_EX_INDEX_ECDH = 13;
+  OPENSSL_CRYPTO_EX_INDEX_COMP = 14;
+  OPENSSL_CRYPTO_EX_INDEX_STORE	= 15;
+  OPENSSL_CRYPTO_EX_INDEX_USER = 100;
+
   OPENSSL_CRYPTO_F_CRYPTO_GET_EX_NEW_INDEX = 100;
+  OPENSSL_CRYPTO_F_CRYPTO_GET_NEW_DYNLOCKID	= 103;
   OPENSSL_CRYPTO_F_CRYPTO_GET_NEW_LOCKID = 101;
   OPENSSL_CRYPTO_F_CRYPTO_SET_EX_DATA = 102;
+  OPENSSL_CRYPTO_F_DEF_ADD_INDEX = 104;
+  OPENSSL_CRYPTO_F_DEF_GET_CLASS = 105;
+  OPENSSL_CRYPTO_F_INT_DUP_EX_DATA = 106;
+  OPENSSL_CRYPTO_F_INT_FREE_EX_DATA	= 107;
+  OPENSSL_CRYPTO_F_INT_NEW_EX_DATA = 108;
+  OPENSSL_CRYPTO_R_NO_DYNLOCK_CREATE_CALLBACK = 100;
   OPENSSL_CRYPTO_LOCK = 1;
   OPENSSL_CRYPTO_LOCK_BIO = 19;
   OPENSSL_CRYPTO_LOCK_DSA = 8;
@@ -1211,6 +1217,9 @@ const
   OPENSSL_CRYPTO_READ = 4;
   OPENSSL_CRYPTO_UNLOCK = 2;
   OPENSSL_CRYPTO_WRITE = 8;
+  OPENSSL_V_CRYPTO_MDEBUG_TIME = $1;
+  OPENSSL_V_CRYPTO_MDEBUG_THREAD = $2;
+
   {$IFNDEF OPENSSL_NO_AES}
   OPENSSL_AES_ENCRYPT = 1;
   OPENSSL_AES_DECRYPT = 0;
@@ -1579,6 +1588,185 @@ const
   OPENSSL_EVP_R_WRONG_PUBLIC_KEY_TYPE = 110;
   OPENSSL_EVP_R_SEED_KEY_SETUP_FAILED = 162;
 
+{$IFNDEF OPENSSL_NO_ENGINE}
+//* These flags are used to control combinations of algorithm (methods)
+// * by bitwise "OR"ing. */
+  OPENSSL_ENGINE_METHOD_RSA : TIdC_UINT = $0001;
+  OPENSSL_ENGINE_METHOD_DSA	: TIdC_UINT = $0002;
+  OPENSSL_ENGINE_METHOD_DH : TIdC_UINT = $0004;
+  OPENSSL_ENGINE_METHOD_RAND : TIdC_UINT = $0008;
+  OPENSSL_ENGINE_METHOD_ECDH : TIdC_UINT = $0010;
+  OPENSSL_ENGINE_METHOD_ECDSA	: TIdC_UINT = $0020;
+  OPENSSL_ENGINE_METHOD_CIPHERS	: TIdC_UINT = $0040;
+  OPENSSL_ENGINE_METHOD_DIGESTS	: TIdC_UINT = $0080;
+  OPENSSL_ENGINE_METHOD_STORE	: TIdC_UINT = $0100;
+//* Obvious all-or-nothing cases. */
+  OPENSSL_ENGINE_METHOD_ALL	: TIdC_UINT = $FFFF;
+  OPENSSL_ENGINE_METHOD_NONE : TIdC_UINT = $0000;
+  OPENSSL_ENGINE_TABLE_FLAG_NOINIT : TIdC_UINT = $0001;
+
+  OPENSSL_ENGINE_FLAGS_MANUAL_CMD_CTRL : TIdC_INT = $0002;
+  OPENSSL_ENGINE_FLAGS_BY_ID_COPY	: TIdC_INT = $0004;
+  OPENSSL_ENGINE_CMD_FLAG_NUMERIC	: TIdC_UINT = $0001;
+  OPENSSL_ENGINE_CMD_FLAG_STRING : TIdC_UINT = $0002;
+  OPENSSL_ENGINE_CMD_FLAG_NO_INPUT : TIdC_UINT = $0004;
+  OPENSSL_ENGINE_CMD_FLAG_INTERNAL : TIdC_UINT = $0008;
+
+  OPENSSL_ENGINE_CTRL_SET_LOGSTREAM	= 1;
+  OPENSSL_ENGINE_CTRL_SET_PASSWORD_CALLBACK = 2;
+  OPENSSL_ENGINE_CTRL_HUP	= 3;
+  //* Close and reinitialise any
+	// handles/connections etc. */
+  OPENSSL_ENGINE_CTRL_SET_USER_INTERFACE = 4; //* Alternative to callback */
+  OPENSSL__CALLBACK_DATA = 5;
+  //* User-specific data, used
+	//  when calling the password
+	//  callback and the user
+	//  interface */
+  OPENSSL_D_CONFIGURATION	= 6;
+  //* Load a configuration, given
+	//a string that represents a
+	//file name or so */
+  OPENSSL_D_SECTION	= 7;
+  ///* Load data from a given
+	//section in the already loaded
+	//configuration */
+
+////* Returns non-zero if the supplied ENGINE has a ctrl() handler. If "not", then
+// * all the remaining control commands will return failure, so it is worth
+// * checking this first if the caller is trying to "discover" the engine's
+// * capabilities and doesn't want errors generated unnecessarily. */
+  OPENSSL_ENGINE_CTRL_HAS_CTRL_FUNCTION	= 10;
+///* Returns a positive command number for the first command supported by the
+// * engine. Returns zero if no ctrl commands are supported. */
+  OPENSSL_ENGINE_CTRL_GET_FIRST_CMD_TYPE = 11;
+///* The 'long' argument specifies a command implemented by the engine, and the
+// * return value is the next command supported, or zero if there are no more. */
+  OPENSSL_ENGINE_CTRL_GET_NEXT_CMD_TYPE = 12;
+///* The 'void*' argument is a command name (cast from 'const char *'), and the
+// * return value is the command that corresponds to it. */
+  OPENSSL_ENGINE_CTRL_GET_CMD_FROM_NAME = 13;
+///* The next two allow a command to be converted into its corresponding string
+// * form. In each case, the 'long' argument supplies the command. In the NAME_LEN
+// * case, the return value is the length of the command name (not counting a
+// * trailing EOL). In the NAME case, the 'void*' argument must be a string buffer
+// * large enough, and it will be populated with the name of the command (WITH a
+// * trailing EOL). */
+  OPENSSL_ENGINE_CTRL_GET_NAME_LEN_FROM_CMD = 14;
+  OPENSSL_ENGINE_CTRL_GET_NAME_FROM_CMD	= 15;
+//* The next two are similar but give a "short description" of a command. */
+  OPENSSL_ENGINE_CTRL_GET_DESC_LEN_FROM_CMD	= 16;
+  OPENSSL_ENGINE_CTRL_GET_DESC_FROM_CMD = 17;
+///* With this command, the return value is the OR'd combination of
+// * ENGINE_CMD_FLAG_*** values that indicate what kind of input a given
+// * engine-specific ctrl command expects. */
+  OPENSSL_ENGINE_CTRL_GET_CMD_FLAGS	= 18;
+
+///* ENGINE implementations should start the numbering of their own control
+// * commands from this value. (ie. ENGINE_CMD_BASE, ENGINE_CMD_BASE + 1, etc). */
+  OPENSSL_ENGINE_CMD_BASE = 200;
+
+///* NB: These 2 nCipher "chil" control commands are deprecated, and their
+// * functionality is now available through ENGINE-specific control commands
+// * (exposed through the above-mentioned 'CMD'-handling). Code using these 2
+// * commands should be migrated to the more general command handling before these
+// * are removed. */
+
+//* Flags specific to the nCipher "chil" engine */
+  OPENSSL_ENGINE_CTRL_CHIL_SET_FORKCHECK = 100;
+///* Depending on the value of the (long)i argument, this sets or
+// * unsets the SimpleForkCheck flag in the CHIL API to enable or
+// * disable checking and workarounds for applications that fork().
+// */
+  OPENSSL_ENGINE_CTRL_CHIL_NO_LOCKING	=	101;
+///* This prevents the initialisation function from providing mutex
+// * callbacks to the nCipher library. */
+
+///* Binary/behaviour compatibility levels */
+  OPENSSL_OSSL_DYNAMIC_VERSION	: TIdC_UINT = $00020000;
+///* Binary versions older than this are too old for us (whether we're a loader or
+// * a loadee) */
+  OPENSSL_OSSL_DYNAMIC_OLDEST	: TIdC_UINT = $00020000;
+//* Function codes. */
+  OPENSSL_ENGINE_F_DYNAMIC_CTRL	= 180;
+  OPENSSL_ENGINE_F_DYNAMIC_GET_DATA_CTX = 181;
+  OPENSSL_ENGINE_F_DYNAMIC_LOAD = 182;
+  OPENSSL_ENGINE_F_DYNAMIC_SET_DATA_CTX	= 183;
+  OPENSSL_ENGINE_F_ENGINE_ADD	= 105;
+  OPENSSL_ENGINE_F_ENGINE_BY_ID	= 106;
+  OPENSSL_ENGINE_F_ENGINE_CMD_IS_EXECUTABLE	= 170;
+  OPENSSL_ENGINE_F_ENGINE_CTRL = 142;
+  OPENSSL_ENGINE_F_ENGINE_CTRL_CMD = 178;
+  OPENSSL_ENGINE_F_ENGINE_CTRL_CMD_STRING	= 171;
+  OPENSSL_ENGINE_F_ENGINE_FINISH = 107;
+  OPENSSL_ENGINE_F_ENGINE_FREE_UTIL	= 108;
+  OPENSSL_ENGINE_F_ENGINE_GET_CIPHER = 185;
+  OPENSSL_ENGINE_F_ENGINE_GET_DEFAULT_TYPE = 177;
+  OPENSSL_ENGINE_F_ENGINE_GET_DIGEST = 186;
+  OPENSSL_ENGINE_F_ENGINE_GET_NEXT = 115;
+  OPENSSL_ENGINE_F_ENGINE_GET_PREV = 116;
+  OPENSSL_ENGINE_F_ENGINE_INIT = 119;
+  OPENSSL_ENGINE_F_ENGINE_LIST_ADD = 120;
+  OPENSSL_ENGINE_F_ENGINE_LIST_REMOVE	= 121;
+  OPENSSL_ENGINE_F_ENGINE_LOAD_PRIVATE_KEY = 150;
+  OPENSSL_ENGINE_F_ENGINE_LOAD_PUBLIC_KEY	= 151;
+  OPENSSL_ENGINE_F_ENGINE_LOAD_SSL_CLIENT_CERT = 192;
+  OPENSSL_ENGINE_F_ENGINE_NEW	= 122;
+  OPENSSL_ENGINE_F_ENGINE_REMOVE = 123;
+  OPENSSL_ENGINE_F_ENGINE_SET_DEFAULT_STRING = 189;
+  OPENSSL_ENGINE_F_ENGINE_SET_DEFAULT_TYPE = 126;
+  OPENSSL_ENGINE_F_ENGINE_SET_ID = 129;
+  OPENSSL_ENGINE_F_ENGINE_SET_NAME = 130;
+  OPENSSL_ENGINE_F_ENGINE_TABLE_REGISTER = 184;
+  OPENSSL_ENGINE_F_ENGINE_UNLOAD_KEY = 152;
+  OPENSSL_ENGINE_F_ENGINE_UNLOCKED_FINISH	= 191;
+  OPENSSL_ENGINE_F_ENGINE_UP_REF = 190;
+  OPENSSL_ENGINE_F_INT_CTRL_HELPER = 172;
+  OPENSSL_ENGINE_F_INT_ENGINE_CONFIGURE	= 188;
+  OPENSSL_ENGINE_F_INT_ENGINE_MODULE_INIT	= 187;
+  OPENSSL_ENGINE_F_LOG_MESSAGE = 141;
+
+//* Reason codes. */
+  OPENSSL_ENGINE_R_ALREADY_LOADED	= 100;
+  OPENSSL_ENGINE_R_ARGUMENT_IS_NOT_A_NUMBER	= 133;
+  OPENSSL_ENGINE_R_CMD_NOT_EXECUTABLE	= 134;
+  OPENSSL_ENGINE_R_COMMAND_TAKES_INPUT = 135;
+  OPENSSL_ENGINE_R_COMMAND_TAKES_NO_INPUT	= 136;
+  OPENSSL_ENGINE_R_CONFLICTING_ENGINE_ID = 103;
+  OPENSSL_ENGINE_R_CTRL_COMMAND_NOT_IMPLEMENTED = 119;
+  OPENSSL_ENGINE_R_DH_NOT_IMPLEMENTED	= 139;
+  OPENSSL_ENGINE_R_DSA_NOT_IMPLEMENTED = 140;
+  OPENSSL_ENGINE_R_DSO_FAILURE = 104;
+  OPENSSL_ENGINE_R_DSO_NOT_FOUND = 132;
+  OPENSSL_ENGINE_R_ENGINES_SECTION_ERROR = 148;
+  OPENSSL_ENGINE_R_ENGINE_IS_NOT_IN_LIST = 105;
+  OPENSSL_ENGINE_R_ENGINE_SECTION_ERROR	= 149;
+  OPENSSL_ENGINE_R_FAILED_LOADING_PRIVATE_KEY	= 128;
+  OPENSSL_ENGINE_R_FAILED_LOADING_PUBLIC_KEY = 129;
+  OPENSSL_ENGINE_R_FINISH_FAILED = 106;
+  OPENSSL_ENGINE_R_GET_HANDLE_FAILED = 107;
+  OPENSSL_ENGINE_R_ID_OR_NAME_MISSING	= 108;
+  OPENSSL_ENGINE_R_INIT_FAILED = 109;
+  OPENSSL_ENGINE_R_INTERNAL_LIST_ERROR = 110;
+  OPENSSL_ENGINE_R_INVALID_ARGUMENT = 143;
+  OPENSSL_ENGINE_R_INVALID_CMD_NAME	= 137;
+  OPENSSL_ENGINE_R_INVALID_CMD_NUMBER	= 138;
+  OPENSSL_ENGINE_R_INVALID_INIT_VALUE	= 151;
+  OPENSSL_ENGINE_R_INVALID_STRING	= 150;
+  OPENSSL_ENGINE_R_NOT_INITIALISED = 117;
+  OPENSSL_ENGINE_R_NOT_LOADED	= 112;
+  OPENSSL_ENGINE_R_NO_CONTROL_FUNCTION = 120;
+  OPENSSL_ENGINE_R_NO_INDEX	= 144;
+  OPENSSL_ENGINE_R_NO_LOAD_FUNCTION	= 125;
+  OPENSSL_ENGINE_R_NO_REFERENCE	= 130;
+  OPENSSL_ENGINE_R_NO_SUCH_ENGINE	= 116;
+  OPENSSL_ENGINE_R_NO_UNLOAD_FUNCTION	= 126;
+  OPENSSL_ENGINE_R_PROVIDE_PARAMETERS	= 113;
+  OPENSSL_ENGINE_R_RSA_NOT_IMPLEMENTED = 141;
+  OPENSSL_ENGINE_R_UNIMPLEMENTED_CIPHER	= 146;
+  OPENSSL_ENGINE_R_UNIMPLEMENTED_DIGEST	= 147;
+  OPENSSL_ENGINE_R_VERSION_INCOMPATIBILITY = 145;
+{$ENDIF}
   OPENSSL_MSS_EXIT_FAILURE = 1;
   OPENSSL_MSS_EXIT_SUCCESS = 0;
   OPENSSL_FILENAME_MAX = 1024;
@@ -3978,24 +4166,6 @@ const
   OPENSSL_ERR_TXT_STRING = $02;
   OPENSSL_ERR_NUM_ERRORS = 16;
 
-type
-  ERR_string_data = record
-    error : TIdC_ULONG;
-   	_string : PAnsiChar;
-  end;
-  PERR_string_data = ^ERR_string_data;
-  TERR_STATE = record
-    PID: TIdC_UINT;
-    err_flags : array [0..OPENSSL_ERR_NUM_ERRORS - 1] of TIdC_INT;
-    err_buffer: array[0..OPENSSL_ERR_NUM_ERRORS-1] of TIdC_UINT;
-    err_data : array [0..OPENSSL_ERR_NUM_ERRORS -1] of PAnsiChar;
-    err_data_flags : array [0..OPENSSL_ERR_NUM_ERRORS -1] of TIdC_INT;
-    err_file: array[0..OPENSSL_ERR_NUM_ERRORS-1] of PAnsiChar;
-    err_line: array[0..OPENSSL_ERR_NUM_ERRORS-1] of TIdC_INT;
-    top: TIdC_INT;
-    bottom: TIdC_INT;
-  end; // record
-
 const
   // library
   OPENSSL_ERR_LIB_NONE = 1;
@@ -4061,6 +4231,59 @@ const
   OPENSSL_SSL_PKEY_DH_RSA = 3;
   OPENSSL_SSL_PKEY_DH_DSA = 4;
   OPENSSL_SSL_PKEY_NUM = 5;
+
+//* These are the possible flags.  They can be or'ed together. */
+//* Use to have echoing of input */
+  OPENSSL_UI_INPUT_FLAG_ECHO = $01;
+///* Use a default password.  Where that password is found is completely
+//   up to the application, it might for example be in the user data set
+//   with UI_add_user_data().  It is not recommended to have more than
+//   one input in each UI being marked with this flag, or the application
+//   might get confused. */
+  OPENSSL_UI_INPUT_FLAG_DEFAULT_PWD	= $02;
+
+//* The user of these routines may want to define flags of their own.  The core
+//   UI won't look at those, but will pass them on to the method routines.  They
+//   must use higher bits so they don't get confused with the UI bits above.
+//   UI_INPUT_FLAG_USER_BASE tells which is the lowest bit to use.  A good
+//   example of use is this:
+
+//	#define MY_UI_FLAG1	(0x01 << UI_INPUT_FLAG_USER_BASE)
+
+//*/
+  OPENSSL_UI_INPUT_FLAG_USER_BASE	= 16;
+  //IO_ctrl commands
+//* The commands */
+//* Use UI_CONTROL_PRINT_ERRORS with the value 1 to have UI_process print the
+//   OpenSSL error stack before printing any info or added error messages and
+//   before any prompting. */
+  OPENSSL_UI_CTRL_PRINT_ERRORS = 1;
+//* Check if a UI_process() is possible to do again with the same instance of
+//   a user interface.  This makes UI_ctrl() return 1 if it is redoable, and 0
+//   if not. */
+  OPENSSL_UI_CTRL_IS_REDOABLE	=	2;
+//* Function codes. */
+  OPENSSL_UI_F_GENERAL_ALLOCATE_BOOLEAN = 108;
+  OPENSSL_UI_F_GENERAL_ALLOCATE_PROMPT = 109;
+  OPENSSL_UI_F_GENERAL_ALLOCATE_STRING = 100;
+  OPENSSL_UI_F_UI_CTRL = 111;
+  OPENSSL_UI_F_UI_DUP_ERROR_STRING = 101;
+  OPENSSL_UI_F_UI_DUP_INFO_STRING = 102;
+  OPENSSL_UI_F_UI_DUP_INPUT_BOOLEAN = 110;
+  OPENSSL_UI_F_UI_DUP_INPUT_STRING = 103;
+  OPENSSL_UI_F_UI_DUP_VERIFY_STRING = 106;
+  OPENSSL_UI_F_UI_GET0_RESULT	= 107;
+  OPENSSL_UI_F_UI_NEW_METHOD = 104;
+  OPENSSL_UI_F_UI_SET_RESULT = 105;
+
+//* Reason codes. */
+  OPENSSL_UI_R_COMMON_OK_AND_CANCEL_CHARACTERS = 104;
+  OPENSSL_UI_R_INDEX_TOO_LARGE = 102;
+  OPENSSL_UI_R_INDEX_TOO_SMALL = 103;
+  OPENSSL_UI_R_NO_RESULT_BUFFER	= 105;
+  OPENSSL_UI_R_RESULT_TOO_LARGE	= 100;
+  OPENSSL_UI_R_RESULT_TOO_SMALL	= 101;
+  OPENSSL_UI_R_UNKNOWN_CONTROL_COMMAND = 106;
 
 {$DEFINE ERR_file_name__FILE_}
 {$IFNDEF NO_ERR}
@@ -4237,7 +4460,24 @@ type
       {$ENDIF}
     {$ENDIF}
   {$ENDIF}
-
+  ERR_string_data = record
+    error : TIdC_ULONG;
+   	_string : PAnsiChar;
+  end;
+  PERR_string_data = ^ERR_string_data;
+  ERR_STATE = record
+    PID: TIdC_UINT;
+    err_flags : array [0..OPENSSL_ERR_NUM_ERRORS - 1] of TIdC_INT;
+    err_buffer: array[0..OPENSSL_ERR_NUM_ERRORS-1] of TIdC_UINT;
+    err_data : array [0..OPENSSL_ERR_NUM_ERRORS -1] of PAnsiChar;
+    err_data_flags : array [0..OPENSSL_ERR_NUM_ERRORS -1] of TIdC_INT;
+    err_file: array[0..OPENSSL_ERR_NUM_ERRORS-1] of PAnsiChar;
+    err_line: array[0..OPENSSL_ERR_NUM_ERRORS-1] of TIdC_INT;
+    top: TIdC_INT;
+    bottom: TIdC_INT;
+  end; // record
+  TERR_STATE = ERR_STATE;
+  PERR_FNS = Pointer;
   //rand.h
   RAND_METHOD = record
     seed : procedure (const buf : Pointer; num : TIdC_INT) cdecl;
@@ -4418,24 +4658,401 @@ type
     num,md_len : TIdC_UINT;
   end;
   {$ENDIF}
-
-  //engiene.h
-//  ENGINE = record
-    //I don't have any info about record fields.
-//  end;
-  PENGINE = Pointer;//^ENGINE;
-
+   //ui.h
+   PUI_METHOD = Pointer;  //^UI_METHOD
+   PUI_STRING = Pointer;  //^UI_STRING;
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_UI_STRING = record
+    stack: stack;
+  end;
+  PSTACK_OF_UI_STRING = ^STACK_OF_UI_STRING;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_UI_STRING = PSTACK;
+  {$ENDIF}
+  UI_string_types = (
+  	UIT_NONE,    //=0,
+  	UIT_PROMPT,	 //* Prompt for a string */
+   	UIT_VERIFY,	 //* Prompt for a string and verify */
+   	UIT_BOOLEAN, //* Prompt for a yes/no response */
+   	UIT_INFO,		 //* Send info to the user */
+   	UIT_ERROR);	 //* Send an error message to the user */
   //crypto.h
+  OPENSSL_ITEM = record
+	  code : TIdC_INT;
+	  value : Pointer;		//* Not used for flag attributes */
+	  value_size : size_t;	//* Max size of value for output, length for input */
+	  value_length : ^size_t;	//* Returned length of value for output */
+  end;
   CRYPTO_EX_DATA = record
     sk : PSTACK;
     dummy : TIdC_INT; // gcc is screwing up this data structure :-(
   end;
   PCRYPTO_EX_DATA = ^CRYPTO_EX_DATA;
+{
+/* Some applications as well as some parts of OpenSSL need to allocate
+   and deallocate locks in a dynamic fashion.  The following typedef
+   makes this possible in a type-safe manner.  */
+/* struct CRYPTO_dynlock_value has to be defined by the application. */
+}
+  PCRYPTO_dynlock_value = Pointer;
+  CRYPTO_dynlock = record
+	  references : TIdC_INT;
+	  data : PCRYPTO_dynlock_value;
+  end;
+  PCRYPTO_dynlock = ^CRYPTO_dynlock;
 
-  //evp.h
-//  EVP_PBE_KEYGEN = record
+//* Callback types for crypto.h */
+//typedef int CRYPTO_EX_new(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
+//					int idx, long argl, void *argp);
+  CRYPTO_EX_new = function(parent : Pointer; ptr : Pointer; ad : CRYPTO_EX_DATA;
+    idx : TIdC_INT; arg1 : TIdC_LONG; argp : Pointer) : TIdC_INT; cdecl;
+//typedef void CRYPTO_EX_free(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
+//					int idx, long argl, void *argp);
+  CRYPTO_EX_free = procedure (parent : Pointer; ptr : Pointer; ad : CRYPTO_EX_DATA;
+    idx : TIdC_INT; arg1 : TIdC_LONG; argp : Pointer); cdecl;
+//typedef int CRYPTO_EX_dup(CRYPTO_EX_DATA *to, CRYPTO_EX_DATA *from, void *from_d,
+//					int idx, long argl, void *argp);
+  CRYPTO_EX_dup = function (_to : PCRYPTO_EX_DATA; from : PCRYPTO_EX_DATA;
+    from_d : Pointer; idx : TIdC_INT; arg1 : TIdC_LONG; argp : Pointer) : TIdC_INT; cdecl;
+  CRYPTO_EX_DATA_FUNCS = record
+	  argl : TIdC_LONG;	//* Arbitary long */
+	  argp : Pointer;	//* Arbitary void * */
+	  new_func : CRYPTO_EX_new;
+	  free_func : CRYPTO_EX_free;
+	  dup_func : CRYPTO_EX_dup;
+  end;
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_CRYPTO_EX_DATA_FUNCS = record
+    stack: stack;
+  end;
+  PSTACK_OF_CRYPTO_EX_DATA_FUNCS = ^STACK_OF_CRYPTO_EX_DATA_FUNCS;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_CRYPTO_EX_DATA_FUNCS = PSTACK;
+  {$ENDIF}
+  ///* An opaque type representing an implementation of "ex_data" support */
+  PCRYPTO_EX_DATA_IMPL = Pointer;
+  //bio.h
+  //http://www.openssl.org/docs/crypto/bio.html
+  PBIO = ^BIO;
+  PBIO_METHOD = ^BIO_METHOD;
+  Pbio_info_cb = procedure (_para1 : PBIO; _para2 : TIdC_INT; _para3 : PAnsiChar;
+     _para4 : TIdC_INT; _para5, _para6 : TIdC_LONG); cdecl;
+  BIO_METHOD = record
+    _type : TIdC_INT;
+    name : PAnsiChar;
+    bwrite : function(_para1 : PBIO; _para2 : PAnsiChar; _para3 : TIdC_INT) : TIdC_INT; cdecl;
+    bread : function(_para1: PBIO; _para2: PAnsiChar; _para3: TIdC_INT) : TIdC_INT; cdecl;
+    bputs : function (_para1 : PBIO; _para2 : PAnsiChar) : TIdC_INT; cdecl;
+    bgets : function (_para1 : PBIO; _para2 : PAnsiChar; _para3 : TIdC_INT) : TIdC_INT; cdecl;
+    ctrl : function (_para1 : PBIO; _para2 : TIdC_INT; _para3 : TIdC_LONG; _para4 : Pointer) : TIdC_LONG; cdecl;
+    create : function(_para1 : PBIO) : TIdC_INT; cdecl;
+    destroy : function (_para1 : PBIO) : TIdC_INT; cdecl;
+    callback_ctrl : function (_para1 : PBIO; _para2 : TIdC_INT; _para3 : pbio_info_cb): TIdC_LONG; cdecl;
+  end;
+
+  BIO = record
+    method : PBIO_METHOD;
+    // bio, mode, argp, argi, argl, ret
+    callback : function (_para1 : PBIO; _para2 : TIdC_INT; _para3 : PAnsiChar;
+       _para4 : TIdC_INT; _para5, _para6 : TIdC_LONG) : TIdC_LONG; cdecl;
+    cb_arg : PAnsiChar; // first argument for the callback
+    init : TIdC_INT;
+    shutdown : TIdC_INT;
+    flags : TIdC_INT;  // extra storage
+    retry_reason : TIdC_INT;
+    num : TIdC_INT;
+    ptr : Pointer;
+    next_bio : PBIO;  // used by filter BIOs
+    prev_bio : PBIO;  // used by filter BIOs
+    references : TIdC_INT;
+    num_read : TIdC_ULONG;
+    num_write : TIdC_ULONG;
+    ex_data : CRYPTO_EX_DATA;
+  end;
+  //struct from engine.h
+//  ENGINE = record
+    //I don't have any info about record fields.
 //  end;
-  PEVP_PBE_KEYGEN = Pointer;//^EVP_PBE_KEYGEN;
+  PENGINE = Pointer;//^ENGINE;
+  //asn1.h
+
+  //#define I2D_OF(type) int (*)(type *,unsigned char **)
+  I2D_OF_void = function(_para1 : Pointer; _para2 : PPAnsiChar) : TIdC_INT; cdecl;
+  //D2I_OF(type) type *(*)(type **,const unsigned char **,long)
+  D2I_OF_void = function (var _para1 : Pointer; const _para2 : PPAnsiChar; _para3 : TIdC_LONG) : Pointer; cdecl;
+  // This is just an opaque pointer
+ // ASN1_VALUE = record
+ // end;
+  PASN1_VALUE = Pointer;//^ASN1_VALUE;
+  PPASN1_VALUE = ^PASN1_VALUE;
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_ASN1_VALUE = record
+    stack: stack;
+  end;
+  PSTACK_OF_ASN1_VALUE = ^STACK_OF_AASN1_VALUE;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ASN1_VALUE = PSTACK;
+  {$ENDIF}
+  ASN1_OBJECT = record
+    sn, ln : PAnsiChar;
+    nid    : TIdC_INT;
+    length : TIdC_INT;
+    data   : PAnsiChar;
+    flags  : TIdC_INT; // Should we free this one
+  end;
+  PASN1_OBJECT = ^ASN1_OBJECT;
+  PPASN1_OBJECT = ^PASN1_OBJECT;
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_ASN1_OBJECT = record
+    stack: stack;
+  end;
+  PSTACK_OF_ASN1_OBJECT = ^STACK_OF_ASN1_OBJECT;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ASN1_OBJECT = PSTACK;
+  {$ENDIF}
+  PPSTACK_OF_ASN1_OBJECT = ^PSTACK_OF_ASN1_OBJECT;
+
+  asn1_string_st = record
+    length : TIdC_INT;
+    _type : TIdC_INT;
+    data : PAnsiChar;
+    { The value of the following field depends on the type being
+      held.  It is mostly being used for BIT_STRING so if the
+      input data has a non-zero 'unused bits' value, it will be
+      handled correctly }
+    flags : TIdC_LONG;
+  end;
+
+   //moved from asn1.h section here for a type definition
+  {$IFNDEF OPENSSL_EXPORT_VAR_AS_FUNCTION}
+  // ASN1_ITEM pointer exported type
+  // typedef const ASN1_ITEM ASN1_ITEM_EXP;
+  PASN1_ITEM = ^ASN1_ITEM;
+  {$ELSE}
+  // Platforms that can't easily handle shared global variables are declared
+  // as functions returning ASN1_ITEM pointers.
+
+  // ASN1_ITEM pointer exported type
+  //typedef const ASN1_ITEM * ASN1_ITEM_EXP(void);
+  PASN1_ITEM_EXP = ^ASN1_ITEM_EXP;
+  {$ENDIF}
+
+//  typedef int asn1_output_data_fn(BIO *out, BIO *data, ASN1_VALUE *val, int flags,
+//					const ASN1_ITEM *it);
+  asn1_output_data_fn = function(AOut : PBIO; data : PBIO; val : PASN1_VALUE;
+    flags : TIdC_INT; it : PASN1_ITEM): TIdC_INT; stdcall;
+
+  ASN1_STRING = asn1_string_st;
+  PASN1_STRING = ^ASN1_STRING;
+  PPASN1_STRING = ^PASN1_STRING;
+
+  ASN1_INTEGER = ASN1_STRING;
+  PASN1_INTEGER = ^ASN1_INTEGER;
+  PPASN1_INTEGER = ^PASN1_INTEGER;
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_ASN1_INTEGER = record
+    stack: stack;
+  end;
+  PSTACK_OF_ASN1_INTEGER = ^STACK_OF_ASN1_INTEGER;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ASN1_INTEGER = PSTACK;
+  {$ENDIF}
+
+  ASN1_ENUMERATED = ASN1_STRING;
+  PASN1_ENUMERATED = ^ASN1_ENUMERATED;
+  PPASN1_ENUMERATED = ^PASN1_ENUMERATED;
+
+  ASN1_BIT_STRING = ASN1_STRING;
+  PASN1_BIT_STRING = ^ASN1_BIT_STRING;
+  PPASN1_BIT_STRING = ^PASN1_BIT_STRING;
+
+  ASN1_OCTET_STRING = ASN1_STRING;
+  PASN1_OCTET_STRING = ^ASN1_OCTET_STRING;
+  PPASN1_OCTET_STRING = ^PASN1_OCTET_STRING;
+
+  ASN1_PRINTABLESTRING = ASN1_STRING;
+  PASN1_PRINTABLESTRING = ^ASN1_PRINTABLESTRING;
+  PPASN1_PRINTABLESTRING = ^PASN1_PRINTABLESTRING;
+
+  ASN1_T61STRING = ASN1_STRING;
+  PASN1_T61STRING = ^ASN1_T61STRING;
+  PPASN1_T61STRING = ^PASN1_T61STRING;
+
+  ASN1_IA5STRING = ASN1_STRING;
+  PASN1_IA5STRING = ^ASN1_IA5STRING;
+  PPASN1_IA5STRING = ^PASN1_IA5STRING;
+
+  ASN1_UTCTIME = ASN1_STRING;
+  PASN1_UTCTIME = ^ASN1_UTCTIME;
+  PPASN1_UTCTIME = ^PASN1_UTCTIME;
+
+  ASN1_GENERALIZEDTIME = ASN1_STRING;
+  PASN1_GENERALIZEDTIME = ^ASN1_GENERALIZEDTIME;
+  PPASN1_GENERALIZEDTIME = ^PASN1_GENERALIZEDTIME;
+
+  ASN1_TIME = ASN1_STRING;
+  PASN1_TIME = ^ASN1_TIME;
+  PPASN1_TIME = ^PASN1_TIME;
+
+  ASN1_GENERALSTRING = ASN1_STRING;
+  PASN1_GENERALSTRING = ^ASN1_GENERALSTRING;
+  PPASN1_GENERALSTRING = ^PASN1_GENERALSTRING;
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_ASN1_GENERALSTRING = record
+    _stack: STACK;
+  end;
+  PSTACK_OF_ASN1_GENERALSTRING =^STACK_OF_ASN1_GENERALSTRING;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+   PSTACK_OF_ASN1_GENERALSTRING = PSTACK;
+  {$ENDIF}
+
+  ASN1_UNIVERSALSTRING = ASN1_STRING;
+  PASN1_UNIVERSALSTRING = ^ASN1_UNIVERSALSTRING;
+  PPASN1_UNIVERSALSTRING = ^PASN1_UNIVERSALSTRING;
+
+  ASN1_BMPSTRING = ASN1_STRING;
+  PASN1_BMPSTRING = ^ASN1_BMPSTRING;
+  PPASN1_BMPSTRING = ^PASN1_BMPSTRING;
+
+  ASN1_VISIBLESTRING = ASN1_STRING;
+  PASN1_VISIBLESTRING = ^ASN1_VISIBLESTRING;
+  PPASN1_VISIBLESTRING = ^PASN1_VISIBLESTRING;
+
+  ASN1_UTF8STRING = ASN1_STRING;
+  PASN1_UTF8STRING = ^ASN1_UTF8STRING;
+  PPASN1_UTF8STRING = ^PASN1_UTF8STRING;
+
+  ASN1_BOOLEAN = TIdC_INT;
+  PASN1_BOOLEAN = ^ASN1_BOOLEAN;
+  PPASN1_BOOLEAN = ^PASN1_BOOLEAN;
+
+  ASN1_NULL = TIdC_INT;
+  PASN1_NULL = ^ASN1_NULL;
+  PPASN1_NULL = ^PASN1_NULL;
+
+  ASN1_TYPE = record
+    case Integer of
+      0:  (ptr: PAnsiChar);
+      1:  (boolean: ASN1_BOOLEAN);
+      2:  (asn1_string: PASN1_STRING);
+      3:  (_object: PASN1_OBJECT);
+      4:  (integer: PASN1_INTEGER);
+      5:  (enumerated: PASN1_ENUMERATED);
+      6:  (bit_string: PASN1_BIT_STRING);
+      7:  (octet_string: PASN1_OCTET_STRING);
+      8:  (printablestring: PASN1_PRINTABLESTRING);
+      9:  (t61string: PASN1_T61STRING);
+      10: (ia5string: PASN1_IA5STRING);
+      11: (generalstring: PASN1_GENERALSTRING);
+      12: (bmpstring: PASN1_BMPSTRING);
+      13: (universalstring: PASN1_UNIVERSALSTRING);
+      14: (utctime: PASN1_UTCTIME);
+      15: (generalizedtime: PASN1_GENERALIZEDTIME);
+      16: (visiblestring: PASN1_VISIBLESTRING);
+      17: (utf8string: PASN1_UTF8STRING);
+
+      { set and sequence are left complete and still
+      contain the set or sequence bytes }
+
+      18: (_set: PASN1_STRING);
+      19: (sequence: PASN1_STRING);
+  end;
+  PASN1_TYPE = ^ASN1_TYPE;
+  PPASN1_TYPE = ^PASN1_TYPE;
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_ASN1_TYPE = record
+    _stack: stack;
+  end;
+  PSTACK_OF_ASN1_TYPE = ^STACK_OF_ASN1_TYPE;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ASN1_TYPE = ^PSTACK;
+  {$ENDIF}
+
+  ASN1_CTX = record
+    p : PAnsiChar;         // work char pointer
+    eos : TIdC_INT;    // end of sequence read for indefinite encoding
+    error : TIdC_INT;  // error code to use when returning an error
+    inf : TIdC_INT;    // constructed if 0x20, indefinite is 0x21
+    tag : TIdC_INT;    // tag from last 'get object'
+    xclass : TIdC_INT; // class from last 'get object'
+    slen : TIdC_LONG;  // length of last 'get object'
+    max : PAnsiChar;       // largest value of p allowed
+    q : PAnsiChar;         // temporary variable
+    pp : PPAnsiChar;       // variable
+    line : TIdC_INT;   // used in error processing
+  end;
+  PASN1_CTX = ^ASN1_CTX;
+  PPASN1_CTX = ^PASN1_CTX;
+
+  ASN1_METHOD = record
+    i2d : i2d_of_void;
+    d2i : i2d_of_void;
+    create : function: Pointer; cdecl;
+    destroy : procedure(ptr: Pointer); cdecl;
+  end;
+  PASN1_METHOD = ^ASN1_METHOD;
+  PPASN1_METHOD = ^PASN1_METHOD;
+
+  // This is used when parsing some Netscape objects
+  ASN1_HEADER = record
+    header : PASN1_OCTET_STRING;
+    data : Pointer;
+    meth : PASN1_METHOD;
+  end;
+  PASN1_HEADER = ^ASN1_HEADER;
+  PPASN1_HEADER = ^PASN1_HEADER;
+
+  ASN1_ENCODING = record
+    enc: PAnsiChar;
+    len: TIdC_LONG;
+    modified: TIdC_INT;
+  end;
+  PASN1_ENCODING = ^ASN1_ENCODING;
+  PPASN1_ENCODING = ^ASN1_ENCODING;
+
+  ASN1_STRING_TABLE = record
+    nid : TIdC_INT;
+    minsize : TIdC_LONG;
+    maxsize : TIdC_LONG;
+    mask : TIdC_ULONG;
+    flags : TIdC_ULONG;
+  end;
+  PASN1_STRING_TABLE = ^ASN1_STRING_TABLE;
+  PPASN1_STRING_TABLE = ^ASN1_STRING_TABLE;
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_ASN1_STRING_TABLE = record
+    _stack: stack;
+  end;
+  PSTACK_OF_ASN1_STRING_TABLE = ^STACK_OF_ASN1_STRING_TABLE;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ASN1_STRING_TABLE = PSTACK;
+  {$ENDIF}
+
+
+  {$IFNDEF OPENSSL_EXPORT_VAR_AS_FUNCTION}
+  // ASN1_ITEM pointer exported type
+  // typedef const ASN1_ITEM ASN1_ITEM_EXP;
+  // ASN1_ITEM_EXP = ASN1_ITEM;
+  // PASN1_ITEM_EXP = ^ASN1_ITEM_EXP;
+   // PASN1_ITEM = ^ASN1_ITEM;
+    PASN1_ITEM_EXP = PASN1_ITEM;
+  {$ELSE}
+  // Platforms that can't easily handle shared global variables are declared
+  // as functions returning ASN1_ITEM pointers.
+
+  // ASN1_ITEM pointer exported type
+  //typedef const ASN1_ITEM * ASN1_ITEM_EXP(void);
+  ASN1_ITEM_EXP = function : PASN1_ITEM cdecl;
+//  PASN1_ITEM_EXP = ^ASN1_ITEM_EXP;
+  {$ENDIF}
 
   //rsa.h - struct rsa_st
   {$IFNDEF OPENSSL_NO_RSA}
@@ -4511,7 +5128,6 @@ type
     mt_blinding : PBN_BLINDING;
   end;
   {$ENDIF}
-
   //dh.h
   {$IFNDEF OPENSSL_NO_DH}
   PDH = ^DH;
@@ -4624,7 +5240,6 @@ type
   end;
   PPDSA = ^PDSA;
   {$ENDIF}
-
   // ec.h
   {$IFNDEF OPENSSL_NO_EC}
  // EC_METHOD = record
@@ -4652,6 +5267,303 @@ type
     //The fields are internal to OpenSSL, they are not listed in the header.
 //  end;
   PPEC_KEY = ^PEC_KEY;
+  {$ENDIF}
+  //evp.h
+//  EVP_PBE_KEYGEN = record
+//  end;
+  PEVP_PBE_KEYGEN = Pointer;//^EVP_PBE_KEYGEN;
+  //evp.h
+  //struct evp_pkey_st
+  PPEVP_PKEY = ^PEVP_PKEY;
+  PEVP_PKEY = ^EVP_PKEY;
+  EVP_PKEY_union = record
+    case byte of
+      0: (ptr : PAnsiChar);
+      {$IFNDEF OPENSSL_NO_RSA}
+      1: (rsa : PRSA);    // RSA
+      {$ENDIF}
+      {$IFNDEF OPENSSL_NO_DSA}
+      2: (dsa : PDSA);    // DSA
+      {$ENDIF}
+      {$IFNDEF OPENSSL_NO_DH}
+      3: (dh :PDH);       // DH
+      {$ENDIF}
+      {$IFNDEF OPENSSL_NO_EC}
+      4: (ec : PEC_KEY);  // ECC
+      {$ENDIF}
+  end;
+  Pevp_pkey_st    = PEVP_PKEY;
+  //this was moved from x509 section so that something here can compile.
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_X509_ATTRIBUTE = record
+    _stack: STACK;
+  end;
+  PSTACK_OF_X509_ATTRIBUTE = ^STACK_OF_X509_ATTRIBUTE;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_ATTRIBUTE = PSTACK;
+  {$ENDIF}
+  PPSTACK_OF_X509_ATTRIBUTE = ^PSTACK_OF_X509_ATTRIBUTE;
+
+  EVP_PKEY = record
+    _type : TIdC_INT;
+    save_type : TIdC_INT;
+    references : TIdC_INT;
+    pkey : EVP_PKEY_union;
+    attributes : PSTACK_OF_X509_ATTRIBUTE;  // [ 0 ]
+  end;
+
+  PEVP_MD = ^EVP_MD;
+
+  EVP_MD_CTX = record
+    digest : PEVP_MD;
+    engine : PENGINE; // functional reference if 'digest' is ENGINE-provided
+    flags : TIdC_ULONG;
+    md_data : Pointer;
+  end;
+  PEVP_MD_CTX = ^EVP_MD_CTX;
+
+  EVP_MD = record
+    _type : TIdC_INT;
+    pkey_type : TIdC_INT;
+    md_size : TIdC_INT;
+    flags : TIdC_ULONG;
+    init : function (ctx : PEVP_MD_CTX) : TIdC_INT; cdecl;
+    update : function (ctx : PEVP_MD_CTX; data : Pointer; count : size_t):TIdC_INT; cdecl;
+    _final : function (ctx : PEVP_MD_CTX; md : PAnsiChar) : TIdC_INT; cdecl;
+    copy : function (_to : PEVP_MD_CTX; from : PEVP_MD_CTX ) : TIdC_INT; cdecl;
+    cleanup : function(ctx : PEVP_MD_CTX) : TIdC_INT; cdecl;
+
+    // FIXME: prototype these some day
+    sign : function(_type : TIdC_INT; m : PAnsiChar; m_length : TIdC_UINT;
+      sigret : PAnsiChar; siglen : TIdC_UINT; key : Pointer) : TIdC_INT; cdecl;
+    verify : function(_type : TIdC_INT; m : PAnsiChar; m_length : PAnsiChar;
+      sigbuf : PAnsiChar; siglen : TIdC_UINT; key : Pointer) : TIdC_INT; cdecl;
+    required_pkey_type : array [0..4] of TIdC_INT; // EVP_PKEY_xxx
+
+    block_size : TIdC_INT;
+    ctx_size : TIdC_INT; // how big does the ctx->md_data need to be
+  end;
+
+  PPEVP_CIPHER_CTX = ^PEVP_CIPHER_CTX;
+  PEVP_CIPHER_CTX = ^EVP_CIPHER_CTX;
+
+  PEVP_CIPHER = ^EVP_CIPHER;
+  EVP_CIPHER = record
+    nid : TIdC_INT;
+    block_size : TIdC_INT;
+    key_len : TIdC_INT; // Default value for variable length ciphers
+    iv_len : TIdC_INT;
+    flags : TIdC_UINT; // Various flags
+    init : function (ctx : PEVP_CIPHER_CTX; key : PAnsiChar; iv : PAnsiChar; enc : TIdC_INT): TIdC_INT; cdecl;
+    do_cipher : function (ctx : PEVP_CIPHER_CTX; _out : PAnsiChar; _in : PAnsiChar; inl : TIdC_UINT) : TIdC_INT; cdecl;
+    cleanup : function (_para1 : PEVP_CIPHER_CTX): TIdC_INT; cdecl; // cleanup ctx
+    ctx_size : TIdC_INT;  // how big ctx->cipher_data needs to be
+    set_asn1_parameters : function (_para1 : PEVP_CIPHER_CTX;
+      _para2 : PASN1_TYPE) : TIdC_INT; cdecl; // Populate a ASN1_TYPE with parameters
+    get_asn1_parameters :function (_para1 : PEVP_CIPHER_CTX;
+      _para2 :  PASN1_TYPE) : TIdC_INT; cdecl; // Get parameters from a ASN1_TYPE
+    ctrl : function (_para1 : PEVP_CIPHER_CTX; _type : TIdC_INT; arg : TIdC_INT;
+      ptr : Pointer): TIdC_INT; cdecl; // Miscellaneous operations
+    app_data : Pointer;  // Application data
+  end;
+
+  EVP_CIPHER_CTX = record
+    cipher : PEVP_CIPHER;
+    engine : PENGINE;   // functional reference if 'cipher' is ENGINE-provided
+    encrypt: TIdC_INT;  // encrypt or decrypt
+    buf_len : TIdC_INT; // number we have left
+    oiv : array [0..OPENSSL_EVP_MAX_IV_LENGTH-1] of AnsiChar; // original iv
+    iv : array [0..OPENSSL_EVP_MAX_IV_LENGTH -1] of AnsiChar; // working iv
+    buf : array [0..OPENSSL_EVP_MAX_BLOCK_LENGTH -1] of AnsiChar; // saved partial block
+    num : TIdC_INT;     // used by cfb/ofb mode
+    app_data : Pointer; // application stuff
+    key_len : TIdC_INT; // May change for variable length cipher
+    flags : TIdC_ULONG;	// Various flags
+    cipher_data : Pointer; // per EVP data
+    final_used : TIdC_INT;
+    block_mask : TIdC_INT;
+    _final : array [0..OPENSSL_EVP_MAX_BLOCK_LENGTH-1] of AnsiChar; // possible final block
+  end;
+
+  EVP_CIPHER_INFO = record
+    cipher : PEVP_CIPHER;
+    iv : array [0..OPENSSL_EVP_MAX_IV_LENGTH -1] of AnsiChar;
+  end;
+  PEVP_CIPHER_INFO = ^EVP_CIPHER_INFO;
+  EVP_ENCODE_CTX = record
+    num : TIdC_INT;    // number saved in a partial encode/decode
+    length: TIdC_INT;  // The length is either the output line length
+                       // (in input bytes) or the shortest input line
+                       // length that is ok.  Once decoding begins,
+                       // the length is adjusted up each time a longer
+                       // line is decoded
+    enc_data:array [0..79] of AnsiChar;
+    line_num: TIdC_INT;	// number read on current line
+    expect_nl: TIdC_INT;
+  end;
+  PEVP_ENCODE_CTX = ^EVP_ENCODE_CTX;
+  //forward declarations from x509.h to make sure this compiles.
+  PX509 = ^X509;
+  PPX509 = ^PX509;
+  PX509_CRL = ^X509_CRL;
+  PX509_NAME = ^X509_NAME;
+  PX509_NAME_ENTRY = ^X509_NAME_ENTRY;
+  PX509_REQ = ^X509_REQ;
+  PX509_REQ_INFO = ^X509_REQ_INFO;
+  PPX509_REQ_INFO = ^PX509_REQ_INFO;
+  {$IFDEF DEBUG_SAFESTACK}
+  PSTACK_OF_X509_NAME_ENTRY = ^STACK_OF_X509_NAME_ENTRY;
+  PSTACK_OF_X509_REVOKED = ^STACK_OF_X509_REVOKED;
+  {$ELSE}
+  PSTACK_OF_X509_NAME_ENTRY = PSTACK;
+  PSTACK_OF_X509_REVOKED = PSTACK;
+  {$ENDIF}
+  PPSTACK_OF_X509_REVOKED = ^PSTACK_OF_X509_REVOKED;
+  PPX509_NAME =^PX509_NAME;
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_X509_NAME = record
+    _stack: STACK;
+  end;
+  PSTACK_OF_X509_NAME = ^STACK_OF_X509_NAME;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_NAME = PSTACK;
+  {$ENDIF}
+  PPSTACK_OF_X509_NAME = ^PSTACK_OF_X509_NAME;
+  //pcy_int.h
+  //Note that anything other than PSTACK should be undefined since the record
+  //members aren't exposed in the headers.
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_X509_POLICY_DATA = record
+    _stack: stack;
+  end;
+  PSTACK_OF_X509_POLICY_DATA = ^STACK_OF_X509_POLICY_DATA;
+  STACK_OF_X509_POLICY_REF = record
+    _stack: stack;
+  end;
+  PSTACK_OF_X509_POLICY_REF = ^STACK_OF_X509_POLICY_DATA;
+  STACK_OF_X509_POLICY_NODE = record
+    _stack: stack;
+  end;
+  PSTACK_OF_X509_POLICY_NODE = ^STACK_OF_X509_POLICY_NODE;
+  PSTACK_OF_POLICYQUALINFO = ^STACK_OF_POLICYQUALINFO;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_POLICY_DATA = PSTACK;
+  PSTACK_OF_X509_POLICY_REF = PSTACK;
+  PSTACK_OF_X509_POLICY_NODE = PSTACK;
+  PSTACK_OF_POLICYQUALINFO = PSTACK;
+  {$ENDIF}
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_X509V3_EXT_METHOD = record
+    _stack: stack;
+  end;
+  PSTACK_OF_X509V3_EXT_METHOD = ^STACK_OF_X509V3_EXT_METHOD;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509V3_EXT_METHOD = PSTACK;
+  {$ENDIF}
+  PPSTACK_OF_X509V3_EXT_METHOD = ^PSTACK_OF_X509V3_EXT_METHOD;
+  {$IFDEF DEBUF_SAFESTACK}
+  STACK_OF_X509 = record
+    _stack: STACK;
+  end;
+  PSTACK_OF_X509 = ^STACK_OF_X509;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509 = PSTACK;
+  {$ENDIF}
+  //engiene.h
+  {$IFNDEF OPENSSL_NO_ENGINE}
+  //* Generic function pointer */
+//typedef int (*ENGINE_GEN_FUNC_PTR)(void);
+  ENGINE_GEN_FUNC_PTR = function : TIdC_INT; cdecl;
+//  typedef int (*ENGINE_GEN_INT_FUNC_PTR)(ENGINE *);
+  ENGINE_GEN_INT_FUNC_PTR = function(Para1 : PENGINE) : TIdC_INT; cdecl;
+//typedef int (*ENGINE_CTRL_FUNC_PTR)(ENGINE *, int, long, void *, void (*f)(void));
+  ENGINE_CTRL_FUNC_PTR_F = procedure; cdecl;
+  ENGINE_CTRL_FUNC_PTR = function(Para1 : PENGINE; Para2 : TIdC_INT;
+    Para3 : TIdC_LONG; Para4 : Pointer; f : ENGINE_CTRL_FUNC_PTR_F) : TIdC_Int; cdecl;
+//typedef EVP_PKEY * (*ENGINE_LOAD_KEY_PTR)(ENGINE *, const char *,
+//	UI_METHOD *ui_method, void *callback_data);
+  ENGINE_LOAD_KEY_PTR = function(Para1 : PENGINE; Para2 : PAnsiChar;
+    ui_method : PUI_METHOD; callback_data : Pointer) : PEVP_PKEY; cdecl;
+//typedef int (*ENGINE_SSL_CLIENT_CERT_PTR)(ENGINE *, SSL *ssl,
+//	STACK_OF(X509_NAME) *ca_dn, X509 **pcert, EVP_PKEY **pkey,
+//	STACK_OF(X509) **pother, UI_METHOD *ui_method, void *callback_data);
+  ENGINE_SSL_CLIENT_CERT_PTR = function(Para1 : PENGINE; ssl : PSSL;
+    ca_dn : PSTACK_OF_X509_NAME; var pcert : PX509; var pkey : PEVP_PKEY;
+    var pother : PSTACK_OF_X509; ui_method : PUI_METHOD; callback_data : Pointer) : TIdC_Int; cdecl;
+//typedef int (*ENGINE_CIPHERS_PTR)(ENGINE *, const EVP_CIPHER **, const int **, int);
+  ENGINE_CIPHERS_PTR = function(para1 : PENGINE; var para2 : PEVP_CIPHER; var para3 : PIdC_Int; para4 : TIdC_Int) : TIdC_Int; cdecl;
+//typedef int (*ENGINE_DIGESTS_PTR)(ENGINE *, const EVP_MD **, const int **, int);
+  ENGINE_DIGESTS_PTR = function(para1 : PENGINE; var Para2 : PEVP_MD; var Para3 : PIdC_INT; para : TIdC_INT) : TIdC_INT; cdecl;
+{
+/* When compiling an ENGINE entirely as an external shared library, loadable by
+ * the "dynamic" ENGINE, these types are needed. The 'dynamic_fns' structure
+ * type provides the calling application's (or library's) error functionality
+ * and memory management function pointers to the loaded library. These should
+ * be used/set in the loaded library code so that the loading application's
+ * 'state' will be used/changed in all operations. The 'static_state' pointer
+ * allows the loaded library to know if it shares the same static data as the
+ * calling application (or library), and thus whether these callbacks need to be
+ * set or not. */
+}
+//typedef void *(*dyn_MEM_malloc_cb)(size_t);
+  dyn_MEM_malloc_cb = function(para1 : size_t) : Pointer; cdecl;
+//typedef void *(*dyn_MEM_realloc_cb)(void *, size_t);
+  dyn_MEM_realloc_cb = function (para1 : Pointer; para2 : size_t): Pointer; cdecl;
+//typedef void (*dyn_MEM_free_cb)(void *);
+  dyn_MEM_free_cb = procedure (para1 : Pointer); cdecl;
+  dynamic_MEM_fns = record
+    malloc_cb : dyn_MEM_malloc_cb;
+    realloc_cb : dyn_MEM_realloc_cb;
+    free_cb : dyn_MEM_free_cb;
+  end;
+///* FIXME: Perhaps the memory and locking code (crypto.h) should declare and use
+// * these types so we (and any other dependant code) can simplify a bit?? */
+//typedef void (*dyn_lock_locking_cb)(int,int,const char *,int);
+  dyn_lock_locking_cb = procedure (para1, para2 : TIdC_INT; para3 : PAnsiChar; para4 : TIdC_INT); cdecl;
+//typedef int (*dyn_lock_add_lock_cb)(int*,int,int,const char *,int);
+  dyn_lock_add_lock_cb = function (var para1 : TIdC_INT; para2, para3 : TIdC_INT; para4 : PAnsiChar; para5 : TIdC_INT) : TIdC_INT; cdecl;
+//typedef struct CRYPTO_dynlock_value *(*dyn_dynlock_create_cb)(
+//						const char *,int);
+  dyn_dynlock_create_cb = function (para1 : PAnsiChar; para2 : TIdC_INT) : PCRYPTO_dynlock_value; cdecl;
+//typedef void (*dyn_dynlock_lock_cb)(int,struct CRYPTO_dynlock_value *,
+//						const char *,int);
+  dyn_dynlock_lock_cb = procedure (para1 : TIdC_INT; para2 : PCRYPTO_dynlock_value); cdecl;
+//typedef void (*dyn_dynlock_destroy_cb)(struct CRYPTO_dynlock_value *,
+//						const char *,int);
+  dyn_dynlock_destroy_cb = procedure(para1 : PCRYPTO_dynlock_value; para2 : PAnsiChar; para3 : TIdC_INT); cdecl;
+//typedef struct st_dynamic_LOCK_fns {
+//	dyn_lock_locking_cb			lock_locking_cb;
+//	dyn_lock_add_lock_cb			lock_add_lock_cb;
+//	dyn_dynlock_create_cb			dynlock_create_cb;
+//	dyn_dynlock_lock_cb			dynlock_lock_cb;
+//	dyn_dynlock_destroy_cb			dynlock_destroy_cb;
+//	} dynamic_LOCK_fns;
+   dynamic_LOCK_fns = record
+     lock_locking_cb : dyn_lock_locking_cb;
+     lock_add_lock_cb : dyn_lock_add_lock_cb;
+     dynlock_create_cb : dyn_dynlock_create_cb;
+     dynlock_lock_cb : dyn_dynlock_lock_cb;
+     dynlock_destroy_cb : dyn_dynlock_destroy_cb;
+   end;
+//* The top-level structure */
+   dynamic_fns = record
+     static_state : Pointer;
+     err_fns : PERR_FNS;
+     ex_data_fns : PCRYPTO_EX_DATA_IMPL;
+     mem_fns : dynamic_MEM_fns;
+     lock_fns : dynamic_LOCK_fns;
+   end;
+// typedef unsigned long (*dynamic_v_check_fn)(unsigned long ossl_version);
+  dynamic_v_check_fn = function(ossl_version : TIdC_ULONG) : TIdC_ULONG; cdecl;
+//typedef int (*dynamic_bind_engine)(ENGINE *e, const char *id,
+//    const dynamic_fns *fns);
+  dynamic_bind_engine = function(e : PENGINE; id : PAnsiChar; fns : dynamic_fns) : TIdC_INT; cdecl;
+
   {$ENDIF}
 
   //ecdsa.h
@@ -4762,286 +5674,9 @@ type
   BUF_MEM = buf_mem_st;
   PBUF_MEM = ^BUF_MEM;
   PPBUF_MEM = ^PBUF_MEM;
-  PBIO = ^BIO;
   PFILE = Pointer;
 
-  //asn1.h
 
-  //#define I2D_OF(type) int (*)(type *,unsigned char **)
-  I2D_OF_void = function(_para1 : Pointer; _para2 : PPAnsiChar) : TIdC_INT; cdecl; 
-  //D2I_OF(type) type *(*)(type **,const unsigned char **,long)
-  D2I_OF_void = function (var _para1 : Pointer; const _para2 : PPAnsiChar; _para3 : TIdC_LONG) : Pointer; cdecl; 
-  // This is just an opaque pointer
- // ASN1_VALUE = record
- // end;
-  PASN1_VALUE = Pointer;//^ASN1_VALUE;
-  PPASN1_VALUE = ^PASN1_VALUE;
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_ASN1_VALUE = record
-    stack: stack;
-  end;
-  PSTACK_OF_ASN1_VALUE = ^STACK_OF_AASN1_VALUE;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_ASN1_VALUE = PSTACK;
-  {$ENDIF}
-  ASN1_OBJECT = record
-    sn, ln : PAnsiChar;
-    nid    : TIdC_INT;
-    length : TIdC_INT;
-    data   : PAnsiChar;
-    flags  : TIdC_INT; // Should we free this one
-  end;
-  PASN1_OBJECT = ^ASN1_OBJECT;
-  PPASN1_OBJECT = ^PASN1_OBJECT;
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_ASN1_OBJECT = record
-    stack: stack;
-  end;
-  PSTACK_OF_ASN1_OBJECT = ^STACK_OF_ASN1_OBJECT;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_ASN1_OBJECT = PSTACK;
-  {$ENDIF}
-  PPSTACK_OF_ASN1_OBJECT = ^PSTACK_OF_ASN1_OBJECT;
-
-  asn1_string_st = record
-    length : TIdC_INT;
-    _type : TIdC_INT;
-    data : PAnsiChar;
-    { The value of the following field depends on the type being
-      held.  It is mostly being used for BIT_STRING so if the
-      input data has a non-zero 'unused bits' value, it will be
-      handled correctly }
-    flags : TIdC_LONG;
-  end;
-  
-   //moved from asn1.h section here for a type definition
-  {$IFNDEF OPENSSL_EXPORT_VAR_AS_FUNCTION}
-  // ASN1_ITEM pointer exported type
-  // typedef const ASN1_ITEM ASN1_ITEM_EXP;
-  PASN1_ITEM = ^ASN1_ITEM;
-  {$ELSE}
-  // Platforms that can't easily handle shared global variables are declared
-  // as functions returning ASN1_ITEM pointers.
-
-  // ASN1_ITEM pointer exported type
-  //typedef const ASN1_ITEM * ASN1_ITEM_EXP(void);
-  PASN1_ITEM_EXP = ^ASN1_ITEM_EXP;
-  {$ENDIF}
-
-//  typedef int asn1_output_data_fn(BIO *out, BIO *data, ASN1_VALUE *val, int flags,
-//					const ASN1_ITEM *it);
-  asn1_output_data_fn = function(AOut : PBIO; data : PBIO; val : PASN1_VALUE;
-    flags : TIdC_INT; it : PASN1_ITEM): TIdC_INT; stdcall;
-
-  ASN1_STRING = asn1_string_st;
-  PASN1_STRING = ^ASN1_STRING;
-  PPASN1_STRING = ^PASN1_STRING;
-
-  ASN1_INTEGER = ASN1_STRING;
-  PASN1_INTEGER = ^ASN1_INTEGER;
-  PPASN1_INTEGER = ^PASN1_INTEGER;
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_ASN1_INTEGER = record
-    stack: stack;
-  end;
-  PSTACK_OF_ASN1_INTEGER = ^STACK_OF_ASN1_INTEGER;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_ASN1_INTEGER = PSTACK;
-  {$ENDIF}
-    
-  ASN1_ENUMERATED = ASN1_STRING;
-  PASN1_ENUMERATED = ^ASN1_ENUMERATED;
-  PPASN1_ENUMERATED = ^PASN1_ENUMERATED;
-  
-  ASN1_BIT_STRING = ASN1_STRING;
-  PASN1_BIT_STRING = ^ASN1_BIT_STRING;
-  PPASN1_BIT_STRING = ^PASN1_BIT_STRING;
-  
-  ASN1_OCTET_STRING = ASN1_STRING;
-  PASN1_OCTET_STRING = ^ASN1_OCTET_STRING;
-  PPASN1_OCTET_STRING = ^PASN1_OCTET_STRING;
-  
-  ASN1_PRINTABLESTRING = ASN1_STRING;
-  PASN1_PRINTABLESTRING = ^ASN1_PRINTABLESTRING;
-  PPASN1_PRINTABLESTRING = ^PASN1_PRINTABLESTRING;
-  
-  ASN1_T61STRING = ASN1_STRING;
-  PASN1_T61STRING = ^ASN1_T61STRING;
-  PPASN1_T61STRING = ^PASN1_T61STRING;
-  
-  ASN1_IA5STRING = ASN1_STRING;
-  PASN1_IA5STRING = ^ASN1_IA5STRING;
-  PPASN1_IA5STRING = ^PASN1_IA5STRING;
-  
-  ASN1_UTCTIME = ASN1_STRING;
-  PASN1_UTCTIME = ^ASN1_UTCTIME;
-  PPASN1_UTCTIME = ^PASN1_UTCTIME;
-  
-  ASN1_GENERALIZEDTIME = ASN1_STRING;
-  PASN1_GENERALIZEDTIME = ^ASN1_GENERALIZEDTIME;
-  PPASN1_GENERALIZEDTIME = ^PASN1_GENERALIZEDTIME;
-  
-  ASN1_TIME = ASN1_STRING;
-  PASN1_TIME = ^ASN1_TIME;
-  PPASN1_TIME = ^PASN1_TIME;
-  
-  ASN1_GENERALSTRING = ASN1_STRING;
-  PASN1_GENERALSTRING = ^ASN1_GENERALSTRING;
-  PPASN1_GENERALSTRING = ^PASN1_GENERALSTRING;
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_ASN1_GENERALSTRING = record
-    _stack: STACK;
-  end;
-  PSTACK_OF_ASN1_GENERALSTRING =^STACK_OF_ASN1_GENERALSTRING;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-   PSTACK_OF_ASN1_GENERALSTRING = PSTACK;
-  {$ENDIF}
-
-  ASN1_UNIVERSALSTRING = ASN1_STRING;
-  PASN1_UNIVERSALSTRING = ^ASN1_UNIVERSALSTRING;
-  PPASN1_UNIVERSALSTRING = ^PASN1_UNIVERSALSTRING;
-  
-  ASN1_BMPSTRING = ASN1_STRING;
-  PASN1_BMPSTRING = ^ASN1_BMPSTRING;
-  PPASN1_BMPSTRING = ^PASN1_BMPSTRING;
-  
-  ASN1_VISIBLESTRING = ASN1_STRING;
-  PASN1_VISIBLESTRING = ^ASN1_VISIBLESTRING;
-  PPASN1_VISIBLESTRING = ^PASN1_VISIBLESTRING;
-  
-  ASN1_UTF8STRING = ASN1_STRING;
-  PASN1_UTF8STRING = ^ASN1_UTF8STRING;
-  PPASN1_UTF8STRING = ^PASN1_UTF8STRING;
-  
-  ASN1_BOOLEAN = TIdC_INT;
-  PASN1_BOOLEAN = ^ASN1_BOOLEAN;
-  PPASN1_BOOLEAN = ^PASN1_BOOLEAN;
-  
-  ASN1_NULL = TIdC_INT;
-  PASN1_NULL = ^ASN1_NULL;
-  PPASN1_NULL = ^PASN1_NULL;
-
-  ASN1_TYPE = record 
-    case Integer of 
-      0:  (ptr: PAnsiChar); 
-      1:  (boolean: ASN1_BOOLEAN); 
-      2:  (asn1_string: PASN1_STRING); 
-      3:  (_object: PASN1_OBJECT); 
-      4:  (integer: PASN1_INTEGER); 
-      5:  (enumerated: PASN1_ENUMERATED); 
-      6:  (bit_string: PASN1_BIT_STRING); 
-      7:  (octet_string: PASN1_OCTET_STRING); 
-      8:  (printablestring: PASN1_PRINTABLESTRING); 
-      9:  (t61string: PASN1_T61STRING); 
-      10: (ia5string: PASN1_IA5STRING); 
-      11: (generalstring: PASN1_GENERALSTRING); 
-      12: (bmpstring: PASN1_BMPSTRING); 
-      13: (universalstring: PASN1_UNIVERSALSTRING); 
-      14: (utctime: PASN1_UTCTIME); 
-      15: (generalizedtime: PASN1_GENERALIZEDTIME); 
-      16: (visiblestring: PASN1_VISIBLESTRING); 
-      17: (utf8string: PASN1_UTF8STRING); 
- 
-      { set and sequence are left complete and still   
-      contain the set or sequence bytes } 
- 
-      18: (_set: PASN1_STRING); 
-      19: (sequence: PASN1_STRING); 
-  end;
-  PASN1_TYPE = ^ASN1_TYPE;
-  PPASN1_TYPE = ^PASN1_TYPE;
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_ASN1_TYPE = record
-    _stack: stack;
-  end;
-  PSTACK_OF_ASN1_TYPE = ^STACK_OF_ASN1_TYPE;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_ASN1_TYPE = ^PSTACK;
-  {$ENDIF}
-         
-  ASN1_CTX = record
-    p : PAnsiChar;         // work char pointer
-    eos : TIdC_INT;    // end of sequence read for indefinite encoding
-    error : TIdC_INT;  // error code to use when returning an error
-    inf : TIdC_INT;    // constructed if 0x20, indefinite is 0x21
-    tag : TIdC_INT;    // tag from last 'get object'
-    xclass : TIdC_INT; // class from last 'get object'
-    slen : TIdC_LONG;  // length of last 'get object'
-    max : PAnsiChar;       // largest value of p allowed
-    q : PAnsiChar;         // temporary variable
-    pp : PPAnsiChar;       // variable
-    line : TIdC_INT;   // used in error processing
-  end;
-  PASN1_CTX = ^ASN1_CTX;
-  PPASN1_CTX = ^PASN1_CTX;
-
-  ASN1_METHOD = record
-    i2d : i2d_of_void;
-    d2i : i2d_of_void;
-    create : function: Pointer; cdecl;
-    destroy : procedure(ptr: Pointer); cdecl;
-  end;
-  PASN1_METHOD = ^ASN1_METHOD;
-  PPASN1_METHOD = ^PASN1_METHOD;
- 
-  // This is used when parsing some Netscape objects
-  ASN1_HEADER = record
-    header : PASN1_OCTET_STRING;
-    data : Pointer;
-    meth : PASN1_METHOD;
-  end;
-  PASN1_HEADER = ^ASN1_HEADER;
-  PPASN1_HEADER = ^PASN1_HEADER;
-
-  ASN1_ENCODING = record
-    enc: PAnsiChar;
-    len: TIdC_LONG;
-    modified: TIdC_INT;
-  end;
-  PASN1_ENCODING = ^ASN1_ENCODING;
-  PPASN1_ENCODING = ^ASN1_ENCODING;
-
-  ASN1_STRING_TABLE = record
-    nid : TIdC_INT;
-    minsize : TIdC_LONG;
-    maxsize : TIdC_LONG;
-    mask : TIdC_ULONG;
-    flags : TIdC_ULONG;
-  end;
-  PASN1_STRING_TABLE = ^ASN1_STRING_TABLE;
-  PPASN1_STRING_TABLE = ^ASN1_STRING_TABLE;
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_ASN1_STRING_TABLE = record
-    _stack: stack;
-  end;
-  PSTACK_OF_ASN1_STRING_TABLE = ^STACK_OF_ASN1_STRING_TABLE;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_ASN1_STRING_TABLE = PSTACK;
-  {$ENDIF}
-
-
-  {$IFNDEF OPENSSL_EXPORT_VAR_AS_FUNCTION}
-  // ASN1_ITEM pointer exported type
-  // typedef const ASN1_ITEM ASN1_ITEM_EXP;
-  // ASN1_ITEM_EXP = ASN1_ITEM;
-  // PASN1_ITEM_EXP = ^ASN1_ITEM_EXP;
-   // PASN1_ITEM = ^ASN1_ITEM;
-    PASN1_ITEM_EXP = PASN1_ITEM;
-  {$ELSE}
-  // Platforms that can't easily handle shared global variables are declared
-  // as functions returning ASN1_ITEM pointers.
-
-  // ASN1_ITEM pointer exported type
-  //typedef const ASN1_ITEM * ASN1_ITEM_EXP(void);
-  ASN1_ITEM_EXP = function : PASN1_ITEM cdecl;
-//  PASN1_ITEM_EXP = ^ASN1_ITEM_EXP;
-  {$ENDIF}
 
   //asn1t.h
   ASN1_TEMPLATE = record
@@ -5173,137 +5808,6 @@ type
     enc_offset : TIdC_INT;		//* Offset of ASN1_ENCODING structure */
   end;
   PASN1_AUX = ^ASN1_AUX;
-  //evp.h
-  //struct evp_pkey_st
-  PPEVP_PKEY = ^PEVP_PKEY;
-  PEVP_PKEY = ^EVP_PKEY;
-  EVP_PKEY_union = record
-    case byte of
-      0: (ptr : PAnsiChar);
-      {$IFNDEF OPENSSL_NO_RSA}
-      1: (rsa : PRSA);    // RSA
-      {$ENDIF}
-      {$IFNDEF OPENSSL_NO_DSA}
-      2: (dsa : PDSA);    // DSA
-      {$ENDIF}
-      {$IFNDEF OPENSSL_NO_DH}
-      3: (dh :PDH);       // DH
-      {$ENDIF}
-      {$IFNDEF OPENSSL_NO_EC}
-      4: (ec : PEC_KEY);  // ECC
-      {$ENDIF}
-  end;
-  Pevp_pkey_st    = PEVP_PKEY;
-  //this was moved from x509 section so that something here can compile.
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_X509_ATTRIBUTE = record
-    _stack: STACK;
-  end;
-  PSTACK_OF_X509_ATTRIBUTE = ^STACK_OF_X509_ATTRIBUTE;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_X509_ATTRIBUTE = PSTACK;
-  {$ENDIF}
-  PPSTACK_OF_X509_ATTRIBUTE = ^PSTACK_OF_X509_ATTRIBUTE;
-
-  EVP_PKEY = record
-    _type : TIdC_INT;
-    save_type : TIdC_INT;
-    references : TIdC_INT;
-    pkey : EVP_PKEY_union;
-    attributes : PSTACK_OF_X509_ATTRIBUTE;  // [ 0 ]
-  end;
-  
-  PEVP_MD = ^EVP_MD;
-
-  EVP_MD_CTX = record
-    digest : PEVP_MD;
-    engine : PENGINE; // functional reference if 'digest' is ENGINE-provided
-    flags : TIdC_ULONG;
-    md_data : Pointer;
-  end;
-  PEVP_MD_CTX = ^EVP_MD_CTX;
-        
-  EVP_MD = record
-    _type : TIdC_INT;
-    pkey_type : TIdC_INT;
-    md_size : TIdC_INT;
-    flags : TIdC_ULONG;
-    init : function (ctx : PEVP_MD_CTX) : TIdC_INT; cdecl;
-    update : function (ctx : PEVP_MD_CTX; data : Pointer; count : size_t):TIdC_INT; cdecl;
-    _final : function (ctx : PEVP_MD_CTX; md : PAnsiChar) : TIdC_INT; cdecl;
-    copy : function (_to : PEVP_MD_CTX; from : PEVP_MD_CTX ) : TIdC_INT; cdecl;
-    cleanup : function(ctx : PEVP_MD_CTX) : TIdC_INT; cdecl;
-
-    // FIXME: prototype these some day
-    sign : function(_type : TIdC_INT; m : PAnsiChar; m_length : TIdC_UINT;
-      sigret : PAnsiChar; siglen : TIdC_UINT; key : Pointer) : TIdC_INT; cdecl;
-    verify : function(_type : TIdC_INT; m : PAnsiChar; m_length : PAnsiChar;
-      sigbuf : PAnsiChar; siglen : TIdC_UINT; key : Pointer) : TIdC_INT; cdecl;
-    required_pkey_type : array [0..4] of TIdC_INT; // EVP_PKEY_xxx
-
-    block_size : TIdC_INT;
-    ctx_size : TIdC_INT; // how big does the ctx->md_data need to be
-  end;
-
-  PPEVP_CIPHER_CTX = ^PEVP_CIPHER_CTX;
-  PEVP_CIPHER_CTX = ^EVP_CIPHER_CTX;
-  
-  PEVP_CIPHER = ^EVP_CIPHER;
-  EVP_CIPHER = record
-    nid : TIdC_INT;
-    block_size : TIdC_INT;
-    key_len : TIdC_INT; // Default value for variable length ciphers
-    iv_len : TIdC_INT;
-    flags : TIdC_UINT; // Various flags
-    init : function (ctx : PEVP_CIPHER_CTX; key : PAnsiChar; iv : PAnsiChar; enc : TIdC_INT): TIdC_INT; cdecl;
-    do_cipher : function (ctx : PEVP_CIPHER_CTX; _out : PAnsiChar; _in : PAnsiChar; inl : TIdC_UINT) : TIdC_INT; cdecl;
-    cleanup : function (_para1 : PEVP_CIPHER_CTX): TIdC_INT; cdecl; // cleanup ctx
-    ctx_size : TIdC_INT;  // how big ctx->cipher_data needs to be
-    set_asn1_parameters : function (_para1 : PEVP_CIPHER_CTX;
-      _para2 : PASN1_TYPE) : TIdC_INT; cdecl; // Populate a ASN1_TYPE with parameters
-    get_asn1_parameters :function (_para1 : PEVP_CIPHER_CTX;
-      _para2 :  PASN1_TYPE) : TIdC_INT; cdecl; // Get parameters from a ASN1_TYPE
-    ctrl : function (_para1 : PEVP_CIPHER_CTX; _type : TIdC_INT; arg : TIdC_INT;
-      ptr : Pointer): TIdC_INT; cdecl; // Miscellaneous operations
-    app_data : Pointer;  // Application data
-  end;
-
-  EVP_CIPHER_CTX = record
-    cipher : PEVP_CIPHER;
-    engine : PENGINE;   // functional reference if 'cipher' is ENGINE-provided
-    encrypt: TIdC_INT;  // encrypt or decrypt
-    buf_len : TIdC_INT; // number we have left
-    oiv : array [0..OPENSSL_EVP_MAX_IV_LENGTH-1] of AnsiChar; // original iv
-    iv : array [0..OPENSSL_EVP_MAX_IV_LENGTH -1] of AnsiChar; // working iv
-    buf : array [0..OPENSSL_EVP_MAX_BLOCK_LENGTH -1] of AnsiChar; // saved partial block
-    num : TIdC_INT;     // used by cfb/ofb mode
-    app_data : Pointer; // application stuff
-    key_len : TIdC_INT; // May change for variable length cipher
-    flags : TIdC_ULONG;	// Various flags
-    cipher_data : Pointer; // per EVP data
-    final_used : TIdC_INT;
-    block_mask : TIdC_INT;
-    _final : array [0..OPENSSL_EVP_MAX_BLOCK_LENGTH-1] of AnsiChar; // possible final block
-  end;
-
-  EVP_CIPHER_INFO = record
-    cipher : PEVP_CIPHER;
-    iv : array [0..OPENSSL_EVP_MAX_IV_LENGTH -1] of AnsiChar;
-  end;
-  PEVP_CIPHER_INFO = ^EVP_CIPHER_INFO;
-  EVP_ENCODE_CTX = record
-    num : TIdC_INT;    // number saved in a partial encode/decode
-    length: TIdC_INT;  // The length is either the output line length
-                       // (in input bytes) or the shortest input line
-                       // length that is ok.  Once decoding begins,
-                       // the length is adjusted up each time a longer
-                       // line is decoded
-    enc_data:array [0..79] of AnsiChar;
-    line_num: TIdC_INT;	// number read on current line
-    expect_nl: TIdC_INT;
-  end;
-  PEVP_ENCODE_CTX = ^EVP_ENCODE_CTX;
 
   //hmac.h
   //This has to come after the EVP definitions
@@ -5320,30 +5824,7 @@ type
   PPHMAC_CTX = ^PHMAC_CTX;
   {$ENDIF}
 
-  //pcy_int.h
-  //Note that anything other than PSTACK should be undefined since the record
-  //members aren't exposed in the headers.
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_X509_POLICY_DATA = record
-    _stack: stack;
-  end;
-  PSTACK_OF_X509_POLICY_DATA = ^STACK_OF_X509_POLICY_DATA;
-  STACK_OF_X509_POLICY_REF = record
-    _stack: stack;
-  end;
-  PSTACK_OF_X509_POLICY_REF = ^STACK_OF_X509_POLICY_DATA;  
-  STACK_OF_X509_POLICY_NODE = record
-    _stack: stack;
-  end;
-  PSTACK_OF_X509_POLICY_NODE = ^STACK_OF_X509_POLICY_NODE;   
-  PSTACK_OF_POLICYQUALINFO = ^STACK_OF_POLICYQUALINFO; 
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_X509_POLICY_DATA = PSTACK;
-  PSTACK_OF_X509_POLICY_REF = PSTACK;
-  PSTACK_OF_X509_POLICY_NODE = PSTACK;
-  PSTACK_OF_POLICYQUALINFO = PSTACK;
-  {$ENDIF}
+
 
  // X509_POLICY_DATA = record
  // end;
@@ -5357,23 +5838,7 @@ type
   PX509_POLICY_CACHE = Pointer; //^X509_POLICY_CACHE;
 
   //x509v3.h
-  //forward declarations from x509.h to make sure this compiles.
-  PX509 = ^X509;
-  PPX509 = ^PX509;
-  PX509_CRL = ^X509_CRL;
-  PX509_NAME = ^X509_NAME;
-  PX509_NAME_ENTRY = ^X509_NAME_ENTRY;
-  PX509_REQ = ^X509_REQ;
-  PX509_REQ_INFO = ^X509_REQ_INFO;
-  PPX509_REQ_INFO = ^PX509_REQ_INFO;
-  {$IFDEF DEBUG_SAFESTACK}
-  PSTACK_OF_X509_NAME_ENTRY = ^STACK_OF_X509_NAME_ENTRY;
-  PSTACK_OF_X509_REVOKED = ^STACK_OF_X509_REVOKED;
-  {$ELSE}
-  PSTACK_OF_X509_NAME_ENTRY = PSTACK;
-  PSTACK_OF_X509_REVOKED = PSTACK;
-  {$ENDIF}
-  PPSTACK_OF_X509_REVOKED = ^PSTACK_OF_X509_REVOKED;
+
   
   PPX509_NAME_ENTRY = ^PX509_NAME_ENTRY;
   //forward declarations
@@ -5419,16 +5884,6 @@ type
     usr_data : Pointer;  // Any extension specific data
   end;
   X509V3_EXT_METHOD = V3_EXT_METHOD;
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_X509V3_EXT_METHOD = record
-    _stack: stack;
-  end;
-  PSTACK_OF_X509V3_EXT_METHOD = ^STACK_OF_X509V3_EXT_METHOD;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_X509V3_EXT_METHOD = PSTACK;
-  {$ENDIF}
-  PPSTACK_OF_X509V3_EXT_METHOD = ^PSTACK_OF_X509V3_EXT_METHOD;
 
   X509V3_CONF_METHOD = record
     get_string : function(db : Pointer; section, value : PAnsiChar) : PAnsiChar; cdecl;
@@ -5817,17 +6272,6 @@ type
     hash : TIdC_ULONG; // Keep the hash around for lookups
   end;
 
-  PPX509_NAME =^PX509_NAME;
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_X509_NAME = record
-    _stack: STACK;
-  end;
-  PSTACK_OF_X509_NAME = ^STACK_OF_X509_NAME;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_X509_NAME = PSTACK;
-  {$ENDIF}
-  PPSTACK_OF_X509_NAME = ^PSTACK_OF_X509_NAME;
 
   X509_EXTENSION = record
     _object : PASN1_OBJECT;
@@ -5923,16 +6367,6 @@ type
     {$ENDIF}
     aux : PX509_CERT_AUX;
   end;
-
-  {$IFDEF DEBUF_SAFESTACK}
-  STACK_OF_X509 = record
-    _stack: STACK;
-  end;
-  PSTACK_OF_X509 = ^STACK_OF_X509;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_X509 = PSTACK;
-  {$ENDIF}
   
   X509_CRL_INFO = record
     version : PASN1_INTEGER;
@@ -6576,7 +7010,7 @@ type
   // des_key_schedule = Integer;
 
   {$IFDEF DES_INT}
-   DES_LONG = TIdC_INT;
+   DES_LONG = TIdC_UINT;
   {$ELSE}
   DES_LONG = TIdC_ULONG;
   {$ENDIF}
@@ -6822,47 +7256,6 @@ _des_cblock = DES_cblock
     version : PASN1_INTEGER;
     mac : PPKCS12_MAC_DATA;
     authsafes : PPKCS7;
-  end;
-
-  //end ssl_locl.h
-
-
-  //bio.h
-  //http://www.openssl.org/docs/crypto/bio.html
-  PBIO_METHOD = ^BIO_METHOD;
-  Pbio_info_cb = procedure (_para1 : PBIO; _para2 : TIdC_INT; _para3 : PAnsiChar;
-     _para4 : TIdC_INT; _para5, _para6 : TIdC_LONG);
-  BIO_METHOD = record
-    _type : TIdC_INT;
-    name : PAnsiChar;
-    bwrite : function(_para1 : PBIO; _para2 : PAnsiChar; _para3 : TIdC_INT) : TIdC_INT; cdecl;
-    bread : function(_para1: PBIO; _para2: PAnsiChar; _para3: TIdC_INT) : TIdC_INT; cdecl;
-    bputs : function (_para1 : PBIO; _para2 : PAnsiChar) : TIdC_INT; cdecl;
-    bgets : function (_para1 : PBIO; _para2 : PAnsiChar; _para3 : TIdC_INT) : TIdC_INT; cdecl;
-    ctrl : function (_para1 : PBIO; _para2 : TIdC_INT; _para3 : TIdC_LONG; _para4 : Pointer) : TIdC_LONG; cdecl;
-    create : function(_para1 : PBIO) : TIdC_INT; cdecl;
-    destroy : function (_para1 : PBIO) : TIdC_INT; cdecl;
-    callback_ctrl : function (_para1 : PBIO; _para2 : TIdC_INT; _para3 : pbio_info_cb): TIdC_LONG; cdecl;
-  end;
-
-  BIO = record
-    method : PBIO_METHOD;
-    // bio, mode, argp, argi, argl, ret
-    callback : function (_para1 : PBIO; _para2 : TIdC_INT; _para3 : PAnsiChar;
-       _para4 : TIdC_INT; _para5, _para6 : TIdC_LONG) : TIdC_LONG; cdecl;
-    cb_arg : PAnsiChar; // first argument for the callback
-    init : TIdC_INT;
-    shutdown : TIdC_INT;
-    flags : TIdC_INT;  // extra storage
-    retry_reason : TIdC_INT;
-    num : TIdC_INT;
-    ptr : Pointer;
-    next_bio : PBIO;  // used by filter BIOs
-    prev_bio : PBIO;  // used by filter BIOs
-    references : TIdC_INT;
-    num_read : TIdC_ULONG;
-    num_write : TIdC_ULONG;
-    ex_data : CRYPTO_EX_DATA;
   end;
 
   //comp.h
@@ -8194,7 +8587,35 @@ them in case we use them later.}
   {CH fn_CRYPTO_dup_ex_data = 'CRYPTO_dup_ex_data'; }  {Do not localize}
   {CH fn_CRYPTO_free_ex_data = 'CRYPTO_free_ex_data'; }  {Do not localize}
   {CH fn_CRYPTO_new_ex_data = 'CRYPTO_new_ex_data'; }  {Do not localize}
+
   fn_CRYPTO_mem_ctrl = 'CRYPTO_mem_ctrl';  {Do not localize}
+
+  {CH fn_OPENSSL_issetugid = 'OPENSSL_issetugid'; } {Do not localize}
+  {CH fn_CRYPTO_get_ex_data_implementation = 'CRYPTO_get_ex_data_implementation'; } {Do not localize}
+  {CH fn_CRYPTO_set_ex_data_implementation = 'CRYPTO_set_ex_data_implementation'; } {Do not localize}
+  {CH fn_CRYPTO_ex_data_new_class = 'CRYPTO_ex_data_new_class'; } {Do not localize}
+  {CH fn_CRYPTO_get_locking_callback = 'CRYPTO_get_locking_callback'; } {Do not localize}
+  {CH fn_CRYPTO_get_add_lock_callback = 'CRYPTO_get_add_lock_callback'; } {Do not localize}
+  {CH fn_CRYPTO_get_new_dynlockid = 'CRYPTO_get_new_dynlockid'; } {Do not localize}
+  {CH fn_CRYPTO_destroy_dynlockid = 'CRYPTO_destroy_dynlockid'; }  {Do not localize}
+  {CH fn_CRYPTO_get_dynlock_value = 'CRYPTO_get_dynlock_value'; }  {Do not localize}
+  {CH fn_CRYPTO_set_dynlock_create_callback = 'CRYPTO_set_dynlock_create_callback'; }  {Do not localize}
+  {CH fn_CRYPTO_set_dynlock_lock_callback = 'CRYPTO_set_dynlock_lock_callback'; } {Do not localize}
+  {CH fn_CRYPTO_set_dynlock_destroy_callback = 'CRYPTO_set_dynlock_destroy_callback'; } {Do not localize}
+  {CH fn_CRYPTO_set_locked_mem_ex_functions = 'CRYPTO_set_locked_mem_ex_functions'; }  {Do not localize}
+  {CH fn_CRYPTO_get_mem_ex_functions = 'CRYPTO_get_mem_ex_functions'; }  {Do not localize}
+  {CH fn_CRYPTO_get_locked_mem_ex_functions = 'CRYPTO_get_locked_mem_ex_functions'; } {Do not localize}
+  {CH fn_CRYPTO_get_mem_debug_functions = 'CRYPTO_get_mem_debug_functions'; }{Do not localize}
+  {CH fn_CRYPTO_realloc_clean = 'CRYPTO_realloc_clean'; } {Do not localize}
+  {CH fn_OPENSSL_cleanse = 'OPENSSL_cleanse'; } {Do not localize}
+  {CH fn_CRYPTO_set_mem_debug_options = 'CRYPTO_set_mem_debug_options'; } {Do not localize}
+  {CH fn_CRYPTO_get_mem_debug_options = 'CRYPTO_get_mem_debug_options'; } {Do not localize}
+  {CH fn_CRYPTO_push_info_ = 'CRYPTO_push_info_'; } {Do not localize}
+  {CH fn_CRYPTO_pop_info = 'CRYPTO_pop_info'; } {Do not localize}
+  {CH fn_CRYPTO_remove_all_info = 'CRYPTO_remove_all_info'; } {Do not localize}
+  {CH fn_OpenSSLDie = 'OpenSSLDie'; } {Do not localize}
+  {CH fn_OPENSSL_ia32cap_loc = 'OPENSSL_ia32cap_loc'; { {Do not localize}
+
   {CH fn_CRYPTO_get_new_lockid = 'CRYPTO_get_new_lockid'; }  {Do not localize}
   fn_CRYPTO_num_locks = 'CRYPTO_num_locks';  {Do not localize}
   {CH fn_CRYPTO_lock = 'CRYPTO_lock'; }  {Do not localize}
@@ -10512,14 +10933,204 @@ them in case we use them later.}
 {CH fn_ERR_get_state = 'ERR_get_state'; }  {Do not localize}
 
   {$IFNDEF OPENSSL_NO_LHASH}
-{CH fn_ERR_get_string_table = 'ERR_get_string_table';  } {Do not localize}
-{CH fn_ERR_get_err_state_table = 'ERR_get_err_state_table'; } {Do not localize}
-{CH fn_ERR_release_err_state_table = 'ERR_release_err_state_table'; } {Do not localize}
+  {CH fn_ERR_get_string_table = 'ERR_get_string_table';  } {Do not localize}
+  {CH fn_ERR_get_err_state_table = 'ERR_get_err_state_table'; } {Do not localize}
+  {CH fn_ERR_release_err_state_table = 'ERR_release_err_state_table'; } {Do not localize}
   {$ENDIF}
-{CH fn_ERR_get_next_error_library = 'ERR_get_next_error_library'; } {Do not localize}
-{CH fn_ERR_set_mark = 'ERR_set_mark'; } {Do not localize}
-{CH fn_ERR_pop_to_mark = 'ERR_pop_to_mark'; } {Do not localize}
-
+  {CH fn_ERR_get_next_error_library = 'ERR_get_next_error_library'; } {Do not localize}
+  {CH fn_ERR_set_mark = 'ERR_set_mark'; } {Do not localize}
+  {CH fn_ERR_pop_to_mark = 'ERR_pop_to_mark'; } {Do not localize}
+  {CH fn_UI_new = 'UI_new'; } {Do not localize}
+  {CH fn_UI_new_method = 'UI_new_method'; } {Do not localize}
+  {CH fn_UI_free = 'UI_free'; } {Do not localize}
+  {CH fn_UI_add_input_string = 'UI_add_input_string'; } {Do not localize}
+  {CH fn_UI_dup_input_string = 'UI_dup_input_string'; } {Do not localize}
+  {CH fn_UI_add_verify_string = 'UI_add_verify_string'; } {Do not localize}
+  {CH fn_UI_dup_verify_string = 'UI_dup_verify_string'; } {Do not localize}
+  {CH fn_UI_add_input_boolean = 'UI_add_input_boolean'; } {Do not localize}
+  {CH fn_UI_dup_input_boolean = 'UI_dup_input_boolean'; } {Do not localize}
+  {CH fn_UI_add_info_string = 'UI_add_info_string'; } {Do not localize}
+  {CH fn_UI_dup_info_string = 'UI_dup_info_string'; } {Do not localize}
+  {CH fn_UI_add_error_string = 'UI_add_error_string'; } {Do not localize}
+  {CH fn_UI_dup_error_string = 'UI_dup_error_string'; } {Do not localize}
+  {CH fn_UI_construct_prompt = 'UI_construct_prompt'; } {Do not localize}
+  {CH fn_UI_add_user_data = 'UI_add_user_data'; } {Do not localize}
+  {CH fn_UI_get0_user_data = 'UI_get0_user_data'; } {Do not localize}
+  {CH fn_UI_get0_resul = 'UI_get0_resul'; } {Do not localize}
+  {CH fn_UI_process = 'UI_process'; } {Do not localize}
+  {CH fn_UI_ctrl = 'UI_ctrl'; } {Do not localize}
+  {CH fn_UI_get_ex_new_index = 'UI_get_ex_new_index'; } {Do not localize}
+  {CH fn_UI_set_ex_data = 'UI_set_ex_data'; } {Do not localize}
+  {CH fn_UI_get_ex_data = 'UI_get_ex_data'; } {Do not localize}
+  {CH fn_UI_set_default_method = 'UI_set_default_method'; } {Do not localize}
+  {CH fn_UI_get_method = 'UI_get_method'; } {Do not localize}
+  {CH fn_UI_set_method = 'UI_set_method'; } {Do not localize}
+  {CH fn_UI_OpenSSL = 'UI_OpenSSL'; } {Do not localize}
+  {CH fn_UI_create_method = 'UI_create_method'; } {Do not localize}
+  {CH fn_UI_destroy_method = 'UI_destroy_method'; } {Do not localize}
+  {CH fn_UI_method_set_opener = 'UI_method_set_opener'; } {Do not localize}
+  {CH fn_UI_method_set_writer = 'UI_method_set_writer'; } {Do not localize}
+  {CH fn_UI_method_set_flusher = 'UI_method_set_flusher'; } {Do not localize}
+  {CH fn_UI_method_set_reader = 'UI_method_set_reader'; } {Do not localize}
+  {CH fn_UI_method_set_closer = 'UI_method_set_closer'; } {Do not localize}
+  {CH fn_UI_get_string_type = 'UI_get_string_type'; } {Do not localize}
+  {CH fn_UI_get_input_flags = 'UI_get_input_flags'; } {Do not localize}
+  {CH fn_UI_get0_output_string = 'UI_get0_output_string'; } {Do not localize}
+  {CH fn_UI_get0_action_string = 'UI_get0_action_string'; } {Do not localize}
+  {CH fn_UI_get0_result_string = 'UI_get0_result_string'; } {Do not localize}
+  {CH fn_UI_get0_test_string = 'UI_get0_test_string'; } {Do not localize}
+  {CH fn_UI_get_result_minsize = 'UI_get_result_minsize'; } {Do not localize}
+  {CH fn_UI_get_result_maxsize = 'UI_get_result_maxsize'; } {Do not localize}
+  {CH fn_UI_set_result = 'UI_set_result'; } {Do not localize}
+  {CH fn_UI_UTIL_read_pw_string = 'UI_UTIL_read_pw_string'; } {Do not localize}
+  {CH fn_UI_UTIL_read_pw = 'UI_UTIL_read_pw'; } {Do not localize}
+  {CH fn_ERR_load_UI_strings = 'ERR_load_UI_strings'; } {Do not localize}
+  {$IFNDEF OPENSSL_NO_ENGINE}
+  {CH fn_ENGINE_get_first = 'ENGINE_get_first'; } {Do not localize}
+  {CH fn_ENGINE_get_last = 'ENGINE_get_last'; }  {Do not localize}
+  {CH fn_ENGINE_get_next = 'ENGINE_get_next'; }  {Do not localize}
+  {CH fn_ENGINE_get_prev = 'ENGINE_get_prev'; }  {Do not localize}
+  {CH fn_ENGINE_add = 'ENGINE_add'; } {Do not localize}
+  {CH fn_ENGINE_remove = 'ENGINE_remove'; } {Do not localize}
+  {CH fn_ENGINE_by_id = 'ENGINE_by_id'; } {Do not localize}
+  {CH fn_ENGINE_load_openssl = 'ENGINE_load_openssl'; } {Do not localize}
+  {CH fn_ENGINE_load_dynamic = 'ENGINE_load_dynamic'; } {Do not localize}
+  {$IFNDEF OPENSSL_NO_STATIC_ENGINE}
+  {CH fn_ENGINE_load_4758cca = 'ENGINE_load_4758cca'; }  {Do not localize}
+  {CH fn_ENGINE_load_aep = 'ENGINE_load_aep'; } {Do not localize}
+  {CH fn_ENGINE_load_atalla = 'ENGINE_load_atalla'; } {Do not localize}
+  {CH fn_ENGINE_load_chil = 'ENGINE_load_chil'; } {Do not localize}
+  {CH fn_ENGINE_load_cswift = 'ENGINE_load_cswift'; }  {Do not localize}
+    {$IFNDEF OPENSSL_NO_GMP}
+  {CH fn_ENGINE_load_gmp = 'ENGINE_load_gmp'; }  {Do not localize}
+    {$ENDIF}
+  {CH fn_ENGINE_load_nuron = 'ENGINE_load_nuron'; }  {Do not localize}
+  {CH fn_ENGINE_load_sureware = 'ENGINE_load_sureware'; }  {Do not localize}
+  {CH fn_ENGINE_load_ubsec = 'ENGINE_load_ubsec'; } {Do not localize}
+  {$ENDIF}
+  {CH fn_ENGINE_load_cryptodev = 'ENGINE_load_cryptodev'; } {Do not localize}
+  {CH fn_ENGINE_load_padlock = 'ENGINE_load_padlock'; } {Do not localize}
+  {CH fn_ENGINE_load_builtin_engines = 'ENGINE_load_builtin_engines'; } {Do not localize}
+  {$IFNDEF OPENSSL_NO_CAPIENG}
+  {CH fn_ENGINE_load_capi = 'ENGINE_load_capi'; } {Do not localize}
+  {$ENDIF}
+  {CH fn_ENGINE_get_table_flags = 'ENGINE_get_table_flags'; } {Do not localize}
+  {CH fn_ENGINE_set_table_flags = 'ENGINE_set_table_flags'; }  {Do not localize}
+  {CH fn_ENGINE_register_RSA = 'ENGINE_register_RSA'; } {Do not localize}
+  {CH fn_ENGINE_unregister_RSA = 'ENGINE_unregister_RSA'; } {Do not localize}
+  {CH fn_ENGINE_register_all_RSA = 'ENGINE_register_all_RSA'; } {Do not localize}
+  {CH fn_ENGINE_register_DSA = 'ENGINE_register_DSA'; } {Do not localize}
+  {CH fn_ENGINE_unregister_DSA = 'ENGINE_unregister_DSA'; } {Do not localize}
+  {CH fn_ENGINE_register_all_DSA = 'ENGINE_register_all_DSA'; } {Do not localize}
+  {CH fn_ENGINE_register_ECDH = 'ENGINE_register_ECDH'; } {Do not localize}
+  {CH fn_ENGINE_unregister_ECDH = 'ENGINE_unregister_ECDH'; } {Do not localize}
+  {CH fn_ENGINE_register_all_ECDH = 'ENGINE_register_all_ECDH'; } {Do not localize}
+  {CH fn_ENGINE_register_ECDSA = 'ENGINE_register_ECDSA'; } {Do not localize}
+  {CH fn_ENGINE_unregister_ECDSA = 'ENGINE_unregister_ECDSA'; } {Do not localize}
+  {CH fn_ENGINE_register_all_ECDSA = 'ENGINE_register_all_ECDSA'; } {Do not localize}
+  {CH fn_ENGINE_register_DH = 'ENGINE_register_DH'; } {Do not localize}
+  {CH fn_ENGINE_unregister_DH = 'ENGINE_unregister_DH'; } {Do not localize}
+  {CH fn_ENGINE_register_all_DH = 'ENGINE_register_all_DH'; } {Do not localize}
+  {CH fn_ENGINE_register_RAND = 'ENGINE_register_RAND'; } {Do not localize}
+  {CH fn_ENGINE_unregister_RAND = 'ENGINE_unregister_RAND'; } {Do not localize}
+  {CH fn_ENGINE_register_all_RAND = 'ENGINE_register_all_RAND'; } {Do not localize}
+  {CH fn_ENGINE_register_STORE = 'ENGINE_register_STORE'; { {Do not localize}
+  {CH fn_ENGINE_unregister_STORE = 'ENGINE_unregister_STORE'; } {Do not localize}
+  {CH fn_ENGINE_register_all_STORE = 'ENGINE_register_all_STORE'; } {Do not localize}
+  {CH fn_ENGINE_register_ciphers = 'ENGINE_register_ciphers'; } {Do not localize}
+  {CH fn_ENGINE_unregister_ciphers = 'ENGINE_unregister_ciphers'; } {Do not localize}
+  {CH fn_ENGINE_register_all_ciphers = 'ENGINE_register_all_ciphers'; } {Do not localize}
+  {CH fn_ENGINE_register_digests = 'ENGINE_register_digests'; } {Do not localize}
+  {CH fn_ENGINE_unregister_digests = 'ENGINE_unregister_digests'; } {Do not localize}
+  {CH fn_ENGINE_register_all_digests= 'ENGINE_register_all_digests'; } {Do not localize}
+  {CH fn_ENGINE_register_complete = 'ENGINE_register_complete'; } {Do not localize}
+  {CH fn_ENGINE_register_all_complete = 'ENGINE_register_all_complete'; } {Do not localize}
+  {CH fn_ENGINE_ctrl = 'ENGINE_ctrl'; } {Do not localize}
+  {CH fn_ENGINE_cmd_is_executable = 'ENGINE_cmd_is_executable'; } {Do not localize}
+  {CH fn_ENGINE_ctrl_cmd = 'ENGINE_ctrl_cmd'; } {Do not localize}
+  {CH fn_ENGINE_ctrl_cmd_string = 'ENGINE_ctrl_cmd_string'; }  {Do not localize}
+  {CH fn_ENGINE_new = 'ENGINE_new'; } {Do not localize}
+  {CH fn_ENGINE_free = 'ENGINE_free'; } {Do not localize}
+  {CH fn_ENGINE_up_ref = 'ENGINE_up_ref'; } {Do not localize}
+  {CH fn_ENGINE_set_id = 'ENGINE_set_id'; } {Do not localize}
+  {CH fn_ENGINE_set_name = 'ENGINE_set_name'; } {Do not localize}
+  {CH fn_ENGINE_set_RSA = 'ENGINE_set_RSA'; } {Do not localize}
+  {CH fn_ENGINE_set_DSA = 'ENGINE_set_DSA'; } {Do not localize}
+  {CH fn_ENGINE_set_ECDH = 'ENGINE_set_ECDH'; } {Do not localize}
+  {CH fn_ENGINE_set_ECDSA = 'ENGINE_set_ECDSA'; } {Do not localize}
+  {CH fn_ENGINE_set_DH = 'ENGINE_set_DH'; }  {Do not localize}
+  {CH fn_ENGINE_set_RAND = 'ENGINE_set_RAND'; }  {Do not localize}
+  {CH fn_ENGINE_set_STORE = 'ENGINE_set_STORE'; }  {Do not localize}
+  {CH fn_ENGINE_set_destroy_function = 'ENGINE_set_destroy_function'; }  {Do not localize}
+  {CH fn_ENGINE_set_init_function = 'ENGINE_set_init_function'; } {Do not localize}
+  {CH fn_ENGINE_set_finish_function = 'ENGINE_set_finish_function'; }  {Do not localize}
+  {CH fn_ENGINE_set_ctrl_function = 'ENGINE_set_ctrl_function'; }  {Do not localize}
+  {CH fn_ENGINE_set_load_privkey_function = 'ENGINE_set_load_privkey_function'; }  {Do not localize}
+  {CH fn_ENGINE_set_load_pubkey_function = 'ENGINE_set_load_pubkey_function'; }  {Do not localize}
+  {CH fn_ENGINE_set_load_ssl_client_cert_function = 'ENGINE_set_load_ssl_client_cert_function'; } {Do not localize}
+  {CH fn_ENGINE_set_ciphers = 'ENGINE_set_ciphers'; } {Do not localize}
+  {CH fn_ENGINE_set_digests = 'ENGINE_set_digests'; } {Do not localize}
+  {CH fn_ENGINE_set_flags = 'ENGINE_set_flags'; } {Do not localize}
+  {CH fn_ENGINE_set_cmd_defns = 'ENGINE_set_cmd_defns'; } {Do not localize}
+  {CH fn_ENGINE_get_ex_new_index = 'ENGINE_get_ex_new_index'; } {Do not localize}
+  {CH fn_ENGINE_set_ex_data = 'ENGINE_set_ex_data'; } {Do not localize}
+  {CH fn_ENGINE_get_ex_data = 'ENGINE_get_ex_data'; }  {Do not localize}
+  {CH fn_ENGINE_cleanup = 'ENGINE_cleanup'; } {Do not localize}
+  {CH fn_ENGINE_get_id = 'ENGINE_get_id'; }  {Do not localize}
+  {CH fn_ENGINE_get_name = 'ENGINE_get_name'; }  {Do not localize}
+  {CH fn_ENGINE_get_RSA = 'ENGINE_get_RSA'; }  {Do not localize}
+  {CH fn_ENGINE_get_DSA = 'ENGINE_get_DSA'; }   {Do not localize}
+  {CH fn_ENGINE_get_ECDH = 'ENGINE_get_ECDH'; }  {Do not localize}
+  {CH fn_ENGINE_get_ECDSA = 'ENGINE_get_ECDSA'; }  {Do not localize}
+  {CH fn_ENGINE_get_DH = 'ENGINE_get_DH'; }  {Do not localize}
+  {CH fn_ENGINE_get_RAND = 'ENGINE_get_RAND'; }  {Do not localize}
+  {CH fn_ENGINE_get_STORE = 'ENGINE_get_STORE'; }  {Do not localize}
+  {CH fn_ENGINE_get_destroy_function = 'ENGINE_get_destroy_function'; } {Do not localize}
+  {CH fn_ENGINE_get_init_function = 'ENGINE_get_init_function'; }  {Do not localize}
+  {CH fn_ENGINE_get_finish_function = 'ENGINE_get_finish_function'; }   {Do not localize}
+  {CH fn_ENGINE_get_ctrl_function = 'ENGINE_get_ctrl_function'; }  {Do not localize}
+  {CH fn_ENGINE_get_load_privkey_function = 'ENGINE_get_load_privkey_function'; }  {Do not localize}
+  {CH fn_ENGINE_get_load_pubkey_function = 'ENGINE_get_load_pubkey_function'; }  {Do not localize}
+  {CH fn_ENGINE_get_ssl_client_cert_function = 'ENGINE_get_ssl_client_cert_function'; }  {Do not localize}
+  {CH fn_ENGINE_get_ciphers = 'ENGINE_get_ciphers'; }  {Do not localize}
+  {CH fn_ENGINE_get_digests = 'ENGINE_get_digests'; }   {Do not localize}
+  {CH fn_ENGINE_get_cipher = 'ENGINE_get_cipher'; }  {Do not localize}
+  {CH fn_ENGINE_get_digest = 'ENGINE_get_digest'; }  {Do not localize}
+  {CH fn_ENGINE_get_cmd_defns = 'ENGINE_get_cmd_defns'; }  {Do not localize}
+  {CH fn_ENGINE_get_flags = 'ENGINE_get_flags'; }  {Do not localize}
+  {CH fn_ENGINE_init = 'ENGINE_init'; }  {Do not localize}
+  {CH fn_ENGINE_finish = 'ENGINE_finish'; }  {Do not localize}
+  {CH fn_ENGINE_load_private_key = 'ENGINE_load_private_key'; } {Do not localize}
+  {CH fn_ENGINE_load_public_key = 'ENGINE_load_public_key'; }  {Do not localize}
+  {CH fn_ENGINE_load_ssl_client_cert = 'ENGINE_load_ssl_client_cert'; }  {Do not localize}
+  {CH fn_ENGINE_get_default_RSA = 'ENGINE_get_default_RSA'; }  {Do not localize}
+  {CH fn_ENGINE_get_default_DSA = 'ENGINE_get_default_DSA'; }  {Do not localize}
+  {CH fn_ENGINE_get_default_ECDH = 'ENGINE_get_default_ECDH'; }  {Do not localize}
+  {CH fn_ENGINE_get_default_ECDSA = 'ENGINE_get_default_ECDSA'; }  {Do not localize}
+  {CH fn_ENGINE_get_default_DH = 'ENGINE_get_default_DH'; }  {Do not localize}
+  {CH fn_ENGINE_get_default_RAND = 'ENGINE_get_default_RAND'; }  {Do not localize}
+  {CH fn_ENGINE_get_cipher_engine = 'ENGINE_get_cipher_engine'; }  {Do not localize}
+  {CH fn_ENGINE_get_digest_engine = 'ENGINE_get_digest_engine'; }  {Do not localize}
+  {CH fn_ENGINE_set_default_RSA = 'ENGINE_set_default_RSA'; }  {Do not localize}
+  {CH fn_ENGINE_set_default_string = 'ENGINE_set_default_string'; } {Do not localize}
+  {CH fn_ENGINE_set_default_DSA = 'ENGINE_set_default_DSA'; }  {Do not localize}
+  {CH fn_ENGINE_set_default_ECDH = 'ENGINE_set_default_ECDH'; }  {Do not localize}
+  {CH fn_ENGINE_set_default_ECDSA = 'ENGINE_set_default_ECDSA'; }  {Do not localize}
+  {CH fn_ENGINE_set_default_DH = 'ENGINE_set_default_DH'; }  {do not localize}
+  {CH fn_ENGINE_set_default_RAND = 'ENGINE_set_default_RAND'; }  {Do not localize}
+  {CH fn_ENGINE_set_default_ciphers = 'ENGINE_set_default_ciphers'; }  {Do not localize}
+  {CH fn_ENGINE_set_default_digests = 'ENGINE_set_default_digests'; }  {Do not localize}
+  {CH fn_ENGINE_set_default = 'ENGINE_set_default'; }   {Do not localize}
+  {CH fn_ENGINE_add_conf_module = 'ENGINE_add_conf_module'; }  {Do not localize}
+  {CH fn_ENGINE_get_static_state = 'ENGINE_get_static_state'; }  {Do not localize}
+  {$IFDEF OPENBSD}
+  {CH fn_ENGINE_setup_bsd_cryptodev = 'ENGINE_setup_bsd_cryptodev'; }  {Do not localize}
+  {$ENDIF}
+  {$IFDEF FREEBSD}
+  {CH fn_ENGINE_setup_bsd_cryptodev = 'ENGINE_setup_bsd_cryptodev'; }  {Do not localize}
+  {$ENDIF}
+  {CH fn_ERR_load_ENGINE_strings = 'ERR_load_ENGINE_strings'; }  {Do not localize}
+  {$ENDIF}
   {$IFDEF OPENSSL_EXPORT_VAR_AS_FUNCTION}
   //These have a gl prefix because they may not be functions in some platforms.
   //They are functions in Win32 because DLL's can't export global variables
@@ -10540,6 +11151,7 @@ them in case we use them later.}
   {CH gl_NAME_CONSTRAINTS_it = 'NAME_CONSTRAINTS_it'; } {Do not localize}
   {CH gl_POLICY_CONSTRAINTS_it = 'POLICY_CONSTRAINTS_it'; } {Do not localize}
   {$ENDIF}
+
 
 function LoadFunction(const FceName: string; const ACritical : Boolean = True): Pointer;
 begin
