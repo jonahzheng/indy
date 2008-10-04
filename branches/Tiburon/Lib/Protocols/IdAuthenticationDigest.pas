@@ -104,8 +104,6 @@ function TIdDigestAuthentication.Authentication: String;
     with TIdHashMessageDigest5.Create do try
       Result := LowerCase(HashStringAsHex(S));
     finally Free end;
-    // RLebeau: how can spaces get into the Hex output?
-    Result := StringReplace(Result, ' ', '0', [rfReplaceAll]); //Stupid uppercase, cost me a whole day to figure this one out
   end;
 
 var
@@ -116,7 +114,8 @@ begin
   case FCurrentStep of
     0:
       begin
-        Result := 'Digest'; //Just be save with this one
+        //Just be save with this one
+        Result := 'Digest'; {do not localize}
       end;
     1:
       begin
@@ -124,22 +123,23 @@ begin
 
         LstrCNonce := ResultString(DateTimeToStr(Now));
 
-        LstrA1 := ResultString(Username + ':' + FRealm + ':' + Password);
+        LstrA1 := ResultString(Username + ':' + FRealm + ':' + Password); {do not localize}
         if TextIsSame(FAlgorithm, 'MD5-sess') then begin
-          LstrA1 := ResultString(LstrA1 + ':' + Fnonce + ':' + LstrCNonce);
+          LstrA1 := ResultString(LstrA1 + ':' + Fnonce + ':' + LstrCNonce); {do not localize}
         end;
-        if FQopOptions.IndexOf('auth-int') > -1 then begin
-          LstrA2 := ResultString(FMethod + ':' + FUri + ':' + ResultString(FPostbody.CommaText))
+        if FQopOptions.IndexOf('auth-int') > -1 then begin {do not localize}
+          LstrA2 := ResultString(FMethod + ':' + FUri + ':' + ResultString(FPostbody.CommaText)) {do not localize}
         end else begin
-          LstrA2 := ResultString(FMethod + ':' + FUri);
+          LstrA2 := ResultString(FMethod + ':' + FUri); {do not localize}
         end;
-        LstrResponse := LstrA1 + ':' + Fnonce + ':';
-        if (FQopOptions.IndexOf('auth-int') > -1) or (FQopOptions.IndexOf('auth') > -1) then begin //Qop header present
-          LstrResponse := LstrResponse + IntToHex(FNoncecount, 8) + ':' + LstrCNonce + ':';
-          if FQopOptions.IndexOf('auth-int') > -1 then begin
-            LstrResponse := LstrResponse + 'auth-int:';
+        LstrResponse := LstrA1 + ':' + Fnonce + ':'; {do not localize}
+        //Qop header present
+        if (FQopOptions.IndexOf('auth-int') > -1) or (FQopOptions.IndexOf('auth') > -1) then begin {do not localize}
+          LstrResponse := LstrResponse + IntToHex(FNoncecount, 8) + ':' + LstrCNonce + ':'; {do not localize}
+          if FQopOptions.IndexOf('auth-int') > -1 then begin {do not localize}
+            LstrResponse := LstrResponse + 'auth-int:'; {do not localize}
           end else begin
-            LstrResponse := LstrResponse + 'auth:';
+            LstrResponse := LstrResponse + 'auth:'; {do not localize}
           end;
         end;
         LstrResponse := LstrResponse + LstrA2;
@@ -151,18 +151,19 @@ begin
           'nonce="' + FNonce + '", ' + {do not localize}
           'algorithm="' + FAlgorithm + '", ' + {do not localize}
           'uri="' + Furi + '", ';
-        if (FQopOptions.IndexOf('auth-int') > -1) or (FQopOptions.IndexOf('auth') > -1) then begin //Qop header present
-          if FQopOptions.IndexOf('auth-int') > -1 then begin
-            Result := Result + 'qop="auth-int", '
+        //Qop header present
+        if (FQopOptions.IndexOf('auth-int') > -1) or (FQopOptions.IndexOf('auth') > -1) then begin {do not localize}
+          if FQopOptions.IndexOf('auth-int') > -1 then begin {do not localize}
+            Result := Result + 'qop="auth-int", '; {do not localize}
           end else begin
-            Result := Result + 'qop="auth", ';
+            Result := Result + 'qop="auth", '; {do not localize}
           end;
-          Result := Result + 'nc=' + IntToHex(FNoncecount, 8) + ', ' +
-            'cnonce="' + LstrCNonce + '", ';
+          Result := Result + 'nc=' + IntToHex(FNoncecount, 8) + ', ' + {do not localize}
+            'cnonce="' + LstrCNonce + '", '; {do not localize}
         end;
-        Result := Result + 'response="' + LstrResponse + '"';
+        Result := Result + 'response="' + LstrResponse + '"'; {do not localize}
         if FOpaque <> '' then begin
-          Result := Result + ', opaque="' + FOpaque + '"';
+          Result := Result + ', opaque="' + FOpaque + '"'; {do not localize}
         end;
         Inc(FNoncecount);
         FCurrentStep := 0;
@@ -170,9 +171,9 @@ begin
   end;
 end;
 
-function RemoveQuote(const aStr:string):string;
+function RemoveQuote(const aStr: string):string;
 begin
-  if (Length(aStr) >= 2) and (aStr[1] = '"') and (aStr[Length(aStr)] = '"') then begin
+  if (Length(aStr) >= 2) and (aStr[1] = '"') and (aStr[Length(aStr)] = '"') then begin {do not localize}
     Result := Copy(aStr, 2, Length(aStr)-2);
   end else begin
     Result := aStr;
@@ -203,13 +204,13 @@ begin
           FQopOptions.Clear;
         end;
 
-        S := ReadAuthInfo('Digest');
+        S := ReadAuthInfo('Digest'); {do not localize}
         Fetch(S);
 
         LParams := TStringList.Create;
         try
           while Length(S) > 0 do begin
-            LParams.Add(Fetch(S, ', '));
+            LParams.Add(Fetch(S, ',')); {do not localize}
           end;
 
           for i := LParams.Count-1 downto 0 do
@@ -217,26 +218,28 @@ begin
             LParams.Values[LParams.Names[i]] := RemoveQuote(LParams.Values[LParams.Names[i]]);
           end;
 
-          FRealm := LParams.Values['realm'];
-          LStrTempnonce := LParams.Values['nonce'];
+          FRealm := LParams.Values['realm']; {do not localize}
+          LStrTempnonce := LParams.Values['nonce']; {do not localize}
           if FNonce <> LstrTempNonce then
           begin
             FnonceCount := 1;
             FNonce := LstrTempNonce;
           end;
 
-          S := LParams.Values['domain'];
+          S := LParams.Values['domain']; {do not localize}
           while Length(S) > 0 do begin
             FDomain.Add(Fetch(S));
           end;
 
-          FOpaque := LParams.Values['opaque'];
-          FStale := TextIsSame(LParams.Values['stale'], 'True');
-          FAlgorithm := LParams.Values['algorithm'];
-          FQopOptions.CommaText := LParams.Values['qop'];
+          FOpaque := LParams.Values['opaque']; {do not localize}
+          FStale := TextIsSame(LParams.Values['stale'], 'True'); {do not localize}
+          FAlgorithm := LParams.Values['algorithm']; {do not localize}
+          FQopOptions.CommaText := LParams.Values['qop']; {do not localize}
 
-          if not TextIsSame(FAlgorithm, 'MD5') then begin
-            //FAlgorithm:='MD5';
+          if FAlgorithm = '' then begin
+            FAlgorithm := 'MD5'; {do not localize}
+          end
+          else if PosInStrArray(FAlgorithm, ['MD5', 'MD5-sess'], False) = -1 then begin {do not localize}
             raise EIdInvalidAlgorithm.Create(RSHTTPAuthInvalidHash);
           end;
 
@@ -261,6 +264,6 @@ begin
 end;
 
 initialization
-  RegisterAuthenticationMethod('Digest', TIdDigestAuthentication);
+  RegisterAuthenticationMethod('Digest', TIdDigestAuthentication); {do not localize}
 end.
 
