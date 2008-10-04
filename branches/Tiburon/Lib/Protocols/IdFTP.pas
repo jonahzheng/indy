@@ -658,6 +658,7 @@ will chop off a connection instead of closing it causing TIdFTP to wait forever 
 
   }
   DEF_Id_FTP_READTIMEOUT = 60000; //one minute
+  DEF_Id_FTP_UseHOST = True;
   DEF_Id_FTP_PassiveUseControlHost = False;
   DEF_Id_FTP_AutoIssueFEAT = True;
 
@@ -726,6 +727,7 @@ type
 
     FUsingSFTP : Boolean; //enable SFTP internel flag
     FUsingCCC : Boolean; //are we using FTP with SSL on a clear control channel?
+    FUseHOST: Boolean;
     FCanUseMLS : Boolean; //can we use MLISx instead of LIST
     FUsingExtDataPort : Boolean; //are NAT Extensions (RFC 2428 available) flag
     FUsingNATFastTrack : Boolean;//are we using NAT fastrack feature
@@ -1007,6 +1009,7 @@ type
     property ProxySettings: TIdFtpProxySettings read FProxySettings write SetProxySettings;
     property Account: string read FAccount write FAccount;
     property ClientInfo : TIdFTPClientIdentifier read FClientInfo write SetClientInfo;
+    property UseHOST: Boolean read FUseHOST write FUseHOST default DEF_Id_FTP_UseHOST;
     property UseTLS;
     property OnTLSNotAvailable;
 
@@ -1105,6 +1108,7 @@ begin
   FDataPortProtection := Id_TIdFTP_DataPortProtection;
   FUseCCC := DEF_Id_FTP_UseCCC;
   FAUTHCmd := DEF_Id_FTP_AUTH_CMD;
+  FUseHOST := DEF_Id_FTP_UseHOST;
 
   FDataPort := 0;
   FDataPortMin := 0;
@@ -1208,6 +1212,21 @@ begin
     LSendQuitOnError := True;
 
     FGreeting.Assign(LastCmdResult);
+    // Implement HOST command as specified by
+    // http://tools.ietf.org/html/draft-hethmon-mcmurray-ftp-hosts-01
+    // Do not check the response for failures.  The draft suggests allowing
+    // 220 (success) and 500/502 (unsupported), but vsftpd returns 530, and
+    // whatever ftp.microsoft.com is running returns 504.
+    if UseHOST then begin
+      if FHost = Socket.Binding.PeerIP then begin
+        IOHandler.WriteLn('HOST [' + FHost + ']');
+      end else begin
+        IOHandler.WriteLn('HOST ' + FHost);
+      end;
+      if GetResponse = 220 then begin
+        FGreeting.Assign(LastCmdResult);
+      end;
+    end;
     DoOnBannerBeforeLogin (FGreeting.FormattedReply);
 
     // RLebeau: having an AutoIssueFeat property doesn't make sense to
