@@ -49,6 +49,7 @@ const
   Id_HTTPMethodReport = 'REPORT';  {do not localize}
   Id_HTTPMethodVersion = 'VERSION-CONTROL';  {do not localize}
   Id_HTTPMethodLabel = 'LABEL';  {do not localize}
+  Id_HTTPMethodMakeCol = 'MKCOL';  {Do not localize}
 
 const
   //casing is according to rfc
@@ -75,6 +76,7 @@ type
     procedure DAVUnCheckOut(const AURL: String);
     procedure DAVUnLock(const AURL: string; const ALockToken: string);
     procedure DAVVersionControl(const AURL: string);
+    procedure DAVMakeCollection(const AURL: string);
   end;
 
 implementation
@@ -316,6 +318,11 @@ begin
       Request.CustomHeaders.Values['If'] := '';  {do not localize}
     end;
   end;
+end;
+
+procedure DAVMakeCollection(const AURL: string);
+begin
+  DoRequest(Id_HTTPMethodMakeCol, AURL, nil, nil, []);
 end;
 
 end.
