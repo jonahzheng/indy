@@ -210,7 +210,8 @@ begin
         LParams := TStringList.Create;
         try
           while Length(S) > 0 do begin
-            LParams.Add(Fetch(S, ',')); {do not localize}
+            // RLebeau: Apache sends a space after each comma, but IIS does not!
+            LParams.Add(Trim(Fetch(S, ','))); {do not localize}
           end;
 
           for i := LParams.Count-1 downto 0 do
