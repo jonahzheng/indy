@@ -135,6 +135,23 @@ begin
   //
   //02-16-2005  04:16AM       <DIR>          pub
 
+  //Also, this really should cover a dir form that might be used on some FTP servers.
+  //Serv-U uses this if you specify -h:"DOS" when retreiving a DIR with LIST:
+  //
+{
+09/09/2008  03:51 PM    <DIR>          .
+09/09/2008  03:51 PM    <DIR>          ..
+04/29/2008  01:39 PM               802 00index.txt
+09/09/2008  03:51 PM    <DIR>          allegrosurf
+09/09/2008  03:51 PM    <DIR>          FTP Voyager SDK
+09/09/2008  03:51 PM    <DIR>          ftptree
+09/09/2008  03:51 PM    <DIR>          ftpvoyager
+09/22/2008  10:28 AM    <DIR>          OpenSSL
+09/09/2008  03:51 PM    <DIR>          serv-u
+09/09/2008  03:51 PM    <DIR>          VISIT www.RhinoSoft.com
+09/09/2008  03:51 PM    <DIR>          WinKey
+09/09/2008  03:51 PM    <DIR>          zaep
+}
   Result := False;
   for i := 0 to AListing.Count - 1 do
   begin
@@ -259,27 +276,37 @@ begin
     end;
   end;
 
-  LBuffer := Trim(LBuffer);
+  repeat
+    LBuffer := Trim(LBuffer);
 
-  // Scan file size or dir marker
-  LValue := Fetch(LBuffer);
+    // Scan file size or dir marker
+    LValue := Fetch(LBuffer);
 
-  // Strip commas or StrToInt64Def will barf
-  if IndyPos(',', LValue) <> 0 then begin   {Do not Localize}
-    LValue := StringReplace(LValue, ',', '', [rfReplaceAll]);    {Do not Localize}
-  end;
-
-  // What did we get?
-  if TextIsSame(LValue, '<DIR>') then    {Do not Localize}
-  begin
-    AItem.ItemType := ditDirectory;
-    AItem.SizeAvail := False;
-  end else
-  begin
-    AItem.ItemType := ditFile;
-    AItem.Size := IndyStrToInt64(LValue, 0);
-  end;
-
+    // Strip commas or StrToInt64Def will barf
+    if IndyPos(',', LValue) <> 0 then begin   {Do not Localize}
+      LValue := StringReplace(LValue, ',', '', [rfReplaceAll]);    {Do not Localize}
+    end;
+    // What did we get?
+    if TextIsSame(LValue, '<DIR>') then    {Do not Localize}
+    begin
+      AItem.ItemType := ditDirectory;
+      AItem.SizeAvail := False;
+      Break;
+    end else
+    begin
+      if not TextIsSame(LValue, 'AM') then
+      begin
+        if TextIsSame(LValue, 'PM') then
+        begin
+          AItem.ModifiedDate := AItem.ModifiedDate + EncodeTime(12,0,0,0);
+        end else begin
+          AItem.ItemType := ditFile;
+          AItem.Size := IndyStrToInt64(LValue, 0);
+          break;
+        end;
+      end;
+    end;
+  until False;
   //We do things this way because a space starting a file name is legel
   if AItem.ItemType = ditDirectory then begin
     LPosMarker := 10;
