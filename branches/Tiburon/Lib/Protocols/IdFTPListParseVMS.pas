@@ -179,7 +179,7 @@ begin
   if Result then
   begin
     Result := (IndyPos(' BLOCK', LData) > 9) and    {do not localize}
-              TextEndsWith(AData, '.') and          {do not localize}
+          //    TextEndsWith(AData, '.') and          {do not localize}
               (IndyPos(' FILE', LData) > 9);        {do not localize}
     if not Result then begin
       Result := Fetch(LData) = '*.*;';              {do not localize}
@@ -235,6 +235,15 @@ begin
   LBuffer := Fetch(LLine, ';'); {do not localize}
   LI.LocalFileName := LowerCase(LBuffer);
   LBuf2 := Fetch(LLine);
+  //Some FTP servers might follow the filename with a tab and than
+  //give an error such as this:
+  //1KBTEST.PTF;10#9No privilege for attempted operation
+  if IndyPos(#9,LBuf2) >0 then begin
+    LBuf2 := Fetch(LBuf2,#9);
+    LVMSError := True;
+
+  end;
+
   LI.Version := IndyStrToInt(LBuf2, 0);
   LBuffer := LBuffer + ';' + LBuf2; {do not localize}
 
@@ -266,7 +275,13 @@ begin
   if APath <> '' then begin
     AItem.FileName := APath + AItem.FileName;
   end;
-
+  if LVMSError then
+  begin
+    LI.ModifiedAvail := False;
+    LI.SizeAvail := False;
+    Result := True;
+    Exit;
+  end;
   LCols := TStringList.Create;
   try
     SplitColumns(LLine, LCols);
