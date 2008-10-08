@@ -39,6 +39,7 @@ const
   Id_HTTPMethodPropPatch = 'PROPPATCH';  {do not localize}
   Id_HTTPMethodOrderPatch = 'ORDERPATCH';  {do not localize}
   Id_HTTPMethodSearch = 'SEARCH';  {do not localize}
+  Id_HTTPMethodMKCol = 'MKCOL';  {do not localize}
   Id_HTTPMethodMove = 'MOVE';  {do not localize}
   Id_HTTPMethodCopy = 'COPY';  {do not localize}
   Id_HTTPMethodCheckIn = 'CHECKIN';  {do not localize}
@@ -320,7 +321,7 @@ begin
   end;
 end;
 
-procedure DAVMakeCollection(const AURL: string);
+procedure TIdWebDAV.DAVMakeCollection(const AURL: string);
 begin
   DoRequest(Id_HTTPMethodMakeCol, AURL, nil, nil, []);
 end;
