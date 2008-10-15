@@ -764,6 +764,7 @@ resourcestring
   RSFTPSTRUChanged = 'Structure set to %s.';
   RSFTPSITECmdsSupported = 'The following SITE commands are supported:';
   RSFTPDirectorySTRU = '%s directory structure.';
+  RSFTPCmdStartOfStat = 'System status';
   RSFTPCmdEndOfStat = 'End of Status';
   RSFTPCmdExtsSupportedStart = 'Extensions supported:';
   RSFTPCmdExtsSupportedEnd = 'End of extentions.';

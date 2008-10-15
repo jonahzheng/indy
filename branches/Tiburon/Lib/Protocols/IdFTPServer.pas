@@ -1844,6 +1844,7 @@ begin
   LCmd.Command := 'SITE';    {Do not Localize}
   LCmd.OnCommand := CommandSITE;
   LCmd.ExceptionReply.NumericCode := 501;
+  LCmd.Description.Text := 'Syntax: SITE (site-specific commands)';
 
   //SYST <CRLF>
   LCmd := CommandHandlers.Add;
@@ -3578,16 +3579,13 @@ begin
           FOnStat(LContext, LStream);
           for i := 0 to LStream.Count - 1 do
           begin
-            if i = 0 then begin
-              ASender.Reply.Text.Add(TrimLeft(LStream[i]));
-            end else begin
-              ASender.Reply.Text.Add('     ' + TrimLeft(LStream[i])); {Do not Localize}
-            end;
+            ASender.Reply.Text.Add('    ' + TrimLeft(LStream[i])); {Do not Localize}
           end;
         finally
           FreeAndNil(LStream);
         end;
       end;
+      ASender.Reply.Text.Insert(0,RSFTPCmdStartOfStat);
       ASender.Reply.Text.Add(RSFTPCmdEndOfStat);
     end else
     begin //else act as LIST command without a data channel
@@ -3634,16 +3632,16 @@ begin
     SetRFCReplyFormat(ASender.Reply);
     ASender.Reply.NumericCode := 211;
     ASender.Reply.Text.Add(RSFTPCmdExtsSupportedStart); {Do not translate}
-    //AVBL
-    if Assigned(FOnAvailDiskSpace) then
-    begin
-      ASender.Reply.Text.Add('AVBL');
-    end;
     //AUTH
     if IOHandler is TIdServerIOHandlerSSLBase then begin
       if (FUseTLS <> utUseImplicitTLS) then begin
         ASender.Reply.Text.Add('AUTH TLS;AUTH TLS-C;SSL;TLS-P;'); {Do not translate}
       end;
+    end;
+    //AVBL
+    if Assigned(FOnAvailDiskSpace) then
+    begin
+      ASender.Reply.Text.Add('AVBL');
     end;
     //CCC
     if (FUseTLS <> utNoTLSSupport) then begin
@@ -3696,7 +3694,6 @@ begin
         ASender.Reply.Text.Add('MDTM YYYYMMDDHHMMSS filename');  {Do not translate}
       end;
     end;
-
     //MFCT
     if Assigned(FOnSetCreationTime) then begin
       ASender.Reply.Text.Add('MFCT');  {Do not Localize}
@@ -3738,7 +3735,6 @@ begin
     if Assigned(FOnSetModifiedTime) or Assigned(FTPFileSystem) then begin
       ASender.Reply.Text.Add('MFMT');  {Do not Localize}
     end;
-
     //MLST
     if Assigned(FOnListDirectory) then begin
       ASender.Reply.Text.Add('MLSD');  {Do not translate}
@@ -3748,6 +3744,16 @@ begin
     if Assigned(FCompressor) then begin
       ASender.Reply.Text.Add('MODE Z'); {do not localize}
     end;
+    //OPTS
+    LTmp := 'OPTS ';
+    if Assigned(FOnListDirectory) then begin
+      LTmp := LTmp + 'MLST;';
+    end;
+    if Assigned(FCompressor) then begin
+      LTmp := LTmp + 'MODE;';
+    end;
+    LTmp := LTmp + 'UTF8';
+    ASender.Reply.Text.Add(LTmp);
     //PBSZ
     if (FUseTLS <> utNoTLSSupport) then begin
       ASender.Reply.Text.Add('PBSZ');   {Do not translate}
@@ -3852,7 +3858,13 @@ begin
     if UserSecurity.FInvalidPassDelay <> 0 then begin
       LTmp := LTmp + '2577 ';
     end;
-    ASender.Reply.Text.Add(LTmp + '3659'); {Do not Localize}
+    LTmp := LTmp + '3659 '; {Do not Localize}
+    if IOHandler is TIdServerIOHandlerSSLBase then begin
+      if (FUseTLS <> utUseImplicitTLS) then begin
+        LTmp := LTmp + '4217 ';  {Do not localize}
+      end;
+    end;
+    ASender.Reply.Text.Add(Trim(LTmp)); {Do not Localize}
     ASender.Reply.Text.Add(RSFTPCmdExtsSupportedEnd);
   end;
 end;
