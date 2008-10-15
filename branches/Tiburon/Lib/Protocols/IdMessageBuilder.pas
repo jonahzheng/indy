@@ -1,11 +1,34 @@
 unit IdMessageBuilder;
 
 interface
+
 {$i IdCompilerDefines.inc}
+
 uses
   Classes, IdMessage;
 
 type
+  TIdMessageBuilderAttachment = class(TCollectionItem)
+  private
+    FContentID: String;
+    FFileName: String;
+  public
+    procedure Assign(Source: TPersistent); override;
+    property ContentID: String read FContentID write FContentID;
+    property FileName: String read FFileName write FFileName;
+  end;
+
+  TIdMessageBuilderAttachments = class(TCollection)
+  private
+    function GetAttachment(Index: Integer): TIdMessageBuilderAttachment;
+    procedure SetAttachment(Index: Integer; Value: TIdMessageBuilderAttachment);
+  public
+    constructor Create; reintroduce;
+    function Add(const AFileName: String; const AContentID: String = ''): TIdMessageBuilderAttachment; reintroduce;
+    property Attachment[Index: Integer]: TIdMessageBuilderAttachment
+      read GetAttachment write SetAttachment; default;
+  end;
+
   TIdCustomMessageBuilder = class
   protected
     FAttachments: TStrings;
@@ -30,11 +53,11 @@ type
   TIdMessageBuilderHtml = class(TIdCustomMessageBuilder)
   protected
     FHtml: TStrings;
-    FHtmlFiles: TStrings;
+    FHtmlFiles: TIdMessageBuilderAttachments;
     procedure InternalFill(AMsg: TIdMessage); override;
     procedure SetContentType(AMsg: TIdMessage); override;
     procedure SetHtml(AValue: TStrings);
-    procedure SetHtmlFiles(AValue: TStrings);
+    procedure SetHtmlFiles(AValue: TIdMessageBuilderAttachments);
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -42,7 +65,7 @@ type
     procedure Clear; override;
     //
     property Html: TStrings read FHtml write SetHtml;
-    property HtmlFiles: TStrings read FHtmlFiles write SetHtmlFiles;
+    property HtmlFiles: TIdMessageBuilderAttachments read FHtmlFiles write SetHtmlFiles;
   end;
 
   TIdMessageBuilderRtfType = (idMsgBldrRtfMS, idMsgBldrRtfEnriched, idMsgBldrRtfRichtext);
@@ -76,6 +99,46 @@ const
   cMultipartAlternative = 'multipart/alternative'; {do not localize}
   cMultipartMixed = 'multipart/mixed'; {do not localize}
   cMultipartRelatedHtml = 'multipart/related; type="text/html"'; {do not localize}
+
+{ TIdMessageBuilderAttachment }
+
+procedure TIdMessageBuilderAttachment.Assign(Source: TPersistent);
+begin
+  if Source is TIdMessageBuilderAttachment then
+  begin
+    with TIdMessageBuilderAttachment(Source) do
+    begin
+      Self.FContentID := FContentID;
+      Self.FFileName := FFileName;
+    end;
+  end else begin
+    inherited Assign(Source);
+  end;
+end;
+
+{ TIdMessageBuilderAttachments }
+
+constructor TIdMessageBuilderAttachments.Create;
+begin
+  inherited Create(TIdMessageBuilderAttachment);
+end;
+
+function TIdMessageBuilderAttachments.Add(const AFileName: String; const AContentID: String = ''): TIdMessageBuilderAttachment;
+begin
+  Result := TIdMessageBuilderAttachment(inherited Add);
+  Result.FContentID := AContentID;
+  Result.FFileName := AFileName;
+end;
+
+function TIdMessageBuilderAttachments.GetAttachment(Index: Integer): TIdMessageBuilderAttachment;
+begin
+  Result := TIdMessageBuilderAttachment(inherited GetItem(Index));
+end;
+
+procedure TIdMessageBuilderAttachments.SetAttachment(Index: Integer; Value: TIdMessageBuilderAttachment);
+begin
+  inherited SetItem(Index, Value);
+end;
 
 { TIdCustomMessageBuilder }
 
@@ -185,7 +248,7 @@ constructor TIdMessageBuilderHtml.Create;
 begin
   inherited Create;
   FHtml := TStringList.Create;
-  FHtmlFiles := TStringList.Create;
+  FHtmlFiles := TIdMessageBuilderAttachments.Create;
 end;
 
 destructor TIdMessageBuilderHtml.Destroy;
@@ -206,6 +269,21 @@ procedure TIdMessageBuilderHtml.InternalFill(AMsg: TIdMessage);
 var
   LUseText, LUseHtml, LUseHtmlFiles, LUseAttachments: Boolean;
   I, LAlternativeIndex, LRelatedIndex: Integer;
+  LAttachment: TIdMessageBuilderAttachment;
+
+  function FormatContentId(Item: TIdMessageBuilderAttachment): String;
+  begin
+    if Item.FContentID <> '' then begin
+      Result := EnsureMsgIDBrackets(Item.FContentID);
+    end
+    else if Item.FFileName <> '' then begin
+      Result := EnsureMsgIDBrackets(ExtractFileName(Item.FFileName));
+    end
+    else begin
+      Result := '';
+    end;
+  end;
+
 begin
   // Cache these for better performance
   //
@@ -309,9 +387,10 @@ begin
     begin
       for I := 0 to FHtmlFiles.Count-1 do
       begin
-        with TIdAttachmentFile.Create(AMsg.MessageParts, FHtmlFiles[I]) do
+        LAttachment := FHtmlFiles[I];
+        with TIdAttachmentFile.Create(AMsg.MessageParts, LAttachment.FileName) do
         begin
-          ContentId := '<' + FileName + '>';
+          ContentId := FormatContentId(LAttachment);
           ContentType := GetMIMETypeFromFile(FileName);
           if TextStartsWith(ContentType, 'image/') then begin {do not localize}
             ContentDisposition := 'inline'; {do not localize}
@@ -358,7 +437,7 @@ begin
   FHtml.Assign(AValue);
 end;
 
-procedure TIdMessageBuilderHtml.SetHtmlFiles(AValue: TStrings);
+procedure TIdMessageBuilderHtml.SetHtmlFiles(AValue: TIdMessageBuilderAttachments);
 begin
   FHtmlFiles.Assign(AValue);
 end;
