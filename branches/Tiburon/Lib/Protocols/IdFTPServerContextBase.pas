@@ -79,6 +79,7 @@ begin
   FALLOSize := 0;
   FCurrentDir := '/';    {Do not Localize}
   FHomeDir := '';    {Do not Localize}
+  FHost := '';   {Do not localize}
   FUsername := '';    {Do not Localize}
   FPassword := '';    {Do not Localize}
   FRESTPos := 0;
