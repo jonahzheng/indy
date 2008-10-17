@@ -329,6 +329,8 @@ resourcestring
   RSBlockIncorrectLength = 'Incorrect length in received block (%d)';
 
   // FTP
+  RSFTPInvalidNumberArgs = 'Invalid number of arguments %s';
+  RSFTPHostNotFound = 'Host not found.';
   RSFTPUnknownHost = 'Unknown';
   RSFTPStatusReady = 'Connection established';
   RSFTPStatusStartTransfer = 'Starting FTP transfer';
@@ -703,6 +705,7 @@ resourcestring
   RSFTPUserOkay = 'User name okay, need password.';
   RSFTPAnonymousUserOkay = 'Anonymous login OK, send e-mail as password.';
   RSFTPNeedLoginWithUser = 'Login with USER first.';
+  RSFTPNotAfterAuthentication = 'Not in authorization state, already logged in.';
   RSFTPFileActionPending = 'Requested file action pending further information.';
   RSFTPServiceNotAvailable = 'Service not available, closing control connection.';
   RSFTPCantOpenDataConn = 'Can''t open data connection.';

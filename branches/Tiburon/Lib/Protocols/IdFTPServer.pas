@@ -707,6 +707,7 @@ type
   TOnCacheChecksum = procedure(ASender: TIdFTPServerContext; const AFileName : TIdFTPFileName; var VCheckSum : String) of object;
   TOnVerifyChecksum = procedure(ASender: TIdFTPServerContext; const AFileName : TIdFTPFileName; const ACheckSum : String) of object;
   TOnSetFileDateEvent = procedure(ASender: TIdFTPServerContext; const AFileName : TIdFTPFileName; var AFileTime : TDateTime) of object;
+  TOnHostCheck = procedure(ASender:TIdFTPServerContext; const AHost : String; var VAccepted : Boolean) of object;
   //This is just to be efficient with the SITE UTIME command and for setting the windows.lastaccesstime fact
   TOnSiteUTIME = procedure(ASender: TIdFTPServerContext; const AFileName : TIdFTPFileName;
     var VLastAccessTime, VLastModTime, VCreateDate : TDateTime;
@@ -975,6 +976,7 @@ type
     FCompressor : TIdZLibCompressorBase;
     FOnMLST : TIdOnMLST;
     FOnSiteUTIME : TOnSiteUTIME;
+    FOnHostCheck : TOnHostCheck;
     function SupportTaDirSwitches(AContext : TIdFTPServerContext) : Boolean;
     function IgnoreLastPathDelim(const APath : String) : String;
     procedure DoOnPASVBeforeBind(ASender : TIdFTPServerContext; var VIP : String;
@@ -999,6 +1001,8 @@ type
     procedure CmdFileActionAborted(ASender : TIdCommand);
     procedure CmdSyntaxError(AContext: TIdContext; ALine: string; const AReply : TIdReply = nil); overload;
     procedure CmdSyntaxError(ASender : TIdCommand); overload;
+    procedure CmdInvalidParams(ASender: TIdCommand);
+    procedure CmdInvalidParamNum(ASender:TIdCommand);
     //The http://www.potaroo.net/ietf/idref/draft-twine-ftpmd5/
     //draft didn't specify 550 as an error.  It said use 504.
     procedure CmdTwineFileActionAborted(ASender : TIdCommand);
@@ -1075,6 +1079,7 @@ type
     //
     procedure CommandSPSV(ASender: TIdCommand);
 
+    procedure CommandHOST(ASender : TIdCommand);
     procedure CommandSecRFC(ASender : TIdCommand); //stub for some commands in 2228
     procedure CommandSITE(ASender: TIdCommand);
     procedure CommandSiteHELP(ASender : TIdCommand);
@@ -1207,6 +1212,7 @@ type
     property OnSetCreationTime : TOnSetFileDateEvent read FOnSetCreationTime write FOnSetCreationTime;
     property OnSetModifiedTime : TOnSetFileDateEvent read FOnSetModifiedTime write FOnSetModifiedTime;
     property OnFileExistCheck : TOnCheckFileEvent read FOnFileExistCheck write FOnFileExistCheck;
+    property OnHostCheck : TOnHostCheck read FOnHostCheck write FOnHostCheck;
     property OnSetATTRIB : TOnSetATTRIB read FOnSetATTRIB write FOnSetATTRIB;
     property OnSiteUMASK : TOnSiteUMASK read FOnSiteUMASK write FOnSiteUMASK;
     property OnSiteCHMOD : TOnSiteCHMOD read FOnSiteCHMOD write FOnSiteCHMOD;
@@ -1258,11 +1264,11 @@ uses
 const
   //THese commands need some special treatment in the Indy 10 FTP Server help system
   //as they will not always work
-  HELP_SPEC_CMDS : array [0..21] of string =
+  HELP_SPEC_CMDS : array [0..22] of string =
     ('SIZE','MDTM',                                                 {do not localize}
      'AUTH','PBSZ','PROT','CCC','MIC','CONF','ENC', 'SSCN','CPSV',  {do not localize}
      'MFMT','MFF','MD5','MMD5','XCRC','XMD5','XSHA1',               {do not localize}
-     'COMB','AVBL','DSIZ','RMDA');                                                       {do not localize}
+     'COMB','AVBL','DSIZ','RMDA','HOST');                                                       {do not localize}
 
   //These commands must always be present even if not implemented
   //alt help topics and superscripts should be used sometimes.
@@ -1504,6 +1510,10 @@ var
           begin
             Result := True;
           end;
+        22 : // HOST
+          if Assigned( FOnHostCheck ) then begin
+            Result := True;
+          end;
     end;
   end;
 
@@ -1637,6 +1647,48 @@ begin
       FreeAndNil(LCmds);
     end;
   end;
+end;
+
+procedure TIdFTPServer.CommandHOST(ASender: TIdCommand);
+var LTmp : String;
+  LValid : Boolean;
+  LContext : TIdFTPServerContext;
+begin
+  LContext := TIdFTPServerContext(ASender.Context);
+  if Assigned(OnHostCheck) then begin
+    if LContext.Username <> '' then begin
+      ASender.Reply.SetReply(530,  RSFTPNotAfterAuthentication );
+      Exit;
+    end;
+    if (ASender.Params.Count > 0)  then begin
+      LTmp := ASender.Params[0];
+      if Copy(LTmp,1,1)='[' then begin
+        Delete(LTmp,1,1);
+      end;
+      LTmp := Fetch(LTmp,']');
+      LValid := False;
+      FOnHostCheck(LContext,LTmp,LValid);
+      if LValid then begin
+        LContext.Host := LTmp;
+        OnGreeting(LContext,ASender.Reply);
+        if ASender.Reply.NumericCode = 421 then
+        begin
+          ASender.Disconnect := True;
+        end else begin
+          //setting the reply code number directly causes the text to be cleared
+          ASender.Reply.SetReply(220,ASender.Reply.Text.Text);
+         // ASender.Reply.NumericCode := 220;
+        end;
+        ASender.SendReply;
+  //      ASender.PerformReply := Reply;
+      end else begin
+        ASender.Reply.SetReply(530,RSFTPHostNotFound);
+      end;
+    end;
+  end else begin
+     CmdSyntaxError(ASender);
+  end;
+
 end;
 
 procedure TIdFTPServer.InitializeCommandHandlers;
@@ -2106,6 +2158,13 @@ begin
   LCmd.Command := 'SPSV'; {do not localize}
   LCmd.OnCommand := CommandSPSV;
   LCmd.Description.Text := 'Syntax: SPSV (set server in passive mode)'; {do not localize}
+
+  LCmd := CommandHandlers.Add;
+  LCmd.Command := 'HOST';  {Do not localize}
+  LCmd.OnCommand := CommandHOST;
+  LCmd.ExceptionReply.NumericCode := 504;
+  LCmd.Description.Text := 'Syntax: HOST <sp> domain (select a domain prior to logging in)';  {Do not localize}
+
   //Note that these commands are mentioned in old RFC's
   //and we will not support them at all.  The commands
   //were there because FTP was a predisessor of SMTP
@@ -3670,6 +3729,10 @@ begin
     ASender.Reply.Text.Add('EPRT');    {Do not translate}
     //EPSV
     ASender.Reply.Text.Add('EPSV');    {Do not translate}
+    //Host
+    if Assigned(FOnHostCheck) then  begin
+      ASender.Reply.Text.Add('HOST domain');  {Do not localize}
+    end;
     //
     //This is not proper but FTP Voyager uses it to determine if the -T parameter
     //will work.
@@ -3962,7 +4025,7 @@ begin
     LParm := ASender.UnparsedParams;
     if Length(LParm) = 0 then begin
       LContext.FDataPortDenied := True;
-      ASender.Reply.SetReply(501, IndyFormat(RSFTPParamError, [ASender.CommandHandler.Command]));
+      CmdInvalidParamNum(ASender);
       Exit;
     end;
     if FFTPSecurityOptions.BlockAllPORTTransfers then
@@ -4362,6 +4425,10 @@ begin
   LContext := ASender.Context as TIdFTPServerContext;
   if IOHandler is TIdServerIOHandlerSSLBase then
   begin
+    if ASender.UnparsedParams = '' then
+    begin
+      CmdInvalidParamNum(ASender);
+    end;
     if (LContext.AuthMechanism = '') and (FUseTLS <> utUseImplicitTLS) then
     begin
       ASender.Reply.SetReply(503, RSFTPPBSZAuthDataRequired);
@@ -4386,7 +4453,7 @@ begin
         LContext.DataPBSZCalled := True;
       end else
       begin
-        ASender.Reply.SetReply(501, IndyFormat(RSFTPParamError, [ASender.CommandHandler.Command]));
+        CmdInvalidParams(ASender);
       end;
     end;
   end else
@@ -4448,6 +4515,11 @@ begin
   end;
   if LContext.IsAuthenticated(ASender) then
   begin
+    if ASender.UnparsedParams = '' then
+    begin
+      Self.CmdInvalidParamNum(ASender);
+      Exit;
+    end;
     if Pos('"', ASender.UnparsedParams) > 0 then
     begin
       LBuf := ASender.UnparsedParams;
@@ -4469,7 +4541,7 @@ begin
       end;
     end else
     begin
-      ASender.Reply.SetReply(501, IndyFormat(RSFTPParamError, [ASender.CommandHandler.Command]));
+      Self.CmdInvalidParams(ASender);
     end;
   end;
 end;
@@ -4725,6 +4797,11 @@ begin
     Exit;
   end;
   s := '';
+  if ASender.UnparsedParams = '' then
+  begin
+    CmdInvalidParamNum(ASender);
+    Exit;
+  end;
   if LContext.IsAuthenticated(ASender) then begin
     LFacts := TStringList.Create;
     try
@@ -5806,6 +5883,18 @@ begin
   ASender.Reply.SetReply(550, RSFTPFileActionAborted);
 end;
 
+//This is for where the client didn't provide a valid number of parameters for a command
+procedure TIdFTPServer.CmdInvalidParamNum(ASender: TIdCommand);
+begin
+  ASender.Reply.SetReply(501, IndyFormat(RSFTPInvalidNumberArgs, [ASender.CommandHandler.Command]));
+end;
+
+//This is for other command syntax issues.
+procedure TIdFTPServer.CmdInvalidParams(ASender: TIdCommand);
+begin
+  ASender.Reply.SetReply(501, IndyFormat(RSFTPParamError, [ASender.CommandHandler.Command]));
+end;
+
 procedure TIdFTPServer.CmdTwineFileActionAborted(ASender: TIdCommand);
 begin
   ASender.Reply.SetReply(504, RSFTPFileActionAborted);
@@ -5917,7 +6006,7 @@ begin
       end;
       if LFileName = '' then
       begin
-        ASender.Reply.SetReply(501, IndyFormat(RSFTPParamError, [ASender.CommandHandler.Command]));
+        Self.CmdInvalidParamNum(ASender);
         Exit;
       end;
       LBuf := Trim(LBuf);

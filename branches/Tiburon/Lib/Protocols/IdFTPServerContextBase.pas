@@ -46,6 +46,7 @@ type
     FALLOSize: Integer;
     FCurrentDir: TIdFTPFileName;
     FHomeDir: TIdFTPFileName;
+    FHost : String;
     FUsername: string;
     FPassword: string;
     FRESTPos: Integer;
@@ -59,6 +60,8 @@ type
     property HomeDir: TIdFTPFileName read FHomeDir write FHomeDir;
     property Password: string read FPassword write FPassword;
     property Username: string read FUsername write FUsername;
+    //for virtual domains
+    property Host: string read FHost write FHost;
     property UserType: TIdFTPUserType read FUserType write FUserType;
     property RESTPos: Integer read FRESTPos write FRESTPos;
     property RNFR: string read FRNFR write FRNFR;
