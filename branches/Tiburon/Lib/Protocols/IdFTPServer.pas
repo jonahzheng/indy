@@ -1371,7 +1371,7 @@ begin
     if not FDataChannel.Stopped then
     begin
       FDataChannel.Stopped := True;
-      FDataChannel.FDataChannel.Disconnect;
+      FDataChannel.FDataChannel.Disconnect(False);
     end;
     FreeAndNil(FDataChannel);
   end;
@@ -3537,7 +3537,7 @@ begin
             end;
           finally
             if Assigned(LContext.FDataChannel.FDataChannel) then begin
-              LContext.FDataChannel.FDataChannel.Disconnect;
+              LContext.FDataChannel.FDataChannel.Disconnect(False);
             end;
           end;
           LContext.FDataChannel.FReply.Assign(LContext.FDataChannel.FOKReply); //226
@@ -6968,7 +6968,7 @@ begin
           TIdFTPServerContext(FControlContext).FDataPortDenied := True;
           ErrorReply.SetReply(504, RSFTPSameIPAddress);
           FControlContext.Connection.IOHandler.Write(ErrorReply.FormattedReply);
-          TIdSimpleServer(FDataChannel).Disconnect;
+          TIdSimpleServer(FDataChannel).Disconnect(False);
           Exit;
         end;
       end;

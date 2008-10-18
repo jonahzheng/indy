@@ -1611,7 +1611,7 @@ begin
             end;
           end;
         finally
-          LPasvCl.Disconnect;
+          LPasvCl.Disconnect(False);
         end;
       finally
         FinalizeDataOperation;
@@ -1738,7 +1738,7 @@ begin
           end;
         end;
       finally
-        LPasvCl.Disconnect;
+        LPasvCl.Disconnect(False);
       end;
     finally
       FinalizeDataOperation;
