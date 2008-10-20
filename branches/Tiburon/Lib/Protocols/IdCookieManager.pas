@@ -65,16 +65,16 @@ uses
   IdURI;
 
 Type
-  TOnNewCookieEvent = procedure(ASender: TObject; ACookie: TIdCookieRFC2109; Var VAccept: Boolean) of object;
+  TOnNewCookieEvent = procedure(ASender: TObject; ACookie: TIdCookieRFC2109; var VAccept: Boolean) of object;
 
-  TOnManagerEvent = procedure(ASender: TObject; ACookieCollection: TIdCookies) of object;
-  TOnCreateEvent = TOnManagerEvent;
-  TOnDestroyEvent = TOnManagerEvent;
+  TOnCookieManagerEvent = procedure(ASender: TObject; ACookieCollection: TIdCookies) of object;
+  TOnCookieCreateEvent = TOnCookieManagerEvent;
+  TOnCookieDestroyEvent = TOnCookieManagerEvent;
 
   TIdCookieManager = class(TIdBaseComponent)
   protected
-    FOnCreate: TOnCreateEvent;
-    FOnDestroy:  TOnDestroyEvent;
+    FOnCreate: TOnCookieCreateEvent;
+    FOnDestroy:  TOnCookieDestroyEvent;
     FOnNewCookie: TOnNewCookieEvent;
     FCookieCollection: TIdCookies;
 
@@ -85,15 +85,18 @@ Type
     function DoOnNewCookie(ACookie: TIdCookieRFC2109): Boolean; virtual;
     procedure InitComponent; override;
   public
+    destructor Destroy; override;
+    //
     procedure AddCookie(ACookie, AHost: String);
     procedure AddCookie2(ACookie, AHost: String);
-    destructor Destroy; override;
+    procedure AddCookies(ASource: TIdCookieManager);
+    //
     function GenerateCookieList(URL: TIdURI; SecureConnection: Boolean = false): String;
     //
     property CookieCollection: TIdCookies read FCookieCollection;
   published
-    property OnCreate: TOnCreateEvent read FOnCreate write FOnCreate;
-    property OnDestroy: TOnDestroyEvent read FOnDestroy write FOnDestroy;
+    property OnCreate: TOnCookieCreateEvent read FOnCreate write FOnCreate;
+    property OnDestroy: TOnCookieDestroyEvent read FOnDestroy write FOnDestroy;
     property OnNewCookie: TOnNewCookieEvent read FOnNewCookie write FOnNewCookie;
   end;
 
@@ -191,7 +194,7 @@ Var
   i, j: Integer;
   LCookieList: TIdCookieList;
   LResultList: TIdCookieList;
-  LCookiesByDomain: TIdCookieList;
+  LCookiesByDomain: TIdCookieDomainList;
 begin
   CleanupCookieList;
   S := '';    {Do not Localize}
@@ -207,7 +210,7 @@ begin
         begin
           if IsDomainMatch(URL.Host, LCookiesByDomain.Strings[i]) then
           begin
-            LCookieList := LCookiesByDomain.Objects[i] as TIdCookieList;
+            LCookieList := LCookiesByDomain.CookieList[i];
 
             for j := LCookieList.Count - 1 downto 0 do
             begin
@@ -237,7 +240,7 @@ begin
   finally
     FCookieCollection.UnlockCookieListByDomain(caRead);
   end;
-  result := S;
+  Result := S;
 end;
 
 procedure TIdCookieManager.DoAdd(ACookie: TIdCookieRFC2109; ACookieText, AHost: String);
@@ -246,6 +249,9 @@ begin
 
   if Length(ACookie.Domain) = 0 then begin
     ACookie.Domain := AHost;
+  end
+  else if not TextStartsWith(ACookie.Domain, '.') then begin {do not localize}
+    ACookie.Domain := '.' + ACookie.Domain;
   end;
 
   if not IsRejectedCookie(ACookie, AHost) then
@@ -275,6 +281,13 @@ Var
 begin
   LCookie := FCookieCollection.Add2;
   DoAdd(LCookie, ACookie, AHost);
+end;
+
+procedure TIdCookieManager.AddCookies(ASource: TIdCookieManager);
+begin
+  if (ASource <> nil) and (ASource <> Self) then begin
+    FCookieCollection.AddCookies(ASource.CookieCollection);
+  end;
 end;
 
 function TIdCookieManager.DoOnNewCookie(ACookie: TIdCookieRFC2109): Boolean;
@@ -307,7 +320,7 @@ var
   S: String;
   i, j, LLastCount: Integer;
   LCookieList: TIdCookieList;
-  LCookiesByDomain: TIdCookieList;
+  LCookiesByDomain: TIdCookieDomainList;
 begin
   LCookiesByDomain := FCookieCollection.LockCookieListByDomain(caReadWrite);
   try
@@ -315,7 +328,7 @@ begin
     begin
       for i := 0 to LCookiesByDomain.Count - 1 do
       begin
-        LCookieList := LCookiesByDomain.Objects[i] as TIdCookieList;
+        LCookieList := LCookiesByDomain.CookieList[i];
 
         for j := LCookieList.Count - 1 downto 0 do
         begin

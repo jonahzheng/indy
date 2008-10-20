@@ -107,6 +107,13 @@ Type
     property Cookies[Index: Integer]: TIdNetscapeCookie read GetCookie;
   end;
 
+  TIdCookieDomainList = class(TStringList)
+  protected
+    function GetCookieList(Index: Integer): TIdCookieList;
+  public
+    property CookieList[Index: Integer]: TIdCookieList read GetCookieList;
+  end;
+
   {
     Base Cookie class as described in
     "Persistent Client State -- HTTP Cookies"
@@ -187,6 +194,10 @@ Type
     property PortList[AIndex: Integer]: Integer read GetPort write SetPort;
   end;
 
+  TIdNetscapeCookieClass = class of TIdNetscapeCookie;
+  TIdCookieRFC2109Class = class of TIdCookieRFC2109;
+  TIdCookieRFC2965Class = class of TIdCookieRFC2965;
+
   { Used in the HTTP server }
   // This class descends from TIdCookieRFC2109 but uses Expires and not Max-Age which is not
   // supported from new browsers
@@ -204,7 +215,7 @@ Type
 
   TIdCookies = class(TOwnedCollection)
   protected
-    FCookieListByDomain: TIdCookieList;
+    FCookieListByDomain: TIdCookieDomainList;
     FRWLock: TMultiReadExclusiveWriteSynchronizer;
 
     function GetCookie(const AName, ADomain: string): TIdCookieRFC2109;
@@ -213,18 +224,24 @@ Type
   public
     constructor Create(AOwner: TPersistent);
     destructor Destroy; override;
+
     function Add: TIdCookieRFC2109;
     function Add2: TIdCookieRFC2965;
+
     procedure AddCookie(ACookie: TIdCookieRFC2109);
     procedure AddSrcCookie(const ACookie: string);
+    procedure AddCookies(ASource: TIdCookies);
+
+    procedure Assign(ASource: TPersistent); override;
+    procedure Clear; reintroduce;
     procedure Delete(Index: Integer);
+
     function GetCookieIndex(FirstIndex: Integer; const AName: string): Integer; overload;
     function GetCookieIndex(FirstIndex: Integer; const AName, ADomain: string): Integer; overload;
 
-    function LockCookieListByDomain(AAccessType: TIdCookieAccess): TIdCookieList;
+    function LockCookieListByDomain(AAccessType: TIdCookieAccess): TIdCookieDomainList;
     procedure UnlockCookieListByDomain(AAccessType: TIdCookieAccess);
 
-    // property CookieListByDomain: TIdCookieList read FCookieListByDomain;
     property Cookie[const AName, ADomain: string]: TIdCookieRFC2109 read GetCookie;
     property Items[Index: Integer]: TIdCookieRFC2109 read GetItem write SetItem; Default;
   end;
@@ -272,7 +289,14 @@ end;
 
 function TIdCookieList.GetCookie(Index: Integer): TIdNetscapeCookie;
 begin
-  result := TIdNetscapeCookie(Objects[Index]);
+  Result := TIdNetscapeCookie(Objects[Index]);
+end;
+
+{ TIdDomainList }
+
+function TIdCookieDomainList.GetCookieList(Index: Integer): TIdCookieList;
+begin
+  Result := TIdCookieList(Objects[Index]);
 end;
 
 { TIdNetscapeCookie }
@@ -285,8 +309,8 @@ end;
 
 destructor TIdNetscapeCookie.Destroy;
 Var
-  LListByDomain: TIdCookieList;
-  LCookieStringList: TStringList;
+  LListByDomain: TIdCookieDomainList;
+  LCookieList: TIdCookieList;
   i: Integer;
 begin
   if Assigned(Collection) then try
@@ -295,11 +319,11 @@ begin
       i := LListByDomain.IndexOf(Domain);
       if i > -1 then
       begin
-        LCookieStringList := TStringList(LListByDomain.Objects[i]);
-        i := LCookieStringList.IndexOf(CookieName);
+        LCookieList := LListByDomain.CookieList[i];
+        i := LCookieList.IndexOf(CookieName);
         if i > -1 then
         begin
-          LCookieStringList.Delete(i);
+          LCookieList.Delete(i);
         end;
       end;
     finally
@@ -621,29 +645,21 @@ end;
 constructor TIdCookies.Create(AOwner: TPersistent);
 begin
   inherited Create(AOwner, TIdCookieRFC2109);
-
   FRWLock := TMultiReadExclusiveWriteSynchronizer.Create;
-  FCookieListByDomain := TIdCookieList.Create;
+  FCookieListByDomain := TIdCookieDomainList.Create;
 end;
 
 destructor TIdCookies.Destroy;
-var
-  i : Integer;
 begin
-  // This will force the Cookie removing process before we free the FCookieListByDomain and
-  // FRWLock
-  Clear;
-  for i := 0 to FCookieListByDomain.Count -1 do
-  begin
-    FCookieListByDomain.Objects[i].Free;
-  end;
+  // This will force the Cookie removing process before we free the FCookieListByDomain and FRWLock
+  Self.Clear;
   FreeAndNil(FCookieListByDomain);
   FreeAndNil(FRWLock);
   inherited Destroy;
 end;
 
 procedure TIdCookies.AddCookie(ACookie: TIdCookieRFC2109);
-Var
+var
   LList: TIdCookieList;
   LIndex: Integer;
 begin
@@ -667,7 +683,7 @@ begin
     LIndex := LList.IndexOf(ACookie.CookieName);
     if LIndex = -1 then
     begin
-      LList.AddObject(ACookie.CookieName, ACookie);
+      LList.AddObject(ACookie.CookieName, TIdNetscapeCookie(ACookie));
     end
     else begin
       TIdCookieRFC2109(LList.Objects[LIndex]).Assign(ACookie);
@@ -679,9 +695,25 @@ begin
   end;
 end;
 
+procedure TIdCookies.Assign(ASource: TPersistent);
+begin
+  if (ASource = nil) or (ASource is TIdCookies) then
+  begin
+    LockCookieListByDomain(caReadWrite);
+    try
+      Self.Clear;
+      AddCookies(TIdCookies(ASource));
+    finally
+      UnlockCookieListByDomain(caReadWrite);
+    end;
+  end else begin
+    inherited Assign(ASource);
+  end;
+end;
+
 function TIdCookies.GetItem(Index: Integer): TIdCookieRFC2109;
 begin
-  result := (inherited Items[Index]) as TIdCookieRFC2109;
+  Result := (inherited Items[Index]) as TIdCookieRFC2109;
 end;
 
 procedure TIdCookies.SetItem(Index: Integer; const Value: TIdCookieRFC2109);
@@ -702,6 +734,46 @@ end;
 procedure TIdCookies.AddSrcCookie(const ACookie: string);
 begin
   Add.CookieText := ACookie;
+end;
+
+procedure TIdCookies.AddCookies(ASource: TIdCookies);
+var
+  LSrcDomains: TIdCookieDomainList;
+  LSrcCookies: TIdCookieList;
+  LSrcCookie: TIdNetscapeCookie;
+  LDestCookie: TIdCookieRFC2109;
+  I, J: Integer;
+begin
+  if (ASource <> nil) and (ASource <> Self) then
+  begin
+    LSrcDomains := ASource.LockCookieListByDomain(caRead);
+    try
+      LockCookieListByDomain(caReadWrite);
+      try
+        for I := 0 to LSrcDomains.Count-1 do
+	begin
+          LSrcCookies := LSrcDomains.CookieList[I];
+          for J := 0 to LSrcCookies.Count-1 do
+          begin
+            LSrcCookie := LSrcCookies.Cookies[J];
+            LDestCookie := TIdCookieRFC2109Class(LSrcCookie.ClassType).Create(Self);
+            try
+              LDestCookie.Assign(LSrcCookie);
+              AddCookie(LDestCookie);
+            except
+              LDestCookie.Collection := nil;
+              LDestCookie.Free;
+              raise;
+            end;
+          end;
+	end;
+      finally
+        UnlockCookieListByDomain(caReadWrite);
+      end;
+    finally
+      ASource.UnlockCookieListByDomain(caRead);
+    end;
+  end;
 end;
 
 function TIdCookies.GetCookie(const AName, ADomain: string): TIdCookieRFC2109;
@@ -748,12 +820,28 @@ begin
   end;
 end;
 
+procedure TIdCookies.Clear;
+var
+  I: Integer;
+begin
+  LockCookieListByDomain(caReadWrite);
+  try
+    inherited Clear;
+    for I := 0 to FCookieListByDomain.Count-1 do begin
+      FCookieListByDomain.Objects[I].Free;
+    end;
+    FCookieListByDomain.Clear;
+  finally
+    UnlockCookieListByDomain(caReadWrite);
+  end;
+end;
+
 procedure TIdCookies.Delete(Index: Integer);
 begin
   Items[Index].Free;
 end;
 
-function TIdCookies.LockCookieListByDomain(AAccessType: TIdCookieAccess): TIdCookieList;
+function TIdCookies.LockCookieListByDomain(AAccessType: TIdCookieAccess): TIdCookieDomainList;
 begin
   case AAccessType of
     caRead:
