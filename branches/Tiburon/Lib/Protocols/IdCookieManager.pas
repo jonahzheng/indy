@@ -90,6 +90,7 @@ Type
     procedure AddCookie(ACookie, AHost: String);
     procedure AddCookie2(ACookie, AHost: String);
     procedure AddCookies(ASource: TIdCookieManager);
+    procedure CopyCookie(ACookie: TIdCookieRFC2109);
     //
     function GenerateCookieList(URL: TIdURI; SecureConnection: Boolean = false): String;
     //
@@ -251,7 +252,7 @@ begin
     ACookie.Domain := AHost;
   end
   else if not TextStartsWith(ACookie.Domain, '.') then begin {do not localize}
-    ACookie.Domain := '.' + ACookie.Domain;
+    ACookie.Domain := '.' + ACookie.Domain; {do not localize}
   end;
 
   if not IsRejectedCookie(ACookie, AHost) then
@@ -268,7 +269,7 @@ begin
 end;
 
 procedure TIdCookieManager.AddCookie(ACookie, AHost: String);
-Var
+var
   LCookie: TIdCookieRFC2109;
 begin
   LCookie := FCookieCollection.Add;
@@ -276,7 +277,7 @@ begin
 end;
 
 procedure TIdCookieManager.AddCookie2(ACookie, AHost: String);
-Var
+var
   LCookie: TIdCookieRFC2965;
 begin
   LCookie := FCookieCollection.Add2;
@@ -287,6 +288,35 @@ procedure TIdCookieManager.AddCookies(ASource: TIdCookieManager);
 begin
   if (ASource <> nil) and (ASource <> Self) then begin
     FCookieCollection.AddCookies(ASource.CookieCollection);
+  end;
+end;
+
+procedure TIdCookieManager.CopyCookie(ACookie: TIdCookieRFC2109);
+var
+  LCookie: TIdCookieRFC2109;
+begin
+  LCookie := TIdCookieRFC2109Class(ACookie.ClassType).Create(FCookieCollection);
+  try
+    LCookie.Assign(ACookie);
+
+    // RLebeau: copied from DoAdd()...
+    if (Length(LCookie.Domain) > 0) and (not TextStartsWith(LCookie.Domain, '.')) then begin {do not localize}
+      LCookie.Domain := '.' + LCookie.Domain; {do not localize}
+    end;
+    if Length(LCookie.Domain) > 0 then
+    begin
+      if DoOnNewCookie(LCookie) then
+      begin
+        FCookieCollection.AddCookie(LCookie);
+        LCookie := nil;
+      end;
+    end;
+  finally
+    if LCookie <> nil then
+    begin
+      LCookie.Collection := nil;
+      LCookie.Free;
+    end;
   end;
 end;
 
