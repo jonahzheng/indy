@@ -590,7 +590,7 @@ var
 begin
   L := IndyMin(ASpaces, Length(AString));
   for i := 1 to L do begin
-    if Result[i] <> ' ' then begin
+    if AString[i] <> ' ' then begin
       Break;
     end;
   end;
