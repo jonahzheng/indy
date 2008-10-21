@@ -251,6 +251,7 @@ begin
     AItem.ModifiedDate := DateYYMMDD(LCols[1]);
     AItem.ModifiedDate := AItem.ModifiedDate + TimeHHMMSS(LCols[2]);
     AItem.ItemType := ditFile;
+    AItem.SizeAvail := False;
   finally
     FreeAndNil(LCols);
   end;
@@ -341,6 +342,7 @@ begin
       LI.OwnerName := LCols[6];
     end;
     LI.ItemType := ditFile;
+    LI.ModifiedAvail := False;
   finally
     FreeAndNil(LCols);
   end;

@@ -271,6 +271,10 @@ ENDTRACE TCPIP    F      80       1      1 1999-07-28 12:24:01 TCM191
         LI.Size := LSize;
       end;
     end;
+    if LI.RecFormat = 'DIR' then
+    begin
+      LI.SizeAvail := False;
+    end;
   end;
   LCols := TStringList.Create;
   try
