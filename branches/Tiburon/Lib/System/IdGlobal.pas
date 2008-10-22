@@ -3807,10 +3807,52 @@ begin
 end;
 {$ENDIF}
 
+// RLebeau: In BCB/Delphi 2009, The overloaded version of SysUtils.Format() that
+// has a TFormatSettings parameter has an internal bug that causes an EConvertError
+// exception when UnicodeString parameters greater than 4094 characters are passed
+// to it.  Refer to QC #67934 for details.  Until CodeGear releases a fix for it,
+// call FormatBuf() directly to work around the problem...
 function IndyFormat(const AFormat: string; const Args: array of const): string;
+{$IFDEF TFormatSettings}
+var
+  EnglishFmt: TFormatSettings;
+  {$IFDEF BrokenFmtStr}
+  Len, BufLen: Integer;
+  Buffer: array[0..4095] of Char;
+  {$ENDIF}
+{$ENDIF}
 begin
   {$IFDEF TFormatSettings}
-  Result := SysUtils.Format(AFormat, Args, GetEnglishSetting);
+  EnglishFmt := GetEnglishSetting;
+    {$IFDEF BrokenFmtStr}
+  BufLen := Length(Buffer);
+  if Length(AFormat) < (Length(Buffer) - (Length(Buffer) div 4)) then
+  begin
+    Len := SysUtils.FormatBuf(Buffer, Length(Buffer) - 1, Pointer(AFormat)^,
+      Length(AFormat), Args, EnglishFmt);
+  end else
+  begin
+    BufLen := Length(AFormat);
+    Len := BufLen;
+  end;
+  if Len >= BufLen - 1 then
+  begin
+    while Len >= BufLen - 1 do
+    begin
+      Inc(BufLen, BufLen);
+      Result := '';          // prevent copying of existing data, for speed
+      SetLength(Result, BufLen);
+      Len := SysUtils.FormatBuf(PChar(Result), BufLen - 1, Pointer(AFormat)^,
+        Length(AFormat), Args, EnglishFmt);
+    end;
+    SetLength(Result, Len);
+  end else
+  begin
+    SetString(Result, Buffer, Len);
+  end;
+    {$ELSE}
+  Result := SysUtils.Format(AFormat, Args, EnglishFmt);
+    {$ENDIF}
   {$ELSE}
   //Is there a way to get delphi5 to use locale in format? something like:
   //  SetThreadLocale(TheNewLocaleId);
