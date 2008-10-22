@@ -315,6 +315,7 @@
     {$DEFINE REGISTER_EXPECTED_MEMORY_LEAK}
   {$ENDIF}
   {$DEFINE TFormatSettings}
+  {$DEFINE BrokenFmtStr}
   {$DEFINE TSelectionEditor}
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
