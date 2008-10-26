@@ -578,7 +578,37 @@ const
   IdS_IXOTH = IdS_IXGRP shr 3;  { Execute by others.  }
   { Read, write, and execute by others.  }
   IdS_IRWXO = IdS_IRWXG shr 3;
-  
+
+{Some stuff for internationalization provided by Craig Peterson}
+const
+{$IFNDEF UNICODESTRING}
+  // These are the CJK "month", "day", and "year" characters, which appear after
+  // a number in the listings.  Constants are UTF-8.  According to
+  // www.FileFormat.info the characters for KoreanTotal, KoreanMonth, and
+  // KoreanDay aren't valid Unicode, but that's what appears in the listing.
+  KoreanTotal = #$EC#$B4#$9D;   // #$CD1D
+  KoreanMonth = #$EC#$9B#$94;   // #$C6D4 Hangul Syllable Ieung Weo Rieul
+  KoreanDay = #$EC#$9D#$BC;     // #$C77C Hangul Syllable Ieung I Rieul
+  ChineseTotal = #$E6#$80#$BB + #$E6#$95#$B0;
+                                // #$603B CJK Unified Ideograph Collect/Overall +
+                                // #$6570 CJK Unified Ideograph Number/Several/Count
+  ChineseMonth = #$E6#$9C#$88;  // #$6708 CJK Unified Ideograph Month
+  ChineseDay = #$E6#$97#$A5;    // #$65E5 CJK Unified Ideograph Day
+  ChineseYear = #$E5#$B9#$B4;   // #$5E74 CJK Unified Ideograph Year
+{$ELSE}
+  //These are in Unicode since the parsers receive data in Unicode form
+  KoreanTotal = #$CD1D;   // #$CD1D
+  KoreanMonth = #$C6D4;   // #$C6D4 Hangul Syllable Ieung Weo Rieul
+  KoreanDay = #$C77C;     // #$C77C Hangul Syllable Ieung I Rieul
+  ChineseTotal = #$603B + #$6570;
+                                // #$603B CJK Unified Ideograph Collect/Overall +
+                                // #$6570 CJK Unified Ideograph Number/Several/Count
+  ChineseMonth = #$6708;  // #$6708 CJK Unified Ideograph Month
+  ChineseDay = #$65E5;    // #$65E5 CJK Unified Ideograph Day
+  ChineseYear = #$5E74;   // #$5E74 CJK Unified Ideograph Year
+
+{$ENDIF}
+
 implementation
 
 {Misc Parsing}
@@ -904,7 +934,12 @@ end;
 function IsTotalLine(const AData: String): Boolean;
 begin
   //just in case someone is doing a recursive listing and there's a dir with the name total
-  Result := TextStartsWith(AData, 'TOTAL') and (not TextEndsWith(AData, ':'));
+  Result := (not TextEndsWith(AData, ':')) and
+	(TextStartsWith(AData, 'TOTAL') or
+	 TextStartsWith(AData, 'GESAMT') or // German
+	 TextStartsWith(AData, 'INSGESAMT') or // German HPUX
+	 (IndyPos(KoreanTotal, AData) = 1) or // Korean (Unicode)
+	 (IndyPos(ChineseTotal, AData) = 1)); // Chinese (Unicode)
 end;
 
 {Quoted strings}

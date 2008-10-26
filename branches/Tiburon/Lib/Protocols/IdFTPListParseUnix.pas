@@ -263,8 +263,8 @@ begin
       begin
         Result := PosInStrArray(s[9], ['AM', 'PM']) = -1; {do not localize}
         if Result then begin
-          //we test the month with a copy because Netware Print Services may return a 4 char month such as Sept
-          Result := not ((IndyPos(':', s[8]) = 0) and (StrToMonth(Copy(s[6], 1, 3)) > 0)); {do not localize}
+          // allow localized months longer than 3 characters
+          Result := not ((IndyPos(':', s[8]) = 0) and (StrToMonth(s[6]) > 0)); {do not localize}
         end;
       end;
     finally
@@ -552,21 +552,75 @@ begin
         LStep := pusMonth;
       end;
       pusMonth: begin // Scan modified MMM
+        // Handle Chinese listings;  the month, day, and year may not have spaces between them
+        if IndyPos(ChineseYear, LData) > 0 then begin
+            wYear := IndyStrToInt(Fetch(LData, ChineseYear));
+            LData := TrimLeft(LData);
+            // Set time info to 00:00:00.999
+            wHour := 0;
+            wMin := 0;
+            wSec := 0;
+            wMSec := 999;
+            LStep := pusName
+        end;
+        if IndyPos(ChineseDay, LData) > 0 then begin
+            wMonth := IndyStrToInt(Fetch(LData, ChineseMonth));
+            LData := TrimLeft(LData);
+            wDay := IndyStrToInt(Fetch(LData, ChineseDay));
+            LData := TrimLeft(LData);
+            if LStep <> pusName then
+            begin
+              LTmp := Fetch(LData);
+              LStep := pusTime;
+            end;
+            Continue;
+        end;
         //fix up a bonked date such as:
         //-rw-r--r--   1 root     other        531 09-26 13:45 README3
         LData := FixBonkedYear(LData);
         //we do this in case there's a space
         LTmp := Fetch(LData);
-        if Length(LTmp) > 3 then
+        if (Length(LTmp) > 3) and IsNumeric(LTmp) then
         begin
           //must be a year
           wYear := IndyStrToInt(LTmp, wYear);
           LTmp := Fetch(LData);
         end;
         LData := TrimLeft(LData);
+        // HPUX can output the dates like "28. Jan., 16:48", "5. Mai, 05:34" or 
+        // "7. Nov. 2004"
+        if TextEndsWith(LTmp, '.') then
+        begin
+          Delete(LTmp, Length(LTmp), 1);
+        end;
+        // Korean listings will have the Korean "month" character
+        if Pos(KoreanMonth, LTmp) = Length(LTmp) - Length(KoreanMonth) + 1 then
+        begin
+          Delete(LTmp, Length(LTmp) - Length(KoreanMonth) + 1, Length(KoreanMonth));
+        end;
         if IsNumeric(LTmp) then
         begin
           wMonth := IndyStrToInt(LTmp, wMonth);
+          // HPUX
+          LTmp := Fetch(LData, ' ', False);
+          if TextEndsWith(LTmp, ',') then
+          begin
+            Delete(LTmp, Length(LTmp), 1);
+          end;
+          if TextEndsWith(LTmp, '.') then
+          begin
+            Delete(LTmp, Length(LTmp), 1);
+          end;
+          // Handle dates where the day preceeds a string month (French, Dutch)
+          i := StrToMonth(LTmp);
+          if i > 0 then
+          begin
+            wDay := wMonth;
+            LTmp := Fetch(LData);
+            LData := TrimLeft(LData);
+            wMonth := i;
+            LStep := pusYear;
+          end else
           if wMonth > 12 then
           begin
             wDay := wMonth;
@@ -581,11 +635,24 @@ begin
         begin
           wMonth := StrToMonth(LTmp);
           LStep := pusDay;
+          // Korean listings can have dates in the form "2004.10.25"
+          if wMonth = 0 then
+          begin
+            wYear := IndyStrToInt(Fetch(LTmp, '.'), wYear);
+            wMonth := IndyStrToInt(Fetch(LTmp, '.'), 0);
+            wDay := IndyStrToInt(LTmp);
+            LStep := pusName;
+          end;
         end;
       end;
       pusDay: begin // Scan DD
         LTmp := Fetch(LData);
         LData := TrimLeft(LData);
+        // Korean dates can have their "Day" character as included
+        if IndyPos(KoreanDay, LTmp) = Length(LTmp) - Length(KoreanDay) + 1 then
+        begin
+          Delete(LTmp, Length(LTmp) - Length(KoreanDay) + 1, Length(KoreanDay));
+        end;
         wDay := IndyStrToInt(LTmp, wDay);
         LStep := pusYear;
       end;
@@ -594,7 +661,7 @@ begin
         // Not time info, scan year
         if IndyPos(':', LTmp) = 0 then    {Do not Localize}
         begin
-	  wYear := IndyStrToInt(LTmp, wYear);
+	        wYear := IndyStrToInt(LTmp, wYear);
           // Set time info to 00:00:00.999
           wHour := 0;
           wMin := 0;

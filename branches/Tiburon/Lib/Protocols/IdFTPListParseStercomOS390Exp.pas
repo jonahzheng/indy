@@ -100,21 +100,24 @@ begin
   Result := False;
   if AListing.Count > 0 then
   begin
-    LBuf := AListing[0];
-    if Length(LBuf) >= 3 then
+    if not IdFTPCommon.IsTotalLine(AListing[0]) then
     begin
-      if CharIsInSet(LBuf, 2, 'DF') and (LBuf[3] = ' ') then {do not localize}
+      LBuf := AListing[0];
+      if Length(LBuf) >= 3 then
       begin
-        Result := True;
-        Exit;
+        if CharIsInSet(LBuf, 2, 'DF') and (LBuf[3] = ' ') then {do not localize}
+        begin
+          Result := True;
+          Exit;
+        end;
       end;
-    end;
-    if Length(LBuf) >= 5 then
-    begin
-      if CharIsInSet(LBuf, 4, '012') and (LBuf[5] = ' ') then  {do not localize}
+      if Length(LBuf) >= 5 then
       begin
-        Result := True;
-        Exit;
+        if CharIsInSet(LBuf, 4, '012') and (LBuf[5] = ' ') then  {do not localize}
+        begin
+          Result := True;
+          Exit;
+        end;
       end;
     end;
   end;

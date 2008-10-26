@@ -1801,12 +1801,33 @@ begin
 end;
 
 function StrToMonth(const AMonth: string): Byte;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+const
+  Months: array[0..6] of array[1..12] of string = (
+    ('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'),   // English
+	  //Netware Print Services may return a 4 char month such as Sept
+    ('',    '',    '',    '',    '',   'JUNE','JULY', '',   'SEPT', '',    '',    ''),      // English - alt. 4 letter abbreviations
+    ('',    '',    'MRZ', '',    'MAI', '',    '',    '',    '',    'OKT', '',    'DEZ'),   // German
+    ('ENO', 'FBRO','MZO', 'AB',  '',    '',    '',    'AGTO','SBRE','OBRE','NBRE','DBRE'),  // Spanish
+    ('',    '',    'MRT', '',    'MEI', '',    '',    '',    '',    'OKT', '',    ''),      // Dutch
+    ('JANV','F'+#$C9+'V', 'MARS','AVR', 'MAI', 'JUIN','JUIL','AO'+#$DB, 'SEPT','',    '',    'D'+#$C9+'C'),   // French
+    ('',    'F'+#$C9+'VR','',    '',    '',    '',    '',    'AOÛT','',    '',    '',    ''));   // French (alt)
+var
+  i: Integer;
 begin
-  Result := Succ(
-    PosInStrArray(AMonth,
-      ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'], {do not localize}
-      False));
+  if AMonth <> '' then
+  begin
+    for i := Low(Months) to High(Months) do
+    begin
+      for Result := Low(Months[i]) to High(Months[i]) do
+      begin
+        if TextIsSame(AMonth, Months[i][Result]) then
+        begin
+          Exit;
+        end;
+      end;
+	  end;
+  end;
+  Result := 0;
 end;
 
 function UpCaseFirst(const AStr: string): string;
