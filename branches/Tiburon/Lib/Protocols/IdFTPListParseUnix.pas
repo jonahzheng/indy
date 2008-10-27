@@ -594,10 +594,15 @@ begin
           Delete(LTmp, Length(LTmp), 1);
         end;
         // Korean listings will have the Korean "month" character
-        if Pos(KoreanMonth, LTmp) = Length(LTmp) - Length(KoreanMonth) + 1 then
+        DeleteSuffix(LTmp,KoreanMonth);
+        //  Just in case
+        DeleteSuffix(LTmp,KoreanEUCMonth);
+        {        if IndyPos(KoreanMonth, LTmp) = Length(LTmp) - Length(KoreanMonth) + 1 then
         begin
           Delete(LTmp, Length(LTmp) - Length(KoreanMonth) + 1, Length(KoreanMonth));
         end;
+        // Japanese listings will have the Japanese "month" character
+}       DeleteSuffix(LTmp,JapaneseMonth);
         if IsNumeric(LTmp) then
         begin
           wMonth := IndyStrToInt(LTmp, wMonth);
@@ -649,15 +654,20 @@ begin
         LTmp := Fetch(LData);
         LData := TrimLeft(LData);
         // Korean dates can have their "Day" character as included
-        if IndyPos(KoreanDay, LTmp) = Length(LTmp) - Length(KoreanDay) + 1 then
+{        if IndyPos(KoreanDay, LTmp) = Length(LTmp) - Length(KoreanDay) + 1 then
         begin
           Delete(LTmp, Length(LTmp) - Length(KoreanDay) + 1, Length(KoreanDay));
-        end;
+        end;   }
+        DeleteSuffix(LTmp,KoreanDay);
+        //Ditto for Japanese
+        DeleteSuffix(LTmp,JapaneseDay);
         wDay := IndyStrToInt(LTmp, wDay);
         LStep := pusYear;
       end;
       pusYear: begin
         LTmp := Fetch(LData);
+        //Some localized Japanese listings include a year sybmol
+        DeleteSUffix(LTmp,JapaneseYear);
         // Not time info, scan year
         if IndyPos(':', LTmp) = 0 then    {Do not Localize}
         begin

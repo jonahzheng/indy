@@ -589,17 +589,27 @@ const
   KoreanTotal = #$EC#$B4#$9D;   // #$CD1D
   KoreanMonth = #$EC#$9B#$94;   // #$C6D4 Hangul Syllable Ieung Weo Rieul
   KoreanDay = #$EC#$9D#$BC;     // #$C77C Hangul Syllable Ieung I Rieul
+  KoreanEUCMonth = #$EB#$BF#$B9; //#$BFF9
   ChineseTotal = #$E6#$80#$BB + #$E6#$95#$B0;
                                 // #$603B CJK Unified Ideograph Collect/Overall +
                                 // #$6570 CJK Unified Ideograph Number/Several/Count
   ChineseMonth = #$E6#$9C#$88;  // #$6708 CJK Unified Ideograph Month
   ChineseDay = #$E6#$97#$A5;    // #$65E5 CJK Unified Ideograph Day
   ChineseYear = #$E5#$B9#$B4;   // #$5E74 CJK Unified Ideograph Year
+
+  JapaneseTotal = #$E5#$90#$88 + #$E8#$A8#$88;
+                                  //@$5408
+                                  //
+  JapaneseMonth = #$E8#$B2#$8E;   // #$8c8e Japanse Month symbol
+  JapaneseDay = #$E9#$8F#$BA;   //93fa - Japanese Day Symbol - not valid Unicode
+  JapaneseYear = #$E9#$91#$8E;    //944e - Japanese Year symbol = not valid Unicode
+
 {$ELSE}
   //These are in Unicode since the parsers receive data in Unicode form
   KoreanTotal = #$CD1D;   // #$CD1D
   KoreanMonth = #$C6D4;   // #$C6D4 Hangul Syllable Ieung Weo Rieul
   KoreanDay = #$C77C;     // #$C77C Hangul Syllable Ieung I Rieul
+  KoreanEUCMonth = #$BFF9;   // #$BFF9  EUC-KR Same as #$C6#$D4
   ChineseTotal = #$603B + #$6570;
                                 // #$603B CJK Unified Ideograph Collect/Overall +
                                 // #$6570 CJK Unified Ideograph Number/Several/Count
@@ -607,11 +617,27 @@ const
   ChineseDay = #$65E5;    // #$65E5 CJK Unified Ideograph Day
   ChineseYear = #$5E74;   // #$5E74 CJK Unified Ideograph Year
 
+  JapaneseTotal = #$5408 + #$8a08;
+                            //#$5408
+                            //#$8a08
+  JapaneseMonth = #$8c8e;   // #$8c8e Japanse Day symbol
+  JapaneseDay = #$93fa;   //93fa - Japanese Day Symbol - not valid Unicode
+  JapaneseYear = #$944e;    //944e - Japanese Year symbol = not valid Unicode
 {$ENDIF}
+
+procedure DeleteSuffix(var VStr : String; const ASuffix : String); {$IFDEF USEINLINE}inline; {$ENDIF}
 
 implementation
 
 {Misc Parsing}
+
+procedure DeleteSuffix(var VStr : String; const ASuffix : String);
+begin
+  if IndyPos(ASuffix, VStr) = Length(VStr) - Length(ASuffix) + 1 then
+  begin
+    Delete(VStr, Length(VStr) - Length(ASuffix) + 1, Length(ASuffix));
+  end;
+end;
 
 function StripSpaces(const AString : String; const ASpaces : Cardinal): String;
 var
@@ -939,7 +965,8 @@ begin
 	 TextStartsWith(AData, 'GESAMT') or // German
 	 TextStartsWith(AData, 'INSGESAMT') or // German HPUX
 	 (IndyPos(KoreanTotal, AData) = 1) or // Korean (Unicode)
-	 (IndyPos(ChineseTotal, AData) = 1)); // Chinese (Unicode)
+	 (IndyPos(ChineseTotal, AData) = 1) or // Chinese (Unicode)
+   TextStartsWith(AData, JapaneseTotal));
 end;
 
 {Quoted strings}
