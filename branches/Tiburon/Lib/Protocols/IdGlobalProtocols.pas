@@ -1810,7 +1810,7 @@ const
     ('ENO', 'FBRO','MZO', 'AB',  '',    '',    '',    'AGTO','SBRE','OBRE','NBRE','DBRE'),  // Spanish
     ('',    '',    'MRT', '',    'MEI', '',    '',    '',    '',    'OKT', '',    ''),      // Dutch
     ('JANV','F'+#$C9+'V', 'MARS','AVR', 'MAI', 'JUIN','JUIL','AO'+#$DB, 'SEPT','',    '',    'D'+#$C9+'C'),   // French
-    ('',    'F'+#$C9+'VR','',    '',    '',    '',    '',    'AOÛT','',    '',    '',    ''));   // French (alt)
+    ('',    'F'+#$C9+'VR','',    '',    '',    '',    'JUI',    'AO'+#$DB+'T','',    '',    '',    ''));   // French (alt)
 var
   i: Integer;
 begin
