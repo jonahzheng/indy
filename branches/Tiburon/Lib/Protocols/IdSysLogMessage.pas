@@ -660,24 +660,26 @@ end;
 
 procedure TIdSysLogMessage.InitComponent;
 var
-  bCreatedStack : Boolean;
+  LStack: TIdStack;
+  LFreeStack: Boolean;
 begin
   inherited;
   PRI := 13; //default
   {This stuff is necessary to prevent an AV in the IDE if GStack does not exist}
-  bCreatedStack := False;
-  if not Assigned(GStack) then
+  LFreeStack := False;
+  LStack := GStack;
+  if not Assigned(LStack) then
   begin
-    GStack :=  IdStackFactory;
-    bCreatedStack := True;
+    LStack := IdStackFactory;
+    LFreeStack := True;
   end;
   try
-    Hostname := GStack.HostName;
+    Hostname := LStack.HostName;
   finally
     {Free the stack ONLY if we created it to prevent a memory leak}
-    if bCreatedStack then
+    if LFreeStack then
     begin
-      FreeAndNil(GStack);
+      FreeAndNil(LStack);
     end;
   end;
   FMsg := TIdSysLogMsgPart.Create;
