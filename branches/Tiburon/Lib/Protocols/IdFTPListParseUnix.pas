@@ -600,15 +600,16 @@ begin
             LData := TrimLeft(LData);
             wMonth := i;
             LStep := pusYear;
-          end else
-          if wMonth > 12 then begin
-            wDay := wMonth;
-            LTmp := Fetch(LData);
-            LData := TrimLeft(LData);
-            wMonth := IndyStrToInt(LTmp, wMonth);
-            LStep := pusYear;
           end else begin
-            LStep := pusDay;
+            if wMonth > 12 then begin
+              wDay := wMonth;
+              LTmp := Fetch(LData);
+              LData := TrimLeft(LData);
+              wMonth := IndyStrToInt(LTmp, wMonth);
+              LStep := pusYear;
+            end else begin
+              LStep := pusDay;
+            end;
           end;
         end else begin
           wMonth := StrToMonth(LTmp);

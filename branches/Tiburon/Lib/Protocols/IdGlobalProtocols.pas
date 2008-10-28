@@ -583,49 +583,33 @@ begin
   LLineLen := Length(ALine);
   LBreakLen := Length(ABreakStr);
   Result := '';    {Do not Localize}
-  while LPos <= LLineLen do
-  begin
+  while LPos <= LLineLen do begin
     LCurChar := ALine[LPos];
-    if IsLeadChar(LCurChar) then
-    begin
+    if IsLeadChar(LCurChar) then begin
       Inc(LPos);
       Inc(LCol);
-    end  //if CurChar in LeadBytes then
-    else
-    begin
-      if LCurChar = ABreakStr[1] then
-      begin
-        if LQuoteChar = ' ' then    {Do not Localize}
-        begin
+    end else begin //if CurChar in LeadBytes then
+      if LCurChar = ABreakStr[1] then begin
+        if LQuoteChar = ' ' then begin   {Do not Localize}
           LExistingBreak := TextIsSame(ABreakStr, Copy(ALine, LPos, LBreakLen));
-          if LExistingBreak then
-          begin
+          if LExistingBreak then begin
             Inc(LPos, LBreakLen-1);
             LBreakPos := LPos;
           end; //if ExistingBreak then
         end // if QuoteChar = ' ' then    {Do not Localize}
-      end // if CurChar = BreakStr[1] then
-      else
-        if CharIsInSet(LCurChar, 1, ABreakChars) then
-        begin
-          if LQuoteChar = ' ' then    {Do not Localize}
-          begin
+      end else begin// if CurChar = BreakStr[1] then
+        if CharIsInSet(LCurChar, 1, ABreakChars) then begin
+          if LQuoteChar = ' ' then begin   {Do not Localize}
             LBreakPos := LPos;
           end;
-        end  // if CurChar in BreakChars then
-        else
-        begin
-        if CharIsInSet(LCurChar, 1, QuoteChars) then
-        begin
-          if LCurChar = LQuoteChar then
-          begin
-            LQuoteChar := ' ';    {Do not Localize}
-          end
-          else
-          begin
-            if LQuoteChar = ' ' then    {Do not Localize}
-            begin
-              LQuoteChar := LCurChar;
+        end else begin // if CurChar in BreakChars then
+          if CharIsInSet(LCurChar, 1, QuoteChars) then begin
+            if LCurChar = LQuoteChar then begin
+              LQuoteChar := ' ';    {Do not Localize}
+            end else begin
+              if LQuoteChar = ' ' then begin   {Do not Localize}
+                LQuoteChar := LCurChar;
+              end;
             end;
           end;
         end;
@@ -635,18 +619,14 @@ begin
     Inc(LCol);
     if not (CharIsInSet(LQuoteChar, 1, QuoteChars)) and
        (LExistingBreak or
-      ((LCol > MaxCol) and (LBreakPos > LLinePos))) then
-    begin
+      ((LCol > MaxCol) and (LBreakPos > LLinePos))) then begin
       LCol := LPos - LBreakPos;
       Result := Result + Copy(ALine, LLinePos, LBreakPos - LLinePos + 1);
-      if not (CharIsInSet(LCurChar, 1, QuoteChars)) then
-      begin
-        while (LPos <= LLineLen) and (CharIsInSet(ALine, LPos, ABreakChars + #13+#10)) do
-        begin
+      if not (CharIsInSet(LCurChar, 1, QuoteChars)) then begin
+        while (LPos <= LLineLen) and (CharIsInSet(ALine, LPos, ABreakChars + #13+#10)) do begin
           Inc(LPos);
         end;
-        if not LExistingBreak and (LPos < LLineLen) then
-        begin
+        if not LExistingBreak and (LPos < LLineLen) then begin
           Result := Result + ABreakStr;
         end;
       end;
@@ -911,8 +891,7 @@ begin
   Fetch(LBuf,' ');
   //get the version number without any letters
   LNumber := '';
-  for i := 1 to Length(LBuf) do
-  begin
+  for i := 1 to Length(LBuf) do begin
     if IsNumeric(LBuf[i]) then begin
       LNumber := LNumber+LBuf[i];
     end else begin
@@ -934,8 +913,7 @@ begin
       else
         Result := WindowsXPPro; // Windows 2003 has no desktop version
       end;
-    end else
-    begin
+    end else begin
       if Win32MinorVersion >= 1 then begin
         case GetNTType of
           Server : Result := Windows2000Server; // hmmm, winXp has no server versions
@@ -943,8 +921,7 @@ begin
         else
           Result := WindowsXPPro;
         end;
-      end
-      else begin
+      end else begin
         case GetNTType of
           Server : Result := Windows2000Server;
           AdvancedServer : Result := Windows2000AdvancedServer;
@@ -953,22 +930,19 @@ begin
         end;
       end;
     end;
-  end
-  else begin
+  end else begin
     {is this WIndows 95, 98, Me, or NT 40}
     if Win32MajorVersion > 3 then begin
       if Win32Platform = VER_PLATFORM_WIN32_NT then begin
         //Bas requested that we specifically check for anything below SP6
-        if GetOSServicePack < 6 then
-        begin
+        if GetOSServicePack < 6 then begin
           case GetNTType of
             Server : Result := WindowsNT40PreSP6Server;
             AdvancedServer : Result := WindowsNT40PreSP6AdvancedServer;
           else
             Result := WindowsNT40PreSP6Workstation;
           end;
-        end else
-        begin
+        end else begin
           case GetNTType of
         //WindowsNT40Workstation, WindowsNT40Server, WindowsNT40AdvancedServer
             Server : Result := WindowsNT40Server;
@@ -977,35 +951,29 @@ begin
             Result := WindowsNT40Workstation;
           end;
         end;
-      end
-      else begin
+      end else begin
         {mask off junk}
         Win32BuildNumber := Win32BuildNumber and $FFFF;
         if Win32MinorVersion >= 90 then begin
           Result := WindowsMe;
-        end
-        else begin
+        end else begin
           if Win32MinorVersion >= 10 then begin
             {Windows 98}
             if Win32BuildNumber >= 2222 then begin
               Result := Windows98SE
-            end
-            else begin
+            end else begin
               Result := Windows98;
             end;
-          end
-          else begin {Windows 95}
+          end else begin {Windows 95}
             if Win32BuildNumber >= 1000 then begin
               Result := Windows95OSR2
-            end
-            else begin
+            end else begin
               Result := Windows95;
             end;
           end;
         end;
       end;
-    end
-    else begin
+    end else begin
       Result := Win32s;
     end;
   end;
@@ -1031,40 +999,34 @@ begin
   DecodeDate(ADateTime2, LYear2, LMonth2, LDay2);
   // year
   Result := LYear1 - LYear2;
-  if Result <> 0 then
-  begin
+  if Result <> 0 then begin
     Exit;
   end;
   // month
   Result := LMonth1 - LMonth2;
-  if Result <> 0 then
-  begin
+  if Result <> 0 then begin
     Exit;
   end;
   // day
   Result := LDay1 - LDay2;
-  if Result <> 0 then
-  begin
+  if Result <> 0 then begin
     Exit;
   end;
   DecodeTime(ADateTime1, LHour1, LMin1, LSec1, LMSec1);
   DecodeTime(ADateTime2, LHour2, LMin2, LSec2, LMSec2);
   //hour
   Result := LHour1 - LHour2;
-  if Result <> 0 then
-  begin
+  if Result <> 0 then begin
     Exit;
   end;
   //minute
   Result := LMin1 - LMin2;
-  if Result <> 0 then
-  begin
+  if Result <> 0 then begin
     Exit;
   end;
   //second
   Result := LSec1 - LSec2;
-  if Result <> 0 then
-  begin
+  if Result <> 0 then begin
     Exit;
   end;
   //millasecond
@@ -1107,8 +1069,7 @@ begin
     {Day of Week}
     if StrToDay(Copy(Value, 1, 3)) > 0 then begin
       //workaround in case a space is missing after the initial column
-      if (Copy(Value,4,1)=',') and (Copy(Value,5,1)<>' ') then
-      begin
+      if (Copy(Value,4,1)=',') and (Copy(Value,5,1)<>' ') then begin
         Insert(' ',Value,5);
       end;
       Fetch(Value);
@@ -1118,21 +1079,17 @@ begin
     // Workaround for some buggy web servers which use '-' to separate the date parts.    {Do not Localize}
     if (IndyPos('-', Value) > 1) and (IndyPos('-', Value) < IndyPos(' ', Value)) then begin    {Do not Localize}
       ADelim := '-';    {Do not Localize}
-    end
-    else begin
+    end else begin
       ADelim := ' ';    {Do not Localize}
     end;
     //workaround for improper dates such as 'Fri, Sep 7 2001'    {Do not Localize}
     //RFC 2822 states that they should be like 'Fri, 7 Sep 2001'    {Do not Localize}
-    if (StrToMonth(Fetch(Value, ADelim,False)) > 0) then
-    begin
+    if (StrToMonth(Fetch(Value, ADelim,False)) > 0) then begin
       {Month}
       ParseMonth;
       {Day of Month}
       ParseDayOfMonth;
-    end
-    else
-    begin
+    end else begin
       {Day of Month}
       ParseDayOfMonth;
       {Month}
@@ -1850,8 +1807,7 @@ var
 begin
   LR := data;
   Result := '';
-  for i := 1 to Length(AText) do
-  begin
+  for i := 1 to Length(AText) do begin
     case LR of
       data :
         if (AText[i] = '%') and (i < Length(AText)) then begin
@@ -1905,8 +1861,7 @@ begin
           end;
         end;
     binary :
-        If IsBinary(AText[i]) and (Length(LNum)<8) then
-        begin
+        If IsBinary(AText[i]) and (Length(LNum)<8) then begin
           LNum := LNum + AText[i];
           if (BinStrToInt(LNum)>$FF) then begin
             IdDelete(LNum,Length(LNum),1);
@@ -2001,10 +1956,11 @@ var
 begin
   SetLength(Result, 32);
   for i := 1 to 32 do begin
-    if ((Value shl (i-1)) shr 31) = 0 then
+    if ((Value shl (i-1)) shr 31) = 0 then begin
       Result[i] := '0'  {do not localize}
-    else
+    end else begin
       Result[i] := '1'; {do not localize}
+    end;
   end;
 end;
 
@@ -2070,11 +2026,9 @@ begin
   if not Assigned(AMIMEList) then begin
     Exit;
   end;
-
   if AMIMEList.Count > 0 then begin
     Exit;
   end;
-
   with AMIMEList do begin
     {NOTE:  All of these strings should never be translated
     because they are protocol specific and are important for some
@@ -2678,12 +2632,20 @@ begin
     S1 := Fetch(S1, '.');    {Do not Localize}
     // here will be the exceptions check: com.uk, co.uk, com.tw and etc.
     if LTmp = 'UK' then begin    {Do not Localize}
-      if S1 = 'CO' then result := i = 2;    {Do not Localize}
-      if S1 = 'COM' then result := i = 2;    {Do not Localize}
+      if S1 = 'CO' then begin
+        result := i = 2;    {Do not Localize}
+      end;
+      if S1 = 'COM' then begin
+        result := i = 2;    {Do not Localize}
+      end;
     end;
     if LTmp = 'TW' then begin    {Do not Localize}
-      if S1 = 'CO' then result := i = 2;    {Do not Localize}
-      if S1 = 'COM' then result := i = 2;    {Do not Localize}
+      if S1 = 'CO' then begin
+        result := i = 2;    {Do not Localize}
+      end;
+      if S1 = 'COM' then begin
+        result := i = 2;    {Do not Localize}
+      end;
     end;
   end;
 end;
@@ -2749,24 +2711,25 @@ begin
           else if not TextEndsWith(Result, APathDelim) then begin
             Result := Result + LWork[i];
           end;
-        end else
-         if LWork[i] = '.' then begin    {Do not Localize}
-          // If the last character was a PathDelim then the . is a relative path modifier.
-          // If it doesnt follow a PathDelim, its part of a filename
-          if TextEndsWith(Result, APathDelim) and (Copy(LWork, i, 2) = '..') then begin    {Do not Localize}
-            // Delete the last PathDelim
-            Delete(Result, Length(Result), 1);
-            // Delete up to the next PathDelim
-            while (Length(Result) > 0) and (not TextEndsWith(Result, APathDelim)) do begin
+        end else begin
+          if LWork[i] = '.' then begin    {Do not Localize}
+            // If the last character was a PathDelim then the . is a relative path modifier.
+            // If it doesnt follow a PathDelim, its part of a filename
+            if TextEndsWith(Result, APathDelim) and (Copy(LWork, i, 2) = '..') then begin    {Do not Localize}
+              // Delete the last PathDelim
               Delete(Result, Length(Result), 1);
+              // Delete up to the next PathDelim
+              while (Length(Result) > 0) and (not TextEndsWith(Result, APathDelim)) do begin
+                Delete(Result, Length(Result), 1);
+              end;
+              // Skip over second .
+              Inc(i);
+            end else begin
+              Result := Result + LWork[i];
             end;
-            // Skip over second .
-            Inc(i);
           end else begin
             Result := Result + LWork[i];
           end;
-        end else begin
-          Result := Result + LWork[i];
         end;
         Inc(i);
       end;
@@ -3084,8 +3047,7 @@ var
 begin
   Result := AText;
   Len := Length(Result);
-  while Len > 0 do
-  begin
+  while Len > 0 do begin
     if IndyPos(Result[1], ATrim) > 0 then begin
       IdDelete(Result, 1, 1);
       Dec(Len);
