@@ -202,16 +202,14 @@ begin
   Result := False;
   for i := 0 to AListing.Count - 1 do
   begin
-    if AListing[i] <> '' then
-    begin
+    if AListing[i] <> '' then begin
       //workaround for the XBox MediaCenter FTP Server
       //which returns something like this:
       //
       //dr-xr-xr-x    1 ftp      ftp            1 Feb 23 00:00 D:
       //and the trailing : is falsely assuming that a ":" means
       //a subdirectory entry in a recursive list.
-      if InternelChkUnix(AListing[i]) then
-      begin
+      if InternelChkUnix(AListing[i]) then begin
         if GetIdent = UNITREE then begin
           Result := IsUnitree(AListing[i]);
         end else begin
@@ -246,8 +244,7 @@ begin
   // s - socket
   LCData := UpperCase(AData);
   Result := IsValidUnixPerms(AData);
-  if Result then
-  begin
+  if Result then begin
     //Do NOT attempt to do Novell Netware Print Services for Unix FTPD in NFS
     //namespace if we have a block device.
     if CharIsInSet(LCData, 1, 'CB') then begin
@@ -259,8 +256,7 @@ begin
     s := TStringList.Create;
     try
       SplitColumns(LCData, s);
-      if s.Count > 9 then
-      begin
+      if s.Count > 9 then begin
         Result := PosInStrArray(s[9], ['AM', 'PM']) = -1; {do not localize}
         if Result then begin
           // allow localized months longer than 3 characters
@@ -270,18 +266,15 @@ begin
     finally
       FreeAndNil(s);
     end;
-  end else
-  begin
+  end else begin
     //we make an additional check for two additional rows before the
     //the permissions.  These are the inode and block count for the item.
     //These are specified with the -i and -s parameters.
     s := TStringList.Create;
     try
       SplitColumns(LCData, s);
-      if s.Count > 3 then
-      begin
-        if IsNumeric(s[0]) then
-        begin
+      if s.Count > 3 then begin
+        if IsNumeric(s[0]) then begin
           Result :=  IsValidUnixPerms(S[1]);
           if not Result then begin
             Result := IsNumeric(s[1]) and IsValidUnixPerms(S[2]);
@@ -356,8 +349,7 @@ var
     s := TStringList.Create;
     try
       SplitColumns(AString, s);
-      if s.Count > 2 then
-      begin
+      if s.Count > 2 then begin
         //if either inode or block count were given
         if IsNumeric(s[0]) then begin
           s.Delete(0);
@@ -366,8 +358,7 @@ var
         if IsNumeric(s[0]) then begin
           s.Delete(0);
         end;
-        if s.Count > 5 then
-        begin
+        if s.Count > 5 then begin
           if StrToMonth(s[3]) > 0 then begin
             Result := IsNumeric(s[4]) and (IsNumeric(s[5]) or (IndyPos(':', s[5]) > 0)); {do not localize}
           end;
@@ -406,8 +397,7 @@ begin
         LTmp := Fetch(LTmp);
         if IsValidUnixPerms(LTmp) then begin
           LStep := pusPerm;
-        end else
-        begin
+        end else begin
           //the inode column is right justified
           LData := TrimLeft(LData);
           LTmp := Fetch(LData);
@@ -420,8 +410,7 @@ begin
         //Note that there is an ambigioutity because this value could
         //be the inode if only the -i switch was used.
         LTmp := Fetch(LData, ' ', False); {do not localize}
-        if not IsValidUnixPerms(LTmp) then
-        begin
+        if not IsValidUnixPerms(LTmp) then begin
           LTmp := Fetch(LData);
           LData := TrimLeft(LData);
           LBlocks := LTmp;
@@ -448,12 +437,10 @@ begin
         // "drwxrwxr-x               folder        2 May 10  1996 network" */
         if TextIsSame(LTmp, 'folder') then begin  {do not localize}
           LStep := pusSize;
-        end else
-        begin
+        end else begin
           //APR
           //Patch for overflow -r--r--r--   0526478   128  Dec 30 2002  DE292000
-          if (Length(LTmp) > 3) and (LTmp[1] = '0') then
-          begin
+          if (Length(LTmp) > 3) and (LTmp[1] = '0') then begin
             LData := Copy(LTmp, 2, MaxInt) + ' ' + LData;
             LCount := '0';
           end else begin
@@ -483,8 +470,7 @@ begin
       pusSize: begin
         //Ericsson - Switch FTP returns empty owner
         //Do not apply Ericson patch to Unitree
-        if IsAlpha(LData, 1, 1) and (GetIdent <> UNITREE) then
-        begin
+        if IsAlpha(LData, 1, 1) and (GetIdent <> UNITREE) then begin
           LSize := LGroup;
           LGroup := LOwner;
           LOwner := '';
@@ -494,8 +480,7 @@ begin
           //e.g.
           //
           //drwx------  1          BUILTIN     NT AUTHORITY          0 Dec  7  2001 System Volume Information
-          if not IsNumeric(LSize) then
-          begin
+          if not IsNumeric(LSize) then begin
             //undo the Ericson patch
             LOwner := LGroup;
             LGroup := '';
@@ -508,16 +493,14 @@ begin
             //delete the initial space we had added in the repeat loop
             IdDelete(LGroup, 1, 1);
           end;
-        end else
-        begin
+        end else begin
           LTmp := Fetch(LData);
           //This is necessary for cases where are char device is listed
           //e.g.
           //crw-rw-rw-   1 0        1         11, 42 Aug  8  2000 tcp
           //
           //Note sure what 11, 42 is so size is not returned.
-          if IndyPos(',', LTmp) > 0 then {do not localize}
-          begin
+          if IndyPos(',', LTmp) > 0 then begin {do not localize}
             LData := TrimLeft(LData);
             Fetch(LData);
             LData := TrimLeft(LData);
@@ -529,8 +512,7 @@ begin
           case PosInStrArray(LSize, UnitreeStoreTypes) of
             0 : //AR - archived to tape - migrated
             begin
-              if AItem is TIdUnitreeFTPListItem then
-              begin
+              if AItem is TIdUnitreeFTPListItem then begin
                 (LI as TIdUnitreeFTPListItem).Migrated := True;
                 (LI as TIdUnitreeFTPListItem).FileFamily := Fetch(LData);
               end;
@@ -568,8 +550,7 @@ begin
             LData := TrimLeft(LData);
             wDay := IndyStrToInt(Fetch(LData, ChineseDay));
             LData := TrimLeft(LData);
-            if LStep <> pusName then
-            begin
+            if LStep <> pusName then begin
               LTmp := Fetch(LData);
               LStep := pusTime;
             end;
@@ -580,8 +561,7 @@ begin
         LData := FixBonkedYear(LData);
         //we do this in case there's a space
         LTmp := Fetch(LData);
-        if (Length(LTmp) > 3) and IsNumeric(LTmp) then
-        begin
+        if (Length(LTmp) > 3) and IsNumeric(LTmp) then begin
           //must be a year
           wYear := IndyStrToInt(LTmp, wYear);
           LTmp := Fetch(LData);
@@ -589,8 +569,7 @@ begin
         LData := TrimLeft(LData);
         // HPUX can output the dates like "28. Jan., 16:48", "5. Mai, 05:34" or 
         // "7. Nov. 2004"
-        if TextEndsWith(LTmp, '.') then
-        begin
+        if TextEndsWith(LTmp, '.') then begin
           Delete(LTmp, Length(LTmp), 1);
         end;
         // Korean listings will have the Korean "month" character
@@ -603,31 +582,26 @@ begin
         end;
         // Japanese listings will have the Japanese "month" character
 }       DeleteSuffix(LTmp,JapaneseMonth);
-        if IsNumeric(LTmp) then
-        begin
+        if IsNumeric(LTmp) then begin
           wMonth := IndyStrToInt(LTmp, wMonth);
           // HPUX
           LTmp := Fetch(LData, ' ', False);
-          if TextEndsWith(LTmp, ',') then
-          begin
+          if TextEndsWith(LTmp, ',') then begin
             Delete(LTmp, Length(LTmp), 1);
           end;
-          if TextEndsWith(LTmp, '.') then
-          begin
+          if TextEndsWith(LTmp, '.') then begin
             Delete(LTmp, Length(LTmp), 1);
           end;
           // Handle dates where the day preceeds a string month (French, Dutch)
           i := StrToMonth(LTmp);
-          if i > 0 then
-          begin
+          if i > 0 then begin
             wDay := wMonth;
             LTmp := Fetch(LData);
             LData := TrimLeft(LData);
             wMonth := i;
             LStep := pusYear;
           end else
-          if wMonth > 12 then
-          begin
+          if wMonth > 12 then begin
             wDay := wMonth;
             LTmp := Fetch(LData);
             LData := TrimLeft(LData);
@@ -636,13 +610,11 @@ begin
           end else begin
             LStep := pusDay;
           end;
-        end else
-        begin
+        end else begin
           wMonth := StrToMonth(LTmp);
           LStep := pusDay;
           // Korean listings can have dates in the form "2004.10.25"
-          if wMonth = 0 then
-          begin
+          if wMonth = 0 then begin
             wYear := IndyStrToInt(Fetch(LTmp, '.'), wYear);
             wMonth := IndyStrToInt(Fetch(LTmp, '.'), 0);
             wDay := IndyStrToInt(LTmp);
@@ -669,8 +641,7 @@ begin
         //Some localized Japanese listings include a year sybmol
         DeleteSUffix(LTmp,JapaneseYear);
         // Not time info, scan year
-        if IndyPos(':', LTmp) = 0 then    {Do not Localize}
-        begin
+        if IndyPos(':', LTmp) = 0 then begin   {Do not Localize}
 	        wYear := IndyStrToInt(LTmp, wYear);
           // Set time info to 00:00:00.999
           wHour := 0;
@@ -695,16 +666,14 @@ begin
         //instead of:
         //
         //drwxrwxrwx   1 user     group           0 Mar  3 04:49 upload
-        if (IndyPos(':', LTmp) > 0) and (IsNumeric(Fetch(LData, ' ', False))) then {Do not localize}
-        begin
+        if (IndyPos(':', LTmp) > 0) and (IsNumeric(Fetch(LData, ' ', False))) then begin {Do not localize}
           // Scan minutes
           wMin := IndyStrToInt(Fetch(LTmp, ':'), 0);   {Do not localize}
           wSec := IndyStrToInt(Fetch(LTmp, ':'), 0);   {Do not localize}
           wMSec := IndyStrToInt(Fetch(LTmp,':'), 999); {Do not localize}
           LTmp := Fetch(LData);
           wYear := IndyStrToInt(LTmp, wYear);
-        end else
-        begin
+        end else begin
           // Scan minutes
           wMin := IndyStrToInt(Fetch(LTmp, ':'), 0); {Do not localize}
           wSec := IndyStrToInt(Fetch(LTmp, ':'), 0); {Do not localize}
@@ -719,8 +688,7 @@ begin
     end;//case LStep
   until LStep = pusDone;
   AItem.ItemType := ditFile;
-  if LDir <> '' then
-  begin
+  if LDir <> '' then begin
     case LDir[1] of
       'D' : AItem.ItemType := ditDirectory;    {Do not Localize}
       'L' : AItem.ItemType := ditSymbolicLink; {Do not Localize}
@@ -739,16 +707,14 @@ begin
   LI.Size := IndyStrToInt64(LSize, 0);
   LI.ModifiedDate := EncodeDate(wYear, wMonth, wDay) + EncodeTime(wHour, wMin, wSec, wMSec);
 
-  if LI.ItemType = ditSymbolicLink then
-  begin
+  if LI.ItemType = ditSymbolicLink then begin
     i := IndyPos(UNIX_LINKTO_SYM, LName);
     LLinkTo := Copy(LName, i + 4, Length(LName) - i - 3);
     LName := Copy(LName, 1, i - 1);
     //with ls -F (DIR -F in FTP, you will sometimes symbolic links with the linked
     //to item file name ending with a /.  That indicates that the item being pointed to
     //is a directory
-    if TextEndsWith(LLinkTo, PATH_FILENAME_SEP_UNIX) then
-    begin
+    if TextEndsWith(LLinkTo, PATH_FILENAME_SEP_UNIX) then begin
       LI.ItemType := ditSymbolicLinkDir;
       LLinkTo := Copy(LLinkTo, 1, Length(LLinkTo)-1);
     end;
@@ -766,8 +732,7 @@ begin
     LName := Copy(LName, 1, Length(LName)-1);
   end;
 
-  if APath <> '' then
-  begin
+  if APath <> '' then begin
     // a path can sometimes come into the form of:
     //  pub:
     // or
@@ -776,8 +741,7 @@ begin
     //Deal with both cases
     LI.LocalFileName := LName;
     LName := APath + PATH_FILENAME_SEP_UNIX + LName;
-    if TextStartsWith(LName, UNIX_CURDIR) then
-    begin
+    if TextStartsWith(LName, UNIX_CURDIR) then begin
       IdDelete(LName, 1, Length(UNIX_CURDIR));
       if TextStartsWith(LName, PATH_FILENAME_SEP_UNIX) then begin
         IdDelete(LName, 1, Length(PATH_FILENAME_SEP_UNIX));
@@ -802,26 +766,21 @@ var
   LPathSpec : String;
   LItem : TIdFTPListItem;
 begin
-  for i := 0 to AListing.Count-1 do
-  begin
-    if not ((AListing[i] = '') or IsTotalLine(AListing[i]) or IsUnixLsErr(AListing[i]) or IsUnitreeBanner(AListing[i])) then
-    begin
+  for i := 0 to AListing.Count-1 do begin
+    if not ((AListing[i] = '') or IsTotalLine(AListing[i]) or IsUnixLsErr(AListing[i]) or IsUnitreeBanner(AListing[i])) then begin
       //workaround for the XBox MediaCenter FTP Server
       //which returns something like this:
       //
       //dr-xr-xr-x    1 ftp      ftp            1 Feb 23 00:00 D:
       //and the trailing : is falsely assuming that a ":" means
       //a subdirectory entry in a recursive list.
-      if (not InternelChkUnix(AListing[i])) and IsSubDirContentsBanner(AListing[i]) then
-      begin
+      if (not InternelChkUnix(AListing[i])) and IsSubDirContentsBanner(AListing[i]) then begin
         LPathSpec := Copy(AListing[i], 1, Length(AListing[i])-1);
-      end else
-      begin
+      end else begin
         LItem := MakeNewItem(ADir);
         LItem.Data := AListing[i];
         Result := ParseLine(LItem, LPathSpec);
-        if not Result then
-        begin
+        if not Result then begin
           FreeAndNil(LItem);
           Exit;
         end;

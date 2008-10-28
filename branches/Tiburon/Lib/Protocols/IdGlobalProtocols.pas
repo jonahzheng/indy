@@ -1157,13 +1157,11 @@ begin
 
     Result := EncodeDate(Yr, Mo, Dt);
     // SG 26/9/00: Changed so that ANY time format is accepted
-    if IndyPos('AM', Value) > 0 then {do not localize}
-    begin
+    if IndyPos('AM', Value) > 0 then begin{do not localize}
       LAM := True;
       Value := Fetch(Value, 'AM');  {do not localize}
     end;
-    if IndyPos('PM', Value) > 0 then  {do not localize}
-    begin
+    if IndyPos('PM', Value) > 0 then begin {do not localize}
       LPM := True;
       Value := Fetch(Value, 'PM');  {do not localize}
     end;
@@ -1179,22 +1177,16 @@ begin
       Sec := IndyStrToInt( Fetch ( sTime ), 0);
       {AM/PM part if preasent}
       Value := TrimLeft(Value);
-      if LAM then
-      begin
-        if Ho = 12 then
-        begin
+      if LAM then begin
+        if Ho = 12 then begin
           Ho := 0;
         end;
-      end
-      else
-      begin
-        if LPM then
-        begin
+      end else begin
+        if LPM then begin
           //in the 12 hour format, afternoon is 12:00PM followed by 1:00PM
           //while midnight is written as 12:00 AM
           //Not exactly technically correct but pritty accurate
-          if Ho < 12 then
-          begin
+          if Ho < 12 then begin
             Ho := Ho + 12;
           end;
         end;
@@ -1221,8 +1213,7 @@ var LYear, LMonth, LDay, LHour, LMin, LSec, LMSec : Integer;
 begin
   Result := 0;
   LBuffer := ATimeStamp;
-  if LBuffer <> '' then
-  begin
+  if LBuffer <> '' then begin
   //  1234 56 78  90 12 34
   //  ---------- ---------
   //  1998 11 07  08 52 15
@@ -1244,8 +1235,7 @@ function FTPMLSToLocalDateTime(const ATimeStamp : String):TDateTime;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := 0;
-  if ATimeStamp <> '' then
-  begin
+  if ATimeStamp <> '' then begin
     Result := FTPMLSToGMTDateTime(ATimeStamp);
     // Apply local offset
     Result := Result + OffSetFromUTC;
@@ -1260,10 +1250,8 @@ begin
   DecodeDate(ATimeStamp,LYear,LMonth,LDay);
   DecodeTime(ATimeStamp,LHour,LMin,LSec,LMSec);
   Result := IndyFormat('%4d%2d%2d%2d%2d%2d',[LYear,LMonth,LDay,LHour,LMin,LSec]);
-  if AIncludeMSecs then
-  begin
-    if (LMSec <> 0) then
-    begin
+  if AIncludeMSecs then begin
+    if (LMSec <> 0) then begin
       Result := Result + IndyFormat('.%3d',[LMSec]);
     end;
   end;
@@ -1309,20 +1297,15 @@ begin
   iPos := 1 ;
   iLength := Length(Value);
   AList.Clear ;
-  while iPos <= iLength do
-  begin
+  while iPos <= iLength do begin
     iStart := iPos ;
     iEnd := iStart ;
-    while iPos <= iLength do
-    begin
-      if Value[iPos] = '"' then  {do not localize}
-      begin
+    while iPos <= iLength do begin
+      if Value[iPos] = '"' then begin {do not localize}
         Inc(iQuote);
       end;
-      if Value[iPos] = ',' then  {do not localize}
-      begin
-        if iQuote <> 1 then
-        begin
+      if Value[iPos] = ',' then begin {do not localize}
+        if iQuote <> 1 then begin
           Break;
         end;
       end;
@@ -1330,8 +1313,7 @@ begin
       Inc(iPos);
     end ;
     sTemp := Trim(Copy(Value, iStart, iEnd - iStart));
-    if Length(sTemp) > 0 then
-    begin
+    if Length(sTemp) > 0 then begin
       AList.Add(sTemp);
     end;
     iPos := iEnd + 1 ;
@@ -1395,8 +1377,7 @@ begin
   Rewrite(DestF, 1);
   {$I+} //turn it back on
   Result := IOResult <> 0;
-  if Result then
-  begin
+  if Result then begin
     repeat
       BlockRead(SourceF, Buffer, SizeOf(Buffer), NumRead);
       BlockWrite(DestF, Buffer, NumRead, NumWritten);
@@ -1415,12 +1396,10 @@ var
 begin
   SetLength(Result, MAX_PATH);
   i := GetTempPath(MAX_PATH, {$IFDEF UNICODE}PWideChar{$ELSE}PChar{$ENDIF}(Result));
-  if i > 0 then
-  begin
+  if i > 0 then begin
     SetLength(Result, i);
     Result := IndyIncludeTrailingPathDelimiter(Result);
-  end else
-  begin
+  end else begin
     Result := '';
   end;
 end;
@@ -1466,11 +1445,9 @@ begin
   //Do not use Tempnam in Unix-like Operating systems.  That function is dangerous
   //and you will be warned about it when compiling.  FreePascal has GetTempFileName.  Use
   //that instead.
-  if APath = '' then
-  begin
+  if APath = '' then begin
     Result := GetTempFileName('', 'Indy');
-  end else
-  begin
+  end else begin
     Result := GetTempFileName(APath, 'Indy');
   end;
   {$ELSE}
@@ -1478,16 +1455,14 @@ begin
   LFQE := AExt;
 
   // period is optional in the extension... force it
-  if LFQE <> '' then
-  begin
+  if LFQE <> '' then begin
     if LFQE[1] <> '.' then begin
       LFQE := '.' + LFQE;
     end;
   end;
 
   // validate path and add path delimiter before file name prefix
-  if APath <> '' then
-  begin
+  if APath <> '' then begin
     if not IndyDirectoryExists(APath) then begin
       LFName := APrefix;
     end else begin
@@ -1599,11 +1574,9 @@ begin
   Result := -1;
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   LHandle := Windows.FindFirstFile({$IFDEF WINCE}PWideChar(AFileName){$ELSE}PChar(AFileName){$ENDIF}, LRec);
-  if LHandle <> INVALID_HANDLE_VALUE then
-  begin
+  if LHandle <> INVALID_HANDLE_VALUE then begin
     Windows.FindClose(LHandle);
-    if (LRec.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY) = 0 then
-    begin
+    if (LRec.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY) = 0 then begin
       {$IFDEF WINCE}
       FileTimeToSystemTime(@LRec, @LTime);
       Result := SystemTimeToDateTime(LTime);
@@ -1620,8 +1593,7 @@ begin
   end;
   {$ENDIF}
   {$IFDEF UNIX}
-  if {$IFDEF KYLIXCOMPAT}stat{$ELSE}fpstat{$ENDIF}(PChar(AFileName), LRec) = 0 then
-  begin
+  if {$IFDEF KYLIXCOMPAT}stat{$ELSE}fpstat{$ENDIF}(PChar(AFileName), LRec) = 0 then begin
     LTime := LRec.st_mtime;
     {$IFDEF KYLIXCOMPAT}
     gmtime_r({$IFDEF KYLIX}@{$ENDIF}LTime, LU);
@@ -1642,8 +1614,7 @@ begin
   LStrLen := Length(AStr);
   if (Len > LStrLen) or (Len < 0) then begin
     Result := AStr;
-  end
-  else begin
+  end else begin
     //+1 is necessary for the Index because it is one based
     Result := Copy(AStr, LStrLen - Len+1, Len);
   end;
@@ -1682,14 +1653,12 @@ end;
 function IndyStrToBool(const AString : String) : Boolean;
 begin
   // First check against each of the elements of the FalseBoolStrs
-  if PosInStrArray(AString, IndyFalseBoolStrs, False) <> -1 then
-  begin
+  if PosInStrArray(AString, IndyFalseBoolStrs, False) <> -1 then begin
     Result := False;
     Exit;
   end;
   // Second check against each of the elements of the TrueBoolStrs
-  if PosInStrArray(AString, IndyTrueBoolStrs, False) <> -1 then
-  begin
+  if PosInStrArray(AString, IndyTrueBoolStrs, False) <> -1 then begin
     Result := True;
     Exit;
   end;
@@ -1730,20 +1699,17 @@ begin
     {$IFNDEF WINCE}
   // RLebeau 2/1/2008: MSDN says that SetLocalTime() does the adjustment
   // automatically, so why is it being done manually?
-  if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then
-  begin
+  if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then begin
     if not Windows.OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY, hToken) then begin
       Exit;
     end;
-    if not Windows.LookupPrivilegeValue(nil, 'SeSystemtimePrivilege', tkp.Privileges[0].Luid) then     {Do not Localize}
-    begin
+    if not Windows.LookupPrivilegeValue(nil, 'SeSystemtimePrivilege', tkp.Privileges[0].Luid) then begin    {Do not Localize}
       Windows.CloseHandle(hToken);
       Exit;
     end;
     tkp.PrivilegeCount := 1;
     tkp.Privileges[0].Attributes := SE_PRIVILEGE_ENABLED;
-    if not Windows.AdjustTokenPrivileges(hToken, FALSE, tkp, SizeOf(tkp), tpko, buffer) then
-    begin
+    if not Windows.AdjustTokenPrivileges(hToken, FALSE, tkp, SizeOf(tkp), tpko, buffer) then begin
       Windows.CloseHandle(hToken);
       Exit;
     end;
@@ -1754,8 +1720,7 @@ begin
   Result := Windows.SetLocalTime({$IFDEF FPC}@{$ENDIF}dSysTime);
 
     {$IFNDEF WINCE}
-  if Result then
-  begin
+  if Result then begin
     // RLebeau 2/1/2008: According to MSDN:
     //
     // "The system uses UTC internally. Therefore, when you call SetLocalTime(),
@@ -1768,8 +1733,7 @@ begin
     //
     // TODO: adjust the Time manually so only 1 call to SetLocalTime() is needed...
 
-    if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then
-    begin
+    if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then begin
       Windows.SetLocalTime({$IFDEF FPC}@{$ENDIF}dSysTime);
       // Windows 2000+ will broadcast WM_TIMECHANGE automatically...
       if Win32MajorVersion < 5 then begin // Windows 2000 = v5.0
@@ -1782,8 +1746,7 @@ begin
 
   {Undo the Process Privilege change we had done for the
   set time and close the handle that was allocated}
-  if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then
-  begin
+  if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then begin
     Windows.AdjustTokenPrivileges(hToken, False, tpko, SizeOf(tpko), tkp, Buffer);
     Windows.CloseHandle(hToken);
   end;
@@ -1802,7 +1765,7 @@ end;
 
 function StrToMonth(const AMonth: string): Byte;
 const
-  Months: array[0..6] of array[1..12] of string = (
+  Months: array[0..7] of array[1..12] of string = (
     ('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'),   // English
 	  //Netware Print Services may return a 4 char month such as Sept
     ('',    '',    '',    '',    '',   'JUNE','JULY', '',   'SEPT', '',    '',    ''),      // English - alt. 4 letter abbreviations
@@ -1810,18 +1773,15 @@ const
     ('ENO', 'FBRO','MZO', 'AB',  '',    '',    '',    'AGTO','SBRE','OBRE','NBRE','DBRE'),  // Spanish
     ('',    '',    'MRT', '',    'MEI', '',    '',    '',    '',    'OKT', '',    ''),      // Dutch
     ('JANV','F'+#$C9+'V', 'MARS','AVR', 'MAI', 'JUIN','JUIL','AO'+#$DB, 'SEPT','',    '',    'D'+#$C9+'C'),   // French
-    ('',    'F'+#$C9+'VR','',    '',    '',    '',    'JUI',    'AO'+#$DB+'T','',    '',    '',    ''));   // French (alt)
+    ('',    'F'+#$C9+'VR','',    '',    '',    '',    'JUI',    'AO'+#$DB+'T','',    '',    '',    ''),   // French (alt)
+    ('',    '',     '',   '', 'MAJ',    '',    '',       '',     'AVG',    '',    '',  ''));     // Slovenian
 var
   i: Integer;
 begin
-  if AMonth <> '' then
-  begin
-    for i := Low(Months) to High(Months) do
-    begin
-      for Result := Low(Months[i]) to High(Months[i]) do
-      begin
-        if TextIsSame(AMonth, Months[i][Result]) then
-        begin
+  if AMonth <> '' then begin
+    for i := Low(Months) to High(Months) do begin
+      for Result := Low(Months[i]) to High(Months[i]) do begin
+        if TextIsSame(AMonth, Months[i][Result]) then begin
           Exit;
         end;
       end;
@@ -1894,11 +1854,9 @@ begin
   begin
     case LR of
       data :
-        if (AText[i] = '%') and (i < Length(AText)) then
-        begin
+        if (AText[i] = '%') and (i < Length(AText)) then begin
           LR := rule;
-        end else
-        begin
+        end else begin
           Result := Result + AText[i];
         end;
       rule :
@@ -1913,8 +1871,7 @@ begin
           end;
         end;
       decimal :
-        If IsNumeric(AText[i]) then
-        begin
+        If IsNumeric(AText[i]) then begin
           LNum := LNum + AText[i];
           if IndyStrToInt(LNum, 0) > $FF then begin
             IdDelete(LNum,Length(LNum),1);
@@ -1922,9 +1879,7 @@ begin
             LR := Data;
             Result := Result + AText[i];
           end;
-        end
-        else
-        begin
+        end else begin
           Result := Result + Char(IndyStrToInt(LNum, 0));
           LNum := '';
           if AText[i] <> '.' then begin
@@ -1941,13 +1896,10 @@ begin
             LR := Data;
             Result := Result + AText[i];
           end;
-        end
-        else
-        begin
+        end else begin
           Result := Result + Char(IndyStrToInt('$'+LNum, 0));
           LNum := '';
-          if AText[i] <> '.' then
-          begin
+          if AText[i] <> '.' then begin
             LR := Data;
             Result := Result + AText[i];
           end;
@@ -1956,20 +1908,16 @@ begin
         If IsBinary(AText[i]) and (Length(LNum)<8) then
         begin
           LNum := LNum + AText[i];
-          if (BinStrToInt(LNum)>$FF)  then
-          begin
+          if (BinStrToInt(LNum)>$FF) then begin
             IdDelete(LNum,Length(LNum),1);
             Result := Result + Char(BinStrToInt(LNum));
             LR := Data;
             Result := Result + AText[i];
           end;
-        end
-        else
-        begin
+        end else begin
           Result := Result + Char(IndyStrToInt('$'+LNum, 0));
           LNum := '';
-          if AText[i] <> '.' then
-          begin
+          if AText[i] <> '.' then begin
             LR := Data;
             Result := Result + AText[i];
           end;
@@ -2007,14 +1955,11 @@ function GmtOffsetStrToDateTime(S: string): TDateTime;
 begin
   Result := 0.0;
   S := Copy(Trim(s), 1, 5);
-  if Length(S) > 0 then
-  begin
-    if (s[1] = '-') or (s[1] = '+') then   {do not localize}
-    begin
+  if Length(S) > 0 then begin
+    if (s[1] = '-') or (s[1] = '+') then begin  {do not localize}
       try
         Result := EncodeTime(IndyStrToInt(Copy(s, 2, 2)), IndyStrToInt(Copy(s, 4, 2)), 0, 0);
-        if s[1] = '-' then  {do not localize}
-        begin
+        if s[1] = '-' then begin  {do not localize}
           Result := -Result;
         end;
       except
@@ -2028,12 +1973,10 @@ function GMTToLocalDateTime(S: string): TDateTime;
 var  {-Always returns date/time relative to GMT!!  -Replaces StrInternetToDateTime}
   DateTimeOffset: TDateTime;
 begin
-  if s = '' then
-  begin
+  if s = '' then begin
     // just hardcode to 0 - don't need all the work below and the spurious timezone adjustment. GDG 20-Mar 2003
     Result := 0;
-  end else
-  begin
+  end else begin
     Result := RawStrInternetToDateTime(S);
     if Length(S) < 5 then begin
       DateTimeOffset := 0.0
@@ -2057,8 +2000,7 @@ var
   i: Integer;
 begin
   SetLength(Result, 32);
-  for i := 1 to 32 do
-  begin
+  for i := 1 to 32 do begin
     if ((Value shl (i-1)) shr 31) = 0 then
       Result[i] := '0'  {do not localize}
     else
@@ -2075,8 +2017,7 @@ var
   i, p: Integer;
   s, LMimeType, LExtension: String;
 begin
-  if FileExists(AFileName) then  {Do not localize}
-  begin
+  if FileExists(AFileName) then begin {Do not localize}
     // build list from /etc/mime.types style list file
     // I'm lazy so I'm using a stringlist to load the file, ideally
     // this should not be done, reading the file line by line is better
@@ -2084,21 +2025,17 @@ begin
     KeyList := TStringList.Create;
     try
       KeyList.LoadFromFile(AFileName); {Do not localize}
-      for i := 0 to KeyList.Count -1 do
-      begin
+      for i := 0 to KeyList.Count -1 do begin
         s := KeyList[i];
         p := IndyPos('#', s); {Do not localize}
         if p > 0 then begin
           SetLength(s, p-1);
         end;
-        if s <> '' then {Do not localize}
-        begin
+        if s <> '' then begin {Do not localize}
           s := Trim(s);
           LMimeType := IndyLowerCase(Fetch(s));
-          if LMimeType <> '' then {Do not localize}
-          begin
-             while s <> '' do {Do not localize}
-             begin
+          if LMimeType <> '' then begin {Do not localize}
+             while s <> '' do begin {Do not localize}
                LExtension := IndyLowerCase(Fetch(s));
                if LExtension <> '' then {Do not localize}
                try
@@ -2134,13 +2071,11 @@ begin
     Exit;
   end;
 
-  if AMIMEList.Count > 0 then
-  begin
+  if AMIMEList.Count > 0 then begin
     Exit;
   end;
 
-  with AMIMEList do
-  begin
+  with AMIMEList do begin
     {NOTE:  All of these strings should never be translated
     because they are protocol specific and are important for some
     web-browsers}
@@ -2498,19 +2433,15 @@ begin
     KeyList := TStringList.create;
     try
       Reg.RootKey := HKEY_CLASSES_ROOT;
-      if Reg.OpenKeyReadOnly('\') then  {do not localize}
-      begin
+      if Reg.OpenKeyReadOnly('\') then begin  {do not localize}
         Reg.GetKeyNames(KeyList);
         Reg.Closekey;
       end;
       // get a list of registered extentions
-      for i := 0 to KeyList.Count - 1 do
-      begin
+      for i := 0 to KeyList.Count - 1 do begin
         LExt := KeyList[i];
-        if TextStartsWith(LExt, '.') then   {do not localize}
-        begin
-          if Reg.OpenKeyReadOnly(LExt) then
-          begin
+        if TextStartsWith(LExt, '.') then begin  {do not localize}
+          if Reg.OpenKeyReadOnly(LExt) then begin
             s := Reg.ReadString('Content Type');  {do not localize}
             if Length(s) > 0 then begin
               AMIMEList.Values[IndyLowerCase(LExt)] := IndyLowerCase(s);
@@ -2519,20 +2450,16 @@ begin
           end;
         end;
       end;
-      if Reg.OpenKeyReadOnly('\MIME\Database\Content Type') then {do not localize}
-      begin
+      if Reg.OpenKeyReadOnly('\MIME\Database\Content Type') then begin {do not localize}
         // get a list of registered MIME types
         KeyList.Clear;
         Reg.GetKeyNames(KeyList);
         Reg.CloseKey;
 
-        for i := 0 to KeyList.Count - 1 do
-        begin
-          if Reg.OpenKeyReadOnly('\MIME\Database\Content Type\' + KeyList[i]) then {do not localize}
-          begin
+        for i := 0 to KeyList.Count - 1 do begin
+          if Reg.OpenKeyReadOnly('\MIME\Database\Content Type\' + KeyList[i]) then begin {do not localize}
             LExt := IndyLowerCase(Reg.ReadString('Extension'));  {do not localize}
-            if Length(LExt) > 0 then
-            begin
+            if Length(LExt) > 0 then begin
               if LExt[1] <> '.' then begin
                 LExt := '.' + LExt; {do not localize}
               end;
@@ -2573,8 +2500,7 @@ var
 begin
   { Check and fix extension }
   LExt := IndyLowerCase(Ext);
-  if Length(LExt) = 0 then
-  begin
+  if Length(LExt) = 0 then begin
     EIdException.IfTrue(ARaiseOnError, RSMIMEExtensionEmpty);
     Exit;
   end;
@@ -2588,8 +2514,7 @@ begin
     LExt := '.' + LExt;      {do not localize}
   end;
   { Check list }
-  if FFileExt.IndexOf(LExt) = -1 then
-  begin
+  if FFileExt.IndexOf(LExt) = -1 then begin
     FFileExt.Add(LExt);
     FMIMEList.Add(LMIMEType);
   end else begin
@@ -2602,10 +2527,10 @@ procedure TIdMimeTable.BuildCache;
 begin
   if Assigned(FOnBuildCache) then begin
     FOnBuildCache(Self);
-  end
-  else if FFileExt.Count = 0 then
-  begin
-    BuildDefaultCache;
+  end else begin
+    if FFileExt.Count = 0 then begin
+      BuildDefaultCache;
+    end;
   end;
 end;
 
@@ -2648,8 +2573,7 @@ var
 begin
   LMimeType := IndyLowerCase(MIMEType);
   Index := FMIMEList.IndexOf(LMimeType);
-  if Index = -1 then
-  begin
+  if Index = -1 then begin
     BuildCache;
     Index := FMIMEList.IndexOf(LMIMEType);
   end;
@@ -2667,8 +2591,7 @@ var
 begin
   LExt := IndyLowerCase(ExtractFileExt(AFileName));
   Index := FFileExt.IndexOf(LExt);
-  if Index = -1 then
-  begin
+  if Index = -1 then begin
     BuildCache;
     Index := FFileExt.IndexOf(LExt);
   end;
@@ -2689,8 +2612,7 @@ begin
   FFileExt.Clear;
   FMIMEList.Clear;
 
-  for I := 0 to AStrings.Count - 1 do
-  begin
+  for I := 0 to AStrings.Count - 1 do begin
     S := AStrings[I];
     P := Pos(MimeSeparator, S);
     if P > 0 then begin
@@ -2827,8 +2749,8 @@ begin
           else if not TextEndsWith(Result, APathDelim) then begin
             Result := Result + LWork[i];
           end;
-        end
-        else if LWork[i] = '.' then begin    {Do not Localize}
+        end else
+         if LWork[i] = '.' then begin    {Do not Localize}
           // If the last character was a PathDelim then the . is a relative path modifier.
           // If it doesnt follow a PathDelim, its part of a filename
           if TextEndsWith(Result, APathDelim) and (Copy(LWork, i, 2) = '..') then begin    {Do not Localize}
@@ -2998,8 +2920,7 @@ begin
   {$IFDEF UNIX}
   //TODO: No need for LHost at all? Prob can use just Result
     {$IFDEF KYLIXCOMPAT}
-  if GetHostname(@LHost[1], 255) <> -1 then
-  begin
+  if GetHostname(@LHost[1], 255) <> -1 then begin
     i := IndyPos(#0, LHost);
     SetString(Result, @LHost[1], i-1);
   end;
@@ -3088,14 +3009,12 @@ begin
   LPos := Pos(LowerCase(AEntry), LowerCase(AHeader));
   if LPos = 0 then begin
     Result := AHeader;
-  end else
-  begin
+  end else begin
     Result := Copy(AHeader, 1, LPos-1);
     LS := Copy(AHeader, LPos, MaxInt);
     //See if there is a following ; that is not within quotes...
     //LPos := Pos(';', LS);
-    for LPos := 1 to Length(LS) do
-    begin
+    for LPos := 1 to Length(LS) do begin
       LInQuotes := False;
       if LS[LPos] = '"' then begin {do not localize}
         LInQuotes := not LInQuotes;
@@ -3123,16 +3042,12 @@ var
   I, LLength, LPos: Integer;
 begin
   Result := 0;
-  if Length(AFind) > 0 then
-  begin
+  if Length(AFind) > 0 then begin
     LLength := IndyLength(AText, ALength, AStartPos);
-    if LLength > 0 then
-    begin
-      for I := 0 to LLength-1 do
-      begin
+    if LLength > 0 then begin
+      for I := 0 to LLength-1 do begin
         LPos := AStartPos + I;
-        if IndyPos(AText[LPos], AFind) <> 0 then
-        begin
+        if IndyPos(AText[LPos], AFind) <> 0 then begin
           Result := LPos;
           Exit;
         end;
@@ -3148,18 +3063,14 @@ var
 begin
   Result := 0;
   LLength := IndyLength(AText, ALength, AStartPos);
-  if LLength > 0 then
-  begin
-    if Length(AFind) = 0 then
-    begin
+  if LLength > 0 then begin
+    if Length(AFind) = 0 then begin
       Result := AStartPos;
       Exit;
     end;
-    for I := 0 to LLength-1 do
-    begin
+    for I := 0 to LLength-1 do begin
       LPos := AStartPos + I;
-      if IndyPos(AText[LPos], AFind) = 0 then
-      begin
+      if IndyPos(AText[LPos], AFind) = 0 then begin
         Result := LPos;
         Exit;
       end;
@@ -3175,8 +3086,7 @@ begin
   Len := Length(Result);
   while Len > 0 do
   begin
-    if IndyPos(Result[1], ATrim) > 0 then
-    begin
+    if IndyPos(Result[1], ATrim) > 0 then begin
       IdDelete(Result, 1, 1);
       Dec(Len);
     end else begin
@@ -3184,8 +3094,7 @@ begin
     end;
   end;
   while Len > 0 do begin
-    if IndyPos(Result[Len], ATrim) > 0 then
-    begin
+    if IndyPos(Result[Len], ATrim) > 0 then begin
       IdDelete(Result, Len, 1);
       Dec(Len);
     end else begin
@@ -3200,8 +3109,7 @@ var
   LCharSet: String;
 begin
   LCharSet := ExtractHeaderSubItem(aContentType, 'CHARSET');  {do not localize}
-  if LCharSet <> '' then
-  begin
+  if LCharSet <> '' then begin
     if PosInStrArray(LCharSet, ['UTF-8', 'UTF8'], False) <> -1 then begin
       Result := enUTF8;
       Exit;

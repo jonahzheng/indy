@@ -633,8 +633,7 @@ implementation
 
 procedure DeleteSuffix(var VStr : String; const ASuffix : String);
 begin
-  if IndyPos(ASuffix, VStr) = Length(VStr) - Length(ASuffix) + 1 then
-  begin
+  if IndyPos(ASuffix, VStr) = Length(VStr) - Length(ASuffix) + 1 then begin
     Delete(VStr, Length(VStr) - Length(ASuffix) + 1, Length(ASuffix));
   end;
 end;
@@ -673,8 +672,7 @@ var
 begin
   Result := 0;
   for i := 1 to Length(AString) do begin
-    if AString[i] = ASearchChar then
-    begin
+    if AString[i] = ASearchChar then begin
       Inc(Result);
     end;
   end;
@@ -767,8 +765,7 @@ Begin
         Exit;
       end;
     end;
-  end
-  else begin
+  end else begin
     Result := True; //empty
   end;
 end;
@@ -873,8 +870,7 @@ end;
 
 function IndyIsRelativePath(const APathName : String): Boolean;
 begin
-  if APathName <> '' then
-  begin
+  if APathName <> '' then begin
     Result := CharIsInSet(APathName, 1, PATH_SUBDIR_SEP_UNIX + PATH_SUBDIR_SEP_DOS);
   end else begin
     Result := False;
@@ -1100,16 +1096,14 @@ var
 begin
   Result := False;
   LBuffer := ADate;
-  if IndyPos('-', LBuffer) > 0 then
-  begin
+  if IndyPos('-', LBuffer) > 0 then begin
     LMSecPart := LBuffer;
     LBuffer := Fetch(LMSecPart, '-');
     if not IsNumeric(LMSecPart) then begin
       Exit;
     end;
   end;
-  if IndyPos('+', LBuffer) > 0 then
-  begin
+  if IndyPos('+', LBuffer) > 0 then begin
     LMSecPart := LBuffer;
     LBuffer := Fetch(LMSecPart, '+');
     if not IsNumeric(LMSecPart) then begin
@@ -1195,8 +1189,7 @@ begin
         LBuffer := Fetch(LOffset, '-');
         LOffset := '-' + LOffset;
       end;
-      if IndyPos('+', LBuffer) > 0 then
-      begin
+      if IndyPos('+', LBuffer) > 0 then begin
         LOffset := LBuffer;
         LBuffer := Fetch(LOffset, '+');
       end;
@@ -1271,8 +1264,7 @@ begin
   if PatternsInStr(ADelim, AData) = 2 then begin
     LBuf := AData;
     LPt := Fetch(LBuf, ADelim);
-    if (IndyStrToInt(LPt, 0) > 0) and (IndyStrToInt(LPt, 0) < 13) then
-    begin
+    if (IndyStrToInt(LPt, 0) > 0) and (IndyStrToInt(LPt, 0) < 13) then begin
       LPt := Fetch(LBuf, ADelim);
       if (IndyStrToInt(LPt, 0) > 0) and (IndyStrToInt(LPt, 0) < 33) then begin
         Result := IsNumeric(LBuf);
@@ -1294,8 +1286,7 @@ begin
   //Note that some OS/2 servers return years greater than 100 for
   //years such as 2000 and 2003
   if Result < 1000 then begin
-    if TwoDigitYearCenturyWindow > 0 then
-    begin
+    if TwoDigitYearCenturyWindow > 0 then begin
       if Result > TwoDigitYearCenturyWindow then begin
         Inc(Result, ((IndyCurrentYear div 100)-1)*100);
       end else begin
@@ -1605,8 +1596,7 @@ begin
       }
       CharIsInSet(SData, 9, 'TSRWX-') and   {Do not Localize}
       CharIsInSet(SData, 10, 'TSRWX-');     {Do not Localize}
-  end else
-  begin
+  end else begin
     Result := CharIsInSet(AData, 1, 'd-') and   {Do not Localize}
       CharIsInSet(AData, 2, 'tsrwx-') and    {Do not Localize}
       CharIsInSet(AData, 3, 'tsrwx-') and    {Do not Localize}
@@ -1654,8 +1644,7 @@ begin
   if (Length(APerms) > 1) and (APerms[2] = 'w') then begin
     Result := Result or IdS_IWUSR;
   end;
-  if Length(APerms) > 2 then
-  begin
+  if Length(APerms) > 2 then begin
     case APerms[3] of
       'x' : //exec
         begin
@@ -1679,8 +1668,7 @@ begin
   if (Length(APerms) > 4) and (APerms[5] = 'w') then begin
     Result := Result or IdS_IWGRP;
   end;
-  if Length(APerms) > 5 then
-  begin
+  if Length(APerms) > 5 then begin
     case APerms[6] of
       'x' : //exec
         begin
@@ -1708,7 +1696,7 @@ begin
     case APerms[9] of
       'x' :
         begin
-	  Result := Result or IdS_IXOTH;
+	        Result := Result or IdS_IXOTH;
         end;
       't' :
         begin
@@ -1717,8 +1705,8 @@ begin
         end;
       'T' :
         begin
-	  Result := Result or IdS_ISVTX;
-	end;
+          Result := Result or IdS_ISVTX;
+        end;
     end;
   end;
 end;
@@ -2090,8 +2078,7 @@ begin
   if AString = '' then begin
     Exit;
   end;
-  if Length(AString) = 3 then
-  begin
+  if Length(AString) = 3 then begin
     if AString = '---' then begin
       Result := True;
     end;
@@ -2114,8 +2101,7 @@ begin
   if AString = '' then begin
     Exit;
   end;
-  for i := 1 to Length(AString) do
-  begin
+  for i := 1 to Length(AString) do begin
     if (IndyPos(AString[i], CValidFlags) = 0) and
       (IndyPos(AString[i], CWhiteSpace) = 0) then begin
       Exit;
