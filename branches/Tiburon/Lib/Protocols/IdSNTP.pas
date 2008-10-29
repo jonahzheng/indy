@@ -268,7 +268,7 @@ end;
 function TIdSNTP.GetDateTime: TDateTime;
 var
   LNTPDataGram: TNTPGram;
-  LResultStr : String;
+  LBuffer : TIdBytes;
 begin
 //  FillChar(NTPDataGram, SizeOf(NTPDataGram), 0);
   LNTPDataGram := TNTPGram.Create;
@@ -278,23 +278,21 @@ begin
     DateTimeToNTP(Now, LNTPDataGram.FXmit1, LNTPDataGram.FXmit2);
     LNTPDataGram.Xmit1 := GStack.HostToNetwork(LNTPDataGram.Xmit1);
     LNTPDataGram.Xmit2 := GStack.HostToNetwork(LNTPDataGram.Xmit2);
-
-    LResultStr := BytesToString(LNTPDataGram.Bytes);
-    Send(LResultStr);
-    LResultStr := ReceiveString;
+    LBuffer := LNTPDataGram.Bytes;
+    SendBuffer(LBuffer);
+    ReceiveBuffer(LBuffer);
 
     // DS default result is an empty TDateTime value
     Result := 0.0;
 
     // DS response may contain optional NTP authentication scheme info not in NTPGram
-    if Length(LResultStr) >= NTGRAMSIZE then
-    begin
+    if Length(LBuffer) >= NTGRAMSIZE then begin
       FDestinationTimeStamp := Now ;
 
       // DS copy result data back into NTPDataGram
       // DS ignore optional NTP authentication scheme info in response
-      LNTPDataGram.Bytes := ToBytes(LResultStr);
-
+    //  LNTPDataGram.Bytes := ToBytes(LResultStr);
+      LNTPDataGram.Bytes := LBuffer;
       FOriginateTimeStamp := NTPToDateTime(GStack.NetworkToHost(LNTPDataGram.FOrg1),
         GStack.NetworkToHost(LNTPDataGram.FOrg2));
       FReceiveTimestamp := NTPToDateTime(GStack.NetworkToHost(LNTPDataGram.FRcv1),
@@ -310,8 +308,7 @@ begin
         (FTransmitTimestamp - FDestinationTimestamp)) / 2;
 
       // DS update date/time when NTP datagram is not ignored
-      if not Disregard(LNTPDataGram) then
-      begin
+      if not Disregard(LNTPDataGram) then begin
         Result := NTPToDateTime(GStack.NetworkToHost(LNTPDataGram.FXmit1),
           GStack.NetworkToHost(LNTPDataGram.FXmit2));
       end;
@@ -325,15 +322,13 @@ function TIdSNTP.SyncTime: Boolean;
 begin
   Result := DateTime <> 0.0;
 
-  if Result then
-  begin
+  if Result then begin
     Result := IndySetLocalTime(FOriginateTimestamp + FLocalClockOffset
       + FRoundTripDelay);
   end;
 end;
 
 { TNTPGram }
-
 
 function TNTPGram.GetBytes: TIdBytes;
 begin
