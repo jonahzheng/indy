@@ -1533,9 +1533,9 @@ var
   var
     LN : Integer;
   begin
-   LN := An2;
-   An2 := An1;
-   An1 := LN;
+    LN := An2;
+    An2 := An1;
+    An1 := LN;
   end;
 
 begin
@@ -2025,15 +2025,15 @@ begin
   Result := False;
   s := TStringList.Create;
   try
-   SplitColumns(TrimRight(AData), s);
-   if s.Count > 4 then begin
-     Result := (s[2] = 'F') or (s[2] = 'D');
-     if Result then begin
-       Result := IsNumeric(s[4]) or (s[4] = '-');
-     end;
+    SplitColumns(TrimRight(AData), s);
+    if s.Count > 4 then begin
+      Result := (s[2] = 'F') or (s[2] = 'D');
+      if Result then begin
+        Result := IsNumeric(s[4]) or (s[4] = '-');
+      end;
     end;
   finally
-   FreeAndNil(s);
+    FreeAndNil(s);
   end;
 end;
 

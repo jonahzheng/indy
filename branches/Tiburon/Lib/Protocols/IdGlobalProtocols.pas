@@ -685,8 +685,7 @@ begin
   {$IFNDEF DOTNET}
   //note that in DotNET, everything is MBCS
     and (ByteType(ANSIStr, 1) = mbSingleByte)
-  {$ENDIF}
-  ;
+  {$ENDIF} ;
   //just in case someone is doing a recursive listing and there's a dir with the name total
 end;
 
@@ -1054,6 +1053,7 @@ var
     Mo := StrToMonth( Fetch ( Value, ADelim )  );
     Value := TrimLeft(Value);
   end;
+
 begin
   Result := 0.0;
 
