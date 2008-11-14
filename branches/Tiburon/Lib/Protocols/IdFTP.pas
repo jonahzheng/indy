@@ -1261,15 +1261,13 @@ begin
 
       if IsSiteZONESupported then
       begin
-        if not FCanUseMLS then begin
-          if SendCmd('SITE ZONE') = 210 then begin {do not localize}
-            if LastCmdResult.Text.Count > 0 then begin
-              LBuf := LastCmdResult.Text[0];
-              //remove UTC from reply string "UTC-300"
-              IdDelete(LBuf, 1, 3);
-              FTZInfo.GMTOffset := MDTMOffset(LBuf);
-              FTZInfo.FGMTOffsetAvailable := True;
-            end;
+        if SendCmd('SITE ZONE') = 210 then begin {do not localize}
+          if LastCmdResult.Text.Count > 0 then begin
+            LBuf := LastCmdResult.Text[0];
+            //remove UTC from reply string "UTC-300"
+            IdDelete(LBuf, 1, 3);
+            FTZInfo.GMTOffset := MDTMOffset(LBuf);
+            FTZInfo.FGMTOffsetAvailable := True;
           end;
         end;
       end;
@@ -1419,7 +1417,7 @@ var
   LDest: TMemoryStream;
   LTrans : TIdFTPTransferType;
 begin
-  if FCanUseMLS then begin
+  if UseMLIS and FCanUseMLS then begin
     ExtListDir(ADest);
     Exit;
   end;
@@ -1815,7 +1813,7 @@ procedure TIdFTP.KillDataChannel;
 begin
   // Had kill the data channel ()
   if Assigned(FDataChannel) then begin
-    FDataChannel.Disconnect; //FDataChannel.IOHandler.DisconnectSocket;  {//BGO}
+    FDataChannel.Disconnect(False); //FDataChannel.IOHandler.DisconnectSocket;  {//BGO}
   end;
 end;
 
@@ -2229,7 +2227,7 @@ begin
     FUsingExtDataPort := IsExtSupported('EPRT') and IsExtSupported('EPSV');  {do not localize}
   end;
 
-  FCanUseMLS := UseMLIS and (IsExtSupported('MLSD') or IsExtSupported('MLST')); {do not localize}
+  FCanUseMLS := IsExtSupported('MLSD') or IsExtSupported('MLST'); {do not localize}
   ExtractFeatFacts('LANG', FLangsSupported); {do not localize}
 
   // send the CLNT command before sending the OPTS UTF8 command.
