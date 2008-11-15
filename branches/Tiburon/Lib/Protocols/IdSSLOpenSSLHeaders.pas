@@ -8456,6 +8456,8 @@ function IdSslMASN1StringData(x : PASN1_STRING) : PAnsiChar;
 
 function ErrMsg(AErr : TIdC_ULONG) : AnsiString;
 
+function GetCryptLibHandle : Integer;
+
 implementation
 
 uses
@@ -8496,6 +8498,11 @@ var
   // LIBEAY functions - open SSL 0.9.6a
   IdSslRandScreen : procedure; cdecl = nil;
   {$ENDIF}
+
+function GetCryptLibHandle : Integer;
+begin
+  Result := hIdCrypto;
+end;
 
 { This constant's are used twice. First time in Load function and second time  }  {Do not localize}
 { in function WhichFailedToLoad. I belive that this reduce size of final       }
@@ -8933,9 +8940,9 @@ them in case we use them later.}
   {CH fn__ossl_096_des_random_seed = '_ossl_096_des_random_seed'; {Do not localize}
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_RC4}
-  {CH fn_RC4_options = 'RC4_options'; }  {Do not localize}
+  {CH fn_RC4_options = 'RC4_options'; } {Do not localize}
   {CH fn_RC4_set_key = 'RC4_set_key'; }  {Do not localize}
-  {CH fn_RC4 = 'RC4'; }  {Do not localize}
+  {CH fn_RC4 = 'RC4'; } {Do not localize}
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_RC2}
   {CH fn_RC2_set_key = 'RC2_set_key'; }  {Do not localize}
