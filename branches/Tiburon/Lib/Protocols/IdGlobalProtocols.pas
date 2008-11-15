@@ -2954,7 +2954,16 @@ begin
     // the Windows one so we default to it.
     LANG_UKRAINIAN: Result := idcswindows_1251;
     else begin
+      {$IFDEF UNICODESTRING}
+      Result := idcsUNICODE_1_1;
+      // not a particular Unicode encoding - just unicode in general
+      // i.e. Delphi/C++Builder 2009+ native string is 2 byte Unicode,
+      // we do not concern ourselves with Byte order. (though we have
+      // to concern ourselves once we start writing to some stream or
+      // Bytes
+      {$ELSE}
       Result := idcsISO_8859_1;
+      {$ENDIF}
     end;
   end;
   {$ENDIF}
@@ -3070,18 +3079,20 @@ function ContentTypeStrToEncoding (const aContentType: string): TIdEncoding;
 var
   LCharSet: String;
 begin
-  LCharSet := ExtractHeaderSubItem(aContentType, 'CHARSET');  {do not localize}
-  if LCharSet <> '' then begin
-    if PosInStrArray(LCharSet, ['UTF-8', 'UTF8'], False) <> -1 then begin
-      Result := enUTF8;
-      Exit;
-    end;
-  end;
   {JPM - I have decided to temporarily make this en8bit because I'm concerned
   about how binary files will be handled by the en7bit encoder (where there may
   be 8bit byte-values.  In addition, there are numerous charsets for various
   languages and code that does some special mapping for them would be a mess.}
+
   Result := en8bit; //en7Bit;
+
+  LCharSet := ExtractHeaderSubItem(aContentType, 'CHARSET');  {do not localize}
+  if LCharSet <> '' then begin
+    case PosInStrArray(LCharSet, ['UTF-8', 'UTF8', 'ASCII', 'US-ASCII'], False) of
+      0, 1: Result := enUTF8;
+      2, 3: Result := en7bit;
+    end;
+  end;
 end;
 
 
