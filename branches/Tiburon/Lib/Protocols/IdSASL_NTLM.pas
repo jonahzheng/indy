@@ -80,7 +80,7 @@ begin
   IdGlobal.DebugOutput('Type 2 Flags = '+ DumpFlags(LFlags));
   GetDomain(GetUsername,LUsername,LDomain);
   Result := BytesToString( BuildType3Msg(LDomain,LDomain,GetUsername,GetPassword,
-    LFlags,LNonce,LTargetName,LTargetInfo,FLMCompatibility ));
+    LFlags,LNonce,LTargetName,LTargetInfo,FLMCompatibility ),en8bit);
 end;
 
 procedure TIdSASLNTLM.InitComponent;
@@ -111,7 +111,7 @@ begin
   begin
     LDomain := FDomain;
   end;
-  Result := BytesToString( IdNTLMv2.BuildType1Msg(LDomain,LDomain  ));
+  Result := BytesToString( IdNTLMv2.BuildType1Msg(LDomain,LDomain),en8bit);
 //  Result := BuildType1Message(LDomain,AHost);
 end;
 
