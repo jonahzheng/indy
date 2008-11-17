@@ -111,7 +111,7 @@ begin
   begin
     LDomain := FDomain;
   end;
-  Result := BytesToString( IdNTLMv2.BuildType1Msg(LDomain,LDomain),en8bit);
+  Result := BytesToString( IdNTLMv2.BuildType1Msg(LDomain,LDomain,FLMCompatibility),en8bit);
 //  Result := BuildType1Message(LDomain,AHost);
 end;
 
