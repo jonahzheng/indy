@@ -919,23 +919,29 @@ function MakeBlob(const ANTLMTimeStamp : FILETIME; const ATargetInfo : TIdBytes;
 begin
   SetLength(Result,0);
 
-  //blob signature
-
+  //blob signature - offset 0
+  //   RespType - offset 0
+  //   HiRespType - offset 1
+  //   Reserved1 - offset 2
   AddByteArray( Result, NTLMv2_BLOB_Sig);
-  // reserved
+  // reserved  - offset 4
+  //   Reserved2  - offset 4
   AddByteArray( Result, NTLMv2_BLOB_Res);
 
-  // time
+  // time - offset 8
   IdNTLMv2.AddLongWord(Result, ANTLMTimeStamp.dwLowDateTime );
   IdNTLMv2.AddLongWord(Result, ANTLMTimeStamp.dwHighDateTime );
 
  // AddInt64(Result,ANTLMTimeStamp);
   //client nonce (challange)
+  // cnonce - offset 16
   IdGlobal.AppendBytes(Result,cnonce);
-  // unknown (0 works)
-  AddByteArray( Result, NTLMv2_BLOB_Res);
-
-  // targetinfo
+  // reserved 3
+  //   offset - offset 24
+  AddLongWord(Result,0);
+//  AddByteArray( Result, NTLMv2_BLOB_Res);
+  // targetinfo - offset 28
+  //    av pairs - offset 28
   IdGlobal.AppendBytes(Result,ATargetInfo);
   // unknown (0 works)
   AddByteArray( Result, NTLMv2_BLOB_Res);
@@ -1274,7 +1280,8 @@ begin
     end;
     LUser := ToBytes(UpperCase(AUsername));
   end;
-  if AFlags and IdNTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY > 0 then
+  if (ALMCompatibility < 3) and
+    (AFlags and IdNTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY > 0) then
   begin
     LCNonce := GenerateCNonce;
     LNTLMData := CreateModNTLMv1Response(lntlmhash,AUserName,APassword,LCNonce,ANonce,LLMData);
@@ -1321,9 +1328,10 @@ begin
       end;
      3,4,5 : //Send NTLMv2 response only
       begin
-        LFlags := LFlags and (not IdNTLMSSP_NEGOTIATE_NTLM);
+//        LFlags := LFlags and (not IdNTLMSSP_NEGOTIATE_NTLM);
+        LCNonce := GenerateCNonce;
         LLMData := IdNTLMv2.SetupLMv2Response(llmhash,AUsername,ADomain,APassword,LCNonce,ANonce);
-        LNTLMData := CreateNTLMv2Response(lntlmhash,AUserName,ADomain,APassword,ATargetName,ATargetName, ATargetInfo,LCNonce);
+        LNTLMData := CreateNTLMv2Response(lntlmhash,AUserName,ADomain,APassword,ATargetName,ATargetInfo,LCNonce,ANonce);
 
       end;
       //        LCNonce := GenerateCNonce;
@@ -1473,7 +1481,8 @@ begin
   end;
 end;
 
-procedure TestNTLM;
+procedure DoDavePortTests;
+
 var LNonce,LCNonce, lmhash : TIdBytes;
   LMResp : TIdBytes;
   LTargetINfo : TIdBytes;
@@ -1501,7 +1510,7 @@ begin
 
    SetLength(LTargetInfo,Length(TEST_TARGETINFO));
    CopyTIdByteArray(TEST_TARGETINFO,0,LTargetInfo,0,Length(TEST_TARGETINFO));
-   
+
    if ToHex(SetupLMResponse(lmhash,'SecREt01',LNonce)) <> 'C337CD5CBD44FC9782A667AF6D427C6DE67C20C2D3E77C56' then
    begin
      DebugOutput(BytesToHex(LNonce));
@@ -1540,6 +1549,72 @@ begin
      raise Exception.Create ('NTLMv2 Response failed' );
    end;
 end;
+
+function ConstArray(const AArray : array of byte) : TIdBytes;
+var i : Integer;
+begin
+  SetLength(Result,0);
+  for i := Low(AArray) to High(AArray) do begin
+    AppendByte(Result,AArray[i]);
+  end;
+end;
+
+
+{
+Microsoft tests
+User
+
+0000000: 55 00 73 00 65 00 72 00                           U.s.e.r.
+0000000: 55 00 53 00 45 00 52 00                           U.S.E.R.
+0000000: 55 73 65 72                                       User
+
+UserDom
+0000000: 44 00 6f 00 6d 00 61 00 69 00 6e 00               D.o.m.a.i.n
+
+Password
+0000000: 50 00 61 00 73 00 73 00 77 00 6f 00 72 00 64 00   P.a.s.s.w.o.r.d.
+0000000: 50 41 53 53 57 4f 52 44 00 00 00 00 00 00         PASSWORD......
+
+Server Name
+00000000: 53 00 65 00 72 00 76 00 65 00 72 00              S.e.r.v.e.r.
+
+Workstation Name
+0000000: 43 00 4f 00 4d 00 50 00 55 00 54 00 45 00 52 00   C.O.M.P.U.T.E.R.
+
+Random Session Key
+0000000: 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55   UUUUUUUUUUUUUUUU
+
+Time
+0000000: 00 00 00 00 00 00 00 00                           ........
+
+Client Challange
+0000000: aa aa aa aa aa aa aa aa                           ........
+
+Server Challange
+0000000: 01 23 45 67 89 ab cd ef                           .#Eg..&#x2550;.
+
+4.2.2 NTLM v1 Authentication
+
+# NTLMSSP_NEGOTIATE_KEY_EXCH
+# NTLMSSP_NEGOTIATE_56
+# NTLMSSP_NEGOTIATE_128
+# NTLMSSP_NEGOTIATE_VERSION
+# NTLMSSP_TARGET_TYPE_SERVER
+# NTLMSSP_NEGOTIATE_ALWAYS_SIGN
+# NTLM NTLMSSP_NEGOTIATE_NTLM
+# NTLMSSP_NEGOTIATE_SEAL
+# NTLMSSP_NEGOTIATE_SIGN
+# NTLM_NEGOTIATE_OEM
+# NTLMSSP_NEGOTIATE_UNICOD
+}
+
+procedure TestNTLM;
+begin
+  //DoMSTests;
+  DoDavePortTests;
+end;
+
+
 {$ENDIF}
 
 initialization
