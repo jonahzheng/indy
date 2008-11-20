@@ -1358,11 +1358,7 @@ begin
     AppendByte(Result, IdNTLM_WINDOWS_MINOR_VERSION_0);
     AddWord(Result,IdNTLM_WINDOWS_BUILD_ORIG_VISTA);
     AddLongWord(Result,$F);
-  end
-  else
-  begin
-
-  end; }
+  end;   }
   lu_ofs := ld_len + ld_ofs;
   lh_ofs := lu_len + lu_ofs;
   ll_ofs := lh_len + lh_ofs;
