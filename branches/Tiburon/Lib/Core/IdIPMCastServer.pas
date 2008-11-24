@@ -70,6 +70,8 @@ type
   TIdIPMCastServer = class(TIdIPMCastBase)
   protected
     FBinding: TIdSocketHandle;
+    FBoundIP: String;
+    FBoundPort: TIdPort;
     FLoopback: Boolean;
     FTimeToLive: Byte;
     //
@@ -91,6 +93,8 @@ type
     property Binding: TIdSocketHandle read GetBinding;
   published
     property Active;
+    property BoundIP: String read FBoundIP write FBoundIP;
+    property BoundPort: TIdPort read FBoundPort write FBoundPort;
     property Loopback: Boolean read FLoopback write SetLoopback default DEF_IMP_LOOPBACK;
     property MulticastGroup;
     property IPVersion;
@@ -161,6 +165,8 @@ begin
     {$ELSE}
     FBinding.AllocateSocket(Id_SOCK_DGRAM);
     {$ENDIF}
+    FBinding.IP := FBoundIP;
+    FBinding.Port := FBoundPort;
     FBinding.Bind;
     //Multicast.IMRMultiAddr :=  GBSDStack.StringToTIn4Addr(FMulticastGroup);
     //Hope the following is correct for StringToTIn4Addr(), should be checked...
