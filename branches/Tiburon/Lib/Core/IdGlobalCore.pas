@@ -38,7 +38,7 @@ uses
 
 const
   {$IFDEF LINUX}
-  tpListener = tpIdNormal;
+  tpListener = tpNormal;
   {$ELSE}
   tpListener = tpHighest;
   {$ENDIF}
