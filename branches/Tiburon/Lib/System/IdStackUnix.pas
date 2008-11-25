@@ -472,7 +472,7 @@ begin
       begin
         LiSize := SizeOf(sockaddr_in6);
         Result := fpRecvFrom(ASocket, @VBuffer, ALength, AFlags or Id_MSG_NOSIGNAL, PSockAddr(@LAddr), @LiSize);
-        with LAddr6 do
+        with LAddr do
         begin
           VIP := NetAddrToStr6(sin6_addr);
           VPort := ntohs(sin6_port);
@@ -597,7 +597,7 @@ procedure TIdStackUnix.WSSendTo(ASocket: TIdStackSocketHandle;
   const ABuffer; const ABufferLength, AFlags: Integer; const AIP: string;
   const APort: TIdPort; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 var
-  LAddr : sockdddr_in6;
+  LAddr : sockaddr_in6;
   LBytesOut: Integer;
 begin
   case AIPVersion of
@@ -614,7 +614,7 @@ begin
     Id_IPv6:
       begin
         InitSockAddr_in6(LAddr);
-        with LAddr6 do
+        with LAddr do
         begin
           sin6_addr := StrToHostAddr6(AIP);
           //TranslateStringToTInAddr(AIP, sin6_addr, AIPVersion);
@@ -778,7 +778,7 @@ function TIdStackUnix.HostByAddress(const AAddress: string;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string;
 var
   LI : Array of string;
-  LAddr: THostAddr;
+  LAddr4: THostAddr;
   LAddr6: THostAddr6;
 begin
   Result := '';
