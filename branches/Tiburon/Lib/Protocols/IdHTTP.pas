@@ -512,6 +512,9 @@ type
     procedure DoOnDisconnected; override;
   public
     destructor Destroy; override;
+
+    procedure Delete(AURL: string);
+
     procedure Options(AURL: string); overload;
     procedure Get(AURL: string; AResponseContent: TStream); overload;
     procedure Get(AURL: string; AResponseContent: TStream; AIgnoreReplies: array of SmallInt);
@@ -681,6 +684,11 @@ begin
   FreeAndNil(FProxyParameters);
   SetCookieManager(nil);
   inherited Destroy;
+end;
+
+procedure TIdCustomHTTP.Delete(AURL: string);
+begin
+  DoRequest(Id_HTTPMethodDelete, AURL, nil, nil, []);
 end;
 
 procedure TIdCustomHTTP.Options(AURL: string);
@@ -1802,22 +1810,25 @@ function TIdHTTPProtocol.ProcessResponse(AIgnoreReplies: array of SmallInt): TId
     LTempStream: TStream;
   begin
     LTempResponse := TMemoryStream.Create;
-    LTempStream := Response.ContentStream;
-    Response.ContentStream := LTempResponse;
     try
-      FHTTP.ReadResult(Response, AUnexpectedContentTimeout);
-      if High(ALIgnoreReplies) > -1 then begin
-        for i := Low(ALIgnoreReplies) to High(ALIgnoreReplies) do begin
-          if AResponseCode = ALIgnoreReplies[i] then begin
-            Exit;
+      LTempStream := Response.ContentStream;
+      Response.ContentStream := LTempResponse;
+      try
+        FHTTP.ReadResult(Response, AUnexpectedContentTimeout);
+        if High(ALIgnoreReplies) > -1 then begin
+          for i := Low(ALIgnoreReplies) to High(ALIgnoreReplies) do begin
+            if AResponseCode = ALIgnoreReplies[i] then begin
+              Exit;
+            end;
           end;
         end;
+        LTempResponse.Position := 0;
+        raise EIdHTTPProtocolException.CreateError(AResponseCode, FHTTP.ResponseText,
+          ReadStringFromStream(LTempResponse, -1, ContentTypeStrToEncoding(FHTTP.Response.FContentType)));
+      finally
+        Response.ContentStream := LTempStream;
       end;
-      LTempResponse.Position := 0;
-      raise EIdHTTPProtocolException.CreateError(AResponseCode, FHTTP.ResponseText,
-        ReadStringFromStream(LTempResponse, -1, ContentTypeStrToEncoding(FHTTP.Response.FContentType)));
     finally
-      Response.ContentStream := LTempStream;
       FreeAndNil(LTempResponse);
     end;
   end;
