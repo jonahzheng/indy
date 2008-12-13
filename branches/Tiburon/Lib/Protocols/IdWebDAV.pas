@@ -207,7 +207,7 @@ begin
   begin
     s := '<?xml version="1.0" encoding="utf-8" ?>' +   {do not localize}
          '<propertyupdate xmlns:D="DAV:"><set><prop>' +  {do not localize}
-	 '<comment>' + AComment + '</comment></set></set></propertyupdate>';  {do not localize}
+         '<comment>' + AComment + '</comment></set></set></propertyupdate>';  {do not localize}
     LXML := TMemoryStream.Create;
     try
       WriteStringToStream(LXML, s, enUTF8);
@@ -296,8 +296,7 @@ begin
     Request.CustomHeaders.Values['If'] := '';  {do not localize}
   end;
   try
-    //possible conflicts with baseclass PUT?
-    DoRequest(Id_HTTPMethodPut, AURL, ASource, nil, []);
+    inherited Put(AURL, ASource, nil);
   finally
     if ALockToken <> '' then begin
       Request.CustomHeaders.Values['If'] := '';  {do not localize}
@@ -313,7 +312,7 @@ begin
     Request.CustomHeaders.Values['If'] := '';  {do not localize}
   end;
   try
-    DoRequest(Id_HTTPMethodDelete, AURL, nil, nil, []);
+    inherited Delete(AURL);
   finally
     if ALockToken <> '' then begin
       Request.CustomHeaders.Values['If'] := '';  {do not localize}
