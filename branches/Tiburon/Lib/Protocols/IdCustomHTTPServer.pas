@@ -790,7 +790,7 @@ var
 
 var
   i: integer;
-  s, LInputLine, LCmd: String;
+  s, LInputLine, LCmd, LContentType: String;
   LURI: TIdURI;
   LRawHTTPCommand: string;
   LContinueProcessing: Boolean;
@@ -813,9 +813,6 @@ begin
           try
             LResponseInfo := TIdHTTPResponseInfo.Create(AContext.Connection, Self);
             try
-              LResponseInfo.CloseConnection := not (FKeepAlive and
-                TextIsSame(LRequestInfo.Connection, 'Keep-alive')); {Do not Localize}
-
               // SG 05.07.99
               // Set the ServerSoftware string to what it's supposed to be.    {Do not Localize}
               LResponseInfo.ServerSoftware := Trim(ServerSoftware);
@@ -833,6 +830,9 @@ begin
               LRequestInfo.RawHeaders.Clear;
               IOHandler.Capture(LRequestInfo.RawHeaders, '');    {Do not Localize}
               LRequestInfo.ProcessHeaders;
+
+              LResponseInfo.CloseConnection := not (FKeepAlive and
+                TextIsSame(LRequestInfo.Connection, 'Keep-alive')); {Do not Localize}
 
               {TODO Check for 1.0 only at this point}
               LCmd := UpperCase(Fetch(LInputLine, ' '));    {Do not Localize}
@@ -872,10 +872,14 @@ begin
                 end;
               end;
 
+              // retreive the base ContentType
+              s := LRequestInfo.ContentType;
+              LContentType := Fetch(s, ';');  {Do not Localize}
+
               // reset back to 0 before reading the string from the post stream
               LRequestInfo.PostStream.Position := 0;
-              if TextIsSame(LRequestInfo.ContentType, 'application/x-www-form-urlencoded') then begin    {Do not Localize}
-                LRequestInfo.FormParams := ReadStringFromStream(LRequestInfo.PostStream);
+              if TextIsSame(LContentType, 'application/x-www-form-urlencoded') then begin    {Do not Localize}
+                LRequestInfo.FormParams := ReadStringFromStream(LRequestInfo.PostStream, -1, ContentTypeStrToEncoding(LRequestInfo.ContentType));
               end;
 
               // reset back to 0 for the OnCommand... event handler
@@ -898,7 +902,7 @@ begin
 
               // Parse Params
               if ParseParams then begin
-                if TextIsSame(LRequestInfo.ContentType, 'application/x-www-form-urlencoded') then begin    {Do not Localize}
+                if TextIsSame(LContentType, 'application/x-www-form-urlencoded') then begin    {Do not Localize}
                   LRequestInfo.DecodeAndSetParams(LRequestInfo.UnparsedParams);
                 end else begin
                   // Parse only query params when content type is not 'application/x-www-form-urlencoded'    {Do not Localize}
