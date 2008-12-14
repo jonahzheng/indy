@@ -2019,7 +2019,7 @@ type
   {$EXTERNALSYM PWSAQUERYSET}
   {$EXTERNALSYM LPWSAQUERYSET}
   {$IFDEF UNICODE}
-  TWSAQuerySet  = TWSAQuerySetA;
+  TWSAQuerySet  = TWSAQuerySetW;
   PWSAQUERYSET  = PWSAQUERYSETW;
   LPWSAQUERYSET = LPWSAQUERYSETW;
   {$ELSE}
@@ -2291,9 +2291,9 @@ type
   LPWSANAMESPACE_INFOEX = PWSANAMESPACE_INFOEX;
   LPFN_WSAENUMNAMESPACEPROVIDERSEX = LPFN_WSAENUMNAMESPACEPROVIDERSEXW;
   {$ELSE}
-  WSANAMESPACE_INFOEX = WSANAMESPACE_INFOEXW;
-  TWSANameSpace_InfoEx = TWSANameSpace_InfoExW;
-  PWSANAMESPACE_INFOEX = PWSANAMESPACE_INFOEXW;
+  WSANAMESPACE_INFOEX = WSANAMESPACE_INFOEXA;
+  TWSANameSpace_InfoEx = TWSANameSpace_InfoExA;
+  PWSANAMESPACE_INFOEX = PWSANAMESPACE_INFOEXA;
   LPWSANAMESPACE_INFOEX = PWSANAMESPACE_INFOEX;
   LPFN_WSAENUMNAMESPACEPROVIDERSEX = LPFN_WSAENUMNAMESPACEPROVIDERSEXA;
   {$ENDIF}
@@ -5547,7 +5547,7 @@ begin
   Result := WSALookupServiceBeginW(qsRestrictions, dwControlFlags, hLookup);
 end;
 
-function Stub_WSALookupServiceBegin(var qsRestrictions: {$IFDEF UNICODE}TWSAQuerySetW{$ELSE}TWSAQuerySet{$ENDIF}; const dwControlFlags: DWORD; var hLookup: THandle): Integer; stdcall;
+function Stub_WSALookupServiceBegin(var qsRestrictions: TWSAQuerySet; const dwControlFlags: DWORD; var hLookup: THandle): Integer; stdcall;
 begin
   {$IFDEF UNICODE}
   @WSALookupServiceBegin := FixupStub(hWinSockDll, 'WSALookupServiceBeginW'); {Do not Localize}
