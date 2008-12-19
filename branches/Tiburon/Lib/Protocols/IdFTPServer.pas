@@ -728,6 +728,8 @@ type
   //have an extremely compelling reason to do so.  This even is ONLY for those compelling case.
   TIdOnPASV = procedure(ASender: TIdFTPServerContext; var VIP : String;
     var VPort : TIdPort; const AIPVer : TIdIPVersion) of object;
+  TIdOnPASVRange = procedure(ASender: TIdFTPServerContext; var VIP : String;
+    var VPortMin, VPortMax : TIdPort; const AIPVer : TIdIPVersion) of object;
   TIdOnDirSizeInfo = procedure(ASender : TIdFTPServerContext;
     const APathName : TIdFTPFileName;
     var VIsAFile : Boolean; var VSpace : Int64) of object;
@@ -967,7 +969,7 @@ type
 
     FOnDataPortBeforeBind : TOnDataPortBind;
     FOnDataPortAfterBind : TOnDataPortBind;
-    FOnPASVBeforeBind : TIdOnPASV;
+    FOnPASVBeforeBind : TIdOnPASVRange;
     FOnPASVReply : TIdOnPASV;
     FFTPFileSystem: TIdFTPBaseFileSystem;
     FEndOfHelpLine : String;
@@ -980,7 +982,7 @@ type
     function SupportTaDirSwitches(AContext : TIdFTPServerContext) : Boolean;
     function IgnoreLastPathDelim(const APath : String) : String;
     procedure DoOnPASVBeforeBind(ASender : TIdFTPServerContext; var VIP : String;
-      var VPort : TIdPort; const AIPVersion : TIdIPVersion);
+      var VPortMin, VPortMax : TIdPort; const AIPVersion : TIdIPVersion);
     procedure DoOnPASVReply(ASender : TIdFTPServerContext; var VIP : String;
       var VPort : TIdPort; const AIPVersion : TIdIPVersion);
     function InternalPASV(ASender: TIdCommand; var VIP : String;
@@ -1230,7 +1232,7 @@ type
     given as a reply.  The server IP is the same one that the client connects to.
 
     }
-    property OnPASVBeforeBind : TIdOnPASV read FOnPASVBeforeBind write FOnPASVBeforeBind;
+    property OnPASVBeforeBind : TIdOnPASVRange read FOnPASVBeforeBind write FOnPASVBeforeBind;
     property OnPASVReply : TIdOnPASV read FOnPASVReply write FOnPASVReply;
     property OnMLST : TIdOnMLST read FOnMLST write FOnMLST;
     property OnSiteUTIME : TOnSiteUTIME read FOnSiteUTIME write FOnSiteUTIME;
@@ -2769,7 +2771,6 @@ var
   LContext : TIdFTPServerContext;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
-  LContext.FDataPortDenied := False;
   if LContext.IsAuthenticated(ASender) then begin
     if LContext.FEPSVAll then begin
       ASender.Reply.SetReply(501, IndyFormat(RSFTPNotAllowedAfterEPSVAll, [ASender.CommandHandler.Command]));
@@ -2823,6 +2824,7 @@ begin
       IPVersion := Id_IPv4;
     end;
     LContext.FDataPort := LPort;
+    LContext.FDataPortDenied := False;
     CmdCommandSuccessful(ASender, 200);
   end;
 end;
@@ -2934,7 +2936,7 @@ begin
   LContext := ASender.Context as TIdFTPServerContext;
   if LContext.IsAuthenticated(ASender) then
   begin
-    if LContext.FDataPortDenied then
+    if (not Assigned(LContext.FDataChannel)) or LContext.FDataPortDenied then
     begin
       ASender.Reply.SetReply(425, RSFTPCantOpenData);
       Exit;
@@ -2993,7 +2995,7 @@ begin
   LContext := ASender.Context as TIdFTPServerContext;
   if LContext.IsAuthenticated(ASender) then
   begin
-    if not Assigned(LContext.FDataChannel) then
+    if (not Assigned(LContext.FDataChannel)) or LContext.FDataPortDenied then
     begin
       ASender.Reply.SetReply(425, RSFTPCantOpenData);
       Exit;
@@ -3271,7 +3273,7 @@ begin
   begin
     if IsAuthenticated(ASender) then
     begin
-      if FDataPortDenied then
+      if (not Assigned(LContext.FDataChannel)) or FDataPortDenied then
       begin
         ASender.Reply.SetReply(425, RSFTPCantOpenData);
         Exit;
@@ -3302,7 +3304,6 @@ begin
         begin
           //it should be safe to assume that the FDataChannel object exists because
           //we checked it earlier
-          Assert(FDataChannel <> nil);
           FDataChannel.Data := LStream;
           FDataChannel.FFtpOperation := ftpRetr;
           FDataChannel.OKReply.SetReply(226, RSFTPDataConnClosed);
@@ -3423,7 +3424,7 @@ var
   var
     i : Integer;
     LM : TStream;
-    LEncoding: TIdEncoding;
+    LEncoding: TIdTextEncoding;
   begin
     LEncoding := en8bit;
     //for loops will execute at least once triggering an out of range error.
@@ -3454,7 +3455,7 @@ var
       LM := TMemoryStream.Create;
       try
         for i := 0 to AStrings.Count-1 do begin
-          WriteStringToStream(LM, AStrings[i]+ EOL, LEncoding);
+          WriteStringToStream(LM, AStrings[i] + EOL, LEncoding);
         end;
         LM.Position := 0;
         WriteToStream(AContext, ACmdQueue, LM, True);
@@ -3607,7 +3608,7 @@ var
   LSwitches, LPath : String;
   i : Integer;
   LContext : TIdFTPServerContext;
-  LEncoding : TIdEncoding;
+  LEncoding : TIdTextEncoding;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
   LActAsList := (ASender.Params.Count > 0);
@@ -4018,7 +4019,6 @@ var
   LContext : TIdFTPServerContext;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
-  LContext.FDataPortDenied := False;
   if LContext.IsAuthenticated(ASender) then begin
     LIPVersion := ASender.Context.Connection.Socket.IPVersion;
     LContext.FPASV := False;
@@ -4030,7 +4030,8 @@ begin
     end;
     if FFTPSecurityOptions.BlockAllPORTTransfers then
     begin
-      ASender.Reply.SetReply(502,RSFTPPORTDisabled);
+      LContext.FDataPortDenied := True;
+      ASender.Reply.SetReply(502, RSFTPPORTDisabled);
       Exit;
     end;
     LDelim := LParm[1];
@@ -4094,6 +4095,7 @@ begin
       Port := LContext.FDataPort;
       IPVersion := LIPVersion;
     end;
+    LContext.FDataPortDenied := False;
     CmdCommandSuccessful(ASender, 200);
   end;
 end;
@@ -4101,7 +4103,7 @@ end;
 procedure TIdFTPServer.CommandEPSV(ASender: TIdCommand);
 var
   LParam: string;
-  LBPort: Word;
+  LBPortMin, LBPortMax: Word;
   LIP : String;
   LIPVersion: TIdIPVersion;
   LProtocol: integer;
@@ -4151,24 +4153,37 @@ begin
       end;
       Exit;
     end;
-    LIP := LContext.Connection.Socket.Binding.IP;
-    LBPort := FDefaultDataPort;
 
-    // RLebeau: TODO - only passing 1 port around is not allowing the
-    // PASVBoundPortMin/Max properties to be utilized correctly...
-    DoOnPASVBeforeBind(LContext, LIP, LBPort, LIPVersion);
+    LIP := LContext.Connection.Socket.Binding.IP;
+    if (FPASVBoundPortMin <> 0) and (FPASVBoundPortMax <> 0) then begin
+      LBPortMin := FPASVBoundPortMin;
+      LBPortMax := FPASVBoundPortMax;
+    end else begin
+      LBPortMin := FDefaultDataPort;
+      LBPortMax := LBPortMin;
+    end;
+    DoOnPASVBeforeBind(LContext, LIP, LBPortMin, LBPortMax, LIPVersion);
+
     LContext.CreateDataChannel(True);
     with TIdSimpleServer(LContext.FDataChannel.FDataChannel) do begin
       BoundIP := LIP;
-      BoundPort := LBPort;
+      if LBPortMin = LBPortMax then begin
+        BoundPort := LBPortMin;
+        BoundPortMin := 0;
+        BoundPortMax := 0;
+      end else begin
+        BoundPort := 0;
+        BoundPortMin := LBPortMin;
+        BoundPortMax := LBPortMax;
+      end;
       IPVersion := LIPVersion;
       BeginListen;
-      LBPort := Binding.Port;
       LIP := Binding.IP;
+      LBPortMin := Binding.Port;
     end;
-    //Note that only LBPort can work with EPSV
-    DoOnPASVReply(LContext, LIP, LBPort, LIPVersion);
-    LParam := '|||' + IntToStr(LBPort) + '|'; {Do not localize}
+    //Note that only one Port can work with EPSV
+    DoOnPASVReply(LContext, LIP, LBPortMin, LIPVersion);
+    LParam := '|||' + IntToStr(LBPortMin) + '|'; {Do not localize}
     ASender.Reply.SetReply(229, IndyFormat(RSFTPEnteringEPSV, [LParam]));
     LContext.FPASV := True;
   end;
@@ -4567,7 +4582,7 @@ begin
         OnConnect(AContext);
       end;
       if LGreeting.NumericCode = 421 then begin
-        AContext.Connection.Disconnect;
+        AContext.Connection.Disconnect(False);
       end;
     finally
       FreeAndNil(LGreeting);
@@ -4601,8 +4616,10 @@ begin
   end;
   LContext := ASender.Context as TIdFTPServerContext;
   LSendData := False;
-  if LContext.IsAuthenticated(ASender) then begin
-    if not Assigned(LContext.FDataChannel) then begin
+  if LContext.IsAuthenticated(ASender) then
+  begin
+    if (not Assigned(LContext.FDataChannel)) or LContext.FDataPortDenied then
+    begin
       ASender.Reply.SetReply(425, RSFTPCantOpenData);
       Exit;
     end;
@@ -6066,6 +6083,7 @@ function TIdFTPServer.InternalPASV(ASender: TIdCommand; var VIP : String;
   var VPort: TIdPort; var VIPVersion : TIdIPVersion): Boolean;
 var
   LContext : TIdFTPServerContext;
+  LBPortMin, LBPortMax: TIdPort;
 begin
   Result := False;
   LContext := ASender.Context as TIdFTPServerContext;
@@ -6074,32 +6092,48 @@ begin
       ASender.Reply.SetReply(501, IndyFormat(RSFTPNotAllowedAfterEPSVAll, [ASender.CommandHandler.Command]));
       Exit;
     end;
-    VIP := LContext.Connection.Socket.Binding.IP;
-    VPort := FDefaultDataPort;
-    VIPVersion := LContext.Connection.Socket.IPVersion;
 
-    // RLebeau: TODO - only passing 1 port around is not allowing the
-    // PASVBoundPortMin/Max properties to be utilized correctly...
-    DoOnPASVBeforeBind(LContext, VIP, VPort, VIPVersion);
+    VIP := LContext.Connection.Socket.Binding.IP;
+    VIPVersion := LContext.Connection.Socket.IPVersion;
+    
+    if (FPASVBoundPortMin <> 0) and (FPASVBoundPortMax <> 0) then begin
+      LBPortMin := FPASVBoundPortMin;
+      LBPortMax := FPASVBoundPortMax;
+    end else begin
+      LBPortMin := FDefaultDataPort;
+      LBPortMax := LBPortMin;
+    end;
+    DoOnPASVBeforeBind(LContext, VIP, LBPortMin, LBPortMax, VIPVersion);
+
     LContext.CreateDataChannel(True);
     with TIdSimpleServer(LContext.FDataChannel.FDataChannel) do begin
       BoundIP := VIP;
-      BoundPort := VPort;
+      if LBPortMin = LBPortMax then begin
+        BoundPort := LBPortMin;
+        BoundPortMin := 0;
+        BoundPortMax := 0;
+      end else begin
+        BoundPort := 0;
+        BoundPortMin := LBPortMin;
+        BoundPortMax := LBPortMax;
+      end;
       IPVersion := VIPVersion;
       BeginListen;
-      VPort := Binding.Port;
       VIP := Binding.IP;
+      VPort := Binding.Port;
     end;
+
     LContext.FPASV := True;
+    LContext.FDataPortDenied := False;
     Result := True;
   end;
 end;
 
 procedure TIdFTPServer.DoOnPASVBeforeBind(ASender: TIdFTPServerContext;
-  var VIP: String; var VPort: TIdPort; const AIPVersion: TIdIPVersion);
+  var VIP: String; var VPortMin, VPortMax: TIdPort; const AIPVersion: TIdIPVersion);
 begin
   if Assigned(FOnPASVBeforeBind) then begin
-    FOnPASVBeforeBind(ASender, VIP, VPort, AIPVersion);
+    FOnPASVBeforeBind(ASender, VIP, VPortMin, VPortMax, AIPVersion);
   end;
 end;
 
