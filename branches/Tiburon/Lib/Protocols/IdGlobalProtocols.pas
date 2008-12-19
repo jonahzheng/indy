@@ -382,6 +382,7 @@ type
     function _AddRef: Integer;
     function _Release: Integer;
   end;
+
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   TIdWin32Type = (Win32s,
     WindowsNT40PreSP6Workstation, WindowsNT40PreSP6Server, WindowsNT40PreSP6AdvancedServer,
@@ -408,7 +409,16 @@ type
   function CharRange(const AMin, AMax : Char): String;
   procedure CommaSeparatedToStringList(AList: TStrings; const Value:string);
   function CompareDateTime(const ADateTime1, ADateTime2 : TDateTime) : Integer;
-  function ContentTypeStrToEncoding (const aContentType: string): TIdEncoding;
+
+  function ContentTypeToEncoding(const AContentType: string): TIdTextEncoding;
+  function CharsetToEncoding(const ACharset: string): TIdTextEncoding;
+
+  function ReadStringAsContentType(AStream: TStream; const AContentType: String): String;
+  function ReadStringAsCharset(AStream: TStream; const ACharset: String): String;
+
+  procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings; const AContentType: string);
+  procedure ReadStringsAsCharset(AStream: TStream; AStrings: TStrings; const ACharset: string);
+
   {
   These are for handling binary values that are in Network Byte order.  They call
   ntohs, ntols, htons, and htons which are required by SNTP and FSP
@@ -639,7 +649,7 @@ begin
 end;
 
 function IndyCurrentYear : Integer;
-{$IFDEF VCL11ORABOVE}
+{$IFDEF VCL2007ORABOVE}
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := CurrentYear;
@@ -3074,27 +3084,119 @@ begin
   end;
 end;
 
-function ContentTypeStrToEncoding (const aContentType: string): TIdEncoding;
-//TODO:  Figure out what should happen with Unicode content type.
+function ContentTypeToEncoding(const AContentType: String): TIdTextEncoding;
 var
-  LCharSet: String;
+  LCharset: String;
 begin
+  LCharset := ExtractHeaderSubItem(AContentType, 'CHARSET');  {do not localize}
+  Result := CharsetToEncoding(LCharset);
+end;
+
+function CharsetToEncoding(const ACharset: String): TIdTextEncoding;
+//TODO:  Figure out what should happen with Unicode content type.
+begin
+  Result := nil;
+
+  if ACharSet <> '' then
+  begin
+    {$IFDEF DOTNET}
+    Result := TIdTextEncoding.GetEncoding(ACharset);
+    {$ELSE}
+    Result := TIdTextEncoding.GetEncoding(CharsetToCodePage(ACharset));
+  end;
+  {$ENDIF}
+
   {JPM - I have decided to temporarily make this en8bit because I'm concerned
   about how binary files will be handled by the en7bit encoder (where there may
   be 8bit byte-values.  In addition, there are numerous charsets for various
   languages and code that does some special mapping for them would be a mess.}
-
-  Result := en8bit; //en7Bit;
-
-  LCharSet := ExtractHeaderSubItem(aContentType, 'CHARSET');  {do not localize}
-  if LCharSet <> '' then begin
-    case PosInStrArray(LCharSet, ['UTF-8', 'UTF8', 'ASCII', 'US-ASCII'], False) of
-      0, 1: Result := enUTF8;
-      2, 3: Result := en7bit;
-    end;
+  if Result = nil then
+  begin
+    {RLebeau: use GetEncoding() instead of en8bit().  This way, the caller
+    does not have to figure out whether or not to free the output TIdTextEncoding.
+    Standard TIdTextEncoding objects (ASCII, UTF8, etc) are owned by the RTL
+    and the 8-bit encoding object (that en8bit uses) is owned by IdGlobal.pas,
+    and thus should not be freed, but objects returned by GetEncoding are not
+    owned by anyone and must always be freed.}
+    {TODO: implement a truer 8-bit encoding class in IdGlobal.pas...}
+    Result := TIdTextEncoding.GetEncoding(1252);//en8bit; //en7Bit;
   end;
 end;
 
+function ReadStringAsContentType(AStream: TStream; const AContentType: String): String;
+var
+  LEncoding: TIdTextEncoding;
+begin
+  Result := '';
+  LEncoding := ContentTypeToEncoding(AContentType);
+  {$IFNDEF DOTNET}
+  try
+  {$ENDIF}
+    Result := ReadStringFromStream(AStream, -1, LEncoding);
+  {$IFNDEF DOTNET}
+  finally
+    LEncoding.Free;
+  end;
+  {$ENDIF}
+end;
+
+procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings; const AContentType: string);
+var
+  LEncoding: TIdTextEncoding;
+begin
+  LEncoding := ContentTypeToEncoding(AContentType);
+  {$IFNDEF DOTNET}
+  try
+  {$ENDIF}
+    {$IFDEF TEncoding}
+    AStrings.LoadFromStream(AStream, LEncoding);
+    {$ELSE}
+    AStrings.Text := ReadStringFromStream(AStream, -1, LEncoding);
+    {$ENDIF}
+  {$IFNDEF DOTNET}
+  finally
+    LEncoding.Free;
+  end;
+  {$ENDIF}
+end;
+
+function ReadStringAsCharset(AStream: TStream; const ACharset: String): String;
+//TODO:  Figure out what should happen with Unicode content type.
+var
+  LEncoding: TIdTextEncoding;
+begin
+  Result := '';
+  LEncoding := CharsetToEncoding(ACharset);
+  {$IFNDEF DOTNET}
+  try
+  {$ENDIF}
+    Result := ReadStringFromStream(AStream, -1, LEncoding);
+  {$IFNDEF DOTNET}
+  finally
+    LEncoding.Free;
+  end;
+  {$ENDIF}
+end;
+
+procedure ReadStringsAsCharset(AStream: TStream; AStrings: TStrings; const ACharset: String);
+var
+  LEncoding: TIdTextEncoding;
+begin
+  LEncoding := CharsetToEncoding(ACharset);
+  {$IFNDEF DOTNET}
+  try
+  {$ENDIF}
+    {$IFDEF TEncoding}
+    AStrings.LoadFromStream(AStream, LEncoding);
+    {$ELSE}
+    AStrings.Text := ReadStringFromStream(AStream, -1, LEncoding);
+    {$ENDIF}
+  {$IFNDEF DOTNET}
+  finally
+    LEncoding.Free;
+  end;
+  {$ENDIF}
+end;
 
 { TIdInterfacedObject }
 
