@@ -128,7 +128,7 @@ const
 type
   // RLebeau: find a better place for this
   {$IFNDEF FPC}
-    {$IFNDEF VCL11ORABOVE}
+    {$IFNDEF VCL2006ORABOVE}
   {$EXTERNALSYM UINT64}
   UINT64 = Int64;
     {$ENDIF}
@@ -138,6 +138,7 @@ type
   PPaddrinfo = ^PAddrInfo;
   {$NODEFINE PPaddrinfoW}
   PPaddrinfoW = ^PAddrInfoW;
+
   {$IFNDEF UNDER_CE}
   {$EXTERNALSYM SOCKET_SECURITY_PROTOCOL}
   {$EXTERNALSYM SOCKET_SECURITY_PROTOCOL_DEFAULT}
