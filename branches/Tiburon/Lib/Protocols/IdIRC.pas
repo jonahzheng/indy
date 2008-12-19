@@ -28,6 +28,8 @@ unit IdIRC;
   ported to Indy by Daaron Dwyer (ddwyer@ncic.com)
 }
 
+{ Based on RFC 2812 }
+
 interface
 
 {$i IdCompilerDefines.inc}
@@ -46,7 +48,7 @@ type
   TIdIRCStat = (stServerConnectionsList, stCommandUsageCount, stOperatorList, stUpTime);
 
   { -WELCOME- }
-  TIdIRCServerWelcomeEvent = procedure(ASender: TIdContext; AWelcomeInfo: TStrings) of object;
+  TIdIRCServerMsgEvent = procedure(ASender: TIdContext; const AMsg: String) of object;
   TIdIRCPingPongEvent = procedure(ASender: TIdContext) of object;
   { -MESSAGE- }
   TIdIRCPrivMessageEvent = procedure(ASender: TIdContext; const ANicknameFrom, AHost, ANicknameTo, AMessage: String) of object;
@@ -91,7 +93,7 @@ type
   TIdIRCKnownServerNamesEvent = procedure(ASender: TIdContext; AKnownServers: TStrings) of object;
   { -INFO- }
   TIdIRCAdminInfoRecvEvent = procedure(ASender: TIdContext; AAdminInfo: TStrings) of object;
-  TIdIRCUserInfoRecvEvent = procedure(ASender: TIdContext; AUserInfo: TStrings) of object;
+  TIdIRCUserInfoRecvEvent = procedure(ASender: TIdContext; const AUserInfo: String) of object;
   { -WHO- }
   TIdIRCWhoEvent = procedure(ASender: TIdContext; AWhoResults: TStrings) of object;
   TIdIRCWhoIsEvent = procedure(ASender: TIdContext; AWhoIsResults: TStrings) of object;
@@ -152,8 +154,11 @@ type
     FSenderNick: String;
     FSenderHost: String;
     FTmp: TStrings;
+    FWhoIs: TStrings;
+    FWhoWas: TStrings;
+    FSvrList: TStrings;
     //
-    FOnSWelcome: TIdIRCServerWelcomeEvent;
+    FOnSWelcome: TIdIRCServerMsgEvent;
     FOnPingPong: TIdIRCPingPongEvent;
     FOnPrivMessage: TIdIRCPrivMessageEvent;
     FOnNotice: TIdIRCNoticeEvent;
@@ -213,7 +218,7 @@ type
     procedure ParseDCC(AContext: TIdContext; const ADCC: String);
     //Command handlers
     procedure DoBeforeCmd(ASender: TIdCommandHandlers; var AData: string; AContext: TIdContext);
-    procedure DoCmdHandlersException(ACommand: String; AContext: TIdContext);
+    procedure DoReplyUnknownCommand(AContext: TIdContext; ALine: string); override;
     procedure CommandPRIVMSG(ASender: TIdCommand);
     procedure CommandNOTICE(ASender: TIdCommand);
     procedure CommandJOIN(ASender: TIdCommand);
@@ -227,12 +232,20 @@ type
     procedure CommandPING(ASender: TIdCommand);
     procedure CommandWALLOPS(ASender: TIdCommand);
     procedure CommandTOPIC(ASender: TIdCommand);
-    procedure CommandServerWelcome(ASender: TIdCommand);
+    procedure CommandWELCOME(ASender: TIdCommand);
+    procedure CommandYOURHOST(ASender: TIdCommand);
+    procedure CommandCREATED(ASender: TIdCommand);
+    procedure CommandMYINFO(ASender: TIdCommand);
+    procedure CommandBOUNCE(ASender: TIdCommand);
     procedure CommandUSERHOST(ASender: TIdCommand);
     procedure CommandISON(ASender: TIdCommand);
+    procedure CommandWHOIS(ASender: TIdCommand);
     procedure CommandENDOFWHOIS(ASender: TIdCommand);
+    procedure CommandWHOWAS(ASender: TIdCommand);
     procedure CommandENDOFWHOWAS(ASender: TIdCommand);
+    procedure CommandLIST(ASender: TIdCommand);
     procedure CommandLISTEND(ASender: TIdCommand);
+    procedure CommandAWAY(ASender: TIdCommand);
     procedure CommandINVITING(ASender: TIdCommand);
     procedure CommandSUMMONING(ASender: TIdCommand);
     procedure CommandENDOFINVITELIST(ASender: TIdCommand);
@@ -331,7 +344,7 @@ type
     property Replies: TIdIRCReplies read FReplies write SetIdIRCReplies;
     property UserMode: TIdIRCUserModes read FUserMode write SetIdIRCUserMode;
     { Events }
-    property OnServerWelcome: TIdIRCServerWelcomeEvent read FOnSWelcome write FOnSWelcome;
+    property OnServerWelcome:TIdIRCServerMsgEvent read FOnSWelcome write FOnSWelcome;
     property OnPingPong: TIdIRCPingPongEvent read FOnPingPong write FOnPingPong;
     property OnPrivateMessage: TIdIRCPrivMessageEvent read FOnPrivMessage write FOnPrivMessage;
     property OnNotice: TIdIRCNoticeEvent read FOnNotice write FOnNotice;
@@ -445,23 +458,28 @@ begin
   FTmp := TStringList.Create;
   Port := IdPORT_IRC;
   FUserMode := [];
-  //
-  if not IsDesignTime then begin
-    AssignIRCClientCommands;
-  end;
 
   // RLebeau 2/21/08: for the IRC protocol, RFC 2812 section 2.4 says that
   // clients are not allowed to issue numeric replies for server-issued
   // commands.  Added the PerformReplies property so TIdIRC can specify
-  // that behavior.  
+  // that behavior.
   CommandHandlers.PerformReplies := False;
+
+  // RLebeau 3/11/08: most of the command handlers should parse parameters by default
+  CommandHandlers.ParseParamsDefault := False;
+
+  if not IsDesignTime then begin
+    AssignIRCClientCommands;
+  end;
 end;
 
 destructor TIdIRC.Destroy;
 begin
   FreeAndNil(FReplies);
   FreeAndNil(FTmp);
-  //
+  FreeAndNil(FWhoIs);
+  FreeAndNil(FWhoWas);
+  FreeAndNil(FSvrList);
   inherited Destroy;
 end;
 
@@ -530,35 +548,30 @@ begin
   begin
     Command := 'PRIVMSG'; {do not localize}
     OnCommand := CommandPRIVMSG;
-    ParseParams := False;
   end;
   //NOTICE Nickname/#channel :message
   with CommandHandlers.Add do
   begin
     Command := 'NOTICE';  {do not localize}
     OnCommand := CommandNOTICE;
-    ParseParams := False;
   end;
   //JOIN #channel
   with CommandHandlers.Add do
   begin
     Command := 'JOIN';  {do not localize}
     OnCommand := CommandJOIN;
-    ParseParams := False;
   end;
   //PART #channel
   with CommandHandlers.Add do
   begin
     Command := 'PART';  {do not localize}
     OnCommand := CommandPART;
-    ParseParams := False;
   end;
   //KICK #channel target :reason
   with CommandHandlers.Add do
   begin
     Command := 'KICK';  {do not localize}
     OnCommand := CommandKICK;
-    ParseParams := False;
   end;
   //MODE Nickname/#channel +/-modes parameters...
   with CommandHandlers.Add do
@@ -571,57 +584,68 @@ begin
   begin
     Command := 'NICK';  {do not localize}
     OnCommand := CommandNICK;
-    ParseParams := False;
   end;
   //QUIT :reason
   with CommandHandlers.Add do
   begin
     Command := 'QUIT';  {do not localize}
     OnCommand := CommandQUIT;
-    ParseParams := False;
   end;
   //INVITE Nickname :#channel
   with CommandHandlers.Add do
   begin
     Command := 'INVITE';  {do not localize}
     OnCommand := CommandINVITE;
-    ParseParams := False;
   end;
   //KILL Nickname :reason
   with CommandHandlers.Add do
   begin
     Command := 'KILL';  {do not localize}
     OnCommand := CommandKILL;
-    ParseParams := False;
   end;
   //PING server
   with CommandHandlers.Add do
   begin
     Command := 'PING';  {do not localize}
     OnCommand := CommandPING;
-    ParseParams := False;
   end;
   //WALLOPS :message
   with CommandHandlers.Add do
   begin
     Command := 'WALLOPS'; {do not localize}
     OnCommand := CommandWALLOPS;
-    ParseParams := False;
   end;
   //TOPIC
   with CommandHandlers.Add do
   begin
     Command := 'TOPIC'; {do not localize}
     OnCommand := CommandTOPIC;
-    ParseParams := False;
   end;
 
   { Numeric commands }
-  //004
+  //RPL_WELCOME
+  with CommandHandlers.Add do
+  begin
+    Command := '001'; {do not localize}
+    OnCommand := CommandWELCOME;
+  end;
+  //RPL_YOURHOST
+  with CommandHandlers.Add do
+  begin
+    Command := '002'; {do not localize}
+    OnCommand := CommandYOURHOST;
+  end;
+  //RPL_CREATED
+  with CommandHandlers.Add do
+  begin
+    Command := '003'; {do not localize}
+    OnCommand := CommandCREATED;
+  end;
+  //RPL_MYINFO
   with CommandHandlers.Add do
   begin
     Command := '004'; {do not localize}
-    OnCommand := CommandServerWelcome;
+    OnCommand := CommandMYINFO;
   end;
   //ENDOFSTATS
   with CommandHandlers.Add do
@@ -635,6 +659,12 @@ begin
     Command := '235'; {do not localize}
     OnCommand := CommandSERVLISTEND;
   end;
+  //AWAY
+  with CommandHandlers.Add do
+  begin
+    Command := '301'; {do not localize}
+    OnCommand := CommandAWAY;
+  end;
   //USERHOST
   with CommandHandlers.Add do
   begin
@@ -647,6 +677,42 @@ begin
     Command := '303'; {do not localize}
     OnCommand := CommandISON;
   end;
+  //UNAWAY
+  with CommandHandlers.Add do
+  begin
+    Command := '305'; {do not localize}
+    OnCommand := CommandAWAY;
+  end;
+  //NOWAWAY
+  with CommandHandlers.Add do
+  begin
+    Command := '306'; {do not localize}
+    OnCommand := CommandAWAY;
+  end;
+  //WHOISUSER
+  with CommandHandlers.Add do
+  begin
+    Command := '311'; {do not localize}
+    OnCommand := CommandWHOIS;
+  end;
+  //WHOISSERVER
+  with CommandHandlers.Add do
+  begin
+    Command := '312'; {do not localize}
+    OnCommand := CommandWHOIS;
+  end;
+  //WHOISOPERATOR
+  with CommandHandlers.Add do
+  begin
+    Command := '313'; {do not localize}
+    OnCommand := CommandWHOIS;
+  end;
+  //WHOWASUSER
+  with CommandHandlers.Add do
+  begin
+    Command := '314';
+    OnCommand := CommandWHOWAS;
+  end;
   //ENDOFWHO
   with CommandHandlers.Add do
   begin
@@ -658,6 +724,12 @@ begin
   begin
     Command := '318'; {do not localize}
     OnCommand := CommandENDOFWHOIS;
+  end;
+  //LIST
+  with CommandHandlers.Add do
+  begin
+    Command := '322'; {do not localize}
+    OnCommand := CommandLIST;
   end;
   //LISTEND
   with CommandHandlers.Add do
@@ -676,7 +748,6 @@ begin
   begin
     Command := '331'; {do not localize}
     OnCommand := CommandTOPIC;
-    ParseParams := False;
   end;
   //INVITING
   with CommandHandlers.Add do
@@ -707,7 +778,6 @@ begin
   begin
     Command := '351'; {do not localize}
     OnCommand := CommandSVERSION;
-    ParseParams := False;
   end;
   //ENDOFLINKS
   with CommandHandlers.Add do
@@ -768,7 +838,6 @@ begin
   begin
     Command := '391'; {do not localize}
     OnCommand := CommandSTIME;
-    ParseParams := False;
   end;
   //ENDOFUSERS
   with CommandHandlers.Add do
@@ -776,11 +845,7 @@ begin
     Command := '394'; {do not localize}
     OnCommand := CommandENDOFUSERS;
   end;
-  with FCommandHandlers do
-  begin
-    OnBeforeCommandHandler := DoBeforeCmd;
-    OnCommandHandlersException := DoCmdHandlersException;
-  end;
+  FCommandHandlers.OnBeforeCommandHandler := DoBeforeCmd;
 end;
 
 { Command handlers }
@@ -804,11 +869,11 @@ begin
   end;
 end;
 
-procedure TIdIRC.DoCmdHandlersException(ACommand: String; AContext: TIdContext);
+procedure TIdIRC.DoReplyUnknownCommand(AContext: TIdContext; ALine: string);
 var
   ACmdCode: Integer;
 begin
-  ACmdCode := IndyStrToInt(Fetch(ACommand, #32), -1);
+  ACmdCode := IndyStrToInt(Fetch(ALine, #32), -1);
   //
   case ACmdCode of
     6,
@@ -816,41 +881,26 @@ begin
       begin
         //MAP
       end;
-    301,
-    305,
-    306:
-      begin
-        if Assigned(FOnAway) then begin
-          if (ACmdCode = 305) or (ACmdCode = 306) then begin
-            FUserAway := False;
-          end else begin
-            FUserAway := True;
-          end;
-          OnAway(AContext, FSenderNick, FSenderHost, FetchIRCParam(ACommand), FUserAway);
-        end;
-      end;
     5,
-    401..424,
+    400..424,
     437..502:
       begin
         if Assigned(FOnServerError) then begin
-          OnServerError(AContext, ACmdCode, ACommand);
+          OnServerError(AContext, ACmdCode, ALine);
         end;
       end;
-    431,
-    432,
-    433,
+    431..433,
     436:
       begin
         if Assigned(FOnNickError) then begin
-          OnNicknameError(AContext, IndyStrToInt(FetchIRCParam(ACommand)));
+          OnNicknameError(AContext, IndyStrToInt(FetchIRCParam(ALine)));
         end;
       end;
     else
       { anything else, just add to TStrings }
       if ACmdCode <> -1 then begin
-        if Length(ACommand) <> 0 then begin
-          FTmp.Add(ACommand);
+        if Length(ALine) <> 0 then begin
+          FTmp.Add(ALine);
         end;
       end;
   end;
@@ -918,14 +968,18 @@ begin
 end;
 
 procedure TIdIRC.CommandMODE(ASender: TIdCommand);
+var
+  LTmp, LParam: String;
 begin
-  if IsChannel(ASender.Params[1]) then begin
+  LTmp := ASender.UnparsedParams;
+  LParam := FetchIRCParam(LTmp);
+  if IsChannel(LParam) then begin
     if Assigned(FOnChanMode) then begin
       OnChannelMode(ASender.Context);
     end;
   end
   else if Assigned(FOnUserMode) then begin
-    OnUserMode(ASender.Context, FSenderNick, FSenderHost, ASender.Params[0]);
+    OnUserMode(ASender.Context, FSenderNick, FSenderHost, LParam);
   end;
 end;
 
@@ -1006,21 +1060,94 @@ begin
   end;
 end;
 
-procedure TIdIRC.CommandServerWelcome(ASender: TIdCommand);
+procedure TIdIRC.CommandWELCOME(ASender: TIdCommand);
+var
+  LTmp: string;
 begin
   if Assigned(FOnSWelcome) then begin
-    FTmp.Add(ASender.UnparsedParams);
-    OnServerWelcome(ASender.Context, FTmp);
-    FTmp.Clear;
+    LTmp := ASender.UnparsedParams;
+    FetchIRCParam(LTmp); // skip target
+    OnServerWelcome(ASender.Context, FetchIRCParam(LTmp));
+  end;
+end;
+
+procedure TIdIRC.CommandYOURHOST(ASender: TIdCommand);
+var
+  LTmp: string;
+begin
+  //if Assigned(FOnYourHost) then begin
+    LTmp := ASender.UnparsedParams;
+    FetchIRCParam(LTmp); // skip target
+    //OnYourHost(ASender.Context, FetchIRCParam(LTmp));
+  //end;
+end;
+
+procedure TIdIRC.CommandCREATED(ASender: TIdCommand);
+var
+  LTmp: string;
+begin
+  //if Assigned(FOnServerCreated) then begin
+    LTmp := ASender.UnparsedParams;
+    FetchIRCParam(LTmp); // skip target
+    //OnServerCreated(ASender.Context, FetchIRCParam(LTmp));
+  //end;
+end;
+
+procedure TIdIRC.CommandMYINFO(ASender: TIdCommand);
+var
+  LTmp, LServer, LVersion, LUserModes, LChannelModes: string;
+begin
+  //if Assigned(FOnMyInfo) then begin
+    LTmp := ASender.UnparsedParams;
+    FetchIRCParam(LTmp); // skip target
+    LServer := FetchIRCParam(LTmp);
+    LVersion := FetchIRCParam(LTmp);
+    LUserModes := FetchIRCParam(LTmp);
+    LChannelModes := FetchIRCParam(LTmp);
+    //OnMyInfo(ASender.Context, LServer, LVersion, LUserModes, LChannelModes, LTmp);
+  //end;
+end;
+
+procedure TIdIRC.CommandBOUNCE(ASender: TIdCommand);
+var
+  LTmp: string;
+begin
+  //if Assigned(FOnBounce) then begin
+    LTmp := ASender.UnparsedParams;
+    FetchIRCParam(LTmp); // skip target
+    //OnBounce(ASender.Context, FetchIRCParam(LTmp));
+  //end;
+end;
+
+procedure TIdIRC.CommandAWAY(ASender: TIdCommand);
+var
+  LTmp: String;
+  LCmd: Integer;
+begin
+  LCmd := IndyStrToInt(ASender.CommandHandler.Command, 0);
+  case LCmd of
+    301:
+    begin
+      if Assigned(FOnAway) then begin
+        LTmp := ASender.UnparsedParams;
+        OnAway(ASender.Context, FSenderNick, FSenderHost, FetchIRCParam(LTmp), True);
+      end;
+    end;
+    305, 306:
+    begin
+      FUserAway := (LCmd = 306);
+      if Assigned(FOnAway) then begin
+        LTmp := ASender.UnparsedParams;
+        OnAway(ASender.Context, FNickname, '', FetchIRCParam(LTmp), FUserAway);
+      end;
+    end;
   end;
 end;
 
 procedure TIdIRC.CommandUSERHOST(ASender: TIdCommand);
 begin
   if Assigned(FOnUserInfo) then begin
-    FTmp.Add(ASender.UnparsedParams);
-    OnUserInfoReceived(ASender.Context, FTmp);
-    FTmp.Clear;
+    OnUserInfoReceived(ASender.Context, ASender.UnparsedParams);
   end;
 end;
 
@@ -1031,40 +1158,64 @@ begin
   end;
 end;
 
-procedure TIdIRC.CommandENDOFWHOIS(ASender: TIdCommand);
+procedure TIdIRC.CommandWHOIS(ASender: TIdCommand);
 var
   LTmp: String;
 begin
-  if Assigned(FOnWhoIs) then begin
-    LTmp := ASender.UnparsedParams;
-    FTmp.Add(FetchIRCParam(LTmp));
-    OnWhoIs(ASender.Context, FTmp);
-    FTmp.Clear;
+  if not Assigned(FWhoIs) then begin
+    FWhoIs := TStringList.Create;
   end;
+  LTmp := ASender.UnparsedParams;
+  FWhoIs.Add(FetchIRCParam(LTmp));
+end;
+
+procedure TIdIRC.CommandENDOFWHOIS(ASender: TIdCommand);
+begin
+  CommandWHOIS(ASender);
+  if Assigned(FOnWhoIs) then begin
+    OnWhoIs(ASender.Context, FWhoIs);
+  end;
+  FWhoIs.Clear;
+end;
+
+procedure TIdIRC.CommandWHOWAS(ASender: TIdCommand);
+var
+  LTmp: String;
+begin
+  if not Assigned(FWhoWas) then begin
+    FWhoWas := TStringList.Create;
+  end;
+  LTmp := ASender.UnparsedParams;
+  FWhoWas.Add(FetchIRCParam(LTmp));
 end;
 
 procedure TIdIRC.CommandENDOFWHOWAS(ASender: TIdCommand);
+begin
+  CommandWHOWAS(ASender);
+  if Assigned(FOnWhoWas) then begin
+    OnWhoWas(ASender.Context, FWhoWas);
+  end;
+  FWhoWas.Clear;
+end;
+
+procedure TIdIRC.CommandLIST(ASender: TIdCommand);
 var
   LTmp: String;
 begin
-  if Assigned(FOnWhoWas) then begin
-    LTmp := ASender.UnparsedParams;
-    FTmp.Add(FetchIRCParam(LTmp));
-    OnWhoWas(ASender.Context, FTmp);
-    FTmp.Clear;
+  if not Assigned(FSvrList) then begin
+    FSvrList := TStringList.Create;
   end;
+  LTmp := ASender.UnparsedParams;
+  FSvrList.Add(FetchIRCParam(LTmp));
 end;
 
 procedure TIdIRC.CommandLISTEND(ASender: TIdCommand);
-var
-  LTmp: String;
 begin
+  CommandLIST(ASender);
   if Assigned(FOnSvrList) then begin
-    LTmp := ASender.UnparsedParams;
-    FTmp.Add(FetchIRCParam(LTmp));
-    OnServerListReceived(ASender.Context, FTmp);
-    FTmp.Clear;
+    OnServerListReceived(ASender.Context, FSvrList);
   end;
+  FSvrList.Clear;
 end;
 
 procedure TIdIRC.CommandINVITING(ASender: TIdCommand);
@@ -1156,10 +1307,7 @@ end;
 procedure TIdIRC.CommandENDOFINFO(ASender: TIdCommand);
 begin
   if Assigned(FOnUserInfo) then begin
-    //LTmp := ASender.UnparsedParams;
-    //FTmp.Add(FetchIRCParam(LTmp));
-    OnUserInfoReceived(ASender.Context, FTmp);
-    FTmp.Clear;
+    OnUserInfoReceived(ASender.Context, ASender.UnparsedParams);
   end;
 end;
 
