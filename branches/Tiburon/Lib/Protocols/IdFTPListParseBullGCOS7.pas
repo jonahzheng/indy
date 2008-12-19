@@ -82,7 +82,7 @@ var
     Result := True;
     for i := 1 to Length(ALine) do
     begin
-      if (not IsNumeric(ALine[i])) and (ALine[i] <> ' ') then
+      if (not IsNumeric(ALine[i])) and (not CharEquals(ALine, i, ' ')) then
       begin
         Result := False;
         Break;
@@ -92,7 +92,7 @@ var
 
 begin
   Result := False;
-  if AListing.Count >0 then
+  if AListing.Count > 0 then
   begin
     LData := AListing[0];
     Result := (Length(LData) > 54) and
