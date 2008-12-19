@@ -45,7 +45,7 @@ interface
 {$I IdCompilerDefines.inc}
 
 uses
-  {$IFDEF VCL9ORABOVE}
+  {$IFDEF VCL2005ORABOVE}
      {$IFDEF DOTNET}
       Borland.Vcl.Design.DesignIntf,
       Borland.Vcl.Design.DesignEditors;
