@@ -69,8 +69,8 @@ type
     function LongWordHashToHex(const AHash: TIdBytes; const ACount: Integer): String;
   public
     constructor Create; virtual;
-    function HashString(const ASrc: string): TIdBytes;
-    function HashStringAsHex(const AStr: String): String;
+    function HashString(const ASrc: string; AEncoding: TIdTextEncoding = nil): TIdBytes;
+    function HashStringAsHex(const AStr: String; AEncoding: TIdTextEncoding = nil): String;
     function HashBytes(const ASrc: TIdBytes): TIdBytes;
     function HashBytesAsHex(const ASrc: TIdBytes): String;
     function HashStream(AStream: TStream): TIdBytes; overload;
@@ -84,7 +84,7 @@ type
     function GetHashBytes(AStream: TStream; ASize: Int64): TIdBytes; override;
     function HashToHex(const AHash: TIdBytes): String; override;
   public
-    function HashValue(const ASrc: string): Word; overload;
+    function HashValue(const ASrc: string; AEncoding: TIdTextEncoding = nil): Word; overload;
     function HashValue(const ASrc: TIdBytes): Word; overload;
     function HashValue(AStream: TStream): Word; overload;
     function HashValue(AStream: TStream; const AStartPos, ASize: Int64): Word; overload;
@@ -98,7 +98,7 @@ type
     function GetHashBytes(AStream: TStream; ASize: Int64): TIdBytes; override;
     function HashToHex(const AHash: TIdBytes): String; override;
   public
-    function HashValue(const ASrc: string): LongWord; overload;
+    function HashValue(const ASrc: string; AEncoding: TIdTextEncoding = nil): LongWord; overload;
     function HashValue(const ASrc: TIdBytes): LongWord; overload;
     function HashValue(AStream: TStream): LongWord; overload;
     function HashValue(AStream: TStream; const AStartPos, ASize: Int64): LongWord; overload;
@@ -121,20 +121,20 @@ begin
   inherited Create;
 end;
 
-function TIdHash.HashString(const ASrc: string): TIdBytes;
+function TIdHash.HashString(const ASrc: string; AEncoding: TIdTextEncoding = nil): TIdBytes;
 var
   LStream: TStream;  // not TIdStringStream -  Unicode on DotNet!
 begin
   LStream := TMemoryStream.Create; try
-    WriteStringToStream(LStream, ASrc);
+    WriteStringToStream(LStream, ASrc, AEncoding);
     LStream.Position := 0;
     Result := HashStream(LStream);
   finally FreeAndNil(LStream); end;
 end;
 
-function TIdHash.HashStringAsHex(const AStr: String): String;
+function TIdHash.HashStringAsHex(const AStr: String; AEncoding: TIdTextEncoding = nil): String;
 begin
-  Result := HashToHex(HashString(AStr));
+  Result := HashToHex(HashString(AStr, AEncoding));
 end;
 
 function TIdHash.HashBytes(const ASrc: TIdBytes): TIdBytes;
@@ -245,9 +245,9 @@ procedure TIdHash16.HashEnd(var VRunningHash : Word);
 begin
 end;
 
-function TIdHash16.HashValue(const ASrc: string): Word;
+function TIdHash16.HashValue(const ASrc: string; AEncoding: TIdTextEncoding = nil): Word;
 begin
-  Result := BytesToWord(HashString(ASrc));
+  Result := BytesToWord(HashString(ASrc, AEncoding));
 end;
 
 function TIdHash16.HashValue(const ASrc: TIdBytes): Word;
@@ -308,9 +308,9 @@ procedure TIdHash32.HashEnd(var VRunningHash : LongWord);
 begin
 end;
 
-function TIdHash32.HashValue(const ASrc: string): LongWord;
+function TIdHash32.HashValue(const ASrc: string; AEncoding: TIdTextEncoding = nil): LongWord;
 begin
-  Result := BytesToLongWord(HashString(ASrc));
+  Result := BytesToLongWord(HashString(ASrc, AEncoding));
 end;
 
 function TIdHash32.HashValue(const ASrc: TIdBytes): LongWord;
