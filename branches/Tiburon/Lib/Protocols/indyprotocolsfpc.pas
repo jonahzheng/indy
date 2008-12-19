@@ -117,7 +117,7 @@ uses
   IdHeaderCoder2022JP,
   IdHeaderCoderBase,
   IdHeaderCoderPlain,
-  IdHeaderCoderUTF8,
+  IdHeaderCoderUTF,
   IdHeaderList,
   IdIMAP4,
   IdIMAP4Server,
