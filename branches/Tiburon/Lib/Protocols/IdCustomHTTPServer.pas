@@ -484,6 +484,7 @@ uses
 
 const
   SessionCapacity = 128;
+  ContentTypeFormUrlencoded = 'application/x-www-form-urlencoded'; {Do not Localize}
 
   // Calculate the number of MS between two TimeStamps
 
@@ -878,8 +879,8 @@ begin
 
               // reset back to 0 before reading the string from the post stream
               LRequestInfo.PostStream.Position := 0;
-              if TextIsSame(LContentType, 'application/x-www-form-urlencoded') then begin    {Do not Localize}
-                LRequestInfo.FormParams := ReadStringFromStream(LRequestInfo.PostStream, -1, ContentTypeStrToEncoding(LRequestInfo.ContentType));
+              if TextIsSame(LContentType, ContentTypeFormUrlencoded) then begin
+                LRequestInfo.FormParams := ReadStringAsContentType(LRequestInfo.PostStream, LRequestInfo.ContentType);
               end;
 
               // reset back to 0 for the OnCommand... event handler
@@ -902,7 +903,7 @@ begin
 
               // Parse Params
               if ParseParams then begin
-                if TextIsSame(LContentType, 'application/x-www-form-urlencoded') then begin    {Do not Localize}
+                if TextIsSame(LContentType, ContentTypeFormUrlencoded) then begin
                   LRequestInfo.DecodeAndSetParams(LRequestInfo.UnparsedParams);
                 end else begin
                   // Parse only query params when content type is not 'application/x-www-form-urlencoded'    {Do not Localize}
