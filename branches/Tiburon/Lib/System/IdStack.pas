@@ -377,7 +377,7 @@ var
 
 var
   GInstanceCount: Integer = 0;
-  GStackCriticalSection: TIdCriticalSection;
+  GStackCriticalSection: TIdCriticalSection = nil;
 
 //for IPv4 Multicast address chacking
 const
