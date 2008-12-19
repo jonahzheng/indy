@@ -183,6 +183,19 @@ var
     end;
   end;
 
+  procedure WriteByte(AValue: Byte; AWriteEOL: Boolean);
+  var
+    LTemp: TIdBytes;
+  begin
+    SetLength(LTemp, iif(AWriteEOL, 3, 1));
+    LTemp[0] := AValue;
+    if AWriteEOL then begin
+      LTemp[1] := Ord(CR);
+      LTemp[2] := Ord(LF);
+    end;
+    TIdStreamHelper.Write(FStream, LTemp);
+  end;
+
 begin
   LBufferLen := IndyLength(ASrcStream, ABytes);
   if LBufferLen <= 0 then begin
@@ -233,11 +246,13 @@ begin
         //if =20 + EOL, this is a hard line break after a space
         if (DecodedByte = 32) and (LBufferIndex < LBufferLen) and ByteIsInEOL(LBuffer, LBufferIndex) then begin
           if Assigned(FStream) then begin
-            WriteStringToStream(FStream, Char(DecodedByte) + EOL);
+            WriteByte(DecodedByte, True);
           end;
           StripEOLChars;
         end else begin
-          WriteStringToStream(FStream, Char(DecodedByte));
+          if Assigned(FStream) then begin
+            WriteByte(DecodedByte, False);
+          end;
         end;
       end else begin
         //ignore soft line breaks -
@@ -272,7 +287,13 @@ var
 
   procedure FinishLine;
   begin
-    WriteStringToStream(ADestStream, Copy(CurrentLine, 1, CurrentPos-1) + EOL);
+    WriteStringToStream(ADestStream,
+      {$IFDEF UNICODESTRING}
+      String(Copy(CurrentLine, 1, CurrentPos-1)) // explicit convert to Unicode
+      {$ELSE}
+      Copy(CurrentLine, 1, CurrentPos-1)
+      {$ENDIF}
+       + EOL);
     CurrentPos := 1;
   end;
 
