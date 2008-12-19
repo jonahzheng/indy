@@ -4354,7 +4354,7 @@ type
   PUInteger       =^UInteger;
   PFunction       = Pointer;
   {$IFNDEF FPC}
-     {$IFNDEF VCL11ORABOVE}
+	 {$IFNDEF VCL2007ORABOVE}
   // Kudzu - CB3,4 dont like this. I think its a typo anyways. I dont think they
   // intended a pointer to a pointer to an integer.
   //PInteger  =^PInteger;
@@ -4369,7 +4369,7 @@ type
   PULong    =^LongWord;
   PUShort   =^Word;
   {$IFNDEF FPC}
-     {$IFNDEF VCL11ORABOVE}
+     {$IFNDEF VCL2007ORABOVE}
   PPAnsiChar    =^PAnsiChar;
      {$ENDIF}
   {$ENDIF}
