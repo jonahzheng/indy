@@ -32,7 +32,7 @@ unit IdDsnBaseCmpEdt;
 interface
 
 uses
-  {$IFDEF VCL9ORABOVE}
+  {$IFDEF VCL2005ORABOVE}
      {$IFDEF DOTNET}
       Borland.Vcl.Design.DesignIntF,
       Borland.Vcl.Design.DesignEditors;
