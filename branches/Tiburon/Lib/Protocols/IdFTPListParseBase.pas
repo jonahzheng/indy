@@ -213,7 +213,7 @@ implementation
 uses
   IdFTPCommon, IdFTPListTypes, IdGlobal, IdGlobalProtocols,
   {$IFNDEF UNICODESTRING}
-  IdHeaderCoderUTF8,  //here so we can decode UTF8 filenames
+  IdHeaderCoderUTF,  //here so we can decode UTF... filenames
   {$ENDIF}
   IdResourceStringsProtocols, IdStrings, SysUtils;
 
@@ -500,7 +500,7 @@ begin
       {$IFDEF UNICODESTRING}
       ParseFacts(AItem.Data, LFacts);
       {$ELSE}
-      TIdHeaderCoderUTF8.Decode('UTF-8', ParseFacts(AItem.Data, LFacts));
+      TIdHeaderCoderUTF.Decode('UTF-8', ParseFacts(AItem.Data, LFacts));
       {$ENDIF}
     LI.LocalFileName := AItem.FileName;
 
