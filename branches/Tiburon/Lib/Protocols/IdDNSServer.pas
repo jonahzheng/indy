@@ -720,8 +720,7 @@ end;
 
 procedure TIdMWayTreeNode.RemoveChild(Index: Integer);
 begin
-  // RLebeau: why not use SubTree.Delete() here?
-  SubTree.Remove(SubTree.Items[Index]);
+  SubTree.Delete(Index);
 end;
 
 procedure TIdMWayTreeNode.SetFundmentalClass(const Value: TIdMWayTreeNodeClass);
@@ -731,7 +730,7 @@ end;
 
 procedure TIdMWayTreeNode.SetTreeNode(Index: Integer; const Value: TIdMWayTreeNode);
 begin
-  // RLebeau: isn't this a memory leak? Perhaps use Assign() instead?
+  SubTree.Items[Index].Free;
   SubTree.Items[Index] := Value;
 end;
 
@@ -2204,7 +2203,12 @@ begin
       qtA :
         begin
           LRR_A := TIdRR_A.Create;
-          NodeCursor.RRs.Add(LRR_A);
+          try
+            NodeCursor.RRs.Add(LRR_A);
+          except
+            LRR_A.Free;
+            raise;
+          end;
 
           LRR_A.RRName := RRName;
           {$IFDEF UNICODESTRING}
@@ -2221,7 +2225,12 @@ begin
       qtAAAA :
         begin
           LRR_AAAA := TIdRR_AAAA.Create;
-          NodeCursor.RRs.Add(LRR_AAAA);
+          try
+            NodeCursor.RRs.Add(LRR_AAAA);
+          except
+            LRR_AAAA.Free;
+            raise;
+          end;
 
           LRR_AAAA.RRName := RRName;
           {$IFDEF UNICODESTRING}
@@ -2238,7 +2247,12 @@ begin
       qtNS:
         begin
           LRR_NS := TIdRR_NS.Create;
-          NodeCursor.RRs.Add(LRR_NS);
+          try
+            NodeCursor.RRs.Add(LRR_NS);
+          except
+            LRR_NS.Free;
+            raise;
+          end;
 
           LRR_NS.RRName := RRName;
           {$IFDEF UNICODESTRING}
@@ -2255,7 +2269,12 @@ begin
       qtMD, qtMF, qtMB:
         begin
           LRR_MB := TIdRR_MB.Create;
-          NodeCursor.RRs.Add(LRR_MB);
+          try
+            NodeCursor.RRs.Add(LRR_MB);
+          except
+            LRR_MB.Free;
+            raise;
+          end;
 
           LRR_MB.RRName := RRName;
           {$IFDEF UNICODESTRING}
@@ -2272,7 +2291,12 @@ begin
       qtName:
         begin
           LRR_Name := TIdRR_CName.Create;
-          NodeCursor.RRs.Add(LRR_Name);
+          try
+            NodeCursor.RRs.Add(LRR_Name);
+          except
+            LRR_Name.Free;
+            raise;
+          end;
 
           LRR_Name.RRName := RRName;
           {$IFDEF UNICODESTRING}
@@ -2289,7 +2313,12 @@ begin
       qtSOA:
         begin
           LRR_SOA := TIdRR_SOA.Create;
-          NodeCursor.RRs.Add(LRR_SOA);
+          try
+            NodeCursor.RRs.Add(LRR_SOA);
+          except
+            LRR_SOA.Free;
+            raise;
+          end;
 
           LRR_SOA.RRName := RRName;
 
@@ -2323,7 +2352,12 @@ begin
       qtMG :
         begin
           LRR_MG := TIdRR_MG.Create;
-          NodeCursor.RRs.Add(LRR_MG);
+          try
+            NodeCursor.RRs.Add(LRR_MG);
+          except
+            LRR_MG.Free;
+            raise;
+          end;
 
           LRR_MG.RRName := RRName;
           {$IFDEF UNICODESTRING}
@@ -2340,7 +2374,12 @@ begin
       qtMR :
         begin
           LRR_MR := TIdRR_MR.Create;
-          NodeCursor.RRs.Add(LRR_MR);
+          try
+            NodeCursor.RRs.Add(LRR_MR);
+          except
+            LRR_MR.Free;
+            raise;
+          end;
 
           LRR_MR.RRName := RRName;
           {$IFDEF UNICODESTRING}
@@ -2360,7 +2399,12 @@ begin
       qtPTR:
         begin
           LRR_PTR := TIdRR_PTR.Create;
-          NodeCursor.RRs.Add(LRR_PTR);
+          try
+            NodeCursor.RRs.Add(LRR_PTR);
+          except
+            LRR_PTR.Free;
+            raise;
+          end;
 
           LRR_PTR.RRName := RRName;
           {$IFDEF UNICODESTRING}
@@ -2377,7 +2421,12 @@ begin
       qtHINFO:
         begin
           LRR_HINFO := TIdRR_HINFO.Create;
-          NodeCursor.RRs.Add(LRR_HINFO);
+          try
+            NodeCursor.RRs.Add(LRR_HINFO);
+          except
+            LRR_HINFO.Free;
+            raise;
+          end;
 
           LRR_HINFO.RRName := RRName;
           {$IFDEF UNICODESTRING}
@@ -2397,7 +2446,12 @@ begin
       qtMINFO:
         begin
           LRR_MINFO := TIdRR_MINFO.Create;
-          NodeCursor.RRs.Add(LRR_MINFO);
+          try
+            NodeCursor.RRs.Add(LRR_MINFO);
+          except
+            LRR_MINFO.Free;
+            raise;
+          end;
 
           LRR_MINFO.RRName := RRName;
           {$IFDEF UNICODESTRING}
@@ -2417,7 +2471,12 @@ begin
       qtMX:
         begin
           LRR_MX := TIdRR_MX.Create;
-          NodeCursor.RRs.Add(LRR_MX);
+          try
+            NodeCursor.RRs.Add(LRR_MX);
+          except
+            LRR_MX.Free;
+            raise;
+          end;
 
           LRR_MX.RRName := RRName;
           {$IFDEF UNICODESTRING}
@@ -2437,7 +2496,12 @@ begin
       qtTXT, qtNULL:
         begin
           LRR_TXT := TIdRR_TXT.Create;
-          NodeCursor.RRs.Add(LRR_TXT);
+          try
+            NodeCursor.RRs.Add(LRR_TXT);
+          except
+            LRR_TXT.Free;
+            raise;
+          end;
 
           LRR_TXT.RRName := RRName;
           {$IFDEF UNICODESTRING}
