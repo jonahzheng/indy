@@ -49,7 +49,7 @@ interface
 
 uses
   Classes,
-  {$IFDEF VCL9ORABOVE}
+  {$IFDEF VCL2005ORABOVE}
      {$IFDEF DOTNET}
       Borland.Vcl.Design.DesignIntF,
       Borland.Vcl.Design.DesignEditors;
@@ -87,7 +87,7 @@ implementation
 
 uses
   IdDsnResourceStrings,
-   {$IFDEF WidgetWinforms}
+  {$IFDEF WidgetWinforms}
   IdDsnSASLListEditorFormNET,
   {$R 'IdDsnSASLListEditorFormNET.TfrmSASLListEditor.resources' 'IdDsnSASLListEditorFormNET.resx'}
   {$ENDIF}
@@ -113,6 +113,7 @@ type
   {$ENDIF}
 
 { TfrmSASLListEditor }
+
 {$IFDEF WidgetWinForms}
 constructor TfrmSASLListEditor.Create(AOwner : TComponent);
 begin
