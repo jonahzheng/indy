@@ -255,16 +255,15 @@ begin
       if Assigned(LMsg) and (LMsg.Encoding = meMIME) then begin
         //There is an exception if we are a child of multipart/digest...
         if ParentPart <> -1 then begin
-          LTemp := LParts.Items[ParentPart].Headers.Values['Content-Type'];  {do not localize}
-        end else begin
-          LTemp := '';
+          AContentType := LParts.Items[ParentPart].Headers.Values['Content-Type'];  {do not localize}
+          LTemp := Trim(Fetch(AContentType, ';'));  {do not localize}
+          if TextIsSame(LTemp, 'multipart/digest') then begin  {do not localize}
+            Result := 'message/rfc822';  {do not localize}
+            Exit;
+          end;
         end;
-        if TextStartsWith(LTemp, 'multipart/digest') then begin  {do not localize}
-          Result := 'message/rfc822';  {do not localize}
-        end else begin
-          //The default type...
-          Result := 'text/plain';      {do not localize}
-        end;
+        //The default type...
+        Result := 'text/plain';      {do not localize}
         Exit;
       end;
     end;
