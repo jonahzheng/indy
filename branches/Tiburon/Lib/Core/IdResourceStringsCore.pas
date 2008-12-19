@@ -118,8 +118,13 @@ resourcestring
   RSSocksServerAddressError = 'Address type not supported.';
   RSInvalidIPAddress = 'Invalid IP Address';
   RSInterceptCircularLink = '%d: Circular links are not allowed';
-  RSNotEnoughDataInBuffer = 'Not enough data in buffer.';
+
+  RSNotEnoughDataInBuffer = 'Not enough data in buffer. (%d/%d)';
   RSTooMuchDataInBuffer = 'Too much data in buffer.';
+  RSCapacityTooSmall = 'Capacity cannot be smaller than Size.';
+  RSBufferIsEmpty = 'No bytes in buffer.';
+  RSBufferRangeError = 'Index out of bounds.';
+
   RSFileNotFound = 'File "%s" not found';
   RSNotConnected = 'Not Connected';
   RSObjectTypeNotSupported = 'Object type not supported.';
