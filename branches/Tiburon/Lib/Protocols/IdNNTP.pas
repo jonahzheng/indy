@@ -264,7 +264,7 @@ type
     procedure Post(AMsg: TIdMessage); overload;
     procedure Post(AStream: TStream); overload;
     function SendCmd(AOut: string; const AResponse: array of SmallInt;
-      const AEncoding: TIdEncoding = en7bit): SmallInt; override;
+      AEncoding: TIdTextEncoding = nil): SmallInt; override;
     function SelectArticle(AMsgNo: Integer): Boolean;
     procedure SelectGroup(AGroup: string);
     function TakeThis(AMsgID: string; AMsg: TStream): string;
@@ -370,7 +370,7 @@ begin
 end;
 
 function TIdNNTP.SendCmd(AOut: string; const AResponse: Array of SmallInt;
-  const AEncoding: TIdEncoding = en7bit): SmallInt;
+  AEncoding: TIdTextEncoding = nil): SmallInt;
 begin
   // NOTE: Responses must be passed as arrays so that the proper inherited SendCmd is called
   // and a stack overflow is not caused.
