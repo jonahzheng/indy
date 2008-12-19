@@ -1391,7 +1391,12 @@ begin
     LParentPart := StripInitPathDelim(IndyGetFilePath(APathName));
     LParentPart := IndyGetFileName(LParentPart);
     LDirEnt := TDirEntry.Create(APathName, ADirEnt);
-    FSubDirs.Add(LDirEnt);
+    try
+      FSubDirs.Add(LDirEnt);
+    except
+      LDirEnt.Free;
+      raise;
+    end;
     AddFileName(APathName, ADirEnt);
     Result := True;
     Exit;
@@ -1400,8 +1405,6 @@ begin
     for i := 0 to SubDirs.Count-1 do begin
       LDirEnt := TDirEntry(SubDirs[i]);
       LParentPart := StripInitPathDelim(IndyGetFilePath(LDirEnt.FDirListItem.FileName));
-      //  if Copy(APathName,1, Length(LParentPart))=
-      //    LParentPart then
       if TextStartsWith(APathName, LParentPart) then begin
         if LDirEnt.AddSubDir(APathName, ADirEnt) then begin
           Result := True;
