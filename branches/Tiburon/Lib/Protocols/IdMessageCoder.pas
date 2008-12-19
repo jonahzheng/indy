@@ -95,11 +95,11 @@ type
     procedure ReadHeader; virtual;
     //CC: ATerminator param added because Content-Transfer-Encoding of binary needs
     //an ATerminator of EOL...
-    function ReadLn(const ATerminator: string = LF; const AEncoding: TIdEncoding = en7Bit): string;
+    function ReadLn(const ATerminator: string = LF; AEncoding: TIdTextEncoding = nil): string;
     //RLebeau: added for RFC 822 retrieves
-    function ReadLnRFC(var VMsgEnd: Boolean; const AEncoding: TIdEncoding = en7Bit): String; overload;
+    function ReadLnRFC(var VMsgEnd: Boolean; AEncoding: TIdTextEncoding = nil): String; overload;
     function ReadLnRFC(var VMsgEnd: Boolean; const ALineTerminator: String;
-      const ADelim: String = '.'; const AEncoding: TIdEncoding = en7Bit): String; overload; {do not localize}
+      const ADelim: String = '.'; AEncoding: TIdTextEncoding = nil): String; overload; {do not localize}
     destructor Destroy; override;
     //
     property Filename: string read FFilename;
@@ -259,7 +259,7 @@ begin
 end;
 
 function TIdMessageDecoder.ReadLn(const ATerminator: string = LF;
-  const AEncoding: TIdEncoding = en7Bit): string;
+  AEncoding: TIdTextEncoding = nil): string;
 var
   LWasSplit: Boolean;  //Needed for lines > 16K, e.g. if Content-Transfer-Encoding is 'binary'
 begin
@@ -274,13 +274,13 @@ begin
 end;
 
 function TIdMessageDecoder.ReadLnRFC(var VMsgEnd: Boolean;
-  const AEncoding: TIdEncoding = en7Bit): String;
+  AEncoding: TIdTextEncoding = nil): String;
 begin
   Result := ReadLnRFC(VMsgEnd, LF, '.', AEncoding); {do not localize}
 end;
 
 function TIdMessageDecoder.ReadLnRFC(var VMsgEnd: Boolean; const ALineTerminator: String;
-  const ADelim: String = '.'; const AEncoding: TIdEncoding = en7Bit): String;
+  const ADelim: String = '.'; AEncoding: TIdTextEncoding = nil): String;
 begin
   Result := ReadLn(ALineTerminator, AEncoding);
   // Do not use ATerminator since always ends with . (standard)
