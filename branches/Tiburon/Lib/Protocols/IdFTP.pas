@@ -1079,9 +1079,6 @@ uses
 
 const
   cIPVersions: array[TIdIPVersion] of String = ('1', '2'); {do not localize}
-  {$IFDEF TEncoding}
-  cFTPEncodings: array[Boolean] of TIdEncoding = (en8Bit, enUtf8);
-  {$ENDIF}
 
 type
   TIdFTPListResult = class(TStringList)
@@ -1436,10 +1433,9 @@ begin
       FreeAndNil(FDirectoryListing);
       LDest.Position := 0;
       {$IFDEF TEncoding}
-      FListResult.LoadFromStream(LDest, GetEncoder(IOHandler.DefStringEncoding));
+      FListResult.LoadFromStream(LDest, IOHandler.DefStringEncoding);
       {$ELSE}
-      // TODO - perform decoding when UTF-8 is enabled on the data connection...
-      FListResult.LoadFromStream(LDest);
+      FListResult.Text := ReadStringFromStream(LDest, -1, IOHandler.DefStringEncoding);
       {$ENDIF}
       with TIdFTPListResult(FListResult) do begin
         FDetails := ADetails;
@@ -2734,10 +2730,9 @@ begin
     DoOnRetrievedDir;
     LDest.Position := 0;
     {$IFDEF TEncoding}
-    FListResult.LoadFromStream(LDest, GetEncoder(IOHandler.DefStringEncoding));
+    FListResult.LoadFromStream(LDest, IOHandler.DefStringEncoding);
     {$ELSE}
-    // TODO - perform decoding when UTF-8 is enabled on the data connection...
-    FListResult.LoadFromStream(LDest);
+    FListResult.Text := ReadStringFromStream(LDest, -1, IOHandler.DefStringEncoding);
     {$ENDIF}
     with TIdFTPListResult(FListResult) do begin
       FDetails := True;
