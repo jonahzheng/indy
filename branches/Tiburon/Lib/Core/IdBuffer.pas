@@ -300,7 +300,7 @@ type
     function GetAsString: string;
   protected
     FBytes: TIdBytes;
-    FEncoding: TIdEncoding;
+    FEncoding: TIdTextEncoding;
     FGrowthFactor: Integer;
     FHeadIndex: Integer;
     FOnBytesRemoved: TIdBufferBytesRemoved;
@@ -328,7 +328,7 @@ type
 
     }
     // will extract number of bytes and decode as specified
-    function Extract(AByteCount: Integer = -1; AEncoding: TIdEncoding = enDefault): string;
+    function Extract(AByteCount: Integer = -1; AEncoding: TIdTextEncoding = nil): string;
     // all 3 extract routines append to existing data, if any
     procedure ExtractToStream(const AStream: TStream; AByteCount: Integer = -1; const AIndex: Integer = -1);
     procedure ExtractToIdBuffer(ABuffer: TIdBuffer; AByteCount: Integer = -1; const AIndex : Integer = -1);
@@ -341,7 +341,7 @@ type
     procedure ExtractToIPv6(const AIndex : Integer; var VAddress: TIdIPv6Address);
     function IndexOf(const ABytes: TIdBytes; AStartPos: Integer = 0): Integer; overload;
     function IndexOf(const AString: string; AStartPos: Integer = 0;
-      AEncoding: TIdEncoding = enDefault): Integer; overload;
+      AEncoding: TIdTextEncoding = nil): Integer; overload;
     function PeekByte(AIndex: Integer): Byte;
     procedure Remove(AByteCount: Integer);
     procedure SaveToStream(const AStream: TStream);
@@ -352,7 +352,7 @@ type
         location in a random access manner.
       }
     // Write
-    procedure Write(const AString: string; AEncoding: TIdEncoding = enDefault;
+    procedure Write(const AString: string; AEncoding: TIdTextEncoding = nil;
       const ADestIndex: Integer = -1); overload;
     procedure Write(const ABytes: TIdBytes; const ADestIndex: Integer = -1); overload;
     procedure Write(const ABytes: TIdBytes; const ALength, AOffset : Integer; const ADestIndex: Integer = -1); overload;
@@ -371,7 +371,7 @@ type
     // the reference was kept.
     //
     property Capacity: Integer read GetCapacity write SetCapacity;
-    property Encoding: TIdEncoding read FEncoding write FEncoding;
+    property Encoding: TIdTextEncoding read FEncoding write FEncoding;
     property GrowthFactor: Integer read FGrowthFactor write FGrowthFactor;
     property Size: Integer read FSize;
     //useful for testing. returns buffer as string without extraction.
@@ -445,7 +445,7 @@ begin
   TIdStack.DecUsage;
 end;
 
-function TIdBuffer.Extract(AByteCount: Integer = -1; AEncoding: TIdEncoding = enDefault): string;
+function TIdBuffer.Extract(AByteCount: Integer = -1; AEncoding: TIdTextEncoding = nil): string;
 var
   LBytes: TIdBytes;
 begin
@@ -454,8 +454,9 @@ begin
   end;
   if AByteCount > 0 then
   begin
-    if AEncoding = enDefault then begin
+    if AEncoding = nil then begin
       AEncoding := FEncoding;
+      EnsureEncoding(AEncoding);
     end;
     ExtractToBytes(LBytes, AByteCount);
     Result := BytesToString(LBytes, AEncoding);
@@ -594,9 +595,9 @@ begin
 end;
 
 function TIdBuffer.IndexOf(const AString: string; AStartPos: Integer = 0;
-  AEncoding: TIdEncoding = enDefault): Integer;
+  AEncoding: TIdTextEncoding = nil): Integer;
 begin
-  if AEncoding = enDefault then begin
+  if AEncoding = nil then begin
     AEncoding := FEncoding;
   end;
   Result := IndexOf(ToBytes(AString, AEncoding), AStartPos);
@@ -634,10 +635,10 @@ begin
   end;
 end;
 
-procedure TIdBuffer.Write(const AString: string; AEncoding: TIdEncoding = enDefault;
+procedure TIdBuffer.Write(const AString: string; AEncoding: TIdTextEncoding = nil;
   const ADestIndex : Integer = -1);
 begin
-  if AEncoding = enDefault then begin
+  if AEncoding = nil then begin
     AEncoding := FEncoding;
   end;
   Write(ToBytes(AString, AEncoding), ADestIndex);
@@ -658,7 +659,6 @@ end;
 constructor TIdBuffer.Create;
 begin
   inherited Create;
-  FEncoding := en7Bit;
   FGrowthFactor := 2048;
   Clear;
   TIdStack.IncUsage;
