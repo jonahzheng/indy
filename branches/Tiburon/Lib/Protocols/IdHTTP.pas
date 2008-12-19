@@ -810,7 +810,7 @@ begin
   try
     Post(AURL, ASource, LResponse);
     LResponse.Position := 0;
-    Result := ReadStringFromStream(LResponse, -1, ContentTypeStrToEncoding(Response.FContentType));
+    Result := ReadStringAsContentType(LResponse, Response.FContentType);
   finally
     FreeAndNil(LResponse);
   end;
@@ -826,7 +826,7 @@ begin
   try
     Post(AURL, ASource, LResponse);
     LResponse.Position := 0;
-    Result := ReadStringFromStream(LResponse, -1, ContentTypeStrToEncoding(Response.FContentType));
+    Result := ReadStringAsContentType(LResponse, Response.FContentType);
   finally
     FreeAndNil(LResponse);
   end;
@@ -850,7 +850,7 @@ begin
   try
     Put(AURL, ASource, LResponse);
     LResponse.Position := 0;
-    Result := ReadStringFromStream(LResponse, -1, ContentTypeStrToEncoding(Response.FContentType));
+    Result := ReadStringAsContentType(LResponse, Response.FContentType);
   finally
     FreeAndNil(LResponse);
   end;
@@ -869,7 +869,7 @@ begin
   try
     Trace(AURL, LResponse);
     LResponse.Position := 0;
-    Result := ReadStringFromStream(LResponse, -1, ContentTypeStrToEncoding(Response.FContentType));
+    Result := ReadStringAsContentType(LResponse, Response.FContentType);
   finally
     FreeAndNil(LResponse);
   end;
@@ -1824,7 +1824,7 @@ function TIdHTTPProtocol.ProcessResponse(AIgnoreReplies: array of SmallInt): TId
         end;
         LTempResponse.Position := 0;
         raise EIdHTTPProtocolException.CreateError(AResponseCode, FHTTP.ResponseText,
-          ReadStringFromStream(LTempResponse, -1, ContentTypeStrToEncoding(FHTTP.Response.FContentType)));
+          ReadStringAsContentType(LTempResponse, FHTTP.Response.FContentType));
       finally
         Response.ContentStream := LTempStream;
       end;
@@ -2045,9 +2045,7 @@ begin
   try
     Get(AURL, LStream, AIgnoreReplies);
     LStream.Position := 0;
-    // This is here instead of a TStringStream for .net conversions?
-    Result := ReadStringFromStream(LStream, -1,
-      ContentTypeStrToEncoding(Response.FContentType));
+    Result := ReadStringAsContentType(LStream, Response.FContentType);
   finally
     FreeAndNil(LStream);
   end;
