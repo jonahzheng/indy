@@ -2028,11 +2028,18 @@ end;
 function InterlockedCompareExchangePtr(var VTarget: Pointer; const AValue, Compare: Pointer): Pointer;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
-  {$IFDEF THANDLE32}
-  Result := InterlockedCompareExchange(VTarget, AValue, Compare);
-  {$ENDIF}
-  {$IFDEF THANDLE64}
-  Result := Pointer(InterlockedCompareExchange64(Int64(VTarget), Int64(AValue), Int64(Compare)));
+  {$IFDEF FPC}
+   //FreePascal 2.2.0 has an overload for InterlockedCompareExchange that takes
+   // pointers.
+   //TODO:  Figure out what to do about FreePascal 2.0.x but that might not be
+   //as important as older versions since you download and install FPC for free.
+
+    Result := InterlockedCompareExchange(VTarget, AValue, Compare);
+
+  {$ELSE}
+  //TODO:  We need to figure out what to do about the  InterlockedCompareExchangePointer
+  //in earlier versions of Delphi.  Most do not have this function.
+    Result := InterlockedCompareExchangePointer(VTarget, AValue, Compare);
   {$ENDIF}
 end;
 {$ENDIF}
