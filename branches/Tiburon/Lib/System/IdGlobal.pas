@@ -2033,13 +2033,13 @@ begin
    // pointers.
    //TODO:  Figure out what to do about FreePascal 2.0.x but that might not be
    //as important as older versions since you download and install FPC for free.
-
     Result := InterlockedCompareExchange(VTarget, AValue, Compare);
-
   {$ELSE}
-  //TODO:  We need to figure out what to do about the  InterlockedCompareExchangePointer
-  //in earlier versions of Delphi.  Most do not have this function.
+    {$IFNDEF VCL2009ORABOVE}
+     Result := Pointer(InterlockedCompareExchange(LongInt(VTarget),LongInt(AValue),LongInt(Compare)));
+    {$ELSE}
     Result := InterlockedCompareExchangePointer(VTarget, AValue, Compare);
+    {$ENDIF}
   {$ENDIF}
 end;
 {$ENDIF}
