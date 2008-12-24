@@ -2029,14 +2029,14 @@ function InterlockedCompareExchangePtr(var VTarget: Pointer; const AValue, Compa
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
   {$IFDEF FPC}
-   //FreePascal 2.2.0 has an overload for InterlockedCompareExchange that takes
-   // pointers.
-   //TODO:  Figure out what to do about FreePascal 2.0.x but that might not be
-   //as important as older versions since you download and install FPC for free.
-    Result := InterlockedCompareExchange(VTarget, AValue, Compare);
+  //FreePascal 2.2.0 has an overload for InterlockedCompareExchange that takes
+  // pointers.
+  //TODO: Figure out what to do about FreePascal 2.0.x but that might not be
+  //as important as older versions since you download and install FPC for free.
+  Result := InterlockedCompareExchange(VTarget, AValue, Compare);
   {$ELSE}
     {$IFNDEF VCL2009ORABOVE}
-     Result := Pointer(InterlockedCompareExchange(LongInt(VTarget),LongInt(AValue),LongInt(Compare)));
+  Result := InterlockedCompareExchange(VTarget, AValue, Compare);
     {$ELSE}
     Result := InterlockedCompareExchangePointer(VTarget, AValue, Compare);
     {$ENDIF}
