@@ -1144,7 +1144,7 @@ begin
   }
   FInputBuffer.ExtractToBytes(LResult, LTermPos + Length(LTerm));
   if (ATerminator = LF) and (LTermPos > 0) then begin
-    if LResult[LTermPos] = Ord(CR) then begin
+    if LResult[LTermPos-1] = Ord(CR) then begin
       Dec(LTermPos);
     end;
   end;
