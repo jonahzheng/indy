@@ -2035,10 +2035,14 @@ begin
   //as important as older versions since you download and install FPC for free.
   Result := InterlockedCompareExchange(VTarget, AValue, Compare);
   {$ELSE}
-    {$IFNDEF VCL2009ORABOVE}
-  Result := InterlockedCompareExchange(VTarget, AValue, Compare);
+    {$IFDEF VCL2009ORABOVE}
+  Result := InterlockedCompareExchangePointer(VTarget, AValue, Compare);
     {$ELSE}
-    Result := InterlockedCompareExchangePointer(VTarget, AValue, Compare);
+      {$IFDEF VCL2006ORABOVE}
+  Result := Pointer(InterlockedCompareExchange(Longint(VTarget), Longint(AValue), Longint(Compare)));
+      {$ELSE}
+  Result := InterlockedCompareExchange(VTarget, AValue, Compare);
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
 end;
