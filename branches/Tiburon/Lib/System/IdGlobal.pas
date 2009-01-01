@@ -596,7 +596,7 @@ const
   IdFetchDeleteDefault = True;
   IdFetchCaseSensitiveDefault = True;
 
-  WhiteSpace = [0..12, 14..32]; {do not localize}
+  IdWhiteSpace = [0..12, 14..32]; {do not localize}
 
   IdHexDigits: array [0..15] of Char = ('0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'); {do not localize}
   IdOctalDigits: array [0..7] of Char = ('0','1','2','3','4','5','6','7'); {do not localize}
@@ -2886,7 +2886,7 @@ begin
               raise EIdCorruptServicesFile.CreateFmt(RSCorruptServicesFile, [ServicesFilePath]); {do not localize}
             end;
           //TODO: Make Whitespace a function to elim warning
-          until Ord(s[i]) in WhiteSpace;
+          until Ord(s[i]) in IdWhiteSpace;
           i := IndyStrToInt(Copy(s, i+1, iPosSlash-i-1));
           if i <> iPrev then begin
             GIdPorts.Add(TObject(i));
