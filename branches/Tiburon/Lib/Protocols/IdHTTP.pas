@@ -486,6 +486,7 @@ type
     procedure DoRequest(const AMethod: TIdHTTPMethod; AURL: string;
       ASource, AResponseContent: TStream; AIgnoreReplies: array of SmallInt); virtual;
     procedure InitComponent; override;
+    function InternalReadLn: String;
     procedure SetAuthenticationManager(Value: TIdAuthenticationManager);
     procedure SetCookieManager(ACookieManager: TIdCookieManager);
     procedure SetAllowCookies(AValue: Boolean);
@@ -630,7 +631,8 @@ implementation
 uses
   SysUtils,
   IdAllAuthentications, IdComponent, IdCoderMIME, IdTCPConnection,
-  IdResourceStringsProtocols, IdGlobalProtocols, IdIOHandler, IdIOHandlerSocket;
+  IdResourceStringsCore, IdResourceStringsProtocols, IdGlobalProtocols,
+  IdIOHandler, IdIOHandlerSocket;
 
 const
   ProtocolVersionString: array[TIdHTTPProtocolVersion] of string = ('1.0', '1.1'); {do not localize}
@@ -980,7 +982,7 @@ var
     j: Integer;
     s: string;
   begin
-    s := IOHandler.ReadLn;
+    s := InternalReadLn;
     j := IndyPos(' ', s);
     if j > 0 then begin
       s := Copy(s, 1, j - 1);
@@ -1019,10 +1021,10 @@ begin
         while Size > 0 do
         begin
           IOHandler.ReadStream(LS, Size);
-          IOHandler.ReadLn; // blank line
+          InternalReadLn; // blank line
           Size := ChunkSize;
         end;
-        IOHandler.ReadLn; // blank line
+        InternalReadLn; // blank line
       end
       else if AResponse.ContentLength > 0 then // If chunked then this is also 0
       begin
@@ -1256,7 +1258,7 @@ begin
               CheckAndConnect(Response);
               BuildAndSendRequest(nil);
 
-              Response.ResponseText := IOHandler.ReadLn;
+              Response.ResponseText := InternalReadLn;
               if Length(Response.ResponseText) = 0 then begin
                 // Support for HTTP responses without status line and headers
                 Response.ResponseText := 'HTTP/1.0 200 OK'; {do not localize}
@@ -1781,13 +1783,13 @@ begin
   // Don't use Capture.
   // S.G. 6/4/2004: Added AmaxHeaderCount parameter to prevent the "header bombing" of the server
   Response.RawHeaders.Clear;
-  s := FHTTP.IOHandler.ReadLn;
+  s := FHTTP.InternalReadLn;
   try
     LHeaderCount := 0;
     while (s <> '') and ( (AMaxHeaderCount > 0) or (LHeaderCount < AMaxHeaderCount) ) do
     begin
       Response.RawHeaders.Add(S);
-      s := FHTTP.IOHandler.ReadLn;
+      s := FHTTP.InternalReadLn;
       inc(LHeaderCount);
     end;
   except
@@ -2037,6 +2039,14 @@ begin
   FMaxHeaderLines := Id_TIdHTTP_MaxHeaderLines;
 end;
 
+function TIdCustomHTTP.InternalReadLn: String;
+begin
+  Result := IOHandler.ReadLn;
+  if IOHandler.ReadLnTimedout then begin
+    raise EIdReadTimeout.Create(RSReadTimeout);
+  end;
+end;
+
 function TIdCustomHTTP.Get(AURL: string; AIgnoreReplies: array of SmallInt): string;
 var
   LStream: TMemoryStream;
@@ -2094,7 +2104,7 @@ begin
       // This workaround is just for temporary use until we have final HTTP 1.1
       // realisation. HTTP 1.1 is ongoing because of all the buggy and conflicting servers.
       repeat
-        Response.ResponseText := IOHandler.ReadLn;
+        Response.ResponseText := InternalReadLn;
         FHTTPProto.RetrieveHeaders(MaxHeaderLines);
         ProcessCookies(Request, Response);
       until Response.ResponseCode <> 100;
