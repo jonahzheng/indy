@@ -194,6 +194,7 @@ type
   public
     function Check(const AData: string; AContext: TIdContext): boolean; virtual;
     procedure DoCommand(const AData: string; AContext: TIdContext; AUnparsedParams: string); virtual;
+    procedure DoParseParams(AUnparsedParams: string; AParams: TStrings); virtual;
     constructor Create(ACollection: TCollection); override;
     destructor Destroy; override;
 //    function GetNamePath: string; override;
@@ -322,10 +323,9 @@ constructor TIdCommandHandlers.Create(
   );
 begin
   if ACommandHandlerClass = nil then begin
-    inherited Create(ABase, TIdCommandHandler);
-  end else begin
-    inherited Create(ABase, ACommandHandlerClass);
+    ACommandHandlerClass := TIdCommandHandler;
   end;
+  inherited Create(ABase, ACommandHandlerClass);
   FBase := ABase;
   FExceptionReply := AExceptionReply;
   FParseParamsDef := IdParseParamsDefault;
@@ -415,33 +415,24 @@ begin
     FRawLine := AData;
     FContext := AContext;
     FUnparsedParams := AUnparsedParams;
-    Params.Clear;
 
     if ParseParams then begin
-      if Self.FParamDelimiter = #32 then begin
-        SplitColumnsNoTrim(AUnparsedParams, Params, #32);
-      end else begin
-        SplitColumns(AUnparsedParams, Params, Self.FParamDelimiter);
-      end;
+      DoParseParams(AUnparsedParams, Params);
     end;
 
     // RLebeau 2/21/08: for the IRC protocol, RFC 2812 section 2.4 says that
     // clients are not allowed to issue numeric replies for server-issued
     // commands.  Added the PerformReplies property so TIdIRC can specify
     // that behavior.
-    if Assigned(Self.Collection) then
-    begin
-      if Self.Collection is TIdCommandHandlers then
-      begin
-        PerformReply := TIdCommandHandlers(Collection).PerformReplies;
-      end;
+    if Self.Collection is TIdCommandHandlers then begin
+      PerformReply := TIdCommandHandlers(Self.Collection).PerformReplies;
     end;
+
     try
-      if (LCommand.Reply.Code ='')  and (Self.NormalReply.Code<>'') then begin
-        if Reply.Code = '' then begin
-          Reply.Assign(Self.NormalReply);
-        end;
+      if (Reply.Code = '') and (Self.NormalReply.Code <> '') then begin
+        Reply.Assign(Self.NormalReply);
       end;
+
       //if code<>'' before DoCommand, then it breaks exception handling
       Assert(Reply.Code <> '');
       DoCommand;
@@ -460,22 +451,22 @@ begin
         // to catch it before it reaches us
         Reply.Clear;
         if PerformReply then begin
-        // Try from command handler first
+          // Try from command handler first
           if ExceptionReply.Code <> '' then begin
             Reply.Assign(ExceptionReply);
           // If still no go, from server
           // Can be nil though. Typically only servers pass it in
-          end else if (TIdCommandHandlers(Collection).FExceptionReply <> nil) then begin
+          end else if (Collection is TIdCommandHandlers) and (TIdCommandHandlers(Collection).FExceptionReply <> nil) then begin
             Reply.Assign(TIdCommandHandlers(Collection).FExceptionReply);
           end;
           if Reply.Code <> '' then begin
-          //done this way in case an exception message has more than one line.
-          //otherwise you could get something like this:
-          //
-          // 550 System Error.  Code: 2
-          // The system cannot find the file specified
-          //
-          //and the second line would throw off some clients.
+            //done this way in case an exception message has more than one line.
+            //otherwise you could get something like this:
+            //
+            // 550 System Error.  Code: 2
+            // The system cannot find the file specified
+            //
+            //and the second line would throw off some clients.
             Reply.Text.Text := E.Message;
             //Reply.Text.Add(E.Message);
             SendReply;
@@ -504,7 +495,23 @@ begin
       if Disconnect then begin
         AContext.Connection.Disconnect;
       end;
-    finally Free; end;
+    finally
+      Free;
+    end;
+  end;
+end;
+
+procedure TIdCommandHandler.DoParseParams(AUnparsedParams: string; AParams: TStrings);
+// AUnparsedParams is not preparsed and is completely left up to the command handler. This will
+// allow for future expansion such as multiple delimiters etc, and allow the logic to properly
+// remain in each of the command handler implementations. In the future there may be a base type
+// and multiple descendants
+begin
+  AParams.Clear;
+  if FParamDelimiter = #32 then begin
+    SplitColumnsNoTrim(AUnparsedParams, AParams, #32);
+  end else begin
+    SplitColumns(AUnparsedParams, AParams, FParamDelimiter);
   end;
 end;
 
