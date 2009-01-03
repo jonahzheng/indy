@@ -506,19 +506,19 @@ end;
 }
 
 
-function GetRandomString(NumChar: cardinal): string;
+function GetRandomString(NumChar: Cardinal): string;
 const
-  CharMap='qwertzuiopasdfghjklyxcvbnmQWERTZUIOPASDFGHJKLYXCVBNM1234567890';    {Do not Localize}
+  CharMap = 'qwertzuiopasdfghjklyxcvbnmQWERTZUIOPASDFGHJKLYXCVBNM1234567890';    {Do not Localize}
+  MaxChar: Cardinal = Length(CharMap) - 1;
 var
   i: integer;
-  MaxChar: cardinal;
 begin
   randomize;
-  MaxChar := length(CharMap) - 1;
+  SetLength(Result, NumChar);
   for i := 1 to NumChar do
   begin
     // Add one because CharMap is 1-based
-    Result := result + CharMap[Random(maxChar) + 1];
+    Result[i] := CharMap[Random(MaxChar) + 1];
   end;
 end;
 
@@ -575,26 +575,24 @@ function TIdCustomHTTPServer.CreateSession(AContext: TIdContext; HTTPResponse: T
 begin
   if SessionState then begin
     DoOnCreateSession(AContext, Result);
-    if not Assigned(result) then
-    begin
-      result := FSessionList.CreateUniqueSession(HTTPRequest.RemoteIP);
-    end
-    else begin
-      FSessionList.Add(result);
+    if not Assigned(Result) then begin
+      Result := FSessionList.CreateUniqueSession(HTTPRequest.RemoteIP);
+    end else begin
+      FSessionList.Add(Result);
     end;
 
     with HTTPResponse.Cookies.Add do
     begin
       CookieName := GSessionIDCookie;
-      Value := result.SessionID;
+      Value := Result.SessionID;
       Path := '/';    {Do not Localize}
       MaxAge := -1; // By default the cookies wil be valid until the user has closed his browser window.
       // MaxAge := SessionTimeOut div 1000;
     end;
-    HTTPResponse.FSession := result;
-    HTTPRequest.FSession := result;
+    HTTPResponse.FSession := Result;
+    HTTPRequest.FSession := Result;
   end else begin
-    result := nil;
+    Result := nil;
   end;
 end;
 
@@ -873,14 +871,14 @@ begin
                 end;
               end;
 
-              // retreive the base ContentType
+              // retreive the base ContentType with attributes omitted
               s := LRequestInfo.ContentType;
               LContentType := Fetch(s, ';');  {Do not Localize}
 
               // reset back to 0 before reading the string from the post stream
               LRequestInfo.PostStream.Position := 0;
               if TextIsSame(LContentType, ContentTypeFormUrlencoded) then begin
-                LRequestInfo.FormParams := ReadStringAsContentType(LRequestInfo.PostStream, LRequestInfo.ContentType);
+                LRequestInfo.FormParams := ReadStringAsCharSet(LRequestInfo.PostStream, LRequestInfo.CharSet);
               end;
 
               // reset back to 0 for the OnCommand... event handler
@@ -1165,7 +1163,7 @@ end;
 
 function TIdHTTPSession.IsSessionStale: boolean;
 begin
-  result := TimeStampInterval(FLastTimeStamp, Now) > Integer(FOwner.SessionTimeout);
+  Result := TimeStampInterval(FLastTimeStamp, Now) > Integer(FOwner.SessionTimeout);
 end;
 
 procedure TIdHTTPSession.Lock;
@@ -1419,30 +1417,48 @@ begin
 end;
 
 procedure TIdHTTPResponseInfo.WriteContent;
+var
+  LEncoding: TIdTextEncoding;
 begin
-  if not HeaderHasBeenWritten then begin
-    WriteHeader;
-  end;
-  with FConnection do begin
-    // Always check ContentText first
-    if ContentText <> '' then begin
-      IOHandler.Write(ContentText);
-    end else if Assigned(ContentStream) then begin
-      ContentStream.Position := 0;
-      IOHandler.Write(ContentStream);
-    end else begin
-      IOHandler.WriteLn('<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + ResponseText    {Do not Localize}
-       + '</B></BODY></HTML>');    {Do not Localize}
+  LEncoding := nil;
+  {$IFNDEF DOTNET}
+  try
+  {$ENDIF}
+   if not HeaderHasBeenWritten then begin
+      WriteHeader;
     end;
-    // Clear All - This signifies that WriteConent has been called.
-    ContentText := '';    {Do not Localize}
-    ReleaseContentStream;
+    with FConnection do begin
+      // Always check ContentText first
+      if ContentText <> '' then begin
+        LEncoding := CharsetToEncoding(CharSet);
+        IOHandler.Write(ContentText, LEncoding);
+      end
+      else if Assigned(ContentStream) then begin
+        ContentStream.Position := 0;
+        IOHandler.Write(ContentStream);
+      end
+      else begin
+        LEncoding := CharsetToEncoding(CharSet);
+        IOHandler.WriteLn('<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + ResponseText    {Do not Localize}
+         + '</B></BODY></HTML>', LEncoding);    {Do not Localize}
+      end;
+      // Clear All - This signifies that WriteConent has been called.
+      ContentText := '';    {Do not Localize}
+      ReleaseContentStream;
+    end;
+  {$IFNDEF DOTNET}
+  finally
+    if Assigned(LEncoding) then begin
+      LEncoding.Free;
+    end;
   end;
+  {$ENDIF}
 end;
 
 procedure TIdHTTPResponseInfo.WriteHeader;
 var
   i: Integer;
+  LEncoding: TIdTextEncoding;
 begin
   EIdHTTPHeaderAlreadyWritten.IfTrue(HeaderHasBeenWritten, RSHTTPHeaderAlreadyWritten);
   FHeaderHasBeenWritten := True;
@@ -1450,19 +1466,30 @@ begin
   if ContentLength = -1 then begin
     // Always check ContentText first
     if ContentText <> '' then begin
-      ContentLength := Length(ContentText);
-    end else if Assigned(ContentStream) then begin
+      LEncoding := CharsetToEncoding(CharSet);
+      {$IFNDEF DOTNET}
+      try
+      {$ENDIF}
+        ContentLength := LEncoding.GetByteCount(ContentText);
+      {$IFNDEF DOTNET}
+      finally
+        LEncoding.Free;
+      end;
+      {$ENDIF}
+    end
+    else if Assigned(ContentStream) then begin
       ContentLength := ContentStream.Size;
     end;
   end;
   SetHeaders;
-  FConnection.IOHandler.WriteBufferOpen; try
+  FConnection.IOHandler.WriteBufferOpen;
+  try
     // Write HTTP status response
     // Client will be forced to close the connection. We are not going to support
     // keep-alive feature for now
     FConnection.IOHandler.WriteLn('HTTP/1.1 ' + IntToStr(ResponseNo) + ' ' + ResponseText);    {Do not Localize}
     // Write headers
-    for i := 0 to RawHeaders.Count -1 do begin
+    for i := 0 to RawHeaders.Count-1 do begin
       FConnection.IOHandler.WriteLn(RawHeaders[i]);
     end;
     // Write cookies
@@ -1471,12 +1498,14 @@ begin
     end;
     // HTTP headers ends with a double CR+LF
     FConnection.IOHandler.WriteLn;
-  finally FConnection.IOHandler.WriteBufferClose; end;
+  finally
+    FConnection.IOHandler.WriteBufferClose;
+  end;
 end;
 
 function TIdHTTPResponseInfo.GetServer: string;
 begin
-  result := Server;
+  Result := Server;
 end;
 
 procedure TIdHTTPResponseInfo.SetServer(const Value: string);
@@ -1514,8 +1543,8 @@ end;
 
 function TIdHTTPDefaultSessionList.CreateSession(const RemoteIP, SessionID: String): TIdHTTPSession;
 begin
-  result := TIdHTTPSession.CreateInitialized(Self, SessionID, RemoteIP);
-  SessionList.Add(result);
+  Result := TIdHTTPSession.CreateInitialized(Self, SessionID, RemoteIP);
+  SessionList.Add(Result);
 end;
 
 function TIdHTTPDefaultSessionList.CreateUniqueSession(
@@ -1528,7 +1557,7 @@ begin
   begin
     SessionID := GetRandomString(15);
   end;    // while
-  result := CreateSession(RemoteIP, SessionID);
+  Result := CreateSession(RemoteIP, SessionID);
 end;
 
 destructor TIdHTTPDefaultSessionList.destroy;
@@ -1557,8 +1586,8 @@ begin
       begin
         // Session found
         ASession.FLastTimeStamp := Now;
-        result := ASession;
-        break;
+        Result := ASession;
+        Break;
       end;
     end;
   finally
