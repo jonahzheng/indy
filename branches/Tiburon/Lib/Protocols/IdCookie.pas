@@ -123,6 +123,7 @@ Type
     FCookieText: String;
     FDomain: String;
     FExpires: String;
+    FHttpOnly: Boolean;
     FName: String;
     FPath: String;
     FSecure: Boolean;
@@ -143,14 +144,15 @@ Type
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
 
-    property CookieText: String read GetCookie write SetCookie;
-    property ServerCookie: String read GetServerCookie;
     property ClientCookie: String read GetClientCookie;
+    property CookieName: String read FName write FName;
+    property CookieText: String read GetCookie write SetCookie;
     property Domain: String read FDomain write FDomain;
     property Expires: String read FExpires write SetExpires;
-    property CookieName: String read FName write FName;
+    property HttpOnly: Boolean read FHttpOnly write FHttpOnly;
     property Path: String read FPath write FPath;
     property Secure: Boolean read FSecure write FSecure;
+    property ServerCookie: String read GetServerCookie;
     property Value: String read FValue write FValue;
   end;
 
@@ -352,11 +354,11 @@ end;
 
 {
 Set-Cookie: NAME=VALUE; expires=DATE;
-path=PATH; domain=DOMAIN_NAME; secure
+path=PATH; domain=DOMAIN_NAME; secure; HttpOnly
 }
 function TIdNetscapeCookie.GetServerCookie: String;
 begin
-  result := GetCookie;
+  Result := GetCookie;
 end;
 
 {
@@ -380,6 +382,10 @@ begin
   begin
     Result := AddCookieFlag('secure', Result);    {Do not Localize}
   end;
+  if FHttpOnly then
+  begin
+    Result := AddCookieFlag('HttpOnly', Result);    {Do not Localize}
+  end;
 end;
 
 procedure TIdNetscapeCookie.LoadProperties(APropertyList: TStrings);
@@ -398,9 +404,10 @@ begin
   else begin
     FPath := '/'; {Do not Localize}
   end;
-  Expires := APropertyList.values['EXPIRES'];    {Do not Localize}
-  FDomain := APropertyList.values['DOMAIN'];    {Do not Localize}
+  Expires := APropertyList.Values['EXPIRES'];    {Do not Localize}
+  FDomain := APropertyList.Values['DOMAIN'];    {Do not Localize}
   FSecure := APropertyList.IndexOf('SECURE') <> -1;    {Do not Localize}
+  FHttpOnly := APropertyList.IndexOf('HTTPONLY') <> -1;    {Do not Localize}
 end;
 
 procedure TIdNetscapeCookie.SetCookie(const AValue: String);
@@ -428,7 +435,6 @@ begin
 
       for i := 0 to CookieProp.Count - 1 do
       begin
-        {RLebeau - isn't this upper-casing everything?  If so, then why look for '=' at all? }
         if Pos('=', CookieProp[i]) = 0 then    {Do not Localize}
         begin
           CookieProp[i] := UpperCase(CookieProp[i]);  // This is for cookie flags (secure)
