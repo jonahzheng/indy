@@ -79,6 +79,7 @@ type
   protected
     FCacheControl: String;
     FRawHeaders: TIdHeaderList;
+    FCharSet: String;
     FConnection: string;
     FContentDisposition: string;
     FContentEncoding: string;
@@ -103,6 +104,7 @@ type
     function GetOwner: TPersistent; override;
 
     procedure SetContentLength(const AValue: Int64);
+    procedure SetContentType(const AValue: String);
     procedure SetCustomHeaders(const AValue: TIdHeaderList);
     function GetHasContentRange: Boolean;
     function GetHasContentRangeInstance: Boolean;
@@ -117,17 +119,16 @@ type
     property RawHeaders: TIdHeaderList read FRawHeaders;
   published
     property CacheControl: String read FCacheControl write FCacheControl;
+    property CharSet: String read FCharSet write FCharSet;
     property Connection: string read FConnection write FConnection;
     property ContentDisposition: string read FContentDisposition write FContentDisposition;
     property ContentEncoding: string read FContentEncoding write FContentEncoding;
     property ContentLanguage: string read FContentLanguage write FContentLanguage;
     property ContentLength: Int64 read FContentLength write SetContentLength;
-
     property ContentRangeEnd: Int64 read FContentRangeEnd write FContentRangeEnd;
     property ContentRangeStart: Int64 read FContentRangeStart write FContentRangeStart;
     property ContentRangeInstanceLength: Int64 read FContentRangeInstanceLength write FContentRangeInstanceLength;
-
-    property ContentType: string read FContentType write FContentType;
+    property ContentType: string read FContentType write SetContentType;
     property ContentVersion: string read FContentVersion write FContentVersion;
     property CustomHeaders: TIdHeaderList read FCustomHeaders write SetCustomHeaders;
     property Date: TDateTime read FDate write FDate;
@@ -270,6 +271,7 @@ begin
     begin
       FRawHeaders.Assign(Self.FRawHeaders);
       FCacheControl := Self.FCacheControl;
+      FCharSet := Self.FCharSet;
       FContentDisposition := Self.FContentDisposition;
       FContentEncoding := Self.FContentEncoding;
       FContentLanguage := Self.FContentLanguage;
@@ -293,6 +295,7 @@ end;
 procedure TIdEntityHeaderInfo.Clear;
 begin
   FCacheControl := '';
+  FCharSet := '';
   FConnection := '';
   FContentVersion := '';
   FContentDisposition := '';
@@ -307,8 +310,8 @@ begin
     Requests, by default, have NO content-type.
     This caused problems with some netscape servers
   }
-
   FContentType := '';
+
   FContentLength := -1;
   FContentRangeStart := 0;
   FContentRangeEnd := 0;
@@ -335,7 +338,7 @@ begin
     FContentDisposition := Values['Content-Disposition']; {do not localize}
     FContentEncoding := Values['Content-Encoding']; {do not localize}
     FContentLanguage := Values['Content-Language']; {do not localize}
-    FContentType := Values['Content-Type']; {do not localize}
+    ContentType := Values['Content-Type']; {do not localize}
     FContentLength := IndyStrToInt(Values['Content-Length'], -1); {do not localize}
     FHasContentLength := FContentLength >= 0;
 
@@ -415,7 +418,12 @@ begin
     end;
     if Length(FContentType) > 0 then
     begin
-      Values['Content-Type'] := FContentType; {do not localize}
+      if Length(FCharSet) > 0 then begin
+        Values['Content-Type'] := RemoveHeaderEntry(FContentType, 'charset')  {do not localize}
+           + '; charset="' + FCharSet + '"'; {do not localize}
+      end else begin
+        Values['Content-Type'] := FContentType; {do not localize}
+      end;
     end;
     if FContentLength >= 0 then
     begin
@@ -461,6 +469,19 @@ procedure TIdEntityHeaderInfo.SetContentLength(const AValue: Int64);
 begin
   FContentLength := AValue;
   FHasContentLength := FContentLength >= 0;
+end;
+
+procedure TIdEntityHeaderInfo.SetContentType(const AValue: String);
+begin
+  if AValue <> '' then
+  begin
+    FCharSet := ExtractHeaderSubItem(AValue, 'CHARSET'); {do not localize}
+    FContentType := RemoveHeaderEntry(AValue, 'CHARSET'); {do not localize}
+  end else
+  begin
+    FCharSet := '';
+    FContentType := '';
+  end;
 end;
 
 function TIdEntityHeaderInfo.GetHasContentRange: Boolean;
