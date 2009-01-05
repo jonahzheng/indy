@@ -450,7 +450,7 @@ type
   function GetMIMETypeFromFile(const AFile: TIdFileName): string;
   function GetMIMEDefaultFileExt(const MIMEType: string): TIdFileName;
   function GetGMTDateByName(const AFileName : TIdFileName) : TDateTime;
-  function GmtOffsetStrToDateTime(S: string): TDateTime;
+  function GmtOffsetStrToDateTime(const S: string): TDateTime;
   function GMTToLocalDateTime(S: string): TDateTime;
   function IdGetDefaultCharSet : TIdCharSet;
   function IntToBin(Value: LongWord): string;
@@ -1047,28 +1047,27 @@ function RawStrInternetToDateTime(var Value: string): TDateTime;
 var
   i: Integer;
   Dt, Mo, Yr, Ho, Min, Sec: Word;
-  sTime: String;
-  ADelim: string;
+  sYear, sTime, sDelim: string;
   //flags for if AM/PM marker found
   LAM, LPM : Boolean;
 
   Procedure ParseDayOfMonth;
   begin
-    Dt :=  IndyStrToInt( Fetch(Value, ADelim), 1);
+    Dt :=  IndyStrToInt( Fetch(Value, sDelim), 1);
     Value := TrimLeft(Value);
   end;
 
   Procedure ParseMonth;
   begin
-    Mo := StrToMonth( Fetch ( Value, ADelim )  );
+    Mo := StrToMonth( Fetch (Value, sDelim)  );
     Value := TrimLeft(Value);
   end;
 
 begin
   Result := 0.0;
 
-  LAM:=false;
-  LPM:=false;
+  LAM := False;
+  LPM := False;
 
   Value := Trim(Value);
   if Length(Value) = 0 then begin
@@ -1079,8 +1078,8 @@ begin
     {Day of Week}
     if StrToDay(Copy(Value, 1, 3)) > 0 then begin
       //workaround in case a space is missing after the initial column
-      if (Copy(Value,4,1)=',') and (Copy(Value,5,1)<>' ') then begin
-        Insert(' ',Value,5);
+      if CharEquals(Value, 4, ',') and (not CharEquals(Value, 5, ' ')) then begin
+        Insert(' ', Value, 5);
       end;
       Fetch(Value);
       Value := TrimLeft(Value);
@@ -1088,13 +1087,14 @@ begin
 
     // Workaround for some buggy web servers which use '-' to separate the date parts.    {Do not Localize}
     if (IndyPos('-', Value) > 1) and (IndyPos('-', Value) < IndyPos(' ', Value)) then begin    {Do not Localize}
-      ADelim := '-';    {Do not Localize}
+      sDelim := '-';    {Do not Localize}
     end else begin
-      ADelim := ' ';    {Do not Localize}
+      sDelim := ' ';    {Do not Localize}
     end;
+
     //workaround for improper dates such as 'Fri, Sep 7 2001'    {Do not Localize}
     //RFC 2822 states that they should be like 'Fri, 7 Sep 2001'    {Do not Localize}
-    if (StrToMonth(Fetch(Value, ADelim,False)) > 0) then begin
+    if StrToMonth(Fetch(Value, sDelim, False)) > 0 then begin
       {Month}
       ParseMonth;
       {Day of Month}
@@ -1105,20 +1105,36 @@ begin
       {Month}
       ParseMonth;
     end;
-    {Year}
-    // There is sometrage date/time formats like
-    // DayOfWeek Month DayOfMonth Time Year
 
-    sTime := Fetch(Value);
-    Yr := IndyStrToInt(sTime, 1900);
-    // Is sTime valid Integer
-    if Yr = 1900 then begin
-      Yr := IndyStrToInt(Value, 1900);
+    {Year}
+    // There is some strange date/time formats like
+    // DayOfWeek Month DayOfMonth Time Year
+    sYear := Fetch(Value);
+    Yr := IndyStrToInt(sYear, High(Word));
+    if Yr = High(Word) then begin // Is sTime valid Integer?
+      sTime := sYear;
+      sYear := Value;
       Value := sTime;
+      Yr := IndyStrToInt(sYear);
     end;
-    if Yr < 80 then begin
-      Inc(Yr, 2000);
-    end else if Yr < 100 then begin
+
+    // RLebeau: According to RFC 2822, Section 4.3:
+    //
+    // "Where a two or three digit year occurs in a date, the year is to be
+    // interpreted as follows: If a two digit year is encountered whose
+    // value is between 00 and 49, the year is interpreted by adding 2000,
+    // ending up with a value between 2000 and 2049.  If a two digit year is
+    // encountered with a value between 50 and 99, or any three digit year
+    // is encountered, the year is interpreted by adding 1900."
+    if Length(sYear) = 2 then begin
+      if {(Yr >= 0) and} (Yr <= 49) then begin
+        Inc(Yr, 2000);
+      end
+      else if (Yr >= 50) and (Yr <= 99) then begin
+        Inc(Yr, 1900);
+      end;
+    end
+    else if Length(sYear) = 3 then begin
       Inc(Yr, 1900);
     end;
 
@@ -1127,35 +1143,34 @@ begin
     if IndyPos('AM', Value) > 0 then begin{do not localize}
       LAM := True;
       Value := Fetch(Value, 'AM');  {do not localize}
-    end;
-    if IndyPos('PM', Value) > 0 then begin {do not localize}
+    end
+    else if IndyPos('PM', Value) > 0 then begin {do not localize}
       LPM := True;
       Value := Fetch(Value, 'PM');  {do not localize}
     end;
     i := IndyPos(':', Value);       {do not localize}
     if i > 0 then begin
       // Copy time string up until next space (before GMT offset)
-      sTime := fetch(Value, ' ');  {do not localize}
+      sTime := Fetch(Value, ' ');  {do not localize}
       {Hour}
-      Ho  := IndyStrToInt( Fetch ( sTime, ':'), 0);  {do not localize}
+      Ho  := IndyStrToInt( Fetch(sTime, ':'), 0);  {do not localize}
       {Minute}
-      Min := IndyStrToInt( Fetch ( sTime, ':'), 0);  {do not localize}
+      Min := IndyStrToInt( Fetch(sTime, ':'), 0);  {do not localize}
       {Second}
-      Sec := IndyStrToInt( Fetch ( sTime ), 0);
+      Sec := IndyStrToInt( Fetch(sTime), 0);
       {AM/PM part if preasent}
       Value := TrimLeft(Value);
       if LAM then begin
         if Ho = 12 then begin
           Ho := 0;
         end;
-      end else begin
-        if LPM then begin
-          //in the 12 hour format, afternoon is 12:00PM followed by 1:00PM
-          //while midnight is written as 12:00 AM
-          //Not exactly technically correct but pritty accurate
-          if Ho < 12 then begin
-            Ho := Ho + 12;
-          end;
+      end
+      else if LPM then begin
+        //in the 12 hour format, afternoon is 12:00PM followed by 1:00PM
+        //while midnight is written as 12:00 AM
+        //Not exactly technically correct but pretty accurate
+        if Ho < 12 then begin
+          Inc(Ho, 12);
         end;
       end;
       {The date and time stamp returned}
@@ -1175,8 +1190,9 @@ begin
 end;
 
 function FTPMLSToGMTDateTime(const ATimeStamp : String):TDateTime;
-var LYear, LMonth, LDay, LHour, LMin, LSec, LMSec : Integer;
-    LBuffer : String;
+var
+  LYear, LMonth, LDay, LHour, LMin, LSec, LMSec : Integer;
+  LBuffer : String;
 begin
   Result := 0;
   LBuffer := ATimeStamp;
@@ -1915,47 +1931,109 @@ begin
   end;
 end;
 
-function GmtOffsetStrToDateTime(S: string): TDateTime;
+function GmtOffsetStrToDateTime(const S: string): TDateTime;
 {$IFDEF USEINLINE} inline; {$ENDIF}
+var
+  sTmp: String;
 begin
   Result := 0.0;
-  S := Copy(Trim(s), 1, 5);
-  if Length(S) > 0 then begin
-    if (s[1] = '-') or (s[1] = '+') then begin  {do not localize}
-      try
-        Result := EncodeTime(IndyStrToInt(Copy(s, 2, 2)), IndyStrToInt(Copy(s, 4, 2)), 0, 0);
-        if s[1] = '-' then begin  {do not localize}
-          Result := -Result;
+  sTmp := Copy(Trim(S), 1, 5);
+  if Length(sTmp) > 0 then begin
+    // RLebeau: According to RFC 2822 Section 4.3:
+    //
+    // In the obsolete time zone, "UT" and "GMT" are indications of
+    // "Universal Time" and "Greenwich Mean Time" respectively and are both
+    // semantically identical to "+0000".
+    //
+    // The remaining three character zones are the US time zones.  The first
+    // letter, "E", "C", "M", or "P" stands for "Eastern", "Central",
+    // "Mountain" and "Pacific".  The second letter is either "S" for
+    // "Standard" time, or "D" for "Daylight" (or summer) time.  Their
+    // interpretations are as follows:
+    //
+    // EDT is semantically equivalent to -0400
+    // EST is semantically equivalent to -0500
+    // CDT is semantically equivalent to -0500
+    // CST is semantically equivalent to -0600
+    // MDT is semantically equivalent to -0600
+    // MST is semantically equivalent to -0700
+    // PDT is semantically equivalent to -0700
+    // PST is semantically equivalent to -0800
+    //
+    // The 1 character military time zones were defined in a non-standard
+    // way in [RFC822] and are therefore unpredictable in their meaning.
+    // The original definitions of the military zones "A" through "I" are
+    // equivalent to "+0100" through "+0900" respectively; "K", "L", and "M"
+    // are equivalent to  "+1000", "+1100", and "+1200" respectively; "N"
+    // through "Y" are equivalent to "-0100" through "-1200" respectively;
+    // and "Z" is equivalent to "+0000".  However, because of the error in
+    // [RFC822], they SHOULD all be considered equivalent to "-0000" unless
+    // there is out-of-band information confirming their meaning.
+    //
+    // Other multi-character (usually between 3 and 5) alphabetic time zones
+    // have been used in Internet messages.  Any such time zone whose
+    // meaning is not known SHOULD be considered equivalent to "-0000"
+    // unless there is out-of-band information confirming their meaning.
+
+    if (sTmp[1] <> '-') and (sTmp[1] <> '+') then begin  {do not localize}
+      if TextIsSame(sTmp, 'UT') or TextIsSame(sTmp, 'GMT') then begin {do not localize}
+        // sTmp := '+0000'; {do not localize}
+        Exit;
+      end
+      else if TextIsSame(sTmp, 'EDT') then begin {do not localize}
+        sTmp := '-0400'; {do not localize}
+      end
+      else if TextIsSame(sTmp, 'EST') or TextIsSame(sTmp, 'CDT') then begin {do not localize}
+        sTmp := '-0500'; {do not localize}
+      end
+      else if TextIsSame(sTmp, 'CST') or TextIsSame(sTmp, 'MDT') then begin {do not localize}
+        sTmp := '-0600'; {do not localize}
+      end
+      else if TextIsSame(sTmp, 'MST') or TextIsSame(sTmp, 'PDT') then begin {do not localize}
+        sTmp := '-0700'; {do not localize}
+      end
+      else if TextIsSame(sTmp, 'PST') then begin
+        sTmp := '-0800'; {do not localize}
+      end else begin
+        Exit;
+      end;
+    end;
+    if Length(sTmp) >= 5 then begin
+      if (sTmp[1] = '-') or (sTmp[1] = '+') then begin  {do not localize}
+        try
+          Result := EncodeTime(IndyStrToInt(Copy(sTmp, 2, 2)), IndyStrToInt(Copy(sTmp, 4, 2)), 0, 0);
+          if sTmp[1] = '-' then begin  {do not localize}
+            Result := -Result;
+          end;
+        except
+          Result := 0.0;
         end;
-      except
-        Result := 0.0;
       end;
     end;
   end;
 end;
 
+{-Always returns date/time relative to GMT!!  -Replaces StrInternetToDateTime}
 function GMTToLocalDateTime(S: string): TDateTime;
-var  {-Always returns date/time relative to GMT!!  -Replaces StrInternetToDateTime}
+var
   DateTimeOffset: TDateTime;
 begin
-  if s = '' then begin
+  if S = '' then begin
     // just hardcode to 0 - don't need all the work below and the spurious timezone adjustment. GDG 20-Mar 2003
-    Result := 0;
+    Result := 0.0;
   end else begin
     Result := RawStrInternetToDateTime(S);
-    if Length(S) < 5 then begin
-      DateTimeOffset := 0.0
-    end else begin
+    if Result <> 0.0 then begin
       DateTimeOffset := GmtOffsetStrToDateTime(S);
+      {-Apply GMT offset here}
+      if DateTimeOffset < 0.0 then begin
+        Result := Result + Abs(DateTimeOffset);
+      end else begin
+        Result := Result - DateTimeOffset;
+      end;
+      // Apply local offset
+      Result := Result + OffSetFromUTC;
     end;
-    {-Apply GMT offset here}
-    if DateTimeOffset < 0.0 then begin
-      Result := Result + Abs(DateTimeOffset);
-    end else begin
-      Result := Result - DateTimeOffset;
-    end;
-    // Apply local offset
-    Result := Result + OffSetFromUTC;
   end;
 end;
 
