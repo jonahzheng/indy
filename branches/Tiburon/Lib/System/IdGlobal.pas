@@ -1250,9 +1250,6 @@ procedure EnsureEncoding(var VEncoding : TIdTextEncoding);
 
 var
   IndyPos: TPosProc = nil;
-  {$IFNDEF DOTNET}
-  IndyStrScan: TStrScanProc = nil;
-  {$ENDIF}
   
 {$IFDEF UNIX}
 const
@@ -5189,7 +5186,8 @@ function CharPosInSet(const AString: string; const ACharPos: Integer; const ASet
 {$IFDEF USEINLINE}inline;{$ENDIF}
 {$IFNDEF DOTNET}
 var
-  LStart, LFound: PChar;
+  LChar: Char;
+  I: Integer;
 {$ENDIF}
 begin
   Result := 0;
@@ -5205,12 +5203,12 @@ begin
     //
     // Result := IndyPos(AString[ACharPos], ASet);
     //
-    LStart := PChar(ASet);
-    LFound := IndyStrScan(LStart, AString[ACharPos]);
-    if LFound <> nil then begin
-      // Strings are 1 based. If you compare pointer values, the result
-      // will be zero-based. We do not want to return zero in this case.
-      Result := 1 + ((PtrInt(LFound) - PtrInt(LStart)) {$IFDEF UNICODESTRING}div SizeOf(Char){$ENDIF});
+    LChar := AString[ACharPos];
+    for I := 1 to Length(ASet) do begin
+      if ASet[I] = LChar then begin
+        Result := I;
+        Exit;
+      end;
     end;
     {$ENDIF}
   end;
@@ -5409,14 +5407,11 @@ initialization
   // AnsiPos does not handle strings with #0 and is also very slow compared to Pos
   {$IFDEF DOTNET}
   IndyPos := SBPos;
-  //IndyStrScan := SBStrScan;
   {$ELSE}
   if LeadBytes = [] then begin
     IndyPos := SBPos;
-    IndyStrScan := SBStrScan;
   end else begin
     IndyPos := InternalAnsiPos;
-    IndyStrScan := InternalAnsiStrScan;
   end;
   {$ENDIF}
 
