@@ -576,7 +576,7 @@ type
     procedure ReadBytes(var VBuffer: TIdBytes; AByteCount: Integer; AAppend:boolean=true); virtual;
     // ReadLn
     function ReadLn(AEncoding: TIdTextEncoding = nil): string; overload; // .Net overload
-    function ReadLn(ATerminator: string; AEncoding: TIdTextEncoding = nil): string; overload;
+    function ReadLn(ATerminator: string; AEncoding: TIdTextEncoding): string; overload;
     function ReadLn(ATerminator: string;
              ATimeout: Integer = IdTimeoutDefault;
              AMaxLineLength: Integer = -1;
@@ -1048,7 +1048,7 @@ begin
   Result := ReadLn(LF, IdTimeoutDefault, -1, AEncoding);
 end;
 
-function TIdIOHandler.ReadLn(ATerminator: string; AEncoding: TIdTextEncoding = nil): string;
+function TIdIOHandler.ReadLn(ATerminator: string; AEncoding: TIdTextEncoding): string;
 {$IFDEF USECLASSINLINE}inline;{$ENDIF}
 begin
   Result := ReadLn(ATerminator, IdTimeoutDefault, -1, AEncoding);
