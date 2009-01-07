@@ -847,6 +847,10 @@ begin
                 Break;
               end;
 
+              // retreive the base ContentType with attributes omitted
+              s := LRequestInfo.ContentType;
+              LContentType := Fetch(s, ';');  {Do not Localize}
+
               // Grab Params so we can parse them
               // POSTed data - may exist with GETs also. With GETs, the action
               // params from the form element will be posted
@@ -855,41 +859,47 @@ begin
               // If only the first, the solution is easy. If both - need more
               // investigation.
 
-              // i := StrToIntDef(LRequestInfo.Headers.Values['Content-Length'], -1);    {Do not Localize}
-              LRequestInfo.PostStream := nil;
-              CreatePostStream(AContext, LRequestInfo.RawHeaders, LRequestInfo.FPostStream);
-              if LRequestInfo.FPostStream = nil then begin
-                LRequestInfo.FPostStream := TMemoryStream.Create;    {Do not Localize}
-              end;
+              // RLebeau 1/6/2009: don't create the PostStream unless there is
+              // actually something to read. This should make it easier for the
+              // request handler to know when to use the PostStream and when to
+              // use the (Unparsed)Params instead...
 
-              LRequestInfo.PostStream.Position := 0;
-              if LRequestInfo.ContentLength > 0 then begin
-                IOHandler.ReadStream(LRequestInfo.PostStream, LRequestInfo.ContentLength);
-              end else if LRequestInfo.CommandType = hcPOST then begin
-                if not LRequestInfo.HasContentLength then begin
+              LRequestInfo.PostStream := nil;
+
+              if (LRequestInfo.ContentLength > 0) or
+                ((LRequestInfo.CommandType = hcPOST) and (not LRequestInfo.HasContentLength)) then
+              begin
+                CreatePostStream(AContext, LRequestInfo.RawHeaders, LRequestInfo.FPostStream);
+                if LRequestInfo.FPostStream = nil then begin
+                  LRequestInfo.FPostStream := TMemoryStream.Create;
+                end;
+                LRequestInfo.PostStream.Position := 0;
+
+                if LRequestInfo.ContentLength > 0 then begin
+                  IOHandler.ReadStream(LRequestInfo.PostStream, LRequestInfo.ContentLength);
+                end else begin
                   IOHandler.ReadStream(LRequestInfo.PostStream, -1, True);
                 end;
+                LRequestInfo.PostStream.Position := 0;
+
+                if TextIsSame(LContentType, ContentTypeFormUrlencoded) then
+                begin
+                  LRequestInfo.FormParams := ReadStringAsCharSet(LRequestInfo.PostStream, LRequestInfo.CharSet);
+                  FreeAndNil(LRequestInfo.FPostStream); // don't need the PostStream anymore
+                end;
               end;
-
-              // retreive the base ContentType with attributes omitted
-              s := LRequestInfo.ContentType;
-              LContentType := Fetch(s, ';');  {Do not Localize}
-
-              // reset back to 0 before reading the string from the post stream
-              LRequestInfo.PostStream.Position := 0;
-              if TextIsSame(LContentType, ContentTypeFormUrlencoded) then begin
-                LRequestInfo.FormParams := ReadStringAsCharSet(LRequestInfo.PostStream, LRequestInfo.CharSet);
-              end;
-
-              // reset back to 0 for the OnCommand... event handler
-              LRequestInfo.PostStream.Position := 0;
-              LRequestInfo.UnparsedParams := LRequestInfo.FormParams;
 
               // GET data - may exist with POSTs also
               LRequestInfo.QueryParams := LInputLine;
               LInputLine := Fetch(LRequestInfo.FQueryParams, '?');    {Do not Localize}
+
               // glue together parameters passed in the URL and those
               //
+              // RLebeau: should we really be doing this?  For a GET, it might
+              // makes sense to do, but for a POST the FormParams is the content
+              // and the QueryParams belongs to the URL only, not the content.
+              // We should be keeping everything separate for accuracy...
+              LRequestInfo.UnparsedParams := LRequestInfo.FormParams;
               if Length(LRequestInfo.QueryParams) > 0 then begin
                 if Length(LRequestInfo.UnparsedParams) = 0 then begin
                   LRequestInfo.FUnparsedParams := LRequestInfo.QueryParams;
@@ -913,6 +923,7 @@ begin
               ReadCookiesFromRequestHeader;
 
               // Host
+              // the next line is done in TIdHTTPRequestInfo.ProcessHeaders()...
               // LRequestInfo.FHost := LRequestInfo.Headers.Values['host'];    {Do not Localize}
 
               // Parse the document input line
