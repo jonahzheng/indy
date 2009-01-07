@@ -74,21 +74,20 @@ type
     FRequestInfo   : TIdHTTPRequestInfo;
     FResponseInfo  : TIdHTTPResponseInfo;
     FThread        : TIdContext;
-    FClientCursor  : Integer;
+    FContentStream : TStream;
+    FFreeContentStream : Boolean;
     //
     function GetDateVariable(Index: Integer): TDateTime; override;
     function GetIntegerVariable(Index: Integer): Integer; override;
-    function GetStringVariable(Index: Integer): string; override;
+    function GetStringVariable(Index: Integer): AnsiString; override;
   public
     constructor Create(AThread: TIdContext; ARequestInfo: TIdHTTPRequestInfo;
      AResponseInfo: TIdHTTPResponseInfo);
-    function GetFieldByName(const Name: string): string; override;
-    {$IFDEF CLR}
-    function ReadClient(var Buffer: TBytes; Count: Integer): Integer; override;
-    {$ELSE}
-    function ReadClient(var Buffer; Count: Integer): Integer; override;
-    {$ENDIF}
-    function ReadString(Count: Integer): string; override;
+    destructor Destroy; override;
+    function GetFieldByName(const Name: AnsiString): AnsiString; override;
+    function ReadClient(var Buffer{$IFDEF CLR}: TBytes{$ENDIF}; Count: Integer): Integer; override;
+    function ReadString(Count: Integer): AnsiString; override;
+    {function ReadUnicodeString(Count: Integer): string;}
     function TranslateURI(const URI: string): string; override;
     function WriteClient(var ABuffer; ACount: Integer): Integer; override;
 
@@ -99,9 +98,9 @@ type
     {$DEFINE VCL6ORABOVEORCLR}
     {$ENDIF}
     {$IFDEF VCL6ORABOVEORCLR}
-    function WriteHeaders(StatusCode: Integer; const ReasonString, Headers: string): Boolean; override;
+    function WriteHeaders(StatusCode: Integer; const ReasonString, Headers: AnsiString): Boolean; override;
     {$ENDIF}
-    function WriteString(const AString: string): Boolean; override;
+    function WriteString(const AString: AnsiString): Boolean; override;
   end;
 
   TIdHTTPAppResponse = class(TWebResponse)
@@ -112,16 +111,16 @@ type
     FSent: Boolean;
     FThread: TIdContext;
     //
-    function GetContent: string; override;
+    function GetContent: AnsiString; override;
     function GetDateVariable(Index: Integer): TDateTime; override;
     function GetStatusCode: Integer; override;
     function GetIntegerVariable(Index: Integer): Integer; override;
     function GetLogMessage: string; override;
-    function GetStringVariable(Index: Integer): string; override;
-    procedure SetContent(const AValue: string); override;
+    function GetStringVariable(Index: Integer): AnsiString; override;
+    procedure SetContent(const AValue: AnsiString); override;
     procedure SetContentStream(AValue: TStream); override;
     procedure SetStatusCode(AValue: Integer); override;
-    procedure SetStringVariable(Index: Integer; const Value: string); override;
+    procedure SetStringVariable(Index: Integer; const Value: AnsiString); override;
     procedure SetDateVariable(Index: Integer; const Value: TDateTime); override;
     procedure SetIntegerVariable(Index: Integer; Value: Integer); override;
     procedure SetLogMessage(const Value: string); override;
@@ -129,7 +128,7 @@ type
   public
     constructor Create(AHTTPRequest: TWebRequest; AThread: TIdContext;
      ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
-    procedure SendRedirect(const URI: string); override;
+    procedure SendRedirect(const URI: AnsiString); override;
     procedure SendResponse; override;
     procedure SendStream(AStream: TStream); override;
     function Sent: Boolean; override;
@@ -150,7 +149,8 @@ type
 implementation
 
 uses
-  IdBuffer,  IdHTTPHeaderInfo, IdGlobal, IdCookie, IdStream,
+  IdBuffer, IdHTTPHeaderInfo, IdGlobal, IdGlobalProtocols, IdCookie,
+  {$IFDEF CLR}IdStream,{$ENDIF}
   SysUtils, Math;
 
 //TODO:  Not sure where these really should go.  They should not be in the main packages
@@ -223,24 +223,47 @@ const
 { TIdHTTPAppRequest }
 
 constructor TIdHTTPAppRequest.Create(AThread: TIdContext; ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
-Var
+var
   i: Integer;
 begin
   FThread := AThread;
   FRequestInfo := ARequestInfo;
   FResponseInfo := AResponseInfo;
   inherited Create;
-  FClientCursor := 0;
   for i := 0 to ARequestInfo.Cookies.Count - 1 do begin
     CookieFields.Add(ARequestInfo.Cookies[i].ClientCookie);
   end;
+  if Assigned(FRequestInfo.PostStream) then
+  begin
+    FContentStream := FRequestInfo.PostStream;
+    FFreeContentStream := False;
+  end else
+  begin
+    if FRequestInfo.FormParams <> '' then begin {do not localize}
+      // an input form that was submitted as "application/www-url-encoded"...
+      FContentStream := TStringStream.Create(FRequestInfo.FormParams);
+    end else
+    begin
+      // anything else for now...
+      FContentStream := TStringStream.Create(FRequestInfo.UnparsedParams);
+    end;
+    FFreeContentStream := True;
+  end;
+end;
+
+destructor TIdHTTPAppRequest.Destroy;
+begin
+  if FFreeContentStream then begin
+    FreeAnsNil(FContentStream);
+  end;
+  inherited;
 end;
 
 function TIdHTTPAppRequest.GetDateVariable(Index: Integer): TDateTime;
 var
   LValue: string;
 begin
-  LValue := GetStringVariable(Index);
+  LValue := string(GetStringVariable(Index));
   if Length(LValue) > 0 then begin
     Result := ParseDate(LValue)
   end else begin
@@ -250,39 +273,40 @@ end;
 
 function TIdHTTPAppRequest.GetIntegerVariable(Index: Integer): Integer;
 begin
-  Result := StrToIntDef(GetStringVariable(Index), -1)
+  Result := StrToIntDef(string(GetStringVariable(Index)), -1)
 end;
 
-function TIdHTTPAppRequest.GetStringVariable(Index: Integer): string;
+function TIdHTTPAppRequest.GetStringVariable(Index: Integer): AnsiString;
 var
   s: string;
+  LPos: {$IFDEF SIZE64STREAM}Int64{$ELSE}Integer{$ENDIF};
 begin
   case Index of
-    INDEX_Method          : Result := FRequestInfo.Command;
-    INDEX_ProtocolVersion : Result := FRequestInfo.Version;
-    INDEX_URL             : Result := FRequestInfo.Document;
-    INDEX_Query           : Result := FRequestInfo.UnparsedParams;
-    INDEX_PathInfo        : Result := FRequestInfo.Document;
-    INDEX_PathTranslated  : Result := FRequestInfo.Document;             // it's not clear quite what should be done here - we can't translate to a path
+    INDEX_Method          : Result := AnsiString(FRequestInfo.Command);
+    INDEX_ProtocolVersion : Result := AnsiString(FRequestInfo.Version);
+    INDEX_URL             : Result := AnsiString(FRequestInfo.Document);
+    INDEX_Query           : Result := AnsiString(FRequestInfo.QueryParams);
+    INDEX_PathInfo        : Result := AnsiString(FRequestInfo.Document);
+    INDEX_PathTranslated  : Result := AnsiString(FRequestInfo.Document);             // it's not clear quite what should be done here - we can't translate to a path
     INDEX_CacheControl    : Result := GetFieldByName('CACHE_CONTROL');   {do not localize}
     INDEX_Date            : Result := GetFieldByName('DATE');            {do not localize}
-    INDEX_Accept          : Result := FRequestInfo.Accept;
-    INDEX_From            : Result := FRequestInfo.From;
+    INDEX_Accept          : Result := AnsiString(FRequestInfo.Accept);
+    INDEX_From            : Result := AnsiString(FRequestInfo.From);
     INDEX_Host: begin
       s := FRequestInfo.Host;
-      Result := Fetch(s, ':');
+      Result := AnsiString(Fetch(s, ':'));
     end;
     INDEX_IfModifiedSince : Result := GetFieldByName('IF_MODIFIED_SINCE'); {do not localize}
-    INDEX_Referer         : Result := FRequestInfo.Referer;
-    INDEX_UserAgent       : Result := FRequestInfo.UserAgent;
-    INDEX_ContentEncoding : Result := FRequestInfo.ContentEncoding;
-    INDEX_ContentType     : Result := FRequestInfo.ContentType;
-    INDEX_ContentLength   : Result := IntToStr(Length(FRequestInfo.UnparsedParams));
+    INDEX_Referer         : Result := AnsiString(FRequestInfo.Referer);
+    INDEX_UserAgent       : Result := AnsiString(FRequestInfo.UserAgent);
+    INDEX_ContentEncoding : Result := AnsiString(FRequestInfo.ContentEncoding);
+    INDEX_ContentType     : Result := AnsiString(FRequestInfo.ContentType);
+    INDEX_ContentLength   : Result := AnsiString(IntToStr(FContentStream.Size));
     INDEX_ContentVersion  : Result := GetFieldByName('CONTENT_VERSION'); {do not localize}
     INDEX_DerivedFrom     : Result := GetFieldByName('DERIVED_FROM');    {do not localize}
     INDEX_Expires         : Result := GetFieldByName('EXPIRES');         {do not localize}
     INDEX_Title           : Result := GetFieldByName('TITLE');           {do not localize}
-    INDEX_RemoteAddr      : Result := FRequestInfo.RemoteIP;
+    INDEX_RemoteAddr      : Result := AnsiString(FRequestInfo.RemoteIP);
     INDEX_RemoteHost      : Result := GetFieldByName('REMOTE_HOST');     {do not localize}
     INDEX_ScriptName      : Result := '';
     INDEX_ServerPort: begin
@@ -292,9 +316,23 @@ begin
         s := IntToStr(FThread.Connection.Socket.Binding.Port);
         // Result := '80';
       end;
-      Result := s;
+      Result := AnsiString(s);
     end;
-    INDEX_Content         : Result := FRequestInfo.UnparsedParams;
+    INDEX_Content: begin
+      if FFreeContentStream then
+      begin
+        Result := AnsiString(TStringStream(FContentStream).DataString);
+      end else
+      begin
+        LPos := FContentStream.Position;
+        FContentStream.Position := 0;
+        try
+          Result := AnsiString(ReadStringAsCharSet(FContentStream, FRequestInfo.CharSet));
+        finally
+          FContentStream.Position := LPos;
+        end;
+      end;
+    end;
     INDEX_Connection      : Result := GetFieldByName('CONNECTION');      {do not localize}
     INDEX_Cookie          : Result := '';  // not available at present. FRequestInfo.Cookies....;
     INDEX_Authorization   : Result := GetFieldByName('AUTHORIZATION');   {do not localize}
@@ -303,44 +341,28 @@ begin
   end;
 end;
 
-function TIdHTTPAppRequest.GetFieldByName(const Name: string): string;
+function TIdHTTPAppRequest.GetFieldByName(const Name: AnsiString): AnsiString;
 begin
-  Result := FRequestInfo.RawHeaders.Values[Name];
+  Result := AnsiString(FRequestInfo.RawHeaders.Values[string(Name)]);
 end;
 
-function TIdHTTPAppRequest.ReadClient;
-{$IFDEF CLR}
-var
-  LASCII : System.Text.ASCIIEncoding;
-{$ENDIF}
+function TIdHTTPAppRequest.ReadClient(var Buffer{$IFDEF CLR}: TBytes{$ENDIF};
+  Count: Integer): Integer;
 begin
-  Result := IndyMin(Count, length(FRequestInfo.UnparsedParams)) - FClientCursor;
-  if Result > 0 then begin
-    {$IFDEF CLR}
-    LASCII := System.Text.ASCIIEncoding.Create;
-    LASCII.GetBytes(FRequestInfo.UnparsedParams.ToCharArray(FClientCursor + 1, Result), 0, Result, Buffer, 0);
-    {$ELSE}
-    Move(FRequestInfo.UnparsedParams[FClientCursor + 1], Buffer, Result);
-    {$ENDIF}
-    Inc(FClientCursor, Result);
-  end else begin
-    // well, it shouldn't be less than 0. but let's not take chances
+  {$IFDEF CLR}
+  Result := TIdStreamHelper.ReadBytes(FContentStream, Buffer, Count);
+  {$ELSE}
+  Result := FContentStream.Read(Buffer, Count);
+  {$ENDIF}
+  // well, it shouldn't be less than 0. but let's not take chances
+  if Result < 0 then begin
     Result := 0;
   end;
 end;
 
-function TIdHTTPAppRequest.ReadString(Count: Integer): string;
-var
-  LLength: Integer;
+function TIdHTTPAppRequest.ReadString(Count: Integer): AnsiString;
 begin
-  LLength := IndyMin(Count, length(FRequestInfo.UnparsedParams)) - FClientCursor;
-  if LLength > 0 then
-    begin
-    Result := copy(FRequestInfo.UnparsedParams, FClientCursor, LLength);
-    inc(FClientCursor, LLength);
-    end
-  else
-    Result := '';
+  Result := AnsiString(ReadStringFromStream(FContentStream, Count));
 end;
 
 function TIdHTTPAppRequest.TranslateURI(const URI: string): string;
@@ -351,19 +373,19 @@ begin
 end;
 
 {$IFDEF VCL6ORABOVEORCLR}
-function TIdHTTPAppRequest.WriteHeaders(StatusCode: Integer; const ReasonString, Headers: string): Boolean;
+function TIdHTTPAppRequest.WriteHeaders(StatusCode: Integer; const ReasonString, Headers: AnsiString): Boolean;
 begin
   FResponseInfo.ResponseNo := StatusCode;
-  FResponseInfo.ResponseText := ReasonString;
-  FResponseInfo.CustomHeaders.Add(Headers);
+  FResponseInfo.ResponseText := string(ReasonString);
+  FResponseInfo.CustomHeaders.Add(string(Headers));
   FResponseInfo.WriteHeader;
   Result := True;
 end;
 {$ENDIF}
 
-function TIdHTTPAppRequest.WriteString(const AString: string): Boolean;
+function TIdHTTPAppRequest.WriteString(const AString: AnsiString): Boolean;
 begin
-  FThread.Connection.IOHandler.Write(AString);
+  FThread.Connection.IOHandler.Write(string(AString));
   Result := True;
 end;
 
@@ -399,9 +421,9 @@ begin
   ContentType := 'text/html'; {do not localize}
 end;
 
-function TIdHTTPAppResponse.GetContent: string;
+function TIdHTTPAppResponse.GetContent: AnsiString;
 begin
-  Result := FResponseInfo.ContentText;
+  Result := AnsiString(FResponseInfo.ContentText);
 end;
 
 function TIdHTTPAppResponse.GetLogMessage: string;
@@ -458,53 +480,53 @@ begin
   end;
 end;
 
-function TIdHTTPAppResponse.GetStringVariable(Index: Integer): string;
+function TIdHTTPAppResponse.GetStringVariable(Index: Integer): AnsiString;
 begin
   //TODO: resource string these
   case Index of
-    INDEX_RESP_Version           :Result := FRequestInfo.Version;
-    INDEX_RESP_ReasonString      :Result := FResponseInfo.ResponseText;
-    INDEX_RESP_Server            :Result := FResponseInfo.Server;
-    INDEX_RESP_WWWAuthenticate   :Result := FResponseInfo.WWWAuthenticate.Text;
-    INDEX_RESP_Realm             :Result := FResponseInfo.AuthRealm;
-    INDEX_RESP_Allow             :Result := FResponseInfo.CustomHeaders.Values['Allow'];        {do not localize}
-    INDEX_RESP_Location          :Result := FResponseInfo.Location;
-    INDEX_RESP_ContentEncoding   :Result := FResponseInfo.ContentEncoding;
-    INDEX_RESP_ContentType       :Result := FResponseInfo.ContentType;
-    INDEX_RESP_ContentVersion    :Result := FResponseInfo.ContentVersion;
-    INDEX_RESP_DerivedFrom       :Result := FResponseInfo.CustomHeaders.Values['Derived-From']; {do not localize}
-    INDEX_RESP_Title             :Result := FResponseInfo.CustomHeaders.Values['Title'];        {do not localize}
+    INDEX_RESP_Version           :Result := AnsiString(FRequestInfo.Version);
+    INDEX_RESP_ReasonString      :Result := AnsiString(FResponseInfo.ResponseText);
+    INDEX_RESP_Server            :Result := AnsiString(FResponseInfo.Server);
+    INDEX_RESP_WWWAuthenticate   :Result := AnsiString(FResponseInfo.WWWAuthenticate.Text);
+    INDEX_RESP_Realm             :Result := AnsiString(FResponseInfo.AuthRealm);
+    INDEX_RESP_Allow             :Result := AnsiString(FResponseInfo.CustomHeaders.Values['Allow']);        {do not localize}
+    INDEX_RESP_Location          :Result := AnsiString(FResponseInfo.Location);
+    INDEX_RESP_ContentEncoding   :Result := AnsiString(FResponseInfo.ContentEncoding);
+    INDEX_RESP_ContentType       :Result := AnsiString(FResponseInfo.ContentType);
+    INDEX_RESP_ContentVersion    :Result := AnsiString(FResponseInfo.ContentVersion);
+    INDEX_RESP_DerivedFrom       :Result := AnsiString(FResponseInfo.CustomHeaders.Values['Derived-From']); {do not localize}
+    INDEX_RESP_Title             :Result := AnsiString(FResponseInfo.CustomHeaders.Values['Title']);        {do not localize}
   else
     raise EWBBInvalidIdxGetStrVariable.Create(Format(RSWBBInvalidIdxGetStrVariable,[ IntToStr(Index)]));
   end;
 end;
 
-procedure TIdHTTPAppResponse.SetStringVariable(Index: Integer; const Value: string);
+procedure TIdHTTPAppResponse.SetStringVariable(Index: Integer; const Value: AnsiString);
 begin
   //TODO: resource string these
   case Index of
     INDEX_RESP_Version           :EWBBInvalidStringVar.Create(RSWBBInvalidStringVar);
-    INDEX_RESP_ReasonString      :FResponseInfo.ResponseText := Value;
-    INDEX_RESP_Server            :FResponseInfo.Server := Value;
-    INDEX_RESP_WWWAuthenticate   :FResponseInfo.WWWAuthenticate.Text := Value;
-    INDEX_RESP_Realm             :FResponseInfo.AuthRealm := Value;
-    INDEX_RESP_Allow             :FResponseInfo.CustomHeaders.Values['Allow'] := Value; {do not localize}
-    INDEX_RESP_Location          :FResponseInfo.Location := Value;
-    INDEX_RESP_ContentEncoding   :FResponseInfo.ContentEncoding := Value;
-    INDEX_RESP_ContentType       :FResponseInfo.ContentType := Value;
-    INDEX_RESP_ContentVersion    :FResponseInfo.ContentVersion := Value;
-    INDEX_RESP_DerivedFrom       :FResponseInfo.CustomHeaders.Values['Derived-From'] := Value;  {do not localize}
-    INDEX_RESP_Title             :FResponseInfo.CustomHeaders.Values['Title'] := Value; {do not localize}
+    INDEX_RESP_ReasonString      :FResponseInfo.ResponseText := string(Value);
+    INDEX_RESP_Server            :FResponseInfo.Server := string(Value);
+    INDEX_RESP_WWWAuthenticate   :FResponseInfo.WWWAuthenticate.Text := string(Value);
+    INDEX_RESP_Realm             :FResponseInfo.AuthRealm := string(Value);
+    INDEX_RESP_Allow             :FResponseInfo.CustomHeaders.Values['Allow'] := string(Value); {do not localize}
+    INDEX_RESP_Location          :FResponseInfo.Location := string(Value);
+    INDEX_RESP_ContentEncoding   :FResponseInfo.ContentEncoding := string(Value);
+    INDEX_RESP_ContentType       :FResponseInfo.ContentType := string(Value);
+    INDEX_RESP_ContentVersion    :FResponseInfo.ContentVersion := string(Value);
+    INDEX_RESP_DerivedFrom       :FResponseInfo.CustomHeaders.Values['Derived-From'] := string(Value);  {do not localize}
+    INDEX_RESP_Title             :FResponseInfo.CustomHeaders.Values['Title'] := string(Value); {do not localize}
   else
     raise EWBBInvalidIdxSetStringVar.Create( Format(RSWBBInvalidIdxSetStringVar,[IntToStr(Index)]));                   {do not localize}
   end;
 end;
 
-procedure TIdHTTPAppResponse.SendRedirect(const URI: string);
+procedure TIdHTTPAppResponse.SendRedirect(const URI: AnsiString);
 begin
   FSent := True;
   MoveCookiesAndCustomHeaders;
-  FResponseInfo.Redirect(URI);
+  FResponseInfo.Redirect(string(URI));
 end;
 
 procedure TIdHTTPAppResponse.SendResponse;
@@ -526,10 +548,13 @@ begin
   Result := FSent;
 end;
 
-procedure TIdHTTPAppResponse.SetContent(const AValue: string);
+procedure TIdHTTPAppResponse.SetContent(const AValue: AnsiString);
+var
+ LValue : string;
 begin
-  FResponseInfo.ContentText := AValue;
-  FResponseInfo.ContentLength := Length(AValue);
+  LValue := string(AValue);
+  FResponseInfo.ContentText := LValue;
+  FResponseInfo.ContentLength := Length(LValue);
 end;
 
 procedure TIdHTTPAppResponse.SetLogMessage(const Value: string);
@@ -554,7 +579,7 @@ Var
 begin
   for i := 0 to Cookies.Count - 1 do begin
     with FResponseInfo.Cookies.Add do begin
-      CookieText := Cookies[i].HeaderValue
+      CookieText := string(Cookies[i].HeaderValue)
     end;
   end;
   FResponseInfo.CustomHeaders.Clear;
