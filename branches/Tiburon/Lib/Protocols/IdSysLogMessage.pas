@@ -118,10 +118,6 @@ type
     procedure SetProcess(const AValue: String);
     function GetText: String;
     procedure SetText(const AValue: String);
-    function GetMaxTagLength : Integer;
-    //extract the PID part into a SysLog PID including []
-    function PIDToStr(APID : Integer) : String; virtual;
-
   public
     procedure Assign(Source: TPersistent); override;
   published
@@ -409,6 +405,24 @@ begin
       result := STR_SYSLOG_FACILITY_UNKNOWN;
   end;    // case
 end;
+
+function ExtractAlphaNumericStr(var VString : String) : String;
+var
+  i, len : Integer;
+begin
+  len := 0;  
+  for i := 1 to IndyMax(Length(VString), 32) do begin
+    //numbers or alphabet only
+    if IsAlphaNumeric(VString[i]) then begin
+      Inc(len);
+    end else begin
+      Break;
+    end;
+  end;
+  Result := Copy(VString, 1, len);
+  VString := Copy(VString, len+1, MaxInt);
+end;
+
 { TIdSysLogMessage }
 
 procedure TIdSysLogMessage.Assign(Source: TPersistent);
@@ -726,20 +740,6 @@ begin
   end;
 end;
 
-function TIdSysLogMsgPart.GetMaxTagLength: Integer;
-begin
-  Result := 32 - Length(PIDToStr(PID));
-end;
-
-function TIdSysLogMsgPart.PIDToStr(APID: Integer): String;
-begin
-  if FPIDAvailable then begin
-    Result := IndyFormat('[%d]:', [APID]);    {Do not Localize}
-  end else begin
-    Result := ':';    {Do not Localize}
-  end;
-end;
-
 procedure TIdSysLogMsgPart.SetPID(AValue: Integer);
 begin
   FPID := AValue;
@@ -747,32 +747,24 @@ begin
 end;
 
 procedure TIdSysLogMsgPart.SetProcess(const AValue: String);
-
-  function AlphaNumericStr(const AString : String) : String;
   var
-    i : Integer;
-  begin
-    for i := 1 to Length(AString) do begin
-      //numbers or alphabet only
-      if IsAlphaNumeric(AString[i]) then begin
-        Result := Result + AString[i];
-      end else begin
-        Break;
-      end;
-    end;
-  end;
-
+  LTmp: String;
 begin
-  //we have to ensure that the TAG field will never be greater than 32 charactors
+  //we have to ensure that the TAG field will never be greater than 32 characters
   //and the program name must contain alphanumeric characters
-  FProcess := AlphaNumericStr(Copy(AValue, 1, GetMaxTagLength));
+  LTmp := AValue;
+  FProcess := ExtractAlphaNumericStr(LTmp);
 end;
 
 function TIdSysLogMsgPart.GetText: String;
 begin
-  Result := Process + PIDToStr(PID) + Content;
-  if (not PIDAvailable) and (Result = ':') then begin   {Do not Localize}
-    Result := '';    {Do not Localize}
+  Result := Process;
+  if FPIDAvailable then begin
+    Result := Result + IndyFormat('[%d]', [FPID]); {Do not Localize}
+  end;
+  Result := Result + ': ' + Content; {Do not Localize}
+  if Result = ': ' then begin {Do not Localize}
+    Result := '';
   end;
 end;
 
@@ -786,19 +778,21 @@ begin
   FContent := '';  {Do not Localize}
 
   SBuf := AValue;
-  if Pos(':', SBuf) > 1 then begin   {Do not Localize}
-    FProcess := Fetch(SBuf, ':');    {Do not Localize}
-    FContent := SBuf;
-    if Pos('[', FProcess) > 0 then begin   {Do not Localize}
-      SBuf := FProcess;
-      FProcess := Fetch(SBuf, '[');    {Do not Localize}
-      SBuf := Fetch(SBuf, ']');        {Do not Localize}
-      if Length(SBuf) > 0 then begin
-        FPID := IndyStrToInt(SBuf, -1);
-        FPIDAvailable := FPID <> -1;
-      end;
-    end;
+  FProcess := ExtractAlphaNumericStr(SBuf);
+
+  if TextStartsWith(SBuf, '[') then begin  {Do not Localize}
+    SBuf := Copy(SBuf, 2, MaxInt);
+    FPID := IndyStrToInt(Fetch(SBuf, ']'), -1);  {Do not Localize}
+    FPIDAvailable := FPID <> -1;
   end;
+  if TextStartsWith(SBuf, ': ') then begin  {Do not Localize}
+    SBuf := Copy(SBuf, 3, MaxInt);
+  end
+  else if TextStartsWith(SBuf, ':') or TextStartsWith(SBuf, ' ') then begin  {Do not Localize}
+    SBuf := Copy(SBuf, 2, MaxInt);
+  end;
+
+  FContent := SBuf;
 end;
 
 end.
