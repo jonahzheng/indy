@@ -488,6 +488,7 @@ var
     T := T + EndEncode;
   end;
 
+  // RLebeau: how is this different from what CharRange() produces?
   function CreateEncodeRange(AStart, AEnd: Char): String;
   var
     LBuf: TIdBytes;
@@ -509,7 +510,12 @@ begin
     Exit;
   end;//if
 
-  csNeedEncode := CreateEncodeRange(#0, #31) + CreateEncodeRange(#127, #255) + Specials;
+  // RLebeau 1/7/09: using Char() for #128-#255 because in D2009, the compiler
+  // may change characters >= #128 from their Ansi codepage value to their true
+  // Unicode codepoint value, depending on the codepage used for the source code.
+  // For instance, #128 may become #$20AC...
+
+  csNeedEncode := CreateEncodeRange(#0, #31) + CreateEncodeRange(#127, Char(255)) + Specials;
   csReqQuote := csNeedEncode + '?=_ ';   {Do not Localize}
   BeginEncode := '=?' + MimeCharSet + '?' + HeaderEncoding + '?';    {Do not Localize}
   EndEncode := '?=';  {Do not Localize}

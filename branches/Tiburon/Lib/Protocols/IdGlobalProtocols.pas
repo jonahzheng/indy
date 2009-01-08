@@ -1748,6 +1748,10 @@ end;
 
 function StrToMonth(const AMonth: string): Byte;
 const
+  // RLebeau 1/7/09: using Char() for #128-#255 because in D2009, the compiler
+  // may change characters >= #128 from their Ansi codepage value to their true
+  // Unicode codepoint value, depending on the codepage used for the source code.
+  // For instance, #128 may become #$20AC...
   Months: array[0..7] of array[1..12] of string = (
     ('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'),   // English
 	  //Netware Print Services may return a 4 char month such as Sept
@@ -1755,8 +1759,8 @@ const
     ('',    '',    'MRZ', '',    'MAI', '',    '',    '',    '',    'OKT', '',    'DEZ'),   // German
     ('ENO', 'FBRO','MZO', 'AB',  '',    '',    '',    'AGTO','SBRE','OBRE','NBRE','DBRE'),  // Spanish
     ('',    '',    'MRT', '',    'MEI', '',    '',    '',    '',    'OKT', '',    ''),      // Dutch
-    ('JANV','F'+#$C9+'V', 'MARS','AVR', 'MAI', 'JUIN','JUIL','AO'+#$DB, 'SEPT','',    '',    'D'+#$C9+'C'),   // French
-    ('',    'F'+#$C9+'VR','',    '',    '',    '',    'JUI',    'AO'+#$DB+'T','',    '',    '',    ''),   // French (alt)
+    ('JANV','F'+Char($C9)+'V', 'MARS','AVR', 'MAI', 'JUIN','JUIL','AO'+Char($DB), 'SEPT','',    '',    'D'+Char($C9)+'C'),   // French
+    ('',    'F'+Char($C9)+'VR','',    '',    '',    '',    'JUI',    'AO'+Char($DB)+'T','',    '',    '',    ''),   // French (alt)
     ('',    '',     '',   '', 'MAJ',    '',    '',       '',     'AVG',    '',    '',  ''));     // Slovenian
 var
   i: Integer;
@@ -1975,27 +1979,17 @@ begin
     // meaning is not known SHOULD be considered equivalent to "-0000"
     // unless there is out-of-band information confirming their meaning.
 
-    if (sTmp[1] <> '-') and (sTmp[1] <> '+') then begin  {do not localize}
-      if TextIsSame(sTmp, 'UT') or TextIsSame(sTmp, 'GMT') then begin {do not localize}
-        // sTmp := '+0000'; {do not localize}
-        Exit;
-      end
-      else if TextIsSame(sTmp, 'EDT') then begin {do not localize}
-        sTmp := '-0400'; {do not localize}
-      end
-      else if TextIsSame(sTmp, 'EST') or TextIsSame(sTmp, 'CDT') then begin {do not localize}
-        sTmp := '-0500'; {do not localize}
-      end
-      else if TextIsSame(sTmp, 'CST') or TextIsSame(sTmp, 'MDT') then begin {do not localize}
-        sTmp := '-0600'; {do not localize}
-      end
-      else if TextIsSame(sTmp, 'MST') or TextIsSame(sTmp, 'PDT') then begin {do not localize}
-        sTmp := '-0700'; {do not localize}
-      end
-      else if TextIsSame(sTmp, 'PST') then begin
-        sTmp := '-0800'; {do not localize}
-      end else begin
-        Exit;
+    if (sTmp[1] <> '-') and (sTmp[1] <> '+') then {do not localize}
+    begin
+      case PosInStrArray(sTmp, ['UT','GMT','EDT','EST','CDT','CST','MDT','MST','PDT','PST']) of {do not localize}
+        0, 1: sTmp := '+0000'; {do not localize}
+        2:    sTmp := '-0400'; {do not localize}
+        3, 4: sTmp := '-0500'; {do not localize}
+        5, 6: sTmp := '-0600'; {do not localize}
+        7, 8: sTmp := '-0700'; {do not localize}
+        9:    sTmp := '-0800'; {do not localize}
+      else
+        sTmp := '-0000' {do not localize}
       end;
     end;
     if Length(sTmp) >= 5 then begin

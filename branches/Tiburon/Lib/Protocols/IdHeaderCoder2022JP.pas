@@ -18,7 +18,12 @@ type
 implementation
 
 const
-  kana_tbl : array[#$A1..#$DF] of Word = (
+  // RLebeau 1/7/09: using integers for #128-#255 because in D2009, the compiler
+  // may change characters >= #128 from their Ansi codepage value to their true
+  // Unicode codepoint value, depending on the codepage used for the source code.
+  // For instance, #128 may become #$20AC...
+
+  kana_tbl : array[161..223{#$A1..#$DF}] of Word = (
     $2123,$2156,$2157,$2122,$2126,$2572,$2521,$2523,$2525,$2527,
     $2529,$2563,$2565,$2567,$2543,$213C,$2522,$2524,$2526,$2528,
     $252A,$252B,$252D,$252F,$2531,$2533,$2535,$2537,$2539,$253B,
@@ -27,7 +32,7 @@ const
     $2562,$2564,$2566,$2568,$2569,$256A,$256B,$256C,$256D,$256F,
     $2573,$212B,$212C);
 
-  vkana_tbl : array[#$A1..#$DF] of Word = (
+  vkana_tbl : array[161..223{#$A1..#$DF}] of Word = (
     $0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,
     $0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$2574,$0000,
     $0000,$252C,$252E,$2530,$2532,$2534,$2536,$2538,$253A,$253C,
@@ -36,9 +41,7 @@ const
     $0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,
     $0000,$0000,$0000);
 
-  // for some reason, I get this error with DotNET that doesn't happen in Win32:
-  // [DCC Error] IdHeaderCoder2022JP.pas(39): E2011 Low bound exceeds high bound
-  sj1_tbl : array[128..255] of byte = (//#128..#255] of Byte = (
+  sj1_tbl : array[128..255{#128..#255}] of byte = (
     $00,$21,$23,$25,$27,$29,$2B,$2D,$2F,$31,$33,$35,$37,$39,$3B,$3D,
     $3F,$41,$43,$45,$47,$49,$4B,$4D,$4F,$51,$53,$55,$57,$59,$5B,$5D,
     $00,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,
@@ -48,9 +51,7 @@ const
     $5F,$61,$63,$65,$67,$69,$6B,$6D,$6F,$71,$73,$75,$77,$79,$7B,$7D,
     $02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$00,$00,$00);
 
-  // RLebeau: for some reason, produces this error in D2009:
-  // [DCC Error] IdHeaderCoder2022JP.pas(78): E2072 Number of elements (256) differs from declaration (730)
-  sj2_tbl : array[0..255] of Word = (//#0..#255] of Word = (
+  sj2_tbl : array[0..255{#0..#255}] of Word = (
     $0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,
     $0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,
     $0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,$0000,
@@ -185,20 +186,26 @@ begin
             isK := True;
           end;
           { simple SBCS -> DBCS conversion                         }
-          K2 := kana_tbl[AnsiChar(AData[I])];
+          K2 := kana_tbl[Ord(AData[I])];
           if (I < L) and ((Ord(AData[I+1]) and $FE) = $DE) then
           begin  { convert kana + voiced mark to voiced kana }
-            K3 := vkana_tbl[AnsiChar(AData[I])];
+            K3 := vkana_tbl[Ord(AData[I])];
             // This is an if and not a case because of a D8 bug, return to
             // case when d8 patch is released
-            if AData[I+1] = #$DE then begin  { voiced }
+
+            // RLebeau 1/7/09: using Char() for #128-#255 because in D2009, the compiler
+            // may change characters >= #128 from their Ansi codepage value to their true
+            // Unicode codepoint value, depending on the codepage used for the source code.
+            // For instance, #128 may become #$20AC...
+
+            if AData[I+1] = Char($DE) then begin  { voiced }
               if K3 <> 0 then
               begin
                 K2 := K3;
                 Inc(I);
               end;
             end
-            else if AData[I+1] = #$DF then begin  { semivoiced }
+            else if AData[I+1] = Char($DF) then begin  { semivoiced }
               if (K3 >= $2550) and (K3 <= $255C) then
               begin
                 K2 := K3 + 1;

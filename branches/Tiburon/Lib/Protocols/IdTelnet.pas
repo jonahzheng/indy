@@ -98,83 +98,88 @@ uses
   IdTCPClient, IdThread;
 
 const
+  // RLebeau 1/7/09: using Char() for #128-#255 because in D2009, the compiler
+  // may change characters >= #128 from their Ansi codepage value to their true
+  // Unicode codepoint value, depending on the codepage used for the source code.
+  // For instance, #128 may become #$20AC...
+
   { These are the telnet command constansts from RFC 854 }
-  TNC_EOR                = #239;    // End of Record RFC 885
-  TNC_SE                 = #240;    // End of subnegotiation parameters.
-  TNC_NOP                = #241;    // No operation.
-  TNC_DATA_MARK          = #242;    // The data stream portion of a Synch.
-                                    // This should always be accompanied
-                                    // by a TCP Urgent notification.
-  TNC_BREAK              = #243;    // NVT character BRK.
-  TNC_IP                 = #244;    // The function IP.
-  TNC_AO                 = #245;    // The function ABORT OUTPUT.
-  TNC_AYT                = #246;    // The function ARE YOU THERE.
-  TNC_EC                 = #247;    // The function ERASE CHARACTER.
-  TNC_EL                 = #248;    // The function ERASE LINE.
-  TNC_GA                 = #249;    // The GO AHEAD signal.
-  TNC_SB                 = #250;    // Indicates that what follows is
-                                    // subnegotiation of the indicated
-                                    // option.
-  TNC_WILL               = #251;    // Indicates the desire to begin
-                                    // performing, or confirmation that
-                                    // you are now performing, the
-                                    // indicated option.
-  TNC_WONT               = #252;    // Indicates the refusal to perform,
-                                    // or continue performing, the
-                                    // indicated option.
-  TNC_DO                 = #253;    // Indicates the request that the
-                                    // other party perform, or
-                                    // confirmation that you are expecting
-                                    // the other party to perform, the
-                                    // indicated option.
-  TNC_DONT               = #254;    // Indicates the demand that the
-                                    // other party stop performing,
-                                    // or confirmation that you are no
-                                    // longer expecting the other party
-                                    // to perform, the indicated option.
-  TNC_IAC                = #255;    // Data Byte 255.
+  TNC_EOR                = Char(239);   // End of Record RFC 885
+  TNC_SE                 = Char(240);   // End of subnegotiation parameters.
+  TNC_NOP                = Char(241);   // No operation.
+  TNC_DATA_MARK          = Char(242);   // The data stream portion of a Synch.
+                                        // This should always be accompanied
+                                        // by a TCP Urgent notification.
+  TNC_BREAK              = Char(243);   // NVT character BRK.
+  TNC_IP                 = Char(244);   // The function IP.
+  TNC_AO                 = Char(245);   // The function ABORT OUTPUT.
+  TNC_AYT                = Char(246);   // The function ARE YOU THERE.
+  TNC_EC                 = Char(247);   // The function ERASE CHARACTER.
+  TNC_EL                 = Char(248);   // The function ERASE LINE.
+  TNC_GA                 = Char(249);   // The GO AHEAD signal.
+  TNC_SB                 = Char(250);   // Indicates that what follows is
+                                        // subnegotiation of the indicated
+                                        // option.
+  TNC_WILL               = Char(251);   // Indicates the desire to begin
+                                        // performing, or confirmation that
+                                        // you are now performing, the
+                                        // indicated option.
+  TNC_WONT               = Char(252);   // Indicates the refusal to perform,
+                                        // or continue performing, the
+                                        // indicated option.
+  TNC_DO                 = Char(253);   // Indicates the request that the
+                                        // other party perform, or
+                                        // confirmation that you are expecting
+                                        // the other party to perform, the
+                                        // indicated option.
+  TNC_DONT               = Char(254);   // Indicates the demand that the
+                                        // other party stop performing,
+                                        // or confirmation that you are no
+                                        // longer expecting the other party
+                                        // to perform, the indicated option.
+  TNC_IAC                = Char(255);   // Data Byte 255.
 
   { Telnet options from RFC 1010 }
-  TNO_BINARY             = #0;      // Binary Transmission
-  TNO_ECHO               = #1;      // Echo
-  TNO_RECONNECT          = #2;      // Reconnection
-  TNO_SGA                = #3;      // Suppress Go Ahead
-  TNO_AMSN               = #4;      // Approx Message Size Negotiation
-  TNO_STATUS             = #5;      // Status
-  TNO_TIMING_MARK        = #6;      // Timing Mark
-  TNO_RCTE               = #7;      // Remote Controlled Trans and Echo -BELL
-  TNO_OLW                = #8;      // Output Line Width
-  TNO_OPS                = #9;      // Output Page Size
-  TNO_OCRD               = #10;     // Output Carriage-Return Disposition
-  TNO_OHTS               = #11;     // Output Horizontal Tab Stops
-  TNO_OHTD               = #12;     // Output Horizontal Tab Disposition
-  TNO_OFD                = #13;     // Output Formfeed Disposition
-  TNO_OVT                = #14;     // Output Vertical Tabstops
-  TNO_OVTD               = #15;     // Output Vertical Tab Disposition
-  TNO_OLD                = #16;     // Output Linefeed Disposition
-  TNO_EA                 = #17;     // Extended ASCII
-  TNO_LOGOUT             = #18;     // Logout
-  TNO_BYTE_MACRO         = #19;     // Byte Macro
-  TNO_DET                = #20;     // Data Entry Terminal
-  TNO_SUPDUP             = #21;     // SUPDUP
-  TNO_SUPDUP_OUTPUT      = #22;     // SUPDUP Output
-  TNO_SL                 = #23;     // Send Location
-  TNO_TERMTYPE           = #24;     // Terminal Type
-  TNO_EOR                = #25;     // End of Record
-  TNO_TACACS_ID          = #26;     // TACACS User Identification
-  TNO_OM                 = #27;     // Output Marking
-  TNO_TLN                = #28;     // Terminal Location Number
-  TNO_3270REGIME         = #29;     // 3270 regime
-  TNO_X3PAD	         = #30;     // X.3 PAD
-  TNO_NAWS      	 = #31;     // Window size
-  TNO_TERM_SPEED         = #32;     // Terminal speed
-  TNO_RFLOW              = #33;     // Remote flow control
-  TNO_LINEMODE           = #34;     // Linemode option
-  TNO_XDISPLOC	         = #35;     // X Display Location
-  TNO_AUTH               = #37;     // Authenticate
-  TNO_ENCRYPT            = #38;     // Encryption option
+  TNO_BINARY             = #0;        // Binary Transmission
+  TNO_ECHO               = #1;        // Echo
+  TNO_RECONNECT          = #2;        // Reconnection
+  TNO_SGA                = #3;        // Suppress Go Ahead
+  TNO_AMSN               = #4;        // Approx Message Size Negotiation
+  TNO_STATUS             = #5;        // Status
+  TNO_TIMING_MARK        = #6;        // Timing Mark
+  TNO_RCTE               = #7;        // Remote Controlled Trans and Echo -BELL
+  TNO_OLW                = #8;        // Output Line Width
+  TNO_OPS                = #9;        // Output Page Size
+  TNO_OCRD               = #10;       // Output Carriage-Return Disposition
+  TNO_OHTS               = #11;       // Output Horizontal Tab Stops
+  TNO_OHTD               = #12;       // Output Horizontal Tab Disposition
+  TNO_OFD                = #13;       // Output Formfeed Disposition
+  TNO_OVT                = #14;       // Output Vertical Tabstops
+  TNO_OVTD               = #15;       // Output Vertical Tab Disposition
+  TNO_OLD                = #16;       // Output Linefeed Disposition
+  TNO_EA                 = #17;       // Extended ASCII
+  TNO_LOGOUT             = #18;       // Logout
+  TNO_BYTE_MACRO         = #19;       // Byte Macro
+  TNO_DET                = #20;       // Data Entry Terminal
+  TNO_SUPDUP             = #21;       // SUPDUP
+  TNO_SUPDUP_OUTPUT      = #22;       // SUPDUP Output
+  TNO_SL                 = #23;       // Send Location
+  TNO_TERMTYPE           = #24;       // Terminal Type
+  TNO_EOR                = #25;       // End of Record
+  TNO_TACACS_ID          = #26;       // TACACS User Identification
+  TNO_OM                 = #27;       // Output Marking
+  TNO_TLN                = #28;       // Terminal Location Number
+  TNO_3270REGIME         = #29;       // 3270 regime
+  TNO_X3PAD              = #30;       // X.3 PAD
+  TNO_NAWS               = #31;       // Window size
+  TNO_TERM_SPEED         = #32;       // Terminal speed
+  TNO_RFLOW              = #33;       // Remote flow control
+  TNO_LINEMODE           = #34;       // Linemode option
+  TNO_XDISPLOC           = #35;       // X Display Location
+  TNO_AUTH               = #37;       // Authenticate
+  TNO_ENCRYPT            = #38;       // Encryption option
 
-  TNO_EOL                = #255;    // Extended-Options-List                               [84,JBP]
+  TNO_EOL                = Char(255); // Extended-Options-List                               [84,JBP]
 
   // Sub options
   TNOS_TERM_IS           = #0;

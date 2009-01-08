@@ -748,10 +748,16 @@ function IsLineStr(const AData : String): Boolean;
 //see if this is just a line with spaces, '-', or tabs so we
 //can skip it in the parser
 const
-//Note that there are two separate char codes are rended as '-' in the line below.
-//Be careful when editing because the codes are different.
-//  LineSet = [' ','-','–','+'];    {Do not Localize}
-  LineSet = ' -'+#$96+'+'; //BGO: for DotNet, what to do with this    {Do not Localize}
+  //Note that there are two separate char codes are rended as '-' in the line below.
+  //Be careful when editing because the codes are different.
+  //  LineSet = [' ','-','–','+'];    {Do not Localize}
+
+  // RLebeau 1/7/09: using Char() for #128-#255 because in D2009, the compiler
+  // may change characters >= #128 from their Ansi codepage value to their true
+  // Unicode codepoint value, depending on the codepage used for the source code.
+  // For instance, #128 may become #$20AC...
+
+  LineSet = ' -'+Char($96)+'+'; //BGO: for DotNet, what to do with this    {Do not Localize}
 var
   i: Integer;
   LLen: Integer;

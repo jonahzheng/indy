@@ -2166,11 +2166,16 @@ end;
 
 function IsBig5(ch1, ch2:char) : boolean;
 begin
-  if (not (((ch1 >= #161) and (ch1 <= #254)) or
-    ((ch1 >= #142) and (ch1 <= #160)) or
-    ((ch1 >= #129) and (ch1 <= #141))) ) or
+  // RLebeau 1/7/09: using Char() for #128-#255 because in D2009, the compiler
+  // may change characters >= #128 from their Ansi codepage value to their true
+  // Unicode codepoint value, depending on the codepage used for the source code.
+  // For instance, #128 may become #$20AC...
+
+  if (not (((ch1 >= Char(161)) and (ch1 <= Char(254))) or
+    ((ch1 >= Char(142)) and (ch1 <= Char(160))) or
+    ((ch1 >= Char(129)) and (ch1 <= Char(141)))) ) or
     (not (((ch2 >= #64) and (ch2 <= #126)) or
-    ((ch2 >= #161) and (ch2 <= #254))) ) then
+    ((ch2 >= Char(161)) and (ch2 <= Char(254)))) ) then
    begin
     Result := False;
   end else begin

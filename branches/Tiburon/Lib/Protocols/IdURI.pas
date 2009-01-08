@@ -226,9 +226,10 @@ begin
     Delete(LURI, 1, LTokenPos + 2);
     // separate the path from the parameters
     LTokenPos := IndyPos('?', LURI);    {Do not Localize}
-    if LTokenPos = 0 then begin
-      LTokenPos := IndyPos('=', LURI);    {Do not Localize}
-    end;
+    // RLebeau: this is BAD! It messes up JSP and similar URLs that use '=' characters in the document
+    {if LTokenPos = 0 then begin
+      LTokenPos := IndyPos('=', LURI);    {Do not Localize
+    end;}
     if LTokenPos > 0 then begin
       FParams := Copy(LURI, LTokenPos + 1, MaxInt);
       LURI := Copy(LURI, 1, LTokenPos - 1);
@@ -268,9 +269,10 @@ begin
   end else begin
     // received an absolute path, not an URI
     LTokenPos := IndyPos('?', LURI);    {Do not Localize}
-    if LTokenPos = 0 then begin
-      LTokenPos := IndyPos('=', LURI);    {Do not Localize}
-    end;
+    // RLebeau: this is BAD! It messes up JSP and similar URLs that use '=' characters in the document
+    {if LTokenPos = 0 then begin
+      LTokenPos := IndyPos('=', LURI);    {Do not Localize
+    end;}
     if LTokenPos > 0 then begin // The case when there is parameters after the document name
       FParams := Copy(LURI, LTokenPos + 1, MaxInt);
       LURI := Copy(LURI, 1, LTokenPos - 1);
@@ -361,7 +363,13 @@ begin
     // S.G. 27/11/2002: a new parameter"
     // S.G. 27/11/2002: ref: Message-ID: <3de30169@newsgroups.borland.com> borland.public.delphi.internet.winsock
     // S.G. 27/11/2002: Most low-ascii is actually Ok in parameters encoding.
-    if CharIsInSet(ASrc, I, UnsafeChars) or (not CharIsInSet(ASrc, I, CharRange(#33,#128))) then begin {do not localize}
+
+    // RLebeau 1/7/09: using Char() for #128-#255 because in D2009, the compiler
+    // may change characters >= #128 from their Ansi codepage value to their true
+    // Unicode codepoint value, depending on the codepage used for the source code.
+    // For instance, #128 may become #$20AC...
+
+    if CharIsInSet(ASrc, I, UnsafeChars) or (not CharIsInSet(ASrc, I, CharRange(#33, Char(128)))) then begin {do not localize}
       {$IFDEF UNICODESTRING}
       Len := CalcUTF16CharLength(ASrc, I); // calculate length including surrogates
       U := UTF8String(Copy(ASrc, I, Len)); // explicit Unicode->UTF8 conversion
