@@ -6155,19 +6155,8 @@ var
     decode any UTF-8 data into a Unicode string afterwards if
     needed }
   LLine: TIdBytes;
+  LReply: TIdBytes;
   Finished: Boolean;
-const
-{
-  //These are the telnet commands we have to deal with
-  TELNET_DO = #$FF#$FD;
-  TELNET_WILL = #$FF#$FB;
-  TELNET_IAC = #$FF#$FF;  //interpret as data $FF
-}
-  //replies
-  TELNET_WONT = #$FF#$FC; //Telnet - I won't use
-  TELNET_DONT = #$FF#$FE; //Telnet - do not use
-  TELNET_IP = #$FF#$F4;  //Interrupt process
-  TELNET_DM = #$FF#$F2; //Data Mark
 begin
   Result := '';
   LContext := AContext as TIdFTPServerContext;
@@ -6179,6 +6168,7 @@ begin
   end;
   //
   SetLength(LLine, 0);
+  SetLength(LReply, 0);
   Finished := False;
 
   State := tsData;
@@ -6243,7 +6233,20 @@ begin
           $F5: //abort output
           begin
             // note - the DM needs to be sent as OOB "Urgent" data
-            AContext.Connection.IOHandler.Write(TELNET_IP + TELNET_DM);
+
+            SetLength(LReply, 4);
+
+            // TELNET_IP
+            LReply[0] := $FF;
+            LReply[1] := $F4;
+
+            // TELNET_DM
+            LReply[2] := $FF;
+            LReply[3] := $F2;
+
+            AContext.Connection.IOHandler.Write(LReply);
+            SetLength(LReply, 0);
+
             State := tsData;
           end;
           $F6: //are you there - do nothing for now
@@ -6300,15 +6303,31 @@ begin
 
       tsWill:
       begin
-        AContext.Connection.IOHandler.Write(TELNET_WONT);
-        AContext.Connection.IOHandler.Write(lb);
+        SetLength(LReply, 3);
+
+        // TELNET_WONT
+        LReply[0] := $FF;
+        LReply[1] := $FC;
+        LReply[2] := lb;
+
+        AContext.Connection.IOHandler.Write(LReply);
+        SetLength(LReply, 0);
+
         State := tsData;
       end;
 
       tsDo:
       begin
-        AContext.Connection.IOHandler.Write(TELNET_DONT);
-        AContext.Connection.IOHandler.Write(lb);
+        SetLength(LReply, 3);
+
+        // TELNET_DONT
+        LReply[0] := $FF;
+        LReply[1] := $FE;
+        LReply[2] := lb;
+
+        AContext.Connection.IOHandler.Write(LReply);
+        SetLength(LReply, 0);
+
         State := tsData;
       end;
 
