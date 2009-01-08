@@ -282,9 +282,10 @@ begin
 end;
 
 constructor TIdDsnPropEdBindingVCL.Create(AOwner: TComponent);
-var i : Integer;
+var
+  i : Integer;
 begin
-  inherited CreateNew(AOwner,0);
+  inherited CreateNew(AOwner, 0);
   {$IFNDEF WIDGETKYLIX}
   Borderstyle := bsDialog;
   {$ENDIF}
@@ -704,7 +705,12 @@ end;
 
 procedure TIdDsnPropEdBindingVCL.edtPortKeyPress(Sender: TObject; var Key: Char);
 begin
-  if (Key > #31) and (Key < #128) then begin
+  // RLebeau 1/7/09: using Char() for #128-#255 because in D2009, the compiler
+  // may change characters >= #128 from their Ansi codepage value to their true
+  // Unicode codepoint value, depending on the codepage used for the source code.
+  // For instance, #128 may become #$20AC...
+
+  if (Key > #31) and (Key < Char(128)) then begin
     if not IsNumeric(Key) then begin
       Key := #0;
     end;
