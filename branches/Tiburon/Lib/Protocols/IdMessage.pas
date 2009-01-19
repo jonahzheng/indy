@@ -366,10 +366,8 @@ type
     const AHeaders: TStrings; var AAttachment: TIdAttachment) of object;
 
   TIdMessage = class(TIdBaseComponent)
-  private
-    FAttachmentTempDirectory: string;
-    procedure SetAttachmentTempDirectory(const Value: string);
   protected
+    FAttachmentTempDirectory: string;
     FBccList: TIdEmailAddressList;
     FBody: TStrings;
     FCharSet: string;
@@ -416,9 +414,11 @@ type
     function  GetUseNowForDate: Boolean;
     function  GetFrom: TIdEmailAddressItem;
     procedure SetAttachmentEncoding(const AValue: string);
+    procedure SetAttachmentTempDirectory(const Value: string);
     procedure SetBccList(const AValue: TIdEmailAddressList);
     procedure SetBody(const AValue: TStrings);
     procedure SetCCList(const AValue: TIdEmailAddressList);
+    procedure SetContentType(const AValue: String);
     procedure SetEncoding(const AValue: TIdMessageEncoding);
     procedure SetExtraHeaders(const AValue: TIdHeaderList);
     procedure SetFrom(const AValue: TIdEmailAddressItem);
@@ -470,7 +470,7 @@ type
     property BccList: TIdEmailAddressList read FBccList write SetBccList;
     property CharSet: string read FCharSet write FCharSet;
     property CCList: TIdEmailAddressList read FCcList write SetCcList;
-    property ContentType: string read FContentType write FContentType;
+    property ContentType: string read FContentType write SetContentType;
     property ContentTransferEncoding: string read FContentTransferEncoding
      write FContentTransferEncoding;
     property ContentDisposition: string read FContentDisposition write FContentDisposition;
@@ -817,12 +817,14 @@ begin
         Values['Content-Transfer-Encoding'] := '';
         Values['Content-Disposition'] := '';
       end else begin
-        Values['Content-Type'] := ContentType;  {do not localize}
-        if FCharSet > '' then begin
-          Values['Content-Type'] := Values['Content-Type'] + ';' + EOL + TAB + 'charset="' + FCharSet + '"';  {do not localize}
-        end;
-        if MessageParts.Count > 0 then begin
-          Values['Content-Type'] := Values['Content-Type'] + '; boundary="' + LMIMEBoundary + '"'; {do not localize}
+        if FContentType <> '' then begin
+          Values['Content-Type'] := FContentType;  {do not localize}
+          if FCharSet <> '' then begin
+            Values['Content-Type'] := Values['Content-Type'] + ';' + EOL + TAB + 'charset="' + FCharSet + '"';  {do not localize}
+          end;
+          if MessageParts.Count > 0 then begin
+            Values['Content-Type'] := Values['Content-Type'] + '; boundary="' + LMIMEBoundary + '"'; {do not localize}
+          end;
         end;
         {CC2: We may have MIME with no parts if ConvertPreamble is True}
         Values['MIME-Version'] := '1.0'; {do not localize}
@@ -856,10 +858,13 @@ begin
       end;
     end;
 
+    Values['Message-Id'] := MsgId;
+
     // Add extra headers created by UA - allows duplicates
     if (FExtraHeaders.Count > 0) then begin
       AddStrings(FExtraHeaders);
     end;
+
     {Generate In-Reply-To if at all possible to pacify SA.  Do this after FExtraHeaders
      added in case there is a message-ID present as an extra header.}
     if InReplyTo = '' then begin
@@ -962,6 +967,18 @@ end;
 procedure TIdMessage.SetCCList(const AValue: TIdEmailAddressList);
 begin
   FCcList.Assign(AValue);
+end;
+
+procedure TIdMessage.SetContentType(const AValue: String);
+var
+  LCharSet: string;
+begin
+  FContentType := RemoveHeaderEntry(AValue, 'CHARSET'); {do not localize}
+  {RLebeau: override the current CharSet only if the header specifies a new value}
+  LCharSet := ExtractHeaderSubItem(AValue, 'CHARSET'); {do not localize}
+  if LCharSet <> '' then begin
+    FCharSet := LCharSet;
+  end;
 end;
 
 procedure TIdMessage.SetExtraHeaders(const AValue: TIdHeaderList);
