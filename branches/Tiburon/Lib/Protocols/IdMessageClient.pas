@@ -670,15 +670,14 @@ var
         ReadStringsAsContentType(LMStream, LTxt.Body, LHdrs.Values[SContentType]);
         RemoveLastBlankLine(LTxt.Body);
         LTxt.ContentType := LTxt.ResolveContentType(LHdrs.Values[SContentType]);
-        LTxt.Headers.Add('Content-Type: '+ LHdrs.Values[SContentType]);     {do not localize}
         LTxt.CharSet := LTxt.GetCharSet(LHdrs.Values[SContentType]);       {do not localize}
         LTxt.ContentTransfer := LHdrs.Values[SContentTransferEncoding];    {do not localize}
-        LTxt.Headers.Add('Content-Transfer-Encoding: '+ LHdrs.Values[SContentTransferEncoding]);   {do not localize}
         LTxt.ContentID := LHdrs.Values['Content-ID'];  {do not localize}
         LTxt.ContentLocation := LHdrs.Values['Content-Location'];  {do not localize}
         LTxt.ContentDescription := LHdrs.Values['Content-Description'];  {do not localize}
+        LTxt.ContentDisposition := LHdrs.Values['Content-Disposition'];  {do not localize}
         if not AMsg.IsMsgSinglePartMime then begin
-          LTxt.ExtraHeaders.NameValueSeparator := '=';                          {do not localize}
+          LTxt.ExtraHeaders.NameValueSeparator := '='; {do not localize}
           for i := 0 to LHdrs.Count-1 do begin
             if LTxt.Headers.IndexOfName(LHdrs.Names[i]) < 0 then begin
               LTxt.ExtraHeaders.Add(LHdrs.Strings[i]);
@@ -720,7 +719,6 @@ var
           LHdrs := ADecoder.Headers;
         end;
         ContentType := ResolveContentType(LHdrs.Values[SContentType]);
-        Headers.Add('Content-Type: '+ LHdrs.Values[SContentType]);        {do not localize}
         CharSet := GetCharSet(LHdrs.Values[SContentType]);
         if ADecoder is TIdMessageDecoderUUE then begin
           if TIdMessageDecoderUUE(ADecoder).CodingType = 'XXE' then begin {do not localize}
@@ -733,10 +731,8 @@ var
           //in the header, but we need to set it to something meaningful for us...
           if TextStartsWith(ContentType, 'application/mac-binhex40') then begin {do not localize}
             ContentTransfer := 'binhex40';                                               {do not localize}
-            Headers.Add('Content-Transfer-Encoding: binhex40');                          {do not localize}
           end else begin
             ContentTransfer := LHdrs.Values[SContentTransferEncoding];
-            Headers.Add('Content-Transfer-Encoding: '+ LHdrs.Values[SContentTransferEncoding]); {do not localize}
           end;
         end;
         ContentDisposition := LHdrs.Values['Content-Disposition']; {do not localize}
@@ -914,39 +910,41 @@ var
 
     LFileName := EncodeHeader(ExtractFileName(ATextPart.FileName), '', HeaderEncoding, ISOCharSet); {do not localize}
 
-    //ContentType may contain the charset also, but CharSet overrides it if it is present...
-    if ATextPart.CharSet <> '' then begin
-      IOHandler.Write('Content-Type: ' + RemoveHeaderEntry(ATextPart.ContentType, 'charset')  {do not localize}
-         + '; charset="' + ATextPart.CharSet + '"'); {do not localize}
-      LEncoding := CharsetToEncoding(ATextPart.CharSet);
-    end else begin
+    if ATextPart.ContentType <> '' then begin
       IOHandler.Write('Content-Type: ' + ATextPart.ContentType); {do not localize}
-      LEncoding := ContentTypeToEncoding(ATextPart.ContentType);
-    end;
-    {$IFNDEF DOTNET}
-    try
-    {$ENDIF}
+      if ATextPart.CharSet <> '' then begin
+        IOHandler.Write('; charset="' + ATextPart.CharSet + '"'); {do not localize}
+      end;
       if LFileName <> '' then begin
         IOHandler.WriteLn(';');  {do not localize}
         IOHandler.Write('        name="' + LFileName + '"'); {do not localize}
       end;
       IOHandler.WriteLn;
+    end;
 
-      IOHandler.WriteLn(SContentTransferEncoding + ': ' + ATextPart.ContentTransfer); {do not localize}
-      IOHandler.Write('Content-Disposition: ' + ATextPart.ContentDisposition); {do not localize}
-      if LFileName <> '' then begin
-        IOHandler.WriteLn(';'); {do not localize}
-        IOHandler.Write('        filename="' + LFileName + '"'); {do not localize}
-      end;
-      IOHandler.WriteLn;
+    IOHandler.WriteLn(SContentTransferEncoding + ': ' + ATextPart.ContentTransfer); {do not localize}
+    IOHandler.Write('Content-Disposition: ' + ATextPart.ContentDisposition); {do not localize}
+    if LFileName <> '' then begin
+      IOHandler.WriteLn(';'); {do not localize}
+      IOHandler.Write('        filename="' + LFileName + '"'); {do not localize}
+    end;
+    IOHandler.WriteLn;
 
-      if ATextPart.ContentID <> '' then begin
-        IOHandler.WriteLn('Content-ID: ' + ATextPart.ContentID);  {do not localize}
-      end;
+    if ATextPart.ContentID <> '' then begin
+      IOHandler.WriteLn('Content-ID: ' + ATextPart.ContentID);  {do not localize}
+    end;
 
-      IOHandler.Write(ATextPart.ExtraHeaders);
-      IOHandler.WriteLn;
+    if ATextPart.ContentDescription <> '' then begin
+      IOHandler.WriteLn('Content-Description: ' + ATextPart.ContentDescription); {do not localize}
+    end;
 
+    IOHandler.Write(ATextPart.ExtraHeaders);
+    IOHandler.WriteLn;
+
+    LEncoding := CharsetToEncoding(ATextPart.CharSet);
+    {$IFNDEF DOTNET}
+    try
+    {$ENDIF}
       if TextIsSame(ATextPart.ContentTransfer, 'quoted-printable') then begin {do not localize}
         if ATextPart.Body.Count > 0 then begin
           LQuotedPrintableEncoder := TIdEncoderQuotedPrintable.Create(Self);
@@ -1203,11 +1201,9 @@ begin
               //header!  We also have to write a Content-Type specified in RFC 1741
               //(overriding any ContentType present, if necessary).
               LAttachment.ContentType := 'application/mac-binhex40';            {do not localize}
+              IOHandler.Write('Content-Type: ' + LAttachment.ContentType); {do not localize}
               if LAttachment.CharSet <> '' then begin
-                IOHandler.Write('Content-Type: ' + RemoveHeaderEntry(LAttachment.ContentType, 'charset') {do not localize}
-                  + '; charset="' + LAttachment.CharSet + '"'); {do not localize}
-              end else begin
-                IOHandler.Write('Content-Type: ' + LAttachment.ContentType); {do not localize}
+                IOHandler.Write('; charset="' + LAttachment.CharSet + '"'); {do not localize}
               end;
               if LFileName <> '' then begin
                 IOHandler.WriteLn(';'); {do not localize}
@@ -1216,11 +1212,9 @@ begin
               IOHandler.WriteLn;
             end
             else begin
+              IOHandler.Write('Content-Type: ' + LAttachment.ContentType); {do not localize}
               if LAttachment.CharSet <> '' then begin
-                IOHandler.Write('Content-Type: ' + RemoveHeaderEntry(LAttachment.ContentType, 'charset')  {do not localize}
-                 + '; charset="' + LAttachment.CharSet + '"'); {do not localize}
-              end else begin
-                IOHandler.Write('Content-Type: ' + LAttachment.ContentType); {do not localize}
+                IOHandler.Write('; charset="' + LAttachment.CharSet + '"'); {do not localize}
               end;
               if LFileName <> '' then begin
                 IOHandler.WriteLn(';');
@@ -1238,8 +1232,13 @@ begin
             if LAttachment.ContentID <> '' then begin
               IOHandler.WriteLn('Content-ID: '+ LAttachment.ContentID); {Do not Localize}
             end;
+            if LAttachment.ContentDescription <> '' then begin
+              IOHandler.WriteLn('Content-Description: ' + LAttachment.ContentDescription); {Do not localize}
+            end;
+
             IOHandler.Write(LAttachment.ExtraHeaders);
             IOHandler.WriteLn;
+
             LDestStream := TIdTCPStream.Create(Self);
             try
               case PosInStrArray(LAttachment.ContentTransfer, ['base64', 'quoted-printable', 'binhex40'], False) of {do not localize}
