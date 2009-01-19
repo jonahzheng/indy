@@ -5628,26 +5628,28 @@ const
 
   function ProcessTextPart(ADecoder: TIdMessageDecoder): TIdMessageDecoder;
   var
-    LDestStream: TStringStream;
+    LDestStream: TMemoryStream;
     Li: integer;
   begin
     try
-      LDestStream := TStringStream.Create('');  {Do not Localize}
+      LDestStream := TMemoryStream.Create;
       try
         Result := ADecoder.ReadBody(LDestStream, LMsgEnd);
+        LDestStream.Position := 0;
         with TIdText.Create(AMsg.MessageParts) do begin
           ContentType := ADecoder.Headers.Values[SContentType];
           ContentID := ADecoder.Headers.Values['Content-ID'];  {Do not Localize}
           ContentLocation := ADecoder.Headers.Values['Content-Location'];  {Do not Localize}
           ContentDescription := ADecoder.Headers.Values['Content-Description']; {Do not Localize}
+          ContentDisposition := ADecoder.Headers.Values['Content-Disposition']; {Do not Localize}
+          ContentTransfer := ADecoder.Headers.Values['Content-Transfer-Encoding'];  {Do not Localize}
           ExtraHeaders.NameValueSeparator := '=';  {Do not Localize}
           for Li := 0 to ADecoder.Headers.Count-1 do begin
             if Headers.IndexOfName(ADecoder.Headers.Names[Li]) < 0 then begin
               ExtraHeaders.Add(ADecoder.Headers.Strings[Li]);
             end;
           end;
-          ContentTransfer := ADecoder.Headers.Values['Content-Transfer-Encoding'];  {Do not Localize}
-          Body.Text := LDestStream.DataString;
+          ReadStringsAsCharset(LDestStream, Body, CharSet);
         end;
       finally
         FreeAndNil(LDestStream);
