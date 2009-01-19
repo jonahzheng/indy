@@ -130,7 +130,7 @@ type
     property ContentID: string read GetContentID write SetContentID;
     property ContentLocation: string read GetContentLocation write SetContentLocation;
     property ContentTransfer: string read FContentTransfer write FContentTransfer;
-    property ContentType: string read FContentType write FContentType;
+    property ContentType: string read FContentType write SetContentType;
     property ExtraHeaders: TIdHeaderList read FExtraHeaders write SetExtraHeaders;
     property FileName: String read FFileName write FFileName;
     property ParentPart: integer read FParentPart write FParentPart;
@@ -328,8 +328,15 @@ begin
 end;
 
 procedure TIdMessagePart.SetContentType(const Value: string);
+var
+  LCharSet: string;
 begin
-  Headers.Values['Content-Type'] := Value; {do not localize}
+  Headers.Values['Content-Type'] := RemoveHeaderEntry(Value, 'CHARSET'); {do not localize}
+  {RLebeau: override the current CharSet only if the header specifies a new value}
+  LCharSet := ExtractHeaderSubItem(Value, 'CHARSET'); {do not localize}
+  if LCharSet <> '' then begin
+    FCharSet := LCharSet;
+  end;
 end;
 
 procedure TIdMessagePart.SetExtraHeaders(const Value: TIdHeaderList);
