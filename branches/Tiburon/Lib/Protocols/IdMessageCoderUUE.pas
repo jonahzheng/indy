@@ -143,6 +143,9 @@ begin
   AMsgEnd := False;
   Result := nil;
   LLine := ReadLnRFC(LMsgEnd);
+  if LMsgEnd then begin
+    Exit;
+  end;
   LDecoder := nil;
   if Length(LLine) > 0 then
   begin
@@ -176,10 +179,12 @@ begin
           LDecoder.Decode(LLine);
         end;
         LLine := ReadLnRFC(LMsgEnd);
-      until TextIsSame(Trim(LLine), 'end');    {Do not Localize}
+      until TextIsSame(Trim(LLine), 'end') or LMsgEnd;    {Do not Localize}
       LDecoder.DecodeEnd;
     end;
-  finally FreeAndNil(LDecoder); end;
+  finally
+    FreeAndNil(LDecoder);
+  end;
 end;
 
 { TIdMessageEncoderInfoUUE }
