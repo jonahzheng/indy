@@ -472,14 +472,19 @@ begin
 end;
 
 procedure TIdEntityHeaderInfo.SetContentType(const AValue: String);
+var
+  LCharSet: string;
 begin
   if AValue <> '' then
   begin
-    FCharSet := ExtractHeaderSubItem(AValue, 'CHARSET'); {do not localize}
     FContentType := RemoveHeaderEntry(AValue, 'CHARSET'); {do not localize}
+    {RLebeau: override the current CharSet only if the header specifies a new value}
+    LCharSet := ExtractHeaderSubItem(AValue, 'CHARSET'); {do not localize}
+    if LCharSet <> '' then begin
+      FCharSet := LCharSet;
+    end;
   end else
   begin
-    FCharSet := '';
     FContentType := '';
   end;
 end;
