@@ -170,7 +170,7 @@ var LFName, LFExt : String;
 var
   MSDOS_Valid_Chars : String;
 begin
-  MSDOS_Valid_Chars := CharRange('A','Z')+CharRange('0','9')+'_$~!#%&-{}()@'''+#180;
+  MSDOS_Valid_Chars := CharRange('A','Z')+CharRange('0','9')+'_$~!#%&-{}()@'''+Char(180);
   Result := UpperCase(AUnixFileName);
   LFName := Fetch(Result,'.');
   LFName := Copy(LFName,1,8);
