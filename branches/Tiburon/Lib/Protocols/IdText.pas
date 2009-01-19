@@ -54,8 +54,6 @@ type
     function  GetContentDisposition: string; override;
     function  GetContentType: string; override;
     procedure SetBody(const AStrs : TStrings); virtual;
-    procedure SetContentType(const AValue: string); override;
-    procedure SetCharSet(const AValue: String); virtual;
   public
     constructor Create(Collection: TIdMessageParts; ABody: TStrings = nil); reintroduce;
     destructor Destroy; override;
@@ -72,9 +70,6 @@ implementation
 uses
   IdGlobal,
   SysUtils;
-
-const
-  SContentType = '%s; CHARSET="%s"';  {do not localize}
 
 { TIdText }
 
@@ -144,16 +139,6 @@ end;
 procedure TIdText.SetBody(const AStrs: TStrings);
 begin
   FBody.Assign(AStrs);
-end;
-
-procedure TIdText.SetCharSet(const AValue: String);
-begin
-  inherited SetContentType(IndyFormat(SContentType, [GetContentType, AValue]));
-end;
-
-procedure TIdText.SetContentType(const AValue: string);
-begin
-  inherited SetContentType(IndyFormat(SContentType, [AValue, GetCharSet(Headers.Values['Content-Type'])]));  {do not localize}
 end;
 
 initialization
