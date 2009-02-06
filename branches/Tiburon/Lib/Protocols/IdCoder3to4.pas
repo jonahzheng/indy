@@ -236,18 +236,15 @@ var
   LInBufSize: Integer;
   LEmptyBytes: Integer;
   LInBytes: TIdBytes;
-  LWorkBytes: TIdBytes;
   LOutPos: Integer;
   LOutSize: Integer;
   LInLimit: Integer;
   LInPos: Integer;
-  LWhole : LongWord;
-  LFillChar: AnsiChar; // local copy of FFillChar
+  LFillChar: Byte; // local copy of FFillChar
 begin
   SetLength(LInBytes, 4);
-  SetLength(LWorkBytes, SizeOf(LongWord));
 
-  LFillChar := FillChar;
+  LFillChar := Byte(FillChar);
   LEmptyBytes := 0;
   LInPos := 0;
 
@@ -277,18 +274,9 @@ begin
     Inc(LInPos, 4);
 
     // Reduce to 3 bytes
-    LWhole :=
-      (FDecodeTable[LInBytes[0]] shl 18) or
-      (FDecodeTable[LInBytes[1]] shl 12) or
-      (FDecodeTable[LInBytes[2]] shl 6) or
-      FDecodeTable[LInBytes[3]];
-    ToBytesF(LWorkBytes, LWhole);
-
-    //TODO: Temp - Change the above to reconstruct in our order if possible
-    // Then we can call a move on all 3 bytes
-    Result[LOutPos]     := LWorkBytes[2];
-    Result[LOutPos + 1] := LWorkBytes[1];
-    Result[LOutPos + 2] := LWorkBytes[0];
+    Result[LOutPos]     := (FDecodeTable[LInBytes[0]] shl 2) or ((FDecodeTable[LInBytes[1]] shr 4) and 3);
+    Result[LOutPos + 1] := ((FDecodeTable[LInBytes[1]] and 15) shl 4) or ((FDecodeTable[LInBytes[2]] shr 2) and 15);
+    Result[LOutPos + 2] := ((FDecodeTable[LInBytes[2]] and 3) shl 6) or (FDecodeTable[LInBytes[3]] and 63);
     Inc(LOutPos, 3);
 
     // If we dont know how many bytes we need to watch for fill chars. MIME
@@ -300,14 +288,17 @@ begin
     // Because of this we watch for early ends beyond what we originally
     // estimated.
 
-    // Must check 3 before 4, if 3 is FillChar, 4 will also be FillChar
-    if LInBytes[2] = Byte(LFillChar) then begin
-      LEmptyBytes := 2;
-      Break;
-    end
-    else if LInBytes[3] = Byte(LFillChar) then begin
-      LEmptyBytes := 1;
-      Break;
+    // RLebeau: normally, the FillChar does not appear inside the encoded bytes,
+    // however UUE/XXE does allow it, so do not break the loop when the FillChar 
+    // is encountered...
+    if LInBytes[3] = LFillChar then begin
+      if LInBytes[2] = LFillChar then begin
+        LEmptyBytes := 2;
+      end else begin
+        LEmptyBytes := 1;
+      end;
+    end else begin
+      LEmptyBytes := 0;
     end;
   end;
 
@@ -390,8 +381,8 @@ begin
     //possible to do a better assert than this?
     Assert(Length(FCodingTable)>0);
     Result[LLen]     := Byte(FCodingTable[((LIn1 shr 2) and 63) + 1]);
-    Result[LLen + 1] := Byte(FCodingTable[(((LIn1 shl 4) or (LIn2 shr 4)) and 63) + 1]);
-    Result[LLen + 2] := Byte(FCodingTable[(((LIn2 shl 2) or (LIn3 shr 6)) and 63) + 1]);
+    Result[LLen + 1] := Byte(FCodingTable[((((LIn1 and 3) shl 4) or ((LIn2 shr 4) and 15)) and 63) + 1]);
+    Result[LLen + 2] := Byte(FCodingTable[((((LIn2 and 15) shl 2) or ((LIn3 shr 6) and 3)) and 63) + 1]);
     Result[LLen + 3] := Byte(FCodingTable[(LIn3 and 63) + 1]);
     Inc(LLen, 4);
 
