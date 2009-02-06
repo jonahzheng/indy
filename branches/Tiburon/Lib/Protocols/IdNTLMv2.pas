@@ -158,9 +158,6 @@ procedure GetDomain(const AUserName : String; var VUserName, VDomain : String);
 function DumpFlags(const ABytes : TIdBytes): String; overload;
 function DumpFlags(const AFlags : LongWord): String; overload;
 
-function BytesToUnicodeLEStr(const AValue : TIdBytes; const AStartIndex: Integer;
-  const ALength: Integer = -1) : String;
-
 function LoadRC4 : Boolean;
 function RC4FunctionsLoaded : Boolean;
 
@@ -292,13 +289,26 @@ begin
   {$ENDIF}
 end;
 
-{$IFDEF DOTNET}
 function BuildUnicodeLE(const S: String): TIdBytes;
 {$IFDEF USEINLINE}inline;{$ENDIF}
-begin
-  Result := System.Text.Encoding.Unicode.GetBytes(S);
-end;
+{$IFNDEF DOTNET_OR_UNICODESTRING}
+var
+  i: integer;
 {$ENDIF}
+begin
+  {$IFDEF DOTNET_OR_UNICODESTRING}
+  Result := TIdTextEncoding.Unicode.GetBytes(S);
+  {$ELSE}
+  // RLebeau: ise TIdTextEncoding.Unicode instead?
+  SetLength(Result, Length(S)*2);
+  if Length(Result) > 0 then begin
+    for i := 1 to Length(S) do begin
+      Result[(i-1)*2] := Ord(S[i]);
+      Result[((i-1)*2)+1] := 0;
+    end;
+  end;
+  {$ENDIF}
+end;
 
 function ConcateBytes(const A1, A2 : TIdBytes) : TIdBytes;
 begin
@@ -581,7 +591,7 @@ function NTLMHashedPass(const APassword : String): TIdBytes;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   with TIdHashMessageDigest4.Create do try
-    Result := HashBytes(BuildUnicodeLE( APassword));
+    Result := HashBytes(BuildUnicodeLE(APassword));
   finally
     Free;
   end;
@@ -658,39 +668,7 @@ begin
   SetLength(Result,24);
   calc_resp(PDes_cblock(@lm_hpw[0]), nonce, Pdes_key_schedule(@Result[0]));
 //
-
 end;
-
-   {$IFDEF TEncoding}
-function BuildUnicodeLE(const S: String): TIdBytes;
-{$IFDEF USEINLINE}inline;{$ENDIF}
-begin
-  Result := TEncoding.Unicode.GetBytes(S);
-end;
-
-function BytesToUnicodeLEStr(const AValue : TIdBytes; const AStartIndex: Integer;
-  const ALength: Integer = -1) : String;
-var LLength : Integer;
-begin
-  LLength := IndyLength(AValue, ALength, AStartIndex);
-  Result := TEncoding.Unicode.GetString(AValue, AStartIndex, LLength);
-end;
-
-   {$ELSE}
-function BuildUnicodeLE(const S: String): TIdBytes;
-{$IFDEF USEINLINE}inline;{$ENDIF}
-Var
-  i: integer;
-begin
-  SetLength(Result,Length(S)*2);
-  if Length(Result)>0 then  begin
-    for i := 1 to Length( S) do begin
-      Result[(i-1)*2] := Ord(S[i]);
-      Result[((i-1)*2)+1] := 0;
-    end;
-  end;
-end;
-   {$ENDIF}
 
 //* create NT hashed password */
 function CreateNTLMResponse(var vntlmhash : TIdBytes; const APassword : String; const nonce : TIdBytes): TIdBytes;
@@ -699,7 +677,7 @@ var
   nt_hpw : TIdBytes; //array [1..21] of Char;
  // nt_hpw128 : TIdBytes;
 begin
-  nt_pw := BuildUnicodeLE( APassword);
+  nt_pw := BuildUnicodeLE(APassword);
   with TIdHashMessageDigest4.Create do try
     vntlmhash := HashBytes(nt_pw);
   finally
@@ -722,7 +700,7 @@ var
 
 begin
   SetLength(Result,24);
-  nt_pw := BuildUnicodeLE( APassword);
+  nt_pw := BuildUnicodeLE(APassword);
   with TIdHashMessageDigest4.Create do try
 
     nt_hpw128 := HashBytes(nt_pw);//HashString( nt_pw);
