@@ -371,8 +371,9 @@ begin
     but does track previous IP addresses to detect changes.
   }
   FPreviousIPAddresses.Text := FIPAddresses.Text;
-  FIPAddresses.Text := GStack.LocalAddresses.Text;
-  AdapterCount := GStack.LocalAddresses.Count;
+  FIPAddresses.Clear;
+  GStack.AddLocalAddressesToList(FIPAddresses);
+  AdapterCount := FIPAddresses.Count;
 end;
 
 end.
