@@ -73,7 +73,7 @@ uses
 type
 //  TIdSyslogSeverity = ID_SYSLOG_SEVERITY_EMERGENCY..ID_SYSLOG_SEVERITY_DEBUG;
 //  TIdSyslogFacility = ID_SYSLOG_FACILITY_KERNEL..ID_SYSLOG_FACILITY_LOCAL7;
-  TIdSyslogPRI = 1..191;
+  TIdSyslogPRI = 0..191;
   TIdSyslogFacility = (sfKernel, { ID_SYSLOG_FACILITY_KERNEL}
                       sfUserLevel, { ID_SYSLOG_FACILITY_USER }
                       sfMailSystem, { ID_SYSLOG_FACILITY_MAIL }
@@ -156,13 +156,6 @@ type
     procedure UpdatePRI; virtual;
     function DecodeTimeStamp(TimeStampString: String): TDateTime; virtual;
     procedure InitComponent; override;
-//    function logFacilityToNo(AFac : TIdSyslogFacility) : Word; virtual;
-//    function NoToFacility(AFac : Word) : TIdSyslogFacility;  virtual;
-//    function logSeverityToNo(ASev :  TIdSyslogSeverity) : Word; virtual;
-//    function SeverityToString(ASec: TIdsyslogSeverity): string; virtual;
-//    function FacilityToString(AFac: TIdSyslogFacility): string; virtual;
-//    function NoToSeverity(ASev :  Word) : TIdSyslogSeverity; virtual;
-     //extract the PID part into a SysLog PID including []
   public
     procedure Assign(Source: TPersistent); override;
     destructor Destroy; override;
@@ -328,82 +321,50 @@ end;
 
 function SeverityToString(ASec: TIdsyslogSeverity): string;
 begin
-  case ASec of    //
-    slEmergency:
-      result := STR_SYSLOG_SEVERITY_EMERGENCY;
-    slAlert:
-      result := STR_SYSLOG_SEVERITY_ALERT;
-    slCritical:
-      result := STR_SYSLOG_SEVERITY_CRITICAL;
-    slError:
-      result := STR_SYSLOG_SEVERITY_ERROR;
-    slWarning:
-      result := STR_SYSLOG_SEVERITY_WARNING;
-    slNotice:
-      result := STR_SYSLOG_SEVERITY_NOTICE;
-    slInformational:
-      result := STR_SYSLOG_SEVERITY_INFORMATIONAL;
-    slDebug:
-      result := STR_SYSLOG_SEVERITY_DEBUG;
-    else
-      result := STR_SYSLOG_SEVERITY_UNKNOWN;
-  end;    // case
+  case ASec of
+    slEmergency: Result := STR_SYSLOG_SEVERITY_EMERGENCY;
+    slAlert: Result := STR_SYSLOG_SEVERITY_ALERT;
+    slCritical: Result := STR_SYSLOG_SEVERITY_CRITICAL;
+    slError: Result := STR_SYSLOG_SEVERITY_ERROR;
+    slWarning: Result := STR_SYSLOG_SEVERITY_WARNING;
+    slNotice: Result := STR_SYSLOG_SEVERITY_NOTICE;
+    slInformational: Result := STR_SYSLOG_SEVERITY_INFORMATIONAL;
+    slDebug: Result := STR_SYSLOG_SEVERITY_DEBUG;
+  else
+    Result := STR_SYSLOG_SEVERITY_UNKNOWN;
+  end;
 end;
 
 function FacilityToString(AFac: TIdSyslogFacility): string;
 begin
-  case AFac of    //
-    sfKernel:
-      result := STR_SYSLOG_FACILITY_KERNEL;
-    sfUserLevel:
-      result := STR_SYSLOG_FACILITY_USER;
-    sfMailSystem:
-      result := STR_SYSLOG_FACILITY_MAIL;
-    sfSystemDaemon:
-      result := STR_SYSLOG_FACILITY_SYS_DAEMON;
-    sfSecurityOne:
-      result := STR_SYSLOG_FACILITY_SECURITY1;
-    sfSysLogInternal:
-      result := STR_SYSLOG_FACILITY_INTERNAL;
-    sfLPR:
-      result := STR_SYSLOG_FACILITY_LPR;
-    sfNNTP:
-      result := STR_SYSLOG_FACILITY_NNTP;
-    sfClockDaemonOne:
-      result := STR_SYSLOG_FACILITY_CLOCK1;
-    sfUUCP:
-      result := STR_SYSLOG_FACILITY_UUCP;
-    sfSecurityTwo:
-      result := STR_SYSLOG_FACILITY_SECURITY2;
-    sfFTPDaemon:
-      result := STR_SYSLOG_FACILITY_FTP;
-    sfNTP:
-      result := STR_SYSLOG_FACILITY_NTP;
-    sfLogAudit:
-      result := STR_SYSLOG_FACILITY_AUDIT;
-    sfLogAlert:
-      result := STR_SYSLOG_FACILITY_ALERT;
-    sfClockDaemonTwo:
-      result := STR_SYSLOG_FACILITY_CLOCK2;
-    sfLocalUseZero:
-      result := STR_SYSLOG_FACILITY_LOCAL0;
-    sfLocalUseOne:
-      result := STR_SYSLOG_FACILITY_LOCAL1;
-    sfLocalUseTwo:
-      result := STR_SYSLOG_FACILITY_LOCAL2;
-    sfLocalUseThree:
-      result := STR_SYSLOG_FACILITY_LOCAL3;
-    sfLocalUseFour:
-      result := STR_SYSLOG_FACILITY_LOCAL4;
-    sfLocalUseFive:
-      result := STR_SYSLOG_FACILITY_LOCAL5;
-    sfLocalUseSix:
-      result := STR_SYSLOG_FACILITY_LOCAL6;
-    sfLocalUseSeven:
-      result := STR_SYSLOG_FACILITY_LOCAL7;
-    else
-      result := STR_SYSLOG_FACILITY_UNKNOWN;
-  end;    // case
+  case AFac of
+    sfKernel: Result := STR_SYSLOG_FACILITY_KERNEL;
+    sfUserLevel: Result := STR_SYSLOG_FACILITY_USER;
+    sfMailSystem: Result := STR_SYSLOG_FACILITY_MAIL;
+    sfSystemDaemon: Result := STR_SYSLOG_FACILITY_SYS_DAEMON;
+    sfSecurityOne: Result := STR_SYSLOG_FACILITY_SECURITY1;
+    sfSysLogInternal: Result := STR_SYSLOG_FACILITY_INTERNAL;
+    sfLPR: Result := STR_SYSLOG_FACILITY_LPR;
+    sfNNTP: Result := STR_SYSLOG_FACILITY_NNTP;
+    sfClockDaemonOne: Result := STR_SYSLOG_FACILITY_CLOCK1;
+    sfUUCP: Result := STR_SYSLOG_FACILITY_UUCP;
+    sfSecurityTwo: Result := STR_SYSLOG_FACILITY_SECURITY2;
+    sfFTPDaemon: Result := STR_SYSLOG_FACILITY_FTP;
+    sfNTP: Result := STR_SYSLOG_FACILITY_NTP;
+    sfLogAudit: Result := STR_SYSLOG_FACILITY_AUDIT;
+    sfLogAlert: Result := STR_SYSLOG_FACILITY_ALERT;
+    sfClockDaemonTwo: Result := STR_SYSLOG_FACILITY_CLOCK2;
+    sfLocalUseZero: Result := STR_SYSLOG_FACILITY_LOCAL0;
+    sfLocalUseOne: Result := STR_SYSLOG_FACILITY_LOCAL1;
+    sfLocalUseTwo: Result := STR_SYSLOG_FACILITY_LOCAL2;
+    sfLocalUseThree: Result := STR_SYSLOG_FACILITY_LOCAL3;
+    sfLocalUseFour: Result := STR_SYSLOG_FACILITY_LOCAL4;
+    sfLocalUseFive: Result := STR_SYSLOG_FACILITY_LOCAL5;
+    sfLocalUseSix: Result := STR_SYSLOG_FACILITY_LOCAL6;
+    sfLocalUseSeven: Result := STR_SYSLOG_FACILITY_LOCAL7;
+  else
+    Result := STR_SYSLOG_FACILITY_UNKNOWN;
+  end;
 end;
 
 function ExtractAlphaNumericStr(var VString : String) : String;
@@ -411,7 +372,7 @@ var
   i, len : Integer;
 begin
   len := 0;  
-  for i := 1 to IndyMax(Length(VString), 32) do begin
+  for i := 1 to IndyMin(Length(VString), 32) do begin
     //numbers or alphabet only
     if IsAlphaNumeric(VString[i]) then begin
       Inc(len);
@@ -442,8 +403,7 @@ begin
   end;
 end;
 
-function TIdSysLogMessage.DecodeTimeStamp(
-  TimeStampString: String): TDateTime;
+function TIdSysLogMessage.DecodeTimeStamp(TimeStampString: String): TDateTime;
 var
   AYear, AMonth, ADay, AHour, AMin, ASec: Word;
   LDate : TDateTime;
@@ -486,7 +446,8 @@ begin
 end;
 
 procedure TIdSysLogMessage.ReadFromBytes(const ASrc: TIdBytes; const APeer : String);
-const MSGLEN = 1024;
+const
+  MSGLEN = 1024;
 begin
   FPeer := APeer;
   RawMessage := BytesToString(ASrc, 0, MSGLEN);
@@ -518,9 +479,15 @@ begin
     end;    // while
 
     FHostname := Copy(FRawMessage, StartPos, AHostNameEnd - StartPos);
+
+    if Pos(':', FHostname) <> 0 then begin // check if the hostname doesn't contain a semicolon (so it's not a process)
+      FHostname := Peer;
+    end else begin
+      StartPos := AHostNameEnd + 1;
+    end;
+
     // SG 25/2/02: Check the ASCII range of host name
     CheckASCIIRange(FHostname);
-    StartPos := AHostNameEnd + 1;
   except
     on e: Exception do
     begin
@@ -747,7 +714,7 @@ begin
 end;
 
 procedure TIdSysLogMsgPart.SetProcess(const AValue: String);
-  var
+var
   LTmp: String;
 begin
   //we have to ensure that the TAG field will never be greater than 32 characters
