@@ -238,7 +238,6 @@ type
     procedure Disconnect(ASocket: TIdStackSocketHandle); virtual; abstract;
     function IOControl(const s: TIdStackSocketHandle; const cmd: LongWord;
       var arg: LongWord): Integer; virtual; abstract;
-    class procedure Make;
     class procedure IncUsage; //create stack if necessary and inc counter
     class procedure DecUsage; //decrement counter and free if it gets to zero
     procedure GetPeerName(ASocket: TIdStackSocketHandle; var VIP: string;
@@ -347,7 +346,6 @@ var
   GSocketListClass: TIdSocketListClass;
 
 // Procedures
-  function IdStackFactory : TIdStack;
   procedure SetStackClass( AStackClass: TIdStackClass );
 
 implementation
@@ -376,7 +374,7 @@ var
   GStackClass: TIdStackClass = nil;
 
 var
-  GInstanceCount: Integer = 0;
+  GInstanceCount: LongWord = 0;
   GStackCriticalSection: TIdCriticalSection = nil;
 
 //for IPv4 Multicast address chacking
@@ -387,11 +385,6 @@ const
 procedure SetStackClass(AStackClass: TIdStackClass);
 begin
   GStackClass := AStackClass;
-end;
-
-function IdStackFactory: TIdStack;
-begin
-  Result := GStackClass.Create;
 end;
 
 { TIdSocketList }
@@ -492,8 +485,25 @@ begin
 end;
 
 function TIdStack.GetLocalAddress: string;
+var
+  LAddresses: TStringList;
 begin
-  Result := LocalAddresses[0];
+  // RLebeau: using a local TStringList, instead of the LocalAddresses
+  // property, so this method can be thread-safe...
+  //
+  // old code:
+  // Result := LocalAddresses[0];
+
+  Result := '';
+  LAddresses := TStringList.Create;
+  try
+    AddLocalAddressesToList(LAddresses);
+    if LAddresses.Count > 0 then begin
+      Result := LAddresses[0];
+    end;
+  finally
+    LAddresses.Free;
+  end;
 end;
 
 function TIdStack.IsIP(AIP: string): Boolean;
@@ -516,13 +526,6 @@ end;
 function TIdStack.MakeCanonicalIPv6Address(const AAddr: string): string;
 begin
   Result := IdGlobal.MakeCanonicalIPv6Address(AAddr);
-end;
-
-class procedure TIdStack.Make;
-begin
-  EIdException.IfTrue(GStackClass = nil, RSStackClassUndefined);
-  EIdException.IfTrue(GStack <> nil, RSStackAlreadyCreated);
-  GStack := IdStackFactory;
 end;
 
 function TIdStack.ResolveHost(const AHost: string;
@@ -564,11 +567,13 @@ begin
   Assert(GStackCriticalSection<>nil);
   GStackCriticalSection.Acquire;
   try
-    Dec(GInstanceCount);
-    if GInstanceCount = 0 then begin
-      // This CS will guarantee that during the FreeAndNil nobody
-      // will try to use or construct GStack
-      FreeAndNil(GStack);
+    // This CS will guarantee that during the FreeAndNil nobody
+    // will try to use or construct GStack
+    if GInstanceCount > 0 then begin
+      Dec(GInstanceCount);
+      if GInstanceCount = 0 then begin
+        FreeAndNil(GStack);
+      end;
     end;
   finally
     GStackCriticalSection.Release;
@@ -580,10 +585,12 @@ begin
   Assert(GStackCriticalSection<>nil);
   GStackCriticalSection.Acquire;
   try
-    Inc(GInstanceCount);
-    if GInstanceCount = 1 then begin
-      TIdStack.Make;
+    if GInstanceCount = 0 then begin
+      EIdException.IfTrue(GStack <> nil, RSStackAlreadyCreated);
+      EIdException.IfTrue(GStackClass = nil, RSStackClassUndefined);
+      GStack := GStackClass.Create;
     end;
+    Inc(GInstanceCount);
   finally
     GStackCriticalSection.Release;
   end;
