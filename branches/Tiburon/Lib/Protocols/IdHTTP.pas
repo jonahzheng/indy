@@ -1017,14 +1017,19 @@ begin
       if IndyPos('chunked', LowerCase(AResponse.RawHeaders.Values['Transfer-Encoding'])) > 0 then {do not localize}
       begin // Chunked
         DoStatus(hsStatusText, [RSHTTPChunkStarted]);
-        Size := ChunkSize;
-        while Size > 0 do
-        begin
-          IOHandler.ReadStream(LS, Size);
-          InternalReadLn; // blank line
+        BeginWork(wmRead);
+        try
           Size := ChunkSize;
+          while Size > 0 do
+          begin
+            IOHandler.ReadStream(LS, Size);
+            InternalReadLn; // blank line
+            Size := ChunkSize;
+          end;
+          InternalReadLn; // blank line
+        finally
+          EndWork(wmRead);
         end;
-        InternalReadLn; // blank line
       end
       else if AResponse.ContentLength > 0 then // If chunked then this is also 0
       begin
