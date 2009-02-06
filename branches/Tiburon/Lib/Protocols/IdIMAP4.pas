@@ -779,8 +779,7 @@ varies between servers.  A typical line that gets parsed into this is:
     procedure ParseEnvelopeResult (AMsg: TIdMessage; ACmdResultStr: String);
     function  ParseLastCmdResult(ALine: string; AExpectedCommand: string; AExpectedIMAPFunction: array of string): Boolean;
     procedure ParseLastCmdResultButAppendInfo(ALine: string);
-    function  InternalRetrieve(const AMsgNum: Integer; AUseUID: Boolean; AUsePeek: Boolean; ANoDecode: Boolean;
-          AMsg: TIdMessage): Boolean;
+    function  InternalRetrieve(const AMsgNum: Integer; AUseUID: Boolean; AUsePeek: Boolean; AMsg: TIdMessage): Boolean;
     function  InternalRetrievePart(const AMsgNum: Integer; const APartNum: string;
           AUseUID: Boolean; AUsePeek: Boolean;
           ADestStream: TStream;
@@ -1938,7 +1937,6 @@ begin
         if Capability(FCapabilities) then begin
           FSASLMechanisms.LoginSASL('AUTHENTICATE', FHost, IdGSKSSN_imap, ['* OK'], ['* +'], Self, FCapabilities);     {Do not Localize}
         end;
-        Capability(FCapabilities);
       end;
     end else begin
       if LastCmdResult.Code = IMAP_PREAUTH then begin
@@ -3775,7 +3773,7 @@ end;
 function TIdIMAP4.Retrieve(const AMsgNum: Integer; AMsg: TIdMessage): Boolean;
 begin
   IsNumberValid(AMsgNum);
-  Result := InternalRetrieve(AMsgNum, False, False, False, AMsg);
+  Result := InternalRetrieve(AMsgNum, False, False, AMsg);
 end;
 
 //Retrieves a whole message "raw" and saves it to file, while marking it read.
@@ -3787,8 +3785,9 @@ begin
   IsNumberValid(AMsgNum);
   LMsg := TIdMessage.Create(nil);
   try
-    if InternalRetrieve(AMsgNum, False, False, True, LMsg) then begin
-      LMsg.NoEncode := True;
+    LMsg.NoDecode := True;
+    LMsg.NoEncode := True;
+    if InternalRetrieve(AMsgNum, False, False, LMsg) then begin
       LMsg.SaveToFile(ADestFile);
       Result := True;
     end;
@@ -3806,8 +3805,9 @@ begin
   IsNumberValid(AMsgNum);
   LMsg := TIdMessage.Create(nil);
   try
-    if InternalRetrieve(AMsgNum, False, False, True, LMsg) then begin
-      LMsg.NoEncode := True;
+    LMsg.NoDecode := True;
+    LMsg.NoEncode := True;
+    if InternalRetrieve(AMsgNum, False, False, LMsg) then begin
       LMsg.SaveToStream(AStream);
       Result := True;
     end;
@@ -3819,13 +3819,13 @@ end;
 function TIdIMAP4.RetrievePeek(const AMsgNum: Integer; AMsg: TIdMessage): Boolean;
 begin
   IsNumberValid(AMsgNum);
-  Result := InternalRetrieve(AMsgNum, False, True, False, AMsg);
+  Result := InternalRetrieve(AMsgNum, False, True, AMsg);
 end;
 
 function TIdIMAP4.UIDRetrieve(const AMsgUID: String; AMsg: TIdMessage): Boolean;
 begin
   IsUIDValid(AMsgUID);
-  Result := InternalRetrieve(IndyStrToInt(AMsgUID), True, False, False, AMsg);
+  Result := InternalRetrieve(IndyStrToInt(AMsgUID), True, False, AMsg);
 end;
 
 //Retrieves a whole message "raw" and saves it to file, while marking it read.
@@ -3837,8 +3837,9 @@ begin
   IsUIDValid(AMsgUID);
   LMsg := TIdMessage.Create(nil);
   try
-    if InternalRetrieve(IndyStrToInt(AMsgUID), True, False, True, LMsg) then begin
-      LMsg.NoEncode := True;
+    LMsg.NoDecode := True;
+    LMsg.NoEncode := True;
+    if InternalRetrieve(IndyStrToInt(AMsgUID), True, False, LMsg) then begin
       LMsg.SaveToFile(ADestFile);
       Result := True;
     end;
@@ -3856,8 +3857,9 @@ begin
   IsUIDValid(AMsgUID);
   LMsg := TIdMessage.Create(nil);
   try
-    if InternalRetrieve(IndyStrToInt(AMsgUID), True, False, True, LMsg) then begin
-      LMsg.NoEncode := True;
+    LMsg.NoDecode := True;
+    LMsg.NoEncode := True;
+    if InternalRetrieve(IndyStrToInt(AMsgUID), True, False, LMsg) then begin
       LMsg.SaveToStream(AStream);
       Result := True;
     end;
@@ -3869,10 +3871,10 @@ end;
 function TIdIMAP4.UIDRetrievePeek(const AMsgUID: String; AMsg: TIdMessage): Boolean;
 begin
   IsUIDValid(AMsgUID);
-  Result := InternalRetrieve(IndyStrToInt(AMsgUID), True, True, False, AMsg);
+  Result := InternalRetrieve(IndyStrToInt(AMsgUID), True, True, AMsg);
 end;
 
-function TIdIMAP4.InternalRetrieve(const AMsgNum: Integer; AUseUID: Boolean; AUsePeek: Boolean; ANoDecode: Boolean; AMsg: TIdMessage): Boolean;
+function TIdIMAP4.InternalRetrieve(const AMsgNum: Integer; AUseUID: Boolean; AUsePeek: Boolean; AMsg: TIdMessage): Boolean;
 var
   LStr: String;
   LCmd: string;
@@ -3916,7 +3918,6 @@ begin
         finally
           FreeAndNil(LHelper);
         end;
-        AMsg.NoDecode := ANoDecode;
         {Feed stream into the standard message parser...}
         LDestStream.Position := 0;
         AMsg.LoadFromStream(LDestStream);
@@ -5631,25 +5632,33 @@ const
     LDestStream: TMemoryStream;
     Li: integer;
   begin
+    Result := nil;
     try
       LDestStream := TMemoryStream.Create;
       try
         Result := ADecoder.ReadBody(LDestStream, LMsgEnd);
         LDestStream.Position := 0;
         with TIdText.Create(AMsg.MessageParts) do begin
-          ContentType := ADecoder.Headers.Values[SContentType];
-          ContentID := ADecoder.Headers.Values['Content-ID'];  {Do not Localize}
-          ContentLocation := ADecoder.Headers.Values['Content-Location'];  {Do not Localize}
-          ContentDescription := ADecoder.Headers.Values['Content-Description']; {Do not Localize}
-          ContentDisposition := ADecoder.Headers.Values['Content-Disposition']; {Do not Localize}
-          ContentTransfer := ADecoder.Headers.Values['Content-Transfer-Encoding'];  {Do not Localize}
-          ExtraHeaders.NameValueSeparator := '=';  {Do not Localize}
-          for Li := 0 to ADecoder.Headers.Count-1 do begin
-            if Headers.IndexOfName(ADecoder.Headers.Names[Li]) < 0 then begin
-              ExtraHeaders.Add(ADecoder.Headers.Strings[Li]);
+          try
+            ContentType := ADecoder.Headers.Values[SContentType];
+            ContentID := ADecoder.Headers.Values['Content-ID'];  {Do not Localize}
+            ContentLocation := ADecoder.Headers.Values['Content-Location'];  {Do not Localize}
+            ContentDescription := ADecoder.Headers.Values['Content-Description']; {Do not Localize}
+            ContentDisposition := ADecoder.Headers.Values['Content-Disposition']; {Do not Localize}
+            ContentTransfer := ADecoder.Headers.Values['Content-Transfer-Encoding'];  {Do not Localize}
+            ExtraHeaders.NameValueSeparator := '=';  {Do not Localize}
+            for Li := 0 to ADecoder.Headers.Count-1 do begin
+              if Headers.IndexOfName(ADecoder.Headers.Names[Li]) < 0 then begin
+                ExtraHeaders.Add(ADecoder.Headers.Strings[Li]);
+              end;
             end;
+            ReadStringsAsCharset(LDestStream, Body, CharSet);
+          except
+            //this should also remove the Item from the TCollection.
+            //Note that Delete does not exist in the TCollection.
+            Free;
+            raise;
           end;
-          ReadStringsAsCharset(LDestStream, Body, CharSet);
         end;
       finally
         FreeAndNil(LDestStream);
@@ -5693,8 +5702,8 @@ const
         except
           //this should also remove the Item from the TCollection.
           //Note that Delete does not exist in the TCollection.
-          AMsg.MessageParts[Index].Free;
           Free;
+          raise;
         end;
       end;
     finally
