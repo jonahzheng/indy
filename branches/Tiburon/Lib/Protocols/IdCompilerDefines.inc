@@ -259,6 +259,7 @@
     {$DEFINE WIDGETVCL}
     {$DEFINE VCL60PLUS}
   {$ENDIF}
+  {$DEFINE CLASSPROPERTIES}
 {$ENDIF}
 
 // BDS 2007 NET personality uses VER190 instead of 185.
@@ -286,6 +287,7 @@
     {$DEFINE VCL2007}
     {$DEFINE DELPHI2007}
   {$ENDIF}
+  {$DEFINE CLASSPROPERTIES}
 {$ENDIF}
 
 //Delphi 2009 (Tiburon)
@@ -294,6 +296,7 @@
   {$DEFINE TEncoding}
   {$DEFINE TCharacter}
   {$DEFINE DOTNET_OR_TEncoding}
+  {$DEFINE DOTNET_OR_UNICODESTRING}
   {$DEFINE USEINLINE}
   {$DEFINE VCL4ORABOVE}
   {$DEFINE VCL5ORABOVE}
@@ -324,11 +327,12 @@
     {$DEFINE WIDGETVCL}
     {$DEFINE VCL60PLUS}
   {$ENDIF}
+  {$DEFINE CLASSPROPERTIES}
 {$ENDIF}
 
-// Delphi 2009 and later are UNICODE only!
-// NOTE: Do not define UNICODE here.  The
-// compiler defines the symbol automatically.
+// Delphi 2009 and later support UNICODE strings natively!
+// NOTE: Do not define UNICODE here.  The compiler defines
+// the symbol automatically.
 {$IFNDEF UNICODESTRING}
   {$IFDEF UNICODE}
     {$DEFINE UNICODE_BUT_NO_UNICODESTRING}
@@ -343,6 +347,7 @@
   {$DEFINE CPU32}
   {$DEFINE WIDGETWINFORMS}
   {$DEFINE DOTNET_OR_TEncoding}
+  {$DEFINE DOTNET_OR_UNICODESTRING}
   // Platform specific conditional. Used for platform specific code.
   {$DEFINE DOTNET}
   //differences in DotNET Framework versions.
