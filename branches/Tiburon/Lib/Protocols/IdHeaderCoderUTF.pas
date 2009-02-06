@@ -42,25 +42,33 @@ end;
 
 class function TIdHeaderCoderUTF.Encode(const ACharSet, AData: String): String;
 var
-  LEncoder: TIdTextEncoding;
   LBytes: TIdBytes;
+  LStrEncoding, LByteEncoding: TIdTextEncoding;
 begin
   Result := '';
   LBytes := nil;
+  // RLebeau 1/27/09: do not use the same Encoding class to encode the input
+  // string to bytes and then encode the bytes to a string.  Doing so will
+  // undo what TIdTextEncoding.Convert() does, effectively making this class
+  // behave the same as TIdHeaderCoderPlain.  The output of this class needs
+  // to be a string that contains codeunits in the UTF-7/8 Ansi range, not
+  // codeunits that have been converted back to UTF-16...
   if TextIsSame(ACharSet, 'UTF-7') then begin {do not localize}
-    LEncoder := TIdTextEncoding.UTF7;
+    LStrEncoding := TIdTextEncoding.UTF7;
+    LByteEncoding := TIdTextEncoding.ASCII;
   end
   else if TextIsSame(ACharSet, 'UTF-8') then begin {do not localize}
-    LEncoder := TIdTextEncoding.UTF8;
+    LStrEncoding := TIdTextEncoding.UTF8;
+    LByteEncoding := Get8BitEncoding;
   end else
   begin
     Exit;
   end;
   LBytes := TIdTextEncoding.Convert(
     TIdTextEncoding.Unicode,
-    LEncoder,
+    LStrEncoding,
     TIdTextEncoding.Unicode.GetBytes(AData));
-  Result := LEncoder.GetString(LBytes, 0, Length(LBytes));
+  Result := LByteEncoding.GetString(LBytes, 0, Length(LBytes));
 end;
 
 class function TIdHeaderCoderUTF.CanHandle(const ACharSet: String): Boolean;
