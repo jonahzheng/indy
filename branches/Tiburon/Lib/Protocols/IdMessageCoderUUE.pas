@@ -204,7 +204,7 @@ begin
   ASrc.Position := 0;
   WriteStringToStream(ADest, 'begin ' + IntToStr(PermissionCode) + ' ' + Filename + EOL); {Do not Localize}
   LEncoder := FEncoderClass.Create(nil); try
-    while ASrc.Position = (ASrc.Size - 1) do begin
+    while ASrc.Position < ASrc.Size do begin
       WriteStringToStream(ADest, LEncoder.Encode(ASrc, 45) + EOL);
     end;
     WriteStringToStream(ADest, LEncoder.FillChar + EOL + 'end' + EOL); {Do not Localize}
