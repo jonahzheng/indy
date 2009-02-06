@@ -84,12 +84,11 @@ type
   TIdMessagePart = class(TCollectionItem)
   protected
     FContentMD5: string;
-    FContentTransfer: string;
-    FContentType: string;
     FCharSet: string;
     FEndBoundary: string;
     FExtraHeaders: TIdHeaderList;
     FFileName: String;
+    FName: String;
     FHeaders: TIdHeaderList;
     FIsEncoded: Boolean;
     FOnGetMessagePartStream: TOnGetMessagePartStream;
@@ -129,10 +128,11 @@ type
     property ContentDisposition: string read GetContentDisposition write SetContentDisposition;
     property ContentID: string read GetContentID write SetContentID;
     property ContentLocation: string read GetContentLocation write SetContentLocation;
-    property ContentTransfer: string read FContentTransfer write FContentTransfer;
-    property ContentType: string read FContentType write SetContentType;
+    property ContentTransfer: string read GetContentTransfer write SetContentTransfer;
+    property ContentType: string read GetContentType write SetContentType;
     property ExtraHeaders: TIdHeaderList read FExtraHeaders write SetExtraHeaders;
     property FileName: String read FFileName write FFileName;
+    property Name: String read FName write FName;
     property ParentPart: integer read FParentPart write FParentPart;
   end;
 
@@ -182,7 +182,9 @@ begin
     // RLebeau 10/17/2003
     Headers.Assign(mp.Headers);
     ExtraHeaders.Assign(mp.ExtraHeaders);
+    CharSet := mp.CharSet;
     FileName := mp.FileName;
+    Name := mp.Name;
   end else begin
     inherited Assign(Source);
   end;
@@ -313,8 +315,15 @@ begin
 end;
 
 procedure TIdMessagePart.SetContentDisposition(const Value: string);
+var
+  LTmp: string;
 begin
-  Headers.Values['Content-Disposition'] := Value; {do not localize}
+  Headers.Values['Content-Disposition'] := RemoveHeaderEntry(Value, 'FILENAME'); {do not localize}
+  {RLebeau: override the current value only if the header specifies a new one}
+  LTmp := ExtractHeaderSubItem(Value, 'FILENAME'); {do not localize}
+  if LTmp <> '' then begin
+    FFileName := LTmp;
+  end;
 end;
 
 procedure TIdMessagePart.SetContentLocation(const Value: string);
@@ -329,13 +338,19 @@ end;
 
 procedure TIdMessagePart.SetContentType(const Value: string);
 var
-  LCharSet: string;
+  LTmp: string;
 begin
-  Headers.Values['Content-Type'] := RemoveHeaderEntry(Value, 'CHARSET'); {do not localize}
-  {RLebeau: override the current CharSet only if the header specifies a new value}
-  LCharSet := ExtractHeaderSubItem(Value, 'CHARSET'); {do not localize}
-  if LCharSet <> '' then begin
-    FCharSet := LCharSet;
+  LTmp := RemoveHeaderEntry(Value, 'CHARSET'); {do not localize}
+  LTmp := RemoveHeaderEntry(LTmp, 'NAME'); {do not localize}
+  Headers.Values['Content-Type'] := LTmp; {do not localize}
+  {RLebeau: override the current values only if the header specifies new ones}
+  LTmp := ExtractHeaderSubItem(Value, 'CHARSET'); {do not localize}
+  if LTmp <> '' then begin
+    FCharSet := LTmp;
+  end;
+  LTmp := ExtractHeaderSubItem(Value, 'NAME'); {do not localize}
+  if LTmp <> '' then begin
+    FName := LTmp;
   end;
 end;
 
