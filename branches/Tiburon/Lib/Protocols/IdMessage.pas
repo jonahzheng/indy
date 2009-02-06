@@ -403,11 +403,10 @@ type
     FOnCreateAttachment: TIdCreateAttachmentEvent;
     FLastGeneratedHeaders: TIdHeaderList;
     FConvertPreamble: Boolean;
-    FGenerateBCCListInHeader: Boolean;
+    FSavingToFile: Boolean;
     FIsMsgSinglePartMime: Boolean;
     FExceptionOnBlockedAttachments: Boolean; // used in TIdAttachmentFile
     //
-    function  FixUpMsgID(const AValue: String) : String;
     procedure DoInitializeISO(var VHeaderEncoding: Char; var VCharSet: String); virtual;
     function  GetAttachmentEncoding: string;
     function  GetInReplyTo: String;
@@ -536,6 +535,9 @@ uses
   IdMessageClient, IdAttachmentFile,
   IdText, SysUtils;
 
+const
+  cPriorityStrs: array[TIdMessagePriority] of string = ('urgent', 'urgent', 'normal', 'non-urgent', 'non-urgent');
+
 { TIdMIMEBoundary }
 
 procedure TIdMIMEBoundary.Clear;
@@ -642,7 +644,7 @@ begin
   FLastGeneratedHeaders.Clear;
   FEncoding := meDefault; {CC3: Changed initial encoding from meMIME to meDefault}
   FConvertPreamble := True;  {By default, in MIME, we convert the preamble text to the 1st TIdText part}
-  FGenerateBCCListInHeader := False;  {Only set True by SaveToFile}
+  FSavingToFile := False;  {Only set True by SaveToFile}
   FIsMsgSinglePartMime := False;
 end;
 
@@ -709,8 +711,7 @@ var
   ISOCharset: string;
   HeaderEncoding: Char;
   LN: Integer;
-  LEncoding: string;
-  LMIMEBoundary: string;
+  LEncoding, LMIMEBoundary, LContentType: string;
 begin
   MessageParts.CountParts;
   {CC2: If the encoding is meDefault, the user wants us to pick an encoding mechanism:}
@@ -789,9 +790,9 @@ begin
     Values['Subject'] := EncodeHeader(Subject, '', HeaderEncoding, ISOCharSet); {do not localize}
     Values['To'] := EncodeAddress(Recipients, HeaderEncoding, ISOCharSet); {do not localize}
     Values['Cc'] := EncodeAddress(CCList, HeaderEncoding, ISOCharSet); {do not localize}
-    {CC: SaveToFile sets FGenerateBCCListInHeader to True so that BCC names are saved
+    {CC: SaveToFile sets FSavingToFile to True so that BCC names are saved
      when saving to file and omitted otherwise (as required by SMTP)...}
-    if not FGenerateBCCListInHeader then begin
+    if not FSavingToFile then begin
       Values['Bcc'] := ''; {do not localize}
     end else begin
       Values['Bcc'] := EncodeAddress(BCCList, HeaderEncoding, ISOCharSet); {do not localize}
@@ -818,13 +819,14 @@ begin
         Values['Content-Disposition'] := '';
       end else begin
         if FContentType <> '' then begin
-          Values['Content-Type'] := FContentType;  {do not localize}
+          LContentType := FContentType;
           if FCharSet <> '' then begin
-            Values['Content-Type'] := Values['Content-Type'] + ';' + EOL + TAB + 'charset="' + FCharSet + '"';  {do not localize}
+            LContentType := LContentType + '; charset="' + FCharSet + '"';  {do not localize}
           end;
-          if MessageParts.Count > 0 then begin
-            Values['Content-Type'] := Values['Content-Type'] + '; boundary="' + LMIMEBoundary + '"'; {do not localize}
+          if (MessageParts.Count > 0) and (LMIMEBoundary <> '') then begin
+            LContentType := LContentType + '; boundary="' + LMIMEBoundary + '"'; {do not localize}
           end;
+          Values['Content-Type'] := LContentType; {do not localize}
         end;
         {CC2: We may have MIME with no parts if ConvertPreamble is True}
         Values['MIME-Version'] := '1.0'; {do not localize}
@@ -833,7 +835,11 @@ begin
     end else begin
       //CC: non-MIME can have ContentTransferEncoding of base64, quoted-printable...
       Values['Content-Transfer-Encoding'] := ContentTransferEncoding; {do not localize}
-      Values['Content-Type'] := ContentType;  {do not localize}
+      LContentType := FContentType;
+      if (LContentType <> '') and (FCharSet <> '') then begin
+        LContentType := LContentType + '; charset="' + FCharSet + '"';  {do not localize}
+      end;
+      Values['Content-Type'] := LContentType;  {do not localize}
     end;
     Values['Sender'] := Sender.Text; {do not localize}
     Values['Reply-To'] := EncodeAddress(ReplyTo, HeaderEncoding, ISOCharSet); {do not localize}
@@ -851,11 +857,11 @@ begin
 
     // S.G. 27/1/2003: Only issue X-Priority header if priority <> mpNormal (for stoopid spam filters)
     if Priority <> mpNormal then begin
+      Values['Priority'] := cPriorityStrs[Priority]; {do not localize}
       Values['X-Priority'] := IntToStr(Ord(Priority) + 1) {do not localize}
     end else begin
-      if IndexOfName('X-Priority') >= 0 then begin  {do not localize}
-        delete(IndexOfName('X-Priority'));    {do not localize}
-      end;
+      Values['Priority'] := '';    {do not localize}
+      Values['X-Priority'] := '';    {do not localize}
     end;
 
     Values['Message-Id'] := MsgId;
@@ -886,7 +892,7 @@ var
   LMIMEVersion: string;
 
   // Some mailers send priority as text, number or combination of both
-  function GetMsgPriority(APriority:string): TIdMessagePriority;
+  function GetMsgPriority(APriority: string): TIdMessagePriority;
   var
     s: string;
     Num: integer;
@@ -894,12 +900,13 @@ var
     // This is for Pegasus.
     if IndyPos('urgent', LowerCase(APriority)) <> 0 then begin {do not localize}
       Result := mpHigh;
-    end else if IndyPos('non-priority', LowerCase(APriority)) <> 0 then begin {do not localize}
+    end
+    else if IndyPos('non-urgent', LowerCase(APriority)) <> 0 then begin {do not localize}
       Result := mpLow;
-    end else begin
+    end else
+    begin
       s := Trim(APriority);
-      s := Fetch(s, ' ');   {do not localize}
-      Num := IndyStrToInt(s, 3);
+      Num := IndyStrToInt(Fetch(s, ' '), 3); {do not localize}
       Result := TIdMessagePriority(Num - 1);
     end;
   end;
@@ -935,10 +942,10 @@ begin
   Date := GMTToLocalDateTime(Headers.Values['Date']); {do not localize}
   Sender.Text := Headers.Values['Sender']; {do not localize}
 
-  if Length(Headers.Values['Priority']) = 0 then begin {do not localize}
-    Priority := GetMsgPriority(Headers.Values['X-Priority']) {do not localize}
-  end else begin
+  if Length(Headers.Values['Priority']) > 0 then begin {do not localize}
     Priority := GetMsgPriority(Headers.Values['Priority']); {do not localize}
+  end else begin
+    Priority := GetMsgPriority(Headers.Values['X-Priority']) {do not localize}
   end;
   {Note that the following code ensures MIMEBoundary.Count is 0 for single-part MIME messages...}
   LBoundary := ExtractHeaderSubItem(Headers.Values['Content-Type'], 'BOUNDARY');  {do not localize}
@@ -1096,9 +1103,9 @@ var
   LStream : TFileStream;
 begin
   LStream := TIdFileCreateStream.Create(AFileName); try
-    FGenerateBCCListInHeader := True; try
+    FSavingToFile := True; try
       SaveToStream(LStream, AHeadersOnly);
-    finally FGenerateBCCListInHeader := False; end;
+    finally FSavingToFile := False; end;
   finally FreeAndNil(LStream); end;
 end;
 
@@ -1175,30 +1182,17 @@ end;//
 
 function TIdMessage.GetInReplyTo: String;
 begin
-  Result := FixUpMsgID(FInReplyTo);
+  Result := EnsureMsgIDBrackets(FInReplyTo);
 end;
 
 procedure TIdMessage.SetInReplyTo(const AValue: String);
 begin
-  FInReplyTo := FixUpMsgID(AValue);
-end;
-
-function TIdMessage.FixUpMsgID(const AValue: String): String;
-begin
-  Result := AValue;
-  if Length(Result) > 0 then begin
-    if not TextStartsWith(Result, '<') then begin
-      Result := '<' + Result;
-    end;
-    if not TextEndsWith(Result, '>') then begin
-      Result := Result + '>';
-    end;
-  end;
+  FInReplyTo := EnsureMsgIDBrackets(AValue);
 end;
 
 procedure TIdMessage.SetMsgID(const AValue: String);
 begin
-  FMsgId := FixUpMsgID(AValue);
+  FMsgId := EnsureMsgIDBrackets(AValue);
 end;
 
 procedure TIdMessage.SetAttachmentTempDirectory(const Value: string);
