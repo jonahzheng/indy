@@ -507,7 +507,8 @@ type
     class procedure RegisterIOHandler;
     class procedure SetDefaultClass;
     function WaitFor(const AString: string; ARemoveFromBuffer: Boolean = True;
-      AInclusive: Boolean = False; AEncoding: TIdTextEncoding = nil): string;
+      AInclusive: Boolean = False; AEncoding: TIdTextEncoding = nil;
+      ATimeout: Integer = IdTimeoutDefault): string;
     // This is different than WriteDirect. WriteDirect goes
     // directly to the network or next level. WriteBuffer allows for buffering
     // using WriteBuffers. This should be the only call to WriteDirect
@@ -1723,7 +1724,8 @@ begin
 end;
 
 function TIdIOHandler.WaitFor(const AString: string; ARemoveFromBuffer: Boolean = True;
-  AInclusive: Boolean = False; AEncoding: TIdTextEncoding = nil): string;
+  AInclusive: Boolean = False; AEncoding: TIdTextEncoding = nil;
+  ATimeout: Integer = IdTimeoutDefault): string;
   //TODO: Add a time out (default to infinite) and event to pass data
   //TODO: Add a max size argument as well.
   //TODO: Add a case insensitive option
@@ -1736,25 +1738,23 @@ begin
   LBytes := ToBytes(AString, AEncoding);
   LPos := 0;
   repeat
-    if CheckForDataOnSource(250) then begin
-      LPos := InputBuffer.IndexOf(LBytes, LPos);
-      if LPos <> -1 then begin
-        if ARemoveFromBuffer and AInclusive then begin
-          Result := InputBuffer.Extract(LPos+Length(LBytes), AEncoding);
-        end else begin
-          Result := InputBuffer.Extract(LPos, AEncoding);
-          if ARemoveFromBuffer then begin
-            InputBuffer.Remove(Length(LBytes));
-          end;
-          if AInclusive then begin
-            Result := Result + AString;
-          end;
+    LPos := InputBuffer.IndexOf(LBytes, LPos);
+    if LPos <> -1 then begin
+      if ARemoveFromBuffer and AInclusive then begin
+        Result := InputBuffer.Extract(LPos+Length(LBytes), AEncoding);
+      end else begin
+        Result := InputBuffer.Extract(LPos, AEncoding);
+        if ARemoveFromBuffer then begin
+          InputBuffer.Remove(Length(LBytes));
         end;
-        Break;
+        if AInclusive then begin
+          Result := Result + AString;
+        end;
       end;
-      LPos := IndyMax(0, InputBuffer.Size - (Length(LBytes)-1));
+      Exit;
     end;
-    CheckForDisconnect;
+    LPos := IndyMax(0, InputBuffer.Size - (Length(LBytes)-1));
+    ReadFromSource(True, ATimeout, True);
   until False;
 end;
 
