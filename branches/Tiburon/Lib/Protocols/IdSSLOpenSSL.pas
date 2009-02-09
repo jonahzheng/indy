@@ -250,7 +250,7 @@ type
   TIdSSLIOHandlerSocketOpenSSL = class;
   TIdSSLCipher = class;
 
-  TCallbackEvent  = procedure(Msg: String) of object;
+  TCallbackEvent  = procedure(const AMsg: String) of object;
   TPasswordEvent  = procedure(var Password: AnsiString) of object;
   TVerifyPeerEvent  = function(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean of object;
   TIOHandlerNotify = procedure(ASender: TIdSSLIOHandlerSocketOpenSSL) of object;
@@ -367,7 +367,7 @@ type
     //
     procedure SetPassThrough(const Value: Boolean); override;
     procedure DoBeforeConnect(ASender: TIdSSLIOHandlerSocketOpenSSL); virtual;
-    procedure DoStatusInfo(Msg: String); virtual;
+    procedure DoStatusInfo(const AMsg: String); virtual;
     procedure DoGetPassword(var Password: AnsiString); virtual;
     function DoVerifyPeer(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean; virtual;
     function RecvEnc(var VBuffer: TIdBytes): Integer; override;
@@ -410,7 +410,7 @@ type
     //procedure CreateSSLContext(axMode: TIdSSLMode);
     //procedure CreateSSLContext;
     //
-    procedure DoStatusInfo(Msg: String); virtual;
+    procedure DoStatusInfo(const AMsg: String); virtual;
     procedure DoGetPassword(var Password: AnsiString); virtual;
     function DoVerifyPeer(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean; virtual;
     procedure InitComponent; override;
@@ -520,6 +520,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     FX509    : PX509;
     FSubject : TIdX509Name;
     FIssuer  : TIdX509Name;
+    FDisplayInfo : TStrings;
     function RSubject:TIdX509Name;
     function RIssuer:TIdX509Name;
     function RnotBefore:TDateTime;
@@ -528,6 +529,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     function RFingerprintAsString:String;
     function GetSerialNumber: String;
     function GetVersion : TIdC_LONG;
+    function GetDisplayInfo : TStrings;
   public
     Constructor Create(aX509: PX509; aCanFreeX509: Boolean = True); virtual;
     Destructor Destroy; override;
@@ -543,6 +545,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     property notBefore: TDateTime read RnotBefore;
     property notAfter: TDateTime read RnotAfter;
     property SerialNumber : string read GetSerialNumber;
+    property DisplayInfo : TStrings read GetDisplayInfo;
   end;
 
   TIdSSLCipher = class(TObject)
@@ -563,7 +566,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     property Version: String read GetVersion;
   end;
 
-  EIdOpenSSLError = class(EIdException);
+  EIdOpenSSLError               = class(EIdException);
   EIdOSSLCouldNotLoadSSLLibrary = class(EIdOpenSSLError);
   EIdOSSLModeNotSet             = class(EIdOpenSSLError);
   EIdOSSLGetMethodError         = class(EIdOpenSSLError);
@@ -628,7 +631,7 @@ var
   LockVerifyCB: TIdCriticalSection = nil;
   CallbackLockList: TThreadList = nil;
 
-function GetErrorMessage(const AErr : TIdC_ULONG) : AnsiString;
+function GetErrorMessage(const AErr : TIdC_ULONG) : AnsiString;  {$IFDEF USEINLINE} inline; {$ENDIF}
 var
   LErrMsg: array [0..160] of AnsiChar;
 begin
@@ -722,29 +725,17 @@ begin
   Result := RSA;
 end;}
 
-function AddMins (const DT: TDateTime; const Mins: Extended): TDateTime;
+function AddMins (const DT: TDateTime; const Mins: Extended): TDateTime;  {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := DT + Mins / (60 * 24)
 end;
 
-function AddHrs (const DT: TDateTime; const Hrs: Extended): TDateTime;
+function AddHrs (const DT: TDateTime; const Hrs: Extended): TDateTime;  {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
-  Result := DT + Hrs / 24.0
+  Result := DT + Hrs / 24.0;
 end;
 
-{function GetLocalTZBias: LongInt;
-var
-	TZ : TTimeZoneInformation;
-begin
-	case GetTimeZoneInformation (TZ) of
-		TIME_ZONE_ID_STANDARD: Result := TZ.Bias + TZ.StandardBias;
-		TIME_ZONE_ID_DAYLIGHT: Result := TZ.Bias + TZ.DaylightBias;
-	else
-		Result := TZ.Bias;
-	end;
-end;}
-
-function GetLocalTime (const DT: TDateTime): TDateTime;
+function GetLocalTime (const DT: TDateTime): TDateTime;   {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := DT - TimeZoneBias{ / (24 * 60)};
 end;
@@ -929,7 +920,7 @@ begin
 end;
 
 //Note that I define UCTTime as  PASN1_STRING
-function UTCTime2DateTime(UCTTime: PASN1_UTCTIME):TDateTime;
+function UTCTime2DateTime(UCTTime: PASN1_UTCTIME):TDateTime; {$IFDEF USEINLINE} inline; {$ENDIF}
 var
   year  : Word;
   month : Word;
@@ -949,14 +940,14 @@ begin
   end;
 end;
 
-function TranslateInternalVerifyToSSL(Mode: TIdSSLVerifyModeSet): Integer;
+function TranslateInternalVerifyToSSL(Mode: TIdSSLVerifyModeSet): Integer;  {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := OPENSSL_SSL_VERIFY_NONE;
   if sslvrfPeer in Mode then 
   begin
     Result := Result or OPENSSL_SSL_VERIFY_PEER;
   end;
-  if sslvrfFailIfNoPeerCert in Mode then 
+  if sslvrfFailIfNoPeerCert in Mode then
   begin
     Result:= Result or OPENSSL_SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
   end;
@@ -966,20 +957,14 @@ begin
   end;
 end;
 
-{function TranslateSLLVerifyToInternal(Mode: Integer): TIdSSLVerifyModeSet;
-begin
-  Result := [];
-  if LogicalAnd(Mode, OPENSSL_SSL_VERIFY_PEER) then Result := Result + [sslvrfPeer];
-  if LogicalAnd(Mode, OPENSSL_SSL_VERIFY_FAIL_IF_NO_PEER_CERT) then Result := Result + [sslvrfFailIfNoPeerCert];
-  if LogicalAnd(Mode, OPENSSL_SSL_VERIFY_CLIENT_ONCE) then Result := Result + [sslvrfClientOnce];
-end;}
-
 function LogicalAnd(A, B: Integer): Boolean;
+ {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := (A and B) = B;
 end;
 
 function BytesToHexString(APtr : Pointer; ALen : Integer) : String;
+{$IFDEF USEINLINE} inline; {$ENDIF}
 var
   i : PtrInt;
 begin
@@ -995,6 +980,7 @@ begin
 end;
 
 function MDAsString(const AMD : TEVP_MD) : String;
+{$IFDEF USEINLINE} inline; {$ENDIF}
 var
   I : Integer;
 begin
@@ -1034,12 +1020,8 @@ begin
       try
         IdSSLSocket := TIdSSLSocket(IdSslGetAppData(hSSL));
 
-        //Error :=
         IdSslX509StoreCtxGetError(ctx);
         Depth := IdSslX509StoreCtxGetErrorDepth(ctx);
-        //  str := Format('Certificate: %s', [Certificate.Subject.OneLine]);    {Do not Localize}
-        //  str := IdSSLSocket.GetSessionIDAsString;
-        //  ShowMessage(str);
 
         if not ((Ok > 0) and (IdSSLSocket.fSSLContext.VerifyDepth >= Depth)) then begin
           Ok := 0;
@@ -1163,7 +1145,6 @@ begin
 
 end;
 
-{function TIdServerIOHandlerSSLOpenSSL.Accept(ASocket: TIdSocketHandle; AThread: TIdThread) : TIdIOHandler;  }
 function TIdServerIOHandlerSSLOpenSSL.Accept(ASocket: TIdSocketHandle;
   // This is a thread and not a yarn. Its the listener thread.
   AListenerThread: TIdThread; AYarn: TIdYarn ): TIdIOHandler;
@@ -1189,24 +1170,27 @@ begin
   Result := LIO;
 end;
 
-procedure TIdServerIOHandlerSSLOpenSSL.DoStatusInfo(Msg: String);
+procedure TIdServerIOHandlerSSLOpenSSL.DoStatusInfo(const AMsg: String);
 begin
-  if Assigned(fOnStatusInfo) then
-    fOnStatusInfo(Msg);
+  if Assigned(fOnStatusInfo) then begin
+    fOnStatusInfo(AMsg);
+  end;
 end;
 
 procedure TIdServerIOHandlerSSLOpenSSL.DoGetPassword(var Password: AnsiString);
 begin
-  if Assigned(fOnGetPassword) then
+  if Assigned(fOnGetPassword) then  begin
     fOnGetPassword(Password);
+  end;
 end;
 
 function TIdServerIOHandlerSSLOpenSSL.DoVerifyPeer(Certificate: TIdX509;
   AOk: Boolean; ADepth: Integer): Boolean;
 begin
   Result := True;
-  if Assigned(fOnVerifyPeer) then
+  if Assigned(fOnVerifyPeer) then begin
     Result := fOnVerifyPeer(Certificate, AOk, ADepth);
+  end;
 end;
 
 function TIdServerIOHandlerSSLOpenSSL.MakeFTPSvrPort : TIdSSLIOHandlerSocketBase;
@@ -1419,24 +1403,27 @@ end;
 
 //}
 
-procedure TIdSSLIOHandlerSocketOpenSSL.DoStatusInfo(Msg: String);
+procedure TIdSSLIOHandlerSocketOpenSSL.DoStatusInfo(const AMsg: String);
 begin
-  if Assigned(fOnStatusInfo) then
-    fOnStatusInfo(Msg);
+  if Assigned(fOnStatusInfo) then begin
+    fOnStatusInfo(AMsg);
+  end;
 end;
 
 procedure TIdSSLIOHandlerSocketOpenSSL.DoGetPassword(var Password: AnsiString);
 begin
-  if Assigned(fOnGetPassword) then
+  if Assigned(fOnGetPassword) then begin
     fOnGetPassword(Password);
+  end;
 end;
 
 function TIdSSLIOHandlerSocketOpenSSL.DoVerifyPeer(Certificate: TIdX509;
   AOk: Boolean; ADepth: Integer): Boolean;
 begin
   Result := True;
-  if Assigned(fOnVerifyPeer) then
+  if Assigned(fOnVerifyPeer) then begin
     Result := fOnVerifyPeer(Certificate, AOk, ADepth);
+  end;
 end;
 
 procedure TIdSSLIOHandlerSocketOpenSSL.OpenEncodedConnection;
@@ -1521,8 +1508,7 @@ begin
   if fMode = sslmUnassigned then begin
     if CtxMode = sslCtxServer then begin
       fMode := sslmServer;
-    end
-    else begin
+    end else begin
       fMode := sslmClient;
     end
   end;
@@ -1564,13 +1550,11 @@ begin
     end;
   end;
 
-  //should use SSL_CTX_check_private_key to check key+cert match
-
   if StatusInfoOn then begin
     IdSslCtxSetInfoCallback(fContext, InfoCallback);
   end;
 
-  //f_SSL_CTX_set_tmp_rsa_callback(hSSLContext, @RSACallback);
+  //if_SSL_CTX_set_tmp_rsa_callback(hSSLContext, @RSACallback);
 
   if fCipherList <> '' then begin    {Do not Localize}
     error := IdSslCtxSetCipherList(fContext, PAnsiChar(fCipherList));
@@ -1839,11 +1823,9 @@ begin
                'description = ' + Cipher.Description + '; ' +    {Do not Localize}
                'bits = ' + IntToStr(Cipher.Bits) + '; ' +    {Do not Localize}
                'version = ' + Cipher.Version + '; ';    {Do not Localize}
-
   if fParent is TIdServerIOHandlerSSLOpenSSL then begin
     (fParent as TIdServerIOHandlerSSLOpenSSL).DoStatusInfo(StatusStr);
   end;
-
 end;
 
 procedure TIdSSLSocket.Connect(const pHandle: TIdStackSocketHandle);
@@ -1877,7 +1859,6 @@ begin
                'description = ' + Cipher.Description + '; ' +    {Do not Localize}
                'bits = ' + IntToStr(Cipher.Bits) + '; ' +    {Do not Localize}
                'version = ' + Cipher.Version + '; ';    {Do not Localize}
-
   if fParent is TIdSSLIOHandlerSocketOpenSSL then begin
     (fParent as TIdSSLIOHandlerSocketOpenSSL).DoStatusInfo(StatusStr);
   end;
@@ -1896,7 +1877,6 @@ begin
     err := GetSSLError(Result);
     if (err <> OPENSSL_SSL_ERROR_WANT_READ) and (err <> OPENSSL_SSL_ERROR_WANT_WRITE) then begin
       Exit;
-    //      Result := IdSslRead(fSSL, @ABuffer[0], Length(ABuffer));
     end;
   until False;
 end;
@@ -1912,10 +1892,9 @@ begin
     end;
     err := GetSSLError(Result);
 
-  if (err <> OPENSSL_SSL_ERROR_WANT_READ) and (err <> OPENSSL_SSL_ERROR_WANT_WRITE) then begin
-    Exit;
-  //    Result := IdSslWrite(fSSL, @ABuffer[AOffset], ALength);
-  end;
+    if (err <> OPENSSL_SSL_ERROR_WANT_READ) and (err <> OPENSSL_SSL_ERROR_WANT_WRITE) then begin
+      Exit;
+    end;
   until False;
 end;
 
@@ -2152,6 +2131,8 @@ end;
 constructor TIdX509.Create(aX509: PX509; aCanFreeX509: Boolean = True);
 begin
   inherited Create;
+  //don't create FDisplayInfo unless specifically requested.
+  FDisplayInfo := nil;
   FX509 := aX509;
   FCanFreeX509 := aCanFreeX509;
   FFingerprints := TIdX509Fingerprints.Create(FX509);
@@ -2162,6 +2143,7 @@ end;
 
 destructor TIdX509.Destroy;
 begin
+  FreeAndNil(FDisplayInfo);
   FreeAndNil(FSubject);
   FreeAndNil(FIssuer);
 
@@ -2177,16 +2159,58 @@ begin
   inherited Destroy;
 end;
 
+
+procedure DumpCert(AOut : TStrings; AX509 : PX509);
+  {$IFDEF USEINLINE} inline; {$ENDIF}
+  {$IFNDEF OPENSSL_NO_BIO}
+var LMem : pBIO;
+  LBuf,s : AnsiString;
+  LRes : TIdC_INT;
+const
+  LBUF_LEN = 1024;
+begin
+  LMem := IdSslBioNew(IdSslBioSMem);
+  try
+     if Assigned(IdSslX509Print) then begin
+       IdSslX509Print(LMem,AX509);
+       s := '';
+       SetLength(LBuf,LBUF_LEN);
+       repeat
+         LRes := IdSslBioRead(LMem,@LBuf[1],LBUF_LEN);
+         if LRes < 1 then begin
+           Break;
+         end;
+         //do this indirectly because OpenSSL will format the output.
+         s := s + Copy(LBuf,1,LRes);
+       until False;
+       AOut.Text := String(s);
+     end;
+  finally
+    IdSslBioFree(LMem);
+  end;
+end;
+{$ELSE}
+begin
+end;
+{$ENDIF}
+
+function TIdX509.GetDisplayInfo: TStrings;
+begin
+  if not Assigned(FDisplayInfo) then begin
+    FDisplayInfo := TStringList.Create;
+    DumpCert(FDisplayInfo, FX509);
+  end;
+  Result := FDisplayInfo;
+end;
+
 function TIdX509.GetSerialNumber: String;
 var
   LSN : PASN1_INTEGER;
 begin
-  if FX509 <> nil then
-  begin
+  if FX509 <> nil then begin
     LSN := IdSslX509GetSerialNumber(FX509);
     Result := BytesToHexString(LSN.data, LSN.length);
-  end else
-  begin
+  end else begin
     Result := '';
   end;
 end;
@@ -2365,7 +2389,7 @@ end;
 
 initialization
   RegisterSSL('OpenSSL','Indy Pit Crew',                                  {do not localize}
-    'Copyright © 1993 - 2004'#10#13 +                                     {do not localize}
+    'Copyright '+Char(169)+' 1993 - 2009'#10#13 +                                     {do not localize}
     'Chad Z. Hower (Kudzu) and the Indy Pit Crew. All rights reserved.',  {do not localize}
     'Open SSL Support DLL Delphi and C++Builder interface',               {do not localize}
     'http://www.indyproject.org/'#10#13 +                                 {do not localize}
