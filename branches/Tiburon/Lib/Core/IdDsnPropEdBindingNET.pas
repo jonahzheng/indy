@@ -91,7 +91,8 @@ const
   IPv4Loopback  = '127.0.0.1';          {do not localize}
 
 function IsValidIP(const AAddr : String): Boolean;
-var LIP :  TIdIPAddress;
+var
+  LIP: TIdIPAddress;
 begin
   LIP :=  TIdIPAddress.MakeAddressObject(AAddr);
   Result := Assigned(LIP);
@@ -121,7 +122,6 @@ var
   LAddr, LText: string;
   LPort: integer;
 begin
-  
   ADest.Clear;
   LItems := TStringList.Create;
   try
@@ -129,12 +129,11 @@ begin
     for i := 0 to LItems.Count-1 do begin
       if Length(LItems[i]) > 0 then begin
         if LItems[i][1] = '[' then begin
-         //  ipv6
+          //  ipv6
           LIPVersion := Id_IPv6;
           LText := Copy(LItems[i], 2, MaxInt);
           LAddr := Fetch(LText, ']:');
           LPort := IndyStrToInt(LText, -1);
-
         end else begin
           // ipv4
           LIPVersion := Id_IPv4;
@@ -158,8 +157,8 @@ begin
 end;
 
 function NumericOnly(const AText : String) : String;
-var i : Integer;
-
+var
+  i: Integer;
 begin
   Result := '';
   for i := 1 to Length(AText) do
@@ -201,7 +200,8 @@ begin
 end;
 
 function GetListValues(const ASocketHandles : TIdSocketHandles) : String;
-var i : Integer;
+var
+  i: Integer;
 begin
   Result := '';
   for i := 0 to ASocketHandles.Count -1 do begin
@@ -294,7 +294,7 @@ begin
   Self.lblIPAddress.Size := System.Drawing.Size.Create(100, 16);
   Self.lblIPAddress.TabIndex := 6;
   Self.lblIPAddress.Text := 'Label1';
-  // 
+  //
   // edtIPAddress
   // 
   Self.edtIPAddress.Anchor := (System.Windows.Forms.AnchorStyles(((System.Windows.Forms.AnchorStyles.Top 
@@ -325,7 +325,7 @@ begin
   Self.edtPort.Size := System.Drawing.Size.Create(224, 20);
   Self.edtPort.TabIndex := 9;
   Include(Self.edtPort.ValueChanged, Self.edtPort_ValueChanged);
-  // 
+  //
   // cboIPVersion
   // 
   Self.cboIPVersion.DropDownStyle := System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -412,8 +412,12 @@ begin
   SetIPv6Addresses(nil);
 
   TIdStack.IncUsage;
+  try
+    GStack.AddLocalAddressesToList(FIPv4Addresses);
+  finally
+    TIdStack.DecUsage;
+  end;
 
-  IPv4Addresses := GStack.LocalAddresses;
   UpdateEditControls;
   //captions
   btnNew.Text := RSBindingNewCaption;

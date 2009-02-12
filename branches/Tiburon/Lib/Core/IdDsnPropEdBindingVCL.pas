@@ -513,17 +513,16 @@ begin
   SetIPv4Addresses(nil);
   SetIPv6Addresses(nil);
 
-  if Assigned(GStack) then begin
-    fCreatedStack := False;
-  end else begin
-    TIdStack.Make;
-    fCreatedStack := True;
+  TIdStack.IncUsage;
+  try
+    GStack.AddLocalAddressesToList(FIPv4Addresses);
+  finally
+    TIdStack.DecUsage;
   end;
 
-  IPv4Addresses := GStack.LocalAddresses;
+  edtPort.Items.BeginUpdate;
   try
     edtPort.Items.Add(PortDescription(0));
-    edtPort.Items.BeginUpdate;
     for i := 0 to IdPorts.Count - 1 do begin
       edtPort.Items.Add(PortDescription(Integer(IdPorts[i])));
     end;
@@ -551,9 +550,6 @@ begin
   FreeAndNil(FIPv4Addresses);
   FreeAndNil(FIPv6Addresses);
   FreeAndNil(FHandles);
-  if fCreatedStack then begin
-    FreeAndNil(GStack);
-  end;
   inherited Destroy;
 end;
 
@@ -710,7 +706,7 @@ begin
   // Unicode codepoint value, depending on the codepage used for the source code.
   // For instance, #128 may become #$20AC...
 
-  if (Key > #31) and (Key < Char(128)) then begin
+  if (Key > Chr(31)) and (Key < Chr(128)) then begin
     if not IsNumeric(Key) then begin
       Key := #0;
     end;
