@@ -20,10 +20,14 @@ type
   TIdHeaderCoderClass = class of TIdHeaderCoder;
 
   function HeaderCoderByCharSet(const ACharSet: String): TIdHeaderCoderClass;
-  function DecodeHeaderData(const ACharSet, AData: String; ADecodeEvent: TIdHeaderCodingNeededEvent = nil): String;
-  function EncodeHeaderData(const ACharSet, AData: String; AEncodeEvent: TIdHeaderCodingNeededEvent = nil): String;
+  function DecodeHeaderData(const ACharSet, AData: String): String;
+  function EncodeHeaderData(const ACharSet, AData: String): String;
   procedure RegisterHeaderCoder(const ACoder: TIdHeaderCoderClass);
   procedure UnregisterHeaderCoder(const ACoder: TIdHeaderCoderClass);
+
+var
+  GHeaderEncodingNeeded: TIdHeaderCodingNeededEvent = nil;
+  GHeaderDecodingNeeded: TIdHeaderCodingNeededEvent = nil;
 
 implementation
 
@@ -83,8 +87,7 @@ begin
   end;
 end;
 
-function DecodeHeaderData(const ACharSet, AData: String;
-  ADecodeEvent: TIdHeaderCodingNeededEvent = nil): String;
+function DecodeHeaderData(const ACharSet, AData: String): String;
 var
   LCoder: TIdHeaderCoderClass;
 begin
@@ -94,14 +97,13 @@ begin
   end else
   begin
     Result := '';
-    if Assigned(ADecodeEvent) then begin
-      ADecodeEvent(ACharSet, AData, Result);
+    if Assigned(GHeaderDecodingNeeded) then begin
+      GHeaderDecodingNeeded(ACharSet, AData, Result);
     end;
   end;
 end;
 
-function EncodeHeaderData(const ACharSet, AData: String;
-  AEncodeEvent: TIdHeaderCodingNeededEvent = nil): String;
+function EncodeHeaderData(const ACharSet, AData: String): String;
 var
   LCoder: TIdHeaderCoderClass;
 begin
@@ -111,15 +113,15 @@ begin
   end else
   begin
     Result := AData;
-    if Assigned(AEncodeEvent) then begin
-      AEncodeEvent(ACharSet, AData, Result);
+    if Assigned(GHeaderEncodingNeeded) then begin
+      GHeaderEncodingNeeded(ACharSet, AData, Result);
     end;
   end;
 end;
 
 procedure RegisterHeaderCoder(const ACoder: TIdHeaderCoderClass);
 begin
-  if Assigned(ACoder) and (GHeaderCoderList.IndexOf(TObject(ACoder)) = -1) then begin
+  if Assigned(ACoder) and Assigned(GHeaderCoderList) and (GHeaderCoderList.IndexOf(TObject(ACoder)) = -1) then begin
     GHeaderCoderList.Add(TObject(ACoder));
   end;
 end;
