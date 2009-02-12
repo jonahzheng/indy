@@ -104,16 +104,14 @@ uses
 
 // Procs
   function EncodeAddressItem(EmailAddr: TIdEmailAddressItem; const HeaderEncoding: Char;
-    const MimeCharSet: string; AUseAddressForNameIfNameMissing: Boolean = False;
-     AEncodeEvent: TIdHeaderCodingNeededEvent = nil): string;
+    const MimeCharSet: string; AUseAddressForNameIfNameMissing: Boolean = False): string;
   function EncodeHeader(const Header: string; Specials: String; const HeaderEncoding: Char;
-   const MimeCharSet: string; AEncodeEvent: TIdHeaderCodingNeededEvent = nil): string;
+   const MimeCharSet: string): string;
   function EncodeAddress(EmailAddr: TIdEMailAddressList; const HeaderEncoding: Char;
-    const MimeCharSet: string; AUseAddressForNameIfNameMissing: Boolean = False;
-    AEncodeEvent: TIdHeaderCodingNeededEvent = nil): string;
-  function DecodeHeader(const Header: string; ADecodeEvent: TIdHeaderCodingNeededEvent = nil): string;
-  procedure DecodeAddress(EMailAddr: TIdEmailAddressItem; ADecodeEvent: TIdHeaderCodingNeededEvent = nil);
-  procedure DecodeAddresses(AEMails: String; EMailAddr: TIdEmailAddressList; ADecodeEvent: TIdHeaderCodingNeededEvent = nil);
+    const MimeCharSet: string; AUseAddressForNameIfNameMissing: Boolean = False): string;
+  function DecodeHeader(const Header: string): string;
+  procedure DecodeAddress(EMailAddr: TIdEmailAddressItem);
+  procedure DecodeAddresses(AEMails: String; EMailAddr: TIdEmailAddressList);
 
   (*$HPPEMIT '#include <Idallheadercoders.hpp>'*)
 
@@ -139,8 +137,7 @@ const
     '4','5','6','7','8','9','+','/');      {Do not Localize}
 
 function EncodeAddressItem(EmailAddr: TIdEmailAddressItem; const HeaderEncoding: Char;
-  const MimeCharSet: string; AUseAddressForNameIfNameMissing: Boolean = False;
-  AEncodeEvent: TIdHeaderCodingNeededEvent = nil): string;
+  const MimeCharSet: string; AUseAddressForNameIfNameMissing: Boolean = False): string;
 var
   S : string;
   I : Integer;
@@ -161,7 +158,7 @@ begin
       end;
     end;
     if NeedEncode then begin
-      S := EncodeHeader(EmailAddr.Name, csSPECIALS, HeaderEncoding, MimeCharSet, AEncodeEvent);
+      S := EncodeHeader(EmailAddr.Name, csSPECIALS, HeaderEncoding, MimeCharSet);
     end else begin
       { quoted string }
       S := '"';           {Do not Localize}
@@ -192,7 +189,7 @@ begin
   Result := 0;
 end;
 
-function DecodeHeader(const Header: string; ADecodeEvent: TIdHeaderCodingNeededEvent = nil): string;
+function DecodeHeader(const Header: string): string;
 var
   HeaderCharSet, HeaderEncoding, HeaderData, S: string;
   LStartPos, LLength, LEncodingStartPos, LEncodingEndPos, LLastStartPos: Integer;
@@ -321,7 +318,7 @@ begin
     if ExtractEncoding(Result, LEncodingStartPos, LEncodingEndPos, HeaderCharSet, HeaderEncoding, HeaderData) then
     begin
       if ExtractEncodedData(HeaderEncoding, HeaderData, S) then begin
-        S := DecodeHeaderData(HeaderCharSet, S, ADecodeEvent);
+        S := DecodeHeaderData(HeaderCharSet, S);
       end;
       //replace old substring in header with decoded string,
       // ignoring whitespace that separates encoded words:
@@ -355,33 +352,31 @@ begin
   until LStartPos = 0;
 end;
 
-procedure DecodeAddress(EMailAddr : TIdEmailAddressItem; ADecodeEvent: TIdHeaderCodingNeededEvent = nil);
+procedure DecodeAddress(EMailAddr : TIdEmailAddressItem);
 begin
-  EMailAddr.Name := DecodeHeader(EMailAddr.Name, ADecodeEvent);
+  EMailAddr.Name := DecodeHeader(EMailAddr.Name);
 end;
 
-procedure DecodeAddresses(AEMails : String; EMailAddr: TIdEmailAddressList;
-  ADecodeEvent: TIdHeaderCodingNeededEvent = nil);
+procedure DecodeAddresses(AEMails : String; EMailAddr: TIdEmailAddressList);
 var
   idx : Integer;
 begin
   EMailAddr.EMailAddresses := AEMails;
   for idx := 0 to EMailAddr.Count-1 do begin
-    DecodeAddress(EMailAddr[idx], ADecodeEvent);
+    DecodeAddress(EMailAddr[idx]);
   end;
 end;
 
 function EncodeAddress(EmailAddr: TIdEMailAddressList; const HeaderEncoding: Char;
-  const MimeCharSet: string; AUseAddressForNameIfNameMissing: Boolean = False;
-  AEncodeEvent: TIdHeaderCodingNeededEvent = nil): string;
+  const MimeCharSet: string; AUseAddressForNameIfNameMissing: Boolean = False): string;
 var
   idx : Integer;
 begin
   if EmailAddr.Count > 0 then begin
-    Result := EncodeAddressItem(EMailAddr[0], HeaderEncoding, MimeCharSet, AUseAddressForNameIfNameMissing, AEncodeEvent);
+    Result := EncodeAddressItem(EMailAddr[0], HeaderEncoding, MimeCharSet, AUseAddressForNameIfNameMissing);
     for idx := 1 to EmailAddr.Count-1 do begin
       Result := Result + ', ' +    {Do not Localize}
-        EncodeAddressItem(EMailAddr[idx], HeaderEncoding, MimeCharSet, AUseAddressForNameIfNameMissing, AEncodeEvent);
+        EncodeAddressItem(EMailAddr[idx], HeaderEncoding, MimeCharSet, AUseAddressForNameIfNameMissing);
     end;
   end else begin
     Result := '';      {Do not Localize}
@@ -390,7 +385,7 @@ end;
 
 { encode a header field if non-ASCII characters are used }
 function EncodeHeader(const Header: string; Specials: String; const HeaderEncoding: Char;
-  const MimeCharSet: string; AEncodeEvent: TIdHeaderCodingNeededEvent = nil): string;
+  const MimeCharSet: string): string;
 const
   SPACES: String = ' ' + TAB + EOL;    {Do not Localize}
 var
@@ -399,7 +394,7 @@ var
   B0, B1, B2: Integer;
   InEncode: Integer;
   NeedEncode: Boolean;
-  csNeedEncode, csReqQuote: String;
+  csNoEncode, csNoReqQuote: String;
   BeginEncode, EndEncode: string;
 
   procedure EncodeWord(AP: Integer);
@@ -423,7 +418,7 @@ var
           if S[LQ] = ' ' then begin {Do not Localize}
             Enc1 := '_';  {Do not Localize}
           end
-          else if CharIsInSet(S, LQ, csReqQuote) then begin
+          else if (not CharIsInSet(S, LQ, csNoReqQuote)) or CharIsInSet(S, LQ, Specials) then begin
             Enc1 := '=' + IntToHex(Ord(S[LQ]), 2);     {Do not Localize}
           end
           else begin
@@ -502,7 +497,7 @@ var
   end;
 
 begin
-  S := EncodeHeaderData(MimeCharSet, Header, AEncodeEvent);
+  S := EncodeHeaderData(MimeCharSet, Header);
 
   {Suggested by Andrew P.Rybin for easy 8bit support}
   if HeaderEncoding = '8' then begin {Do not Localize}
@@ -515,15 +510,19 @@ begin
   // Unicode codepoint value, depending on the codepage used for the source code.
   // For instance, #128 may become #$20AC...
 
-  csNeedEncode := CreateEncodeRange(#0, #31) + CreateEncodeRange(#127, Char(255)) + Specials;
-  csReqQuote := csNeedEncode + '?=_ ';   {Do not Localize}
+  // RLebeau 2/12/09: changed the logic to use "no-encode" sets instead, so
+  // that words containing codeunits outside the ASCII range are always
+  // encoded.  This is easier to manage when Unicode data is involved.
+  
+  csNoEncode := CreateEncodeRange(#32, #126);
+  csNoReqQuote := CreateEncodeRange(#33, #60) + #62 + CreateEncodeRange(#64, #94) + CreateEncodeRange(#96, #126);
   BeginEncode := '=?' + MimeCharSet + '?' + HeaderEncoding + '?';    {Do not Localize}
   EndEncode := '?=';  {Do not Localize}
 
   // JMBERG: We want to encode stuff that the user typed
   // as if it already is encoded!!
   if DecodeHeader(Header) <> Header then begin
-    csNeedEncode := csNeedEncode + '=';
+    Delete(csNoEncode, Pos('=', csNoEncode), 1);
   end;
 
   L := Length(S);
@@ -539,7 +538,7 @@ begin
     R := P;
     NeedEncode := False;
     while (P <= L) and (not CharIsInSet(S, P, SPACES)) do begin
-      if CharIsInSet(S, P, csNeedEncode) then begin
+      if (not CharIsInSet(S, P, csNoEncode)) or CharIsInSet(S, P, Specials) then begin
         NeedEncode := True;
       end;
       Inc(P);
