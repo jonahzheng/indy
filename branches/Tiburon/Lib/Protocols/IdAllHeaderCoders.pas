@@ -18,11 +18,10 @@ implementation
 uses
   IdHeaderCoderPlain,
   IdHeaderCoder2022JP,
-  {$IFDEF DOTNET}
-  IdHeaderCoderDotNet
-  {$ELSE}
-  IdHeaderCoderUTF
-  {$ENDIF};
+  {$IFNDEF DOTNET}
+  IdHeaderCoderUTF,
+  {$ENDIF}
+  IdHeaderCoderIndy;
 
 {dee-duh-de-duh, that's all folks.}
 
