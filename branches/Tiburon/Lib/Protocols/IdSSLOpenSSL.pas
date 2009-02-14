@@ -376,20 +376,15 @@ type
     procedure OpenEncodedConnection; virtual;
     //some overrides from base classes
     procedure InitComponent; override;
-
     procedure ConnectClient; override;
   public
     destructor Destroy; override;
     function Clone :  TIdSSLIOHandlerSocketBase; override;
     procedure StartSSL; override;
-
     procedure AfterAccept; override;
-
     procedure Close; override;
     procedure Open; override;
-
     property SSLSocket: TIdSSLSocket read fSSLSocket write fSSLSocket;
-
     property OnBeforeConnect: TIOHandlerNotify read fOnBeforeConnect write fOnBeforeConnect;
     property SSLContext: TIdSSLContext read fSSLContext write fSSLContext;
   published
@@ -420,12 +415,9 @@ type
     // AListenerThread is a thread and not a yarn. Its the listener thread.
     function Accept(ASocket: TIdSocketHandle; AListenerThread: TIdThread;
       AYarn: TIdYarn): TIdIOHandler; override;
-
 //    function Accept(ASocket: TIdSocketHandle; AThread: TIdThread) : TIdIOHandler;  override;
-
     destructor Destroy; override;
     function MakeClientIOHandler : TIdSSLIOHandlerSocketBase; override;
-
     //
     function MakeFTPSvrPort : TIdSSLIOHandlerSocketBase; override;
     function MakeFTPSvrPasv : TIdSSLIOHandlerSocketBase; override;
@@ -647,22 +639,16 @@ begin
   LockPassCB.Enter;
   try
     Password := '';    {Do not Localize}
-
     IdSSLContext := TIdSSLContext(userdata);
-
     if (IdSSLContext.Parent is TIdSSLIOHandlerSocketOpenSSL) then begin
       TIdSSLIOHandlerSocketOpenSSL(IdSSLContext.Parent).DoGetPassword(Password);
     end;
-
     if (IdSSLContext.Parent is TIdServerIOHandlerSSLOpenSSL) then begin
       TIdServerIOHandlerSSLOpenSSL(IdSSLContext.Parent).DoGetPassword(Password);
     end;
-
     FillChar(buf^, size, 0);
-
     StrPLCopy(buf, Password, size);
     Result := Length(Password);
-
     buf[size-1] := #0; // RLebeau: truncate the password if needed
   finally
     LockPassCB.Leave;
@@ -688,13 +674,10 @@ JPM.
     LockInfoCB.Enter;
     try
       IdSSLSocket := TIdSSLSocket(IdSslGetAppData(sslSocket));
-
       StatusStr := IndyFormat(RSOSSLStatusString, [StrPas(IdSslStateStringLong(sslSocket))]);
-
       if (IdSSLSocket.fParent is TIdSSLIOHandlerSocketOpenSSL) then begin
         TIdSSLIOHandlerSocketOpenSSL(IdSSLSocket.fParent).DoStatusInfo(StatusStr);
       end;
-
       if (IdSSLSocket.fParent is TIdServerIOHandlerSSLOpenSSL) then begin
         TIdServerIOHandlerSSLOpenSSL(IdSSLSocket.fParent).DoStatusInfo(StatusStr);
       end;
@@ -755,9 +738,7 @@ begin
   finally
     CallbackLockList.UnlockList;
   end;
-
   Assert(Lock<>nil);
-
   if (mode and OPENSSL_CRYPTO_LOCK) = OPENSSL_CRYPTO_LOCK then begin
     Lock.Acquire;
   end else begin
@@ -829,7 +810,6 @@ end;
 function LoadOpenSSLLibrary: Boolean;
 begin
   Assert(SSLIsLoaded<>nil);
-
   SSLIsLoaded.Lock;
   try
     if SSLIsLoaded.Value then
@@ -837,7 +817,6 @@ begin
       Result := True;
       Exit;
     end;
-
     Result := IdSSLOpenSSLHeaders.Load;
     if not Result then 
     begin
@@ -847,15 +826,12 @@ begin
     //has to be done before anything that uses memory
     IdSslCryptoMallocInit;
     {$ENDIF}
-
     //required eg to encrypt a private key when writing
     IdSslAddAllCiphers;
     IdSslAddAllDigests;
-
     InitializeRandom;
     // IdSslRandScreen;
     IdSslLoadErrorStrings;
-
     // Successful loading if true
     Result := IdSslAddSslAlgorithms > 0;
     if not Result then 
@@ -867,11 +843,9 @@ begin
     LockInfoCB := TIdCriticalSection.Create;
     LockPassCB := TIdCriticalSection.Create;
     LockVerifyCB := TIdCriticalSection.Create;
-
     // Handle internal OpenSSL locking
     CallbackLockList := TThreadList.Create;
     PrepareOpenSSLLocking;
-
     IdSslSetLockingCallback(SslLockingCallback);
     {$IFNDEF WIN32_OR_WIN64}
     IdSslSetIdCallback(_GetThreadID);
@@ -896,11 +870,9 @@ begin
   end;
   IdSslSetLockingCallback(nil);
   IdSSLOpenSSLHeaders.Unload;
-
   FreeAndNil(LockInfoCB);
   FreeAndNil(LockPassCB);
   FreeAndNil(LockVerifyCB);
-
   if Assigned(CallbackLockList) then
   begin
     with CallbackLockList.LockList do
@@ -912,10 +884,8 @@ begin
       finally
         CallbackLockList.UnlockList;
       end;
-
     FreeAndNil(CallbackLockList);
   end;
-
   SSLIsLoaded.Value := False;
 end;
 
@@ -1014,31 +984,25 @@ begin
         Result := Ok;
         Exit;
       end;
-
       hcert := IdSslX509StoreCtxGetCurrentCert(ctx);
       Certificate := TIdX509.Create(hcert, False); // the certificate is owned by the store
       try
         IdSSLSocket := TIdSSLSocket(IdSslGetAppData(hSSL));
-
         IdSslX509StoreCtxGetError(ctx);
         Depth := IdSslX509StoreCtxGetErrorDepth(ctx);
-
         if not ((Ok > 0) and (IdSSLSocket.fSSLContext.VerifyDepth >= Depth)) then begin
           Ok := 0;
           {if Error = OPENSSL_X509_V_OK then begin
             Error := OPENSSL_X509_V_ERR_CERT_CHAIN_TOO_LONG;
           end;}
         end;
-      
         LOk := False;
         if Ok = 1 then begin
           LOk := True;
         end;
-
         if (IdSSLSocket.fParent is TIdSSLIOHandlerSocketOpenSSL) then begin
           VerifiedOK := TIdSSLIOHandlerSocketOpenSSL(IdSSLSocket.fParent).DoVerifyPeer(Certificate, LOk, Depth);
         end;
-
         if (IdSSLSocket.fParent is TIdServerIOHandlerSSLOpenSSL) then begin
           VerifiedOK := TIdServerIOHandlerSSLOpenSSL(IdSSLSocket.fParent).DoVerifyPeer(Certificate, LOk, Depth);
         end;
@@ -1047,7 +1011,6 @@ begin
       end;
     except
     end;
-
     //if VerifiedOK and (Ok > 0) then begin
     if VerifiedOK {and (Ok > 0)} then begin
       Result := 1;
@@ -1055,7 +1018,6 @@ begin
     else begin
       Result := 0;
     end;
-
   //  Result := Ok; // testing
   finally
     LockVerifyCB.Leave;
@@ -1113,7 +1075,6 @@ procedure TIdServerIOHandlerSSLOpenSSL.Init;
 begin
   //ensure Init isn't called twice
   Assert(fSSLContext = nil);
-
   fSSLContext := TIdSSLContext.Create;
   with fSSLContext do begin
     Parent := Self;
@@ -1127,22 +1088,18 @@ begin
     CertFile := SSLOptions.CertFile;
     KeyFile := SSLOptions.KeyFile;
     {$ENDIF}
-
     fVerifyDepth := SSLOptions.fVerifyDepth;
     fVerifyMode := SSLOptions.fVerifyMode;
     // fVerifyFile := SSLOptions.fVerifyFile;
     fVerifyDirs := String(SSLOptions.fVerifyDirs);
     fCipherList := AnsiString(SSLOptions.fCipherList);
-
     VerifyOn := Assigned(fOnVerifyPeer);
     StatusInfoOn := Assigned(fOnStatusInfo);
     //PasswordRoutineOn := Assigned(fOnGetPassword);
-
     fMethod :=  SSLOptions.Method;
     fMode := SSLOptions.Mode;
     fSSLContext.InitContext(sslCtxServer);
   end;
-
 end;
 
 function TIdServerIOHandlerSSLOpenSSL.Accept(ASocket: TIdSocketHandle;
@@ -1153,7 +1110,6 @@ var
 begin
   Assert(ASocket<>nil);
   Assert(fSSLContext<>nil);
-
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   LIO.PassThrough := True;
   LIO.Open;
@@ -1200,13 +1156,11 @@ begin
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   LIO.PassThrough := True;
   LIO.OnGetPassword := DoGetPassword;
-
   //todo memleak here - setting IsPeer causes SSLOptions to not free
   LIO.IsPeer := True;
   LIO.SSLOptions.Assign(SSLOptions);
   LIO.SSLOptions.Mode := sslmBoth;{doesn't really matter}
   LIO.SSLContext := SSLContext;
-
   Result := LIO;
 end;
 
@@ -1223,13 +1177,11 @@ begin
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   LIO.PassThrough := True;
   LIO.OnGetPassword := DoGetPassword;
-
   //todo memleak here - setting IsPeer causes SSLOptions to not free
   LIO.IsPeer := True;
   LIO.SSLOptions.Assign(SSLOptions);
   LIO.SSLOptions.Mode := sslmBoth;{or sslmServer}
   LIO.SSLContext := nil;
-
   Result := LIO;
 end;
 
@@ -1243,7 +1195,6 @@ var
 begin
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   LIO.PassThrough := True;
-
 //  LIO.SSLOptions.Free;
 //  LIO.SSLOptions := SSLOptions;
 //  LIO.SSLContext := SSLContext;
@@ -1307,7 +1258,6 @@ begin
       if not PassThrough then raise;
     end;
   end;
-
   if not PassThrough then begin
     OpenEncodedConnection;
   end;
@@ -1388,19 +1338,15 @@ begin
       // fVerifyFile := SSLOptions.fVerifyFile;
       fVerifyDirs := String(SSLOptions.fVerifyDirs);
       fCipherList := AnsiString(SSLOptions.fCipherList);
-
       VerifyOn := Assigned(fOnVerifyPeer);
       StatusInfoOn := Assigned(fOnStatusInfo);
       //PasswordRoutineOn := Assigned(fOnGetPassword);
-
       fMethod :=  SSLOptions.Method;
       fMode := SSLOptions.Mode;
       fSSLContext.InitContext(sslCtxClient);
     end;
-
   end;
 end;
-
 //}
 
 procedure TIdSSLIOHandlerSocketOpenSSL.DoStatusInfo(const AMsg: String);
@@ -1429,19 +1375,16 @@ end;
 procedure TIdSSLIOHandlerSocketOpenSSL.OpenEncodedConnection;
 begin
   Assert(Binding<>nil);
-
   if not Assigned(fSSLSocket) then begin
     fSSLSocket := TIdSSLSocket.Create(Self);
   end;
   Assert(fSSLSocket.fSSLContext=nil);
   fSSLSocket.fSSLContext := fSSLContext;
-
   if IsPeer then begin
     fSSLSocket.Accept(Binding.Handle);
   end else begin
     fSSLSocket.Connect(Binding.Handle);
   end;
-  
   fPassThrough := False;
 end;
 
@@ -1469,13 +1412,11 @@ end;
 constructor TIdSSLContext.Create;
 begin
   inherited Create;
-
   //an exception here probably means that you are using the wrong version
   //of the openssl libraries. refer to comments at the top of this file.
   if not IdSSLOpenSSL.LoadOpenSSLLibrary then begin
     raise EIdOSSLCouldNotLoadSSLLibrary.Create(RSOSSLCouldNotLoadSSLLibrary);
   end;
-
   fVerifyMode := [];
   fMode := sslmUnassigned;
   fSessionId := 1;
@@ -1504,7 +1445,6 @@ var
 begin
   // Destroy the context first
   DestroyContext;
-
   if fMode = sslmUnassigned then begin
     if CtxMode = sslCtxServer then begin
       fMode := sslmServer;
@@ -1512,69 +1452,55 @@ begin
       fMode := sslmClient;
     end
   end;
-
   // get SSL method function (SSL2, SSL23, SSL3, TLS)
   SSLMethod := SetSSLMethod;
-
   // create new SSL context
   fContext := IdSslCtxNew(SSLMethod);
   if fContext = nil then begin
     raise EIdOSSLCreatingContextError.Create(RSSSLCreatingContextError);
   end;
-
   IdSslCtxSetMode(fContext,OPENSSL_SSL_MODE_AUTO_RETRY);
   // assign a password lookup routine
 //  if PasswordRoutineOn then begin
     IdSslCtxSetDefaultPasswdCb(fContext, @PasswordCallback);
     IdSslCtxSetDefaultPasswdCbUserdata(fContext, Self);
 //  end;
-
   IdSSLCtxSetDefaultVerifyPaths(fContext);
-
   // load key and certificate files
   if RootCertFile <> '' then begin    {Do not Localize}
     if not LoadRootCert then begin
        EIdOSSLLoadingRootCertError.RaiseException(RSSSLLoadingRootCertError);
     end;
   end;
-
   if CertFile <> '' then begin    {Do not Localize}
     if not LoadCert then begin
       EIdOSSLLoadingCertError.RaiseException(RSSSLLoadingCertError);
     end;
   end;
-
   if KeyFile <> '' then begin    {Do not Localize}
     if not LoadKey then begin
       EIdOSSLLoadingKeyError.RaiseException(RSSSLLoadingKeyError);
     end;
   end;
-
   if StatusInfoOn then begin
     IdSslCtxSetInfoCallback(fContext, InfoCallback);
   end;
-
   //if_SSL_CTX_set_tmp_rsa_callback(hSSLContext, @RSACallback);
-
   if fCipherList <> '' then begin    {Do not Localize}
     error := IdSslCtxSetCipherList(fContext, PAnsiChar(fCipherList));
   end
   else begin
     error := IdSslCtxSetCipherList(fContext, OPENSSL_SSL_DEFAULT_CIPHER_LIST);
   end;
-
   if error <= 0 then begin
     EIdOSSLLoadingKeyError.RaiseException(RSSSLSettingCipherError);
   end;
-
   if fVerifyMode <> [] then begin
     SetVerifyMode(fVerifyMode, VerifyOn);
   end;
-
   if CtxMode = sslCtxServer then begin
     IdSSLCtxSetSessionIdContext(fContext, PByte(@fSessionId), SizeOf(fSessionId));
   end;
-
   // CA list
   if RootCertFile <> '' then begin    {Do not Localize}
     IdSSLCtxSetClientCAList(fContext, IdSSLLoadClientCAFile(PAnsiChar(RootCertFile)));
@@ -1629,7 +1555,6 @@ begin
       else
         Result := IdSslMethodV2;
       end;
-
     sslvSSLv23:
       case fMode of
         sslmServer : Result := IdSslMethodServerV23;
@@ -1638,7 +1563,6 @@ begin
       else
         Result := IdSslMethodV23;
       end;
-
     sslvSSLv3:
       case fMode of
         sslmServer : Result := IdSslMethodServerV3;
@@ -1647,7 +1571,6 @@ begin
       else
         Result := IdSslMethodV3;
       end;
-
     sslvTLSv1:
       case fMode of
         sslmServer : Result := IdSslMethodServerTLSV1;
@@ -1712,7 +1635,6 @@ begin
   Result.KeyFile := KeyFile;
   Result.VerifyMode := VerifyMode;
   Result.VerifyDepth := VerifyDepth;
-
 end;
 
 { TIdSSLSocket }
@@ -1742,7 +1664,6 @@ begin
   // I found out that SSL layer should not interpret errors, cause they will pop up
   // on the socket layer. Only thing that the SSL layer should consider is key
   // or protocol renegotiation. This is done by loop in read and write
-
   Result := IdSslGetError(fSSL, retCode);
   case Result of
     OPENSSL_SSL_ERROR_NONE:
@@ -1802,23 +1723,18 @@ var
 begin
   Assert(fSSL=nil);
   Assert(fSSLContext<>nil);
-
   fSSL := IdSslNew(fSSLContext.fContext);
   if fSSL = nil then exit;
-
   error := IdSslSetAppData(fSSL, Self);
   if error <= 0 then begin
     EIdOSSLDataBindingError.RaiseException(fSSL, error, RSSSLDataBindingError);
     Exit;
   end;
-
   IdSslSetFd(fSSL, pHandle);
-
   error := IdSslAccept(fSSL);
   if error <= 0 then begin
     EIdOSSLAcceptError.RaiseException(fSSL, error, RSSSLAcceptError);
   end;
-
   StatusStr := 'Cipher: name = ' + Cipher.Name + '; ' +    {Do not Localize}
                'description = ' + Cipher.Description + '; ' +    {Do not Localize}
                'bits = ' + IntToStr(Cipher.Bits) + '; ' +    {Do not Localize}
@@ -1835,7 +1751,6 @@ var
 begin
   Assert(fSSL=nil);
   Assert(fSSLContext<>nil);
-
   fSSL := IdSslNew(fSSLContext.fContext);
   if fSSL = nil then begin
     exit;
@@ -1844,17 +1759,14 @@ begin
   if error <= 0 then begin
     EIdOSSLDataBindingError.RaiseException(fSSL, error, RSSSLDataBindingError);
   end;
-
   error :=  IdSslSetFd(fSSL, pHandle);
   if error <= 0 then begin
     EIdOSSLFDSetError.RaiseException(fSSL, error, RSSSLFDSetError);
   end;
-
   error := IdSslConnect(fSSL);
   if error <= 0 then begin
     EIdOSSLConnectError.RaiseException(fSSL, error, RSSSLConnectError);
   end;
-
   StatusStr := 'Cipher: name = ' + Cipher.Name + '; ' +    {Do not Localize}
                'description = ' + Cipher.Description + '; ' +    {Do not Localize}
                'bits = ' + IntToStr(Cipher.Bits) + '; ' +    {Do not Localize}
@@ -1862,7 +1774,6 @@ begin
   if fParent is TIdSSLIOHandlerSocketOpenSSL then begin
     (fParent as TIdSSLIOHandlerSocketOpenSSL).DoStatusInfo(StatusStr);
   end;
-
 end;
 
 function TIdSSLSocket.Recv(var ABuffer: TIdBytes): Integer;
@@ -1891,7 +1802,6 @@ begin
       Exit;
     end;
     err := GetSSLError(Result);
-
     if (err <> OPENSSL_SSL_ERROR_WANT_READ) and (err <> OPENSSL_SSL_ERROR_WANT_WRITE) then begin
       Exit;
     end;
@@ -1998,7 +1908,6 @@ end;
 constructor TIdX509Name.Create(aX509Name: PX509_NAME);
 begin
   Inherited Create;
-
   FX509Name := aX509Name;
 end;
 
@@ -2146,19 +2055,15 @@ begin
   FreeAndNil(FDisplayInfo);
   FreeAndNil(FSubject);
   FreeAndNil(FIssuer);
-
   { If the X.509 certificate handle was obtained from a certificate
   store or from the SSL connection as a peer certificate, then DO NOT
   free it here!  The memory is owned by the OpenSSL library and will
   crash the library if Indy tries to free its private memory here }
-
   if FCanFreeX509 then begin
     IdSslX509Free(FX509);
   end;
-
   inherited Destroy;
 end;
-
 
 procedure DumpCert(AOut : TStrings; AX509 : PX509);
   {$IFDEF USEINLINE} inline; {$ENDIF}
@@ -2270,7 +2175,6 @@ begin
     Result := UTCTime2DateTime(PASN1_UTCTIME(IdSslX509GetNotBefore(FX509)));
   end;
 end;
-
 
 function TIdX509.RnotAfter:TDateTime;
 begin
@@ -2384,7 +2288,6 @@ begin
     LException.FRetCode := ARetCode;
     raise LException;
   end;
-
 end;
 
 initialization
@@ -2396,10 +2299,8 @@ initialization
     'Original Author - Gregor Ibic',                                        {do not localize}
     TIdSSLIOHandlerSocketOpenSSL,
     TIdServerIOHandlerSSLOpenSSL);
-
   Assert(SSLIsLoaded=nil);
   SSLIsLoaded := TIdThreadSafeBoolean.Create;
-
 finalization
   UnLoadOpenSSLLibrary;
   //free the lock last as unload makes calls that use it
