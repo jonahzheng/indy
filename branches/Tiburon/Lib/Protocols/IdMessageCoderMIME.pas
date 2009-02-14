@@ -339,8 +339,7 @@ begin
   end else begin
     LContentTransferEncoding := FHeaders.Values['Content-Transfer-Encoding']; {Do not Localize}
     if LContentTransferEncoding = '' then begin
-      LContentTransferEncoding := FHeaders.Values['Content-Type']; {Do not Localize}
-      if TextStartsWith(LContentTransferEncoding, 'application/mac-binhex40') then begin  {Do not Localize}
+      if TextIsSame(ExtractHeaderItem(FHeaders.Values['Content-Type']), 'application/mac-binhex40') then begin  {Do not Localize}
         LContentTransferEncoding := 'binhex40'; {do not localize}
       end;
     end;
@@ -460,10 +459,10 @@ function TIdMessageDecoderMIME.GetAttachmentFilename(const AContentType, AConten
 var
   LValue: string;
 begin
-  LValue := ExtractHeaderSubItem(AContentDisposition, 'FILENAME'); {do not localize}
-  if Length(LValue) = 0 then begin
+  LValue := ExtractHeaderSubItem(AContentDisposition, 'filename'); {do not localize}
+  if LValue = '' then begin
     // Get filename from Content-Type
-    LValue := ExtractHeaderSubItem(AContentType, 'NAME'); {do not localize}
+    LValue := ExtractHeaderSubItem(AContentType, 'name'); {do not localize}
   end;
   if Length(LValue) > 0 then begin
     Result := RemoveInvalidCharsFromFilename(DecodeHeader(LValue));
@@ -509,13 +508,15 @@ begin
   end;
 
   Idx := LPos - 1;
-  while (Idx > 0) and (Line[Idx] = ' ') do
+  while (Idx > 0) and (Line[Idx] = ' ') do begin
     Dec(Idx);
+  end;
 
   LLen := Length(Line);
   Inc(LPos);
-  while (LPos <= LLen) and (Line[LPos] = ' ') do
+  while (LPos <= LLen) and (Line[LPos] = ' ') do begin
     Inc(LPos);
+  end;
 
   Result := Copy(Line, 1, Idx) + '=' + Copy(Line, LPos, MaxInt);
 end;
@@ -557,7 +558,7 @@ begin
     //CC: Need to detect on "multipart" rather than boundary, because only the
     //"multipart" bit will be visible later...
     if TextStartsWith(s, 'multipart/') then begin  {do not localize}
-      ABoundary := ExtractHeaderSubItem(s, 'BOUNDARY');  {do not localize}
+      ABoundary := ExtractHeaderSubItem(s, 'boundary');  {do not localize}
       if Owner is TIdMessage then begin
         if Length(ABoundary) > 0 then begin
           TIdMessage(Owner).MIMEBoundary.Push(ABoundary, TIdMessage(Owner).MessageParts.Count);
