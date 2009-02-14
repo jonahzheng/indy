@@ -848,8 +848,7 @@ begin
               end;
 
               // retreive the base ContentType with attributes omitted
-              s := LRequestInfo.ContentType;
-              LContentType := Fetch(s, ';');  {Do not Localize}
+              LContentType := ExtractHeaderItem(LRequestInfo.ContentType);
 
               // Grab Params so we can parse them
               // POSTed data - may exist with GETs also. With GETs, the action
@@ -1319,7 +1318,7 @@ begin
       Values['Location'] := Location;    {Do not Localize}
     end;
     if FLastModified > 0 then begin
-      Values['Last-Modified'] := DateTimeGMTToHttpStr(FLastModified); {do not localize}
+      Values['Last-Modified'] := LocalDateTimeToHttpStr(FLastModified); {do not localize}
     end;
     if AuthRealm <> '' then {Do not Localize}
     begin
