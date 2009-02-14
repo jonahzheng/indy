@@ -315,9 +315,9 @@ begin
   LSourceSize := ASrcStream.Size;
   while ASrcStream.Position < LSourceSize do begin
     {$IFDEF UNICODESTRING}
-    SourceLine := AnsiString(ReadLnFromStream(ASrcStream, -1, False)); // explicit convert to Ansi
+    SourceLine := AnsiString(ReadLnFromStream(ASrcStream, -1, False, en8bit)); // explicit convert to Ansi
     {$ELSE}
-    SourceLine := ReadLnFromStream(ASrcStream, -1, False);
+    SourceLine := ReadLnFromStream(ASrcStream, -1, False, en8bit);
     {$ENDIF}
     CurrentPos := 1;
     for i := 1 to Length(SourceLine) do begin
