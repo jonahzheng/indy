@@ -135,8 +135,6 @@ var
 procedure TestNTLM;
 {$ENDIF}
 
-function BuildUnicodeLE(const S: String): TIdBytes;
-
 function BuildType1Msg(const ADomain : AnsiString = ''; const AHost : AnsiString = ''; const ALMCompatibility : LongWord = 0) : TIdBytes;
 procedure ReadType2Msg(const AMsg : TIdBytes; var VFlags : LongWord; var VTargetName : TIdBytes; var VTargetInfo : TIdBytes; var VNonce : TIdBytes );
 function BuildType3Msg(const ADomain, AHost, AUsername, APassword : String;
@@ -150,7 +148,7 @@ function BuildType1Message( ADomain, AHost: String; const AEncodeMsg : Boolean =
 procedure ReadType2Message(const AMsg : String; var VNonce : nonceArray; var Flags : LongWord);
 function BuildType3Message( ADomain, AHost, AUsername: WideString; APassword : String; ANonce : nonceArray): String;
  }
- 
+
 function NTLMFunctionsLoaded : Boolean;
 
 procedure GetDomain(const AUserName : String; var VUserName, VDomain : String);
@@ -289,27 +287,6 @@ begin
   {$ENDIF}
 end;
 
-function BuildUnicodeLE(const S: String): TIdBytes;
-{$IFDEF USEINLINE}inline;{$ENDIF}
-{$IFNDEF DOTNET_OR_UNICODESTRING}
-var
-  i: integer;
-{$ENDIF}
-begin
-  {$IFDEF DOTNET_OR_UNICODESTRING}
-  Result := TIdTextEncoding.Unicode.GetBytes(S);
-  {$ELSE}
-  // RLebeau: ise TIdTextEncoding.Unicode instead?
-  SetLength(Result, Length(S)*2);
-  if Length(Result) > 0 then begin
-    for i := 1 to Length(S) do begin
-      Result[(i-1)*2] := Ord(S[i]);
-      Result[((i-1)*2)+1] := 0;
-    end;
-  end;
-  {$ENDIF}
-end;
-
 function ConcateBytes(const A1, A2 : TIdBytes) : TIdBytes;
 begin
   Result := A1;
@@ -362,7 +339,6 @@ end;
 function DumpFlags(const ABytes : TIdBytes): String;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
-
   Result := DumpFlags( LittleEndianToHost(BytesToLongWord(ABytes)));
 end;
 
@@ -378,94 +354,94 @@ begin
     Result := Result + ' IdNTLM_NEGOTIATE_OEM';
   end;
   if AFlags and IdNTLMSSP_REQUEST_TARGET <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_REQUEST_TARGET';
+    Result := Result + ' IdNTLMSSP_REQUEST_TARGET';
   end;
   if AFlags and IdNTLM_Unknown1 <> 0 then begin
-	  Result := Result + ' IdNTLM_Unknown1';
+    Result := Result + ' IdNTLM_Unknown1';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_SIGN <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_SIGN';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_SIGN';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_SEAL <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_SEAL';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_SEAL';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_DATAGRAM <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_DATAGRAM';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_DATAGRAM';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_LM_KEY <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_LM_KEY';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_LM_KEY';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_NETWARE <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_NETWARE';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_NETWARE';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_NTLM <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_NTLM';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_NTLM';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_NT_ONLY <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_NT_ONLY';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_NT_ONLY';
   end;
   if AFlags and IdNTLMSSP_ANONYMOUS <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_ANONYMOUS';
+    Result := Result + ' IdNTLMSSP_ANONYMOUS';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_LOCAL_CALL <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_LOCAL_CALL';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_LOCAL_CALL';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_ALWAYS_SIGN <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_ALWAYS_SIGN';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_ALWAYS_SIGN';
   end;
   if AFlags and IdNTLMSSP_TARGET_TYPE_DOMAIN <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_TARGET_TYPE_DOMAIN';
+    Result := Result + ' IdNTLMSSP_TARGET_TYPE_DOMAIN';
   end;
   if AFlags and IdNTLMSSP_TARGET_TYPE_SERVER <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_TARGET_TYPE_SERVER';
+    Result := Result + ' IdNTLMSSP_TARGET_TYPE_SERVER';
   end;
   if AFlags and IdNTLMSSP_TARGET_TYPE_SHARE <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_TARGET_TYPE_SHARE';
+    Result := Result + ' IdNTLMSSP_TARGET_TYPE_SHARE';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_IDENTIFY <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_IDENTIFY';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_IDENTIFY';
   end;
   if AFlags and IdNTLMSSP_REQUEST_ACCEPT_RESPONSE <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_REQUEST_ACCEPT_RESPONSE';
+    Result := Result + ' IdNTLMSSP_REQUEST_ACCEPT_RESPONSE';
   end;
   if AFlags and IdIdNTLMSSP_REQUEST_NON_NT_SESSION_KEY <> 0 then begin
-	  Result := Result + ' IdIdNTLMSSP_REQUEST_NON_NT_SESSION_KEY';
+    Result := Result + ' IdIdNTLMSSP_REQUEST_NON_NT_SESSION_KEY';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_TARGET_INFO <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_TARGET_INFO';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_TARGET_INFO';
   end;
   if AFlags and IdNTLM_Unknown4 <> 0 then begin
-	  Result := Result + ' IdNTLM_Unknown4';
+    Result := Result + ' IdNTLM_Unknown4';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_VERSION <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_VERSION';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_VERSION';
   end;
   if AFlags and IdNTLM_Unknown8 <> 0 then begin
-	  Result := Result + ' IdNTLM_Unknown8';
+    Result := Result + ' IdNTLM_Unknown8';
   end;
   if AFlags and IdNTLM_Unknown7 <> 0 then begin
-	  Result := Result + ' IdNTLM_Unknown7';
+    Result := Result + ' IdNTLM_Unknown7';
   end;
   if AFlags and IdNTLM_Unknown8 <> 0 then begin
-	  Result := Result + ' IdNTLM_Unknown8';
+    Result := Result + ' IdNTLM_Unknown8';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_128 <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_128';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_128';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_KEY_EXCH <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_KEY_EXCH';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_KEY_EXCH';
   end;
   if AFlags and IdNTLMSSP_NEGOTIATE_56 <> 0 then begin
-	  Result := Result + ' IdNTLMSSP_NEGOTIATE_56';
+    Result := Result + ' IdNTLMSSP_NEGOTIATE_56';
   end;
 end;
 
@@ -591,7 +567,7 @@ function NTLMHashedPass(const APassword : String): TIdBytes;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   with TIdHashMessageDigest4.Create do try
-    Result := HashBytes(BuildUnicodeLE(APassword));
+    Result := HashBytes(TIdTextEncoding.Unicode.GetBytes(APassword));
   finally
     Free;
   end;
@@ -644,7 +620,7 @@ end;
 
 //* setup LanManager password */
 function SetupLMResponse(var vlmHash : TIdBytes; const APassword : String; nonce : TIdBytes): TIdBytes;
-Var
+var
   lm_hpw : TIdBytes; //array[1..21] of Char;
   lm_pw : TIdBytes; //array[1..21] of Char;
   ks: des_key_schedule;
@@ -677,7 +653,7 @@ var
   nt_hpw : TIdBytes; //array [1..21] of Char;
  // nt_hpw128 : TIdBytes;
 begin
-  nt_pw := BuildUnicodeLE(APassword);
+  nt_pw := TIdTextEncoding.Unicode.GetBytes(APassword);
   with TIdHashMessageDigest4.Create do try
     vntlmhash := HashBytes(nt_pw);
   finally
@@ -700,7 +676,7 @@ var
 
 begin
   SetLength(Result,24);
-  nt_pw := BuildUnicodeLE(APassword);
+  nt_pw := TIdTextEncoding.Unicode.GetBytes(APassword);
   with TIdHashMessageDigest4.Create do try
 
     nt_hpw128 := HashBytes(nt_pw);//HashString( nt_pw);
@@ -930,8 +906,8 @@ Var
   LLmUserDom : TIdBytes;
   Blob : TIdBytes;
 begin
-  LLmUserDom := BuildUnicodeLE(UpperCase(AUsername));
-  AppendBytes(LLmUserDom, BuildUnicodeLE(ADomain));
+  LLmUserDom := TIdTextEncoding.Unicode.GetBytes(UpperCase(AUsername));
+  AppendBytes(LLmUserDom, TIdTextEncoding.Unicode.GetBytes(ADomain));
   with TIdHMACMD5.Create do
   try
      Key := NTLMHashedPass(APassword);
@@ -1036,8 +1012,8 @@ Var
   LLmUserDom : TIdBytes;
   LChall : TIdBytes;
 begin
-  LLmUserDom := BuildUnicodeLE(UpperCase(AUsername));
-  IdGlobal.AppendBytes(LLmUserDom, BuildUnicodeLE(ADomain));
+  LLmUserDom := TIdTextEncoding.Unicode.GetBytes(UpperCase(AUsername));
+  IdGlobal.AppendBytes(LLmUserDom, TIdTextEncoding.Unicode.GetBytes(ADomain));
   with TIdHMACMD5.Create do
   try
      Key := NTLMHashedPass(APassword);
@@ -1242,13 +1218,13 @@ begin
       if Length(ATargetName) > 0 then begin
         LDom := ATargetName;
       end else begin
-        LDom := BuildUnicodeLE(UpperCase(ADomain));
+        LDom := TIdTextEncoding.Unicode.GetBytes(UpperCase(ADomain));
       end;
     end;
     if LFlags and IdNTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED > 0 then begin
-      LHost := BuildUnicodeLE(UpperCase(AHost));
+      LHost := TIdTextEncoding.Unicode.GetBytes(UpperCase(AHost));
     end;
-    LUser := BuildUnicodeLE(UpperCase(AUsername));
+    LUser := TIdTextEncoding.Unicode.GetBytes(UpperCase(AUsername));
   end else begin
     if LFlags and IdNTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED > 0 then begin
       LDom :=  ToBytes(UpperCase(ADomain));
