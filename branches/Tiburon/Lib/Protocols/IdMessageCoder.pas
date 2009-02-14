@@ -136,6 +136,7 @@ type
     procedure InitComponent; override;
   public
     procedure Encode(const AFilename: string; ADest: TStream); overload;
+    procedure Encode(ASrc: TStream; ADest: TStrings); overload;
     procedure Encode(ASrc: TStream; ADest: TStream); overload; virtual; abstract;
   published
     property Filename: string read FFilename write FFilename;
@@ -355,6 +356,17 @@ begin
   LSrcStream := TIdReadFileExclusiveStream.Create(AFileName); try
     Encode(LSrcStream, ADest);
   finally FreeAndNil(LSrcStream); end;
+end;
+
+procedure TIdMessageEncoder.Encode(ASrc: TStream; ADest: TStrings);
+var
+  LDestStream: TStream;
+begin
+  LDestStream := TMemoryStream.Create; try
+    Encode(ASrc, LDestStream);
+    LDestStream.Position := 0;
+    ADest.LoadFromStream(LDestStream);
+  finally FreeAndNil(LDestStream); end;
 end;
 
 procedure TIdMessageEncoder.InitComponent;
