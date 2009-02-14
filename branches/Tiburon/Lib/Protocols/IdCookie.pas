@@ -539,7 +539,7 @@ begin
   if Length(Expires) = 0 then begin
     FInternalVersion := cvNetscape;
     if FMax_Age >= 0 then begin
-      Expires := DateTimeGMTToHttpStr(Now - OffsetFromUTC + FMax_Age * 1000 / MSecsPerDay);
+	  Expires := LocalDateTimeToCookieStr(Now + FMax_Age * 1000 / MSecsPerDay);
     end;
     // else   Free this cookie
   end;
@@ -630,10 +630,9 @@ end;
 
 function TIdServerCookie.GetCookie: String;
 begin
-  if FMax_Age > -1 then
+  if FMax_Age >= 0 then
   begin
-    FExpires := DateTimeGMTToCookieStr(
-      Now + TimeZoneBias + FMax_Age / MSecsPerDay * 1000);
+	FExpires := LocalDateTimeToCookieStr(Now + FMax_Age * 1000 / MSecsPerDay);
   end;
   Result := inherited GetCookie;
 end;
