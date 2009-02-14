@@ -981,7 +981,10 @@ var
   {$IFDEF DOTNET}
   LChars: array[0..1] of Char;
   {$ELSE}
-  LChars: TIdChars;
+  LChars: TIdWideChars;
+    {$IFNDEF UNICODESTRING}
+  LTmp: WideString;
+    {$ENDIF}
   {$ENDIF}
 begin
   AEncoding := iif(AEncoding, FDefStringEncoding);
@@ -999,7 +1002,12 @@ begin
     end;
   end;
   Assert(NumChars > 0);
+  {$IFDEF DOTNET_OR_UNICODESTRING}
   Result := LChars[0];
+  {$ELSE}
+  SetString(LTmp, PWideChar(LChars), NumChars);
+  Result := AnsiString(LTmp)[1];
+  {$ENDIF}
 end;
 
 function TIdIOHandler.ReadByte: Byte;
