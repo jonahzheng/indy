@@ -205,93 +205,408 @@ that generates apporpriate make files with the appropriate defines.  If you do
 custom compiles of OpenSSL or if it's compiled differently that what I assume,
 you will need to add or deactivate the defines.
 
-my $default_depflags = " -DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_CAPIENG -DOPENSSL_NO_CMS -DOPENSSL_NO_GMP -DOPENSSL_NO_JPAKE -DOPENSSL_NO_MDC2 -DOPENSSL_NO_RC5 -DOPENSSL_NO_RFC3779 -DOPENSSL_NO_SEED";
-
 my $x86_gcc_des="DES_PTR DES_RISC1 DES_UNROLL";
 
 # MD2_CHAR slags pentium pros
 my $x86_gcc_opts="RC4_INDEX MD2_INT";
-
+...
+# This is what $depflags will look like with the above defaults
+# (we need this to see if we should advise the user to run "make depend"):
+my $default_depflags = " -DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_CAPIENG -DOPENSSL_NO_CMS -DOPENSSL_NO_GMP -DOPENSSL_NO_JPAKE -DOPENSSL_NO_MDC2 -DOPENSSL_NO_RC5 -DOPENSSL_NO_RFC3779 -DOPENSSL_NO_SEED";
 
 }
 
-//# Win64 targets, WIN64I denotes IA-64 and WIN64A - AMD64
-//"VC-WIN64I","cl::::WIN64I::SIXTY_FOUR_BIT RC4_CHUNK_LL DES_INT EXPORT_VAR_AS_FN:${no_asm}:win32",
-//"VC-WIN64A","cl::::WIN64A::SIXTY_FOUR_BIT RC4_CHUNK_LL DES_INT EXPORT_VAR_AS_FN:${no_asm}:win32",
+// # Our development configs
+// "purify",	"purify gcc:-g -DPURIFY -Wall::(unknown)::-lsocket -lnsl::::",
+// "debug",	"gcc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DBN_CTX_DEBUG -DCRYPTO_MDEBUG -DOPENSSL_NO_ASM -ggdb -g2 -Wformat -Wshadow -Wmissing-prototypes -Wmissing-declarations -Werror::(unknown)::-lefence::::",
+// "debug-ben",	"gcc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DBN_CTX_DEBUG -DCRYPTO_MDEBUG -DPEDANTIC -DDEBUG_SAFESTACK -O2 -pedantic -Wall -Wshadow -Werror -pipe::(unknown):::::bn86-elf.o co86-elf.o",
+// "debug-ben-openbsd","gcc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DBN_CTX_DEBUG -DCRYPTO_MDEBUG -DPEDANTIC -DDEBUG_SAFESTACK -DOPENSSL_OPENBSD_DEV_CRYPTO -DOPENSSL_NO_ASM -O2 -pedantic -Wall -Wshadow -Werror -pipe::(unknown)::::",
+// "debug-ben-openbsd-debug","gcc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DBN_CTX_DEBUG -DCRYPTO_MDEBUG -DPEDANTIC -DDEBUG_SAFESTACK -DOPENSSL_OPENBSD_DEV_CRYPTO -DOPENSSL_NO_ASM -g3 -O2 -pedantic -Wall -Wshadow -Werror -pipe::(unknown)::::",
+// "debug-ben-debug",	"gcc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DBN_CTX_DEBUG -DCRYPTO_MDEBUG -DPEDANTIC -DDEBUG_SAFESTACK -g3 -O2 -pedantic -Wall -Wshadow -Werror -pipe::(unknown)::::::",
+// "debug-ben-strict",	"gcc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DBN_CTX_DEBUG -DCRYPTO_MDEBUG -DCONST_STRICT -O2 -Wall -Wshadow -Werror -Wpointer-arith -Wcast-qual -Wwrite-strings -pipe::(unknown)::::::",
+// "debug-rse","cc:-DTERMIOS -DL_ENDIAN -pipe -O -g -ggdb3 -Wall::(unknown):::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}",
+// "debug-bodo",	"gcc:-DL_ENDIAN -DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DBIO_PAIR_DEBUG -DPEDANTIC -g -march=i486 -pedantic -Wshadow -Wall -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wundef -Wconversion -pipe::-D_REENTRANT:::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}",
+// "debug-ulf", "gcc:-DTERMIOS -DL_ENDIAN -march=i486 -Wall -DBN_DEBUG -DBN_DEBUG_RAND -DREF_CHECK -DCONF_DEBUG -DBN_CTX_DEBUG -DCRYPTO_MDEBUG -DOPENSSL_NO_ASM -g -Wformat -Wshadow -Wmissing-prototypes -Wmissing-declarations:::CYGWIN32:::${no_asm}:win32:cygwin-shared:::.dll",
+// "debug-steve64", "gcc:-m64 -DL_ENDIAN -DTERMIO -DREF_CHECK -DCONF_DEBUG -DDEBUG_SAFESTACK -DCRYPTO_MDEBUG_ALL -DPEDANTIC -DOPENSSL_NO_DEPRECATED -g -pedantic -Wall -Werror -Wno-long-long -Wsign-compare -DMD32_REG_T=int::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK BF_PTR2 DES_INT DES_UNROLL:${x86_64_asm}:dlfcn:linux-shared:-fPIC:-m64:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "debug-steve32", "gcc:-m32 -DL_ENDIAN -DREF_CHECK -DCONF_DEBUG -DDEBUG_SAFESTACK -DCRYPTO_MDEBUG_ALL -DPEDANTIC -DOPENSSL_NO_DEPRECATED -g -pedantic -Wno-long-long -Wall -Werror -Wshadow -pipe::-D_REENTRANT::-rdynamic -ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-fPIC:-m32:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "debug-steve",	"gcc:-DL_ENDIAN -DREF_CHECK -DCONF_DEBUG -DDEBUG_SAFESTACK -DCRYPTO_MDEBUG_ALL -DPEDANTIC -m32 -g -pedantic -Wno-long-long -Wall -Werror -Wshadow -pipe::-D_REENTRANT::-rdynamic -ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared",
+// "debug-steve-opt",	"gcc:-DL_ENDIAN -DREF_CHECK -DCONF_DEBUG -DDEBUG_SAFESTACK -DCRYPTO_MDEBUG_ALL -DPEDANTIC -m32 -O3 -g -pedantic -Wno-long-long -Wall -Werror -Wshadow -pipe::-D_REENTRANT::-rdynamic -ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared",
+// "debug-steve-linux-pseudo64",	"gcc:-DL_ENDIAN -DREF_CHECK -DCONF_DEBUG -DBN_CTX_DEBUG -DDEBUG_SAFESTACK -DCRYPTO_MDEBUG_ALL -DOPENSSL_NO_ASM -g -mcpu=i486 -Wall -Werror -Wshadow -pipe::-D_REENTRANT::-rdynamic -ldl:SIXTY_FOUR_BIT:${no_asm}:dlfcn:linux-shared",
+// "debug-levitte-linux-elf","gcc:-DLEVITTE_DEBUG -DREF_CHECK -DCONF_DEBUG -DBN_DEBUG -DBN_DEBUG_RAND -DCRYPTO_MDEBUG -DENGINE_CONF_DEBUG -DL_ENDIAN -DTERMIO -D_POSIX_SOURCE -DPEDANTIC -ggdb -g3 -mcpu=i486 -pedantic -ansi -Wall -Wshadow -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wundef -Wconversion -pipe::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "debug-levitte-linux-noasm","gcc:-DLEVITTE_DEBUG -DREF_CHECK -DCONF_DEBUG -DBN_DEBUG -DBN_DEBUG_RAND -DCRYPTO_MDEBUG -DENGINE_CONF_DEBUG -DOPENSSL_NO_ASM -DL_ENDIAN -DTERMIO -D_POSIX_SOURCE -DPEDANTIC -ggdb -g3 -mcpu=i486 -pedantic -ansi -Wall -Wshadow -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wundef -Wconversion -pipe::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${no_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "debug-levitte-linux-elf-extreme","gcc:-DLEVITTE_DEBUG -DREF_CHECK -DCONF_DEBUG -DBN_DEBUG -DBN_DEBUG_RAND -DCRYPTO_MDEBUG -DENGINE_CONF_DEBUG -DL_ENDIAN -DTERMIO -D_POSIX_SOURCE -DPEDANTIC -ggdb -g3 -mcpu=i486 -pedantic -ansi -Wall -W -Wundef -Wshadow -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wundef -Wconversion -pipe::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "debug-levitte-linux-noasm-extreme","gcc:-DLEVITTE_DEBUG -DREF_CHECK -DCONF_DEBUG -DBN_DEBUG -DBN_DEBUG_RAND -DCRYPTO_MDEBUG -DENGINE_CONF_DEBUG -DOPENSSL_NO_ASM -DL_ENDIAN -DTERMIO -D_POSIX_SOURCE -DPEDANTIC -ggdb -g3 -mcpu=i486 -pedantic -ansi -Wall -W -Wundef -Wshadow -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wno-long-long -Wundef -Wconversion -pipe::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${no_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "debug-geoff","gcc:-DBN_DEBUG -DBN_DEBUG_RAND -DBN_STRICT -DPURIFY -DOPENSSL_NO_DEPRECATED -DOPENSSL_NO_ASM -DOPENSSL_NO_INLINE_ASM -DL_ENDIAN -DTERMIO -DPEDANTIC -O1 -ggdb2 -Wall -Werror -Wundef -pedantic -Wshadow -Wpointer-arith -Wbad-function-cast -Wcast-align -Wsign-compare -Wmissing-prototypes -Wmissing-declarations -Wno-long-long::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${no_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "debug-linux-pentium","gcc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG -DL_ENDIAN -DTERMIO -g -mcpu=pentium -Wall::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn",
+// "debug-linux-ppro","gcc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG -DL_ENDIAN -DTERMIO -g -mcpu=pentiumpro -Wall::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn",
+// "debug-linux-elf","gcc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG -DL_ENDIAN -DTERMIO -g -march=i486 -Wall::-D_REENTRANT::-lefence -ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "debug-linux-elf-noefence","gcc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG -DL_ENDIAN -DTERMIO -g -march=i486 -Wall::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "dist",		"cc:-O::(unknown)::::::",
 
-//# Visual C targets
-//"VC-NT","cl::::WINNT::BN_LLONG RC4_INDEX EXPORT_VAR_AS_FN ${x86_gcc_opts}:${no_asm}:win32",
-//"VC-CE","cl::::WINCE::BN_LLONG RC4_INDEX EXPORT_VAR_AS_FN ${x86_gcc_opts}:${no_asm}:win32",
-//"VC-WIN32","cl::::WIN32::BN_LLONG RC4_INDEX EXPORT_VAR_AS_FN ${x86_gcc_opts}:${no_asm}:win32",
+// # Basic configs that should work on any (32 and less bit) box
+// "gcc",		"gcc:-O3::(unknown):::BN_LLONG:::",
+// "cc",		"cc:-O::(unknown)::::::",
 
-//# Borland C++ 4.5
-//"BC-32","bcc32::::WIN32::BN_LLONG DES_PTR RC4_INDEX EXPORT_VAR_AS_FN:${no_asm}:win32",
+// ####VOS Configurations
+// "vos-gcc","gcc:-O3 -Wall -D_POSIX_C_SOURCE=200112L -D_BSD -DB_ENDIAN::(unknown):VOS:-Wl,-map:BN_LLONG:${no_asm}:::::.so:",
+// "debug-vos-gcc","gcc:-O0 -g -Wall -D_POSIX_C_SOURCE=200112L -D_BSD -DB_ENDIAN -DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG::(unknown):VOS:-Wl,-map:BN_LLONG:${no_asm}:::::.so:",
 
-//# MinGW
-//"mingw", "gcc:-mno-cygwin -DL_ENDIAN -fomit-frame-pointer -O3 -march=i486 -Wall -D_WIN32_WINNT=0x333:::MINGW32:-lwsock32 -lgdi32:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts} EXPORT_VAR_AS_FN:${x86_coff_asm}:win32:cygwin-shared:-D_WINDLL -DOPENSSL_USE_APPLINK:-mno-cygwin -shared:.dll.a",
+// #### Solaris x86 with GNU C setups
+// # -DOPENSSL_NO_INLINE_ASM switches off inline assembler. We have to do it
+// # here because whenever GNU C instantiates an assembler template it
+// # surrounds it with #APP #NO_APP comment pair which (at least Solaris
+// # 7_x86) /usr/ccs/bin/as fails to assemble with "Illegal mnemonic"
+// # error message.
+// "solaris-x86-gcc","gcc:-O3 -fomit-frame-pointer -march=pentium -Wall -DL_ENDIAN -DOPENSSL_NO_INLINE_ASM::-D_REENTRANT::-lsocket -lnsl -ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:solaris-shared:-fPIC:-shared:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// # -shared -static-libgcc might appear controversial, but modules taken
+// # from static libgcc do not have relocations and linking them into our
+// # shared objects doesn't have any negative side-effects. On the contrary,
+// # doing so makes it possible to use gcc shared build with Sun C. Given
+// # that gcc generates faster code [thanks to inline assembler], I would
+// # actually recommend to consider using gcc shared build even with vendor
+// # compiler:-)
+// #						<appro@fy.chalmers.se>
+// "solaris64-x86_64-gcc","gcc:-m64 -O3 -Wall -DL_ENDIAN -DMD32_REG_T=int::-D_REENTRANT::-lsocket -lnsl -ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK BF_PTR2 DES_INT DES_UNROLL:${x86_64_asm}:dlfcn:solaris-shared:-fPIC:-m64 -shared -static-libgcc:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+//
+// #### Solaris x86 with Sun C setups
+// "solaris-x86-cc","cc:-fast -O -Xa::-D_REENTRANT::-lsocket -lnsl -ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_PTR DES_UNROLL BF_PTR:${no_asm}:dlfcn:solaris-shared:-KPIC:-G -dy -z text:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "solaris64-x86_64-cc","cc:-fast -xarch=amd64 -xstrconst -Xa -DL_ENDIAN::-D_REENTRANT::-lsocket -lnsl -ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK BF_PTR2 DES_INT DES_UNROLL:${x86_64_asm}:dlfcn:solaris-shared:-KPIC:-xarch=amd64 -G -dy -z text:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
 
-//# UWIN
-//"UWIN", "cc:-DTERMIOS -DL_ENDIAN -O -Wall:::UWIN::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${no_asm}:win32",
+// #### SPARC Solaris with GNU C setups
+// "solaris-sparcv7-gcc","gcc:-O3 -fomit-frame-pointer -Wall -DB_ENDIAN -DBN_DIV2W::-D_REENTRANT::-lsocket -lnsl -ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:${no_asm}:dlfcn:solaris-shared:-fPIC:-shared:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "solaris-sparcv8-gcc","gcc:-mv8 -O3 -fomit-frame-pointer -Wall -DB_ENDIAN -DBN_DIV2W::-D_REENTRANT::-lsocket -lnsl -ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::sparcv8.o:des_enc-sparc.o fcrypt_b.o:::::::::dlfcn:solaris-shared:-fPIC:-shared:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// # -m32 should be safe to add as long as driver recognizes -mcpu=ultrasparc
+// "solaris-sparcv9-gcc","gcc:-m32 -mcpu=ultrasparc -O3 -fomit-frame-pointer -Wall -DB_ENDIAN -DBN_DIV2W::-D_REENTRANT:ULTRASPARC:-lsocket -lnsl -ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::sparcv8plus.o:des_enc-sparc.o fcrypt_b.o:::::::::dlfcn:solaris-shared:-fPIC:-shared:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "solaris64-sparcv9-gcc","gcc:-m64 -mcpu=ultrasparc -O3 -Wall -DB_ENDIAN::-D_REENTRANT:ULTRASPARC:-lsocket -lnsl -ldl:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_INT DES_PTR DES_RISC1 DES_UNROLL BF_PTR:::des_enc-sparc.o fcrypt_b.o:::::::::dlfcn:solaris-shared:-fPIC:-m64 -shared:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// ####
+// "debug-solaris-sparcv8-gcc","gcc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG_ALL -O -g -mv8 -Wall -DB_ENDIAN::-D_REENTRANT::-lsocket -lnsl -ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::sparcv8.o::::::::::dlfcn:solaris-shared:-fPIC:-shared:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "debug-solaris-sparcv9-gcc","gcc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG_ALL -DPEDANTIC -O -g -mcpu=ultrasparc -pedantic -ansi -Wall -Wshadow -Wno-long-long -D__EXTENSIONS__ -DB_ENDIAN -DBN_DIV2W::-D_REENTRANT:ULTRASPARC:-lsocket -lnsl -ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::sparcv8plus.o:des_enc-sparc.o fcrypt_b.o:::::::::dlfcn:solaris-shared:-fPIC:-shared:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
 
-//# Cygwin
-//"Cygwin-pre1.3", "gcc:-DTERMIOS -DL_ENDIAN -fomit-frame-pointer -O3 -m486 -Wall::(unknown):CYGWIN32::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${no_asm}:win32",
-//"Cygwin", "gcc:-DTERMIOS -DL_ENDIAN -fomit-frame-pointer -O3 -march=i486 -Wall:::CYGWIN32::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_coff_asm}:dlfcn:cygwin-shared:-D_WINDLL:-shared:.dll.a",
-//"debug-Cygwin", "gcc:-DTERMIOS -DL_ENDIAN -march=i486 -Wall -DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG -DOPENSSL_NO_ASM -g -Wformat -Wshadow -Wmissing-prototypes -Wmissing-declarations -Werror:::CYGWIN32:::${no_asm}:dlfcn:cygwin-shared:-D_WINDLL:-shared:.dll.a",
+// #### SPARC Solaris with Sun C setups
+// # SC4.0 doesn't pass 'make test', upgrade to SC5.0 or SC4.2.
+// # SC4.2 is ok, better than gcc even on bn as long as you tell it -xarch=v8
+// # SC5.0 note: Compiler common patch 107357-01 or later is required!
+// "solaris-sparcv7-cc","cc:-xO5 -xstrconst -xdepend -Xa -DB_ENDIAN -DBN_DIV2W::-D_REENTRANT::-lsocket -lnsl -ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_PTR DES_RISC1 DES_UNROLL BF_PTR:${no_asm}:dlfcn:solaris-shared:-KPIC:-G -dy -z text:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "solaris-sparcv8-cc","cc:-xarch=v8 -xO5 -xstrconst -xdepend -Xa -DB_ENDIAN -DBN_DIV2W::-D_REENTRANT::-lsocket -lnsl -ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_PTR DES_RISC1 DES_UNROLL BF_PTR::sparcv8.o:des_enc-sparc.o fcrypt_b.o:::::::::dlfcn:solaris-shared:-KPIC:-G -dy -z text:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "solaris-sparcv9-cc","cc:-xtarget=ultra -xarch=v8plus -xO5 -xstrconst -xdepend -Xa -DB_ENDIAN -DBN_DIV2W::-D_REENTRANT:ULTRASPARC:-lsocket -lnsl -ldl:BN_LLONG RC4_CHAR RC4_CHUNK_LL DES_PTR DES_RISC1 DES_UNROLL BF_PTR::sparcv8plus.o:des_enc-sparc.o fcrypt_b.o:::::::::dlfcn:solaris-shared:-KPIC:-G -dy -z text:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "solaris64-sparcv9-cc","cc:-xtarget=ultra -xarch=v9 -xO5 -xstrconst -xdepend -Xa -DB_ENDIAN::-D_REENTRANT:ULTRASPARC:-lsocket -lnsl -ldl:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_INT DES_PTR DES_RISC1 DES_UNROLL BF_PTR:::des_enc-sparc.o fcrypt_b.o:::::::::dlfcn:solaris-shared:-KPIC:-xarch=v9 -G -dy -z text:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR):/usr/ccs/bin/ar rs",
+// ####
+// "debug-solaris-sparcv8-cc","cc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG_ALL -xarch=v8 -g -O -xstrconst -Xa -DB_ENDIAN -DBN_DIV2W::-D_REENTRANT::-lsocket -lnsl -ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_PTR DES_RISC1 DES_UNROLL BF_PTR::sparcv8.o::::::::::dlfcn:solaris-shared:-KPIC:-G -dy -z text:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "debug-solaris-sparcv9-cc","cc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG_ALL -xtarget=ultra -xarch=v8plus -g -O -xstrconst -Xa -DB_ENDIAN -DBN_DIV2W::-D_REENTRANT:ULTRASPARC:-lsocket -lnsl -ldl:BN_LLONG RC4_CHAR RC4_CHUNK_LL DES_PTR DES_RISC1 DES_UNROLL BF_PTR::sparcv8plus.o::::::::::dlfcn:solaris-shared:-KPIC:-G -dy -z text:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
 
-//# NetWare from David Ward (dsward@novell.com)
-//# requires either MetroWerks NLM development tools, or gcc / nlmconv
-//# NetWare defaults socket bio to WinSock sockets. However,
-//# the builds can be configured to use BSD sockets instead.
-//# netware-clib => legacy CLib c-runtime support
-//"netware-clib", "mwccnlm::::::${x86_gcc_opts}::",
-//"netware-clib-bsdsock", "mwccnlm::::::${x86_gcc_opts}::",
-//"netware-clib-gcc", "i586-netware-gcc:-nostdinc -I/ndk/nwsdk/include/nlm -I/ndk/ws295sdk/include -DL_ENDIAN -DNETWARE_CLIB -DOPENSSL_SYSNAME_NETWARE -O2 -Wall:::::${x86_gcc_opts}::",
-//"netware-clib-bsdsock-gcc", "i586-netware-gcc:-nostdinc -I/ndk/nwsdk/include/nlm -DNETWARE_BSDSOCK -DNETDB_USE_INTERNET -DL_ENDIAN -DNETWARE_CLIB -DOPENSSL_SYSNAME_NETWARE -O2 -Wall:::::${x86_gcc_opts}::",
-//# netware-libc => LibC/NKS support
-//"netware-libc", "mwccnlm::::::BN_LLONG ${x86_gcc_opts}::",
-//"netware-libc-bsdsock", "mwccnlm::::::BN_LLONG ${x86_gcc_opts}::",
-//"netware-libc-gcc", "i586-netware-gcc:-nostdinc -I/ndk/libc/include -I/ndk/libc/include/winsock -DL_ENDIAN -DNETWARE_LIBC -DOPENSSL_SYSNAME_NETWARE -DTERMIO -O2 -Wall:::::BN_LLONG ${x86_gcc_opts}::",
-//"netware-libc-bsdsock-gcc", "i586-netware-gcc:-nostdinc -I/ndk/libc/include -DNETWARE_BSDSOCK -DL_ENDIAN -DNETWARE_LIBC -DOPENSSL_SYSNAME_NETWARE -DTERMIO -O2 -Wall:::::BN_LLONG ${x86_gcc_opts}::",
+// #### SunOS configs, assuming sparc for the gcc one.
+// #"sunos-cc", "cc:-O4 -DNOPROTO -DNOCONST::(unknown):SUNOS::DES_UNROLL:${no_asm}::",
+// "sunos-gcc","gcc:-O3 -mv8 -Dssize_t=int::(unknown):SUNOS::BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL DES_PTR DES_RISC1:${no_asm}::",
 
-//# DJGPP
-//"DJGPP", "gcc:-I/dev/env/WATT_ROOT/inc -DTERMIOS -DL_ENDIAN -fomit-frame-pointer -O2 -Wall:::MSDOS:-L/dev/env/WATT_ROOT/lib -lwatt:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_out_asm}:",
+// #### IRIX 5.x configs
+// # -mips2 flag is added by ./config when appropriate.
+// "irix-gcc","gcc:-O3 -DTERMIOS -DB_ENDIAN::(unknown):::BN_LLONG MD2_CHAR RC4_INDEX RC4_CHAR RC4_CHUNK DES_UNROLL DES_RISC2 DES_PTR BF_PTR:${no_asm}:dlfcn:irix-shared:::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "irix-cc", "cc:-O2 -use_readonly_const -DTERMIOS -DB_ENDIAN::(unknown):::BN_LLONG RC4_CHAR RC4_CHUNK DES_PTR DES_RISC2 DES_UNROLL BF_PTR:${no_asm}:dlfcn:irix-shared:::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// #### IRIX 6.x configs
+// # Only N32 and N64 ABIs are supported. If you need O32 ABI build, invoke
+// # './Configure irix-cc -o32' manually.
+// "irix-mips3-gcc","gcc:-mabi=n32 -O3 -DTERMIOS -DB_ENDIAN -DBN_DIV3W::-D_SGI_MP_SOURCE:::MD2_CHAR RC4_INDEX RC4_CHAR RC4_CHUNK_LL DES_UNROLL DES_RISC2 DES_PTR BF_PTR SIXTY_FOUR_BIT::bn-mips3.o::::::::::dlfcn:irix-shared::-mabi=n32:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "irix-mips3-cc", "cc:-n32 -mips3 -O2 -use_readonly_const -G0 -rdata_shared -DTERMIOS -DB_ENDIAN -DBN_DIV3W::-D_SGI_MP_SOURCE:::DES_PTR RC4_CHAR RC4_CHUNK_LL DES_RISC2 DES_UNROLL BF_PTR SIXTY_FOUR_BIT::bn-mips3.o::::::::::dlfcn:irix-shared::-n32:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// # N64 ABI builds.
+// "irix64-mips4-gcc","gcc:-mabi=64 -mips4 -O3 -DTERMIOS -DB_ENDIAN -DBN_DIV3W::-D_SGI_MP_SOURCE:::RC4_CHAR RC4_CHUNK DES_RISC2 DES_UNROLL SIXTY_FOUR_BIT_LONG::bn-mips3.o::::::::::dlfcn:irix-shared::-mabi=64:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "irix64-mips4-cc", "cc:-64 -mips4 -O2 -use_readonly_const -G0 -rdata_shared -DTERMIOS -DB_ENDIAN -DBN_DIV3W::-D_SGI_MP_SOURCE:::RC4_CHAR RC4_CHUNK DES_RISC2 DES_UNROLL SIXTY_FOUR_BIT_LONG::bn-mips3.o::::::::::dlfcn:irix-shared::-64:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
 
-//# Ultrix from Bernhard Simon <simon@zid.tuwien.ac.at>
-//"ultrix-cc","cc:-std1 -O -Olimit 2500 -DL_ENDIAN::(unknown):::::::",
-//"ultrix-gcc","gcc:-O3 -DL_ENDIAN::(unknown):::BN_LLONG::::",
-//# K&R C is no longer supported; you need gcc on old Ultrix installations
-//##"ultrix","cc:-O2 -DNOPROTO -DNOCONST -DL_ENDIAN::(unknown):::::::",
+// #### Unified HP-UX ANSI C configs.
+// # Special notes:
+// # - Originally we were optimizing at +O4 level. It should be noted
+// #   that the only difference between +O3 and +O4 is global inter-
+// #   procedural analysis. As it has to be performed during the link
+// #   stage the compiler leaves behind certain pseudo-code in lib*.a
+// #   which might be release or even patch level specific. Generating
+// #   the machine code for and analyzing the *whole* program appears
+// #   to be *extremely* memory demanding while the performance gain is
+// #   actually questionable. The situation is intensified by the default
+// #   HP-UX data set size limit (infamous 'maxdsiz' tunable) of 64MB
+// #   which is way too low for +O4. In other words, doesn't +O3 make
+// #   more sense?
+// # - Keep in mind that the HP compiler by default generates code
+// #   suitable for execution on the host you're currently compiling at.
+// #   If the toolkit is ment to be used on various PA-RISC processors
+// #   consider './config +DAportable'.
+// # - +DD64 is chosen in favour of +DA2.0W because it's meant to be
+// #   compatible with *future* releases.
+// # - If you run ./Configure hpux-parisc-[g]cc manually don't forget to
+// #   pass -D_REENTRANT on HP-UX 10 and later.
+// # - -DMD32_XARRAY triggers workaround for compiler bug we ran into in
+// #   32-bit message digests. (For the moment of this writing) HP C
+// #   doesn't seem to "digest" too many local variables (they make "him"
+// #   chew forever:-). For more details look-up MD32_XARRAY comment in
+// #   crypto/sha/sha_lcl.h.
+// #					<appro@fy.chalmers.se>
+// #
+// # Since there is mention of this in shlib/hpux10-cc.sh
+// "hpux-parisc-cc-o4","cc:-Ae +O4 +ESlit -z -DB_ENDIAN -DBN_DIV2W -DMD32_XARRAY::-D_REENTRANT::-ldld:BN_LLONG DES_PTR DES_UNROLL DES_RISC1:${no_asm}:dl:hpux-shared:+Z:-b:.sl.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "hpux-parisc-gcc","gcc:-O3 -DB_ENDIAN -DBN_DIV2W::-D_REENTRANT::-Wl,+s -ldld:BN_LLONG DES_PTR DES_UNROLL DES_RISC1:${no_asm}:dl:hpux-shared:-fPIC:-shared:.sl.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "hpux-parisc2-gcc","gcc:-march=2.0 -O3 -DB_ENDIAN -D_REENTRANT::::-Wl,+s -ldld:SIXTY_FOUR_BIT RC4_CHAR RC4_CHUNK DES_PTR DES_UNROLL DES_RISC1::pa-risc2.o::::::::::dl:hpux-shared:-fPIC:-shared:.sl.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "hpux64-parisc2-gcc","gcc:-O3 -DB_ENDIAN -D_REENTRANT::::-ldl:SIXTY_FOUR_BIT_LONG MD2_CHAR RC4_INDEX RC4_CHAR DES_UNROLL DES_RISC1 DES_INT::pa-risc2W.o::::::::::dlfcn:hpux-shared:-fpic:-shared:.sl.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
 
-//##### MacOS X (a.k.a. Rhapsody or Darwin) setup
-//"rhapsody-ppc-cc","cc:-O3 -DB_ENDIAN::(unknown):MACOSX_RHAPSODY::BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:${no_asm}::",
-//"darwin-ppc-cc","cc:-arch ppc -O3 -DB_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::osx_ppc32.o::::::::::dlfcn:darwin-shared:-fPIC -fno-common:-arch ppc -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
-//"darwin64-ppc-cc","cc:-arch ppc64 -O3 -DB_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::osx_ppc64.o::::::::::dlfcn:darwin-shared:-fPIC -fno-common:-arch ppc64 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
-//"darwin-i386-cc","cc:-arch i386 -O3 -fomit-frame-pointer -DL_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:${no_asm}:dlfcn:darwin-shared:-fPIC -fno-common:-arch i386 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
-//"debug-darwin-i386-cc","cc:-arch i386 -g3 -DL_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:${no_asm}:dlfcn:darwin-shared:-fPIC -fno-common:-arch i386 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
-//"darwin64-x86_64-cc","cc:-arch x86_64 -O3 -fomit-frame-pointer -DL_ENDIAN -DMD32_REG_T=int -Wall::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK BF_PTR2 DES_INT DES_UNROLL:${no_asm}:dlfcn:darwin-shared:-fPIC -fno-common:-arch x86_64 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
-//"debug-darwin-ppc-cc","cc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG -DB_ENDIAN -g -Wall -O::-D_REENTRANT:MACOSX::BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::osx_ppc32.o::::::::::dlfcn:darwin-shared:-fPIC -fno-common:-dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
+// # More attempts at unified 10.X and 11.X targets for HP C compiler.
+// #
+// # Chris Ruemmler <ruemmler@cup.hp.com>
+// # Kevin Steves <ks@hp.se>
+// "hpux-parisc-cc","cc:+O3 +Optrs_strongly_typed -Ae +ESlit -DB_ENDIAN -DBN_DIV2W -DMD32_XARRAY::-D_REENTRANT::-Wl,+s -ldld:MD2_CHAR RC4_INDEX RC4_CHAR DES_UNROLL DES_RISC1 DES_INT:${no_asm}:dl:hpux-shared:+Z:-b:.sl.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "hpux-parisc1_0-cc","cc:+DAportable +O3 +Optrs_strongly_typed -Ae +ESlit -DB_ENDIAN -DMD32_XARRAY::-D_REENTRANT::-Wl,+s -ldld:MD2_CHAR RC4_INDEX RC4_CHAR DES_UNROLL DES_RISC1 DES_INT:${no_asm}:dl:hpux-shared:+Z:-b:.sl.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "hpux-parisc2-cc","cc:+DA2.0 +DS2.0 +O3 +Optrs_strongly_typed -Ae +ESlit -DB_ENDIAN -DMD32_XARRAY -D_REENTRANT::::-Wl,+s -ldld:SIXTY_FOUR_BIT MD2_CHAR RC4_INDEX RC4_CHAR DES_UNROLL DES_RISC1 DES_INT::pa-risc2.o::::::::::dl:hpux-shared:+Z:-b:.sl.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "hpux64-parisc2-cc","cc:+DD64 +O3 +Optrs_strongly_typed -Ae +ESlit -DB_ENDIAN -DMD32_XARRAY -D_REENTRANT::::-ldl:SIXTY_FOUR_BIT_LONG MD2_CHAR RC4_INDEX RC4_CHAR DES_UNROLL DES_RISC1 DES_INT::pa-risc2W.o::::::::::dlfcn:hpux-shared:+Z:+DD64 -b:.sl.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
 
-//##### A/UX
-//"aux3-gcc","gcc:-O2 -DTERMIO::(unknown):AUX:-lbsd:RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:::",
+// # HP/UX IA-64 targets
+// "hpux-ia64-cc","cc:-Ae +DD32 +O2 +Olit=all -z -DB_ENDIAN -D_REENTRANT::::-ldl:SIXTY_FOUR_BIT MD2_CHAR RC4_INDEX DES_UNROLL DES_RISC1 DES_INT:${ia64_asm}:dlfcn:hpux-shared:+Z:+DD32 -b:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// # Frank Geurts <frank.geurts@nl.abnamro.com> has patiently assisted with
+// # with debugging of the following config.
+// "hpux64-ia64-cc","cc:-Ae +DD64 +O3 +Olit=all -z -DB_ENDIAN -D_REENTRANT::::-ldl:SIXTY_FOUR_BIT_LONG MD2_CHAR RC4_INDEX DES_UNROLL DES_RISC1 DES_INT:${ia64_asm}:dlfcn:hpux-shared:+Z:+DD64 -b:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// # GCC builds...
+// "hpux-ia64-gcc","gcc:-O3 -DB_ENDIAN -D_REENTRANT::::-ldl:SIXTY_FOUR_BIT MD2_CHAR RC4_INDEX DES_UNROLL DES_RISC1 DES_INT:${ia64_asm}:dlfcn:hpux-shared:-fpic:-shared:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "hpux64-ia64-gcc","gcc:-mlp64 -O3 -DB_ENDIAN -D_REENTRANT::::-ldl:SIXTY_FOUR_BIT_LONG MD2_CHAR RC4_INDEX DES_UNROLL DES_RISC1 DES_INT:${ia64_asm}:dlfcn:hpux-shared:-fpic:-mlp64 -shared:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
 
-//##### Sony NEWS-OS 4.x
-//"newsos4-gcc","gcc:-O -DB_ENDIAN::(unknown):NEWS4:-lmld -liberty:BN_LLONG RC4_CHAR RC4_CHUNK DES_PTR DES_RISC1 DES_UNROLL BF_PTR::::",
+// # Legacy HPUX 9.X configs...
+// "hpux-cc",	"cc:-DB_ENDIAN -DBN_DIV2W -DMD32_XARRAY -Ae +ESlit +O2 -z::(unknown)::-Wl,+s -ldld:DES_PTR DES_UNROLL DES_RISC1:${no_asm}:dl:hpux-shared:+Z:-b:.sl.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "hpux-gcc",	"gcc:-DB_ENDIAN -DBN_DIV2W -O3::(unknown)::-Wl,+s -ldld:DES_PTR DES_UNROLL DES_RISC1:${no_asm}:dl:hpux-shared:-fPIC:-shared:.sl.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
 
-//##### GNU Hurd
-//"hurd-x86",  "gcc:-DL_ENDIAN -DTERMIOS -O3 -fomit-frame-pointer -march=i486 -Wall::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-fPIC",
+// #### HP MPE/iX http://jazz.external.hp.com/src/openssl/
+// "MPE/iX-gcc",	"gcc:-D_ENDIAN -DBN_DIV2W -O3 -D_POSIX_SOURCE -D_SOCKET_SOURCE -I/SYSLOG/PUB::(unknown):MPE:-L/SYSLOG/PUB -lsyslog -lsocket -lcurses:BN_LLONG DES_PTR DES_UNROLL DES_RISC1:::",
 
-//##### OS/2 EMX
-//"OS2-EMX", "gcc::::::::",
+// # DEC Alpha OSF/1/Tru64 targets.
+// #
+// #	"What's in a name? That which we call a rose
+// #	 By any other word would smell as sweet."
+// #
+// # - William Shakespeare, "Romeo & Juliet", Act II, scene II.
+// #
+// # For gcc, the following gave a %50 speedup on a 164 over the 'DES_INT' version
+// #
+// "osf1-alpha-gcc", "gcc:-O3::(unknown):::SIXTY_FOUR_BIT_LONG RC4_CHUNK DES_UNROLL DES_RISC1:${no_asm}:dlfcn:alpha-osf1-shared:::.so",
+// "osf1-alpha-cc",  "cc:-std1 -tune host -O4 -readonly_strings::(unknown):::SIXTY_FOUR_BIT_LONG RC4_CHUNK:${no_asm}:dlfcn:alpha-osf1-shared:::.so",
+// "tru64-alpha-cc", "cc:-std1 -tune host -fast -readonly_strings::-pthread:::SIXTY_FOUR_BIT_LONG RC4_CHUNK:${no_asm}:dlfcn:alpha-osf1-shared::-msym:.so",
 
-//##### VxWorks for various targets
-//"vxworks-ppc405","ccppc:-g -msoft-float -mlongcall -DCPU=PPC405 -I\$(WIND_BASE)/target/h:::VXWORKS:-r:::::",
-//"vxworks-ppc750","ccppc:-ansi -nostdinc -DPPC750 -D_REENTRANT -fvolatile -fno-builtin -fno-for-scope -fsigned-char -Wall -msoft-float -mlongcall -DCPU=PPC604 -I\$(WIND_BASE)/target/h \$(DEBUG_FLAG):::VXWORKS:-r:::::",
-//"vxworks-ppc750-debug","ccppc:-ansi -nostdinc -DPPC750 -D_REENTRANT -fvolatile -fno-builtin -fno-for-scope -fsigned-char -Wall -msoft-float -mlongcall -DCPU=PPC604 -I\$(WIND_BASE)/target/h -DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG -DPEDANTIC -DDEBUG_SAFESTACK -DDEBUG -g:::VXWORKS:-r:::::",
-//"vxworks-ppc860","ccppc:-nostdinc -msoft-float -DCPU=PPC860 -DNO_STRINGS_H -I\$(WIND_BASE)/target/h:::VXWORKS:-r:::::",
-//"vxworks-mipsle","ccmips:-B\$(WIND_BASE)/host/\$(WIND_HOST_TYPE)/lib/gcc-lib/ -DL_ENDIAN -EL -Wl,-EL -mips2 -mno-branch-likely -G 0 -fno-builtin -msoft-float -DCPU=MIPS32 -DMIPSEL -DNO_STRINGS_H -I\$(WIND_BASE)/target/h:::VXWORKS:-r::${no_asm}::::::ranlibmips:",
+// ####
+// #### Variety of LINUX:-)
+// ####
+// # *-generic* is endian-neutral target, but ./config is free to
+// # throw in -D[BL]_ENDIAN, whichever appropriate...
+// "linux-generic32","gcc:-DTERMIO -O3 -fomit-frame-pointer -Wall::-D_REENTRANT::-ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_INT DES_UNROLL BF_PTR:${no_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "linux-ppc",	"gcc:-DB_ENDIAN -DTERMIO -O3 -Wall::-D_REENTRANT::-ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_RISC1 DES_UNROLL::linux_ppc32.o::::::::::dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// #### IA-32 targets...
+// "linux-ia32-icc",	"icc:-DL_ENDIAN -DTERMIO -O2 -no_cpprt::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-KPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "linux-elf",	"gcc:-DL_ENDIAN -DTERMIO -O3 -fomit-frame-pointer -Wall::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "linux-aout",	"gcc:-DL_ENDIAN -DTERMIO -O3 -fomit-frame-pointer -march=i486 -Wall::(unknown):::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_out_asm}",
+// ####
+// "linux-generic64","gcc:-DTERMIO -O3 -Wall::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_INT DES_UNROLL BF_PTR:${no_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "linux-ppc64",	"gcc:-m64 -DB_ENDIAN -DTERMIO -O3 -Wall::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_RISC1 DES_UNROLL::linux_ppc64.o::::::::::dlfcn:linux-shared:-fPIC:-m64:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "linux-ia64",	"gcc:-DL_ENDIAN -DTERMIO -O3 -Wall::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK:${ia64_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "linux-ia64-ecc","ecc:-DL_ENDIAN -DTERMIO -O2 -Wall -no_cpprt::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK:${ia64_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "linux-ia64-icc","icc:-DL_ENDIAN -DTERMIO -O2 -Wall -no_cpprt::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK:${ia64_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "linux-x86_64",	"gcc:-m64 -DL_ENDIAN -DTERMIO -O3 -Wall -DMD32_REG_T=int::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK BF_PTR2 DES_INT DES_UNROLL:${x86_64_asm}:dlfcn:linux-shared:-fPIC:-m64:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// #### SPARC Linux setups
+// # Ray Miller <ray.miller@computing-services.oxford.ac.uk> has patiently
+// # assisted with debugging of following two configs.
+// "linux-sparcv8","gcc:-mv8 -DB_ENDIAN -DTERMIO -O3 -fomit-frame-pointer -Wall -DBN_DIV2W::-D_REENTRANT::-ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::sparcv8.o:des_enc-sparc.o fcrypt_b.o:::::::::dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// # it's a real mess with -mcpu=ultrasparc option under Linux, but
+// # -Wa,-Av8plus should do the trick no matter what.
+// "linux-sparcv9","gcc:-m32 -mcpu=ultrasparc -DB_ENDIAN -DTERMIO -O3 -fomit-frame-pointer -Wall -Wa,-Av8plus -DBN_DIV2W::-D_REENTRANT:ULTRASPARC:-ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::sparcv8plus.o:des_enc-sparc.o fcrypt_b.o:::::::::dlfcn:linux-shared:-fPIC:-m32:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// # GCC 3.1 is a requirement
+// "linux64-sparcv9","gcc:-m64 -mcpu=ultrasparc -DB_ENDIAN -DTERMIO -O3 -fomit-frame-pointer -Wall::-D_REENTRANT:ULTRASPARC:-ldl:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::::::::::::dlfcn:linux-shared:-fPIC:-m64:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// #### Alpha Linux with GNU C and Compaq C setups
+// # Special notes:
+// # - linux-alpha+bwx-gcc is ment to be used from ./config only. If you
+// #   ought to run './Configure linux-alpha+bwx-gcc' manually, do
+// #   complement the command line with -mcpu=ev56, -mcpu=ev6 or whatever
+// #   which is appropriate.
+// # - If you use ccc keep in mind that -fast implies -arch host and the
+// #   compiler is free to issue instructions which gonna make elder CPU
+// #   choke. If you wish to build "blended" toolkit, add -arch generic
+// #   *after* -fast and invoke './Configure linux-alpha-ccc' manually.
+// #
+// #					<appro@fy.chalmers.se>
+// #
+// "linux-alpha-gcc","gcc:-O3 -DL_ENDIAN -DTERMIO::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHUNK DES_RISC1 DES_UNROLL:${no_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "linux-alpha+bwx-gcc","gcc:-O3 -DL_ENDIAN -DTERMIO::-D_REENTRANT::-ldl:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_RISC1 DES_UNROLL:${no_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "linux-alpha-ccc","ccc:-fast -readonly_strings -DL_ENDIAN -DTERMIO::-D_REENTRANT:::SIXTY_FOUR_BIT_LONG RC4_CHUNK DES_INT DES_PTR DES_RISC1 DES_UNROLL:${no_asm}",
+// "linux-alpha+bwx-ccc","ccc:-fast -readonly_strings -DL_ENDIAN -DTERMIO::-D_REENTRANT:::SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_INT DES_PTR DES_RISC1 DES_UNROLL:${no_asm}",
 
-//##### Compaq Non-Stop Kernel (Tandem)
-//"tandem-c89","c89:-Ww -D__TANDEM -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED=1 -D_TANDEM_SOURCE -DB_ENDIAN::(unknown):::THIRTY_TWO_BIT:::",
+// #### *BSD [do see comment about ${BSDthreads} above!]
+// "BSD-generic32","gcc:-DTERMIOS -O3 -fomit-frame-pointer -Wall::${BSDthreads}:::BN_LLONG RC2_CHAR RC4_INDEX DES_INT DES_UNROLL:${no_asm}:dlfcn:bsd-gcc-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "BSD-x86",	"gcc:-DL_ENDIAN -DTERMIOS -O3 -fomit-frame-pointer -Wall::${BSDthreads}:::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_out_asm}:dlfcn:bsd-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "BSD-x86-elf",	"gcc:-DL_ENDIAN -DTERMIOS -O3 -fomit-frame-pointer -Wall::${BSDthreads}:::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:bsd-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "debug-BSD-x86-elf",	"gcc:-DL_ENDIAN -DTERMIOS -O3 -Wall -g::${BSDthreads}:::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:bsd-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "BSD-sparcv8",	"gcc:-DB_ENDIAN -DTERMIOS -O3 -mv8 -Wall::${BSDthreads}:::BN_LLONG RC2_CHAR RC4_INDEX DES_INT DES_UNROLL::sparcv8.o:des_enc-sparc.o fcrypt_b.o:::::::::dlfcn:bsd-gcc-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+
+// "BSD-generic64","gcc:-DTERMIOS -O3 -Wall::${BSDthreads}:::SIXTY_FOUR_BIT_LONG RC4_CHUNK DES_INT DES_UNROLL:${no_asm}:dlfcn:bsd-gcc-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// # -DMD32_REG_T=int doesn't actually belong in sparc64 target, it
+// # simply *happens* to work around a compiler bug in gcc 3.3.3,
+// # triggered by RIPEMD160 code.
+// "BSD-sparc64",	"gcc:-DB_ENDIAN -DTERMIOS -O3 -DMD32_REG_T=int -Wall::${BSDthreads}:::SIXTY_FOUR_BIT_LONG RC2_CHAR RC4_CHUNK DES_INT DES_PTR DES_RISC2 BF_PTR:::des_enc-sparc.o fcrypt_b.o:::::::::dlfcn:bsd-gcc-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "BSD-ia64",	"gcc:-DL_ENDIAN -DTERMIOS -O3 -Wall::${BSDthreads}:::SIXTY_FOUR_BIT_LONG RC4_CHUNK:${ia64_asm}:dlfcn:bsd-gcc-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "BSD-x86_64",	"gcc:-DL_ENDIAN -DTERMIOS -O3 -DMD32_REG_T=int -Wall::${BSDthreads}:::SIXTY_FOUR_BIT_LONG RC4_CHUNK DES_INT DES_UNROLL:${x86_64_asm}:dlfcn:bsd-gcc-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+
+// "bsdi-elf-gcc",     "gcc:-DPERL5 -DL_ENDIAN -fomit-frame-pointer -O3 -march=i486 -Wall::(unknown)::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:bsd-gcc-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+
+// "nextstep",	"cc:-O -Wall:<libc.h>:(unknown):::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:::",
+// "nextstep3.3",	"cc:-O3 -Wall:<libc.h>:(unknown):::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:::",
+
+// # NCR MP-RAS UNIX ver 02.03.01
+// "ncr-scde","cc:-O6 -Xa -Hoff=BEHAVED -686 -Hwide -Hiw::(unknown)::-lsocket -lnsl -lc89:${x86_gcc_des} ${x86_gcc_opts}:::",
+
+// # QNX
+// "qnx4",	"cc:-DL_ENDIAN -DTERMIO::(unknown):::${x86_gcc_des} ${x86_gcc_opts}:",
+// "qnx6",	"cc:-DL_ENDIAN -DTERMIOS::(unknown)::-lsocket:${x86_gcc_des} ${x86_gcc_opts}:",
+
+// #### SCO/Caldera targets.
+// #
+// # Originally we had like unixware-*, unixware-*-pentium, unixware-*-p6, etc.
+// # Now we only have blended unixware-* as it's the only one used by ./config.
+// # If you want to optimize for particular microarchitecture, bypass ./config
+// # and './Configure unixware-7 -Kpentium_pro' or whatever appropriate.
+// # Note that not all targets include assembler support. Mostly because of
+// # lack of motivation to support out-of-date platforms with out-of-date
+// # compiler drivers and assemblers. Tim Rice <tim@multitalents.net> has
+// # patiently assisted to debug most of it.
+// #
+// # UnixWare 2.0x fails destest with -O.
+// "unixware-2.0","cc:-DFILIO_H -DNO_STRINGS_H::-Kthread::-lsocket -lnsl -lresolv -lx:${x86_gcc_des} ${x86_gcc_opts}:::",
+// "unixware-2.1","cc:-O -DFILIO_H::-Kthread::-lsocket -lnsl -lresolv -lx:${x86_gcc_des} ${x86_gcc_opts}:::",
+// "unixware-7","cc:-O -DFILIO_H -Kalloca::-Kthread::-lsocket -lnsl:BN_LLONG MD2_CHAR RC4_INDEX ${x86_gcc_des}:${x86_elf_asm}:dlfcn:svr5-shared:-Kpic::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "unixware-7-gcc","gcc:-DL_ENDIAN -DFILIO_H -O3 -fomit-frame-pointer -march=pentium -Wall::-D_REENTRANT::-lsocket -lnsl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:gnu-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// # SCO 5 - Ben Laurie <ben@algroup.co.uk> says the -O breaks the SCO cc.
+// "sco5-cc",  "cc:-belf::(unknown)::-lsocket -lnsl:${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:svr3-shared:-Kpic::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "sco5-gcc",  "gcc:-O3 -fomit-frame-pointer::(unknown)::-lsocket -lnsl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:svr3-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+
+// #### IBM's AIX.
+// "aix3-cc",  "cc:-O -DB_ENDIAN -qmaxmem=16384::(unknown):AIX::BN_LLONG RC4_CHAR:::",
+// "aix-gcc",  "gcc:-O -DB_ENDIAN::-pthread:AIX::BN_LLONG RC4_CHAR::aix_ppc32.o::::::::::dlfcn:aix-shared::-shared -Wl,-G:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)::-X 32",
+// "aix64-gcc","gcc:-maix64 -O -DB_ENDIAN::-pthread:AIX::SIXTY_FOUR_BIT_LONG RC4_CHAR::aix_ppc64.o::::::::::dlfcn:aix-shared::-maix64 -shared -Wl,-G:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)::-X64",
+// # Below targets assume AIX 5. Idea is to effectively disregard $OBJECT_MODE
+// # at build time. $OBJECT_MODE is respected at ./config stage!
+// "aix-cc",   "cc:-q32 -O -DB_ENDIAN -qmaxmem=16384 -qro -qroconst::-qthreaded:AIX::BN_LLONG RC4_CHAR::aix_ppc32.o::::::::::dlfcn:aix-shared::-q32 -G:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)::-X 32",
+// "aix64-cc", "cc:-q64 -O -DB_ENDIAN -qmaxmem=16384 -qro -qroconst::-qthreaded:AIX::SIXTY_FOUR_BIT_LONG RC4_CHAR::aix_ppc64.o::::::::::dlfcn:aix-shared::-q64 -G:.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)::-X 64",
+
+// #
+// # Cray T90 and similar (SDSC)
+// # It's Big-endian, but the algorithms work properly when B_ENDIAN is NOT
+// # defined.  The T90 ints and longs are 8 bytes long, and apparently the
+// # B_ENDIAN code assumes 4 byte ints.  Fortunately, the non-B_ENDIAN and
+// # non L_ENDIAN code aligns the bytes in each word correctly.
+// #
+// # The BIT_FIELD_LIMITS define is to avoid two fatal compiler errors:
+// #'Taking the address of a bit field is not allowed. '
+// #'An expression with bit field exists as the operand of "sizeof" '
+// # (written by Wayne Schroeder <schroede@SDSC.EDU>)
+// #
+// # j90 is considered the base machine type for unicos machines,
+// # so this configuration is now called "cray-j90" ...
+// "cray-j90", "cc: -DBIT_FIELD_LIMITS -DTERMIOS::(unknown):CRAY::SIXTY_FOUR_BIT_LONG DES_INT:::",
+
+// #
+// # Cray T3E (Research Center Juelich, beckman@acl.lanl.gov)
+// #
+// # The BIT_FIELD_LIMITS define was written for the C90 (it seems).  I added
+// # another use.  Basically, the problem is that the T3E uses some bit fields
+// # for some st_addr stuff, and then sizeof and address-of fails
+// # I could not use the ams/alpha.o option because the Cray assembler, 'cam'
+// # did not like it.
+// "cray-t3e", "cc: -DBIT_FIELD_LIMITS -DTERMIOS::(unknown):CRAY::SIXTY_FOUR_BIT_LONG RC4_CHUNK DES_INT:::",
+
+// # DGUX, 88100.
+// "dgux-R3-gcc",	"gcc:-O3 -fomit-frame-pointer::(unknown):::RC4_INDEX DES_UNROLL:::",
+// "dgux-R4-gcc",	"gcc:-O3 -fomit-frame-pointer::(unknown)::-lnsl -lsocket:RC4_INDEX DES_UNROLL:::",
+// "dgux-R4-x86-gcc",	"gcc:-O3 -fomit-frame-pointer -DL_ENDIAN::(unknown)::-lnsl -lsocket:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}",
+
+// # Sinix/ReliantUNIX RM400
+// # NOTE: The CDS++ Compiler up to V2.0Bsomething has the IRIX_CC_BUG optimizer problem. Better use -g  */
+// "ReliantUNIX","cc:-KPIC -g -DTERMIOS -DB_ENDIAN::-Kthread:SNI:-lsocket -lnsl -lc -L/usr/ucblib -lucb:BN_LLONG DES_PTR DES_RISC2 DES_UNROLL BF_PTR:${no_asm}:dlfcn:reliantunix-shared:::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",
+// "SINIX","cc:-O::(unknown):SNI:-lsocket -lnsl -lc -L/usr/ucblib -lucb:RC4_INDEX RC4_CHAR:::",
+// "SINIX-N","/usr/ucb/cc:-O2 -misaligned::(unknown)::-lucb:RC4_INDEX RC4_CHAR:::",
+
+// # SIEMENS BS2000/OSD: an EBCDIC-based mainframe
+// "BS2000-OSD","c89:-O -XLLML -XLLMK -XL -DB_ENDIAN -DTERMIOS -DCHARSET_EBCDIC::(unknown)::-lsocket -lnsl:THIRTY_TWO_BIT DES_PTR DES_UNROLL MD2_CHAR RC4_INDEX RC4_CHAR BF_PTR:::",
+
+// # OS/390 Unix an EBCDIC-based Unix system on IBM mainframe
+// # You need to compile using the c89.sh wrapper in the tools directory, because the
+// # IBM compiler does not like the -L switch after any object modules.
+// #
+// "OS390-Unix","c89.sh:-O -DB_ENDIAN -DCHARSET_EBCDIC -DNO_SYS_PARAM_H  -D_ALL_SOURCE::(unknown):::THIRTY_TWO_BIT DES_PTR DES_UNROLL MD2_CHAR RC4_INDEX RC4_CHAR BF_PTR:::",
+
+// # Win64 targets, WIN64I denotes IA-64 and WIN64A - AMD64
+// "VC-WIN64I","cl::::WIN64I::SIXTY_FOUR_BIT RC4_CHUNK_LL DES_INT EXPORT_VAR_AS_FN:${no_asm}:win32",
+// "VC-WIN64A","cl::::WIN64A::SIXTY_FOUR_BIT RC4_CHUNK_LL DES_INT EXPORT_VAR_AS_FN:${no_asm}:win32",
+
+// # Visual C targets
+// "VC-NT","cl::::WINNT::BN_LLONG RC4_INDEX EXPORT_VAR_AS_FN ${x86_gcc_opts}:${no_asm}:win32",
+// "VC-CE","cl::::WINCE::BN_LLONG RC4_INDEX EXPORT_VAR_AS_FN ${x86_gcc_opts}:${no_asm}:win32",
+// "VC-WIN32","cl::::WIN32::BN_LLONG RC4_INDEX EXPORT_VAR_AS_FN ${x86_gcc_opts}:${no_asm}:win32",
+
+// # Borland C++ 4.5
+// "BC-32","bcc32::::WIN32::BN_LLONG DES_PTR RC4_INDEX EXPORT_VAR_AS_FN:${no_asm}:win32",
+
+// # MinGW
+// "mingw", "gcc:-mno-cygwin -DL_ENDIAN -fomit-frame-pointer -O3 -march=i486 -Wall -D_WIN32_WINNT=0x333:::MINGW32:-lwsock32 -lgdi32:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts} EXPORT_VAR_AS_FN:${x86_coff_asm}:win32:cygwin-shared:-D_WINDLL -DOPENSSL_USE_APPLINK:-mno-cygwin -shared:.dll.a",
+
+// # UWIN
+// "UWIN", "cc:-DTERMIOS -DL_ENDIAN -O -Wall:::UWIN::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${no_asm}:win32",
+
+// # Cygwin
+// "Cygwin-pre1.3", "gcc:-DTERMIOS -DL_ENDIAN -fomit-frame-pointer -O3 -m486 -Wall::(unknown):CYGWIN32::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${no_asm}:win32",
+// "Cygwin", "gcc:-DTERMIOS -DL_ENDIAN -fomit-frame-pointer -O3 -march=i486 -Wall:::CYGWIN32::BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_coff_asm}:dlfcn:cygwin-shared:-D_WINDLL:-shared:.dll.a",
+// "debug-Cygwin", "gcc:-DTERMIOS -DL_ENDIAN -march=i486 -Wall -DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG -DOPENSSL_NO_ASM -g -Wformat -Wshadow -Wmissing-prototypes -Wmissing-declarations -Werror:::CYGWIN32:::${no_asm}:dlfcn:cygwin-shared:-D_WINDLL:-shared:.dll.a",
+
+// # NetWare from David Ward (dsward@novell.com)
+// # requires either MetroWerks NLM development tools, or gcc / nlmconv
+// # NetWare defaults socket bio to WinSock sockets. However,
+// # the builds can be configured to use BSD sockets instead.
+// # netware-clib => legacy CLib c-runtime support
+// "netware-clib", "mwccnlm::::::${x86_gcc_opts}::",
+// "netware-clib-bsdsock", "mwccnlm::::::${x86_gcc_opts}::",
+// "netware-clib-gcc", "i586-netware-gcc:-nostdinc -I/ndk/nwsdk/include/nlm -I/ndk/ws295sdk/include -DL_ENDIAN -DNETWARE_CLIB -DOPENSSL_SYSNAME_NETWARE -O2 -Wall:::::${x86_gcc_opts}::",
+// "netware-clib-bsdsock-gcc", "i586-netware-gcc:-nostdinc -I/ndk/nwsdk/include/nlm -DNETWARE_BSDSOCK -DNETDB_USE_INTERNET -DL_ENDIAN -DNETWARE_CLIB -DOPENSSL_SYSNAME_NETWARE -O2 -Wall:::::${x86_gcc_opts}::",
+// # netware-libc => LibC/NKS support
+// "netware-libc", "mwccnlm::::::BN_LLONG ${x86_gcc_opts}::",
+// "netware-libc-bsdsock", "mwccnlm::::::BN_LLONG ${x86_gcc_opts}::",
+// "netware-libc-gcc", "i586-netware-gcc:-nostdinc -I/ndk/libc/include -I/ndk/libc/include/winsock -DL_ENDIAN -DNETWARE_LIBC -DOPENSSL_SYSNAME_NETWARE -DTERMIO -O2 -Wall:::::BN_LLONG ${x86_gcc_opts}::",
+// "netware-libc-bsdsock-gcc", "i586-netware-gcc:-nostdinc -I/ndk/libc/include -DNETWARE_BSDSOCK -DL_ENDIAN -DNETWARE_LIBC -DOPENSSL_SYSNAME_NETWARE -DTERMIO -O2 -Wall:::::BN_LLONG ${x86_gcc_opts}::",
+
+// # DJGPP
+// "DJGPP", "gcc:-I/dev/env/WATT_ROOT/inc -DTERMIOS -DL_ENDIAN -fomit-frame-pointer -O2 -Wall:::MSDOS:-L/dev/env/WATT_ROOT/lib -lwatt:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_out_asm}:",
+
+// # Ultrix from Bernhard Simon <simon@zid.tuwien.ac.at>
+// "ultrix-cc","cc:-std1 -O -Olimit 2500 -DL_ENDIAN::(unknown):::::::",
+// "ultrix-gcc","gcc:-O3 -DL_ENDIAN::(unknown):::BN_LLONG::::",
+// # K&R C is no longer supported; you need gcc on old Ultrix installations
+// ##"ultrix","cc:-O2 -DNOPROTO -DNOCONST -DL_ENDIAN::(unknown):::::::",
+
+// ##### MacOS X (a.k.a. Rhapsody or Darwin) setup
+// "rhapsody-ppc-cc","cc:-O3 -DB_ENDIAN::(unknown):MACOSX_RHAPSODY::BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:${no_asm}::",
+// "darwin-ppc-cc","cc:-arch ppc -O3 -DB_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::osx_ppc32.o::::::::::dlfcn:darwin-shared:-fPIC -fno-common:-arch ppc -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
+// "darwin64-ppc-cc","cc:-arch ppc64 -O3 -DB_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::osx_ppc64.o::::::::::dlfcn:darwin-shared:-fPIC -fno-common:-arch ppc64 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
+// "darwin-i386-cc","cc:-arch i386 -O3 -fomit-frame-pointer -DL_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:${no_asm}:dlfcn:darwin-shared:-fPIC -fno-common:-arch i386 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
+// "debug-darwin-i386-cc","cc:-arch i386 -g3 -DL_ENDIAN::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:${no_asm}:dlfcn:darwin-shared:-fPIC -fno-common:-arch i386 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
+// "darwin64-x86_64-cc","cc:-arch x86_64 -O3 -fomit-frame-pointer -DL_ENDIAN -DMD32_REG_T=int -Wall::-D_REENTRANT:MACOSX:-Wl,-search_paths_first%:SIXTY_FOUR_BIT_LONG RC4_CHAR RC4_CHUNK BF_PTR2 DES_INT DES_UNROLL:${no_asm}:dlfcn:darwin-shared:-fPIC -fno-common:-arch x86_64 -dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
+// "debug-darwin-ppc-cc","cc:-DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG -DB_ENDIAN -g -Wall -O::-D_REENTRANT:MACOSX::BN_LLONG RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR::osx_ppc32.o::::::::::dlfcn:darwin-shared:-fPIC -fno-common:-dynamiclib:.\$(SHLIB_MAJOR).\$(SHLIB_MINOR).dylib",
+
+// ##### A/UX
+// "aux3-gcc","gcc:-O2 -DTERMIO::(unknown):AUX:-lbsd:RC4_CHAR RC4_CHUNK DES_UNROLL BF_PTR:::",
+
+// ##### Sony NEWS-OS 4.x
+// "newsos4-gcc","gcc:-O -DB_ENDIAN::(unknown):NEWS4:-lmld -liberty:BN_LLONG RC4_CHAR RC4_CHUNK DES_PTR DES_RISC1 DES_UNROLL BF_PTR::::",
+
+// ##### GNU Hurd
+// "hurd-x86",  "gcc:-DL_ENDIAN -DTERMIOS -O3 -fomit-frame-pointer -march=i486 -Wall::-D_REENTRANT::-ldl:BN_LLONG ${x86_gcc_des} ${x86_gcc_opts}:${x86_elf_asm}:dlfcn:linux-shared:-fPIC",
+
+// ##### OS/2 EMX
+// "OS2-EMX", "gcc::::::::",
+
+// ##### VxWorks for various targets
+// "vxworks-ppc405","ccppc:-g -msoft-float -mlongcall -DCPU=PPC405 -I\$(WIND_BASE)/target/h:::VXWORKS:-r:::::",
+// "vxworks-ppc750","ccppc:-ansi -nostdinc -DPPC750 -D_REENTRANT -fvolatile -fno-builtin -fno-for-scope -fsigned-char -Wall -msoft-float -mlongcall -DCPU=PPC604 -I\$(WIND_BASE)/target/h \$(DEBUG_FLAG):::VXWORKS:-r:::::",
+// "vxworks-ppc750-debug","ccppc:-ansi -nostdinc -DPPC750 -D_REENTRANT -fvolatile -fno-builtin -fno-for-scope -fsigned-char -Wall -msoft-float -mlongcall -DCPU=PPC604 -I\$(WIND_BASE)/target/h -DBN_DEBUG -DREF_CHECK -DCONF_DEBUG -DCRYPTO_MDEBUG -DPEDANTIC -DDEBUG_SAFESTACK -DDEBUG -g:::VXWORKS:-r:::::",
+// "vxworks-ppc860","ccppc:-nostdinc -msoft-float -DCPU=PPC860 -DNO_STRINGS_H -I\$(WIND_BASE)/target/h:::VXWORKS:-r:::::",
+// "vxworks-mipsle","ccmips:-B\$(WIND_BASE)/host/\$(WIND_HOST_TYPE)/lib/gcc-lib/ -DL_ENDIAN -EL -Wl,-EL -mips2 -mno-branch-likely -G 0 -fno-builtin -msoft-float -DCPU=MIPS32 -DMIPSEL -DNO_STRINGS_H -I\$(WIND_BASE)/target/h:::VXWORKS:-r::${no_asm}::::::ranlibmips:",
+
+// ##### Compaq Non-Stop Kernel (Tandem)
+// "tandem-c89","c89:-Ww -D__TANDEM -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED=1 -D_TANDEM_SOURCE -DB_ENDIAN::(unknown):::THIRTY_TWO_BIT:::",
 
 {$IFDEF WIN32}
   {$DEFINE OPENSSL_SYSNAME_WIN32}
@@ -1267,18 +1582,15 @@ const
   OPENSSL_CRYPTO_LOCK_FIPS2 = 40;
   OPENSSL_CRYPTO_NUM_LOCKS = 41;
   {$ENDIF}
-
   OPENSSL_CRYPTO_MEM_CHECK_DISABLE = $3;
   OPENSSL_CRYPTO_MEM_CHECK_ENABLE = $2;
   OPENSSL_CRYPTO_MEM_CHECK_OFF = $0;
   OPENSSL_CRYPTO_MEM_CHECK_ON = $1;
-
   OPENSSL_CRYPTO_READ = 4;
   OPENSSL_CRYPTO_UNLOCK = 2;
   OPENSSL_CRYPTO_WRITE = 8;
   OPENSSL_V_CRYPTO_MDEBUG_TIME = $1;
   OPENSSL_V_CRYPTO_MDEBUG_THREAD = $2;
-
   {$IFNDEF OPENSSL_NO_AES}
   OPENSSL_AES_ENCRYPT = 1;
   OPENSSL_AES_DECRYPT = 0;
@@ -1300,24 +1612,18 @@ const
   {$IFNDEF OPENSSL_NO_DH}
   //the OpenSSL developers probably only wanted to make sure this was defined.
   OPENSSL_DH_MAX_MODULUS_BITS = 10000;
-
   OPENSSL_DH_FIPS_MIN_MODULUS_BITS = 1024;
-
   OPENSSL_DH_FLAG_CACHE_MONT_P = $01;
   OPENSSL_DH_FLAG_NO_EXP_CONSTTIME = $02;
-
   OPENSSL_DH_GENERATOR_2 = 2;
   OPENSSL_DH_GENERATOR_5 = 5;
-
   OPENSSL_DH_CHECK_P_NOT_PRIME = $01;
   OPENSSL_DH_CHECK_P_NOT_STRONG_PRIME = $02;
   OPENSSL_DH_UNABLE_TO_CHECK_GENERATOR = $04;
   OPENSSL_DH_NOT_SUITABLE_GENERATOR = $08;
-
   OPENSSL_DH_CHECK_PUBKEY_TOO_SMALL = $01;
   OPENSSL_DH_CHECK_PUBKEY_TOO_LARGE = $02;
   OPENSSL_DH_CHECK_P_NOT_SAFE_PRIME = OPENSSL_DH_CHECK_P_NOT_STRONG_PRIME;
-
   OPENSSL_DH_F_DHPARAMS_PRINT = 100;
   OPENSSL_DH_F_DHPARAMS_PRINT_FP = 101;
   OPENSSL_DH_F_COMPUTE_KEY = 102;
@@ -1332,43 +1638,34 @@ const
   //was   OPENSSL_DH_F_DH_GENERATE_KEY = 103;
   OPENSSL_DH_F_DH_GENERATE_PARAMETERS	= 109;
   //was   OPENSSL_DH_F_DH_GENERATE_PARAMETERS = 104;
-
   OPENSSL_DH_R_NO_PRIVATE_VALUE = 100;
   OPENSSL_DH_R_BAD_GENERATOR = 101;
   OPENSSL_DH_R_INVALID_PUBKEY = 102;
   OPENSSL_DH_R_MODULUS_TOO_LARGE = 103;
   OPENSSL_DH_R_KEY_SIZE_TOO_SMALL	= 104;
-
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_DSA}
   //I think the OpenSSL developers wanted to make sure this was defined.
   OPENSSL_DSA_MAX_MODULUS_BITS = 10000;
-
   OPENSSL_DSA_FIPS_MIN_MODULUS_BITS = 1024;
-
   OPENSSL_DSA_FLAG_CACHE_MONT_P = $01;
   OPENSSL_DSA_FLAG_NO_EXP_CONSTTIME = $02; //* new with 0.9.7h; the built-in DSA
-
 ///* If this flag is set the DSA method is FIPS compliant and can be used
 // * in FIPS mode. This is set in the validated module method. If an
 // * application sets this flag in its own methods it is its reposibility
 // * to ensure the result is compliant.
 // */
-
   OPENSSL_DSA_FLAG_FIPS_METHOD = $0400;
-
 ///* If this flag is set the operations normally disabled in FIPS mode are
 // * permitted it is then the applications responsibility to ensure that the
 // * usage is compliant.
 // */
   OPENSSL_DSA_FLAG_NON_FIPS_ALLOW	= $0400;
-
   OPENSSL_DSA_F_D2I_DSA_SIG = 110;
   OPENSSL_DSA_F_DSAPARAMS_PRINT = 100;
   OPENSSL_DSA_F_DSAPARAMS_PRINT_FP = 101;
   OPENSSL_DSA_F_DSA_BUILTIN_KEYGEN = 119;
   OPENSSL_DSA_F_DSA_BUILTIN_PARAMGEN = 118;
-
   OPENSSL_DSA_F_DSA_DO_SIGN = 112;
   OPENSSL_DSA_F_DSA_DO_VERIFY = 113;
   OPENSSL_DSA_F_DSA_IS_PRIME = 102;
@@ -1380,10 +1677,8 @@ const
   OPENSSL_DSA_F_DSA_SIG_NEW = 109;
   OPENSSL_DSA_F_DSA_VERIFY = 108;
   OPENSSL_DSA_F_DSA_GENERATE_PARAMETERS	= 117;
-
   OPENSSL_DSA_F_I2D_DSA_SIG = 111;
   OPENSSL_DSA_F_SIG_CB = 114;
-
   OPENSSL_DSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE = 100;
   OPENSSL_DSA_R_MISSING_PARAMETERS = 101;
   OPENSSL_DSA_R_BAD_Q_VALUE = 102;
@@ -1391,7 +1686,6 @@ const
   OPENSSL_DSA_R_NON_FIPS_METHOD	= 104;
   OPENSSL_DSA_R_OPERATION_NOT_ALLOWED_IN_FIPS_MODE = 105;
   OPENSSL_DSA_R_KEY_SIZE_TOO_SMALL = 106;
-
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_EC}
   OPENSSL_ECC_MAX_FIELD_BITS = 661;
@@ -1401,9 +1695,7 @@ const
   OPENSSL_POINT_CONVERSION_HYBRID = 6;
   OPENSSL_EC_PKEY_NO_PARAMETERS = $001;
   OPENSSL_EC_PKEY_NO_PUBKEY = $002;
-  
 //* Error codes for the EC functions. */
-
 //* Function codes. */
   OPENSSL_EC_F_COMPUTE_WNAF = 143;
   OPENSSL_EC_F_D2I_ECPARAMETERS = 144;
@@ -1513,7 +1805,6 @@ const
   OPENSSL_EC_F_I2D_ECPRIVATEKEY = 192;
   OPENSSL_EC_F_I2O_ECPUBLICKEY = 151;
   OPENSSL_EC_F_O2I_ECPUBLICKEY = 152;
-
 //* Reason codes. */
   OPENSSL_EC_R_ASN1_ERROR = 115;
   OPENSSL_EC_R_ASN1_UNKNOWN_FIELD = 116;
@@ -1553,7 +1844,6 @@ const
   OPENSSL_EC_R_UNKNOWN_ORDER = 114;
   OPENSSL_EC_R_UNSUPPORTED_FIELD = 131;
   OPENSSL_EC_R_WRONG_ORDER = 130;
-  
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_ECDSA}
   OPENSSL_ECDSA_F_ECDSA_DATA_NEW_METHOD = 100;
@@ -1580,12 +1870,10 @@ const
   OPENSSL_BF_ENCRYPT = 1;
   OPENSSL_BF_ROUNDS = 16;
   {$ENDIF}
-  
   OPENSSL_EVP_MAX_MD_SIZE = 64; //* longest known is SHA512 */  - value I found, 16+20;
   OPENSSL_EVP_MAX_KEY_LENGTH = 32; //value I found, 24;
   OPENSSL_EVP_MAX_IV_LENGTH = 16; //value I found, 8;
   OPENSSL_EVP_MAX_BLOCK_LENGTH=32;
-
   OPENSSL_NID_dhKeyAgreement = 28;
   OPENSSL_EVP_PKEY_DH = OPENSSL_NID_dhKeyAgreement;
   OPENSSL_NID_dsa = 116;
@@ -1646,9 +1934,7 @@ const
 //		((ctx->flags>>16) &0xFFFF) /* seed length */
   OPENSSL_EVP_MD_CTX_FLAG_PSS_MDLEN = $FFFF;	//* salt len same as digest */
   OPENSSL_EVP_MD_CTX_FLAG_PSS_MREC = $FFFE;	//* salt max or auto recovered */
-
 //* Modes for ciphers */
-
   OPENSSL_EVP_CIPH_STREAM_CIPHER = $0;
   OPENSSL_EVP_CIPH_ECB_MODE	= $1;
   OPENSSL_EVP_CIPH_CBC_MODE	= $2;
@@ -1677,7 +1963,6 @@ const
   OPENSSL_EVP_CIPH_FLAG_DEFAULT_ASN1 = $1000;
 //* Buffer length in bits not bytes: CFB1 mode only */
   OPENSSL_EVP_CIPH_FLAG_LENGTH_BITS	= $2000;
-
   OPENSSL_EVP_CTRL_INIT	= $0;
   OPENSSL_EVP_CTRL_SET_KEY_LENGTH = $1;
   OPENSSL_EVP_CTRL_GET_RC2_KEY_BITS	= $2;
@@ -1685,7 +1970,6 @@ const
   OPENSSL_EVP_CTRL_GET_RC5_ROUNDS	= $4;
   OPENSSL_EVP_CTRL_SET_RC5_ROUNDS = $5;
   OPENSSL_EVP_CTRL_RAND_KEY	= $6;
-
   OPENSSL_EVP_F_AES_INIT_KEY = 133;
   OPENSSL_EVP_F_ALG_MODULE_INIT	= 138;
   OPENSSL_EVP_F_CAMELLIA_INIT_KEY = 159;
@@ -1733,7 +2017,6 @@ const
   //was OPENSSL_EVP_F_EVP_PKCS8_SET_BROKEN = 112;
   OPENSSL_EVP_F_RC2_MAGIC_TO_METH	= 109;
   OPENSSL_EVP_F_RC5_CTRL = 125;
-
   OPENSSL_EVP_R_BAD_DECRYPT = 100;
   OPENSSL_EVP_R_BN_DECODE_ERROR = 112;
   OPENSSL_EVP_R_BN_PUBKEY_ERROR = 113;
@@ -1744,7 +2027,6 @@ const
   OPENSSL_EVP_R_ENCODE_ERROR = 115;
   OPENSSL_EVP_R_ERROR_LOADING_SECTION	= 145;
   OPENSSL_EVP_R_ERROR_SETTING_FIPS_MODE	= 146;
-
   OPENSSL_EVP_R_EVP_PBE_CIPHERINIT_ERROR = 119;
   OPENSSL_EVP_R_EXPECTING_AN_RSA_KEY = 127;
   OPENSSL_EVP_R_EXPECTING_A_DH_KEY = 128;
@@ -1755,7 +2037,6 @@ const
   OPENSSL_EVP_R_INITIALIZATION_ERROR = 134;
   OPENSSL_EVP_R_INPUT_NOT_INITIALIZED = 111;
   OPENSSL_EVP_R_INVALID_FIPS_MODE	= 148;
-
   OPENSSL_EVP_R_IV_TOO_LARGE = 102;
   OPENSSL_EVP_R_KEYGEN_FAILURE = 120;
   OPENSSL_EVP_R_MISSING_PARMATERS = 103;
@@ -1776,7 +2057,6 @@ const
   OPENSSL_EVP_R_WRONG_FINAL_BLOCK_LENGTH = 109;
   OPENSSL_EVP_R_WRONG_PUBLIC_KEY_TYPE = 110;
   OPENSSL_EVP_R_SEED_KEY_SETUP_FAILED = 162;
-
   {$IFDEF OPENSSL_FIPS}
 //* Function codes. */
   OPENSSL_FIPS_F_DH_BUILTIN_GENPARAMS	= 100;
@@ -1805,7 +2085,6 @@ const
   OPENSSL_FIPS_F_RSA_EAY_PUBLIC_ENCRYPT			 = 120;
   OPENSSL_FIPS_F_RSA_X931_GENERATE_KEY_EX			= 121;
   OPENSSL_FIPS_F_SSLEAY_RAND_BYTES		 = 122;
-
 //* Reason codes. */
   OPENSSL_FIPS_R_CANNOT_READ_EXE			   = 103;
   OPENSSL_FIPS_R_CANNOT_READ_EXE_DIGEST			= 104;
@@ -1825,9 +2104,8 @@ const
   OPENSSL_FIPS_R_SELFTEST_FAILED				 = 101;
   OPENSSL_FIPS_R_TEST_FAILURE				 = 117;
   OPENSSL_FIPS_R_UNSUPPORTED_PLATFORM			 = 113;
-
   {$ENDIF}
-{$IFNDEF OPENSSL_NO_ENGINE}
+  {$IFNDEF OPENSSL_NO_ENGINE}
 //* These flags are used to control combinations of algorithm (methods)
 // * by bitwise "OR"ing. */
   OPENSSL_ENGINE_METHOD_RSA : TIdC_UINT = $0001;
@@ -1964,7 +2242,6 @@ const
   OPENSSL_ENGINE_F_INT_ENGINE_CONFIGURE	= 188;
   OPENSSL_ENGINE_F_INT_ENGINE_MODULE_INIT	= 187;
   OPENSSL_ENGINE_F_LOG_MESSAGE = 141;
-
 //* Reason codes. */
   OPENSSL_ENGINE_R_ALREADY_LOADED	= 100;
   OPENSSL_ENGINE_R_ARGUMENT_IS_NOT_A_NUMBER	= 133;
@@ -2021,7 +2298,6 @@ const
   OPENSSL_KRBDES_DECRYPT = OPENSSL_DES_DECRYPT;
   OPENSSL_KRBDES_ENCRYPT = OPENSSL_DES_ENCRYPT;
   OPENSSL_LH_LOAD_MULT = 256;
-
   OPENSSL_L_ctermid = 16;
   OPENSSL_L_cuserid = 9;
   OPENSSL_L_tmpnam = 1024;
@@ -2057,7 +2333,6 @@ const
   OPENSSL_SHA512_CBLOCK = (OPENSSL_SHA_LBLOCK*8);
     {$ENDIF}
   {$ENDIF}
-
   OPENSSL_LN_SMIMECapabilities = 'S/MIME Capabilities';  {Do not localize}
   OPENSSL_LN_X500 = 'X500';  {Do not localize}
   OPENSSL_LN_X509 = 'X509';  {Do not localize}
@@ -2231,7 +2506,6 @@ const
   OPENSSL_LN_x509Certificate = 'x509Certificate';  {Do not localize}
   OPENSSL_LN_x509Crl = 'x509Crl';  {Do not localize}
   OPENSSL_LN_zlib_compression = 'zlib compression';  {Do not localize}
-
   OPENSSL_NID_SMIMECapabilities = 167;
   OPENSSL_NID_X500 = 11;
   OPENSSL_NID_X509 = 12;
@@ -2429,7 +2703,6 @@ const
   OPENSSL_PEM_DEK_RSA_MD2 = 80;
   OPENSSL_PEM_DEK_RSA_MD5 = 90;
   OPENSSL_PEM_ERROR = 30;
-
   OPENSSL_PEM_F_DEF_CALLBACK = 100;
   OPENSSL_PEM_F_LOAD_IV = 101;
   OPENSSL_PEM_F_PEM_ASN1_READ = 102;
@@ -2456,7 +2729,6 @@ const
   OPENSSL_PEM_MD_MD5_RSA = OPENSSL_NID_md5WithRSAEncryption;
   OPENSSL_PEM_MD_SHA = OPENSSL_NID_sha;
   OPENSSL_PEM_MD_SHA_RSA = OPENSSL_NID_sha1WithRSAEncryption;
-
   OPENSSL_PEM_OBJ_UNDEF = 0;
   OPENSSL_PEM_OBJ_X509 = 1;
   OPENSSL_PEM_OBJ_X509_REQ = 2;
@@ -2475,7 +2747,6 @@ const
   OPENSSL_PEM_OBJ_PRIV_ECDSA = 20;
   OPENSSL_PEM_OBJ_PUB_ECDSA	= 21;
   OPENSSL_PEM_OBJ_ECPARAMETERS = 22;
-
   OPENSSL_PEM_R_BAD_BASE64_DECODE = 100;
   OPENSSL_PEM_R_BAD_DECRYPT = 101;
   OPENSSL_PEM_R_BAD_END_LINE = 102;
@@ -2492,9 +2763,7 @@ const
   OPENSSL_PEM_R_SHORT_HEADER = 112;
   OPENSSL_PEM_R_UNSUPPORTED_CIPHER = 113;
   OPENSSL_PEM_R_UNSUPPORTED_ENCRYPTION = 114;
-
   OPENSSL_PEM_STRING_EVP_PKEY = 'ANY PRIVATE KEY';  {Do not localize}
-
   OPENSSL_PEM_STRING_X509_OLD = 'X509 CERTIFICATE';  {Do not localize}
   OPENSSL_PEM_STRING_X509 = 'CERTIFICATE';  {Do not localize}
   OPENSSL_PEM_STRING_X509_PAIR = 'CERTIFICATE PAIR'; {Do not localize}
@@ -2518,7 +2787,6 @@ const
   OPENSSL_PEM_STRING_ECPARAMETERS = 'EC PARAMETERS'; {Do not localize}
   OPENSSL_PEM_STRING_ECPRIVATEKEY	= 'EC PRIVATE KEY'; {Do not localize}
   OPENSSL_PEM_STRING_CMS = 'CMS'; {Do not localize}
-
   OPENSSL_PEM_TYPE_CLEAR = 40;
   OPENSSL_PEM_TYPE_ENCRYPTED = 10;
   OPENSSL_PEM_TYPE_MIC_CLEAR = 30;
@@ -2560,12 +2828,10 @@ const
   OPENSSL_PKCS7_S_BODY = 1;
   OPENSSL_PKCS7_S_HEADER = 0;
   OPENSSL_PKCS7_S_TAIL = 2;
-
   OPENSSL_PKCS8_NS_DB = 3;
   OPENSSL_PKCS8_EMBEDDED_PARAM = 2;
   OPENSSL_PKCS8_NO_OCTET = 1;
   OPENSSL_PKCS8_OK = 0;
-
   OPENSSL_P_tmpdir = '/tmp';  {Do not localize}
   OPENSSL_MSS_RAND_MAX = $7fffffff;
   {$IFNDEF OPENSSL_NO_RC2}
@@ -2684,12 +2950,10 @@ const
   OPENSSL_RSA_F_RSA_VERIFY = 119;
   OPENSSL_RSA_F_RSA_VERIFY_ASN1_OCTET_STRING = 120;
   OPENSSL_RSA_F_RSA_VERIFY_PKCS1_PSS			= 126;
-
   OPENSSL_RSA_METHOD_FLAG_NO_CHECK = $01;
   OPENSSL_RSA_NO_PADDING = 3;
   OPENSSL_RSA_PKCS1_OAEP_PADDING = 4;
   OPENSSL_RSA_PKCS1_PADDING = 1;
-
   OPENSSL_RSA_R_ALGORITHM_MISMATCH = 100;
   OPENSSL_RSA_R_BAD_E_VALUE = 101;
   OPENSSL_RSA_R_BAD_FIXED_HEADER_DECRYPT = 102;
@@ -2731,7 +2995,6 @@ const
   OPENSSL_SEEK_CUR = 1;
   OPENSSL_SEEK_END = 2;
   OPENSSL_SEEK_SET = 0;
-
   OPENSSL_SN_Algorithm = 'Algorithm';  {Do not localize}
   OPENSSL_SN_SMIMECapabilities = 'SMIME-CAPS';  {Do not localize}
   OPENSSL_SN_authority_key_identifier = 'authorityKeyIdentifier';  {Do not localize}
@@ -2784,14 +3047,12 @@ const
   OPENSSL_SN_idea_ecb = 'IDEA-ECB';  {Do not localize}
   OPENSSL_SN_idea_ofb64 = 'IDEA-OFB';  {Do not localize}
   OPENSSL_SN_identified_organization = 'identified-organization'; {Do not localize}
-
   OPENSSL_SN_initials = 'I';  {Do not localize}
   OPENSSL_SN_invalidity_date = 'invalidityDate';  {Do not localize}
   OPENSSL_SN_iso = 'ISO'; {Do not localize}
   OPENSSL_SN_issuer_alt_name = 'issuerAltName';  {Do not localize}
   OPENSSL_SN_itu_t = 'ITU-T'; {Do not localize}
   OPENSSL_SN_joint_iso_itu_t = 'JOINT-ISO-ITU-T'; {Do not localize}
-
   OPENSSL_SN_key_usage = 'keyUsage';  {Do not localize}
   OPENSSL_SN_ld_ce = 'ld-ce';  {Do not localize}
   OPENSSL_SN_localityName = 'L';  {Do not localize}
@@ -2804,7 +3065,6 @@ const
   OPENSSL_SN_mdc2 = 'MDC2';  {Do not localize}
   OPENSSL_SN_mdc2WithRSA = 'RSA-MDC2';  {Do not localize}
   OPENSSL_SN_member_body	='member-body'; {Do not localize}
-
   OPENSSL_SN_ms_code_com = 'msCodeCom';  {Do not localize}
   OPENSSL_SN_ms_code_ind = 'msCodeInd';  {Do not localize}
   OPENSSL_SN_ms_ctl_sign = 'msCTLSign';  {Do not localize}
@@ -2860,9 +3120,7 @@ const
   OPENSSL_SN_undef = 'UNDEF';  {Do not localize}
   OPENSSL_SN_uniqueIdentifier = 'UID';  {Do not localize}
   OPENSSL_SN_zlib_compression = 'ZLIB';  {Do not localize}
-
   OPENSSL_OCSP_DEFAULT_NONCE_LENGTH	= 16;
-
   OPENSSL_OCSP_NOCERTS = $1;
   OPENSSL_OCSP_NOINTERN	= $2;
   OPENSSL_OCSP_NOSIGS	= $4;
@@ -2875,8 +3133,6 @@ const
   OPENSSL_OCSP_TRUSTOTHER	= $200;
   OPENSSL_OCSP_RESPID_KEY	= $400;
   OPENSSL_OCSP_NOTIME	= $800;
-
-
   OPENSSL_OCSP_RESPONSE_STATUS_SUCCESSFUL          = 0;
   OPENSSL_OCSP_RESPONSE_STATUS_MALFORMEDREQUEST    = 1;
   OPENSSL_OCSP_RESPONSE_STATUS_INTERNALERROR       = 2;
@@ -2884,24 +3140,17 @@ const
   OPENSSL_OCSP_RESPONSE_STATUS_SIGREQUIRED         = 5;
   OPENSSL_OCSP_RESPONSE_STATUS_UNAUTHORIZED        = 6;
   OPENSSL_OCSP_REVOKED_STATUS_NOSTATUS             = -1;
-
   OPENSSL_OCSP_REVOKED_STATUS_UNSPECIFIED           = 0;
-
   OPENSSL_OCSP_REVOKED_STATUS_KEYCOMPROMISE         = 1;
   OPENSSL_OCSP_REVOKED_STATUS_CACOMPROMISE          = 2;
   OPENSSL_OCSP_REVOKED_STATUS_AFFILIATIONCHANGED    = 3;
-
   OPENSSL_OCSP_REVOKED_STATUS_SUPERSEDED            = 4;
-
   OPENSSL_OCSP_REVOKED_STATUS_CESSATIONOFOPERATION  = 5;
   OPENSSL_OCSP_REVOKED_STATUS_CERTIFICATEHOLD       = 6;
-
   OPENSSL_OCSP_REVOKED_STATUS_REMOVEFROMCRL         = 8;
-
   OPENSSL_V_OCSP_CERTSTATUS_GOOD    = 0;
   OPENSSL_V_OCSP_CERTSTATUS_REVOKED = 1;
   OPENSSL_V_OCSP_CERTSTATUS_UNKNOWN = 2;
-
   OPENSSL_OCSP_F_ASN1_STRING_ENCODE		   	= 100;
   OPENSSL_OCSP_F_D2I_OCSP_NONCE				    = 102;
   OPENSSL_OCSP_F_OCSP_BASIC_ADD1_STATUS	  = 103;
@@ -2920,7 +3169,6 @@ const
   OPENSSL_OCSP_F_OCSP_SENDREQ_BIO			    = 112;
   OPENSSL_OCSP_F_PARSE_HTTP_LINE1		      = 117;
   OPENSSL_OCSP_F_REQUEST_VERIFY	          = 113;
-
 //* Reason codes. */
   OPENSSL_OCSP_R_BAD_DATA					= 100;
   OPENSSL_OCSP_R_CERTIFICATE_VERIFY_ERROR			= 101;
@@ -2952,7 +3200,6 @@ const
   OPENSSL_OCSP_R_UNKNOWN_MESSAGE_DIGEST	= 119;
   OPENSSL_OCSP_R_UNKNOWN_NID			  = 120;
   OPENSSL_OCSP_R_UNSUPPORTED_REQUESTORNAME_TYPE	= 129;
-
   OPENSSL_SSL_ST_CONNECT = $1000;
   OPENSSL_SSL23_ST_CR_SRVR_HELLO_A = $220 or OPENSSL_SSL_ST_CONNECT;
   OPENSSL_SSL23_ST_CR_SRVR_HELLO_B = $221 or OPENSSL_SSL_ST_CONNECT;
@@ -3123,12 +3370,10 @@ const
   OPENSSL_SSL3_FLAGS_POP_BUFFER = $0004;
   OPENSSL_SSL3_MASTER_SECRET_SIZE = 48;
   OPENSSL_SSL3_MAX_SSL_SESSION_ID_LENGTH = 32;
-
   OPENSSL_SSL3_MT_HELLO_REQUEST	= 0;
   OPENSSL_SSL3_MT_CLIENT_REQUEST = 0;
   OPENSSL_SSL3_MT_CLIENT_HELLO = 1;
   OPENSSL_SSL3_MT_SERVER_HELLO = 2;
-
   OPENSSL_SSL3_MT_NEWSESSION_TICKET = 4;
   OPENSSL_SSL3_MT_CERTIFICATE = 11;
   OPENSSL_SSL3_MT_SERVER_KEY_EXCHANGE = 12;
@@ -3136,14 +3381,10 @@ const
   OPENSSL_SSL3_MT_SERVER_DONE = 14;
   OPENSSL_SSL3_MT_CERTIFICATE_VERIFY = 15;
   OPENSSL_SSL3_MT_CLIENT_KEY_EXCHANGE = 16;
-
   OPENSSL_SSL3_MT_FINISHED = 20;
   OPENSSL_SSL3_MT_CERTIFICATE_STATUS = 22;
-
   OPENSSL_DTLS1_MT_HELLO_VERIFY_REQUEST = 3;
-
   OPENSSL_SSL3_MT_CCS = 1;
-
   OPENSSL_SSL3_RANDOM_SIZE = 32;
   OPENSSL_SSL3_RS_BLANK = 1;
   OPENSSL_SSL3_RS_ENCODED = 2;
@@ -3176,7 +3417,6 @@ const
   OPENSSL_SSL3_ST_CR_SESSION_TICKET_B = ($1E1 or OPENSSL_SSL_ST_CONNECT);
   OPENSSL_SSL3_ST_CR_CERT_STATUS_A = ($1F0 or OPENSSL_SSL_ST_CONNECT);
   OPENSSL_SSL3_ST_CR_CERT_STATUS_B = ($1F1 or OPENSSL_SSL_ST_CONNECT);
-
   OPENSSL_SSL3_ST_CR_KEY_EXCH_A = $140 or OPENSSL_SSL_ST_CONNECT;
   OPENSSL_SSL3_ST_CR_KEY_EXCH_B = $141 or OPENSSL_SSL_ST_CONNECT;
   OPENSSL_SSL3_ST_CR_SRVR_DONE_A = $160 or OPENSSL_SSL_ST_CONNECT;
@@ -3223,8 +3463,6 @@ const
   OPENSSL_SSL3_ST_SW_SESSION_TICKET_B = ($1F1 or OPENSSL_SSL_ST_ACCEPT);
   OPENSSL_SSL3_ST_SW_CERT_STATUS_A =	($200 or OPENSSL_SSL_ST_ACCEPT);
   OPENSSL_SSL3_ST_SW_CERT_STATUS_B =	($201 or OPENSSL_SSL_ST_ACCEPT);
-
-
   OPENSSL_SSL3_ST_SW_FLUSH = $100 or OPENSSL_SSL_ST_ACCEPT;
   OPENSSL_SSL3_ST_SW_HELLO_REQ_A = $120 or OPENSSL_SSL_ST_ACCEPT;
   OPENSSL_SSL3_ST_SW_HELLO_REQ_B = $121 or OPENSSL_SSL_ST_ACCEPT;
@@ -3268,14 +3506,12 @@ const
   OPENSSL_SSL3_VERSION = $0300;
   OPENSSL_SSL3_VERSION_MAJOR = $03;
   OPENSSL_SSL3_VERSION_MINOR = $00;
-  
   OPENSSL_SSLEAY_VERSION = 0;
 //* #define SSLEAY_OPTIONS 1 no longer supported */
   OPENSSL_SSLEAY_CFLAGS = 2;
   OPENSSL_SSLEAY_BUILT_ON = 3;
   OPENSSL_SSLEAY_PLATFORM = 4;
   OPENSSL_SSLEAY_DIR = 5;
-
   //tls1.h
   OPENSSL_TLS1_AD_DECRYPTION_FAILED = 21;
   OPENSSL_TLS1_AD_RECORD_OVERFLOW = 22;
@@ -3296,12 +3532,6 @@ const
   OPENSSL_TLS1_AD_BAD_CERTIFICATE_STATUS_RESPONSE = 113;
   OPENSSL_TLS1_AD_BAD_CERTIFICATE_HASH_VALUE = 114;
   OPENSSL_TLS1_AD_UNKNOWN_PSK_IDENTITY = 115;//* fatal */
-//* codes 110-114 are from RFC3546 */
-
-
-
-
-
 //* ExtensionType values from RFC 3546 */
   OPENSSL_TLSEXT_TYPE_server_name = 0;
   OPENSSL_TLSEXT_TYPE_max_fragment_length = 1;
@@ -3312,25 +3542,19 @@ const
   OPENSSL_TLSEXT_TYPE_elliptic_curves = 10;
   OPENSSL_TLSEXT_TYPE_ec_point_formats = 11;
   OPENSSL_TLSEXT_TYPE_session_ticket = 35;
-
   //* NameType value from RFC 3546 */
   OPENSSL_TLSEXT_NAMETYPE_host_name = 0;
 //* status request value from RFC 3546 */
   OPENSSL_TLSEXT_STATUSTYPE_ocsp = 1;
-
 {$IFNDEF OPENSSL_NO_TLSEXT}
   OPENSSL_TLSEXT_MAXLEN_host_name = 255;
-
   OPENSSL_SSL_TLSEXT_ERR_OK  = 0;
   OPENSSL_SSL_TLSEXT_ERR_ALERT_WARNING = 1;
   OPENSSL_SSL_TLSEXT_ERR_ALERT_FATAL = 2;
   OPENSSL_SSL_TLSEXT_ERR_NOACK = 3;
-
 {$ENDIF}
   //
-
   OPENSSL_SSLEAY_VERSION_NUMBER = OPENSSL_OPENSSL_VERSION_NUMBER;
-
   OPENSSL_SSL_AD_REASON_OFFSET = 1000;
   OPENSSL_SSL_AD_CLOSE_NOTIFY = OPENSSL_SSL3_AD_CLOSE_NOTIFY;
   OPENSSL_SSL_AD_UNEXPECTED_MESSAGE = OPENSSL_SSL3_AD_UNEXPECTED_MESSAGE;
@@ -3360,7 +3584,6 @@ const
   OPENSSL_SSL_AD_CERTIFICATE_UNOBTAINABLE = OPENSSL_TLS1_AD_CERTIFICATE_UNOBTAINABLE;
   OPENSSL_SSL_AD_UNRECOGNIZED_NAME = OPENSSL_TLS1_AD_UNRECOGNIZED_NAME;
   OPENSSL_SSL_AD_BAD_CERTIFICATE_STATUS_RESPONSE = OPENSSL_TLS1_AD_BAD_CERTIFICATE_STATUS_RESPONSE;
-
   OPENSSL_SSL_CB_EXIT = $02;
   OPENSSL_SSL_CB_ACCEPT_EXIT = OPENSSL_SSL_ST_ACCEPT or OPENSSL_SSL_CB_EXIT;
   OPENSSL_SSL_CB_LOOP = $01;
@@ -3374,7 +3597,6 @@ const
   OPENSSL_SSL_CB_READ_ALERT = OPENSSL_SSL_CB_ALERT or OPENSSL_SSL_CB_READ;
   OPENSSL_SSL_CB_WRITE = $08;
   OPENSSL_SSL_CB_WRITE_ALERT = OPENSSL_SSL_CB_ALERT or OPENSSL_SSL_CB_WRITE;
-
   OPENSSL_SSL_CTRL_NEED_TMP_RSA = 1;
   OPENSSL_SSL_CTRL_SET_TMP_RSA = 2;
   OPENSSL_SSL_CTRL_SET_TMP_DH = 3;
@@ -3382,7 +3604,6 @@ const
   OPENSSL_SSL_CTRL_SET_TMP_RSA_CB = 5;
   OPENSSL_SSL_CTRL_SET_TMP_DH_CB = 6;
   OPENSSL_SSL_CTRL_SET_TMP_ECDH_CB = 7;
-
   {$IFNDEF OPENSSL_NO_TLSEXT}
   //* see tls1.h for macros based on these */
   OPENSSL_SSL_CTRL_SET_TLSEXT_SERVERNAME_CB	= 53;
@@ -3392,7 +3613,6 @@ const
   OPENSSL_SSL_CTRL_SET_TLSEXT_DEBUG_ARG	= 57;
   OPENSSL_SSL_CTRL_GET_TLSEXT_TICKET_KEYS	= 58;
   OPENSSL_SSL_CTRL_SET_TLSEXT_TICKET_KEYS	=	59;
-
   OPENSSL_SSL_CTRL_SET_TLSEXT_STATUS_REQ_CB	= 63;
   OPENSSL_SSL_CTRL_SET_TLSEXT_STATUS_REQ_CB_ARG	= 64;
   OPENSSL_SSL_CTRL_SET_TLSEXT_STATUS_REQ_TYPE	= 65;
@@ -3402,10 +3622,8 @@ const
   OPENSSL_SSL_CTRL_SET_TLSEXT_STATUS_REQ_IDS = 69;
   OPENSSL_SSL_CTRL_GET_TLSEXT_STATUS_REQ_OCSP_RESP = 70;
   OPENSSL_SSL_CTRL_SET_TLSEXT_STATUS_REQ_OCSP_RESP = 71;
-
   OPENSSL_SSL_CTRL_SET_TLSEXT_TICKET_KEY_CB	= 72;
   {$ENDIF}
-
   OPENSSL_SSL_CTRL_GET_SESSION_REUSED = 8;
   OPENSSL_SSL_CTRL_GET_CLIENT_CERT_REQUEST = 9;
   OPENSSL_SSL_CTRL_GET_NUM_RENEGOTIATIONS = 10;
@@ -3413,10 +3631,8 @@ const
   OPENSSL_SSL_CTRL_GET_TOTAL_RENEGOTIATIONS = 12;
   OPENSSL_SSL_CTRL_GET_FLAGS = 13;
   OPENSSL_SSL_CTRL_EXTRA_CHAIN_CERT = 14;
-
   OPENSSL_SSL_CTRL_SET_MSG_CALLBACK             = 15;
   OPENSSL_SSL_CTRL_SET_MSG_CALLBACK_ARG         = 16;
-
 //* only applies to datagram connections */
   OPENSSL_SSL_CTRL_SET_MTU               = 17;
 //* Stats */
@@ -3426,7 +3642,6 @@ const
   OPENSSL_SSL_CTRL_SESS_CONNECT_RENEGOTIATE = 23;
   OPENSSL_SSL_CTRL_SESS_ACCEPT = 24;
   OPENSSL_SSL_CTRL_SESS_ACCEPT_GOOD = 25;
-
   OPENSSL_SSL_CTRL_SESS_ACCEPT_RENEGOTIATE = 26;
   OPENSSL_SSL_CTRL_SESS_HIT = 27;
   OPENSSL_SSL_CTRL_SESS_CB_HIT = 28;
@@ -3435,19 +3650,14 @@ const
   OPENSSL_SSL_CTRL_SESS_CACHE_FULL = 31;
   OPENSSL_SSL_CTRL_OPTIONS = 32;
   OPENSSL_SSL_CTRL_MODE = 33;
-
   OPENSSL_SSL_CTRL_GET_READ_AHEAD = 40;
   OPENSSL_SSL_CTRL_SET_READ_AHEAD = 41;
   OPENSSL_SSL_CTRL_SET_SESS_CACHE_SIZE = 42;
   OPENSSL_SSL_CTRL_GET_SESS_CACHE_SIZE = 43;
   OPENSSL_SSL_CTRL_SET_SESS_CACHE_MODE = 44;
   OPENSSL_SSL_CTRL_GET_SESS_CACHE_MODE = 45;
-
   OPENSSL_SSL_CTRL_GET_MAX_CERT_LIST = 50;
   OPENSSL_SSL_CTRL_SET_MAX_CERT_LIST = 51;
-
-
-
   OPENSSL_SSL_DEFAULT_CIPHER_LIST= 'AES:ALL:!aNULL:!eNULL:+RC4:@STRENGTH'; //* low priority for RC4 */
   OPENSSL_SSL_ERROR_NONE = 0;
   OPENSSL_SSL_ERROR_SSL = 1;
@@ -3458,7 +3668,6 @@ const
   OPENSSL_SSL_ERROR_ZERO_RETURN = 6;
   OPENSSL_SSL_ERROR_WANT_CONNECT = 7;
   OPENSSL_SSL_ERROR_WANT_ACCEPT = 8;
-  
   OPENSSL_X509_FILETYPE_ASN1 = 2;
   OPENSSL_SSL_FILETYPE_ASN1 = OPENSSL_X509_FILETYPE_ASN1;
   OPENSSL_X509_FILETYPE_PEM = 1;
@@ -3492,7 +3701,6 @@ const
   OPENSSL_SSL_F_DTLS1_SEND_SERVER_HELLO = 266;
   OPENSSL_SSL_F_DTLS1_SEND_SERVER_KEY_EXCHANGE = 267;
   OPENSSL_SSL_F_DTLS1_WRITE_APP_DATA_BYTES = 268;
-  
   OPENSSL_SSL_F_GET_CLIENT_FINISHED = 105;
   OPENSSL_SSL_F_GET_CLIENT_HELLO = 106;
   OPENSSL_SSL_F_GET_CLIENT_MASTER_KEY = 107;
@@ -3524,11 +3732,9 @@ const
   OPENSSL_SSL_F_SSL3_CTRL = 213;
   OPENSSL_SSL_F_SSL3_CTX_CTRL = 133;
   OPENSSL_SSL_F_SSL3_DO_CHANGE_CIPHER_SPEC = 279;
-
   OPENSSL_SSL_F_SSL3_ENC = 134;
   OPENSSL_SSL_F_SSL3_GET_CERTIFICATE_REQUEST = 135;
   OPENSSL_SSL_F_SSL3_GET_CERT_STATUS = 288;
-
   OPENSSL_SSL_F_SSL3_GET_CERT_VERIFY = 136;
   OPENSSL_SSL_F_SSL3_GET_CLIENT_CERTIFICATE = 137;
   OPENSSL_SSL_F_SSL3_GET_CLIENT_HELLO = 138;
@@ -3569,12 +3775,10 @@ const
   OPENSSL_SSL_F_SSL_CHECK_SERVERHELLO_TLSEXT = 274;
   OPENSSL_SSL_F_SSL_CIPHER_PROCESS_RULESTR = 230;
   OPENSSL_SSL_F_SSL_CIPHER_STRENGTH_SORT = 231;
-
   OPENSSL_SSL_F_SSL_CLEAR = 164;
   OPENSSL_SSL_F_SSL_COMP_ADD_COMPRESSION_METHOD = 165;
   OPENSSL_SSL_F_SSL_CREATE_CIPHER_LIST = 166;
   OPENSSL_SSL_F_SSL_CTRL = 232;
-
   OPENSSL_SSL_F_SSL_CTX_CHECK_PRIVATE_KEY = 168;
   OPENSSL_SSL_F_SSL_CTX_NEW = 169;
   OPENSSL_SSL_F_SSL_CTX_SET_CIPHER_LIST = 269;
@@ -3583,7 +3787,6 @@ const
   OPENSSL_SSL_F_SSL_CTX_SET_SESSION_ID_CONTEXT = 219;
   OPENSSL_SSL_F_SSL_CTX_SET_SSL_VERSION = 170;
   OPENSSL_SSL_F_SSL_CTX_SET_TRUST	= 229;
-
   OPENSSL_SSL_F_SSL_CTX_USE_CERTIFICATE = 171;
   OPENSSL_SSL_F_SSL_CTX_USE_CERTIFICATE_ASN1 = 172;
   OPENSSL_SSL_F_SSL_CTX_USE_CERTIFICATE_CHAIN_FILE = 220;
@@ -3635,19 +3838,16 @@ const
   OPENSSL_SSL_F_TLS1_ENC = 210;
   OPENSSL_SSL_F_TLS1_SETUP_KEY_BLOCK = 211;
   OPENSSL_SSL_F_WRITE_PENDING = 212;
-  
   OPENSSL_SSL_MAX_KEY_ARG_LENGTH = 8;
   OPENSSL_SSL_MAX_MASTER_KEY_LENGTH = 48;
   OPENSSL_SSL_MAX_SID_CTX_LENGTH = 32;
   OPENSSL_SSL_MAX_KRB5_PRINCIPAL_LENGTH = 256;
   OPENSSL_SSL_MAX_SSL_SESSION_ID_LENGTH = 32;
-
   OPENSSL_SSL_MODE_ENABLE_PARTIAL_WRITE       = $00000001;
   OPENSSL_SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER = $00000002;
   OPENSSL_SSL_MODE_AUTO_RETRY                 = $00000004;
   OPENSSL_SSL_MODE_NO_AUTO_CHAIN              = $00000008;
   OPENSSL_SSL_NOTHING = 1;
-
   OPENSSL_SSL_OP_MICROSOFT_SESS_ID_BUG = $00000001;
   OPENSSL_SSL_OP_NETSCAPE_CHALLENGE_BUG = $00000002;
   OPENSSL_SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG = $00000008;
@@ -3657,10 +3857,8 @@ const
   OPENSSL_SSL_OP_SSLEAY_080_CLIENT_DH_BUG    = $00000080;
   OPENSSL_SSL_OP_TLS_D5_BUG                  = $00000100;
   OPENSSL_SSL_OP_TLS_BLOCK_PADDING_BUG       = $00000200;
-
   OPENSSL_SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS = $00000800;
   OPENSSL_SSL_OP_ALL                         = $00000FFF; //this was $000FFFFF; before 0.9.7
-
   OPENSSL_SSL_OP_NO_QUERY_MTU                           = $00001000;
   OPENSSL_SSL_OP_COOKIE_EXCHANGE                        = $00002000;
   OPENSSL_SSL_OP_NO_TICKET                              = $00004000;
@@ -3670,19 +3868,14 @@ const
   OPENSSL_SSL_OP_EPHEMERAL_RSA                          = $00200000;
   OPENSSL_SSL_OP_CIPHER_SERVER_PREFERENCE               = $00400000;
   OPENSSL_SSL_OP_TLS_ROLLBACK_BUG                       = $00800000; //was $00000400;
-
   OPENSSL_SSL_OP_NO_SSLv2 = $01000000;
   OPENSSL_SSL_OP_NO_SSLv3 = $02000000;
   OPENSSL_SSL_OP_NO_TLSv1 = $04000000;
-
   OPENSSL_SSL_OP_PKCS1_CHECK_1 = $08000000;
   OPENSSL_SSL_OP_PKCS1_CHECK_2 = $10000000;  
   OPENSSL_SSL_OP_NETSCAPE_CA_DN_BUG = $20000000;
-
   //OPENSSL_SSL_OP_NON_EXPORT_FIRST was removed for OpenSSL 0.9.7 (that was $40000000;)
-
   OPENSSL_SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG = $40000000;// was $80000000;
-
   OPENSSL_SSL_READING = 3;
   OPENSSL_SSL_RECEIVED_SHUTDOWN = 2;
   OPENSSL_SSL_R_APP_DATA_IN_HANDSHAKE = 100;
@@ -3750,7 +3943,6 @@ const
   OPENSSL_SSL_R_INVALID_COMMAND = 280;
   OPENSSL_SSL_R_INVALID_PURPOSE = 278;
   OPENSSL_SSL_R_INVALID_STATUS_RESPONSE = 316;
-
   OPENSSL_SSL_R_INVALID_TICKET_KEYS_LENGTH = 275;
   OPENSSL_SSL_R_INVALID_TRUST = 279; 
   OPENSSL_SSL_R_LENGTH_MISMATCH = 159;
@@ -3782,7 +3974,6 @@ const
   OPENSSL_SSL_R_NO_CIPHER_LIST = 184;
   OPENSSL_SSL_R_NO_CIPHER_MATCH = 185;
   OPENSSL_SSL_R_NO_CLIENT_CERT_METHOD	= 317;
-
   OPENSSL_SSL_R_NO_CLIENT_CERT_RECEIVED = 186;
   OPENSSL_SSL_R_NO_COMPRESSION_SPECIFIED = 187;
   OPENSSL_SSL_R_NO_METHOD_SPECIFIED = 188;
@@ -3888,7 +4079,6 @@ const
   OPENSSL_SSL_R_UNKNOWN_REMOTE_ERROR_TYPE = 253;
   OPENSSL_SSL_R_UNKNOWN_SSL_VERSION = 254;
   OPENSSL_SSL_R_UNSUPPORTED_STATUS_TYPE = 329;
-
   OPENSSL_SSL_R_UNKNOWN_STATE = 255;
   OPENSSL_SSL_R_UNSUPPORTED_CIPHER = 256;
   OPENSSL_SSL_R_UNSUPPORTED_COMPRESSION_ALGORITHM = 257;
@@ -3925,20 +4115,16 @@ const
   OPENSSL_SSL_TXT_MEDIUM = 'MEDIUM';  {Do not localize}
   OPENSSL_SSL_TXT_HIGH = 'HIGH';  {Do not localize}
   OPENSSL_SSL_TXT_FIPS = 'FIPS';  {Do not localize}
-
   OPENSSL_SSL_TXT_kFZA = 'kFZA';  {Do not localize}
   OPENSSL_SSL_TXT_aFZA = 'aFZA';  {Do not localize}
   OPENSSL_SSL_TXT_eFZA = 'eFZA';  {Do not localize}
   OPENSSL_SSL_TXT_FZA = 'FZA';  {Do not localize}
-  
   OPENSSL_SSL_TXT_aNULL = 'aNULL';  {Do not localize}
   OPENSSL_SSL_TXT_eNULL = 'eNULL';  {Do not localize}
   OPENSSL_SSL_TXT_NULL = 'NULL';  {Do not localize}
-  
   OPENSSL_SSL_TXT_kKRB5    = 'kKRB5';{Do not localize}
   OPENSSL_SSL_TXT_aKRB5     ='aKRB5';{Do not localize}
   OPENSSL_SSL_TXT_KRB5      = 'KRB5';{Do not localize}
-  
   OPENSSL_SSL_TXT_kRSA = 'kRSA';  {Do not localize}
   OPENSSL_SSL_TXT_kDHr = 'kDHr';  {Do not localize}
   OPENSSL_SSL_TXT_kDHd = 'kDHd';  {Do not localize}
@@ -3990,10 +4176,8 @@ const
   OPENSSL_SSL_X509_LOOKUP = 4;
   OPENSSL_TLS1_ALLOW_EXPERIMENTAL_CIPHERSUITES = 0;
   OPENSSL_TLS1_VERSION = $0301;
-  OPENSSL_TLS_VERSION_MAJOR = $03;
+  OPENSSL_TLS1_VERSION_MAJOR = $03;
   OPENSSL_TLS1_VERSION_MINOR = $01;
-
-  
   OPENSSL_TLS1_CK_RSA_EXPORT1024_WITH_RC4_56_MD5 = $03000060;
   OPENSSL_TLS1_CK_RSA_EXPORT1024_WITH_RC2_CBC_56_MD5 = $03000061;
   OPENSSL_TLS1_CK_RSA_EXPORT1024_WITH_DES_CBC_SHA = $03000062;
@@ -4001,9 +4185,7 @@ const
   OPENSSL_TLS1_CK_RSA_EXPORT1024_WITH_RC4_56_SHA = $03000064;
   OPENSSL_TLS1_CK_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA = $03000065;
   OPENSSL_TLS1_CK_DHE_DSS_WITH_RC4_128_SHA = $03000066;
-
 //* AES ciphersuites from RFC3268 */
-
   OPENSSL_TLS1_CK_RSA_WITH_AES_128_SHA = $0300002F;
   OPENSSL_TLS1_CK_DH_DSS_WITH_AES_128_SHA  = $03000030;
   OPENSSL_TLS1_CK_DH_RSA_WITH_AES_128_SHA = $03000031;
@@ -4016,7 +4198,6 @@ const
   OPENSSL_TLS1_CK_DHE_DSS_WITH_AES_256_SHA = $03000038;
   OPENSSL_TLS1_CK_DHE_RSA_WITH_AES_256_SHA = $03000039;
   OPENSSL_TLS1_CK_ADH_WITH_AES_256_SHA = $0300003A;
-
 //* Camellia ciphersuites from RFC4132 */
   OPENSSL_TLS1_CK_RSA_WITH_CAMELLIA_128_CBC_SHA = $03000041;
   OPENSSL_TLS1_CK_DH_DSS_WITH_CAMELLIA_128_CBC_SHA = $03000042;
@@ -4024,14 +4205,12 @@ const
   OPENSSL_TLS1_CK_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA = $03000044;
   OPENSSL_TLS1_CK_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA = $03000045;
   OPENSSL_TLS1_CK_ADH_WITH_CAMELLIA_128_CBC_SHA = $03000046;
-
   OPENSSL_TLS1_CK_RSA_WITH_CAMELLIA_256_CBC_SHA = $03000084;
   OPENSSL_TLS1_CK_DH_DSS_WITH_CAMELLIA_256_CBC_SHA = $03000085;
   OPENSSL_TLS1_CK_DH_RSA_WITH_CAMELLIA_256_CBC_SHA = $03000086;
   OPENSSL_TLS1_CK_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA = $03000087;
   OPENSSL_TLS1_CK_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA = $03000088;
   OPENSSL_TLS1_CK_ADH_WITH_CAMELLIA_256_CBC_SHA = $03000089;
-
 //* SEED ciphersuites from RFC4162 */
   OPENSSL_TLS1_CK_RSA_WITH_SEED_SHA                       = $03000096;
   OPENSSL_TLS1_CK_DH_DSS_WITH_SEED_SHA                    = $03000097;
@@ -4039,14 +4218,12 @@ const
   OPENSSL_TLS1_CK_DHE_DSS_WITH_SEED_SHA                   = $03000099;
   OPENSSL_TLS1_CK_DHE_RSA_WITH_SEED_SHA                   = $0300009A;
   OPENSSL_TLS1_CK_ADH_WITH_SEED_SHA                = $0300009B;
-
 //* ECC ciphersuites from draft-ietf-tls-ecc-12.txt with changes soon to be in draft 13 */
   OPENSSL_TLS1_CK_ECDH_ECDSA_WITH_NULL_SHA                = $0300C001;
   OPENSSL_TLS1_CK_ECDH_ECDSA_WITH_RC4_128_SHA             = $0300C002;
   OPENSSL_TLS1_CK_ECDH_ECDSA_WITH_DES_192_CBC3_SHA        = $0300C003;
   OPENSSL_TLS1_CK_ECDH_ECDSA_WITH_AES_128_CBC_SHA         = $0300C004;
   OPENSSL_TLS1_CK_ECDH_ECDSA_WITH_AES_256_CBC_SHA         = $0300C005;
-
   OPENSSL_TLS1_CK_ECDHE_ECDSA_WITH_NULL_SHA               = $0300C006;
   OPENSSL_TLS1_CK_ECDHE_ECDSA_WITH_RC4_128_SHA            = $0300C007;
   OPENSSL_TLS1_CK_ECDHE_ECDSA_WITH_DES_192_CBC3_SHA       = $0300C008;
@@ -4067,10 +4244,8 @@ const
   OPENSSL_TLS1_CK_ECDH_anon_WITH_DES_192_CBC3_SHA         = $0300C017;
   OPENSSL_TLS1_CK_ECDH_anon_WITH_AES_128_CBC_SHA          = $0300C018;
   OPENSSL_TLS1_CK_ECDH_anon_WITH_AES_256_CBC_SHA          = $0300C019;
-
   OPENSSL_TLS1_FINISH_MAC_LENGTH = 12;
   OPENSSL_TLS1_FLAGS_TLS_PADDING_BUG = $0008;
-  
   OPENSSL_TLS1_TXT_RSA_EXPORT1024_WITH_RC4_56_MD5 = 'EXP1024-RC4-MD5';
   OPENSSL_TLS1_TXT_RSA_EXPORT1024_WITH_RC2_CBC_56_MD5 = 'EXP1024-RC2-CBC-MD5';
   OPENSSL_TLS1_TXT_RSA_EXPORT1024_WITH_DES_CBC_SHA = 'EXP1024-DES-CBC-SHA';
@@ -4078,7 +4253,6 @@ const
   OPENSSL_TLS1_TXT_RSA_EXPORT1024_WITH_RC4_56_SHA = 'EXP1024-RC4-SHA';
   OPENSSL_TLS1_TXT_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA = 'EXP1024-DHE-DSS-RC4-SHA';
   OPENSSL_TLS1_TXT_DHE_DSS_WITH_RC4_128_SHA = 'DHE-DSS-RC4-SHA';
-
 //* AES ciphersuites from RFC3268 */
   OPENSSL_TLS1_TXT_RSA_WITH_AES_128_SHA = 'AES128-SHA';
   OPENSSL_TLS1_TXT_DH_DSS_WITH_AES_128_SHA ='DH-DSS-AES128-SHA';
@@ -4086,45 +4260,38 @@ const
   OPENSSL_TLS1_TXT_DHE_DSS_WITH_AES_128_SHA = 'DHE-DSS-AES128-SHA';
   OPENSSL_TLS1_TXT_DHE_RSA_WITH_AES_128_SHA = 'DHE-RSA-AES128-SHA';
   OPENSSL_TLS1_TXT_ADH_WITH_AES_128_SHA = 'ADH-AES128-SHA';
-
   OPENSSL_TLS1_TXT_RSA_WITH_AES_256_SHA = 'AES256-SHA';
   OPENSSL_TLS1_TXT_DH_DSS_WITH_AES_256_SHA ='DH-DSS-AES256-SHA';
   OPENSSL_TLS1_TXT_DH_RSA_WITH_AES_256_SHA = 'DH-RSA-AES256-SHA';
   OPENSSL_TLS1_TXT_DHE_DSS_WITH_AES_256_SHA = 'DHE-DSS-AES256-SHA';
   OPENSSL_TLS1_TXT_DHE_RSA_WITH_AES_256_SHA ='DHE-RSA-AES256-SHA';
   OPENSSL_TLS1_TXT_ADH_WITH_AES_256_SHA = 'ADH-AES256-SHA';
-
 //* ECC ciphersuites from draft-ietf-tls-ecc-01.txt (Mar 15, 2001) */
   OPENSSL_TLS1_TXT_ECDH_ECDSA_WITH_NULL_SHA               = 'ECDH-ECDSA-NULL-SHA';
   OPENSSL_TLS1_TXT_ECDH_ECDSA_WITH_RC4_128_SHA            = 'ECDH-ECDSA-RC4-SHA';
   OPENSSL_TLS1_TXT_ECDH_ECDSA_WITH_DES_192_CBC3_SHA       = 'ECDH-ECDSA-DES-CBC3-SHA';
   OPENSSL_TLS1_TXT_ECDH_ECDSA_WITH_AES_128_CBC_SHA        = 'ECDH-ECDSA-AES128-SHA';
   OPENSSL_TLS1_TXT_ECDH_ECDSA_WITH_AES_256_CBC_SHA        = 'ECDH-ECDSA-AES256-SHA';
-
   OPENSSL_TLS1_TXT_ECDHE_ECDSA_WITH_NULL_SHA              = 'ECDHE-ECDSA-NULL-SHA';
   OPENSSL_TLS1_TXT_ECDHE_ECDSA_WITH_RC4_128_SHA           = 'ECDHE-ECDSA-RC4-SHA';
   OPENSSL_TLS1_TXT_ECDHE_ECDSA_WITH_DES_192_CBC3_SHA      = 'ECDHE-ECDSA-DES-CBC3-SHA';
   OPENSSL_TLS1_TXT_ECDHE_ECDSA_WITH_AES_128_CBC_SHA       = 'ECDHE-ECDSA-AES128-SHA';
   OPENSSL_TLS1_TXT_ECDHE_ECDSA_WITH_AES_256_CBC_SHA       = 'ECDHE-ECDSA-AES256-SHA';
-
   OPENSSL_TLS1_TXT_ECDH_RSA_WITH_NULL_SHA                 = 'ECDH-RSA-NULL-SHA';
   OPENSSL_TLS1_TXT_ECDH_RSA_WITH_RC4_128_SHA              = 'ECDH-RSA-RC4-SHA';
   OPENSSL_TLS1_TXT_ECDH_RSA_WITH_DES_192_CBC3_SHA         = 'ECDH-RSA-DES-CBC3-SHA';
   OPENSSL_TLS1_TXT_ECDH_RSA_WITH_AES_128_CBC_SHA          = 'ECDH-RSA-AES128-SHA';
   OPENSSL_TLS1_TXT_ECDH_RSA_WITH_AES_256_CBC_SHA          = 'ECDH-RSA-AES256-SHA';
-
   OPENSSL_TLS1_TXT_ECDHE_RSA_WITH_NULL_SHA                = 'ECDHE-RSA-NULL-SHA';
   OPENSSL_TLS1_TXT_ECDHE_RSA_WITH_RC4_128_SHA             = 'ECDHE-RSA-RC4-SHA';
   OPENSSL_TLS1_TXT_ECDHE_RSA_WITH_DES_192_CBC3_SHA        = 'ECDHE-RSA-DES-CBC3-SHA';
   OPENSSL_TLS1_TXT_ECDHE_RSA_WITH_AES_128_CBC_SHA         = 'ECDHE-RSA-AES128-SHA';
   OPENSSL_TLS1_TXT_ECDHE_RSA_WITH_AES_256_CBC_SHA         = 'ECDHE-RSA-AES256-SHA';
-
   OPENSSL_TLS1_TXT_ECDH_anon_WITH_NULL_SHA                = 'AECDH-NULL-SHA';
   OPENSSL_TLS1_TXT_ECDH_anon_WITH_RC4_128_SHA             = 'AECDH-RC4-SHA';
   OPENSSL_TLS1_TXT_ECDH_anon_WITH_DES_192_CBC3_SHA        = 'AECDH-DES-CBC3-SHA';
   OPENSSL_TLS1_TXT_ECDH_anon_WITH_AES_128_CBC_SHA         = 'AECDH-AES128-SHA';
   OPENSSL_TLS1_TXT_ECDH_anon_WITH_AES_256_CBC_SHA         = 'AECDH-AES256-SHA';
-
 //* Camellia ciphersuites from RFC4132 */
   OPENSSL_TLS1_TXT_RSA_WITH_CAMELLIA_128_CBC_SHA = 'CAMELLIA128-SHA';
   OPENSSL_TLS1_TXT_DH_DSS_WITH_CAMELLIA_128_CBC_SHA = 'DH-DSS-CAMELLIA128-SHA';
@@ -4132,14 +4299,12 @@ const
   OPENSSL_TLS1_TXT_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA = 'DHE-DSS-CAMELLIA128-SHA';
   OPENSSL_TLS1_TXT_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA = 'DHE-RSA-CAMELLIA128-SHA';
   OPENSSL_TLS1_TXT_ADH_WITH_CAMELLIA_128_CBC_SHA = 'ADH-CAMELLIA128-SHA';
-
   OPENSSL_TLS1_TXT_RSA_WITH_CAMELLIA_256_CBC_SHA = 'CAMELLIA256-SHA';
   OPENSSL_TLS1_TXT_DH_DSS_WITH_CAMELLIA_256_CBC_SHA = 'DH-DSS-CAMELLIA256-SHA';
   OPENSSL_TLS1_TXT_DH_RSA_WITH_CAMELLIA_256_CBC_SHA = 'DH-RSA-CAMELLIA256-SHA';
   OPENSSL_TLS1_TXT_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA = 'DHE-DSS-CAMELLIA256-SHA';
   OPENSSL_TLS1_TXT_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA = 'DHE-RSA-CAMELLIA256-SHA';
   OPENSSL_TLS1_TXT_ADH_WITH_CAMELLIA_256_CBC_SHA = 'ADH-CAMELLIA256-SHA';
-
 //* SEED ciphersuites from RFC4162 */
   OPENSSL_TLS1_TXT_RSA_WITH_SEED_SHA                      = 'SEED-SHA';
   OPENSSL_TLS1_TXT_DH_DSS_WITH_SEED_SHA                   = 'DH-DSS-SEED-SHA';
@@ -4147,9 +4312,6 @@ const
   OPENSSL_TLS1_TXT_DHE_DSS_WITH_SEED_SHA                  = 'DHE-DSS-SEED-SHA';
   OPENSSL_TLS1_TXT_DHE_RSA_WITH_SEED_SHA                  = 'DHE-RSA-SEED-SHA';
   OPENSSL_TLS1_TXT_ADH_WITH_SEED_SHA                      = 'ADH-SEED-SHA';
-
-  OPENSSL_TLS1_VERSION_MAJOR = $03;
-
   OPENSSL_TLS_CT_DSS_FIXED_DH = 4;
   OPENSSL_TLS_CT_DSS_SIGN = 2;
   OPENSSL_TLS_CT_NUMBER = 4;
@@ -4271,7 +4433,6 @@ const
   OPENSSL_X509_R_UNSUPPORTED_ALGORITHM = 111;
   OPENSSL_X509_R_WRONG_LOOKUP_TYPE = 112;
   OPENSSL_X509_R_WRONG_TYPE = 122;
-
   OPENSSL_X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT = 2;
   OPENSSL_X509_V_ERR_UNABLE_TO_GET_CRL = 3;
   OPENSSL_X509_V_ERR_UNABLE_TO_DECRYPT_CERT_SIGNATURE = 4;
@@ -4318,7 +4479,6 @@ const
   OPENSSL_X509_V_ERR_UNNESTED_RESOURCE = 44;
   OPENSSL_X509_V_ERR_APPLICATION_VERIFICATION = 50;
   OPENSSL_X509_V_OK = 0;
-
   OPENSSL_X509v3_KU_CRL_SIGN = $0002;
   OPENSSL_X509v3_KU_DATA_ENCIPHERMENT = $0010;
   OPENSSL_X509v3_KU_DECIPHER_ONLY = $8000;
@@ -4329,11 +4489,9 @@ const
   OPENSSL_X509v3_KU_KEY_ENCIPHERMENT = $0020;
   OPENSSL_X509v3_KU_NON_REPUDIATION = $0040;
   OPENSSL_X509v3_KU_UNDEF = $ffff;
-
   OPENSSL_X509V3_EXT_DYNAMIC = $1;
   OPENSSL_X509V3_EXT_CTX_DEP = $2;
   OPENSSL_X509V3_EXT_MULTILINE = $4;
-
   OPENSSL_GEN_OTHERNAME	= 0;
   OPENSSL_GEN_EMAIL	= 1;
   OPENSSL_GEN_DNS = 2;
@@ -4343,14 +4501,11 @@ const
   OPENSSL_GEN_URI	= 6;
   OPENSSL_GEN_IPADD = 7;
   OPENSSL_GEN_RID = 8;
-
   //* X509_PURPOSE stuff */
-
   OPENSSL_EXFLAG_BCONS = $1;
   OPENSSL_EXFLAG_KUSAGE	= $2;
   OPENSSL_EXFLAG_XKUSAGE = $4;
   OPENSSL_EXFLAG_NSCERT	= $8;
-
   OPENSSL_EXFLAG_CA = $10;
   //* Really self issued not necessarily self signed */
   OPENSSL_EXFLAG_SI	= $20;
@@ -4360,9 +4515,7 @@ const
   OPENSSL_EXFLAG_SET = $100;
   OPENSSL_EXFLAG_CRITICAL	= $200;
   OPENSSL_EXFLAG_PROXY = $400;
-
   OPENSSL_EXFLAG_INVALID_POLICY = $800;
-
   OPENSSL_KU_DIGITAL_SIGNATURE = $0080;
   OPENSSL_KU_NON_REPUDIATION	= $0040;
   OPENSSL_KU_KEY_ENCIPHERMENT	= $0020;
@@ -4372,7 +4525,6 @@ const
   OPENSSL_KU_CRL_SIGN	= $0002;
   OPENSSL_KU_ENCIPHER_ONLY = $0001;
   OPENSSL_KU_DECIPHER_ONLY = $8000;
-
   OPENSSL_NS_SSL_CLIENT	= $80;
   OPENSSL_NS_SSL_SERVER	= $40;
   OPENSSL_NS_SMIME = $20;
@@ -4382,7 +4534,6 @@ const
   OPENSSL_NS_OBJSIGN_CA = $01;
   OPENSSL_NS_ANY_CA	= (OPENSSL_NS_SSL_CA or OPENSSL_NS_SMIME_CA or
     OPENSSL_NS_OBJSIGN_CA);
-
   OPENSSL_XKU_SSL_SERVER = $1;
   OPENSSL_XKU_SSL_CLIENT = $2;
   OPENSSL_XKU_SMIME	=	$4;
@@ -4391,10 +4542,8 @@ const
   OPENSSL_XKU_OCSP_SIGN = $20;
   OPENSSL_XKU_TIMESTAMP = $40;
   OPENSSL_XKU_DVCS = $80;
-
   OPENSSL_X509_PURPOSE_DYNAMIC = $1;
   OPENSSL_X509_PURPOSE_DYNAMIC_NAME = $2;
-
   OPENSSL__ATEXIT_SIZE = 32;
   OPENSSL__IOFBF = 0;
   OPENSSL__IOLBF = 1;
@@ -4432,7 +4581,6 @@ const
   OPENSSL_i386 = 1;
   OPENSSL_i586 = 1;
   OPENSSL_pentium = 1;
-
 //kssl.h
 {$IFNDEF OPENSSL_NO_KRB5}
 {These are consts for Kerberos support.  These will not be complete because
@@ -4441,12 +4589,10 @@ as place holders so we get an exact OpenSSL API if Kerberos support was compiled
 in.
 }
   KSSL_ERR_MAX = 255;
-
   KSSL_CLIENT  = 1;
   KSSL_SERVER  = 2;
   KSSL_SERVICE = 3;
   KSSL_KEYTAB = 4;
-
   KSSL_CTX_OK = 0;
   KSSL_CTX_ERR = 1;
   KSSL_NOMEM = 2;
@@ -4498,7 +4644,6 @@ const
   OPENSSL_ERR_LIB_FIPS = 45;
   OPENSSL_ERR_LIB_CMS = 46;
   OPENSSL_ERR_LIB_JPAKE = 47;
-
 //* fatal error */
   OPENSSL_ERR_R_FATAL	= 64;
 //was  OPENSSL_ERR_R_FATAL = 32;
@@ -4507,9 +4652,7 @@ const
   OPENSSL_ERR_R_PASSED_NULL_PARAMETER = (3 or OPENSSL_ERR_R_FATAL);
   OPENSSL_ERR_R_INTERNAL_ERROR = (4 or OPENSSL_ERR_R_FATAL);
   OPENSSL_ERR_R_DISABLED = (5 or OPENSSL_ERR_R_FATAL);
-
   OPENSSL_ERR_LIB_USER  = 128;
-
   // OS functions
   OPENSSL_SYS_F_FOPEN = 1;
   OPENSSL_SYS_F_CONNECT = 2;
@@ -4522,20 +4665,6 @@ const
   OPENSSL_SYS_F_WSASTARTUP = 9; { Winsock stuff }
   OPENSSL_SYS_F_OPENDIR = 10;
   OPENSSL_SYS_F_FREAD	= 11;
-
-// ssl_locl.h constants.  For some reason, these aren't listed in the include
-// files so it seems that the OpenSSL headers are pulling stuff out of thin air.
-// In any case, I don't know how these constants will work on various platforms.
-// JPM
-
-  // Mostly for SSLv3
-//  OPENSSL_SSL_PKEY_RSA_ENC = 0;
-//  OPENSSL_SSL_PKEY_RSA_SIGN = 1;
-//  OPENSSL_SSL_PKEY_DSA_SIGN = 2;
-//  OPENSSL_SSL_PKEY_DH_RSA = 3;
-//  OPENSSL_SSL_PKEY_DH_DSA = 4;
-//  OPENSSL_SSL_PKEY_NUM = 5;
-
 //* These are the possible flags.  They can be or'ed together. */
 //* Use to have echoing of input */
   OPENSSL_UI_INPUT_FLAG_ECHO = $01;
@@ -4553,7 +4682,6 @@ const
 //   example of use is this:
 
 //	#define MY_UI_FLAG1	(0x01 << UI_INPUT_FLAG_USER_BASE)
-
 //*/
   OPENSSL_UI_INPUT_FLAG_USER_BASE	= 16;
   //IO_ctrl commands
@@ -4579,7 +4707,6 @@ const
   OPENSSL_UI_F_UI_GET0_RESULT	= 107;
   OPENSSL_UI_F_UI_NEW_METHOD = 104;
   OPENSSL_UI_F_UI_SET_RESULT = 105;
-
 //* Reason codes. */
   OPENSSL_UI_R_COMMON_OK_AND_CANCEL_CHARACTERS = 104;
   OPENSSL_UI_R_INDEX_TOO_LARGE = 102;
@@ -4588,7 +4715,6 @@ const
   OPENSSL_UI_R_RESULT_TOO_LARGE	= 100;
   OPENSSL_UI_R_RESULT_TOO_SMALL	= 101;
   OPENSSL_UI_R_UNKNOWN_CONTROL_COMMAND = 106;
-
 {$DEFINE ERR_file_name__FILE_}
 {$IFNDEF NO_ERR}
 {procedure ERR_PUT_error(a,b,c,d, e);
@@ -4632,21 +4758,18 @@ const
   OPENSSL_ERR_R_ECDSA_LIB = OPENSSL_ERR_LIB_ECDSA;
   OPENSSL_ERR_R_ECDH_LIB = OPENSSL_ERR_LIB_ECDH;
   OPENSSL_ERR_R_STORE_LIB = OPENSSL_ERR_LIB_STORE;
-
   OPENSSL_ERR_R_NESTED_ASN1_ERROR = 58;
   OPENSSL_ERR_R_BAD_ASN1_OBJECT_HEADER = 59;
   OPENSSL_ERR_R_BAD_GET_ASN1_OBJECT_CALL = 60;
   OPENSSL_ERR_R_EXPECTING_AN_ASN1_SEQUENCE = 61;
   OPENSSL_ERR_R_ASN1_LENGTH_MISMATCH = 62;
   OPENSSL_ERR_R_MISSING_ASN1_EOS = 63;
-
   OPENSSL_DTLS1_VERSION = $FEFF;
   OPENSSL_DTLS1_BAD_VER = $0100;
 {$IFNDEF USETHIS}
 //* this alert description is not specified anywhere... */
  DTLS1_AD_MISSING_HANDSHAKE_MESSAGE = 110;
 {$endif}
-
   OPENSSL_DTLS1_COOKIE_LENGTH = 32;
   OPENSSL_DTLS1_RT_HEADER_LENGTH = 13;
   OPENSSL_DTLS1_HM_HEADER_LENGTH = 12;
@@ -4659,7 +4782,6 @@ const
 {$else}
   OPENSSL_DTLS1_AL_HEADER_LENGTH = 2;
 {$endif}
-
 
 type
   UInteger        = Longint;
@@ -5002,7 +5124,6 @@ type
 	  data : PCRYPTO_dynlock_value;
   end;
   PCRYPTO_dynlock = ^CRYPTO_dynlock;
-
 //* Callback types for crypto.h */
 //typedef int CRYPTO_EX_new(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
 //					int idx, long argl, void *argp);
@@ -5052,7 +5173,6 @@ type
     destroy : function (_para1 : PBIO) : TIdC_INT; cdecl;
     callback_ctrl : function (_para1 : PBIO; _para2 : TIdC_INT; _para3 : pbio_info_cb): TIdC_LONG; cdecl;
   end;
-
   BIO = record
     method : PBIO_METHOD;
     // bio, mode, argp, argi, argl, ret
@@ -5078,7 +5198,6 @@ type
 //  end;
   PENGINE = Pointer;//^ENGINE;
   //asn1.h
-
   //#define I2D_OF(type) int (*)(type *,unsigned char **)
   I2D_OF_void = function(_para1 : Pointer; _para2 : PPAnsiChar) : TIdC_INT; cdecl;
   //D2I_OF(type) type *(*)(type **,const unsigned char **,long)
@@ -5134,7 +5253,6 @@ type
   {$ELSE}
   // Platforms that can't easily handle shared global variables are declared
   // as functions returning ASN1_ITEM pointers.
-
   // ASN1_ITEM pointer exported type
   //typedef const ASN1_ITEM * ASN1_ITEM_EXP(void);
   PASN1_ITEM_EXP = ^ASN1_ITEM_EXP;
@@ -5146,7 +5264,6 @@ type
   ASN1_STRING = asn1_string_st;
   PASN1_STRING = ^ASN1_STRING;
   PPASN1_STRING = ^PASN1_STRING;
-
   ASN1_INTEGER = ASN1_STRING;
   PASN1_INTEGER = ^ASN1_INTEGER;
   PPASN1_INTEGER = ^PASN1_INTEGER;
@@ -7004,7 +7121,6 @@ type
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_OCSP_RESPID = PSTACK;
   {$ENDIF}
-
 ///*   RevokedInfo ::= SEQUENCE {
 // *       revocationTime              GeneralizedTime,
 // *       revocationReason    [0]     EXPLICIT CRLReason OPTIONAL }
@@ -7015,7 +7131,6 @@ type
   end;
   POCSP_REVOKEDINFO = ^OCSP_REVOKEDINFO;
   PPOCSP_REVOKEDINFO = ^POCSP_REVOKEDINFO;
-
 ///*   CertStatus ::= CHOICE {
 // *       good                [0]     IMPLICIT NULL,
 // *       revoked             [1]     IMPLICIT RevokedInfo,
@@ -7232,15 +7347,6 @@ _des_cblock = DES_cblock
   {$ENDIF}
   TIdSslLockingCallback = procedure (mode, n : TIdC_INT; Afile : PAnsiChar; line : TIdC_INT); cdecl;
   TIdSslIdCallback = function: TIdC_ULONG; cdecl;
-{  X509_REQ = record
-    nid : TIdC_INT;
-    minsize : TIdC_LONG;
-    maxsize : TIdC_LONG;
-    mask : TIdC_ULONG;
-    flags : TIdC_ULONG;
-  end;
-  PX509_REQ = ^X509_REQ;
-  PPX509_REQ = ^PX509_REQ;  }
 ///ssl_locl.h structs.  These are probably internal records so don't expose
 //their members as ssl_lock.h is not included in the headers
 //JPM
@@ -11280,10 +11386,8 @@ end;
 function Load: Boolean;
 begin
   Result := True;
-
   Assert(FFailedFunctionLoadList<>nil);
   FFailedFunctionLoadList.Clear;
-
   {$IFDEF KYLIXCOMPAT}
   // Workaround that is required under Linux (changed RTLD_GLOBAL with RTLD_LAZY Note: also work with LoadLibrary())
   if hIdCrypto = 0 then begin
@@ -11338,7 +11442,6 @@ begin
   end;
     {$ENDIF}
   {$ENDIF}
-
   @IdSslCtxSetCipherList := LoadFunction(fn_SSL_CTX_set_cipher_list);
   @IdSslCtxNew := LoadFunction(fn_SSL_CTX_new);
   @IdSslCtxFree := LoadFunction(fn_SSL_CTX_free);
@@ -11811,7 +11914,6 @@ end;
 
 //* Note: SSL[_CTX]_set_{options,mode} use |= op on the previous value,
 // * they cannot be used to clear bits. */
-
 
 function IdSslCtxSetOptions(ctx: PSSL_CTX; op: TIdC_LONG):TIdC_LONG;
 {$IFDEF USEINLINE} inline; {$ENDIF}
