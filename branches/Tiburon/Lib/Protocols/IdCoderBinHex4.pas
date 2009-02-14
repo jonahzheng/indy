@@ -163,12 +163,14 @@ uses
 type
   TIdEncoderBinHex4 = class(TIdEncoder3to4)
   protected
+    FFileName: String;
     function GetCRC(const ABlock: TIdBytes; const AOffset: Integer = 0; const ASize: Integer = -1): Word;
     procedure AddByteCRC(var ACRC: Word; AByte: Byte);
     procedure InitComponent; override;
   public
-    //We cannot override Encode because we need different parameters...
-    procedure EncodeFile(AFileName: string; ASrcStream: TStream; ADestStream: TStream);
+    procedure Encode(ASrcStream: TStream; ADestStream: TStream; const ABytes: Integer = -1); override;
+    //We need to specify this value before calling Encode...
+    property FileName: String read FFileName write FFileName;
   end;
 
   TIdDecoderBinHex4 = class(TIdDecoder4to3)
@@ -185,6 +187,7 @@ const
 
 type
   EIdMissingColon = class(EIdException);
+  EIdMissingFileName = class(EIdException);
 
 var
   GBinHex4DecodeTable: TIdDecodeTable;
@@ -365,29 +368,29 @@ begin
   end;
 end;
 
-procedure TIdEncoderBinHex4.EncodeFile(AFileName: string; ASrcStream: TStream; ADestStream: TStream);
+procedure TIdEncoderBinHex4.Encode(ASrcStream: TStream; ADestStream: TStream; const ABytes: Integer = -1);
 var
   LN: Integer;
   LOffset: Integer;
   LBlocks: Integer;
   LOut: TIdBytes;
   LSSize, LTemp: Integer;
-  LFileName: string;
+  LFileName: AnsiString;
   LCRC: word;
   LRemainder: integer;
 begin
+  EIdMissingFileName.IfTrue(FFileName='', 'Data passed to TIdEncoderBinHex4.Encode is missing a filename');    {Do not Localize}
   //Read in the attachment first...
-  LSSize := IndyMin(ASrcStream.Size - ASrcStream.Position, MaxInt);
+  LSSize := IndyLength(ASrcStream, ABytes);
   //BinHex4.0 allows filenames to be only 255 bytes long (because the length
   //is stored in a byte), so truncate the filename to 255 bytes...
-  if Length(AFileName) > 255 then begin
-    LFileName := Copy(AFileName, 1, 255);
-  end else begin
-    LFileName := AFileName;
+  LFileName := AnsiString(FFileName);
+  if Length(FFileName) > 255 then begin
+    SetLength(LFileName, 255);
   end;
   //Construct the header...
   SetLength(LOut, 1+Length(LFileName)+1+4+4+2+4+4+2+LSSize+2);
-  LOut[0] := Length(LFileName);         //Length of filename in 1st byte
+  LOut[0] := Length(LFileName);               //Length of filename in 1st byte
   for LN := 1 to Length(LFileName) do begin
     LOut[LN] := Byte(LFileName[LN]);
   end;
