@@ -418,12 +418,7 @@ begin
     end;
     if Length(FContentType) > 0 then
     begin
-      if Length(FCharSet) > 0 then begin
-        Values['Content-Type'] := RemoveHeaderEntry(FContentType, 'charset')  {do not localize}
-           + '; charset="' + FCharSet + '"'; {do not localize}
-      end else begin
-        Values['Content-Type'] := FContentType; {do not localize}
-      end;
+      Values['Content-Type'] := ReplaceHeaderSubItem(FContentType, 'charset', FCharSet); {do not localize}
     end;
     if FContentLength >= 0 then
     begin
@@ -438,7 +433,7 @@ begin
     end;
     if FDate > 0 then
     begin
-      Values['Date'] := DateTimeGMTToHttpStr(FDate); {do not localize}
+      Values['Date'] := LocalDateTimeToHttpStr(FDate); {do not localize}
     end;
     if Length(FETag) > 0 then
     begin
@@ -446,7 +441,7 @@ begin
     end;
     if FExpires > 0 then
     begin
-      Values['Expires'] := DateTimeGMTToHttpStr(FExpires); {do not localize}
+      Values['Expires'] := LocalDateTimeToHttpStr(FExpires); {do not localize}
     end;
     if Length(FPragma) > 0 then
     begin
@@ -477,9 +472,9 @@ var
 begin
   if AValue <> '' then
   begin
-    FContentType := RemoveHeaderEntry(AValue, 'CHARSET'); {do not localize}
+    FContentType := RemoveHeaderEntry(AValue, 'charset'); {do not localize}
     {RLebeau: override the current CharSet only if the header specifies a new value}
-    LCharSet := ExtractHeaderSubItem(AValue, 'CHARSET'); {do not localize}
+    LCharSet := ExtractHeaderSubItem(AValue, 'charset'); {do not localize}
     if LCharSet <> '' then begin
       FCharSet := LCharSet;
     end;
@@ -729,7 +724,7 @@ begin
     // use 'Last-Modified' entity header in the conditional request
     if FLastModified > 0 then
     begin
-      Values['If-Modified-Since'] := DateTimeGMTToHttpStr(FLastModified); {do not localize}
+      Values['If-Modified-Since'] := LocalDateTimeToHttpStr(FLastModified); {do not localize}
     end;
 
     if Assigned(Authentication) then
