@@ -712,6 +712,7 @@ var
   HeaderEncoding: Char;
   LN: Integer;
   LEncoding, LMIMEBoundary, LContentType: string;
+  LDate: TDateTime;
 begin
   MessageParts.CountParts;
   {CC2: If the encoding is meDefault, the user wants us to pick an encoding mechanism:}
@@ -850,10 +851,11 @@ begin
     Values['References'] := References; {do not localize}
 
     if UseNowForDate then begin
-      Values['Date'] := DateTimeToInternetStr(Now); {do not localize}
+      LDate := Now;
     end else begin
-      Values['Date'] := DateTimeToInternetStr(Self.Date); {do not localize}
+      LDate := Self.Date;
     end;
+    Values['Date'] := LocalDateTimeToGMT(LDate); {do not localize}
 
     // S.G. 27/1/2003: Only issue X-Priority header if priority <> mpNormal (for stoopid spam filters)
     if Priority <> mpNormal then begin
@@ -864,7 +866,13 @@ begin
       Values['X-Priority'] := '';    {do not localize}
     end;
 
-    Values['Message-Id'] := MsgId;
+    {CC: SaveToFile sets FSavingToFile to True so that Message IDs
+    are saved when saving to file and omitted otherwise ...}
+    if not FSavingToFile then begin
+      Values['Message-Id'] := '';
+    end else begin
+      Values['Message-Id'] := MsgId;
+    end;
 
     // Add extra headers created by UA - allows duplicates
     if (FExtraHeaders.Count > 0) then begin
@@ -915,10 +923,11 @@ begin
   FContentType := Headers.Values['Content-Type']; {do not localize}
   if FContentType = '' then begin
     FContentType := 'text/plain';  {do not localize}
+    FCharSet := '';
   end else begin
-    FContentType := Trim(Fetch(FContentType, ';'));  {do not localize}
+    FCharSet := ExtractHeaderSubItem(FContentType, 'charset');// Headers.Params['Content-Type', 'charset'];  {do not localize}
+    FContentType := RemoveHeaderEntry(FContentType, 'charset');  {do not localize}
   end;
-  FCharSet := ExtractHeaderSubItem(Headers.Values['Content-Type'], 'CHARSET');  {do not localize}
 
   ContentTransferEncoding := Headers.Values['Content-Transfer-Encoding']; {do not localize}
   ContentDisposition := Headers.Values['Content-Disposition'];  {do not localize}
@@ -948,7 +957,7 @@ begin
     Priority := GetMsgPriority(Headers.Values['X-Priority']) {do not localize}
   end;
   {Note that the following code ensures MIMEBoundary.Count is 0 for single-part MIME messages...}
-  LBoundary := ExtractHeaderSubItem(Headers.Values['Content-Type'], 'BOUNDARY');  {do not localize}
+  LBoundary := ExtractHeaderSubItem(Headers.Values['Content-Type'], 'boundary');  {do not localize}
   if LBoundary <> '' then begin
     MIMEBoundary.Push(LBoundary, -1);
   end;
@@ -980,9 +989,9 @@ procedure TIdMessage.SetContentType(const AValue: String);
 var
   LCharSet: string;
 begin
-  FContentType := RemoveHeaderEntry(AValue, 'CHARSET'); {do not localize}
+  FContentType := RemoveHeaderEntry(AValue, 'charset'); {do not localize}
   {RLebeau: override the current CharSet only if the header specifies a new value}
-  LCharSet := ExtractHeaderSubItem(AValue, 'CHARSET'); {do not localize}
+  LCharSet := ExtractHeaderSubItem(AValue, 'charset'); {do not localize}
   if LCharSet <> '' then begin
     FCharSet := LCharSet;
   end;
