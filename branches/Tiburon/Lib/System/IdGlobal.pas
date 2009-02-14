@@ -554,7 +554,7 @@ const
   {$I IdVers.inc}
 
   {$IFNDEF DOTNET}
-	{$IFNDEF VCL2007ORABOVE}
+    {$IFNDEF VCL2007ORABOVE}
   HoursPerDay   = 24;
   MinsPerHour   = 60;
   SecsPerMin    = 60;
@@ -562,7 +562,7 @@ const
   MinsPerDay    = HoursPerDay * MinsPerHour;
   SecsPerDay    = MinsPerDay * SecsPerMin;
   MSecsPerDay   = SecsPerDay * MSecsPerSec;
-  {$ENDIF}
+    {$ENDIF}
   {$ENDIF}
 
   {$IFDEF DOTNET}
@@ -668,10 +668,10 @@ const
 type
   {$IFDEF UNICODESTRING}
   TIdBytes = TBytes;
-  TIdChars = TCharArray;
+  TIdWideChars = TCharArray;
   {$ELSE}
   TIdBytes = array of Byte;
-  TIdChars = array of Char;
+  TIdWideChars = array of WideChar;
   {$ENDIF}
   {$IFNDEF DOTNET}
     {$IFNDEF FPC}
@@ -698,8 +698,12 @@ type
 
   For earlier versions, TIdTextEncoding is just a compatibility class so Indy
   can have a unified internal interface for String<->Byte conversions without
-  using IFDEFs everywhere.  As such, minimal conversions are actually performed
-  since AnsiString is 1 byte characters.
+  using IFDEFs everywhere.
+
+  Having this compatibility class use WideString adds extra overhead to string
+  operations, but this is the only way to ensure that strings are encoded properly.
+  Later on, perhaps we can optimize the operations when Ansi-compatible encodings
+  are being used with AnsiString values.
   }
 
   {$IFDEF DOTNET}
@@ -709,44 +713,65 @@ type
   TIdTextEncoding = SysUtils.TEncoding;
     {$ELSE}
   TIdTextEncoding = class
+  private
+    {$IFDEF CLASSPROPERTIES}
+    class function GetASCII: TIdTextEncoding; static;
+    class function GetBigEndianUnicode: TIdTextEncoding; static;
+    class function GetDefault: TIdTextEncoding; static;
+    class function GetUnicode: TIdTextEncoding; static;
+    class function GetUTF7: TIdTextEncoding; static;
+    class function GetUTF8: TIdTextEncoding; static;
+    {$ENDIF}
   protected
     FIsSingleByte: Boolean;
     FMaxCharSize: Integer;
-    function GetByteCount(AChars: PChar; ACharCount: Integer): Integer; overload; virtual; abstract;
-    function GetBytes(AChars: PChar; ACharCount: Integer; ABytes: PByte; AByteCount: Integer): Integer; overload; virtual; abstract;
+    function GetByteCount(AChars: PWideChar; ACharCount: Integer): Integer; overload; virtual; abstract;
+    function GetBytes(AChars: PWideChar; ACharCount: Integer; ABytes: PByte; AByteCount: Integer): Integer; overload; virtual; abstract;
     function GetCharCount(ABytes: PByte; AByteCount: Integer): Integer; overload; virtual; abstract;
-    function GetChars(ABytes: PByte; AByteCount: Integer; AChars: PChar; ACharCount: Integer): Integer; overload; virtual; abstract;
+    function GetChars(ABytes: PByte; AByteCount: Integer; AChars: PWideChar; ACharCount: Integer): Integer; overload; virtual; abstract;
   public
     class function Convert(ASource, ADestination: TIdTextEncoding; const ABytes: TIdBytes): TIdBytes; overload;
     class function Convert(ASource, ADestination: TIdTextEncoding; const ABytes: TIdBytes; AStartIndex, ACount: Integer): TIdBytes; overload;
     class procedure FreeEncodings;
     class function IsStandardEncoding(AEncoding: TIdTextEncoding): Boolean;
     class function GetBufferEncoding(const ABuffer: TIdBytes; var AEncoding: TIdTextEncoding): Integer;
-    function GetByteCount(const AChars: TIdChars): Integer; overload;
-    function GetByteCount(const AChars: TIdChars; ACharIndex, ACharCount: Integer): Integer; overload;
-    function GetByteCount(const AStr: string): Integer; overload;
-    function GetBytes(const AChars: TIdChars): TIdBytes; overload;
-    function GetBytes(const AChars: TIdChars; ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
-    function GetBytes(const AStr: string): TIdBytes; overload;
-    function GetBytes(const AStr: string; ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
+    function GetByteCount(const AChars: TIdWideChars): Integer; overload;
+    function GetByteCount(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer): Integer; overload;
+    function GetByteCount(const AStr: WideString): Integer; overload;
+    function GetBytes(const AChars: TIdWideChars): TIdBytes; overload;
+    function GetBytes(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
+    function GetBytes(const AStr: WideString): TIdBytes; overload;
+    function GetBytes(const AStr: WideString; ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
     function GetCharCount(const ABytes: TIdBytes): Integer; overload;
     function GetCharCount(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): Integer; overload;
-    function GetChars(const ABytes: TIdBytes): TIdChars; overload;
-    function GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): TIdChars; overload;
-    function GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer; var VChars: TIdChars; ACharIndex: Integer): Integer; overload;
+    function GetChars(const ABytes: TIdBytes): TIdWideChars; overload;
+    function GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): TIdWideChars; overload;
+    function GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer; var VChars: TIdWideChars; ACharIndex: Integer): Integer; overload;
     class function GetEncoding(ACodePage: Integer): TIdTextEncoding;
     function GetMaxByteCount(ACharCount: Integer): Integer; virtual; abstract;
     function GetMaxCharCount(AByteCount: Integer): Integer; virtual; abstract;
     function GetPreamble: TIdBytes; virtual; abstract;
-    function GetString(const ABytes: TIdBytes): string; overload;
-    function GetString(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): string; overload;
+    function GetString(const ABytes: TIdBytes): WideString; overload;
+    function GetString(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): WideString; overload;
+    {$IFDEF CLASSPROPERTIES}
+    class property ASCII: TIdTextEncoding read GetASCII;
+    class property BigEndianUnicode: TIdTextEncoding read GetBigEndianUnicode;
+    class property Default: TIdTextEncoding read GetDefault;
+    {$ELSE}
     class function ASCII: TIdTextEncoding;
     class function BigEndianUnicode: TIdTextEncoding;
     class function Default: TIdTextEncoding;
+    {$ENDIF}
     property IsSingleByte: Boolean read FIsSingleByte;
+    {$IFDEF CLASSPROPERTIES}
+    class property Unicode: TIdTextEncoding read GetUnicode;
+    class property UTF7: TIdTextEncoding read GetUTF7;
+    class property UTF8: TIdTextEncoding read GetUTF8;
+    {$ELSE}
     class function Unicode: TIdTextEncoding;
     class function UTF7: TIdTextEncoding;
     class function UTF8: TIdTextEncoding;
+    {$ENDIF}
   end;
     {$ENDIF}
   {$ENDIF}
@@ -760,12 +785,21 @@ type
   {$NODEFINE en8Bit}
   function enUTF8: TIdTextEncoding;
   {$NODEFINE enUTF8}
-  function Get8BitEncoding: TIdTextEncoding;
 
-  {*$HPPEMIT '#define enDefault NULL'*}
-  {*$HPPEMIT '#define en7Bit TIdTextEncoding::ASCII'*}
-  {*$HPPEMIT '#define en8Bit Get8BitEncoding()'*}
-  {*$HPPEMIT '#define enUTF8 TIdTextEncoding::UTF8'*}
+  function Get8BitEncoding: TIdTextEncoding;
+  function Create8BitEncoding: TIdTextEncoding;
+
+  (*$HPPEMIT '// These are for backwards compatibility with past Indy 10 releases'*)
+  (*$HPPEMIT '#define enDefault ( TIdTextEncoding* )NULL'*)
+  (*$HPPEMIT '#define en8Bit Get8BitEncoding()'*)
+  {$IFDEF CLASSPROPERTIES}
+  (*$HPPEMIT '#define en7Bit TIdTextEncoding::ASCII'*)
+  (*$HPPEMIT '#define enUTF8 TIdTextEncoding::UTF8'*)
+  {$ELSE}
+  (*$HPPEMIT '#define en7Bit TIdTextEncoding::ASCII(__classid(TIdTextEncoding))'*)
+  (*$HPPEMIT '#define enUTF8 TIdTextEncoding::UTF8(__classid(TIdTextEncoding))'*)
+  {$ENDIF}
+  (*$HPPEMIT ''*)
 
 type
   TIdAppendFileStream = class(TFileStream)
@@ -1130,10 +1164,18 @@ function ByteIsInEOL(const ABytes: TIdBytes; const AIndex: Integer): Boolean;
 
 function CompareDate(const D1, D2: TDateTime): Integer;
 function CurrentProcessId: TIdPID;
+
+// RLebeau: the input of these two functions must be in GMT
 function DateTimeGMTToHttpStr(const GMTValue: TDateTime) : String;
 function DateTimeGMTToCookieStr(const GMTValue: TDateTime) : String;
-function DateTimeToInternetStr(const Value: TDateTime; const AIsGMT : Boolean = False) : String;
-function DateTimeToGmtOffSetStr(ADateTime: TDateTime; SubGMT: Boolean): string;
+
+// RLebeau: the input of these functions must be in local time
+function DateTimeToInternetStr(const Value: TDateTime; const AUseGMTStr: Boolean = False) : String; {$IFDEF DEPRECATED}deprecated{$IFDEF DEPRECATED_MSG} 'Use LocalDateTimeToGMT()'{$ENDIF}{$ENDIF};
+function DateTimeToGmtOffSetStr(ADateTime: TDateTime; const AUseGMTStr: Boolean = False): string; {$IFDEF DEPRECATED}deprecated{$IFDEF DEPRECATED_MSG} 'Use UTCOffsetToStr()'{$ENDIF}{$ENDIF};
+function LocalDateTimeToHttpStr(const Value: TDateTime) : String;
+function LocalDateTimeToCookieStr(const Value: TDateTime) : String;
+function LocalDateTimeToGMT(const Value: TDateTime; const AUseGMTStr: Boolean = False) : String;
+
 procedure DebugOutput(const AText: string);
 function Fetch(var AInput: string; const ADelim: string = IdFetchDelimDefault;
   const ADelete: Boolean = IdFetchDeleteDefault;
@@ -1220,6 +1262,7 @@ function HackLoad(const ALibName : String; const ALibVersions : array of String)
 function MemoryPos(const ASubStr: string; MemBuff: PChar; MemorySize: Integer): Integer;
 {$ENDIF}
 function OffsetFromUTC: TDateTime;
+function UTCOffsetToStr(const AOffset: TDateTime; const AUseGMTStr: Boolean = False): string;
 
 function PosIdx(const ASubStr, AStr: string; AStartPos: LongWord = 0): LongWord; //For "ignoreCase" use AnsiUpperCase
 function PosInSmallIntArray(const ASearchInt: SmallInt; const AArray: array of SmallInt): Integer;
@@ -1249,8 +1292,13 @@ function TwoByteToWord(AByte1, AByte2: Byte): Word;
 procedure EnsureEncoding(var VEncoding : TIdTextEncoding);
 
 var
+  {$IFDEF UNIX}
+  // For linux the user needs to set this variable to be accurate where used (mail, etc)
+  GOffsetFromUTC: TDateTime = 0;
+  {$ENDIF}
+
   IndyPos: TPosProc = nil;
-  
+
 {$IFDEF UNIX}
 const
   {$IFDEF DARWIN}
@@ -1279,10 +1327,10 @@ type
     FMBToWCharFlags: Cardinal;
     FWCharToMBFlags: Cardinal;
   protected
-    function GetByteCount(Chars: PChar; CharCount: Integer): Integer; overload; override;
-    function GetBytes(Chars: PChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
+    function GetByteCount(Chars: PWideChar; CharCount: Integer): Integer; overload; override;
+    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
     function GetCharCount(Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PChar; CharCount: Integer): Integer; overload; override;
+    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
   public
     constructor Create; overload; virtual;
     constructor Create(CodePage: Integer); overload; virtual;
@@ -1294,10 +1342,10 @@ type
 
   TIdUTF7Encoding = class(TIdMBCSEncoding)
   protected
-    function GetByteCount(Chars: PChar; CharCount: Integer): Integer; overload; override;
-    function GetBytes(Chars: PChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
+    function GetByteCount(Chars: PWideChar; CharCount: Integer): Integer; overload; override;
+    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
     function GetCharCount(Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PChar; CharCount: Integer): Integer; overload; override;
+    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
   public
     constructor Create; override;
     function GetMaxByteCount(CharCount: Integer): Integer; override;
@@ -1314,10 +1362,10 @@ type
 
   TIdLEUTF16Encoding = class(TIdTextEncoding)
   protected
-    function GetByteCount(Chars: PChar; CharCount: Integer): Integer; overload; override;
-    function GetBytes(Chars: PChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
+    function GetByteCount(Chars: PWideChar; CharCount: Integer): Integer; overload; override;
+    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
     function GetCharCount(Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PChar; CharCount: Integer): Integer; overload; override;
+    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
   public
     constructor Create; virtual;
     function GetMaxByteCount(CharCount: Integer): Integer; override;
@@ -1327,8 +1375,8 @@ type
 
   TIdBEUTF16Encoding = class(TIdLEUTF16Encoding)
   protected
-    function GetBytes(Chars: PChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PChar; CharCount: Integer): Integer; overload; override;
+    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
+    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
   public
     function GetPreamble: TIdBytes; override;
   end;
@@ -1381,7 +1429,11 @@ begin
   FreeAndNil(GIdBEUTF16Encoding);
 end;
 
+{$IFDEF CLASSPROPERTIES}
+class function TIdTextEncoding.GetASCII: TIdTextEncoding;
+{$ELSE}
 class function TIdTextEncoding.ASCII: TIdTextEncoding;
+{$ENDIF}
 var
   LEncoding: TIdTextEncoding;
 begin
@@ -1394,7 +1446,11 @@ begin
   Result := GIdASCIIEncoding;
 end;
 
+{$IFDEF CLASSPROPERTIES}
+class function TIdTextEncoding.GetBigEndianUnicode: TIdTextEncoding;
+{$ELSE}
 class function TIdTextEncoding.BigEndianUnicode: TIdTextEncoding;
+{$ENDIF}
 var
   LEncoding: TIdTextEncoding;
 begin
@@ -1454,23 +1510,23 @@ begin
   end;
 end;
 
-function TIdTextEncoding.GetByteCount(const AChars: TIdChars): Integer;
+function TIdTextEncoding.GetByteCount(const AChars: TIdWideChars): Integer;
 begin
   Result := GetByteCount(AChars, 0, Length(AChars));
 end;
 
-function TIdTextEncoding.GetByteCount(const AChars: TIdChars; ACharIndex,
+function TIdTextEncoding.GetByteCount(const AChars: TIdWideChars; ACharIndex,
   ACharCount: Integer): Integer;
 begin
   Result := GetByteCount(@AChars[ACharIndex], ACharCount);
 end;
 
-function TIdTextEncoding.GetByteCount(const AStr: string): Integer;
+function TIdTextEncoding.GetByteCount(const AStr: WideString): Integer;
 begin
-  Result := GetByteCount(PChar(AStr), Length(AStr));
+  Result := GetByteCount(PWideChar(AStr), Length(AStr));
 end;
 
-function TIdTextEncoding.GetBytes(const AChars: TIdChars): TIdBytes;
+function TIdTextEncoding.GetBytes(const AChars: TIdWideChars): TIdBytes;
 var
   Len: Integer;
 begin
@@ -1488,7 +1544,7 @@ resourcestring
   RSInvalidDestinationIndex = '%d';
   RSByteIndexOutOfBounds = '%d';
 
-function TIdTextEncoding.GetBytes(const AChars: TIdChars; ACharIndex, ACharCount: Integer;
+function TIdTextEncoding.GetBytes(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer;
   var VBytes: TIdBytes; AByteIndex: Integer): Integer;
 begin
   if (AChars = nil) and (ACharCount <> 0) then
@@ -1507,7 +1563,7 @@ begin
   Result := GetBytes(@AChars[ACharIndex], ACharCount, @VBytes[AByteIndex], Length(VBytes));
 end;
 
-function TIdTextEncoding.GetBytes(const AStr: string): TIdBytes;
+function TIdTextEncoding.GetBytes(const AStr: WideString): TIdBytes;
 var
   Len: Integer;
 begin
@@ -1516,7 +1572,7 @@ begin
   GetBytes(AStr, 1, Length(AStr), Result, 0);
 end;
 
-function TIdTextEncoding.GetBytes(const AStr: string; ACharIndex, ACharCount: Integer;
+function TIdTextEncoding.GetBytes(const AStr: WideString; ACharIndex, ACharCount: Integer;
   var VBytes: TIdBytes; AByteIndex: Integer): Integer;
 begin
   if (VBytes = nil) and (ACharCount <> 0) then
@@ -1543,12 +1599,12 @@ begin
   Result := GetCharCount(@ABytes[AByteIndex], AByteCount);
 end;
 
-function TIdTextEncoding.GetChars(const ABytes: TIdBytes): TIdChars;
+function TIdTextEncoding.GetChars(const ABytes: TIdBytes): TIdWideChars;
 begin
   Result := GetChars(ABytes, 0, Length(ABytes));
 end;
 
-function TIdTextEncoding.GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): TIdChars;
+function TIdTextEncoding.GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): TIdWideChars;
 var
   Len: Integer;
 begin
@@ -1563,11 +1619,11 @@ begin
 
   Len := GetCharCount(ABytes, AByteIndex, AByteCount);
   SetLength(Result, Len);
-  GetChars(@ABytes[AByteIndex], AByteCount, PChar(Result), Len);
+  GetChars(@ABytes[AByteIndex], AByteCount, PWideChar(Result), Len);
 end;
 
 function TIdTextEncoding.GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer;
-  var VChars: TIdChars; ACharIndex: Integer): Integer;
+  var VChars: TIdWideChars; ACharIndex: Integer): Integer;
 var
   Len: Integer;
 begin
@@ -1587,7 +1643,11 @@ begin
   Result := GetChars(@ABytes[AByteIndex], AByteCount, @VChars[ACharIndex], Len);
 end;
 
+{$IFDEF CLASSPROPERTIES}
+class function TIdTextEncoding.GetDefault: TIdTextEncoding;
+{$ELSE}
 class function TIdTextEncoding.Default: TIdTextEncoding;
+{$ENDIF}
 var
   LEncoding: TIdTextEncoding;
 begin
@@ -1605,20 +1665,24 @@ begin
   Result := TIdMBCSEncoding.Create(ACodePage);
 end;
 
-function TIdTextEncoding.GetString(const ABytes: TIdBytes): string;
+function TIdTextEncoding.GetString(const ABytes: TIdBytes): WideString;
 begin
   Result := GetString(ABytes, 0, Length(ABytes));
 end;
 
-function TIdTextEncoding.GetString(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): string;
+function TIdTextEncoding.GetString(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): WideString;
 var
-  LChars: TIdChars;
+  LChars: TIdWideChars;
 begin
   LChars := GetChars(ABytes, AByteIndex, AByteCount);
-  SetString(Result, PChar(LChars), Length(LChars));
+  SetString(Result, PWideChar(LChars), Length(LChars));
 end;
 
+{$IFDEF CLASSPROPERTIES}
+class function TIdTextEncoding.GetUnicode: TIdTextEncoding;
+{$ELSE}
 class function TIdTextEncoding.Unicode: TIdTextEncoding;
+{$ENDIF}
 var
   LEncoding: TIdTextEncoding;
 begin
@@ -1631,7 +1695,11 @@ begin
   Result := GIdLEUTF16Encoding;
 end;
 
+{$IFDEF CLASSPROPERTIES}
+class function TIdTextEncoding.GetUTF7: TIdTextEncoding;
+{$ELSE}
 class function TIdTextEncoding.UTF7: TIdTextEncoding;
+{$ENDIF}
 var
   LEncoding: TIdTextEncoding;
 begin
@@ -1644,7 +1712,11 @@ begin
   Result := GIdUTF7Encoding;
 end;
 
+{$IFDEF CLASSPROPERTIES}
+class function TIdTextEncoding.GetUTF8: TIdTextEncoding;
+{$ELSE}
 class function TIdTextEncoding.UTF8: TIdTextEncoding;
+{$ENDIF}
 var
   LEncoding: TIdTextEncoding;
 begin
@@ -1699,28 +1771,26 @@ begin
   FIsSingleByte := FMaxCharSize = 1;
 end;
 
-function TIdMBCSEncoding.GetByteCount(Chars: PChar; CharCount: Integer): Integer;
+function TIdMBCSEncoding.GetByteCount(Chars: PWideChar; CharCount: Integer): Integer;
 begin
-  Result := CharCount;
+  Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags, Chars, CharCount, nil, 0, nil, nil);
 end;
 
-function TIdMBCSEncoding.GetBytes(Chars: PChar; CharCount: Integer; Bytes: PByte;
+function TIdMBCSEncoding.GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte;
   ByteCount: Integer): Integer;
 begin
-  Result := CharCount;
-  Move(Chars^, Bytes^, Result);
+  Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags, Chars, CharCount, PAnsiChar(Bytes), ByteCount, nil, nil);
 end;
 
 function TIdMBCSEncoding.GetCharCount(Bytes: PByte; ByteCount: Integer): Integer;
 begin
-  Result := ByteCount;
+  Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(Bytes), ByteCount, nil, 0);
 end;
 
-function TIdMBCSEncoding.GetChars(Bytes: PByte; ByteCount: Integer; Chars: PChar;
+function TIdMBCSEncoding.GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar;
   CharCount: Integer): Integer;
 begin
-  Result := CharCount;
-  Move(Bytes^, Chars^, Result);
+  Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(Bytes), ByteCount, Chars, CharCount);
 end;
 
 function TIdMBCSEncoding.GetMaxByteCount(CharCount: Integer): Integer;
@@ -1745,46 +1815,26 @@ begin
   inherited Create(CP_UTF7);
 end;
 
-function TIdUTF7Encoding.GetByteCount(Chars: PChar; CharCount: Integer): Integer;
-var
-  AStr: String;
-  WStr: WideString;
+function TIdUTF7Encoding.GetByteCount(Chars: PWideChar; CharCount: Integer): Integer;
 begin
-  SetString(AStr, Chars, CharCount);
-  WStr := AStr;
-  Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags,
-    PWideChar(WStr), Length(WStr), nil, 0, nil, nil);
+  Result := inherited GetByteCount(Chars, CharCount);
 end;
 
-function TIdUTF7Encoding.GetBytes(Chars: PChar; CharCount: Integer; Bytes: PByte;
+function TIdUTF7Encoding.GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte;
   ByteCount: Integer): Integer;
-var
-  AStr: String;
-  WStr: WideString;
 begin
-  SetString(AStr, Chars, CharCount);
-  WStr := AStr;
-  Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags,
-    PWideChar(WStr), Length(WStr), PAnsiChar(Bytes), ByteCount, nil, nil);
+  Result := inherited GetBytes(Chars, CharCount, Bytes, ByteCount);
 end;
 
 function TIdUTF7Encoding.GetCharCount(Bytes: PByte; ByteCount: Integer): Integer;
 begin
-  Result := MultiByteToWideChar(FCodePage, FWCharToMBFlags,
-    PAnsiChar(Bytes), ByteCount, nil, 0);
+  Result := inherited GetCharCount(Bytes, ByteCount);
 end;
 
-function TIdUTF7Encoding.GetChars(Bytes: PByte; ByteCount: Integer; Chars: PChar;
+function TIdUTF7Encoding.GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar;
   CharCount: Integer): Integer;
-var
-  AStr: AnsiString;
-  WStr: WideString;
 begin
-  SetLength(WStr, CharCount);
-  Result := MultiByteToWideChar(FCodePage, FWCharToMBFlags,
-    PAnsiChar(Bytes), ByteCount, PWideChar(WStr), CharCount);
-  AStr := WStr;
-  Move(AStr[1], Chars^, Length(AStr));
+  Result := inherited GetChars(Bytes, ByteCount, Chars, CharCount);
 end;
 
 function TIdUTF7Encoding.GetMaxByteCount(CharCount: Integer): Integer;
@@ -1830,30 +1880,28 @@ begin
   FMaxCharSize := 4;
 end;
 
-function TIdLEUTF16Encoding.GetByteCount(Chars: PChar; CharCount: Integer): Integer;
+function TIdLEUTF16Encoding.GetByteCount(Chars: PWideChar; CharCount: Integer): Integer;
 begin
-  Result := MultiByteToWideChar(CP_ACP, 0, Chars, CharCount,
-    nil, 0) * SizeOf(WideChar);
+  Result := CharCount * SizeOf(WideChar);
 end;
 
-function TIdLEUTF16Encoding.GetBytes(Chars: PChar; CharCount: Integer;
+function TIdLEUTF16Encoding.GetBytes(Chars: PWideChar; CharCount: Integer;
   Bytes: PByte; ByteCount: Integer): Integer;
 begin
-  Result := MultiByteToWideChar(CP_ACP, 0, Chars, CharCount,
-    PWideChar(Bytes), ByteCount div SizeOf(WideChar)) * SizeOf(WideChar);
+  Result := CharCount * SizeOf(WideChar);
+  Move(Chars^, Bytes^, Result);
 end;
 
 function TIdLEUTF16Encoding.GetCharCount(Bytes: PByte; ByteCount: Integer): Integer;
 begin
-  Result := WideCharToMultiByte(CP_ACP, 0, PWideChar(Bytes), ByteCount div SizeOf(WideChar),
-    nil, 0, nil, nil);
+  Result := ByteCount div SizeOf(WideChar);
 end;
 
 function TIdLEUTF16Encoding.GetChars(Bytes: PByte; ByteCount: Integer;
-  Chars: PChar; CharCount: Integer): Integer;
+  Chars: PWideChar; CharCount: Integer): Integer;
 begin
-  Result := WideCharToMultiByte(CP_ACP, 0, PWideChar(Bytes), ByteCount div SizeOf(WideChar),
-    PChar(Chars), CharCount, nil, nil);
+  Result := ByteCount div SizeOf(WideChar);
+  Move(Bytes^, Chars^, Result * SizeOf(WideChar));
 end;
 
 function TIdLEUTF16Encoding.GetMaxByteCount(CharCount: Integer): Integer;
@@ -1875,49 +1923,38 @@ end;
 
 { TIdBEUTF16Encoding }
 
-procedure SwapBytes(P1, P2: PByte);
-{$IFDEF USEINLINE}inline;{$ENDIF}
-var
-  B: Byte;
-begin
-  B := P1^;
-  P1^ := P2^;
-  P2^ := B;
-end;
-
-function TIdBEUTF16Encoding.GetBytes(Chars: PChar; CharCount: Integer;
+function TIdBEUTF16Encoding.GetBytes(Chars: PWideChar; CharCount: Integer;
   Bytes: PByte; ByteCount: Integer): Integer;
 var
   I: Integer;
 begin
-  Result := inherited GetBytes(Chars, CharCount, Bytes, ByteCount);
-  for I := 1 to Result do
+  for I := 0 to CharCount - 1 do
   begin
-    SwapBytes(Bytes, PByte(LongInt(Bytes) + 1));
-    Inc(Bytes, 2);
+    Bytes^ := Hi(Word(Chars^));
+    Inc(Bytes);
+    Bytes^ := Lo(Word(Chars^));
+    Inc(Bytes);
+    Inc(Chars);
   end;
+  Result := CharCount * SizeOf(WideChar);
 end;
 
 function TIdBEUTF16Encoding.GetChars(Bytes: PByte; ByteCount: Integer;
-  Chars: PChar; CharCount: Integer): Integer;
+  Chars: PWideChar; CharCount: Integer): Integer;
 var
-  Buf: TIdBytes;
   P: PByte;
   I: Integer;
 begin
-  // RLebeau 10/24/2008: copy the bytes to a temporary buffer so
-  // the original bytes are not modified during the swapping...
-  SetLength(Buf, ByteCount);
-  if ByteCount > 0 then begin
-    Move(Bytes^, Buf[0], ByteCount);
-  end;
-  P := PByte(Buf);
-  for I := 1 to CharCount do
+  P := Bytes;
+  Inc(P);
+  for I := 0 to CharCount - 1 do
   begin
-    SwapBytes(P, PByte(LongInt(P) + 1));
+    Chars^ := WideChar(MakeWord(P^, Bytes^));
+    Inc(Bytes, 2);
     Inc(P, 2);
+    Inc(Chars);
   end;
-  Result := inherited GetChars(PByte(Buf), ByteCount, Chars, CharCount);
+  Result := CharCount;
 end;
 
 function TIdBEUTF16Encoding.GetPreamble: TIdBytes;
@@ -1928,6 +1965,22 @@ begin
 end;
 
 {$ENDIF}
+
+function Create8BitEncoding: TIdTextEncoding;
+{$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  // RLebeau: TODO - implement a custom 8-bit encoding class?
+  //
+  // We need a class that converts UFT-16 codeunits in the $00-$FF range
+  // to/from their numeric values as-is.  Was previously using "Windows-1252"
+  // (codepage 1252) for that, which does so for most codeunits, however
+  // codeunits $80-$9F in Windows-1252 map to different codepoints in Unicode,
+  // which we don't want.  "ISO 8859-1" (codepage 28591), on the other hand,
+  // treats codeunits $00-$FF as-is, and seems to be just as widely supported
+  // as codepage 1252 on most systems, so we'll use that now...
+
+  Result := TIdTextEncoding.GetEncoding(28591);
+end;
 
 function enDefault: TIdTextEncoding;
 {$IFDEF USEINLINE}inline;{$ENDIF}
@@ -1961,12 +2014,11 @@ var
   LEncoding: TIdTextEncoding;
 {$ENDIF}
 begin
-  // TODO: implement a custom 8-bit encoding class...
   {$IFDEF DOTNET}
-  Result := TIdTextEncoding.GetEncoding(1252);
+  Result := Create8BitEncoding;
   {$ELSE}
   if GId8BitEncoding = nil then begin
-    LEncoding := TIdTextEncoding.GetEncoding(1252);
+    LEncoding := Create8BitEncoding;
     if InterlockedCompareExchangePtr(Pointer(GId8BitEncoding), LEncoding, nil) <> nil then begin
       LEncoding.Free;
     end;
@@ -2157,7 +2209,7 @@ end;
 
 // TODO: add an AIndex parameter
 procedure FillBytes(var VBytes : TIdBytes; const ACount : Integer; const AValue : Byte);
-{$IFNDEF DOTNET_OR_TEncoding}
+{$IFNDEF DOTNET_OR_UNICODESTRING}
   {$IFDEF USEINLINE}inline;{$ENDIF}
 {$ELSE}
 var
@@ -2167,7 +2219,7 @@ begin
   // RLebeau: FillChar() is bad to use on Delphi/C++Builder 2009 for filling
   // byte buffers as it is actually designed for filling character buffers
   // instead. Now that Char maps to WideChar, this causes problems for FillChar().
-  {$IFDEF DOTNET_OR_TEncoding}
+  {$IFDEF DOTNET_OR_UNICODESTRING}
   //System.&Array.Clear(VBytes, 0, ACount);
   // RLebeau: use the AValue byte instead.
   for I := 0 to ACount-1 do begin
@@ -2448,15 +2500,29 @@ var
   {$IFDEF DOTNET}
   LChars : array[0..0] of Char;
   {$ELSE}
-  LChars : TIdChars;
+  LChars : TIdWideChars;
+    {$IFNDEF UNICODESTRING}
+  LTmp: WideString;
+  I: Integer;
+    {$ENDIF}
   {$ENDIF}
 begin
   EnsureEncoding(AEncoding);
-  {$IFNDEF DOTNET}
-  SetLength(LChars, 1);
-  {$ENDIF}
+  {$IFDEF DOTNET}
   LChars[0] := ASource;
-  AEncoding.GetBytes(LChars, 0, 1, VDest, ADestIndex);
+  {$ELSE}
+    {$IFDEF UNICODESTRING}
+  SetLength(LChars, 1);
+  LChars[0] := ASource;
+    {$ELSE}
+  LTmp := ASource;
+  SetLength(LChars, Length(LTmp));
+  for I := 1 to Length(LTmp) do begin
+    LChars[I-1] := LTmp[I];
+  end;
+    {$ENDIF}
+  {$ENDIF}
+  AEncoding.GetBytes(LChars, 0, Length(LChars), VDest, ADestIndex);
 end;
 
 procedure CopyTIdShort(const ASource: Short; var VDest: TIdBytes; const ADestIndex: Integer);
@@ -4151,9 +4217,7 @@ end;
 function DateTimeGMTToHttpStr(const GMTValue: TDateTime) : String;
 // should adhere to RFC 2616
 var
-  wDay,
-  wMonth,
-  wYear: Word;
+  wDay, wMonth, wYear: Word;
 begin
   DecodeDate(GMTValue, wYear, wMonth, wDay);
   Result := IndyFormat('%s, %.2d %s %.4d %s %s',    {do not localize}
@@ -4174,48 +4238,53 @@ begin
                     wYear, FormatDateTime('HH":"nn":"ss',GMTValue), 'GMT']);  {do not localize}
 end;
 
+function LocalDateTimeToHttpStr(const Value: TDateTime) : String;
+{$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  Result := DateTimeGMTToHttpStr(Value - OffsetFromUTC);
+end;
+
+function LocalDateTimeToCookieStr(const Value: TDateTime) : String;
+{$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  Result := DateTimeGMTToCookieStr(Value - OffsetFromUTC);
+end;
+
+function DateTimeToInternetStr(const Value: TDateTime; const AUseGMTStr : Boolean = False) : String;
+begin
+  Result := LocalDateTimeToGMT(Value, AUseGMTStr);
+end;
+
 {This should never be localized}
-function DateTimeToInternetStr(const Value: TDateTime; const AIsGMT : Boolean = False) : String;
+function LocalDateTimeToGMT(const Value: TDateTime; const AUseGMTStr: Boolean = False) : String;
 var
-  wDay,
-  wMonth,
-  wYear: Word;
+  wDay, wMonth, wYear: Word;
 begin
   DecodeDate(Value, wYear, wMonth, wDay);
   Result := IndyFormat('%s, %d %s %d %s %s',    {do not localize}
                    [wdays[DayOfWeek(Value)], wDay, monthnames[wMonth],
                     wYear, FormatDateTime('HH":"nn":"ss', Value), {do not localize}
-                    DateTimeToGmtOffSetStr(OffsetFromUTC, AIsGMT)]);
+                    UTCOffsetToStr(OffsetFromUTC, AUseGMTStr)]);
 end;
 
-function DateTimeToGmtOffSetStr(ADateTime: TDateTime; SubGMT: Boolean): string;
-var
-  AHour, AMin, ASec, AMSec: Word;
+function DateTimeToGmtOffSetStr(ADateTime: TDateTime; const AUseGMTStr: Boolean = False): string;
+{$IFDEF USEINLINE}inline;{$ENDIF}
 begin
-  if (ADateTime = 0.0) and SubGMT then
-  begin
-    Result := 'GMT'; {do not localize}
-    Exit;
-  end;
-  DecodeTime(ADateTime, AHour, AMin, ASec, AMSec);
-  Result := IndyFormat(' %0.2d%0.2d', [AHour, AMin]); {do not localize}
-  if ADateTime < 0.0 then begin
-    Result[1] := '-'; {do not localize}
-  end else begin
-    Result[1] := '+';  {do not localize}
-  end;
+  Result := UTCOffsetToStr(ADateTime, AUseGMTStr);
 end;
 
 function OffsetFromUTC: TDateTime;
-{$IFDEF DOTNET}
+{$IFNDEF WIN32_OR_WIN64_OR_WINCE}
   {$IFDEF USEINLINE}inline;{$ENDIF}
-{$ENDIF}
-{$IFDEF WIN32_OR_WIN64_OR_WINCE}
+{$ELSE}
 var
   iBias: Integer;
   tmez: TTimeZoneInformation;
 {$ENDIF}
 begin
+  {$IFDEF LINUX}
+  Result := GOffsetFromUTC;
+  {$ENDIF}
   {$IFDEF DOTNET}
   Result := System.Timezone.CurrentTimezone.GetUTCOffset(DateTime.FromOADate(Now)).TotalDays;
   {$ENDIF}
@@ -4241,9 +4310,28 @@ begin
    the difference between the local time and GMT.  So I just make a positive
    value negative and leave a negative value as positive}
   if iBias > 0 then begin
-    Result := 0 - Result;
+    Result := 0.0 - Result;
   end;
   {$ENDIF}
+end;
+
+function UTCOffsetToStr(const AOffset: TDateTime; const AUseGMTStr: Boolean = False): string;
+var
+  AHour, AMin, ASec, AMSec: Word;
+begin
+  if (AOffset = 0.0) and AUseGMTStr then
+  begin
+    Result := 'GMT'; {do not localize}
+  end else
+  begin
+    DecodeTime(AOffset, AHour, AMin, ASec, AMSec);
+    Result := IndyFormat(' %0.2d%0.2d', [AHour, AMin]); {do not localize}
+    if AOffset < 0.0 then begin
+      Result[1] := '-'; {do not localize}
+    end else begin
+      Result[1] := '+';  {do not localize}
+    end;
+  end;
 end;
 
 function IndyIncludeTrailingPathDelimiter(const S: string): string;
@@ -4400,29 +4488,33 @@ var
   {$IFDEF DOTNET}
   LChars: array[0..0] of Char;
   {$ELSE}
-  LChars: TIdChars;
+  LChars: TIdWideChars;
+    {$IFNDEF UNICODESTRING}
+  LTmp: WideString;
+    {$ENDIF}
   {$ENDIF}
 begin
   EnsureEncoding(AEncoding);
   LSrcLen := IndyLength(AValue, ALength, AIndex);
   if LSrcLen > 0 then
   begin
-    {$IFDEF DOTNET2_OR_ABOVE}
-    { RLebeau: maybe use the TIdTextEncoding.GetEncoder()
-      method to get an Encoder object that can be called in a loop
-      to calculate the necessary byte count? }
-    {$ENDIF}
     {$IFNDEF DOTNET}
     SetLength(LChars, 1);
+      {$IFNDEF UNICODESTRING}
+    LTmp := Copy(AValue, AIndex, LSrcLen);
+      {$ENDIF}
     {$ENDIF}
     LLength := 0;
-    for I := AIndex to LSrcLen do
+    for I := {$IFDEF DOTNET_OR_UNICODESTRING}AIndex{$ELSE}1{$ENDIF} to LSrcLen do
     begin
-      LChars[0] := AValue[AIndex];
+      LChars[0] := {$IFDEF DOTNET_OR_UNICODESTRING}AValue{$ELSE}LTmp{$ENDIF}[I];
       Inc(LLength, AEncoding.GetByteCount(LChars, 0, 1));
     end;
     SetLength(Result, LLength);
-    AEncoding.GetBytes(AValue, AIndex{$IFDEF DOTNET}-1{$ENDIF}, LSrcLen, Result, 0);
+    AEncoding.GetBytes(
+      {$IFDEF DOTNET_OR_UNICODESTRING}AValue{$ELSE}LTmp{$ENDIF},
+      {$IFDEF DOTNET_OR_UNICODESTRING}AIndex{$IFDEF DOTNET}-1{$ENDIF}{$ELSE}1{$ENDIF},
+      LSrcLen, Result, 0);
   end else begin
     SetLength(Result, 0);
   end;
@@ -4433,16 +4525,30 @@ var
   {$IFDEF DOTNET}
   LChars: array[0..0] of Char;
   {$ELSE}
-  LChars: TIdChars;
+  LChars: TIdWideChars;
+    {$IFNDEF UNICODESTRING}
+  LTmp: WideString;
+  I: Integer;
+    {$ENDIF}
   {$ENDIF}
 begin
   EnsureEncoding(AEncoding);
-  {$IFNDEF DOTNET}
-  SetLength(LChars, 1);
-  {$ENDIF}
+  {$IFDEF DOTNET}
   LChars[0] := AValue;
-  SetLength(Result, AEncoding.GetByteCount(LChars, 0, 1));
-  AEncoding.GetBytes(LChars, 0, 1, Result, 0);
+  {$ELSE}
+    {$IFDEF UNICODESTRING}
+  SetLength(LChars, 1);
+  LChars[0] := AValue;
+    {$ELSE}
+  LTmp := AValue;
+  SetLength(LChars, Length(LTmp));
+  for I := 1 to Length(LTmp) do begin
+    LChars[I-1] := LTmp[I];
+  end;
+    {$ENDIF}
+  {$ENDIF}
+  SetLength(Result, AEncoding.GetByteCount(LChars, 0, Length(LChars)));
+  AEncoding.GetBytes(LChars, 0, Length(LChars), Result, 0);
 end;
 
 function ToBytes(const AValue: Int64): TIdBytes; overload;
@@ -4534,16 +4640,30 @@ var
   {$IFDEF DOTNET}
   LChars: array[0..0] of Char;
   {$ELSE}
-  LChars: TIdChars;
+  LChars: TIdWideChars;
+    {$IFNDEF UNICODESTRING}
+  LTmp: WideString;
+  I: Integer;
+    {$ENDIF}
   {$ENDIF}
 begin
   EnsureEncoding(AEncoding);
-  {$IFNDEF DOTNET}
-  SetLength(LChars, 1);
-  {$ENDIF}
+  {$IFDEF DOTNET}
   LChars[0] := AValue;
-  Assert(Length(Bytes) >= AEncoding.GetByteCount(LChars, 0, 1));
-  AEncoding.GetBytes(LChars, 0, 1, Bytes, 0);
+  {$ELSE}
+    {$IFDEF UNICODESTRING}
+  SetLength(LChars, 1);
+  LChars[0] := AValue;
+    {$ELSE}
+  LTmp := AValue;
+  SetLength(LChars, Length(LTmp));
+  for I := 1 to Length(LTmp) do begin
+    LChars[I-1] := LTmp[I];
+  end;
+    {$ENDIF}
+  {$ENDIF}
+  Assert(Length(Bytes) >= AEncoding.GetByteCount(LChars, 0, Length(LChars)));
+  AEncoding.GetBytes(LChars, 0, Length(LChars), Bytes, 0);
 end;
 
 procedure ToBytesF(var Bytes: TIdBytes; const AValue: LongInt);
@@ -4614,12 +4734,15 @@ end;
 function BytesToChar(const AValue: TIdBytes; var VChar: Char; const AIndex: Integer = 0;
   AEncoding: TIdTextEncoding = nil): Integer; overload;
 var
-  I, LLength: Integer;
+  I, NumChars: Integer;
   LBytes: TIdBytes;
   {$IFDEF DOTNET}
   LChars: array[0..1] of Char;
   {$ELSE}
-  LChars: TIdChars;
+  LChars: TIdWideChars;
+    {$IFNDEF UNICODESTRING}
+  LTmp: WideString;
+    {$ENDIF}
   {$ENDIF}
 begin
   Result := 0;
@@ -4628,18 +4751,23 @@ begin
   {$IFNDEF DOTNET}
   SetLength(LChars, 2);
   {$ENDIF}
-  LLength := 0;
+  NumChars := 0;
   for I := AIndex to Length(AValue)-1 do
   begin
     LBytes[Result] := AValue[I];
     Inc(Result);
-    LLength := AEncoding.GetChars(LBytes, 0, Result, LChars, 0);
-    if (LLength > 0) or (Result = Length(LBytes)) then begin
+    NumChars := AEncoding.GetChars(LBytes, 0, Result, LChars, 0);
+    if (NumChars > 0) or (Result = Length(LBytes)) then begin
       Break;
     end;
   end;
-  Assert(LLength > 0);
+  Assert(NumChars > 0);
+  {$IFDEF DOTNET_OR_UNICODESTRING}
   VChar := LChars[0];
+  {$ELSE}
+  SetString(LTmp, PWideChar(LChars), NumChars);
+  VChar := AnsiString(LTmp)[1];
+  {$ENDIF}
 end;
 
 function BytesToLongInt(const AValue: TIdBytes; const AIndex: Integer = 0): LongInt;
@@ -4796,7 +4924,10 @@ var
   {$IFDEF DOTNET}
   LChars: array[0..1] of Char;
   {$ELSE}
-  LChars: TIdChars;
+  LChars: TIdWideChars;
+    {$IFNDEF UNICODESTRING}
+  LTmp: WideString;
+    {$ENDIF}
   {$ENDIF}
 
   function ReadByte: Byte;
@@ -4837,8 +4968,13 @@ begin
     raise;
   end;
 
-  if Result > 0 then begin
+  if NumChars > 0 then begin
+    {$IFDEF DOTNET_OR_UNICODESTRING}
     VChar := LChars[0];
+    {$ELSE}
+    SetString(LTmp, PWideChar(LChars), NumChars);
+    VChar := AnsiString(LTmp)[1];
+    {$ENDIF}
   end;
 end;
 
