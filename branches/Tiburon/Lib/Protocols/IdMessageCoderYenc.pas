@@ -162,7 +162,7 @@ function TIdMessageDecoderInfoYenc.CheckForStart(ASender: TIdMessage; const ALin
   var
     LStart: Integer;
   begin
-    LStart := IndyPos('name=', LowerCase(ALine));  {Do not Localize}
+    LStart := IndyPos('name=', LowerCase(ALine)); {Do not Localize}
     if LStart > 0 then begin
       Result := Copy(ALine, LStart+5, MaxInt);
     end else begin
@@ -301,7 +301,7 @@ procedure TIdMessageEncoderYenc.Encode(ASrc: TStream; ADest: TStream);
 const
   LineSize = 128;
 var
-  i: Integer;
+  i: Int64;
   s: String;
   LSSize: Int64;
   LInput: Byte;
@@ -346,8 +346,7 @@ var
 begin
   SetLength(LOutputBuffer, BUFLEN);
   SetLength(LInputBuffer, BUFLEN);
-  ASrc.Position := 0;
-  LSSize := ASrc.Size;
+  LSSize := IndyLength(ASrc);
   LCurrentLineLength := 0;
   LEscape := B_EQUALS;
   LOutputBufferUsed := 0;
@@ -358,9 +357,11 @@ begin
     s := '=ybegin line=' + IntToStr(LineSize) + ' size=' + IntToStr(LSSize) + ' name=' + FFilename + EOL;  {do not localize}
     WriteStringToStream(ADest, s);
 
-    for i := 0 to ASrc.Size - 1 do
+    i := 0;
+    while i < LSSize do
     begin
       LInput := ReadByteFromInputBuffer;
+      Inc(i);
       LOutput := Byte(LInput) + 42;
       if LOutput in [B_NUL, B_LF, B_CR, B_EQUALS, B_TAB, B_PERIOD] then begin {do not localize}
         AddByteToOutputBuffer(LEscape);
