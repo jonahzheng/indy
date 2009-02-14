@@ -436,7 +436,9 @@ type
   function CopyFileTo(const Source, Destination: TIdFileName): Boolean;
   function DomainName(const AHost: String): String;
   function EnsureMsgIDBrackets(const AMsgID: String): String;
+  function ExtractHeaderItem(const AHeaderLine: String): String;
   function ExtractHeaderSubItem(const AHeaderLine,ASubItem: String): String;
+  function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String): String;
   function FileSizeByName(const AFilename: TIdFileName): Int64;
 
   //MLIST FTP DateTime conversion functions
@@ -507,7 +509,8 @@ type
   function IndyWrapText(const ALine, ABreakStr, ABreakChars : string; MaxCol: Integer): string;
  
   //The following is for working on email headers and message part headers...
-  function RemoveHeaderEntry(AHeader, AEntry: string): string;
+  function RemoveHeaderEntry(const AHeader, AEntry: string): string;
+  function RemoveHeaderEntries(const AHeader: string; AEntries: array of string): string;
 
   {
     Three functions for easier manipulating of strings.  Don't know of any
@@ -521,7 +524,6 @@ type
 var
   {$IFDEF UNIX}
   // For linux the user needs to set these variables to be accurate where used (mail, etc)
-  GOffsetFromUTC: TDateTime = 0;
   GTimeZoneBias: TDateTime = 0;
   GIdDefaultCharSet : TIdCharSet = idcsISO_8859_1;
   {$ENDIF}
@@ -785,7 +787,7 @@ function StrToWord(const Value: String): Word;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   if Length(Value) > 1 then begin
-    {$IFDEF DOTNET_Or_TEncoding}
+    {$IFDEF DOTNET_OR_UNICODESTRING}
     Result := TwoCharToWord(Value[1], Value[2]);
     {$ELSE}
     Result := Word(Pointer(Value)^);
@@ -798,7 +800,7 @@ end;
 function WordToStr(const Value: Word): String;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
-  {$IFDEF DOTNET_Or_TEncoding}
+  {$IFDEF DOTNET_OR_UNICODESTRING}
   Result := BytesToString(ToBytes(Value));
   {$ELSE}
   SetLength(Result, SizeOf(Value));
@@ -1043,7 +1045,7 @@ begin
 end;
 
 {This is an internal procedure so the StrInternetToDateTime and GMTToLocalDateTime can share common code}
-function RawStrInternetToDateTime(var Value: string): TDateTime;
+function RawStrInternetToDateTime(var Value: string; var VDateTime: TDateTime): Boolean;
 var
   i: Integer;
   Dt, Mo, Yr, Ho, Min, Sec: Word;
@@ -1051,20 +1053,21 @@ var
   //flags for if AM/PM marker found
   LAM, LPM : Boolean;
 
-  Procedure ParseDayOfMonth;
+  procedure ParseDayOfMonth;
   begin
     Dt :=  IndyStrToInt( Fetch(Value, sDelim), 1);
     Value := TrimLeft(Value);
   end;
 
-  Procedure ParseMonth;
+  procedure ParseMonth;
   begin
     Mo := StrToMonth( Fetch (Value, sDelim)  );
     Value := TrimLeft(Value);
   end;
 
 begin
-  Result := 0.0;
+  Result := False;
+  VDateTime := 0.0;
 
   LAM := False;
   LPM := False;
@@ -1138,7 +1141,7 @@ begin
       Inc(Yr, 1900);
     end;
 
-    Result := EncodeDate(Yr, Mo, Dt);
+    VDateTime := EncodeDate(Yr, Mo, Dt);
     // SG 26/9/00: Changed so that ANY time format is accepted
     if IndyPos('AM', Value) > 0 then begin{do not localize}
       LAM := True;
@@ -1174,11 +1177,13 @@ begin
         end;
       end;
       {The date and time stamp returned}
-      Result := Result + EncodeTime(Ho, Min, Sec, 0);
+      VDateTime := VDateTime + EncodeTime(Ho, Min, Sec, 0);
     end;
     Value := TrimLeft(Value);
+    Result := True;
   except
-    Result := 0.0;
+    VDateTime := 0.0;
+    Result := False;
   end;
 end;
 
@@ -1186,7 +1191,7 @@ end;
 
 function StrInternetToDateTime(Value: string): TDateTime;
 begin
-  Result := RawStrInternetToDateTime(Value);
+  RawStrInternetToDateTime(Value, Result);
 end;
 
 function FTPMLSToGMTDateTime(const ATimeStamp : String):TDateTime;
@@ -1217,18 +1222,17 @@ end;
 function FTPMLSToLocalDateTime(const ATimeStamp : String):TDateTime;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
-  Result := 0;
+  Result := 0.0;
   if ATimeStamp <> '' then begin
     Result := FTPMLSToGMTDateTime(ATimeStamp);
     // Apply local offset
-    Result := Result + OffSetFromUTC;
+    Result := Result + OffsetFromUTC;
   end;
 end;
 
 function FTPGMTDateTimeToMLS(const ATimeStamp : TDateTime; const AIncludeMSecs : Boolean=True): String;
 var LYear, LMonth, LDay,
     LHour, LMin, LSec, LMSec : Word;
-
 begin
   DecodeDate(ATimeStamp,LYear,LMonth,LDay);
   DecodeTime(ATimeStamp,LHour,LMin,LSec,LMSec);
@@ -1247,7 +1251,7 @@ stamps based on GMT)
 function FTPLocalDateTimeToMLS(const ATimeStamp : TDateTime; const AIncludeMSecs : Boolean=True): String;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
-  Result := FTPGMTDateTimeToMLS(ATimeStamp - OffSetFromUTC, AIncludeMSecs);
+  Result := FTPGMTDateTimeToMLS(ATimeStamp - OffsetFromUTC, AIncludeMSecs);
 end;
 
 
@@ -1604,32 +1608,13 @@ begin
 end;
 
 function TimeZoneBias: TDateTime;
-{$IFNDEF WIN32_OR_WIN64_OR_WINCE}
-  {$IFDEF USEINLINE} inline; {$ENDIF}
-{$ELSE}
-var
-  ATimeZone: TTimeZoneInformation;
-{$ENDIF}
+{$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   {$IFDEF UNIX}
   //TODO: Fix TimeZoneBias for Linux to be automatic
   Result := GTimeZoneBias;
-  {$ENDIF}
-  {$IFDEF DOTNET}
+  {$ELSE}
   Result := -OffsetFromUTC;
-  {$ENDIF}
-  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  case GetTimeZoneInformation({$IFDEF WINCE}@{$ENDIF}ATimeZone) of
-    TIME_ZONE_ID_DAYLIGHT:
-      Result := ATimeZone.Bias + ATimeZone.DaylightBias;
-    TIME_ZONE_ID_STANDARD:
-      Result := ATimeZone.Bias + ATimeZone.StandardBias;
-    TIME_ZONE_ID_UNKNOWN:
-      Result := ATimeZone.Bias;
-    else
-      raise EIdException.Create(SysErrorMessage(GetLastError));
-  end;
-  Result := Result / 1440;
   {$ENDIF}
 end;
 
@@ -1676,14 +1661,14 @@ begin
   {I admit that this routine is a little more complicated than the one
   in Indy 8.0.  However, this routine does support Windows NT privileges
   meaning it will work if you have administrative rights under that OS
- 
+
   Original author Kerry G. Neighbour with modifications and testing
   from J. Peter Mugaas}
     {$IFNDEF WINCE}
   // RLebeau 2/1/2008: MSDN says that SetLocalTime() does the adjustment
   // automatically, so why is it being done manually?
   if SysUtils.Win32Platform = VER_PLATFORM_WIN32_NT then begin
-    if not Windows.OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY, hToken) then begin
+    if not Windows.OpenProcessToken(Windows.GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY, hToken) then begin
       Exit;
     end;
     if not Windows.LookupPrivilegeValue(nil, 'SeSystemtimePrivilege', tkp.Privileges[0].Luid) then begin    {Do not Localize}
@@ -1698,7 +1683,7 @@ begin
     end;
   end;
     {$ENDIF}
- 
+
   DateTimeToSystemTime(Value, dSysTime);
   Result := Windows.SetLocalTime({$IFDEF FPC}@{$ENDIF}dSysTime);
 
@@ -1787,13 +1772,11 @@ begin
 end;
 
 function UpCaseFirstWord(const AStr: string): string;
-const
-  LWhiteSet = TAB+CHAR32;    {Do not Localize}
 var
   I: Integer;
 begin
   for I := 1 to Length(AStr) do begin
-    if CharIsInSet(AStr, I, LWhiteSet) then begin
+    if CharIsInSet(AStr, I, LWS) then begin
       if I > 1 then begin
         Result := UpperCase(Copy(AStr, 1, I-1)) + Copy(AStr, I, MaxInt);
         Exit;
@@ -1941,7 +1924,8 @@ var
   sTmp: String;
 begin
   Result := 0.0;
-  sTmp := Copy(Trim(S), 1, 5);
+  sTmp := Trim(S);
+  sTmp := Fetch(sTmp);
   if Length(sTmp) > 0 then begin
     // RLebeau: According to RFC 2822 Section 4.3:
     //
@@ -1992,7 +1976,7 @@ begin
         sTmp := '-0000' {do not localize}
       end;
     end;
-    if Length(sTmp) >= 5 then begin
+    if Length(sTmp) = 5 then begin
       if (sTmp[1] = '-') or (sTmp[1] = '+') then begin  {do not localize}
         try
           Result := EncodeTime(IndyStrToInt(Copy(sTmp, 2, 2)), IndyStrToInt(Copy(sTmp, 4, 2)), 0, 0);
@@ -2012,22 +1996,16 @@ function GMTToLocalDateTime(S: string): TDateTime;
 var
   DateTimeOffset: TDateTime;
 begin
-  if S = '' then begin
-    // just hardcode to 0 - don't need all the work below and the spurious timezone adjustment. GDG 20-Mar 2003
-    Result := 0.0;
-  end else begin
-    Result := RawStrInternetToDateTime(S);
-    if Result <> 0.0 then begin
-      DateTimeOffset := GmtOffsetStrToDateTime(S);
-      {-Apply GMT offset here}
-      if DateTimeOffset < 0.0 then begin
-        Result := Result + Abs(DateTimeOffset);
-      end else begin
-        Result := Result - DateTimeOffset;
-      end;
-      // Apply local offset
-      Result := Result + OffSetFromUTC;
+  if RawStrInternetToDateTime(S, Result) then begin
+    DateTimeOffset := GmtOffsetStrToDateTime(S);
+    {-Apply GMT offset here}
+    if DateTimeOffset < 0.0 then begin
+      Result := Result + Abs(DateTimeOffset);
+    end else begin
+      Result := Result - DateTimeOffset;
     end;
+    // Apply local offset
+    Result := Result + OffsetFromUTC;
   end;
 end;
 
@@ -2839,34 +2817,187 @@ begin
   end;
 end;
 
-function ExtractHeaderSubItem(const AHeaderLine, ASubItem: String): String;
+function ExtractHeaderItem(const AHeaderLine: String): String;
 var
   s: string;
 begin
-  Result := '';
-  // TODO: separate 'name=value' pairs beforehand for more accurate matching!
   // Store in s and not Result because of Fetch semantics
   s := AHeaderLine;
-  //CC: Used to Fetch 'NAME=', but this failed for those with 'NAME ='
-  //Get FETCH to ignore case in searching for 'NaMe'
-  FetchCaseInsensitive(s, ASubItem); {do not localize}
-  if Length(s) > 0 then begin
-    s := Trim(s);
-    if TextStartsWith(s, '=') then begin       {do not localize}
-      s := Copy(s, 2, MaxInt);
+  Result := Trim(Fetch(s, ';')); {do not localize}
+end;
+
+const
+  token_specials = '()<>@,;:\"/[]?='; {do not localize}
+
+procedure SplitHeaderSubItems(AHeaderLine: String; AItems: TStrings);
+var
+  LName, LValue: String;
+  I: Integer;
+
+  function FetchQuotedString(var VHeaderLine: string): string;
+  begin
+    Result := '';
+    Delete(VHeaderLine, 1, 1);
+    I := 1;
+    while I <= Length(VHeaderLine) do
+    begin
+      if VHeaderLine[I] = '\' then begin
+        if I < Length(VHeaderLine) then begin
+          Delete(VHeaderLine, I, 1);
+        end;
+      end
+      else if VHeaderLine[I] = '"' then begin
+        Result := Copy(VHeaderLine, 1, I-1);
+        VHeaderLine := Copy(VHeaderLine, I+1, MaxInt);
+        Break;
+      end;
+      Inc(I);
     end;
-    {CC: Fix suggested by Juergen Haible - some clients add a space after
-    the name, remove it by calling Trim(s)...}
-    s := Trim(s);
-    if TextStartsWith(s, '"') then begin {do not localize}
-      // RLebeau - shouldn't this code use AnsiExtractQuotedStr() instead?
-      Delete(s, 1, 1);
-      Result := Fetch(s, '"'); {do not localize}
-    // Should never occur, and if so bigger problems but just in case we'll try
-    end else begin
-      // RLebeau - just in case the name is not the last field in the line
-      Result := Fetch(s, ';'); {do not localize}
+    Fetch(VHeaderLine, ';');
+  end;
+
+begin
+  Fetch(AHeaderLine, ';'); { do not localize}
+  while AHeaderLine <> '' do
+  begin
+    AHeaderLine := TrimLeft(AHeaderLine);
+    if AHeaderLine = '' then begin
+      Exit;
     end;
+    LName := Trim(Fetch(AHeaderLine, '=')); {do not localize}
+    AHeaderLine := TrimLeft(AHeaderLine);
+    if TextStartsWith(AHeaderLine, '"') then {do not localize}
+    begin
+      LValue := FetchQuotedString(AHeaderLine);
+    end else
+    begin
+      I := FindFirstOf(' ' + token_specials, AHeaderLine);
+      if I <> 0 then
+      begin
+        LValue := Copy(AHeaderLine, 1, I-1);
+        if AHeaderLine[I] = ';' then begin {do not localize}
+          Inc(I);
+        end;
+        Delete(AHeaderLine, 1, I-1);
+      end else
+      begin
+        LValue := AHeaderLine;
+        AHeaderLine := '';
+      end;
+    end;
+    if (LName <> '') and (LValue <> '') then begin
+      AItems.Add(LName + '=' + LValue);
+    end;
+  end;
+end;
+
+function ExtractHeaderSubItem(const AHeaderLine, ASubItem: String): String;
+var
+  LItems: TStringList;
+  {$IFNDEF VCL6ORABOVE}
+  I: Integer;
+  LTmp: string;
+  {$ENDIF}
+begin
+  Result := '';
+  LItems := TStringList.Create;
+  try
+    SplitHeaderSubItems(AHeaderLine, LItems);
+    {$IFDEF VCL6ORABOVE}
+    LItems.CaseSensitive := False;
+    Result := LItems.Values[ASubItem];
+    {$ELSE}
+    for I := 0 to LItems.Count-1 do
+    begin
+      if TextIsSame(LItems.Names[I], ASubItem) then
+      begin
+        LTmp := LItems.Strings[I];
+        Result := Copy(LTmp, Pos('=', LTmp)+1, MaxInt); {do not localize}
+        Break;
+      end;
+    end;
+    {$ENDIF}
+  finally
+    LItems.Free;
+  end;
+end;
+
+function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String): String;
+var
+  LItems: TStringList;
+  I: Integer;
+  LTmp: string;
+  {$IFNDEF VCL6ORABOVE}
+  LValue: string;
+  {$ENDIF}
+
+  {$IFNDEF VCL6ORABOVE}
+  function FindIndexOfItem: Integer;
+  var
+    I: Integer;
+  begin
+    for I := 0 to LItems.Count-1 do
+    begin
+      if TextIsSame(LItems.Names[I], ASubItem) then
+      begin
+        Result := I;
+        Exit;
+      end;
+    end;
+    Result := -1;
+  end;
+  {$ENDIF}
+
+  function QuoteString(const S: String): String;
+  var
+    I: Integer;
+    LQuotesNeeded: Boolean;
+  begin
+    Result := '';
+    LQuotesNeeded := False;
+    for I := 1 to Length(S) do begin
+      if CharIsInSet(S, I, token_specials) then begin
+        Result := Result + '\'; {do not localize}
+        LQuotesNeeded := True;
+      end;
+      Result := Result + S[I];
+    end;
+    if LQuotesNeeded then begin
+      Result := '"' + Result + '"';
+    end;
+  end;
+
+begin
+  Result := '';
+  LItems := TStringList.Create;
+  try
+    SplitHeaderSubItems(AHeaderLine, LItems);
+    {$IFDEF VCL6ORABOVE}
+    LItems.CaseSensitive := False;
+    LItems.Values[ASubItem] := Trim(AValue);
+    {$ELSE}
+    I := FindIndexOfItem;
+    LValue := Trim(AValue);
+    if LAValue <> '' then begin
+      if I < 0 then begin
+        I := LItems.Add('');
+      end;
+      LItems.Strings[I] := s + '=' + LValue; {do not localize}
+    end
+    else if I >= 0 then begin
+      LItems.Delete(I);
+    end;
+    {$ENDIF}
+    Result := ExtractHeaderItem(AHeaderLine);
+    if Result <> '' then begin
+      for I := 0 to LItems.Count-1 do begin
+        LTmp := LItems.Strings[I];
+        // TODO - escapse special characters
+        Result := Result + '; ' + LItems.Names[I] + '=' + QuoteString(Copy(LTmp, Pos('=', LTmp)+1, MaxInt)); {do not localize}
+      end;
+    end;
+  finally
+    LItems.Free;
   end;
 end;
 
@@ -3054,33 +3185,20 @@ end;
 //The following is for working on email headers and message part headers.
 //For example, to remove the boundary from the ContentType header, call
 //ContentType := RemoveHeaderEntry(ContentType, 'boundary');
-function RemoveHeaderEntry(AHeader, AEntry: string): string;
-var
-  LS: string;
-  LPos: integer;
-  LInQuotes: Boolean;
+function RemoveHeaderEntry(const AHeader, AEntry: string): string;
+{$IFDEF USEINLINE}inline;{$ENDIF}
 begin
-  LPos := Pos(LowerCase(AEntry), LowerCase(AHeader));
-  if LPos = 0 then begin
-    Result := AHeader;
-  end else begin
-    Result := Copy(AHeader, 1, LPos-1);
-    LS := Copy(AHeader, LPos, MaxInt);
-    //See if there is a following ; that is not within quotes...
-    //LPos := Pos(';', LS);
-    for LPos := 1 to Length(LS) do begin
-      LInQuotes := False;
-      if LS[LPos] = '"' then begin {do not localize}
-        LInQuotes := not LInQuotes;
-      end;
-      if (LS[LPos] = ';') and (not LInQuotes) then begin {do not localize}
-        Result := Result + Copy(LS, LPos+1, MaxInt);
-        Exit;
-      end;
-    end;
-    Result := Trim(Result);
-    if TextEndsWith(Result, ';') then begin {do not localize}
-      Delete(Result, Length(Result), 1);
+  Result := ReplaceHeaderSubItem(AHeader, AEntry, '');
+end;
+
+function RemoveHeaderEntries(const AHeader: string; AEntries: array of string): string;
+var
+  I: Integer;
+begin
+  Result := AHeader;
+  if Length(AEntries) > 0 then begin
+    for I := Low(AEntries) to High(AEntries) do begin
+      Result := ReplaceHeaderSubItem(Result, AEntries[I], '');
     end;
   end;
 end;
@@ -3160,38 +3278,44 @@ function ContentTypeToEncoding(const AContentType: String): TIdTextEncoding;
 var
   LCharset: String;
 begin
-  LCharset := ExtractHeaderSubItem(AContentType, 'CHARSET');  {do not localize}
+  LCharset := ExtractHeaderSubItem(AContentType, 'charset');  {do not localize}
   Result := CharsetToEncoding(LCharset);
 end;
 
 function CharsetToEncoding(const ACharset: String): TIdTextEncoding;
 //TODO:  Figure out what should happen with Unicode content type.
+{$IFNDEF DOTNET}
+var
+  CP: Word;
+{$ENDIF}
 begin
-  Result := nil;
-
   if ACharSet <> '' then
   begin
     {$IFDEF DOTNET}
     Result := TIdTextEncoding.GetEncoding(ACharset);
     {$ELSE}
-    Result := TIdTextEncoding.GetEncoding(CharsetToCodePage(ACharset));
-  end;
-  {$ENDIF}
-
-  {JPM - I have decided to temporarily make this en8bit because I'm concerned
-  about how binary files will be handled by the en7bit encoder (where there may
-  be 8bit byte-values.  In addition, there are numerous charsets for various
-  languages and code that does some special mapping for them would be a mess.}
-  if Result = nil then
+    CP := CharsetToCodePage(ACharset);
+    Assert(CP <> 0);
+    Result := TIdTextEncoding.GetEncoding(CP);
+    {$ENDIF}
+  end else
   begin
-    {RLebeau: use GetEncoding() instead of en8bit().  This way, the caller
-    does not have to figure out whether or not to free the output TIdTextEncoding.
-    Standard TIdTextEncoding objects (ASCII, UTF8, etc) are owned by the RTL
-    and the 8-bit encoding object (that en8bit uses) is owned by IdGlobal.pas,
-    and thus should not be freed, but objects returned by GetEncoding are not
-    owned by anyone and must always be freed.}
-    {TODO: implement a truer 8-bit encoding class in IdGlobal.pas...}
-    Result := TIdTextEncoding.GetEncoding(1252);//en8bit; //en7Bit;
+    {JPM - I have decided to temporarily make this en8bit because I'm concerned
+    about how binary files will be handled by the en7bit encoder (where there may
+    be 8bit byte-values.  In addition, there are numerous charsets for various
+    languages and code that does some special mapping for them would be a mess.}
+
+    {RLebeau: technically, we should be returning a 7-bit encoding, as the
+    default charset for "text/" content types is "us-ascii".
+    
+    Using TIdTextEncoding.GetEncoding() instead of en8bit().  This way, the
+    caller does not have to figure out whether or not to free the output
+    TIdTextEncoding.  Standard TIdTextEncoding objects (ASCII, UTF8, etc) are
+    owned by the RTL and the 8-bit encoding object (that en8bit uses) is owned
+    by IdGlobal.pas, and thus should not be freed, but objects returned by
+    GetEncoding are not owned by anyone and must always be freed.}
+
+    Result := Create8BitEncoding;
   end;
 end;
 
