@@ -3355,14 +3355,14 @@ var
     end;
   end;
 
-  procedure ReadFromStream(AContext : TIdFTPServerContext; ACmdQueue : TStrings; AStream : TStream);
+  procedure ReadFromStream(AContext : TIdFTPServerContext; ACmdQueue : TStrings; ADestStream : TStream);
   var
     LM : TStream;
   begin
     if AContext.DataMode = dmDeflate then begin
       LM := TMemoryStream.Create;
     end else begin
-      LM := TStream(LContext.FDataChannel.Data);
+      LM := ADestStream;
     end;
     try
       repeat
@@ -3373,7 +3373,7 @@ var
       if AContext.DataMode = dmDeflate then
       begin
         LM.Position := 0;
-        FCompressor.DecompressFTPDeflate(LM, AStream, AContext.ZLibWindowBits);
+        FCompressor.DecompressFTPDeflate(LM, ADestStream, AContext.ZLibWindowBits);
       end;
     finally
       if AContext.DataMode = dmDeflate then begin
@@ -3383,23 +3383,24 @@ var
   end;
 
   procedure WriteToStream(AContext : TIdFTPServerContext; ACmdQueue : TStrings;
-    AStream : TStream; const AIgnoreCompression : Boolean = False);
+    ASrcStream : TStream; const AIgnoreCompression : Boolean = False);
   var
     LBufSize : Int64;
     LOutStream : TStream;
   begin
-    if AContext.DataMode = dmDeflate then
-    begin
+    if AContext.DataMode = dmDeflate then begin
       LOutStream := TMemoryStream.Create;
-      FCompressor.CompressFTPDeflate(AStream, LOutStream,
-        AContext.ZLibCompressionLevel, AContext.ZLibWindowBits,
-        AContext.ZLibMemLevel, AContext.ZLibStratagy);
-      LOutStream.Position := 0;
-    end else
-    begin
-      LOutStream := AStream;
+    end else begin
+      LOutStream := ASrcStream;
     end;
     try
+      if AContext.DataMode = dmDeflate then
+      begin
+        FCompressor.CompressFTPDeflate(ASrcStream, LOutStream,
+          AContext.ZLibCompressionLevel, AContext.ZLibWindowBits,
+          AContext.ZLibMemLevel, AContext.ZLibStratagy);
+        LOutStream.Position := 0;
+      end;
       repeat
         LBufSize := LOutStream.Size - LOutStream.Position;
         if LBufSize > DEF_BLOCKSIZE then begin
@@ -3408,7 +3409,7 @@ var
         if LBufSize > 0 then
         begin
           AContext.FDataChannel.FDataChannel.IOHandler.Write(LOutStream, LBufSize, False);
-          if AStream.Position < AStream.Size then begin
+          if LOutStream.Position < LOutStream.Size then begin
             CheckControlConnection(AContext, ACmdQueue);
           end;
         end;
@@ -3420,23 +3421,22 @@ var
     end;
   end;
 
-  procedure WriteStrings(AContext : TIdFTPServerContext; ACmdQueue : TStrings; AStrings : TStrings);
+  procedure WriteStrings(AContext : TIdFTPServerContext; ACmdQueue : TStrings; ASrcStrings : TStrings);
   var
     i : Integer;
     LM : TStream;
     LEncoding: TIdTextEncoding;
   begin
-    LEncoding := en8bit;
     //for loops will execute at least once triggering an out of range error.
     //write nothing if AStrings is empty.
-    if AStrings.Count < 1 then begin
+    if ASrcStrings.Count < 1 then begin
       Exit;
     end;
     {
     IMPORTANT!!!
 
-    If LIST data is sent as en8bit, you have a FTP list that is unparsable by
-    some FTP clients.  If UTF8 OPTS OFF, you should send the data as en7bit
+    If LIST data is sent as 8bit, you have a FTP list that is unparsable by
+    some FTP clients.  If UTF8 OPTS OFF, you should send the data as 7bit
     for the LIST and NLST commands.  That way, unprintable charactors are
     returned as ?.  While the file name is not valid, at least, there some
     thing that looks better than binary junk.
@@ -3444,18 +3444,20 @@ var
     if PosInStrArray(ASender.CommandHandler.Command, ['LIST', 'NLST', 'MLSD'], False) > -1 then
     begin
       if AContext.NLSTUtf8 then begin
-        LEncoding := enUTF8;
+        LEncoding := TIdTextEncoding.UTF8;
       end else begin
-        LEncoding := en7bit;
+        LEncoding := TIdTextEncoding.ASCII;
       end;
+    end else begin
+      LEncoding := Get8BitEncoding;
     end;
 
     if AContext.DataMode = dmDeflate then
     begin
       LM := TMemoryStream.Create;
       try
-        for i := 0 to AStrings.Count-1 do begin
-          WriteStringToStream(LM, AStrings[i] + EOL, LEncoding);
+        for i := 0 to ASrcStrings.Count-1 do begin
+          WriteStringToStream(LM, ASrcStrings[i] + EOL, LEncoding);
         end;
         LM.Position := 0;
         WriteToStream(AContext, ACmdQueue, LM, True);
@@ -3464,12 +3466,12 @@ var
       end;
       Exit;
     end;
-    for i := 0 to AStrings.Count-1 do
+    for i := 0 to ASrcStrings.Count-1 do
     begin
       if AContext.FDataChannel.FDataChannel.IOHandler.Connected then
       begin
-        AContext.FDataChannel.FDataChannel.IOHandler.WriteLn(AStrings[i], LEncoding);
-        if ((i mod 10) = 0) and (i <> (AStrings.Count-1)) then
+        AContext.FDataChannel.FDataChannel.IOHandler.WriteLn(ASrcStrings[i], LEncoding);
+        if ((i mod 10) = 0) and (i <> (ASrcStrings.Count-1)) then
         begin
           if AContext.FDataChannel.FDataChannel.IOHandler.Connected then begin
             CheckControlConnection(AContext, ACmdQueue);
@@ -5049,7 +5051,7 @@ procedure TIdFTPServer.DoOnGetFileDate(ASender: TIdFTPServerContext;
 begin
   if Assigned(FFTPFileSystem) then begin
     FFTPFileSystem.GetFileDate(ASender, AFileName, VFileDate);
-    VFileDate := VFileDate - OffSetFromUTC;
+	VFileDate := VFileDate - OffsetFromUTC;
   end else if Assigned(FOnGetFileDate) then begin
     FOnGetFileDate(ASender, AFileName, VFileDate);
   end;
@@ -5223,7 +5225,7 @@ procedure TIdFTPServer.CommandSiteUTIME(ASender: TIdCommand);
     begin
       LFileName := ALSender.UnparsedParams;
       //This is local Time
-      LgMTime := FTPMLSToGMTDateTime(Fetch(LFileName)) - OffSetFromUTC;
+      LgMTime := FTPMLSToGMTDateTime(Fetch(LFileName)) - OffsetFromUTC;
       LFileName := DoProcessPath(AContext, LFileName);
       if Assigned(FOnSiteUTIME) then
       begin
