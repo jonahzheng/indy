@@ -166,7 +166,6 @@ resourcestring
   RSFSPPacketTooSmall = 'Packet too small';
 
   //SASL
-
   RSASLNotSupported = 'Doesn''t support AUTH or the SASL handlers you specified!!';
   RSASLRequired = 'Need SASL mechanisms to login with it!!';
   RSASLNotValidForProt = 'Authentication Type not valid for this protocol.';
@@ -175,20 +174,24 @@ resourcestring
   RSSASLDigestMissingAlgorithm = 'missing algorithm in challange.';
   RSSASLDigestInvalidAlgorithm = 'invalid algorithm in challange.';
   RSSASLDigestAuthConfNotSupported = 'auth-conf not yet supported.';
+
   //  TIdEMailAddress
   RSEMailSymbolOutsideAddress = '@ Outside address';
+
   //ZLIB Intercept
   RSZLCompressorInitializeFailure = 'Unable to initialize compressor';
   RSZLDecompressorInitializeFailure = 'Unable to initialize decompressor';
   RSZLCompressionError = 'Compression error';
   RSZLDecompressionError = 'Decompression error';
-  //Winsock 2 Stub
+
   //MIME Types
   RSMIMEExtensionEmpty = 'Extension is empty';
   RSMIMEMIMETypeEmpty = 'Mimetype is empty';
   RSMIMEMIMEExtAlreadyExists = 'Extension already exits';
+
   // IdRegister
   RSRegSASL = 'Indy SASL';
+
   // Status Strings
   // TIdTCPClient
   // Message Strings
@@ -249,6 +252,7 @@ resourcestring
   RSHTTPGatewayTimeout = 'Gateway timeout';
   RSHTTPHTTPVersionNotSupported = 'HTTP version not supported';
   RSHTTPUnknownResponseCode = 'Unknown Response Code';
+
   // HTTP Other
   RSHTTPUnknownProtocol = 'Unknown Protocol';
   RSHTTPMethodRequiresVersion = 'Request method requires HTTP version 1.1';
@@ -256,10 +260,13 @@ resourcestring
   RSHTTPErrorParsingCommand = 'Error in parsing command.';
   RSHTTPUnsupportedAuthorisationScheme = 'Unsupported authorization scheme.';
   RSHTTPCannotSwitchSessionStateWhenActive = 'Cannot change session state when the server is active.';
+
   //HTTP Authentication
   RSHTTPAuthAlreadyRegistered = 'This authentication method is already registered with class name %s.';
+
   //HTTP Authentication Digeest
   RSHTTPAuthInvalidHash = 'Unsupported hash algorithm. This implementation supports only MD5 encoding.';
+
   //SSPI Authentication
   {
   Note: CompleteToken is an API function Name:
@@ -361,7 +368,7 @@ resourcestring
   RSFTPNoAUTHWOSSL = 'Can not set AUTH without SSL.';
   RSFTPNoAUTHCon = 'Can not set AUTH while connected.';
   RSFTPSToSTransferModesMusbtSame = 'Transfer modes must be the same.';
-  RSFTPNoListParseUnitsRegistered = 'No IdFTPListParse classes have been registered. Check your uses clause!';
+  RSFTPNoListParseUnitsRegistered = 'No FTP list parsers have been registered.';
 
   // Property editor exceptions
   // Stack Error Messages
@@ -509,6 +516,7 @@ resourcestring
   RSSSLFDSetError = 'Error setting File Descriptor for SSL';
   RSSSLDataBindingError = 'Error binding data to SSL socket.';
   RSSSLEOFViolation = 'EOF was observed that violates the protocol';
+
   {IdMessage Component Editor}
   RSMsgCmpEdtrNew = '&New Message Part...';
   RSMsgCmpEdtrExtraHead = 'Extra Headers Text Editor';
@@ -953,6 +961,16 @@ resourcestring
   {$IFDEF DOTNET2_OR_ABOVE}
   RSSSLNETNotAuthenticated = 'Not authenticated';
   RSSSLNETCertificateRequired = 'Certificate required for servers';
+  {$ENDIF}
+
+  // TIdURI
+  {$IFDEF UNICODESTRING}
+  {$IFNDEF TCharacter}
+  RSUTF16IndexOutOfRange = 'Character Index %d out of Range, Length = %d';
+  RSUTF16InvalidHighSurrogate = 'Character at Index %d is not a valid UTF-16 High Surrogate';
+  RSUTF16InvalidLowSurrogate = 'Character at Index %d is not a valid UTF-16 Low Surrogate';
+  RSUTF16MissingLowSurrogate = 'Missing a Low Surrogate in UTF-16 sequence';
+  {$ENDIF}
   {$ENDIF}
   
 implementation
