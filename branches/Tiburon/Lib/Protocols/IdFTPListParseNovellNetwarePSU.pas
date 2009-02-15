@@ -85,6 +85,10 @@ type
 const
   NOVELLNETWAREPSU = 'Novell Netware Print Services for Unix:  '; {do not localize}
 
+  // RLebeau 2/14/09: this forces C++Builder to link to this unit so
+  // RegisterFTPListParser can be called correctly at program startup...
+  (*$HPPEMIT '#pragma link "IdFTPListParseNovellNetwarePSU"'*)
+
 implementation
 
 uses

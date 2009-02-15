@@ -63,6 +63,10 @@ type
 const
   STIRCOMEXPOS390 = 'Connect:Express for OS/390'; {do not localize}
 
+  // RLebeau 2/14/09: this forces C++Builder to link to this unit so
+  // RegisterFTPListParser can be called correctly at program startup...
+  (*$HPPEMIT '#pragma link "IdFTPListParseStercomOS390Exp"'*)
+
 implementation
 
 uses

@@ -56,6 +56,10 @@ type
     class function CheckListing(AListing : TStrings; const ASysDescript : String =''; const ADetails : Boolean = True): boolean; override;
   end;
 
+  // RLebeau 2/14/09: this forces C++Builder to link to this unit so
+  // RegisterFTPListParser can be called correctly at program startup...
+  (*$HPPEMIT '#pragma link "IdFTPListParseAS400"'*)
+
 implementation
 
 uses
@@ -216,14 +220,14 @@ QSYS      8704  11/15/95 16:15:33 *FILE      /QSYS.LIB/QSYS.LIB/QPRTSPLQ.PRTF
   LBuffer := TrimLeft(LBuffer);
   //we have to make sure that the size feild really exists or the
   //the parser is thrown off
-  if (LBuffer<>'') and (IsNumeric(LBuffer[1])) then
+  if (LBuffer <> '') and (IsNumeric(LBuffer[1])) then
   begin
     LI.Size := IndyStrToInt64(FetchLength(LBuffer,9),0);
     LI.SizeAvail := True;
     LBuffer := TrimLeft(LBuffer);
   end;
   //Sometimes the date and time feilds will not present
-  if (LBuffer<>'') and (IsNumeric(LBuffer[1])) then
+  if (LBuffer <> '') and (IsNumeric(LBuffer[1])) then
   begin
     LDate := Trim(StrPart(LBuffer, 8));
     if (LBuffer <> '') and (LBuffer[1] <> ' ') then
