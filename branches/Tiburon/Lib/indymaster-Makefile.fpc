@@ -165,8 +165,9 @@ implicitunits=IdASN1Util \
   IdHashSHA1 \
   IdHeaderCoder2022JP \
   IdHeaderCoderBase \
+  IdHeaderCoderIndy \
   IdHeaderCoderPlain \
-  IdHeaderCoderUTF8 \
+  IdHeaderCoderUTF \
   IdHeaderList \
   IdIMAP4 \
   IdIMAP4Server \
@@ -204,6 +205,7 @@ implicitunits=IdASN1Util \
   IdMessage \
   IdMessageClient \
   IdMessageCoder \
+  IdMessageCoderBinHex4 \
   IdMessageCoderMIME \
   IdMessageCoderQuotedPrintable \
   IdMessageCoderUUE \
