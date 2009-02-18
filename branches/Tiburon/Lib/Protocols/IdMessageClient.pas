@@ -463,7 +463,7 @@ uses
     {$ENDIF}
   {$ENDIF}
   //TODO: Remove these references and make it completely pluggable. Check other spots in Indy as well
-  IdCoderQuotedPrintable, IdMessageCoderQuotedPrintable, IdMessageCoderMIME,
+  IdMessageCoderBinHex4, IdMessageCoderQuotedPrintable, IdMessageCoderMIME,
   IdMessageCoderUUE, IdMessageCoderXXE,
   //
   IdGlobalProtocols,
@@ -658,14 +658,18 @@ var
       LParentPart := AMsg.MIMEBoundary.ParentPart;
       Result := ADecoder.ReadBody(LMStream, LMsgEnd);
       LMStream.Position := 0;
-      if AMsg.IsMsgSinglePartMime then begin
-        LHdrs := AMsg.Headers;
-      end else begin
-        LHdrs := ADecoder.Headers;
-      end;
       if AUseBodyAsTarget then begin
-        ReadStringsAsContentType(LMStream, AMsg.Body, LHdrs.Values[SContentType]);
+        if AMsg.IsMsgSinglePartMime then begin
+          ReadStringsAsCharSet(LMStream, AMsg.Body, AMsg.CharSet);
+        end else begin
+          ReadStringsAsContentType(LMStream, AMsg.Body, ADecoder.Headers.Values[SContentType]);
+        end;
       end else begin
+        if AMsg.IsMsgSinglePartMime then begin
+          LHdrs := AMsg.Headers;
+        end else begin
+          LHdrs := ADecoder.Headers;
+        end;
         LTxt := TIdText.Create(AMsg.MessageParts);
         ReadStringsAsContentType(LMStream, LTxt.Body, LHdrs.Values[SContentType]);
         RemoveLastBlankLine(LTxt.Body);
@@ -708,9 +712,8 @@ var
     LParentPart := AMsg.MIMEBoundary.ParentPart;
     AMsg.DoCreateAttachment(ADecoder.Headers, LAttachment);
     Assert(Assigned(LAttachment), 'Attachment must not be unassigned here!'); {Do not localize}
-    with LAttachment do
     try
-      LDestStream := PrepareTempStream;
+      LDestStream := LAttachment.PrepareTempStream;
       try
         Result := ADecoder.ReadBody(LDestStream, LMsgEnd);
         if AMsg.IsMsgSinglePartMime then begin
@@ -718,49 +721,45 @@ var
         end else begin
           LHdrs := ADecoder.Headers;
         end;
-        ContentType := ResolveContentType(LHdrs.Values[SContentType]);
-        CharSet := GetCharSet(LHdrs.Values[SContentType]);
+        LAttachment.ContentType := LAttachment.ResolveContentType(LHdrs.Values[SContentType]);
+        LAttachment.CharSet := LAttachment.GetCharSet(LHdrs.Values[SContentType]);
         if ADecoder is TIdMessageDecoderUUE then begin
-          if TIdMessageDecoderUUE(ADecoder).CodingType = 'XXE' then begin {do not localize}
-            ContentTransfer := 'XXE';  {do not localize}
-          end else begin
-            ContentTransfer := 'UUE';  {do not localize}
-          end;
+          LAttachment.ContentTransfer := TIdMessageDecoderUUE(ADecoder).CodingType;  {do not localize}
         end else begin
           //Watch out for BinHex 4.0 encoding: no ContentTransfer is specified
           //in the header, but we need to set it to something meaningful for us...
-          if TextStartsWith(ContentType, 'application/mac-binhex40') then begin {do not localize}
-            ContentTransfer := 'binhex40';                                               {do not localize}
+          if TextStartsWith(LAttachment.ContentType, 'application/mac-binhex40') then begin {do not localize}
+            LAttachment.ContentTransfer := 'binhex40'; {do not localize}
           end else begin
-            ContentTransfer := LHdrs.Values[SContentTransferEncoding];
+            LAttachment.ContentTransfer := LHdrs.Values[SContentTransferEncoding];
           end;
         end;
-        ContentDisposition := LHdrs.Values['Content-Disposition']; {do not localize}
-        ContentID := LHdrs.Values['Content-ID'];                   {do not localize}
-        ContentLocation := LHdrs.Values['Content-Location'];       {do not localize}
-        ContentDescription := LHdrs.Values['Content-Description']; {do not localize}
+        LAttachment.ContentDisposition := LHdrs.Values['Content-Disposition']; {do not localize}
+        LAttachment.ContentID := LHdrs.Values['Content-ID'];                   {do not localize}
+        LAttachment.ContentLocation := LHdrs.Values['Content-Location'];       {do not localize}
+        LAttachment.ContentDescription := LHdrs.Values['Content-Description']; {do not localize}
         if not AMsg.IsMsgSinglePartMime then begin
-          ExtraHeaders.NameValueSeparator := '=';                               {do not localize}
+          LAttachment.ExtraHeaders.NameValueSeparator := '=';                               {do not localize}
           for i := 0 to LHdrs.Count-1 do begin
-            if Headers.IndexOfName(LHdrs.Names[i]) < 0 then begin
-              ExtraHeaders.Add(LHdrs.Strings[i]);
+            if LAttachment.Headers.IndexOfName(LHdrs.Names[i]) < 0 then begin
+              LAttachment.ExtraHeaders.Add(LHdrs.Strings[i]);
             end;
           end;
         end;
-        Filename := ADecoder.Filename;
-        if TextStartsWith(ContentType, 'multipart/') then begin  {do not localize}
-          ParentPart := LPreviousParentPart;
+        LAttachment.Filename := ADecoder.Filename;
+        if TextStartsWith(LAttachment.ContentType, 'multipart/') then begin  {do not localize}
+          LAttachment.ParentPart := LPreviousParentPart;
         end else begin
-          ParentPart := LParentPart;
+          LAttachment.ParentPart := LParentPart;
         end;
         ADecoder.Free;
       finally
-        FinishTempStream;
+        LAttachment.FinishTempStream;
       end;
     except
       //This should also remove the Item from the TCollection.
       //Note that Delete does not exist in the TCollection.
-      Free;
+      LAttachment.Free;
     end;
   end;
 
@@ -845,8 +844,10 @@ var
   LLine: string;
 
   procedure EncodeStrings(AStrings: TStrings; AEncoderClass: TIdMessageEncoderClass; AEncoding: TIdTextEncoding);
+  var
+    LStrings: TStringList;
   begin
-    LDestStream := TIdTCPStream.Create(Self); try
+    LStrings := TStringList.Create; try
       LEncoder := AEncoderClass.Create(Self); try
         LStrStream := TMemoryStream.Create; try
           {$IFDEF TEncoding}
@@ -855,41 +856,31 @@ var
           WriteStringToStream(LStrStream, AStrings.Text, AEncoding);
           {$ENDIF}
           LStrStream.Position := 0;
-          LEncoder.Encode(LStrStream, LDestStream);
+          LEncoder.Encode(LStrStream, LStrings);
         finally FreeAndNil(LStrStream); end;
       finally FreeAndNil(LEncoder); end;
-    finally FreeAndNil(LDestStream); end;
+      IOHandler.WriteRFCStrings(LStrings, False);
+    finally FreeAndNil(LStrings); end;
   end;
 
-  procedure EncodeAttachment(ADestStream: TStream; AAttachment: TIdAttachment; AEncoderClass: TIdMessageEncoderClass);
+  procedure EncodeAttachment(AAttachment: TIdAttachment; AEncoderClass: TIdMessageEncoderClass);
   var
-    LLocalDestStream: TStream;
     LAttachStream: TStream;
   begin
-    if ADestStream = nil then begin
-      LLocalDestStream := TIdTCPStream.Create(Self);
-    end else begin
-      LLocalDestStream := ADestStream;
-    end;
-    try
+    LDestStream := TIdTCPStream.Create(Self); try
       LEncoder := AEncoderClass.Create(Self); try
         LEncoder.Filename := AAttachment.Filename;
         LAttachStream := AAttachment.OpenLoadStream; try
-          LEncoder.Encode(LAttachStream, LLocalDestStream);
+          LEncoder.Encode(LAttachStream, LDestStream);
         finally AAttachment.CloseLoadStream; end;
       finally FreeAndNil(LEncoder); end;
-    finally
-      if ADestStream = nil then begin
-        FreeAndNil(LLocalDestStream);
-      end;
-    end;
+    finally FreeAndNil(LDestStream); end;
   end;
 
   procedure WriteTextPart(ATextPart: TIdText);
   var
     LData: TStringList;
     li: Integer;
-    LQuotedPrintableEncoder: TIdEncoderQuotedPrintable;
     LEncoding: TIdTextEncoding;
     LFileName: String;
   begin
@@ -917,7 +908,7 @@ var
       end;
       if LFileName <> '' then begin
         IOHandler.WriteLn(';');  {do not localize}
-        IOHandler.Write('        name="' + LFileName + '"'); {do not localize}
+        IOHandler.Write(TAB + 'name="' + LFileName + '"'); {do not localize}
       end;
       IOHandler.WriteLn;
     end;
@@ -926,7 +917,7 @@ var
     IOHandler.Write('Content-Disposition: ' + ATextPart.ContentDisposition); {do not localize}
     if LFileName <> '' then begin
       IOHandler.WriteLn(';'); {do not localize}
-      IOHandler.Write('        filename="' + LFileName + '"'); {do not localize}
+      IOHandler.Write(TAB + 'filename="' + LFileName + '"'); {do not localize}
     end;
     IOHandler.WriteLn;
 
@@ -946,22 +937,7 @@ var
     try
     {$ENDIF}
       if TextIsSame(ATextPart.ContentTransfer, 'quoted-printable') then begin {do not localize}
-        if ATextPart.Body.Count > 0 then begin
-          LQuotedPrintableEncoder := TIdEncoderQuotedPrintable.Create(Self);
-          try
-            LData := TStringList.Create;
-            try
-              for li := 0 to ATextPart.Body.Count - 1 do begin
-                LQuotedPrintableEncoder.Encode(ATextPart.Body[li] + EOL, LData);
-                IOHandler.WriteRFCStrings(LData, False, LEncoding);
-              end;
-            finally
-              FreeAndNil(LData);
-            end;
-          finally
-            FreeAndNil(LQuotedPrintableEncoder);
-          end;
-        end;
+        EncodeStrings(ATextPart.Body, TIdMessageEncoderQuotedPrintable, LEncoding);
       end
       else if TextIsSame(ATextPart.ContentTransfer, 'base64') then begin  {do not localize}
         EncodeStrings(ATextPart.Body, TIdMessageEncoderMIME, LEncoding);
@@ -982,7 +958,6 @@ var
   LTextPart: TIdText;
   LAddedTextPart: Boolean;
   LLastPart: Integer;
-  LBinHex4Encoder: TIdEncoderBinHex4;
   LEncoding: TIdTextEncoding;
   LAttachStream: TStream;
 begin
@@ -1041,29 +1016,26 @@ begin
             IOHandler.WriteLn;
             IOHandler.WriteLn('------- Start of text attachment -------'); {do not localize}
             DoStatus(hsStatusText,  [RSMsgClientEncodingText]);
-            WriteTextPart(AMsg.MessageParts.Items[i] as TIdText);
+            WriteTextPart(TIdText(AMsg.MessageParts.Items[i]));
             IOHandler.WriteLn('------- End of text attachment -------');   {do not localize}
           end
           else if AMsg.MessageParts.Items[i] is TIdAttachment then begin
+            LAttachment := TIdAttachment(AMsg.MessageParts[i]);
             DoStatus(hsStatusText, [RSMsgClientEncodingAttachment]);
-            if AMsg.MessageParts[i].ContentTransfer = '' then begin
+            if LAttachment.ContentTransfer = '' then begin
               //The user has nothing specified: see has he set a preference in
               //TIdMessage.AttachmentEncoding (AttachmentEncoding is really an
               //old and somewhat deprecated property, but we can still support it)...
               if PosInStrArray(AMsg.AttachmentEncoding, ['UUE', 'XXE']) <> -1 then begin  {do not localize}
-                AMsg.MessageParts[i].ContentTransfer := AMsg.AttachmentEncoding;
+                LAttachment.ContentTransfer := AMsg.AttachmentEncoding;
               end else begin
                 //We default to UUE (rather than XXE)...
-                AMsg.MessageParts[i].ContentTransfer := 'UUE';  {do not localize}
+                LAttachment.ContentTransfer := 'UUE';  {do not localize}
               end;
             end;
-            case PosInStrArray(AMsg.MessageParts[i].ContentTransfer, ['UUE', 'XXE'], False) of  {do not localize}
-              0: begin
-                  EncodeAttachment(nil, TIdAttachment(AMsg.MessageParts[i]), TIdMessageEncoderUUE);
-                end;
-              1: begin
-                  EncodeAttachment(nil, TIdAttachment(AMsg.MessageParts[i]), TIdMessageEncoderXXE);
-                end;
+            case PosInStrArray(LAttachment.ContentTransfer, ['UUE', 'XXE'], False) of  {do not localize}
+              0: EncodeAttachment(LAttachment, TIdMessageEncoderUUE);
+              1: EncodeAttachment(LAttachment, TIdMessageEncoderXXE);
             end;
           end;
           IOHandler.WriteLn;
@@ -1159,7 +1131,7 @@ begin
           LBoundary := TIdMIMEBoundaryStrings.GenerateBoundary;
           AMsg.MIMEBoundary.Push(LBoundary, i);
           IOHandler.WriteLn('Content-Type: ' + LLine + ';');            {do not localize}
-          IOHandler.WriteLn('        boundary="' + LBoundary + '"');  {do not localize}
+          IOHandler.WriteLn(TAB + 'boundary="' + LBoundary + '"');  {do not localize}
           IOHandler.WriteLn;
         end
         else begin
@@ -1207,7 +1179,7 @@ begin
               end;
               if LFileName <> '' then begin
                 IOHandler.WriteLn(';'); {do not localize}
-                IOHandler.Write('        name="' + LFileName + '"'); {do not localize}
+                IOHandler.Write(TAB + 'name="' + LFileName + '"'); {do not localize}
               end;
               IOHandler.WriteLn;
             end
@@ -1218,14 +1190,14 @@ begin
               end;
               if LFileName <> '' then begin
                 IOHandler.WriteLn(';');
-                IOHandler.Write('        name="' + LFileName + '"'); {do not localize}
+                IOHandler.Write(TAB + 'name="' + LFileName + '"'); {do not localize}
               end;
               IOHandler.WriteLn;
               IOHandler.WriteLn('Content-Transfer-Encoding: ' + LAttachment.ContentTransfer); {do not localize}
               IOHandler.Write('Content-Disposition: ' + LAttachment.ContentDisposition); {do not localize}
               if LFileName <> '' then begin
                 IOHandler.WriteLn(';');
-                IOHandler.Write('        filename="' + LFileName + '"'); {do not localize}
+                IOHandler.Write(TAB + 'filename="' + LFileName + '"'); {do not localize}
               end;
               IOHandler.WriteLn;
             end;
@@ -1239,59 +1211,30 @@ begin
             IOHandler.Write(LAttachment.ExtraHeaders);
             IOHandler.WriteLn;
 
-            LDestStream := TIdTCPStream.Create(Self);
-            try
-              case PosInStrArray(LAttachment.ContentTransfer, ['base64', 'quoted-printable', 'binhex40'], False) of {do not localize}
-                0:
-                  begin
-                    EncodeAttachment(LDestStream, LAttachment, TIdMessageEncoderMIME);
-                  end;
-                1:
-                  begin
-                    EncodeAttachment(LDestStream, LAttachment, TIdMessageEncoderQuotedPrintable);
-                  end;
-                2:
-                  begin
-                    //This is different, it has to create a header that includes CRC checks
-                    LBinHex4Encoder := TIdEncoderBinHex4.Create(Self);
-                    try
-                      LAttachStream := TIdAttachment(AMsg.MessageParts[i]).OpenLoadStream;
-                      try
-                        LBinHex4Encoder.EncodeFile(TIdAttachment(AMsg.MessageParts[i]).Filename, LAttachStream, LDestStream);
-                      finally
-                        TIdAttachment(AMsg.MessageParts[i]).CloseLoadStream;
-                      end;
-                    finally
-                      FreeAndNil(LBinHex4Encoder);
+            case PosInStrArray(LAttachment.ContentTransfer, ['base64', 'quoted-printable', 'binhex40'], False) of {do not localize}
+              0: EncodeAttachment(LAttachment, TIdMessageEncoderMIME);
+              1: EncodeAttachment(LAttachment, TIdMessageEncoderQuotedPrintable);
+              2: EncodeAttachment(LAttachment, TIdMessageEncoderBinHex4);
+              else
+              begin
+                LAttachStream := LAttachment.OpenLoadStream;
+                try
+                  LEncoding := CharsetToEncoding(LAttachment.Charset);
+                  {$IFNDEF DOTNET}
+                  try
+                  {$ENDIF}
+                    while ReadLnFromStream(LAttachStream, LLine, -1, LEncoding) do begin
+                      IOHandler.WriteLnRFC(LLine, LEncoding);
                     end;
+                  {$IFNDEF DOTNET}
+                  finally
+                    LEncoding.Free;
                   end;
-                else
-                  begin
-                    LAttachStream := TIdAttachment(AMsg.MessageParts[i]).OpenLoadStream;
-                    try
-                      LEncoding := CharsetToEncoding(AMsg.MessageParts[i].Charset);
-                      {$IFNDEF DOTNET}
-                      try
-                      {$ENDIF}
-                        while ReadLnFromStream(LAttachStream, LLine, -1, LEncoding) do begin
-                          {Lines that start with a '.' are required to have an extra '.' inserted per RFC 821.}
-                          if TextStartsWith(LLine, '.') then begin
-                            WriteStringToStream(LDestStream, '.', LEncoding);
-                          end;
-                          WriteStringToStream(LDestStream, LLine + EOL, LEncoding);
-                        end;
-                      {$IFNDEF DOTNET}
-                      finally
-                        LEncoding.Free;
-                      end;
-                      {$ENDIF}
-                    finally
-                      TIdAttachment(AMsg.MessageParts[i]).CloseLoadStream;
-                    end;
-                  end;
+                  {$ENDIF}
+                finally
+                  LAttachment.CloseLoadStream;
+                end;
               end;
-            finally
-              FreeAndNil(LDestStream);
             end;
             IOHandler.WriteLn;
           end;
