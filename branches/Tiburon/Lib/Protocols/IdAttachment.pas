@@ -59,7 +59,6 @@ type
   protected
     function  GetContentDisposition: string; override;
     function  GetContentType: String; override;
-    function  GetContentTypeName: String; virtual;
   public
     // here the methods you have to override...
 
@@ -86,8 +85,7 @@ type
     procedure LoadFromStream(AStream: TStream); virtual;
     procedure SaveToFile(const FileName: String); virtual;
     procedure SaveToStream(AStream: TStream); virtual;
-
-    property  ContentTypeName: String read GetContentTypeName;
+    
     class function PartType: TIdMessagePartType; override;
   end;
 
@@ -96,25 +94,19 @@ type
 implementation
 
 uses
-  IdGlobal, IdGlobalProtocols, SysUtils;
+  IdGlobal, IdGlobalProtocols, IdCoderHeader,
+  SysUtils;
 
 { TIdAttachment }
 
 function TIdAttachment.GetContentDisposition: string;
 begin
-  Result := inherited GetContentDisposition;
-  Result := Fetch(Result, ';');
+  Result := ExtractHeaderItem(inherited GetContentDisposition);
 end;
 
 function TIdAttachment.GetContentType: String;
 Begin
-  Result := inherited GetContentType;
-  Result := Fetch(Result, ';');
-End;//
-
-function TIdAttachment.GetContentTypeName: String;
-Begin
-  Result := ExtractHeaderSubItem(inherited GetContentType, 'NAME'); {do not localize}
+  Result := ExtractHeaderItem(inherited GetContentType);
 End;//
 
 class function TIdAttachment.PartType: TIdMessagePartType;
