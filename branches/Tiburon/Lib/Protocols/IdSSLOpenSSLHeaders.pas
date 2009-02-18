@@ -3658,7 +3658,7 @@ const
   OPENSSL_SSL_CTRL_GET_SESS_CACHE_MODE = 45;
   OPENSSL_SSL_CTRL_GET_MAX_CERT_LIST = 50;
   OPENSSL_SSL_CTRL_SET_MAX_CERT_LIST = 51;
-  OPENSSL_SSL_DEFAULT_CIPHER_LIST= 'AES:ALL:!aNULL:!eNULL:+RC4:@STRENGTH'; //* low priority for RC4 */
+  OPENSSL_SSL_DEFAULT_CIPHER_LIST = 'AES:ALL:!aNULL:!eNULL:+RC4:@STRENGTH'; //* low priority for RC4 */
   OPENSSL_SSL_ERROR_NONE = 0;
   OPENSSL_SSL_ERROR_SSL = 1;
   OPENSSL_SSL_ERROR_WANT_READ = 2;
@@ -8229,6 +8229,7 @@ var
   IdSslAddAllAlgorithms : procedure cdecl = nil;
   IdSslAddAllCiphers : procedure cdecl = nil;
   IdSslAddAllDigests : procedure cdecl = nil;
+
   IdSslEvpCleanup : procedure cdecl = nil;
   //SSL Version function
   IdSslSSLeay_version : function(_type : TIdC_INT) : PAnsiChar cdecl = nil;
@@ -8281,6 +8282,17 @@ var
       var x: Pointer; cb: ppem_password_cb; u:PAnsiChar): Pointer cdecl = nil;
   {$ENDIF}
   IdSslPemReadBioPrivateKey : function(bio: PBIO; var x: PEVP_PKEY; cb: ppem_password_cb; u: Pointer): PEVP_PKEY cdecl = nil;
+//int	EVP_DigestInit_ex(EVP_MD_CTX *ctx, const EVP_MD *type, ENGINE *impl);
+  IdSslEvpDigestInitEx : function (ctx : PEVP_MD_CTX; const AType : PEVP_MD; impl : PENGINE) : TIdC_Int cdecl;
+//int	EVP_DigestUpdate(EVP_MD_CTX *ctx,const void *d,
+//			 size_t cnt);
+  IdSslEvpDigestUpdate : function (ctx : PEVP_MD_CTX; d : Pointer; cnt : size_t) : TIdC_Int cdecl;
+//int	EVP_DigestFinal_ex(EVP_MD_CTX *ctx,unsigned char *md,unsigned int *s);
+  IdSslEvpDigestFinal : function(ctx : PEVP_MD_CTX; md : PAnsiChar; var s : TIdC_UInt) : TIdC_Int cdecl;
+//void	EVP_MD_CTX_init(EVP_MD_CTX *ctx);
+  IdSslEvpMDCtxInit : procedure(ctx : PEVP_MD_CTX) cdecl;
+//int	EVP_MD_CTX_cleanup(EVP_MD_CTX *ctx);
+  IdSslEvpMDCtxCleanup : function(ctx : PEVP_MD_CTX) : TIdC_Int;
   {$IFNDEF OPENSSL_NO_DES}
   IdSslEvpDesEde3Cbc : function: PEVP_CIPHER cdecl = nil;
   {$ENDIF}
@@ -8604,8 +8616,6 @@ end;
 const
 {most of these are commented out because we aren't using them now.  I am keeping
 them in case we use them later.}
-  fn_OpenSSL_add_all_ciphers = 'OpenSSL_add_all_ciphers'; {Do not localize}
-  fn_OpenSSL_add_all_digests = 'OpenSSL_add_all_digests'; {Do not localize}
   {CH fn_sk_num = 'sk_num'; }  {Do not localize}
   {CH fn_sk_value = 'sk_value'; }  {Do not localize}
   {CH fn_sk_set = 'sk_set'; }  {Do not localize}
@@ -9767,6 +9777,38 @@ them in case we use them later.}
   {CH fn_OBJ_create = 'OBJ_create'; }  {Do not localize}
   {CH fn_OBJ_cleanup = 'OBJ_cleanup'; }  {Do not localize}
   {CH fn_OBJ_create_objects = 'OBJ_create_objects'; }  {Do not localize}
+  {===}
+  { fm_EVP_MD_type = 'EVP_MD_type'; } {Do not localize}
+  { fn_EVP_MD_pkey_type = 'EVP_MD_pkey_type'; } {Do not localize}
+  { fn_EVP_MD_size = 'EVP_MD_size'; } {Do not localize}
+  { fn_EVP_MD_block_size = 'EVP_MD_block_size'; } {Do not localize}
+  { fn_EVP_MD_CTX_md = 'EVP_MD_CTX_md';  } {Do not localize}
+  { fn_EVP_CIPHER_nid = 'EVP_CIPHER_nid'; } {Do not localize}
+  { fn_EVP_CIPHER_block_size = 'EVP_CIPHER_block_size';  } {Do not localize}
+  { fn_EVP_CIPHER_key_length = 'EVP_CIPHER_key_length'; } {Do not localize}
+  { fn_EVP_CIPHER_iv_length = 'EVP_CIPHER_iv_length'; } {Do not localize}
+  { fn_EVP_CIPHER_flags = 'EVP_CIPHER_flags'; } {Do not localize}
+  { fn_EVP_CIPHER_CTX_cipher = 'EVP_CIPHER_CTX_cipher'; } {Do not localize}
+  { fn_EVP_CIPHER_CTX_nid = 'EVP_CIPHER_CTX_nid'; } {Do not localize}
+  { fn_EVP_CIPHER_CTX_block_size = 'EVP_CIPHER_CTX_block_size'; } {Do not localize}
+  { fn_EVP_CIPHER_CTX_key_length = 'EVP_CIPHER_CTX_key_length'; } {Do not localize}
+  { fn_EVP_CIPHER_CTX_iv_length = 'EVP_CIPHER_CTX_iv_length'; } {Do not localize}
+  { fn_EVP_CIPHER_CTX_get_app_data = 'EVP_CIPHER_CTX_get_app_data'; } {Do not localize}
+  { fn_EVP_CIPHER_CTX_set_app_data = 'EVP_CIPHER_CTX_set_app_data'; } {Do not localize}
+  { fn_EVP_CIPHER_CTX_flags = 'EVP_CIPHER_CTX_flags'; } {Do not localize}
+  { fn_EVP_Cipher = 'EVP_Cipher'; } {Do not localize}
+   fn_EVP_MD_CTX_init = 'EVP_MD_CTX_init'; {Do not localize}
+   fn_EVP_MD_CTX_cleanup = 'EVP_MD_CTX_cleanup';  {Do not localize}
+  { fn_EVP_MD_CTX_create = 'EVP_MD_CTX_create'; } {Do not localize}
+  { fn_EVP_MD_CTX_destroy = 'EVP_MD_CTX_destroy'; } {Do not localize}
+  { fn_EVP_MD_CTX_copy_ex = 'EVP_MD_CTX_copy_ex'; } {Do not localize}
+  { fn_EVP_MD_CTX_set_flags = 'EVP_MD_CTX_set_flags'; } {Do not localize}
+  { fn_EVP_MD_CTX_clear_flags = 'EVP_MD_CTX_clear_flags'; } {Do not localize}
+  { fn_EVP_MD_CTX_test_flags = 'EVP_MD_CTX_test_flags'; } {Do not localize}
+   fn_EVP_DigestInit_ex = 'EVP_DigestInit_ex';  {Do not localize}
+   fn_EVP_DigestUpdate = 'EVP_DigestUpdate';  {Do not localize}
+   fn_EVP_DigestFinal_ex = 'EVP_DigestFinal_ex';  {Do not localize}
+  { fn_EVP_Digest = 'EVP_Digest'; } {Do not localize}
   {CH fn_EVP_MD_CTX_copy = 'EVP_MD_CTX_copy'; }  {Do not localize}
   {CH fn_EVP_DigestInit = 'EVP_DigestInit'; }  {Do not localize}
   {CH fn_EVP_DigestUpdate = 'EVP_DigestUpdate'; }  {Do not localize}
@@ -9779,14 +9821,21 @@ them in case we use them later.}
   {CH fn_EVP_CIPHER_CTX_clear_flags = 'EVP_CIPHER_CTX_clear_flags'; } {Do not localize}
   {CH fn_EVP_CIPHER_CTX_test_flags = 'EVP_CIPHER_CTX_test_flags'; } {Do not localize}
   {CH fn_EVP_EncryptInit = 'EVP_EncryptInit'; }  {Do not localize}
+  { fn_EVP_EncryptInit_ex = 'EVP_EncryptInit_ex'; } {Do not localize}
   {CH fn_EVP_EncryptUpdate = 'EVP_EncryptUpdate'; }  {Do not localize}
   {CH fn_EVP_EncryptFinal = 'EVP_EncryptFinal'; }  {Do not localize}
+  {CH fn_EVP_EncryptFinal_ex = 'EVP_EncryptFinal_ex'; } {Do not localize}
   {CH fn_EVP_DecryptInit = 'EVP_DecryptInit'; }  {Do not localize}
+  {CH fn_EVP_DecryptInit_ex = 'EVP_DecryptInit_ex'; }  {Do not localize}
   {CH fn_EVP_DecryptUpdate = 'EVP_DecryptUpdate'; }  {Do not localize}
   {CH fn_EVP_DecryptFinal = 'EVP_DecryptFinal'; }  {Do not localize}
+  { fn_EVP_DecryptFinal_ex = 'EVP_DecryptFinal_ex'; } {Do not localize}
   {CH fn_EVP_CipherInit = 'EVP_CipherInit'; }  {Do not localize}
-  {CH fn_EVP_CipherUpdate = 'EVP_CipherUpdate'; }  {Do not localize}
-  {CH fn_EVP_CipherFinal = 'EVP_CipherFinal'; }  {Do not localize}
+  { fn_EVP_CipherInit_ex = 'EVP_CipherInit_ex'; } {Do not localize}
+  { fn_EVP_CipherUpdate = 'EVP_CipherUpdate'; }  {Do not localize}
+  { fn_EVP_CipherFinal = 'EVP_CipherFinal'; }  {Do not localize}
+  { fn_EVP_CipherFinal_ex = 'EVP_CipherFinal_ex'; } {Do not localize}
+
   {CH fn_EVP_SignFinal = 'EVP_SignFinal'; }  {Do not localize}
   {CH fn_EVP_VerifyFinal = 'EVP_VerifyFinal'; }  {Do not localize}
   {CH fn_EVP_OpenInit = 'EVP_OpenInit'; }  {Do not localize}
@@ -9801,9 +9850,12 @@ them in case we use them later.}
   {CH fn_EVP_DecodeUpdate = 'EVP_DecodeUpdate'; }  {Do not localize}
   {CH fn_EVP_DecodeFinal = 'EVP_DecodeFinal'; }  {Do not localize}
   {CH fn_EVP_DecodeBlock = 'EVP_DecodeBlock'; }  {Do not localize}
-  {CH fn_ERR_load_EVP_strings = 'ERR_load_EVP_strings'; }  {Do not localize}
   {CH fn_EVP_CIPHER_CTX_init = 'EVP_CIPHER_CTX_init'; }  {Do not localize}
   {CH fn_EVP_CIPHER_CTX_cleanup = 'EVP_CIPHER_CTX_cleanup'; }  {Do not localize}
+  { fn_EVP_CIPHER_CTX_new = 'EVP_CIPHER_CTX_new'; } {Do not localize}
+  { fn_EVP_CIPHER_CTX_set_key_length = 'EVP_CIPHER_CTX_set_key_length'; } {Do not localize}
+  { fn_EVP_CIPHER_CTX_ctrl = 'EVP_CIPHER_CTX_ctrl'; } {Do not localize}
+  { fn_EVP_CIPHER_CTX_rand_key = 'EVP_CIPHER_CTX_rand_key'; } {Do not localize}
   {$IFNDEF OPENSSL_NO_BIO}
   {CH fn_BIO_f_md = 'BIO_f_md'; }  {Do not localize}
   {CH fn_BIO_f_base64 = 'BIO_f_base64'; }  {Do not localize}
@@ -9976,9 +10028,10 @@ them in case we use them later.}
     {$DEFINE EVP_seed_cfb128}
   {CH fn_EVP_seed_ofb = 'EVP_seed_ofb'; } {Do not localize}
   {$ENDIF}
-  {CH fn_SSLeay_add_all_algorithms = 'SSLeay_add_all_algorithms'; }  {Do not localize}
-  {CH fn_SSLeay_add_all_ciphers = 'SSLeay_add_all_ciphers'; }  {Do not localize}
-  {CH fn_SSLeay_add_all_digests = 'SSLeay_add_all_digests'; }  {Do not localize}
+  { fn_OPENSSL_add_all_algorithms_noconf = 'OPENSSL_add_all_algorithms_noconf'; } {Do not localize}
+  { fn_OPENSSL_add_all_algorithms_conf = 'OPENSSL_add_all_algorithms_conf'; }{Do not localize}
+  fn_OpenSSL_add_all_ciphers = 'OpenSSL_add_all_ciphers'; {Do not localize}
+  fn_OpenSSL_add_all_digests = 'OpenSSL_add_all_digests'; {Do not localize}
   {CH fn_EVP_add_cipher = 'EVP_add_cipher'; }  {Do not localize}
   {CH fn_EVP_add_digest = 'EVP_add_digest'; }  {Do not localize}
   {CH fn_EVP_get_cipherbyname = 'EVP_get_cipherbyname'; }  {Do not localize}
@@ -9990,16 +10043,34 @@ them in case we use them later.}
   {CH fn_EVP_PKEY_bits = 'EVP_PKEY_bits'; }  {Do not localize}
   {CH fn_EVP_PKEY_size = 'EVP_PKEY_size'; }  {Do not localize}
   fn_EVP_PKEY_assign = 'EVP_PKEY_assign';  {Do not localize}
+  {$IFNDEF OPENSSL_NO_RSA}
+  { fn_EVP_PKEY_set1_RSA = 'EVP_PKEY_set1_RSA'; } {Do not localize}
+  { fn_EVP_PKEY_get1_RSA = 'EVP_PKEY_get1_RSA'; } {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_DSA}
+  { fn_EVP_PKEY_set1_DSA = 'EVP_PKEY_set1_DSA'; } {Do not localize}
+  { fn_EVP_PKEY_get1_DSA = 'EVP_PKEY_get1_DSA'; } {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_DH}
+  { fn_EVP_PKEY_set1_DH = 'EVP_PKEY_set1_DH'; } {Do not localize}
+  { fn_EVP_PKEY_get1_DH = 'EVP_PKEY_get1_DH'; } {Do not localize}
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_EC}
+  { fn_EVP_PKEY_set1_EC_KEY = 'EVP_PKEY_set1_EC_KEY'; } {Do not localize}
+  { fn_EVP_PKEY_get1_EC_KEY = 'EVP_PKEY_get1_EC_KEY'; } {Do not localize}
+  {$ENDIF}
   fn_EVP_PKEY_new = 'EVP_PKEY_new';  {Do not localize}
   fn_EVP_PKEY_free = 'EVP_PKEY_free';  {Do not localize}
   {CH fn_d2i_PublicKey = 'd2i_PublicKey'; }  {Do not localize}
   {CH fn_i2d_PublicKey = 'i2d_PublicKey'; }  {Do not localize}
   {CH fn_d2i_PrivateKey = 'd2i_PrivateKey'; }  {Do not localize}
+  { fn_d2i_AutoPrivateKey = 'd2i_AutoPrivateKey';  {Do not localize}
   {CH fn_i2d_PrivateKey = 'i2d_PrivateKey'; }  {Do not localize}
   {CH fn_EVP_PKEY_copy_parameters = 'EVP_PKEY_copy_parameters'; }  {Do not localize}
   {CH fn_EVP_PKEY_missing_parameters = 'EVP_PKEY_missing_parameters'; }  {Do not localize}
   {CH fn_EVP_PKEY_save_parameters = 'EVP_PKEY_save_parameters'; }  {Do not localize}
   {CH fn_EVP_PKEY_cmp_parameters = 'EVP_PKEY_cmp_parameters'; }  {Do not localize}
+  { fn_EVP_PKEY_cmp = 'EVP_PKEY_cmp'; } {Do not localize}
   {CH fn_EVP_CIPHER_type = 'EVP_CIPHER_type'; }  {Do not localize}
   {CH fn_EVP_CIPHER_param_to_asn1 = 'EVP_CIPHER_param_to_asn1'; }  {Do not localize}
   {CH fn_EVP_CIPHER_asn1_to_param = 'EVP_CIPHER_asn1_to_param'; }  {Do not localize}
@@ -10021,6 +10092,7 @@ them in case we use them later.}
     {$ENDIF}
   {$ENDIF}
   {CH fn_EVP_add_alg_module = 'EVP_add_alg_module'; {Do not localize}
+  {CH fn_ERR_load_EVP_strings = 'ERR_load_EVP_strings'; }  {Do not localize}
   {$IFDEF OPENSSL_FIPS}
   {CH fn_FIPS_mode_set = 'FIPS_mode_set'; } {Do not localize}
   {CH fn_FIPS_mode = 'FIPS_mode'; } {Do not localize}
@@ -11626,6 +11698,10 @@ begin
   {$IFNDEF OPENSSL_NO_MD5}
   @IdSslEvpMd5 := LoadFunctionCLib(fn_EVP_md5);
   {$ENDIF}
+  @IdSslEvpDigestInitEx := LoadFunctionCLib(fn_EVP_DigestInit_ex);
+  @IdSslEvpDigestUpdate := LoadFunctionClib(fn_EVP_DigestUpdate);
+  @IdSslEvpDigestFinal := LoadFunctionCLib(fn_EVP_DigestFinal_ex);
+  @IdSslEvpMDCtxCleanup := LoadFunctionCLib(fn_EVP_MD_CTX_cleanup);
   @IdSslEvpPKEYType := LoadFunctionCLib(fn_EVP_PKEY_type);
   @IdSslEvpPKeyNew := LoadFunctionCLib(fn_EVP_PKEY_new);
   @IdSslEvpPKeyFree := LoadFunctionCLib(fn_EVP_PKEY_free);
