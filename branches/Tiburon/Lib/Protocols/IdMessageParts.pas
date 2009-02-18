@@ -318,9 +318,9 @@ procedure TIdMessagePart.SetContentDisposition(const Value: string);
 var
   LTmp: string;
 begin
-  Headers.Values['Content-Disposition'] := RemoveHeaderEntry(Value, 'FILENAME'); {do not localize}
+  Headers.Values['Content-Disposition'] := RemoveHeaderEntry(Value, 'filename'); {do not localize}
   {RLebeau: override the current value only if the header specifies a new one}
-  LTmp := ExtractHeaderSubItem(Value, 'FILENAME'); {do not localize}
+  LTmp := ExtractHeaderSubItem(Value, 'filename'); {do not localize}
   if LTmp <> '' then begin
     FFileName := LTmp;
   end;
@@ -340,15 +340,13 @@ procedure TIdMessagePart.SetContentType(const Value: string);
 var
   LTmp: string;
 begin
-  LTmp := RemoveHeaderEntry(Value, 'CHARSET'); {do not localize}
-  LTmp := RemoveHeaderEntry(LTmp, 'NAME'); {do not localize}
-  Headers.Values['Content-Type'] := LTmp; {do not localize}
+  Headers.Values['Content-Type'] := RemoveHeaderEntries(Value, ['charset', 'name']); {do not localize}
   {RLebeau: override the current values only if the header specifies new ones}
-  LTmp := ExtractHeaderSubItem(Value, 'CHARSET'); {do not localize}
+  LTmp := ExtractHeaderSubItem(Value, 'charset'); {do not localize}
   if LTmp <> '' then begin
     FCharSet := LTmp;
   end;
-  LTmp := ExtractHeaderSubItem(Value, 'NAME'); {do not localize}
+  LTmp := ExtractHeaderSubItem(Value, 'name'); {do not localize}
   if LTmp <> '' then begin
     FName := LTmp;
   end;
