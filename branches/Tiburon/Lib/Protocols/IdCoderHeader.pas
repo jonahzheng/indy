@@ -113,8 +113,6 @@ uses
   procedure DecodeAddress(EMailAddr: TIdEmailAddressItem);
   procedure DecodeAddresses(AEMails: String; EMailAddr: TIdEmailAddressList);
 
-  (*$HPPEMIT '#include <Idallheadercoders.hpp>'*)
-
 implementation
 
 uses
