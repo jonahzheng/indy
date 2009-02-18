@@ -155,6 +155,7 @@ type
     procedure DoBeforeCommandHandler(ASender: TIdCommandHandlers; var AData: string;
       AContext: TIdContext);
     procedure DoReplyUnknownCommand(AContext: TIdContext; ALine: string); virtual;
+    function GetCmdHandlerClass: TIdCommandHandlerClass; virtual;
     procedure InitComponent; override;
     procedure SetCommandHandlers(AValue: TIdCommandHandlers);
     procedure SetExceptionReply(AValue: TIdReply);
@@ -268,14 +269,22 @@ procedure TIdCmdTCPClient.DoReplyUnknownCommand(AContext: TIdContext; ALine: str
 begin
 end;
 
+function TIdCmdTCPClient.GetCmdHandlerClass: TIdCommandHandlerClass;
+begin
+  Result := TIdCommandHandler;
+end;
+
 procedure TIdCmdTCPClient.InitComponent;
+var
+  LHandlerClass: TIdCommandHandlerClass;
 begin
   inherited InitComponent;
 
   FExceptionReply := FReplyClass.Create(nil);
   ExceptionReply.SetReply(500, 'Unknown Internal Error'); {do not localize}
 
-  FCommandHandlers := TIdCommandHandlers.Create(Self, FReplyClass, nil, ExceptionReply);
+  LHandlerClass := GetCmdHandlerClass;
+  FCommandHandlers := TIdCommandHandlers.Create(Self, FReplyClass, nil, ExceptionReply, LHandlerClass);
   FCommandHandlers.OnAfterCommandHandler := DoAfterCommandHandler;
   FCommandHandlers.OnBeforeCommandHandler := DoBeforeCommandHandler;
 end;
