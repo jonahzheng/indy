@@ -92,7 +92,7 @@ end;
 constructor TIdAttachmentFile.Create(Collection: TIdMessageParts; const AFileName: String = '');
 begin
   inherited Create(Collection);
-  FFilename := ExtractFilename(AFilename);
+  FFilename := ExtractFileName(AFilename);
   FTempFileStream := nil;
   FStoredPathName := AFileName;
   FFileIsTempFile := False;
@@ -101,7 +101,7 @@ end;
 destructor TIdAttachmentFile.Destroy;
 begin
   if FileIsTempFile then begin
-    DeleteFile(StoredPathName);
+    SysUtils.DeleteFile(StoredPathName);
   end;
   inherited Destroy;
 end;
