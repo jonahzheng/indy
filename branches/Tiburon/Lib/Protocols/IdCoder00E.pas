@@ -83,24 +83,27 @@ end;
 procedure TIdEncoder00E.Encode(ASrcStream, ADestStream: TStream; const ABytes: Integer = -1);
 var
   LStream: TMemoryStream;
-  LSize: Int64;
+  LSize, LEncodeSize: Int64;
   LBuf: TIdBytes;
 begin
-  SetLength(LBuf, 1024);
+  SetLength(LBuf, 1);
   LStream := TMemoryStream.Create;
   try
     LSize := IndyLength(ASrcStream, ABytes);
-    Assert(LSize<=(Length(FCodingTable)-1));
-    inherited Encode(ASrcStream, LStream, ABytes);
-    LBuf[0] := Ord(FCodingTable[Integer(LSize)+1]);
-    TIdStreamHelper.Write(ADestStream, LBuf, 1);
-    LStream.Position := 0;
-    repeat
-      LSize := TIdStreamHelper.ReadBytes(LStream, LBuf, Length(LBuf));
+    while LSize > 0 do
+    begin
+      LEncodeSize := IndyMin(LSize, Length(FCodingTable)-1);
+      inherited Encode(ASrcStream, LStream, LEncodeSize);
+      Dec(LSize, LEncodeSize);
+      LBuf[0] := Ord(FCodingTable[Integer(LEncodeSize)+1]);
+      TIdStreamHelper.Write(ADestStream, LBuf, 1);
+      LStream.Position := 0;
+      ADestStream.CopyFrom(LStream, 0);
       if LSize > 0 then begin
-        TIdStreamHelper.Write(ADestStream, LBuf, Integer(LSize));
+        WriteStringToStream(ADestStream, EOL);
+        LStream.Clear;
       end;
-    until LSize = 0;
+    end;
   finally
     FreeAndNil(LStream);
   end;
