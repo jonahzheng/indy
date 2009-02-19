@@ -558,39 +558,16 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     property Version: String read GetVersion;
   end;
 
-  EIdOpenSSLError               = class(EIdException);
+
   EIdOSSLCouldNotLoadSSLLibrary = class(EIdOpenSSLError);
   EIdOSSLModeNotSet             = class(EIdOpenSSLError);
   EIdOSSLGetMethodError         = class(EIdOpenSSLError);
   EIdOSSLCreatingContextError   = class(EIdOpenSSLError);
   
-  TIdOpenSSLAPISSLError = class of EIdOpenSSLAPISSLError;
-
-  EIdOpenSSLAPISSLError = class(EIdOpenSSLError)
-  protected
-    FErrorCode : TIdC_INT;
-    FRetCode : TIdC_INT;
-  public
-    class procedure RaiseException(s: PSSL; 
-      const ARetCode : TIdC_INT; const AMsg : String = '');
-    property ErrorCode : TIdC_INT read FErrorCode;
-    property RetCode : TIdC_INT read FRetCode;
-  end;
-
-  TIdOpenSSLAPICryptoError = class of EIdOpenSSLAPICryptoError;
-  EIdOpenSSLAPICryptoError = class(EIdOpenSSLError)
-  protected
-    FErrorCode : TIdC_ULONG;
-  public
-    class procedure RaiseExceptionCode(const AErrCode : TIdC_ULONG; const AMsg : String = '');
-    class procedure RaiseException(const AMsg : String = '');
-    property ErrorCode : TIdC_ULONG read FErrorCode;
-  end;
 
   EIdOSSLLoadingRootCertError = class(EIdOpenSSLAPICryptoError);
   EIdOSSLLoadingCertError = class(EIdOpenSSLAPICryptoError);
   EIdOSSLLoadingKeyError = class(EIdOpenSSLAPICryptoError);
-  EIdOSSLUnderlyingCryptoError = class(EIdOpenSSLAPICryptoError);
 
   EIdOSSLSettingCipherError = class(EIdOpenSSLError);
   EIdOSSLFDSetError = class(EIdOpenSSLAPISSLError);
@@ -623,13 +600,7 @@ var
   LockVerifyCB: TIdCriticalSection = nil;
   CallbackLockList: TThreadList = nil;
 
-function GetErrorMessage(const AErr : TIdC_ULONG) : AnsiString;  {$IFDEF USEINLINE} inline; {$ENDIF}
-var
-  LErrMsg: array [0..160] of AnsiChar;
-begin
-  IdSSLERR_error_string(AErr, @LErrMsg);
-  result := StrPas(PAnsiChar(@LErrMsg));
-end;
+
 
 function PasswordCallback(buf: PAnsiChar; size: TIdC_INT; rwflag: TIdC_INT; userdata: Pointer): TIdC_INT; cdecl;
 var
@@ -2219,75 +2190,6 @@ end;
 function TIdSSLCipher.GetVersion:String;
 begin
   Result := String(StrPas(IdSSLCipherGetVersion(IdSSLGetCurrentCipher(FSSLSocket.fSSL))));
-end;
-
-{ EIdOpenSSLAPICryptoError }
-class procedure EIdOpenSSLAPICryptoError.RaiseException(const AMsg : String = '');
-begin
-  RaiseExceptionCode(IdSSLERR_get_err(), AMsg);
-end;
-
-class procedure EIdOpenSSLAPICryptoError.RaiseExceptionCode(
-  const AErrCode: TIdC_ULONG; const AMsg: String);
-var
-  LMsg: String;
-  LException : EIdOpenSSLAPICryptoError;
-begin
-  if AMsg <> '' then begin
-    LMsg := AMsg + sLineBreak + String(GetErrorMessage(AErrCode));
-  end else begin
-    LMsg := String(GetErrorMessage(AErrCode));
-  end;
-  LException := Create(LMsg);
-  LException.FErrorCode := AErrCode;
-  raise LException;
-end;
-
-{ EIdOpenSSLAPISSLError }
-
-class procedure EIdOpenSSLAPISSLError.RaiseException(s: PSSL;
-  const ARetCode: TIdC_INT; const AMsg: String);
-var
-  LErr : TIdC_INT;
-  LErrQueue : TIdC_ULONG;
-  LException : EIdOpenSSLAPISSLError;
-  LErrStr : String;
-begin
-  if AMsg <> '' then begin
-    LErrStr := AMsg + sLineBreak;
-  end else begin
-    LErrStr := '';
-  end;
-  LErr := IdSslGetError(s, ARetCode);
-  case LErr of
-    OPENSSL_SSL_ERROR_SYSCALL :
-    begin
-      LErrQueue := IdSSLERR_get_err;
-      if LErrQueue = 0 then begin
-        if ARetCode = 0 then begin
-          LException := Create(LErrStr + RSSSLEOFViolation);
-          LException.FErrorCode := LErr;
-          LException.FRetCode := ARetCode;
-          raise LException;
-        end;
-        {Note that if LErrQueue returns 0 and ARetCode = -1, there probably
-        is an error in the underlying socket so you should raise a socket error}
-        if ARetCode = -1 then begin
-          GStack.RaiseLastSocketError;
-        end;
-      end else begin
-        EIdOSSLUnderlyingCryptoError.RaiseExceptionCode(LErrQueue, LErrStr + AMsg);
-      end;
-    end;
-    OPENSSL_SSL_ERROR_SSL : begin
-      EIdOSSLUnderlyingCryptoError.RaiseException(LErrStr + AMsg);
-    end
-  else
-    LException := Create(LErrStr + String(GetErrorMessage(LErr)));
-    LException.FErrorCode := LErr;
-    LException.FRetCode := ARetCode;
-    raise LException;
-  end;
 end;
 
 initialization

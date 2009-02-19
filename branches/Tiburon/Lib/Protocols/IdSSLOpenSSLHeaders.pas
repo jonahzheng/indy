@@ -751,7 +751,8 @@ my $default_depflags = " -DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_CAPIENG -DOPENSSL_NO
 (*$HPPEMIT '#undef OCSP_REQUEST'*)
 (*$HPPEMIT '#undef OCSP_RESPONSE'*)
 {$ENDIF}
-uses 
+uses
+  IdException,
   {$IFDEF KYLIX}
    libc,
   {$ENDIF}
@@ -8283,16 +8284,16 @@ var
   {$ENDIF}
   IdSslPemReadBioPrivateKey : function(bio: PBIO; var x: PEVP_PKEY; cb: ppem_password_cb; u: Pointer): PEVP_PKEY cdecl = nil;
 //int	EVP_DigestInit_ex(EVP_MD_CTX *ctx, const EVP_MD *type, ENGINE *impl);
-  IdSslEvpDigestInitEx : function (ctx : PEVP_MD_CTX; const AType : PEVP_MD; impl : PENGINE) : TIdC_Int cdecl;
+  IdSslEvpDigestInitEx : function (ctx : PEVP_MD_CTX; const AType : PEVP_MD; impl : PENGINE) : TIdC_Int cdecl = nil;
 //int	EVP_DigestUpdate(EVP_MD_CTX *ctx,const void *d,
 //			 size_t cnt);
-  IdSslEvpDigestUpdate : function (ctx : PEVP_MD_CTX; d : Pointer; cnt : size_t) : TIdC_Int cdecl;
+  IdSslEvpDigestUpdate : function (ctx : PEVP_MD_CTX; d : Pointer; cnt : size_t) : TIdC_Int cdecl = nil;
 //int	EVP_DigestFinal_ex(EVP_MD_CTX *ctx,unsigned char *md,unsigned int *s);
-  IdSslEvpDigestFinal : function(ctx : PEVP_MD_CTX; md : PAnsiChar; var s : TIdC_UInt) : TIdC_Int cdecl;
+  IdSslEvpDigestFinalEx : function(ctx : PEVP_MD_CTX; md : PAnsiChar; var s : TIdC_UInt) : TIdC_Int cdecl = nil;
 //void	EVP_MD_CTX_init(EVP_MD_CTX *ctx);
-  IdSslEvpMDCtxInit : procedure(ctx : PEVP_MD_CTX) cdecl;
+  IdSslEvpMDCtxInit : procedure(ctx : PEVP_MD_CTX) cdecl = nil;
 //int	EVP_MD_CTX_cleanup(EVP_MD_CTX *ctx);
-  IdSslEvpMDCtxCleanup : function(ctx : PEVP_MD_CTX) : TIdC_Int;
+  IdSslEvpMDCtxCleanup : function(ctx : PEVP_MD_CTX) : TIdC_Int cdecl = nil;
   {$IFNDEF OPENSSL_NO_DES}
   IdSslEvpDesEde3Cbc : function: PEVP_CIPHER cdecl = nil;
   {$ENDIF}
@@ -8564,18 +8565,123 @@ function IdSslMASN1StringData(x : PASN1_STRING) : PAnsiChar;
 function ErrMsg(AErr : TIdC_ULONG) : AnsiString;
 function GetCryptLibHandle : Integer;
 
+type
+//moved from IdSSLOpenSSL so we can use these classes in other places
+  EIdOpenSSLError               = class(EIdException);
+  TIdOpenSSLAPISSLError = class of EIdOpenSSLAPISSLError;
+
+  EIdOpenSSLAPISSLError = class(EIdOpenSSLError)
+  protected
+    FErrorCode : TIdC_INT;
+    FRetCode : TIdC_INT;
+  public
+    class procedure RaiseException(s: PSSL;
+      const ARetCode : TIdC_INT; const AMsg : String = '');
+    property ErrorCode : TIdC_INT read FErrorCode;
+    property RetCode : TIdC_INT read FRetCode;
+  end;
+
+  TIdOpenSSLAPICryptoError = class of EIdOpenSSLAPICryptoError;
+  EIdOpenSSLAPICryptoError = class(EIdOpenSSLError)
+  protected
+    FErrorCode : TIdC_ULONG;
+  public
+    class procedure RaiseExceptionCode(const AErrCode : TIdC_ULONG; const AMsg : String = '');
+    class procedure RaiseException(const AMsg : String = '');
+    property ErrorCode : TIdC_ULONG read FErrorCode;
+  end;
+  EIdOSSLUnderlyingCryptoError = class(EIdOpenSSLAPICryptoError);
+
 implementation
 
 uses
   Classes,
-  IdException,
-  IdGlobal  //needed for Sys symbol
+  IdGlobal,  //needed for Sys symbol
+  IdResourceStringsProtocols,
+  IdStack
   {$IFDEF FPC}
     , DynLibs  // better add DynLibs only for fpc
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   , Windows
   {$ENDIF};
+
+function GetErrorMessage(const AErr : TIdC_ULONG) : AnsiString;  {$IFDEF USEINLINE} inline; {$ENDIF}
+var
+  LErrMsg: array [0..160] of AnsiChar;
+begin
+  IdSSLERR_error_string(AErr, @LErrMsg);
+  result := StrPas(PAnsiChar(@LErrMsg));
+end;
+
+{ EIdOpenSSLAPICryptoError }
+class procedure EIdOpenSSLAPICryptoError.RaiseException(const AMsg : String = '');
+begin
+  RaiseExceptionCode(IdSSLERR_get_err(), AMsg);
+end;
+
+class procedure EIdOpenSSLAPICryptoError.RaiseExceptionCode(
+  const AErrCode: TIdC_ULONG; const AMsg: String);
+var
+  LMsg: String;
+  LException : EIdOpenSSLAPICryptoError;
+begin
+  if AMsg <> '' then begin
+    LMsg := AMsg + sLineBreak + String(GetErrorMessage(AErrCode));
+  end else begin
+    LMsg := String(GetErrorMessage(AErrCode));
+  end;
+  LException := Create(LMsg);
+  LException.FErrorCode := AErrCode;
+  raise LException;
+end;
+
+{ EIdOpenSSLAPISSLError }
+
+class procedure EIdOpenSSLAPISSLError.RaiseException(s: PSSL;
+  const ARetCode: TIdC_INT; const AMsg: String);
+var
+  LErr : TIdC_INT;
+  LErrQueue : TIdC_ULONG;
+  LException : EIdOpenSSLAPISSLError;
+  LErrStr : String;
+begin
+  if AMsg <> '' then begin
+    LErrStr := AMsg + sLineBreak;
+  end else begin
+    LErrStr := '';
+  end;
+  LErr := IdSslGetError(s, ARetCode);
+  case LErr of
+    OPENSSL_SSL_ERROR_SYSCALL :
+    begin
+      LErrQueue := IdSSLERR_get_err;
+      if LErrQueue = 0 then begin
+        if ARetCode = 0 then begin
+          LException := Create(LErrStr + RSSSLEOFViolation);
+          LException.FErrorCode := LErr;
+          LException.FRetCode := ARetCode;
+          raise LException;
+        end;
+        {Note that if LErrQueue returns 0 and ARetCode = -1, there probably
+        is an error in the underlying socket so you should raise a socket error}
+        if ARetCode = -1 then begin
+          GStack.RaiseLastSocketError;
+        end;
+      end else begin
+        EIdOSSLUnderlyingCryptoError.RaiseExceptionCode(LErrQueue, LErrStr + AMsg);
+      end;
+    end;
+    OPENSSL_SSL_ERROR_SSL : begin
+      EIdOSSLUnderlyingCryptoError.RaiseException(LErrStr + AMsg);
+    end
+  else
+    LException := Create(LErrStr + String(GetErrorMessage(LErr)));
+    LException.FErrorCode := LErr;
+    LException.FRetCode := ARetCode;
+    raise LException;
+  end;
+end;
 
 const
   {$IFDEF UNIX}
@@ -11698,9 +11804,10 @@ begin
   {$IFNDEF OPENSSL_NO_MD5}
   @IdSslEvpMd5 := LoadFunctionCLib(fn_EVP_md5);
   {$ENDIF}
+  @IdSslEvpMDCtxInit := LoadFunctionCLib(fn_EVP_MD_CTX_init);
   @IdSslEvpDigestInitEx := LoadFunctionCLib(fn_EVP_DigestInit_ex);
   @IdSslEvpDigestUpdate := LoadFunctionClib(fn_EVP_DigestUpdate);
-  @IdSslEvpDigestFinal := LoadFunctionCLib(fn_EVP_DigestFinal_ex);
+  @IdSslEvpDigestFinalEx := LoadFunctionCLib(fn_EVP_DigestFinal_ex);
   @IdSslEvpMDCtxCleanup := LoadFunctionCLib(fn_EVP_MD_CTX_cleanup);
   @IdSslEvpPKEYType := LoadFunctionCLib(fn_EVP_PKEY_type);
   @IdSslEvpPKeyNew := LoadFunctionCLib(fn_EVP_PKEY_new);
