@@ -43,7 +43,12 @@ type
   protected
     function GetHashInst : TIdHashInst; override;
   end;
-
+  {$IFNDEF DOTNET}
+  EIdDigestError = class(EIdOpenSSLAPICryptoError);
+  EIdDigestFinalEx = class(EIdDigestError);
+  EIdDigestInitEx = class(EIdDigestError);
+  EIdDigestUpdate = class(EIdDigestError);
+  {$ENDIF}
 
 implementation
 {$IFNDEF DOTNET}
@@ -53,11 +58,16 @@ uses IdCTypes;
 { TIdHashInt }
 
 function TIdHashInt.FinalHash(ACtx: TIdHashIntCtx): TIdBytes;
-var LLen : TIdC_UInt;
+{$IFNDEF DOTNET}
+var LLen, LRet : TIdC_UInt;
+{$ENDIF}
 begin
   {$IFNDEF DOTNET}
   SetLength(Result,OPENSSL_EVP_MAX_MD_SIZE);
-  IdSslEvpDigestFinal(@ACtx,@Result[0],LLen);
+  LRet := IdSslEvpDigestFinalEx(@ACtx,@Result[0],LLen);
+  if LRet <> 1 then begin
+    EIdDigestFinalEx.RaiseException('EVP_DigestFinal_ex error');
+  end;
   SetLength(Result,LLen);
   IdSslEvpMDCtxCleanup(@ACtx);
   {$ENDIF}
@@ -94,19 +104,30 @@ end;
 
 function TIdHashInt.InitHash: TIdHashIntCtx;
 var LHash : TIdHashInst;
+ {$IFNDEF DOTNET}
+  LRet : TIdC_Int;
+  {$ENDIF}
 begin
   LHash := GetHashInst;
   {$IFNDEF DOTNET}
   IdSslEvpMDCtxInit(@Result);
-  IdSslEvpDigestInitEx(@Result, LHash, nil);
+  LRet := IdSslEvpDigestInitEx(@Result, LHash, nil);
+  if LRet <> 1 then begin
+    EIdDigestInitEx.RaiseException('EVP_DigestInit_ex error');
+  end;
   {$ENDIF}
 end;
 
 procedure TIdHashInt.UpdateHash(ACtx: TIdHashIntCtx; const AIn: TIdBytes);
+{$IFNDEF DOTNET}
+var LRet : TIdC_Int;
+{$ENDIF}
 begin
    {$IFNDEF DOTNET}
-
-  IdSslEvpDigestUpdate(@ACtx,@Ain[0],Length(AIn));
+  LRet := IdSslEvpDigestUpdate(@ACtx,@Ain[0],Length(AIn));
+  if LRet <> 1 then begin
+    EIdDigestInitEx.RaiseException('EVP_DigestUpdate error');
+  end;
   {$ENDIF}
 end;
 
