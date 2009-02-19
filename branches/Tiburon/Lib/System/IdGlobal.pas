@@ -2498,31 +2498,26 @@ procedure CopyTIdChar(const ASource: Char; var VDest: TIdBytes; const ADestIndex
   AEncoding: TIdTextEncoding = nil);
 var
   {$IFDEF DOTNET}
-  LChars : array[0..0] of Char;
+  LChars: array[0..0] of Char;
   {$ELSE}
-  LChars : TIdWideChars;
-    {$IFNDEF UNICODESTRING}
+    {$IFDEF UNICODESTRING}
+  LChars: TIdWideChars;
+    {$ELSE}
   LTmp: WideString;
-  I: Integer;
     {$ENDIF}
   {$ENDIF}
 begin
   EnsureEncoding(AEncoding);
-  {$IFDEF DOTNET}
-  LChars[0] := ASource;
-  {$ELSE}
-    {$IFDEF UNICODESTRING}
+  {$IFDEF DOTNET_OR_UNICODESTRING}
+    {$IFNDEF DOTNET}
   SetLength(LChars, 1);
-  LChars[0] := ASource;
-    {$ELSE}
-  LTmp := ASource;
-  SetLength(LChars, Length(LTmp));
-  for I := 1 to Length(LTmp) do begin
-    LChars[I-1] := LTmp[I];
-  end;
     {$ENDIF}
+  LChars[0] := ASource;
+  AEncoding.GetBytes(LChars, 0, 1, VDest, ADestIndex);
+  {$ELSE}
+  LTmp := ASource;  // convert to Unicode
+  AEncoding.GetBytes(LTmp, 1, Length(LTmp), VDest, ADestIndex);
   {$ENDIF}
-  AEncoding.GetBytes(LChars, 0, Length(LChars), VDest, ADestIndex);
 end;
 
 procedure CopyTIdShort(const ASource: Short; var VDest: TIdBytes; const ADestIndex: Integer);
@@ -2646,11 +2641,19 @@ procedure CopyTIdString(const ASource: String; const ASourceIndex: Integer;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 var
   LLength: Integer;
+  {$IFNDEF DOTNET_OR_UNICODESTRING}
+  LTmp: WideString;
+  {$ENDIF}
 begin
   EnsureEncoding(AEncoding);
   LLength := IndyLength(ASource, ALength, ASourceIndex);
   if LLength > 0 then begin
+    {$IFDEF DOTNET_OR_UNICODESTRING}
     AEncoding.GetBytes(ASource, ASourceIndex{$IFDEF DOTNET}-1{$ENDIF}, LLength, VDest, ADestIndex);
+    {$ELSE}
+    LTmp := Copy(ASource, ASourceIndex, LLength); // convert to Unicode
+    AEncoding.GetBytes(LTmp, 1, Length(LTmp), VDest, ADestIndex);
+    {$ENDIF}
   end;
 end;
 
@@ -4483,38 +4486,20 @@ end;
 function ToBytes(const AValue: string; const ALength: Integer; const AIndex: Integer = 1;
   AEncoding: TIdTextEncoding = nil): TIdBytes; overload;
 var
-  LSrcLen, LLength: Integer;
-  I: Integer;
-  {$IFDEF DOTNET}
-  LChars: array[0..0] of Char;
-  {$ELSE}
-  LChars: TIdWideChars;
-    {$IFNDEF UNICODESTRING}
-  LTmp: WideString;
-    {$ENDIF}
-  {$ENDIF}
+  LLength: Integer;
 begin
-  EnsureEncoding(AEncoding);
-  LSrcLen := IndyLength(AValue, ALength, AIndex);
-  if LSrcLen > 0 then
+  LLength := IndyLength(AValue, ALength, AIndex);
+  if LLength > 0 then
   begin
-    {$IFNDEF DOTNET}
-    SetLength(LChars, 1);
-      {$IFNDEF UNICODESTRING}
-    LTmp := Copy(AValue, AIndex, LSrcLen);
-      {$ENDIF}
+    EnsureEncoding(AEncoding);
+    {$IFDEF DOTNET_OR_UNICODESTRING}
+    Result := AEncoding.GetBytes(Copy(AValue, AIndex, LLength));
+    {$ELSE}
+    Result := TIdTextEncoding.Convert(
+      Get8BitEncoding,
+      AEncoding,
+      RawToBytes(AValue[AIndex], LLength));
     {$ENDIF}
-    LLength := 0;
-    for I := {$IFDEF DOTNET_OR_UNICODESTRING}AIndex{$ELSE}1{$ENDIF} to LSrcLen do
-    begin
-      LChars[0] := {$IFDEF DOTNET_OR_UNICODESTRING}AValue{$ELSE}LTmp{$ENDIF}[I];
-      Inc(LLength, AEncoding.GetByteCount(LChars, 0, 1));
-    end;
-    SetLength(Result, LLength);
-    AEncoding.GetBytes(
-      {$IFDEF DOTNET_OR_UNICODESTRING}AValue{$ELSE}LTmp{$ENDIF},
-      {$IFDEF DOTNET_OR_UNICODESTRING}AIndex{$IFDEF DOTNET}-1{$ENDIF}{$ELSE}1{$ENDIF},
-      LSrcLen, Result, 0);
   end else begin
     SetLength(Result, 0);
   end;
@@ -4525,30 +4510,24 @@ var
   {$IFDEF DOTNET}
   LChars: array[0..0] of Char;
   {$ELSE}
+    {$IFDEF UNICODESTRING}
   LChars: TIdWideChars;
-    {$IFNDEF UNICODESTRING}
+    {$ELSE}
   LTmp: WideString;
-  I: Integer;
     {$ENDIF}
   {$ENDIF}
 begin
   EnsureEncoding(AEncoding);
-  {$IFDEF DOTNET}
-  LChars[0] := AValue;
-  {$ELSE}
-    {$IFDEF UNICODESTRING}
-  SetLength(LChars, 1);
-  LChars[0] := AValue;
-    {$ELSE}
-  LTmp := AValue;
-  SetLength(LChars, Length(LTmp));
-  for I := 1 to Length(LTmp) do begin
-    LChars[I-1] := LTmp[I];
-  end;
+  {$IFDEF DOTNET_OR_UNICODESTRING}
+    {$IFNDEF DOTNET}
+  SetLength(Chars, 1);
     {$ENDIF}
+  LChars[0] := AValue;
+  Result := AEncoding.GetBytes(LChars, 0, 1);
+  {$ELSE}
+  LTmp := AValue;  // convert to Unicode
+  Result := AEncoding.GetBytes(LTmp);
   {$ENDIF}
-  SetLength(Result, AEncoding.GetByteCount(LChars, 0, Length(LChars)));
-  AEncoding.GetBytes(LChars, 0, Length(LChars), Result, 0);
 end;
 
 function ToBytes(const AValue: Int64): TIdBytes; overload;
@@ -4640,30 +4619,26 @@ var
   {$IFDEF DOTNET}
   LChars: array[0..0] of Char;
   {$ELSE}
+    {$IFDEF UNICODESTRING}
   LChars: TIdWideChars;
-    {$IFNDEF UNICODESTRING}
+    {$ELSE}
   LTmp: WideString;
-  I: Integer;
     {$ENDIF}
   {$ENDIF}
 begin
   EnsureEncoding(AEncoding);
-  {$IFDEF DOTNET}
-  LChars[0] := AValue;
-  {$ELSE}
-    {$IFDEF UNICODESTRING}
+  {$IFDEF DOTNET_OR_UNICODESTRING}
+    {$IFNDEF DOTNET}
   SetLength(LChars, 1);
-  LChars[0] := AValue;
-    {$ELSE}
-  LTmp := AValue;
-  SetLength(LChars, Length(LTmp));
-  for I := 1 to Length(LTmp) do begin
-    LChars[I-1] := LTmp[I];
-  end;
     {$ENDIF}
+  LChars[0] := AValue;
+  Assert(Length(Bytes) >= AEncoding.GetByteCount(LChars, 0, 1));
+  AEncoding.GetBytes(LChars, 0, 1, Bytes, 0);
+  {$ELSE}
+  LTmp := AValue;  // convert to Unicode
+  Assert(Length(Bytes) >= AEncoding.GetByteCount(LTmp));
+  AEncoding.GetBytes(LTmp, 1, Length(LTmp), Bytes, 0);
   {$ENDIF}
-  Assert(Length(Bytes) >= AEncoding.GetByteCount(LChars, 0, Length(LChars)));
-  AEncoding.GetBytes(LChars, 0, Length(LChars), Bytes, 0);
 end;
 
 procedure ToBytesF(var Bytes: TIdBytes; const AValue: LongInt);
@@ -4863,11 +4838,22 @@ function BytesToString(const AValue: TIdBytes; const AStartIndex: Integer;
   const ALength: Integer = -1; AEncoding: TIdTextEncoding = nil): string; overload;
 var
   LLength: Integer;
+  {$IFNDEF DOTNET_OR_UNICODESTRING}
+  LBytes: TIdBytes;
+  {$ENDIF}
 begin
   LLength := IndyLength(AValue, ALength, AStartIndex);
   if LLength > 0 then begin
     EnsureEncoding(AEncoding);
+    {$IFDEF DOTNET_OR_UNICODESTRING}
     Result := AEncoding.GetString(AValue, AStartIndex, LLength);
+    {$ELSE}
+    LBytes := TIdTextEncoding.Convert(
+      AEncoding,
+      Get8BitEncoding,
+      AValue, AStartIndex, LLength);
+    SetString(Result, PAnsiChar(LBytes), Length(LBytes));
+    {$ENDIF}
   end else begin
     Result := '';
   end;
