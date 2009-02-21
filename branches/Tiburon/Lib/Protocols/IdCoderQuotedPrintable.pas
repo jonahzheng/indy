@@ -265,65 +265,43 @@ end;
 { TIdEncoderQuotedPrintable }
 procedure TIdEncoderQuotedPrintable.Encode(ASrcStream, ADestStream: TStream; const ABytes: Integer = -1);
 const
-  SafeChars = [#33..#60, #62..#126];
-  HalfSafeChars = [#32, TAB];
+  SafeChars = '!"#$%&''()*+,-./0123456789:;<>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~'; {do not localize}
+  HalfSafeChars = #9' ';
   // Rule #2, #3
 var
-  CurrentLine: ShortString;
-  // this is a shortstring for performance reasons.
-  // the lines may never get longer than 76, so even if I go a bit
-  // further, they won't go longer than 80 or so
-  SourceLine: AnsiString;
-  CurrentPos: Integer;
+  SourceLine: String;
+  CurrentLen: Integer;
 
-  procedure WriteToString(const s: AnsiString);
-  var
-    SLen: Integer;
+  procedure WriteToString(const s: String);
   begin
-    SLen := Length(s);
-    MoveChars(s, 1, CurrentLine, CurrentPos, SLen);
-    Inc(CurrentPos, SLen);
+    WriteStringToStream(ADestStream, s);
+    Inc(CurrentLen, Length(s));
   end;
 
   procedure FinishLine;
   begin
-    WriteStringToStream(ADestStream,
-      {$IFDEF UNICODESTRING}
-      String(Copy(CurrentLine, 1, CurrentPos-1)) // explicit convert to Unicode
-      {$ELSE}
-      Copy(CurrentLine, 1, CurrentPos-1)
-      {$ENDIF}
-       + EOL);
-    CurrentPos := 1;
+    WriteStringToStream(ADestStream, EOL);
+    CurrentLen := 0;
   end;
 
-  function CharToHex(const AChar: AnsiChar): AnsiString;
+  function CharToHex(const AChar: Char): String;
   begin
-    {$IFDEF UNICODESTRING}
-    Result := '=' + AnsiString(ByteToHex(Ord(AChar))); {do not localize}
-    {$ELSE}
     Result := '=' + ByteToHex(Ord(AChar)); {do not localize}
-    {$ENDIF}
   end;
 
 var
   I: Integer;
-  LSourceSize: Integer;
+  LSourceSize: TIdStreamSize;
 begin
-  SetLength(CurrentLine, 255);
   //ie while not eof
   LSourceSize := ASrcStream.Size;
   while ASrcStream.Position < LSourceSize do begin
-    {$IFDEF UNICODESTRING}
-    SourceLine := AnsiString(ReadLnFromStream(ASrcStream, -1, False, en8bit)); // explicit convert to Ansi
-    {$ELSE}
     SourceLine := ReadLnFromStream(ASrcStream, -1, False, en8bit);
-    {$ENDIF}
-    CurrentPos := 1;
+    CurrentLen := 0;
     for i := 1 to Length(SourceLine) do begin
-      if not (SourceLine[i] in SafeChars) then
+      if not CharIsInSet(SourceLine, i, SafeChars) then
       begin
-        if (SourceLine[i] in HalfSafeChars) then begin
+        if CharIsInSet(SourceLine, i, HalfSafeChars) then begin
           if i = Length(SourceLine) then begin
             WriteToString(CharToHex(SourceLine[i]));
           end else begin
@@ -333,12 +311,12 @@ begin
           WriteToString(CharToHex(SourceLine[i]));
         end;
       end
-      else if ((CurrentPos = 1) or (CurrentPos = 71)) and (SourceLine[i] = '.') then begin {do not localize}
+      else if ((CurrentLen = 0) or (CurrentLen = 70)) and (SourceLine[i] = '.') then begin {do not localize}
         WriteToString(CharToHex(SourceLine[i]));
       end else begin
         WriteToString(SourceLine[i]);
       end;
-      if CurrentPos > 70 then begin
+      if CurrentLen >= 70 then begin
         WriteToString('=');  {Do not Localize}
         FinishLine;
       end;
