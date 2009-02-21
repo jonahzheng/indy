@@ -133,6 +133,8 @@ resourcestring
   RSReadLnWaitMaxAttemptsExceeded = 'Max line read attempts exceeded.';
   RSAcceptTimeout = 'Accept timed out.';
   RSReadLnMaxLineLengthExceeded = 'Max line length exceeded.';
+  RSRequiresLargeStream = 'Set LargeStream to True to send streams greater than 2GB';
+  RSDataTooLarge = 'Data is too large for stream';
   RSConnectTimeout = 'Connect timed out.';
   RSICMPNotEnoughtBytes = 'Not enough bytes received';
   RSICMPNonEchoResponse = 'Non-echo type response received';
@@ -211,11 +213,11 @@ resourcestring
   RSICMPAdminProhibitted = 'Communication Administratively Prohibited';
   RSICMPHostPrecViolation = 'Host Precedence Violation';
   RSICMPPrecedenceCutoffInEffect =  'Precedence cutoff in effect';
-    //for IPv6
-   RSICMPNoRouteToDest = 'no route to destination';
-   RSICMPAAdminDestProhibitted =  'communication with destination administratively prohibited';
-   RSICMPSourceFilterFailed = 'source address failed ingress/egress policy';
-   RSICMPRejectRoutToDest = 'reject route to destination';
+  //for IPv6
+  RSICMPNoRouteToDest = 'no route to destination';
+  RSICMPAAdminDestProhibitted =  'communication with destination administratively prohibited';
+  RSICMPSourceFilterFailed = 'source address failed ingress/egress policy';
+  RSICMPRejectRoutToDest = 'reject route to destination';
   // Destination Address - 11
   RSICMPTTLExceeded     = 'time to live exceeded in transit';
   RSICMPHopLimitExceeded = 'hop limit exceeded in transit';
