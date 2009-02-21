@@ -637,7 +637,7 @@ procedure TIdMessageEncoderMIME.Encode(ASrc: TStream; ADest: TStream);
 var
   s: string;
   LEncoder: TIdEncoderMIME;
-  LSPos, LSSize : Int64;
+  LSPos, LSSize : TIdStreamSize;
 begin
   ASrc.Position := 0;
   LSPos := 0;
