@@ -149,8 +149,8 @@ type
 implementation
 
 uses
-  IdBuffer, IdHTTPHeaderInfo, IdGlobal, IdGlobalProtocols, IdCookie,
-  {$IFDEF CLR}IdStream,{$ENDIF}
+  IdBuffer, IdHTTPHeaderInfo, IdGlobal, IdGlobalProtocols, IdCookie, IdStream,
+  {$IFDEF DOTNET_OR_UNICODESTRING}IdCharsets,{$ENDIF}
   SysUtils, Math;
 
 //TODO:  Not sure where these really should go.  They should not be in the main packages
@@ -265,7 +265,7 @@ var
 begin
   LValue := string(GetStringVariable(Index));
   if Length(LValue) > 0 then begin
-    Result := ParseDate(LValue)
+    Result := ParseDate(LValue);
   end else begin
     Result := -1;
   end;
@@ -279,8 +279,10 @@ end;
 function TIdHTTPAppRequest.GetStringVariable(Index: Integer): AnsiString;
 var
   s: string;
-  LPos: {$IFDEF SIZE64STREAM}Int64{$ELSE}Integer{$ENDIF};
+  LPos: TIdStreamSize;
+  LBytes: TIdBytes;
 begin
+  LBytes := nil;
   case Index of
     INDEX_Method          : Result := AnsiString(FRequestInfo.Command);
     INDEX_ProtocolVersion : Result := AnsiString(FRequestInfo.Version);
@@ -327,7 +329,24 @@ begin
         LPos := FContentStream.Position;
         FContentStream.Position := 0;
         try
-          Result := AnsiString(ReadStringAsCharSet(FContentStream, FRequestInfo.CharSet));
+          // RLebeau 2/21/2009: not using ReadStringAsCharSet() anymore.  Since
+          // this method returns an AnsiString, the stream data should not be
+          // decoded to Unicode and then converted to Ansi.  That can lose
+          // characters.  Also, for D2009+, the AnsiString payload should have
+          // the proper codepage assigned to it as well so it can be converted
+          // correctly if assigned to other string variables later on...
+
+          // Result := ReadStringAsCharSet(FContentStream, FRequestInfo.CharSet);
+          TIdStreamHelper.ReadBytes(FContentStream, LBytes);
+          {$IFDEF DOTNET}
+          // RLebeau: how to handle this correctly in .NET?
+          Result := AnsiString(BytesToString(LBytes, Get8BitEncoding));
+          {$ELSE}
+          SetString(Result, PAnsiChar(LBytes), Length(LBytes));
+            {$IFDEF UNICODESTRING}
+          SetCodePage(PRawByteString(@Result)^, CharsetToCodePage(FRequestInfo.CharSet), False);
+            {$ENDIF}
+          {$ENDIF}
         finally
           FContentStream.Position := LPos;
         end;
@@ -361,8 +380,26 @@ begin
 end;
 
 function TIdHTTPAppRequest.ReadString(Count: Integer): AnsiString;
+var
+  LBytes: TIdBytes;
 begin
-  Result := AnsiString(ReadStringFromStream(FContentStream, Count));
+  // RLebeau 2/21/2009: not using ReadStringAsCharSet() anymore.  Since
+  // this method returns an AnsiString, the stream data should not be
+  // decoded to Unicode and then converted to Ansi.  That can lose
+  // characters.
+
+  // Result := AnsiString(ReadStringFromStream(FContentStream, Count));
+  LBytes := nil;
+  TIdStreamHelper.ReadBytes(FContentStream, LBytes, Count);
+  {$IFDEF DOTNET}
+  // RLebeau: how to handle this correctly in .NET?
+  Result := AnsiString(BytesToString(LBytes, Get8BitEncoding));
+  {$ELSE}
+  SetString(Result, PAnsiChar(LBytes), Length(LBytes));
+    {$IFDEF UNICODESTRING}
+  SetCodePage(PRawByteString(@Result)^, CharsetToCodePage(FRequestInfo.CharSet), False);
+    {$ENDIF}
+  {$ENDIF}
 end;
 
 function TIdHTTPAppRequest.TranslateURI(const URI: string): string;
@@ -397,6 +434,8 @@ begin
 {$IFNDEF CLR}
   Move(ABuffer, LBuffer[0], ACount);
 {$ELSE}
+  // RLebeau: this can't be right?  It is interpretting the source as a
+  // null-terminated character string, which is likely not the case...
   CopyTIdBytes(ToBytes(string(ABuffer)), 0, LBuffer, 0, ACount);
 {$ENDIF}
   FThread.Connection.IOHandler.Write(LBuffer);
@@ -422,8 +461,42 @@ begin
 end;
 
 function TIdHTTPAppResponse.GetContent: AnsiString;
+{$IFDEF DOTNET_OR_UNICODESTRING}
+var
+  LEncoding: TIdTextEncoding;
+  LBytes: TIdBytes;
+{$ENDIF}
 begin
-  Result := AnsiString(FResponseInfo.ContentText);
+  {$IFDEF DOTNET_OR_UNICODESTRING}
+  // RLebeau 2/21/2009: encode the content using the specified charset.
+  // Also, the AnsiString payload should have the proper codepage assigned
+  // to it as well so it can be converted correctly if assigned to other
+  // string variables later on...
+  Result := '';
+  CP := CharsetToCodePage(FResponseInfo.CharSet);
+  LEncoding := TIdTextEncoding.GetEncoding(CP);
+    {$IFNDEF DOTNET}
+  try
+    {$ENDIF}
+    LBytes := TIdTextEncoding.Convert(
+      TIdTextEncoding.Unicode,
+      LEncoding,
+      TIdTextEncoding.Unicode.GetBytes(FResponseInfo.ContentText));
+    {$IFDEF DOTNET}
+    // RLebeau: how to handle this correctly in .NET?
+    Result := AnsiString(BytesToString(LBytes, Get8BitEncoding));
+    {$ELSE}
+    SetString(Result, PAnsiChar(LBytes), Length(LBytes));
+    SetCodePage(PRawByteString(@Result)^, CP, False);
+    {$ENDIF}
+    {$IFNDEF DOTNET}
+  finally
+    LEncoding.Free;
+  end;
+    {$ENDIF}
+  {$ELSE}
+  Result := FResponseInfo.ContentText;
+  {$ENDIF}
 end;
 
 function TIdHTTPAppResponse.GetLogMessage: string;
@@ -579,7 +652,7 @@ Var
 begin
   for i := 0 to Cookies.Count - 1 do begin
     with FResponseInfo.Cookies.Add do begin
-      CookieText := string(Cookies[i].HeaderValue)
+      CookieText := string(Cookies[i].HeaderValue);
     end;
   end;
   FResponseInfo.CustomHeaders.Clear;
