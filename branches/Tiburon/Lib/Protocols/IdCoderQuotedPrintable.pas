@@ -266,7 +266,7 @@ end;
 procedure TIdEncoderQuotedPrintable.Encode(ASrcStream, ADestStream: TStream; const ABytes: Integer = -1);
 const
   SafeChars = '!"#$%&''()*+,-./0123456789:;<>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~'; {do not localize}
-  HalfSafeChars = #9' ';
+  HalfSafeChars = TAB+CHAR32;
   // Rule #2, #3
 var
   SourceLine: String;
