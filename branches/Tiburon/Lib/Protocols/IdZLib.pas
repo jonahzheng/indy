@@ -267,7 +267,7 @@ begin
   begin
     //handle integer overflow
     {$IFDEF SIZE64STREAM}
-    Available := TIdC_UINT(IndyMin(AStream.Size - AStream.Position, Int64($FFFFFFFF)));
+    Available := TIdC_UINT(IndyMin(AStream.Size - AStream.Position, High(TIdC_UINT)));
     // TODO: account for a 64-bit position in a 32-bit environment
     Inc(PtrInt(Result), AStream.Position);
     {$ELSE}
@@ -440,7 +440,7 @@ begin
     buf := Pointer(BackObj.InMem);
     //handle integer overflow
     {$IFDEF SIZE64STREAM}
-    Result := Integer(IndyMin(S.Size - S.Position, Int64(MaxInt)));
+    Result := TIdC_UNSIGNED(IndyMin(S.Size - S.Position, High(TIdC_UNSIGNED)));
     {$ELSE}
     Result := S.Size - S.Position;
     {$ENDIF}
@@ -555,7 +555,7 @@ end;
 type
   TMemStreamAccess = class(TMemoryStream);
 
-function ExpandStream(AStream: TStream; const ACapacity : Int64): Boolean;
+function ExpandStream(AStream: TStream; const ACapacity : TIdStreamSize): Boolean;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   Result := True;
