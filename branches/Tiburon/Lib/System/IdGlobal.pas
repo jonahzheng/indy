@@ -692,6 +692,12 @@ type
      {$ENDIF}
   {$ENDIF}
 
+  {$IFDEF SIZE64STREAM}
+  TIdStreamSize = Int64;
+  {$ELSE}
+  TIdStreamSize = Integer;
+  {$ENDIF}
+
   {
   Delphi/C++Builder 2009+ has a TEncoding class which mirrors System.Text.Encoding
   in .NET, but does not have a TDecoder class which mirrors System.Text.Decoder.
@@ -1029,7 +1035,7 @@ const
 // otherwise the minimum of the two lengths is returned instead.
 function IndyLength(const ABuffer: String; const ALength: Integer = -1; const AIndex: Integer = 1): Integer; overload;
 function IndyLength(const ABuffer: TIdBytes; const ALength: Integer = -1; const AIndex: Integer = 0): Integer; overload;
-function IndyLength(const ABuffer: TStream; const ALength: Int64 = -1): Int64; overload;
+function IndyLength(const ABuffer: TStream; const ALength: TIdStreamSize = -1): TIdStreamSize; overload;
 
 function IndyFormat(const AFormat: string; const Args: array of const): string;
 function IndyIncludeTrailingPathDelimiter(const S: string): string;
@@ -1105,7 +1111,7 @@ procedure BytesToRaw(const AValue: TIdBytes; var VBuffer; const ASize: Integer);
 // TIdBytes utilities
 procedure AppendBytes(var VBytes: TIdBytes; const AToAdd: TIdBytes; const AIndex: Integer = 0; const ALength: Integer = -1);
 procedure AppendByte(var VBytes: TIdBytes; const AByte: Byte);
-procedure AppendString(var VBytes: TIdBytes; const AStr: String; ALength: Integer = -1; AEncoding: TIdTextEncoding = nil);
+procedure AppendString(var VBytes: TIdBytes; const AStr: String; const ALength: Integer = -1; AEncoding: TIdTextEncoding = nil);
 procedure ExpandBytes(var VBytes: TIdBytes; const AIndex: Integer; const ACount: Integer; const AFillByte: Byte = 0);
 procedure InsertBytes(var VBytes: TIdBytes; const ADestIndex: Integer; const ASource: TIdBytes; const ASourceIndex: Integer = 0);
 procedure InsertByte(var VBytes: TIdBytes; const AByte: Byte; const AIndex: Integer);
@@ -1121,11 +1127,7 @@ procedure WriteStringToStream(AStream: TStream; const AStr: string; AEncoding: T
 procedure WriteStringToStream(AStream: TStream; const AStr: string; const ALength: Integer = -1;
   const AIndex: Integer = 1; AEncoding: TIdTextEncoding = nil); overload;
 function ReadCharFromStream(AStream: TStream; var VChar: Char; AEncoding: TIdTextEncoding = nil): Integer;
-{$IFDEF SIZE64STREAM}
-function ReadTIdBytesFromStream(const AStream: TStream; var ABytes: TIdBytes; const Count: Int64): Int64;
-{$ELSE}
-function ReadTIdBytesFromStream(const AStream: TStream; var ABytes: TIdBytes; const Count: Integer): Integer;
-{$ENDIF}
+function ReadTIdBytesFromStream(const AStream: TStream; var ABytes: TIdBytes; const Count: TIdStreamSize): TIdStreamSize;
 procedure WriteTIdBytesToStream(const AStream: TStream; const ABytes: TIdBytes;
   const ASize: Integer = -1; const AIndex: Integer = 0);
 
@@ -1211,7 +1213,7 @@ function LittleEndianToHost(const AValue : Word) : Word; overload;
 function LittleEndianToHost(const AValue : LongWord): LongWord; overload;
 function LittleEndianToHost(const AValue : Integer): Integer; overload;
 
-procedure WriteMemoryStreamToStream(Src: TMemoryStream; Dest: TStream; Count: int64);
+procedure WriteMemoryStreamToStream(Src: TMemoryStream; Dest: TStream; Count: TIdStreamSize);
 {$IFNDEF DOTNETEXCLUDE}
 function IsCurrentThread(AThread: TThread): boolean;
 {$ENDIF}
@@ -3008,7 +3010,7 @@ begin
   {$ENDIF}
 end;
 
-procedure WriteMemoryStreamToStream(Src: TMemoryStream; Dest: TStream; Count: Int64);
+procedure WriteMemoryStreamToStream(Src: TMemoryStream; Dest: TStream; Count: TIdStreamSize);
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
   {$IFDEF DOTNET}
@@ -4071,10 +4073,10 @@ begin
   end;
 end;
 
-function IndyLength(const ABuffer: TStream; const ALength: Int64 = -1): Int64; overload;
+function IndyLength(const ABuffer: TStream; const ALength: TIdStreamSize = -1): TIdStreamSize; overload;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 var
-  LAvailable: Int64;
+  LAvailable: TIdStreamSize;
 begin
   LAvailable := IndyMax(ABuffer.Size - ABuffer.Position, 0);
   if ALength < 0 then begin
@@ -4842,6 +4844,9 @@ var
   LBytes: TIdBytes;
   {$ENDIF}
 begin
+  {$IFNDEF DOTNET_OR_UNICODESTRING}
+  LBytes := nil; // keep the compiler happy
+  {$ENDIF}
   LLength := IndyLength(AValue, ALength, AStartIndex);
   if LLength > 0 then begin
     EnsureEncoding(AEncoding);
@@ -4890,11 +4895,7 @@ begin
   Result := BytesToString(LBytes, 0, ASize, AEncoding);
 end;
 
-{$IFDEF SIZE64STREAM}
-function ReadTIdBytesFromStream(const AStream: TStream; var ABytes: TIdBytes; const Count: Int64): Int64;
-{$ELSE}
-function ReadTIdBytesFromStream(const AStream: TStream; var ABytes: TIdBytes; const Count: Integer): Integer;
-{$ENDIF}
+function ReadTIdBytesFromStream(const AStream: TStream; var ABytes: TIdBytes; const Count: TIdStreamSize): TIdStreamSize;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
   Result := TIdStreamHelper.ReadBytes(AStream, ABytes, Count);
@@ -4903,7 +4904,7 @@ end;
 function ReadCharFromStream(AStream: TStream; var VChar: Char;
   AEncoding: TIdTextEncoding = nil): Integer;
 var
-  StartPos: Int64;
+  StartPos: TIdStreamSize;
   Lb: Byte;
   NumChars: Integer;
   LBytes: TIdBytes;
@@ -5101,18 +5102,22 @@ begin
   VBytes[LOldLen] := AByte;
 end;
 
-procedure AppendString(var VBytes: TIdBytes; const AStr: String; ALength: Integer = -1;
+procedure AppendString(var VBytes: TIdBytes; const AStr: String; const ALength: Integer = -1;
   AEncoding: TIdTextEncoding = nil);
 var
-  LOldLen: Integer;
+  LBytes: TIdBytes;
+  LLength, LOldLen: Integer;
 begin
-  EnsureEncoding(AEncoding);
-  if ALength < 0 then begin
-    ALength := AEncoding.GetByteCount(AStr);
+  LBytes := nil; // keep the compiler happy
+  LLength := IndyLength(AStr, ALength);
+  if LLength > 0 then begin
+    EnsureEncoding(AEncoding);
+    LBytes := AEncoding.GetBytes(Copy(AStr, 1, LLength));
+    LOldLen := Length(VBytes);
+    LLength := Length(LBytes);
+    SetLength(VBytes, LOldLen + LLength);
+    CopyTIdBytes(LBytes, 0, VBytes, LOldLen, LLength);
   end;
-  LOldLen := Length(VBytes);
-  SetLength(VBytes, LOldLen + ALength);
-  CopyTIdString(AStr, VBytes, LOldLen, ALength, AEncoding);
 end;
 
 procedure ExpandBytes(var VBytes: TIdBytes; const AIndex: Integer; const ACount: Integer; const AFillByte: Byte = 0);
@@ -5416,14 +5421,10 @@ var
   LBuf: TIdBytes;
   LLine: TIdBytes;
   // LBuf: packed array [0..LBUFMAXSIZE] of Char;
-  LBufSize, LStrmPos, LStrmSize: {$IFDEF SIZE64STREAM}Int64{$ELSE}Integer{$ENDIF}; //LBytesToRead = stream size - Position
+  LBufSize, LStrmPos, LStrmSize: TIdStreamSize; //LBytesToRead = stream size - Position
   LCrEncountered: Boolean;
 
-  {$IFDEF SIZE64STREAM}
-  function FindEOL(const ABuf: TIdBytes; var VLineBufSize: Int64; var VCrEncountered: Boolean): Int64;
-  {$ELSE}
-  function FindEOL(const ABuf: TIdBytes; var VLineBufSize: Integer; var VCrEncountered: Boolean): Integer;
-  {$ENDIF}
+  function FindEOL(const ABuf: TIdBytes; var VLineBufSize: TIdStreamSize; var VCrEncountered: Boolean): TIdStreamSize;
   var
     i: Integer;
   begin
