@@ -299,7 +299,7 @@ var
   LBCmp : TIdBytes; //used as Byte
   LFlags : TIdBytes; //used as Byte
   LDict : TIdBytes; //used as Cardinal
-  LOrgPos : Int64;
+  LOrgPos : TIdStreamSize;
 begin
   SetLength(LBCmp, 1);
   SetLength(LFlags, 1);
