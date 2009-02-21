@@ -951,9 +951,9 @@ type
     function CRC(const AFIleName : String; const AStartPoint : Int64 = 0; const AEndPoint : Int64=0) : Int64;
     //verify file was uploaded, this is more comprehensive than the above
     function VerifyFile(ALocalFile : TStream; const ARemoteFile : String;
-      const AStartPoint : Int64 = 0; const AByteCount : Int64=0) : Boolean; overload;
+      const AStartPoint : TIdStreamSize = 0; const AByteCount : TIdStreamSize = 0) : Boolean; overload;
     function VerifyFile(const ALocalFile, ARemoteFile : String;
-      const AStartPoint : Int64 = 0; const AByteCount : Int64=0) : Boolean; overload;
+      const AStartPoint : TIdStreamSize = 0; const AByteCount : TIdStreamSize = 0) : Boolean; overload;
     //file parts must be in order in TStrings parameter
     //GlobalScape FTP Pro uses this for multipart simultanious file uploading
     procedure CombineFiles(const ATargetFile : String; AFileParts : TStrings);
@@ -3606,7 +3606,7 @@ begin
   end;
 end;
 
-function TIdFTP.VerifyFile(const ALocalFile, ARemoteFile: String; const AStartPoint, AByteCount: Int64): Boolean;
+function TIdFTP.VerifyFile(const ALocalFile, ARemoteFile: String; const AStartPoint, AByteCount: TIdStreamSize): Boolean;
 var
   LLocalStream: TStream;
   LRemoteFileName : String;
@@ -3634,13 +3634,13 @@ XCRC - get CRC32 checksum
 The command preference is from first to last (going from longest length to shortest).
 }
 function TIdFTP.VerifyFile(ALocalFile: TStream; const ARemoteFile: String;
-  const AStartPoint, AByteCount: Int64): Boolean;
+  const AStartPoint, AByteCount: TIdStreamSize): Boolean;
 var
   LRemoteCRC : String;
   LLocalCRC : String;
   LCmd : String;
-  LStartPoint : Int64;
-  LByteCount : Int64;  //used instead of AByteCount so you we don't exceed the file size
+  LStartPoint : TIdStreamSize;
+  LByteCount : TIdStreamSize;  //used instead of AByteCount so we don't exceed the file size
   LHashClass: TIdHashClass;
 begin
   LLocalCRC := '';
