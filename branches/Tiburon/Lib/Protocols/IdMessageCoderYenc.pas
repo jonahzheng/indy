@@ -301,9 +301,8 @@ procedure TIdMessageEncoderYenc.Encode(ASrc: TStream; ADest: TStream);
 const
   LineSize = 128;
 var
-  i: Int64;
   s: String;
-  LSSize: Int64;
+  i, LSSize: TIdStreamSize;
   LInput: Byte;
   LOutput: Byte;
   LEscape : Byte;
