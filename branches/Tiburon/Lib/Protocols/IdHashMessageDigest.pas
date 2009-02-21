@@ -72,7 +72,7 @@ type
     procedure MDCoder; override;
     procedure Reset; override;
 
-    function GetHashBytes(AStream: TStream; ASize: Int64): TIdBytes; override;
+    function GetHashBytes(AStream: TStream; ASize: TIdStreamSize): TIdBytes; override;
     function HashToHex(const AHash: TIdBytes): String; override;
   public
     constructor Create; override;
@@ -82,7 +82,7 @@ type
   protected
     FState: T4x4LongWordRecord;
 
-    function GetHashBytes(AStream: TStream; ASize: Int64): TIdBytes; override;
+    function GetHashBytes(AStream: TStream; ASize: TIdStreamSize): TIdBytes; override;
     function HashToHex(const AHash: TIdBytes): String; override;
 
     procedure MDCoder; override;
@@ -188,7 +188,7 @@ begin
   end;
 end;
 
-function TIdHashMessageDigest2.GetHashBytes(AStream: TStream; ASize: Int64): TIdBytes;
+function TIdHashMessageDigest2.GetHashBytes(AStream: TStream; ASize: TIdStreamSize): TIdBytes;
 var
   LStartPos: Integer;
   LSize: Integer;
@@ -322,14 +322,15 @@ begin
 end;
 {$Q+}
 
-function TIdHashMessageDigest4.GetHashBytes(AStream: TStream; ASize: Int64): TidBytes;
+function TIdHashMessageDigest4.GetHashBytes(AStream: TStream; ASize: TIdStreamSize): TidBytes;
 var
   LStartPos: Integer;
-  LBitSize, LSize: Int64;
+  LSize: TIdStreamSize;
+  LBitSize: Int64;
   I, LReadSize: Integer;
 begin
   Result := nil;
-  
+
   LSize := ASize;
 
   // A straight assignment would be by ref on dotNET.
@@ -348,7 +349,7 @@ begin
   // Read the last set of bytes.
   LStartPos := ReadTIdBytesFromStream(AStream, FCBuffer, 64);
   // TODO: handle stream read error
-  
+
   // Append one bit with value 1
   FCBuffer[LStartPos] := $80;
   Inc(LStartPos);

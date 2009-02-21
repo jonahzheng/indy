@@ -60,7 +60,7 @@ type
     FCheckSum: T5x4LongWordRecord;
     FCBuffer: TIdBytes;
     procedure Coder;
-    function GetHashBytes(AStream: TStream; ASize: Int64): TIdBytes; override;
+    function GetHashBytes(AStream: TStream; ASize: TIdStreamSize): TIdBytes; override;
     function HashToHex(const AHash: TIdBytes): String; override;
   public
     constructor Create; override;
@@ -304,7 +304,7 @@ begin
   FCheckSum[4]:= FCheckSum[4] + E;
 end;
 
-function TIdHashSHA1.GetHashBytes(AStream: TStream; ASize: Int64): TIdBytes;
+function TIdHashSHA1.GetHashBytes(AStream: TStream; ASize: TIdStreamSize): TIdBytes;
 var
   LSize: Integer;
   LLenHi: LongWord;
