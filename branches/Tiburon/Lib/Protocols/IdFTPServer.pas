@@ -1315,7 +1315,7 @@ const
      'OFF' {do not localize}
      );
 
-function CalculateCheckSum(AHashClass: TIdHashClass; AStrm: TStream; ABeginPos, AEndPos: Int64): String;
+function CalculateCheckSum(AHashClass: TIdHashClass; AStrm: TStream; ABeginPos, AEndPos: TIdStreamSize): String;
 begin
   with AHashClass.Create do
   try
@@ -3385,7 +3385,7 @@ var
   procedure WriteToStream(AContext : TIdFTPServerContext; ACmdQueue : TStrings;
     ASrcStream : TStream; const AIgnoreCompression : Boolean = False);
   var
-    LBufSize : Int64;
+    LBufSize : TIdStreamSize;
     LOutStream : TStream;
   begin
     if AContext.DataMode = dmDeflate then begin
@@ -4337,7 +4337,7 @@ begin
     if Assigned(FOnAvailDiskSpace) then
     begin
       LPath := DoProcessPath(LContext, ASender.UnparsedParams);
-      FOnAvailDiskSpace(LContext, LPath,LIsFile,LSize);
+      FOnAvailDiskSpace(LContext, LPath, LIsFile, LSize);
       if LIsFile then begin
         ASender.Reply.SetReply(550, IndyFormat(RSFTPIsAFile,[LPath]));
       end else begin
@@ -4367,7 +4367,7 @@ begin
     if Assigned(FOnCompleteDirSize) then
     begin
       LPath := DoProcessPath(LContext, ASender.UnparsedParams);
-      FOnCompleteDirSize(LContext, LPath,LIsFile,LSize);
+      FOnCompleteDirSize(LContext, LPath, LIsFile, LSize);
       if LIsFile then begin
         ASender.Reply.SetReply(550, IndyFormat(RSFTPIsAFile,[LPath]));
       end else begin
@@ -6006,7 +6006,7 @@ const
 var
   LCalcStream : TStream;
   LFileName, LCheckSum, LBuf : String;
-  LBeginPos, LEndPos : Int64;
+  LBeginPos, LEndPos : TIdStreamSize;
   LContext : TIdFTPServerContext;
   LHashIdx: Integer;
 begin
@@ -6025,18 +6025,44 @@ begin
       end;
       if LFileName = '' then
       begin
-        Self.CmdInvalidParamNum(ASender);
+        CmdInvalidParamNum(ASender);
         Exit;
       end;
       LBuf := Trim(LBuf);
-      LBeginPos := IndyStrToInt(Fetch(LBuf), 0);
-      LEndPos := IndyStrToInt(Fetch(LBuf), 0);
+      if LBuf <> '' then
+      begin
+        {$IFDEF SIZE64STREAM}
+        LBeginPos := IndyStrToInt64(Fetch(LBuf), -1);
+        {$ELSE}
+        LBeginPos := IndyStrToInt(Fetch(LBuf), -1);
+        {$ENDIF}
+        if LBeginPos < 0 then begin
+          CmdInvalidParams(ASender);
+          Exit;
+        end;
+        LBuf := Trim(LBuf);
+        if LBuf <> '' then begin
+          {$IFDEF SIZE64STREAM}
+          LEndPos := IndyStrToInt64(Fetch(LBuf), -1);
+          {$ELSE}
+          LEndPos := IndyStrToInt(Fetch(LBuf), -1);
+          {$ENDIF}
+          if LEndPos < 0 then begin
+            CmdInvalidParams(ASender);
+            Exit;
+          end;
+        end;
+      end else
+      begin
+        LBeginPos := 0;
+        LEndPos := -1;
+      end;
       LCalcStream := nil;
       LFileName := DoProcessPath(LContext, LFileName);
       DoOnCRCFile(LContext, LFileName, LCalcStream);
       if Assigned(LCalcStream) then
       begin
-        if LEndPos = 0 then begin
+        if LEndPos = -1 then begin
           LEndPos := LCalcStream.Size;
         end;
         try
