@@ -418,6 +418,7 @@ type
 
   EIdIOHandler = class(EIdException);
   EIdIOHandlerRequiresLargeStream = class(EIdIOHandler);
+  EIdIOHandlerStreamDataTooLarge = class(EIdIOHandler);
 
   TIdIOHandlerClass = class of TIdIOHandler;
 
@@ -544,7 +545,7 @@ type
     procedure Write(AValue: LongInt; AConvert: Boolean = True); overload;
     procedure Write(AValue: SmallInt; AConvert: Boolean = True); overload;
     procedure Write(AValue: Int64; AConvert: Boolean = True); overload;
-    procedure Write(AStream: TStream; ASize: Int64 = 0; AWriteByteCount: Boolean = False); overload; virtual;
+    procedure Write(AStream: TStream; ASize: TIdStreamSize = 0; AWriteByteCount: Boolean = False); overload; virtual;
     procedure WriteRFCStrings(AStrings: TStrings; AWriteTerminator: Boolean = True; AEncoding: TIdTextEncoding = nil);
     // Not overloaded because it does not have a unique type for source
     // and could be easily unresolvable with future additions
@@ -602,7 +603,7 @@ type
     function ReadInt64(AConvert: Boolean = True): Int64;
     function ReadSmallInt(AConvert: Boolean = True): SmallInt;
     //
-    procedure ReadStream(AStream: TStream; AByteCount: Int64 = -1;
+    procedure ReadStream(AStream: TStream; AByteCount: TIdStreamSize = -1;
      AReadUntilDisconnect: Boolean = False); virtual;
     procedure ReadStrings(ADest: TStrings; AReadLinesCount: Integer = -1;
       AEncoding: TIdTextEncoding = nil);
@@ -1308,11 +1309,11 @@ begin
   end;
 end;
 
-procedure TIdIOHandler.Write(AStream: TStream; ASize: Int64 = 0;
+procedure TIdIOHandler.Write(AStream: TStream; ASize: TIdStreamSize = 0;
   AWriteByteCount: Boolean = FALSE);
 var
   LBuffer: TIdBytes;
-  LStreamPos: Int64; // RLebeau: needed to prevent Integer overflow on large streams
+  LStreamPos: TIdStreamSize;
   LBufSize: Integer;
   // LBufferingStarted: Boolean;
 begin
@@ -1328,7 +1329,9 @@ begin
   end;
 
   //else ">0" ACount bytes
-  EIdIOHandlerRequiresLargeStream.IfTrue((ASize > High(Integer)) and (not LargeStream));
+  {$IFDEF SIZE64STREAM}
+  EIdIOHandlerRequiresLargeStream.IfTrue((ASize > High(Integer)) and (not LargeStream), RSRequiresLargeStream);
+  {$ENDIF}
 
   // RLebeau 3/19/2006: DO NOT ENABLE WRITE BUFFERING IN THIS METHOD!
   //
@@ -1342,7 +1345,7 @@ begin
 
   if AWriteByteCount then begin
     if LargeStream then begin
-      Write(ASize);
+      Write(Int64(ASize));
     end else begin
       Write(Integer(ASize));
     end;
@@ -1452,49 +1455,57 @@ begin
    and Opened;
 end;
 
-procedure AdjustStreamSize(const AStream: TStream; const ASize: Int64);
+procedure AdjustStreamSize(const AStream: TStream; const ASize: TIdStreamSize);
 var
-  LStreamPos: Int64;
+  LStreamPos: TIdStreamSize;
 begin
   LStreamPos := AStream.Position;
   AStream.Size := ASize;
-  // Must reset to original size as in some cases size changes position
+  // Must reset to original value in cases where size changes position
   if AStream.Position <> LStreamPos then begin
     AStream.Position := LStreamPos;
   end;
 end;
 
-procedure TIdIOHandler.ReadStream(AStream: TStream; AByteCount: Int64;
+procedure TIdIOHandler.ReadStream(AStream: TStream; AByteCount: TIdStreamSize;
   AReadUntilDisconnect: Boolean);
 var
   i: Integer;
   LBuf: TIdBytes;
-  LWorkCount: Int64;
+  LPos: TIdStreamSize;
+  LByteCount, LWorkCount: Int64;
 const
-  cSizeUnknown=-1;
+  cSizeUnknown = -1;
 begin
   Assert(AStream<>nil);
 
   if (AByteCount = cSizeUnknown) and (not AReadUntilDisconnect) then begin
     // Read size from connection
     if LargeStream then begin
-      AByteCount := ReadInt64;
+      LByteCount := ReadInt64;
+      {$IFNDEF SIZE64STREAM}
+      EIdIOHandlerStreamDataTooLarge.IfTrue(LByteCount > High(Integer), RSDataTooLarge);
+      {$ENDIF}
     end else begin
-    AByteCount := ReadLongInt;
+      LByteCount := ReadLongInt;
     end;
+  end else begin
+    LByteCount := AByteCount;
   end;
 
   // Presize stream if we know the size - this reduces memory/disk allocations to one time
   // Have an option for this? user might not want to presize, eg for int64 files
-  if AByteCount > -1 then begin
-    AdjustStreamSize(AStream, AStream.Position + AByteCount);
+  if LByteCount > -1 then begin
+    LPos := AStream.Position;
+    EIdIOHandlerStreamDataTooLarge.IfTrue(High(TIdStreamSize) - LPos < LByteCount, RSDataTooLarge);
+    AdjustStreamSize(AStream, LPos + LByteCount);
   end;
 
-  if AReadUntilDisconnect then begin
-    LWorkCount := High(LWorkCount);
+  if (LByteCount <= cSizeUnknown) or AReadUntilDisconnect then begin
+    LWorkCount := cSizeUnknown;
     BeginWork(wmRead);
   end else begin
-    LWorkCount := AByteCount;
+    LWorkCount := LByteCount;
     BeginWork(wmRead, LWorkCount);
   end;
 
@@ -1502,9 +1513,13 @@ begin
     // If data already exists in the buffer, write it out first.
     // should this loop for all data in buffer up to workcount? not just one block?
     if FInputBuffer.Size > 0 then begin
-      i := IndyMin(FInputBuffer.Size, LWorkCount);
+      if LWorkCount = cSizeUnknown then begin
+        i := FInputBuffer.Size;
+      end else begin
+        i := IndyMin(FInputBuffer.Size, LWorkCount);
+        Dec(LWorkCount, i);
+      end;
       FInputBuffer.ExtractToStream(AStream, i);
-      Dec(LWorkCount, i);
     end;
 
     // RLebeau - don't call Connected() here!  ReadBytes() already
@@ -1512,8 +1527,15 @@ begin
     // EIdConnClosedGracefully exception that breaks the loop
     // prematurely and thus leave unread bytes in the InputBuffer.
     // Let the loop catch the exception before exiting...
-    while {Connected and} (LWorkCount > 0) do begin
-      i := IndyMin(LWorkCount, RecvBufferSize);
+    repeat
+      if LWorkCount = cSizeUnknown then begin
+        i := RecvBufferSize;
+      end else begin
+        i := IndyMin(LWorkCount, RecvBufferSize);
+        if i < 1 then begin
+          Break;
+        end;
+      end;
       //TODO: Improve this - dont like the use of the exception handler
       //DONE -oAPR: Dont use a string, use a memory buffer or better yet the buffer itself.
       try
@@ -1542,7 +1564,7 @@ begin
           Dec(LWorkCount, i);
         end;
       end;
-    end;
+    until False;
   finally
     EndWork(wmRead);
     if AStream.Size > AStream.Position then begin
