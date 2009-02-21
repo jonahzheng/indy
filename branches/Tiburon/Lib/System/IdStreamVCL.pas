@@ -41,8 +41,8 @@ type
           const AOffset: Integer = 0) : Integer; {$IFDEF DOTNET} static; {$ENDIF}
     class function Seek(
           const AStream: TStream;
-          const AOffset: Int64;
-          const AOrigin: TSeekOrigin) : Int64; {$IFDEF DOTNET} static; {$ENDIF}
+          const AOffset: TIdStreamSize;
+          const AOrigin: TSeekOrigin) : TIdStreamSize; {$IFDEF DOTNET} static; {$ENDIF}
   end;
 
 implementation
@@ -100,8 +100,8 @@ begin
   end;
 end;
 
-class function TIdStreamHelperVCL.Seek(const AStream: TStream; const AOffset: Int64;
-  const AOrigin: TSeekOrigin): Int64;
+class function TIdStreamHelperVCL.Seek(const AStream: TStream; const AOffset: TIdStreamSize;
+  const AOrigin: TSeekOrigin): TIdStreamSize;
 {$IFNDEF SIZE64STREAM}
 const
   cOrigins: array[TSeekOrigin] of Word = (soFromBeginning, soFromCurrent, soFromEnd);
@@ -110,7 +110,7 @@ begin
   {$IFDEF SIZE64STREAM}
   Result := AStream.Seek(AOffset, AOrigin);
   {$ELSE}
-  Result := AStream.Seek(AOffset and $FFFFFFFF, cOrigins[AOrigin]);
+  Result := AStream.Seek(AOffset, cOrigins[AOrigin]);
   {$ENDIF}
 end;
 
