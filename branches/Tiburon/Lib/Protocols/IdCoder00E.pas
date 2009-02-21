@@ -65,7 +65,7 @@ uses
 procedure TIdDecoder00E.Decode(ASrcStream: TStream; const ABytes: Integer = -1);
 var
   LBuf: TIdBytes;
-  LSize: Int64;
+  LSize: TIdStreamSize;
 begin
   LSize := IndyLength(ASrcStream, ABytes);
   if LSize > 0 then begin
@@ -83,7 +83,8 @@ end;
 procedure TIdEncoder00E.Encode(ASrcStream, ADestStream: TStream; const ABytes: Integer = -1);
 var
   LStream: TMemoryStream;
-  LSize, LEncodeSize: Int64;
+  LSize: TIdStreamSize;
+  LEncodeSize: Integer;
   LBuf: TIdBytes;
 begin
   SetLength(LBuf, 1);
