@@ -2792,7 +2792,7 @@ var
   I: Integer;
   LFound: Boolean;
   LCmd: string;
-  LLength: Int64;
+  LLength: TIdStreamSize;
   LTempStream: TMemoryStream;
   LHelper: TIdIMAP4WorkHelper;
   LBuf: TIdBytes;
@@ -5558,8 +5558,8 @@ end;
 procedure TIdIMAP4.StripCRLFs(ASourceStream, ADestStream: TStream);
 var
   LByte: TIdBytes;
-  LNumSourceBytes: int64;
-  LBytesRead: int64;
+  LNumSourceBytes: TIdStreamSize;
+  LBytesRead: Int64;
 begin
   SetLength(LByte, 1);
   ASourceStream.Position := 0;
