@@ -4522,10 +4522,12 @@ begin
   EnsureEncoding(AEncoding);
   {$IFDEF DOTNET_OR_UNICODESTRING}
     {$IFNDEF DOTNET}
-  SetLength(Chars, 1);
+  SetLength(LChars, 1);
     {$ENDIF}
   LChars[0] := AValue;
-  Result := AEncoding.GetBytes(LChars, 0, 1);
+
+  Result := AEncoding.GetBytes(LChars);
+ // Result := AEncoding.GetBytes(LChars, 0, 1);
   {$ELSE}
   LTmp := AValue;  // convert to Unicode
   Result := AEncoding.GetBytes(LTmp);
