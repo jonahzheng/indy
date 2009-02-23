@@ -2089,7 +2089,7 @@ begin
     {$IFDEF VCL2009ORABOVE}
   Result := InterlockedCompareExchangePointer(VTarget, AValue, Compare);
     {$ELSE}
-      {$IFDEF VCL2006ORABOVE}
+      {$IFDEF VCL2005ORABOVE}
   Result := Pointer(InterlockedCompareExchange(Longint(VTarget), Longint(AValue), Longint(Compare)));
       {$ELSE}
   Result := InterlockedCompareExchange(VTarget, AValue, Compare);
@@ -4525,9 +4525,7 @@ begin
   SetLength(LChars, 1);
     {$ENDIF}
   LChars[0] := AValue;
-
   Result := AEncoding.GetBytes(LChars);
- // Result := AEncoding.GetBytes(LChars, 0, 1);
   {$ELSE}
   LTmp := AValue;  // convert to Unicode
   Result := AEncoding.GetBytes(LTmp);
@@ -4716,7 +4714,7 @@ var
   I, NumChars: Integer;
   LBytes: TIdBytes;
   {$IFDEF DOTNET}
-  LChars: array[0..1] of Char;
+  LChars: array[0..0] of Char;
   {$ELSE}
   LChars: TIdWideChars;
     {$IFNDEF UNICODESTRING}
@@ -4728,7 +4726,7 @@ begin
   EnsureEncoding(AEncoding);
   SetLength(LBytes, AEncoding.GetMaxByteCount(1));
   {$IFNDEF DOTNET}
-  SetLength(LChars, 2);
+  SetLength(LChars, 1);
   {$ENDIF}
   NumChars := 0;
   for I := AIndex to Length(AValue)-1 do
@@ -4911,7 +4909,7 @@ var
   NumChars: Integer;
   LBytes: TIdBytes;
   {$IFDEF DOTNET}
-  LChars: array[0..1] of Char;
+  LChars: array[0..0] of Char;
   {$ELSE}
   LChars: TIdWideChars;
     {$IFNDEF UNICODESTRING}
@@ -4939,7 +4937,7 @@ begin
 
   SetLength(LBytes, AEncoding.GetMaxByteCount(1));
   {$IFNDEF DOTNET}
-  SetLength(LChars, 2);
+  SetLength(LChars, 1);
   {$ENDIF}
 
   try
