@@ -263,65 +263,49 @@ begin
 end;
 
 { TIdEncoderQuotedPrintable }
+
+function CharToHex(const AChar: Char): String;
+begin
+  Result := '=' + ByteToHex(Ord(AChar)); {do not localize}
+end;
+
 procedure TIdEncoderQuotedPrintable.Encode(ASrcStream, ADestStream: TStream; const ABytes: Integer = -1);
 const
-  SafeChars = '!"#$%&''()*+,-./0123456789:;<>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~'; {do not localize}
-  HalfSafeChars = TAB+CHAR32;
+  SafeChars = '!"#$%&''()*+,-./0123456789:;<>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmonpqrstuvwxyz{|}~';
+  HalfSafeChars = #9' ';
   // Rule #2, #3
 var
-  SourceLine: String;
-  CurrentLen: Integer;
-
-  procedure WriteToString(const s: String);
-  begin
-    WriteStringToStream(ADestStream, s);
-    Inc(CurrentLen, Length(s));
-  end;
-
-  procedure FinishLine;
-  begin
-    WriteStringToStream(ADestStream, EOL);
-    CurrentLen := 0;
-  end;
-
-  function CharToHex(const AChar: Char): String;
-  begin
-    Result := '=' + ByteToHex(Ord(AChar)); {do not localize}
-  end;
-
-var
-  I: Integer;
+  I, CurrentLen: Integer;
   LSourceSize: TIdStreamSize;
+  S, SourceLine: String;
 begin
   //ie while not eof
   LSourceSize := ASrcStream.Size;
   while ASrcStream.Position < LSourceSize do begin
     SourceLine := ReadLnFromStream(ASrcStream, -1, False, en8bit);
     CurrentLen := 0;
-    for i := 1 to Length(SourceLine) do begin
-      if not CharIsInSet(SourceLine, i, SafeChars) then
+    for I := 1 to Length(SourceLine) do begin
+      if not CharIsInSet(SourceLine, I, SafeChars) then
       begin
-        if CharIsInSet(SourceLine, i, HalfSafeChars) then begin
-          if i = Length(SourceLine) then begin
-            WriteToString(CharToHex(SourceLine[i]));
-          end else begin
-            WriteToString(SourceLine[i]);
-          end;
+        if CharIsInSet(SourceLine, I, HalfSafeChars) and (I < Length(SourceLine)) then begin
+          S := SourceLine[I];
         end else begin
-          WriteToString(CharToHex(SourceLine[i]));
+          S := CharToHex(SourceLine[I]);
         end;
       end
-      else if ((CurrentLen = 0) or (CurrentLen = 70)) and (SourceLine[i] = '.') then begin {do not localize}
-        WriteToString(CharToHex(SourceLine[i]));
+      else if ((CurrentLen = 0) or (CurrentLen >= 70)) and (SourceLine[I] = '.') then begin {do not localize}
+        S := CharToHex(SourceLine[I]);
       end else begin
-        WriteToString(SourceLine[i]);
+        S := SourceLine[I];
       end;
+      WriteStringToStream(ADestStream, S);
+      Inc(CurrentLen, Length(S));
       if CurrentLen >= 70 then begin
-        WriteToString('=');  {Do not Localize}
-        FinishLine;
+        WriteStringToStream(ADestStream, '='+EOL);  {Do not Localize}
+        CurrentLen := 0;
       end;
     end;
-    FinishLine;
+    WriteStringToStream(ADestStream, EOL);
   end;
 end;
 
