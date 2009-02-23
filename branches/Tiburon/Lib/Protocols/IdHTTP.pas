@@ -1886,7 +1886,9 @@ begin
   LNeedAuth := False;
 
   // Handle Redirects
-  if ((LResponseDigit = 3) and (LResponseCode <> 304)) or (Response.Location <> '') then
+  // RLebeau: All 3xx replies other than 304 are redirects.  Reply 201 has a Location header but is NOT a redirect!
+  if ((LResponseDigit = 3) and (LResponseCode <> 304))
+    or ((Response.Location <> '') and (LResponseCode <> 201)) then
   begin
     Inc(FHTTP.FRedirectCount);
 
