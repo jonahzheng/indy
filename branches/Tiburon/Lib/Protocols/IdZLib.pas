@@ -933,10 +933,10 @@ end;
 constructor TCompressionStream.CreateEx(CompressionLevel: TCompressionLevel;
   Dest: TStream; const StreamType: TZStreamType;
   const AName: string = ''; ATime: Integer = 0);
-{$IFDEF UNICODESTRING}
 var
+  LEncoding: TIdTextEncoding;
+  LBytes: TIdBytes;
   LName: AnsiString;
-{$ENDIF}
 begin
   inherited Create(Dest);
   FZRec.next_out := FBuffer;
@@ -952,12 +952,22 @@ begin
     //8859-1 (LATIN-1) characters; on operating systems using
     //EBCDIC or any other character set for file names, the name
     //must be translated to the ISO LATIN-1 character set.
-    {$IFDEF UNICODESTRING}
-    LName := AnsiString(AName); // explicit convert to Ansi
+
+    // Rebeau 2/20/09: Indy's 8-bit encoding class currently uses ISO-8859-1
+    // (codepage 28591), so we could technically use that, but since the RFC
+    // is very specific about the charset, we'll force it here in case Indy's
+    // 8-bit encoding class is changed later on...
+    LEncoding := TIdTextEncoding.GetEncoding(28591);
+    try
+      LBytes := TIdTextEncoding.Convert(
+        TIdTextEncoding.Unicode,
+        LEncoding,
+        TIdTextEncoding.Unicode.GetBytes(AName));
+    finally
+      LEncoding.Free;
+    end;
+    SetString(LName, PAnsiChar(LBytes), Length(LBytes));
     StrPLCopy(FGZHeader.name, LName, FGZHeader.name_max);
-    {$ELSE}
-    StrPLCopy(FGZHeader.name, AName, FGZHeader.name_max);
-    {$ENDIF}
     deflateSetHeader(FZRec, FGZHeader);
   end;
 end;
