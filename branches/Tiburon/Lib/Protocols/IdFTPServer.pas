@@ -1381,6 +1381,7 @@ end;
 
 procedure TIdFTPServerContext.ReInitialize;
 begin
+  inherited;
   FDataType := ftASCII;
  // FDataMode := dmStream;
   FDataPort := 0;
