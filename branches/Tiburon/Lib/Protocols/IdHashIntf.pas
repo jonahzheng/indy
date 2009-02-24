@@ -24,7 +24,7 @@ type
     function InitHash : TIdHashIntCtx; virtual;
     procedure UpdateHash(ACtx : TIdHashIntCtx; const AIn : TIdBytes);
     function FinalHash(ACtx : TIdHashIntCtx) : TIdBytes;
-    function GetHashBytes(AStream: TStream; ASize: Int64): TIdBytes; override;
+    function GetHashBytes(AStream: TStream; ASize: TIdStreamSize): TIdBytes; override;
   public
   end;
   TIdHashSHA224 = class(TIdHashInt)
@@ -73,7 +73,7 @@ begin
   {$ENDIF}
 end;
 
-function TIdHashInt.GetHashBytes(AStream: TStream; ASize: Int64): TIdBytes;
+function TIdHashInt.GetHashBytes(AStream: TStream; ASize: TIdStreamSize): TIdBytes;
 var LBuf : TIdBytes;
   LSize : Int64;
   LCtx : TIdHashIntCtx;
