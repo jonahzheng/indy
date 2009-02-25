@@ -341,7 +341,7 @@ type
     destructor Destroy; override;
     procedure Accept(const pHandle: TIdStackSocketHandle);
     procedure Connect(const pHandle: TIdStackSocketHandle);
-    function Send(const ABuffer : TIdBytes; const AOffset, ALength: Integer): Integer;
+    function Send(const ABuffer : TIdBytes; AOffset, ALength: Integer): Integer;
     function Recv(var ABuffer : TIdBytes): Integer;
     function GetSessionID: TByteArray;
     function GetSessionIDAsString:String;
@@ -1752,31 +1752,47 @@ var
   err: Integer;
 begin
   repeat
-    Result := IdSslRead(fSSL, @ABuffer[0], Length(ABuffer));
-    if Result > 0 then begin
+    err := IdSslRead(fSSL, @ABuffer[0], Length(ABuffer));
+    if err > 0 then begin
+      Result := err;
       Exit;
     end;
-    err := GetSSLError(Result);
-    if (err <> OPENSSL_SSL_ERROR_WANT_READ) and (err <> OPENSSL_SSL_ERROR_WANT_WRITE) then begin
-      Exit;
+    err := GetSSLError(err);
+    if (err = OPENSSL_SSL_ERROR_WANT_READ) or (err = OPENSSL_SSL_ERROR_WANT_WRITE) then begin
+      Continue;
     end;
+    if err = OPENSSL_SSL_ERROR_ZERO_RETURN then begin
+      Result := 0;
+    end else begin
+      Result := -1;
+    end;
+    Exit;
   until False;
 end;
 
-function TIdSSLSocket.Send(const ABuffer: TIdBytes; const AOffset, ALength: Integer): Integer;
+function TIdSSLSocket.Send(const ABuffer: TIdBytes; AOffset, ALength: Integer): Integer;
 var
   err: Integer;
 begin
+  Result := 0;
   repeat
-    Result := IdSslWrite(fSSL, @ABuffer[AOffset], ALength);
-    if Result > 0 then begin
+    err := IdSslWrite(fSSL, @ABuffer[AOffset], ALength);
+    if err < 1 then begin
+      err := GetSSLError(err);
+      if (err = OPENSSL_SSL_ERROR_WANT_READ) or (err = OPENSSL_SSL_ERROR_WANT_WRITE) then begin
+        Continue;
+      end;
+      if err = OPENSSL_SSL_ERROR_ZERO_RETURN then begin
+        Result := 0;
+      end else begin
+        Result := -1;
+      end;
       Exit;
     end;
-    err := GetSSLError(Result);
-    if (err <> OPENSSL_SSL_ERROR_WANT_READ) and (err <> OPENSSL_SSL_ERROR_WANT_WRITE) then begin
-      Exit;
-    end;
-  until False;
+    Inc(Result, err);
+    Inc(AOffset, err);
+    Dec(ALength, err);
+  until ALength < 1;
 end;
 
 function TIdSSLSocket.GetPeerCert: TIdX509;
