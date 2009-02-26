@@ -1172,8 +1172,8 @@ function DateTimeGMTToHttpStr(const GMTValue: TDateTime) : String;
 function DateTimeGMTToCookieStr(const GMTValue: TDateTime) : String;
 
 // RLebeau: the input of these functions must be in local time
-function DateTimeToInternetStr(const Value: TDateTime; const AUseGMTStr: Boolean = False) : String; {$IFDEF DEPRECATED}deprecated{$IFDEF DEPRECATED_MSG} 'Use LocalDateTimeToGMT()'{$ENDIF}{$ENDIF};
-function DateTimeToGmtOffSetStr(ADateTime: TDateTime; const AUseGMTStr: Boolean = False): string; {$IFDEF DEPRECATED}deprecated{$IFDEF DEPRECATED_MSG} 'Use UTCOffsetToStr()'{$ENDIF}{$ENDIF};
+function DateTimeToInternetStr(const Value: TDateTime; const AUseGMTStr: Boolean = False) : String; {$IFDEF DEPRECATED}deprecated{$IFDEF DEPRECATED_MSG} 'Use LocalDateTimeToGMT()'{$ENDIF};{$ENDIF}
+function DateTimeToGmtOffSetStr(ADateTime: TDateTime; const AUseGMTStr: Boolean = False): string; {$IFDEF DEPRECATED}deprecated{$IFDEF DEPRECATED_MSG} 'Use UTCOffsetToStr()'{$ENDIF};{$ENDIF}
 function LocalDateTimeToHttpStr(const Value: TDateTime) : String;
 function LocalDateTimeToCookieStr(const Value: TDateTime) : String;
 function LocalDateTimeToGMT(const Value: TDateTime; const AUseGMTStr: Boolean = False) : String;
