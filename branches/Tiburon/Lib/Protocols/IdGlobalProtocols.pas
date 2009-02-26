@@ -2978,11 +2978,11 @@ begin
     {$ELSE}
     I := FindIndexOfItem;
     LValue := Trim(AValue);
-    if LAValue <> '' then begin
+    if LValue <> '' then begin
       if I < 0 then begin
         I := LItems.Add('');
       end;
-      LItems.Strings[I] := s + '=' + LValue; {do not localize}
+      LItems.Strings[I] := ASubItem + '=' + LValue; {do not localize}
     end
     else if I >= 0 then begin
       LItems.Delete(I);
