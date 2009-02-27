@@ -2958,9 +2958,8 @@ begin
       except
         on E : Exception do
         begin
-          ASender.Reply.SetReply(550,E.Message);
-          ASender.SendReply;
           LContext.KillDataChannel;
+          ASender.Reply.SetReply(550, E.Message);
           Exit;
         end;
       end;
@@ -2978,9 +2977,13 @@ begin
         ASender.SendReply;
         DoDataChannelOperation(ASender, LContext.SSCNOn);
       end else begin
+        //make sure the data connection is closed
+        LContext.KillDataChannel;
         CmdFileActionAborted(ASender);
       end;
     end else begin
+      //make sure the data connection is closed
+      LContext.KillDataChannel;
       CmdNotImplemented(ASender);
     end;
   end;
@@ -3027,7 +3030,6 @@ begin
         on E : Exception do
         begin
           ASender.Reply.SetReply(550, E.Message);
-          ASender.SendReply;
           LContext.KillDataChannel;
           Exit;
         end;
@@ -3056,10 +3058,14 @@ begin
         DoDataChannelOperation(ASender, LContext.SSCNOn);
       end else
       begin
+        //make sure the data connection is closed
+        LContext.KillDataChannel;
         CmdFileActionAborted(ASender);
       end;
     end else
     begin
+      //make sure the data connection is closed
+      LContext.KillDataChannel;
       CmdNotImplemented(ASender);
     end;
   end;
@@ -3270,63 +3276,61 @@ var
 begin
   LSendData := False;
   LContext := ASender.Context as TIdFTPServerContext;
-  with LContext do
+  if LContext.IsAuthenticated(ASender) then
   begin
-    if IsAuthenticated(ASender) then
+    if (not Assigned(LContext.FDataChannel)) or LContext.FDataPortDenied then
     begin
-      if (not Assigned(LContext.FDataChannel)) or FDataPortDenied then
-      begin
-        ASender.Reply.SetReply(425, RSFTPCantOpenData);
-        Exit;
+      ASender.Reply.SetReply(425, RSFTPCantOpenData);
+      Exit;
+    end;
+    if (not Assigned(FOnListDirectory)) and
+     ((FDirFormat = ftpdfCustom) and (not Assigned(FOnCustomListDirectory))) then
+    begin
+      LContext.KillDataChannel;
+      CmdNotImplemented(ASender);
+      Exit;
+    end;
+    LStream := TStringList.Create;
+    try
+      LSwitches := '';
+      LPath := ASender.UnparsedParams;
+      if TextStartsWith(LPath, '-') then begin {Do not Localize}
+        LSwitches := Fetch(LPath);
       end;
-      if (not Assigned(FOnListDirectory)) and
-       ((FDirFormat = ftpdfCustom) and (not Assigned(FOnCustomListDirectory))) then
-      begin
-        CmdNotImplemented(ASender);
-        Exit;
+      //we can't support recursive lists with EPLF
+      if DirFormat = ftpdfEPLF then begin
+        LSwitches := DeletRSwitch(LSwitches);
       end;
-      LStream := TStringList.Create;
-      try
-        LSwitches := '';
-        LPath := ASender.UnparsedParams;
-        if TextStartsWith(LPath, '-') then begin {Do not Localize}
-          LSwitches := Fetch(LPath);
-        end;
-        //we can't support recursive lists with EPLF
-        if DirFormat = ftpdfEPLF then begin
-          LSwitches := DeletRSwitch(LSwitches);
-        end;
-        ListDirectory(LContext, DoProcessPath(LContext, LPath), LStream,
-          TextIsSame(ASender.CommandHandler.Command, 'LIST'), ASender.CommandHandler.Command,
-          LSwitches);
-        LSendData := True;
-      finally
-        if LSendData then
+      ListDirectory(LContext, DoProcessPath(LContext, LPath), LStream,
+        TextIsSame(ASender.CommandHandler.Command, 'LIST'), ASender.CommandHandler.Command,
+        LSwitches);
+      LSendData := True;
+    finally
+      if LSendData then
+      begin
+        //it should be safe to assume that the FDataChannel object exists because
+        //we checked it earlier
+        LContext.FDataChannel.Data := LStream;
+        LContext.FDataChannel.FFtpOperation := ftpRetr;
+        LContext.FDataChannel.OKReply.SetReply(226, RSFTPDataConnClosed);
+        LContext.FDataChannel.ErrorReply.SetReply(426, RSFTPDataConnClosedAbnormally);
+        if FDirFormat = ftpdfEPLF then
         begin
-          //it should be safe to assume that the FDataChannel object exists because
-          //we checked it earlier
-          FDataChannel.Data := LStream;
-          FDataChannel.FFtpOperation := ftpRetr;
-          FDataChannel.OKReply.SetReply(226, RSFTPDataConnClosed);
-          FDataChannel.ErrorReply.SetReply(426, RSFTPDataConnClosedAbnormally);
-          if FDirFormat = ftpdfEPLF then
-          begin
-            ASender.Reply.SetReply(125, RSFTPDataConnToOpen);
-            FDataChannel.OKReply.SetReply(226, RSFTPDataConnClosed);
-          end
-          else if TextIsSame(ASender.CommandHandler.Command, 'LIST') or (LSwitches <> '') then begin {do not localize}
-            ASender.Reply.SetReply(125, RSFTPDataConnList);
-          end else begin
-            ASender.Reply.SetReply(125, RSFTPDataConnNList);
-          end;
-          ASender.SendReply;
-          DoDataChannelOperation(ASender);
-        end else
-        begin
-          FreeAndNil(LStream);
-          TerminateAndFreeDataChannel;
-          ASender.Reply.SetReply(426, RSFTPDataConnClosedAbnormally);
+          ASender.Reply.SetReply(125, RSFTPDataConnToOpen);
+          LContext.FDataChannel.OKReply.SetReply(226, RSFTPDataConnClosed);
+        end
+        else if TextIsSame(ASender.CommandHandler.Command, 'LIST') or (LSwitches <> '') then begin {do not localize}
+          ASender.Reply.SetReply(125, RSFTPDataConnList);
+        end else begin
+          ASender.Reply.SetReply(125, RSFTPDataConnNList);
         end;
+        ASender.SendReply;
+        DoDataChannelOperation(ASender);
+      end else
+      begin
+        FreeAndNil(LStream);
+        LContext.KillDataChannel;
+        ASender.Reply.SetReply(426, RSFTPDataConnClosedAbnormally);
       end;
     end;
   end;
@@ -3689,251 +3693,247 @@ var
   LContext: TIdFTPServerContext;
 begin
   LContext := TIdFTPServerContext(ASender.Context);
-  with LContext do
+  ASender.Reply.Clear;
+  SetRFCReplyFormat(ASender.Reply);
+  ASender.Reply.NumericCode := 211;
+  ASender.Reply.Text.Add(RSFTPCmdExtsSupportedStart); {Do not translate}
+  //AUTH
+  if IOHandler is TIdServerIOHandlerSSLBase then begin
+    if (FUseTLS <> utUseImplicitTLS) then begin
+      ASender.Reply.Text.Add('AUTH TLS;AUTH TLS-C;SSL;TLS-P;'); {Do not translate}
+    end;
+  end;
+  //AVBL
+  if Assigned(FOnAvailDiskSpace) then
   begin
-    ASender.Reply.Clear;
-    SetRFCReplyFormat(ASender.Reply);
-    ASender.Reply.NumericCode := 211;
-    ASender.Reply.Text.Add(RSFTPCmdExtsSupportedStart); {Do not translate}
-    //AUTH
-    if IOHandler is TIdServerIOHandlerSSLBase then begin
-      if (FUseTLS <> utUseImplicitTLS) then begin
-        ASender.Reply.Text.Add('AUTH TLS;AUTH TLS-C;SSL;TLS-P;'); {Do not translate}
-      end;
-    end;
-    //AVBL
-    if Assigned(FOnAvailDiskSpace) then
+    ASender.Reply.Text.Add('AVBL');
+  end;
+  //CCC
+  if (FUseTLS <> utNoTLSSupport) then begin
+    ASender.Reply.Text.Add('CCC'); {Do not translate}
+  end;
+  //CLNT
+  if Assigned(FOnClientID) then begin
+    ASender.Reply.Text.Add('CLNT');  {Do not translate}
+  end;
+  //COMB
+  if Assigned(FOnCombineFiles) or Assigned(FTPFileSystem) then begin
+    ASender.Reply.Text.Add('COMB target;source_list'); {Do not translate}
+  end;
+  //CPSV
+  //CPSV is not supported in IPv6 - same problem as PASV
+  if (UseTLS <> utNoTLSSupport) and (LContext.Connection.Socket.IPVersion = Id_IPv4) then begin
+    ASender.Reply.Text.Add('CPSV');   {Do not translate}
+  end;
+  //DSIZ
+  if Assigned(OnCompleteDirSize) then
+  begin
+    ASender.Reply.Text.Add('DSIZ'); {Do not localize}
+  end;
+  //EPRT
+  ASender.Reply.Text.Add('EPRT');    {Do not translate}
+  //EPSV
+  ASender.Reply.Text.Add('EPSV');    {Do not translate}
+  //Host
+  if Assigned(FOnHostCheck) then  begin
+    ASender.Reply.Text.Add('HOST domain');  {Do not localize}
+  end;
+  //
+  //This is not proper but FTP Voyager uses it to determine if the -T parameter
+  //will work.
+  if Assigned(FOnListDirectory) then begin
+    //we do things this way because the 'a' and 'T' swithces only make sense
+    //when listing Unix dirs.
+    LTmp := 'LIST -l';    {Do not translate}
+    if SupportTaDirSwitches(LContext) then
     begin
-      ASender.Reply.Text.Add('AVBL');
-    end;
-    //CCC
-    if (FUseTLS <> utNoTLSSupport) then begin
-      ASender.Reply.Text.Add('CCC'); {Do not translate}
-    end;
-    //CLNT
-    if Assigned(FOnClientID) then begin
-      ASender.Reply.Text.Add('CLNT');  {Do not translate}
-    end;
-    //COMB
-    if Assigned(FOnCombineFiles) or Assigned(FTPFileSystem) then begin
-      ASender.Reply.Text.Add('COMB target;source_list'); {Do not translate}
-    end;
-    //CPSV
-    //CPSV is not supported in IPv6 - same problem as PASV
-    if (UseTLS <> utNoTLSSupport) and
-      (ASender.Context.Connection.Socket.IPVersion = Id_IPv4) then begin
-      ASender.Reply.Text.Add('CPSV');   {Do not translate}
-    end;
-    //DSIZ
-    if Assigned(OnCompleteDirSize) then
-    begin
-      ASender.Reply.Text.Add('DSIZ'); {Do not localize}
-    end;
-    //EPRT
-    ASender.Reply.Text.Add('EPRT');    {Do not translate}
-    //EPSV
-    ASender.Reply.Text.Add('EPSV');    {Do not translate}
-    //Host
-    if Assigned(FOnHostCheck) then  begin
-      ASender.Reply.Text.Add('HOST domain');  {Do not localize}
-    end;
-    //
-    //This is not proper but FTP Voyager uses it to determine if the -T parameter
-    //will work.
-    if Assigned(FOnListDirectory) then begin
-      //we do things this way because the 'a' and 'T' swithces only make sense
-      //when listing Unix dirs.
-      LTmp := 'LIST -l';    {Do not translate}
-      if SupportTaDirSwitches(LContext) then
-      begin
-        LTmp := LTmp + 'aT';  {Do not translate}
-      end;
-      ASender.Reply.Text.Add(LTmp); {do not localize}
-    end;
-    //MDTM
-    if Assigned(FOnGetFileDate) or Assigned(FFTPFileSystem) then begin
-      ASender.Reply.Text.Add('MDTM');  {Do not translate}
-      //MDTM YYYYMMDDHHMMSS filename
-      if Assigned(FOnSetModifiedTime) then begin
-     //   ASender.Reply.Text.Add('MDTM YYYYMMDDHHMMSS[+-TZ];filename');
-     //Indicate that we wish to use FTP Voyager's old MDTM variation for seting time.
-     //time is returned as local (relative to server's timezone.  We do this for compatibility
-        ASender.Reply.Text.Add('MDTM YYYYMMDDHHMMSS filename');  {Do not translate}
-      end;
-    end;
-    //MFCT
-    if Assigned(FOnSetCreationTime) then begin
-      ASender.Reply.Text.Add('MFCT');  {Do not Localize}
-      //TODO:  The logic for the MMF entry may need to change if we
-      //support modifying more facts
-    end;
-    //MFF
-    LTmp := MFFPREFIX;  {Do not localize}
-    if Assigned(FOnSetCreationTime) then begin
-      LTmp := LTmp + 'Create;'; {Do not Localize}
-    end;
-    if Assigned(FOnSetModifiedTime) or Assigned(FTPFileSystem) then begin
-      LTmp := LTmp + 'Modify;';  {Do not Localize}
-    end;
-    if Assigned(FOnSiteCHMOD) then
-    begin
-      LTmp := LTmp + 'Unix.mode;';
-    end;
-    if Assigned(FOnSiteCHOWN) then
-    begin
-      LTmp := LTmp + 'Unix.owner;';
-    end;
-    if Assigned(FOnSiteCHGRP) then
-    begin
-      LTmp := LTmp + 'Unix.group;';
-    end;
-    if Assigned(FOnSiteUTIME) then
-    begin
-      LTmp := LTmp + 'Windows.lastaccesstime;';
-    end;
-    if Assigned(FOnSetATTRIB) then
-    begin
-      LTmp := LTmp + 'Win32.ea;';
-    end;
-    if LTmp <> MFFPREFIX then begin
-      ASender.Reply.Text.Add(LTmp);
-    end;
-    //MFMT
-    if Assigned(FOnSetModifiedTime) or Assigned(FTPFileSystem) then begin
-      ASender.Reply.Text.Add('MFMT');  {Do not Localize}
-    end;
-    //MLST
-    if Assigned(FOnListDirectory) then begin
-      ASender.Reply.Text.Add('MLSD');  {Do not translate}
-      ASender.Reply.Text.Add(MLSFEATLine(FMLSDFacts, MLSOpts));   {Do not translate}
-    end;
-    //MODE Z
-    if Assigned(FCompressor) then begin
-      ASender.Reply.Text.Add('MODE Z'); {do not localize}
-    end;
-    //OPTS
-    LTmp := 'OPTS ';
-    if Assigned(FOnListDirectory) then begin
-      LTmp := LTmp + 'MLST;';
-    end;
-    if Assigned(FCompressor) then begin
-      LTmp := LTmp + 'MODE;';
-    end;
-    LTmp := LTmp + 'UTF8';
-    ASender.Reply.Text.Add(LTmp);
-    //PBSZ
-    if (FUseTLS <> utNoTLSSupport) then begin
-      ASender.Reply.Text.Add('PBSZ');   {Do not translate}
-    end;
-    //PROT
-    if (FUseTLS <> utNoTLSSupport) then begin
-      ASender.Reply.Text.Add('PROT');    {Do not translate}
-    end;
-    //REST STREAM
-    ASender.Reply.Text.Add('REST STREAM');  {Do not translate}
-    //RMDA
-    if Assigned(FOnRemoveDirectoryAll) then
-    begin
-      ASender.Reply.Text.Add('RMDA directoryname');  {Do not localize}
-    end;
-    //SITE ZONE
-    //Listing a SITE command in feature negotiation is unusual and
-    //may be a little off-spec.  FTP Voyager scans this looking for
-    //SITE ZONE and if it's present, it will use the SITE ZONE
-    //to help it convert the time to the user's local time zone.
-    //The only other way that FTP Voyager would know is if the initial
-    //FTP greeting banner started with "Serv-U FTP-Server v2.5f" which
-    //is more problematic because Serve-U is a trademark and we would then
-    //then be stuck with a situation where everyone has to use it down the road.
-    //This would amount to the same mess we had with "Mozilla" in the HTTP
-    //User-Agent header field.
-    //also list other supported site commands;
-    LTmp := 'SITE ZONE';
-    if Assigned(FOnSetATTRIB) then
-    begin
-      LTmp := LTmp + ';ATTRIB';
-    end;
-    if Assigned(FOnSiteUMASK) then
-    begin
-      LTmp := LTmp + 'UMASK';
-    end;
-    if Assigned(FOnSiteCHMOD) then
-    begin
-      LTmp := LTmp + ';CHMOD';
-    end;
-    if (FDirFormat = ftpdfDOS) or
-      ((FDirFormat = ftpdfOSDependent) and (GOSType = otWindows)) then
-    begin
-      LTmp := LTmp + ';DIRSTYLE';
-    end;
-    if Assigned(OnSiteUTIME) or Assigned(OnSetModifiedTime) then
-    begin
-      LTmp := LTmp + ';UTIME';
-    end;
-    if Assigned(OnSiteCHOWN) then
-    begin
-      LTmp := LTmp + ';CHOWN';
-    end;
-    if Assigned(OnSiteCHGRP) then
-    begin
-      LTmp := LTmp + ';CHGRP';
+      LTmp := LTmp + 'aT';  {Do not translate}
     end;
     ASender.Reply.Text.Add(LTmp); {do not localize}
-    //SIZE
-    if Assigned(FOnGetFileSize) or Assigned(FFTPFileSystem) then begin
-      ASender.Reply.Text.Add('SIZE'); {do not localize}
-    end;
-    //SPSV
-    ASender.Reply.Text.Add('SPSV'); {do not localize}
-    //SSCN
-    if UseTLS <> utNoTLSSupport then begin
-      ASender.Reply.Text.Add('SSCN'); {do not localize}
-    end;
-    //STAT -l
-    //Some servers such as Microsoft FTP Service, RaidenFTPD, and a few others,
-    //treat a STAT -l as a LIST command, only it's sent on the control connection.
-    //Some versions of Flash FXP can also use this as an option to improve efficiency.
-    if Assigned(FOnListDirectory) then begin
-        //we do things this way because the 'a' and 'T' swithces only make sense
-      //when listing Unix dirs.
-      LTmp := 'STAT -l';   {Do not translate}
-      if SupportTaDirSwitches(LContext) then
-      begin
-        LTmp := LTmp + 'aT';   {Do not translate}
-      end;
-      ASender.Reply.Text.Add(LTmp); {do not localize}
-    end;
-    //TVFS
-    if FPathProcessing <> ftppCustom then begin
-      //TVFS should not be indicated for custom parsing because
-      //we don't know what a person will do.
-      ASender.Reply.Text.Add('TVFS'); {Do not localize}
-    end;
-    // UTF-8
-    // RFC 2640 says that "Servers MUST support the UTF-8 feature in response to the FEAT command [RFC2389]."
-    // TODO: finish actually implementing UTF-8 support
-    ASender.Reply.Text.Add('UTF8'); {Do not localize}
-    //XCRC
-    if Assigned(FOnCRCFile) or Assigned(FTPFileSystem) then begin
-      ASender.Reply.Text.Add('XCRC "filename" SP EP');//filename;start;end');  {Do not Localize}
-      ASender.Reply.Text.Add('XMD5 "filename" SP EP');//filename;start;end');  {Do not Localize}
-      ASender.Reply.Text.Add('XSHA1 "filename" SP EP');//filename;start;end');  {Do not Localize}
-    end;
-    //I'm doing things this way with complience level to match the current
-    //version of NcFTPD
-    LTmp := 'RFC 959 2389 ';
-    if UserSecurity.FInvalidPassDelay <> 0 then begin
-      LTmp := LTmp + '2577 ';
-    end;
-    LTmp := LTmp + '3659 '; {Do not Localize}
-    if IOHandler is TIdServerIOHandlerSSLBase then begin
-      if (FUseTLS <> utUseImplicitTLS) then begin
-        LTmp := LTmp + '4217 ';  {Do not localize}
-      end;
-    end;
-    ASender.Reply.Text.Add(Trim(LTmp)); {Do not Localize}
-    ASender.Reply.Text.Add(RSFTPCmdExtsSupportedEnd);
   end;
+  //MDTM
+  if Assigned(FOnGetFileDate) or Assigned(FFTPFileSystem) then begin
+    ASender.Reply.Text.Add('MDTM');  {Do not translate}
+    //MDTM YYYYMMDDHHMMSS filename
+    if Assigned(FOnSetModifiedTime) then begin
+   //   ASender.Reply.Text.Add('MDTM YYYYMMDDHHMMSS[+-TZ];filename');
+   //Indicate that we wish to use FTP Voyager's old MDTM variation for seting time.
+   //time is returned as local (relative to server's timezone.  We do this for compatibility
+      ASender.Reply.Text.Add('MDTM YYYYMMDDHHMMSS filename');  {Do not translate}
+    end;
+  end;
+  //MFCT
+  if Assigned(FOnSetCreationTime) then begin
+    ASender.Reply.Text.Add('MFCT');  {Do not Localize}
+    //TODO:  The logic for the MMF entry may need to change if we
+    //support modifying more facts
+  end;
+  //MFF
+  LTmp := MFFPREFIX;  {Do not localize}
+  if Assigned(FOnSetCreationTime) then begin
+    LTmp := LTmp + 'Create;'; {Do not Localize}
+  end;
+  if Assigned(FOnSetModifiedTime) or Assigned(FTPFileSystem) then begin
+    LTmp := LTmp + 'Modify;';  {Do not Localize}
+  end;
+  if Assigned(FOnSiteCHMOD) then
+  begin
+    LTmp := LTmp + 'Unix.mode;';
+  end;
+  if Assigned(FOnSiteCHOWN) then
+  begin
+    LTmp := LTmp + 'Unix.owner;';
+  end;
+  if Assigned(FOnSiteCHGRP) then
+  begin
+    LTmp := LTmp + 'Unix.group;';
+  end;
+  if Assigned(FOnSiteUTIME) then
+  begin
+    LTmp := LTmp + 'Windows.lastaccesstime;';
+  end;
+  if Assigned(FOnSetATTRIB) then
+  begin
+    LTmp := LTmp + 'Win32.ea;';
+  end;
+  if LTmp <> MFFPREFIX then begin
+    ASender.Reply.Text.Add(LTmp);
+  end;
+  //MFMT
+  if Assigned(FOnSetModifiedTime) or Assigned(FTPFileSystem) then begin
+    ASender.Reply.Text.Add('MFMT');  {Do not Localize}
+  end;
+  //MLST
+  if Assigned(FOnListDirectory) then begin
+    ASender.Reply.Text.Add('MLSD');  {Do not translate}
+    ASender.Reply.Text.Add(MLSFEATLine(FMLSDFacts, LContext.MLSOpts));   {Do not translate}
+  end;
+  //MODE Z
+  if Assigned(FCompressor) then begin
+    ASender.Reply.Text.Add('MODE Z'); {do not localize}
+  end;
+  //OPTS
+  LTmp := 'OPTS ';
+  if Assigned(FOnListDirectory) then begin
+    LTmp := LTmp + 'MLST;';
+  end;
+  if Assigned(FCompressor) then begin
+    LTmp := LTmp + 'MODE;';
+  end;
+  LTmp := LTmp + 'UTF8';
+  ASender.Reply.Text.Add(LTmp);
+  //PBSZ
+  if (FUseTLS <> utNoTLSSupport) then begin
+    ASender.Reply.Text.Add('PBSZ');   {Do not translate}
+  end;
+  //PROT
+  if (FUseTLS <> utNoTLSSupport) then begin
+    ASender.Reply.Text.Add('PROT');    {Do not translate}
+  end;
+  //REST STREAM
+  ASender.Reply.Text.Add('REST STREAM');  {Do not translate}
+  //RMDA
+  if Assigned(FOnRemoveDirectoryAll) then
+  begin
+    ASender.Reply.Text.Add('RMDA directoryname');  {Do not localize}
+  end;
+  //SITE ZONE
+  //Listing a SITE command in feature negotiation is unusual and
+  //may be a little off-spec.  FTP Voyager scans this looking for
+  //SITE ZONE and if it's present, it will use the SITE ZONE
+  //to help it convert the time to the user's local time zone.
+  //The only other way that FTP Voyager would know is if the initial
+  //FTP greeting banner started with "Serv-U FTP-Server v2.5f" which
+  //is more problematic because Serve-U is a trademark and we would then
+  //then be stuck with a situation where everyone has to use it down the road.
+  //This would amount to the same mess we had with "Mozilla" in the HTTP
+  //User-Agent header field.
+  //also list other supported site commands;
+  LTmp := 'SITE ZONE';
+  if Assigned(FOnSetATTRIB) then
+  begin
+    LTmp := LTmp + ';ATTRIB';
+  end;
+  if Assigned(FOnSiteUMASK) then
+  begin
+    LTmp := LTmp + 'UMASK';
+  end;
+  if Assigned(FOnSiteCHMOD) then
+  begin
+    LTmp := LTmp + ';CHMOD';
+  end;
+  if (FDirFormat = ftpdfDOS) or
+    ((FDirFormat = ftpdfOSDependent) and (GOSType = otWindows)) then
+  begin
+    LTmp := LTmp + ';DIRSTYLE';
+  end;
+  if Assigned(OnSiteUTIME) or Assigned(OnSetModifiedTime) then
+  begin
+    LTmp := LTmp + ';UTIME';
+  end;
+  if Assigned(OnSiteCHOWN) then
+  begin
+    LTmp := LTmp + ';CHOWN';
+  end;
+  if Assigned(OnSiteCHGRP) then
+  begin
+    LTmp := LTmp + ';CHGRP';
+  end;
+  ASender.Reply.Text.Add(LTmp); {do not localize}
+  //SIZE
+  if Assigned(FOnGetFileSize) or Assigned(FFTPFileSystem) then begin
+    ASender.Reply.Text.Add('SIZE'); {do not localize}
+  end;
+  //SPSV
+  ASender.Reply.Text.Add('SPSV'); {do not localize}
+  //SSCN
+  if UseTLS <> utNoTLSSupport then begin
+    ASender.Reply.Text.Add('SSCN'); {do not localize}
+  end;
+  //STAT -l
+  //Some servers such as Microsoft FTP Service, RaidenFTPD, and a few others,
+  //treat a STAT -l as a LIST command, only it's sent on the control connection.
+  //Some versions of Flash FXP can also use this as an option to improve efficiency.
+  if Assigned(FOnListDirectory) then begin
+      //we do things this way because the 'a' and 'T' swithces only make sense
+    //when listing Unix dirs.
+    LTmp := 'STAT -l';   {Do not translate}
+    if SupportTaDirSwitches(LContext) then
+    begin
+      LTmp := LTmp + 'aT';   {Do not translate}
+    end;
+    ASender.Reply.Text.Add(LTmp); {do not localize}
+  end;
+  //TVFS
+  if FPathProcessing <> ftppCustom then begin
+    //TVFS should not be indicated for custom parsing because
+    //we don't know what a person will do.
+    ASender.Reply.Text.Add('TVFS'); {Do not localize}
+  end;
+  // UTF-8
+  // RFC 2640 says that "Servers MUST support the UTF-8 feature in response to the FEAT command [RFC2389]."
+  // TODO: finish actually implementing UTF-8 support
+  ASender.Reply.Text.Add('UTF8'); {Do not localize}
+  //XCRC
+  if Assigned(FOnCRCFile) or Assigned(FTPFileSystem) then begin
+    ASender.Reply.Text.Add('XCRC "filename" SP EP');//filename;start;end');  {Do not Localize}
+    ASender.Reply.Text.Add('XMD5 "filename" SP EP');//filename;start;end');  {Do not Localize}
+    ASender.Reply.Text.Add('XSHA1 "filename" SP EP');//filename;start;end');  {Do not Localize}
+  end;
+  //I'm doing things this way with complience level to match the current
+  //version of NcFTPD
+  LTmp := 'RFC 959 2389 ';
+  if LContext.UserSecurity.FInvalidPassDelay <> 0 then begin
+    LTmp := LTmp + '2577 ';
+  end;
+  LTmp := LTmp + '3659 '; {Do not Localize}
+  if IOHandler is TIdServerIOHandlerSSLBase then begin
+    if (FUseTLS <> utUseImplicitTLS) then begin
+      LTmp := LTmp + '4217 ';  {Do not localize}
+    end;
+  end;
+  ASender.Reply.Text.Add(Trim(LTmp)); {Do not Localize}
+  ASender.Reply.Text.Add(RSFTPCmdExtsSupportedEnd);
 end;
 
 procedure TIdFTPServer.CommandOPTS(ASender: TIdCommand);
@@ -6032,26 +6032,20 @@ begin
       LBuf := Trim(LBuf);
       if LBuf <> '' then
       begin
-        {$IFDEF SIZE64STREAM}
-        LBeginPos := IndyStrToInt64(Fetch(LBuf), -1);
-        {$ELSE}
-        LBeginPos := IndyStrToInt(Fetch(LBuf), -1);
-        {$ENDIF}
+        LBeginPos := IndyStrToStreamSize(Fetch(LBuf), -1);
         if LBeginPos < 0 then begin
           CmdInvalidParams(ASender);
           Exit;
         end;
         LBuf := Trim(LBuf);
         if LBuf <> '' then begin
-          {$IFDEF SIZE64STREAM}
-          LEndPos := IndyStrToInt64(Fetch(LBuf), -1);
-          {$ELSE}
-          LEndPos := IndyStrToInt(Fetch(LBuf), -1);
-          {$ENDIF}
+          LEndPos := IndyStrToStreamSize(Fetch(LBuf), -1);
           if LEndPos < 0 then begin
             CmdInvalidParams(ASender);
             Exit;
           end;
+        end else begin
+          LEndPos := -1;
         end;
       end else
       begin
