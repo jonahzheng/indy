@@ -879,8 +879,6 @@ var
 
   procedure WriteTextPart(ATextPart: TIdText);
   var
-    LData: TStringList;
-    li: Integer;
     LEncoding: TIdTextEncoding;
     LFileName: String;
   begin
