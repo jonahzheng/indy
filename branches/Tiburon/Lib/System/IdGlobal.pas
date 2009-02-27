@@ -1055,6 +1055,10 @@ function IndyDirectoryExists(const ADirectory: string): Boolean;
 function IndyStrToInt64(const S: string; const ADefault: Int64): Int64; overload;
 function IndyStrToInt64(const S: string): Int64;  overload;
 
+//This converts the string to an Integer or Int64 depending on the bit size TStream uses
+function IndyStrToStreamSize(const S: string; const ADefault: TIdStreamSize): TIdStreamSize; overload;
+function IndyStrToStreamSize(const S: string): TIdStreamSize; overload;
+
 function AddMSecToTime(const ADateTime: TDateTime; const AMSec: Integer): TDateTime;
 
 // To and From Bytes conversion routines
@@ -4477,6 +4481,26 @@ function IndyStrToInt64(const S: string): Int64;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
   Result := SysUtils.StrToInt64(Trim(S));
+end;
+
+function IndyStrToStreamSize(const S: string; const ADefault: TIdStreamSize): TIdStreamSize;
+{$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  {$IFDEF SIZE64STREAM}
+  Result := IndyStrToInt64(S, ADefault);
+  {$ELSE}
+  Result := IndyStrToInt(S, ADefault);
+  {$ENDIF}
+end;
+
+function IndyStrToStreamSize(const S: string): TIdStreamSize;
+{$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  {$IFDEF SIZE64STREAM}
+  Result := IndyStrToInt64(S);
+  {$ELSE}
+  Result := IndyStrToInt(S);
+  {$ENDIF}
 end;
 
 function ToBytes(const AValue: string; AEncoding: TIdTextEncoding = nil): TIdBytes; overload;
