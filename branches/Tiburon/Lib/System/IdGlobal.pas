@@ -4735,39 +4735,53 @@ end;
 function BytesToChar(const AValue: TIdBytes; var VChar: Char; const AIndex: Integer = 0;
   AEncoding: TIdTextEncoding = nil): Integer; overload;
 var
-  I, NumChars: Integer;
-  LBytes: TIdBytes;
+  I, NumChars, NumBytes: Integer;
   {$IFDEF DOTNET}
-  LChars: array[0..0] of Char;
+  LChars: array[0..1] of Char;
   {$ELSE}
   LChars: TIdWideChars;
     {$IFNDEF UNICODESTRING}
-  LTmp: WideString;
+  LWTmp: WideString;
+  LATmp: AnsiString;
     {$ENDIF}
   {$ENDIF}
 begin
   Result := 0;
   EnsureEncoding(AEncoding);
-  SetLength(LBytes, AEncoding.GetMaxByteCount(1));
+  // 2 Chars to handle UTF-16 surrogates
+  NumBytes := IndyMin(IndyLength(AValue, -1, AIndex), AEncoding.GetMaxByteCount(2));
   {$IFNDEF DOTNET}
-  SetLength(LChars, 1);
+  SetLength(LChars, 2);
   {$ENDIF}
   NumChars := 0;
-  for I := AIndex to Length(AValue)-1 do
+  if NumBytes > 0 then
   begin
-    LBytes[Result] := AValue[I];
-    Inc(Result);
-    NumChars := AEncoding.GetChars(LBytes, 0, Result, LChars, 0);
-    if (NumChars > 0) or (Result = Length(LBytes)) then begin
-      Break;
-    end;
+    for I := 1 to NumBytes do
+    begin
+      NumChars := AEncoding.GetChars(AValue, AIndex, I, LChars, 0);
+      Inc(Result);
+      if NumChars > 0 then begin
+        Break;
+      end;
   end;
-  Assert(NumChars > 0);
+  end;
   {$IFDEF DOTNET_OR_UNICODESTRING}
+  // RLebeau: if the bytes were decoded into surrogates, the second
+  // surrogate is lost here, as it can't be returned unless we cache
+  // it somewhere for the the next BytesToChar() call to retreive.  Just
+  // raise an error for now.  Users will have to update their code to
+  // read surrogates differently...
+  Assert(NumChars = 0);
   VChar := LChars[0];
   {$ELSE}
-  SetString(LTmp, PWideChar(LChars), NumChars);
-  VChar := AnsiString(LTmp)[1];
+  // RLebeau: since we can only return an AnsiChar here, let's convert
+  // the decoded characters, surrogates and all, into their Ansi
+  // representation. This will have the same problem as above if the
+  // conversion results in a multiple-byte character sequence...
+  SetString(LWTmp, PWideChar(LChars), NumChars);
+  LATmp := AnsiString(LWTmp);
+  Assert(Length(LATmp) = 1);
+  VChar := LATmp[1];
   {$ENDIF}
 end;
 
@@ -4930,14 +4944,15 @@ function ReadCharFromStream(AStream: TStream; var VChar: Char;
 var
   StartPos: TIdStreamSize;
   Lb: Byte;
-  NumChars: Integer;
+  NumChars, NumBytes: Integer;
   LBytes: TIdBytes;
   {$IFDEF DOTNET}
-  LChars: array[0..0] of Char;
+  LChars: array[0..1] of Char;
   {$ELSE}
   LChars: TIdWideChars;
     {$IFNDEF UNICODESTRING}
-  LTmp: WideString;
+  LWTmp: WideString;
+  LATmp: AnsiString;
     {$ENDIF}
   {$ENDIF}
 
@@ -4959,16 +4974,18 @@ begin
   end;
   Result := 1;
 
-  SetLength(LBytes, AEncoding.GetMaxByteCount(1));
+  // 2 Chars to handle UTF-16 surrogates
+  NumBytes := AEncoding.GetMaxByteCount(2);
+  SetLength(LBytes, NumBytes);
   {$IFNDEF DOTNET}
-  SetLength(LChars, 1);
+  SetLength(LChars, 2);
   {$ENDIF}
 
   try
     repeat
       LBytes[Result-1] := Lb;
       NumChars := AEncoding.GetChars(LBytes, 0, Result, LChars, 0);
-      if (NumChars > 0) or (Result = Length(LBytes)) then begin
+      if (NumChars > 0) or (Result = NumBytes) then begin
         Break;
       end;
       Lb := ReadByte;
@@ -4979,14 +4996,24 @@ begin
     raise;
   end;
 
-  if NumChars > 0 then begin
-    {$IFDEF DOTNET_OR_UNICODESTRING}
-    VChar := LChars[0];
-    {$ELSE}
-    SetString(LTmp, PWideChar(LChars), NumChars);
-    VChar := AnsiString(LTmp)[1];
-    {$ENDIF}
-  end;
+  {$IFDEF DOTNET_OR_UNICODESTRING}
+  // RLebeau: if the bytes were decoded into surrogates, the second
+  // surrogate is lost here, as it can't be returned unless we cache
+  // it somewhere for the the next ReadTIdBytesFromStream() call to
+  // retreive.  Just raise an error for now.  Users will have to
+  // update their code to read surrogates differently...
+  Assert(NumChars = 1);
+  VChar := LChars[0];
+  {$ELSE}
+  // RLebeau: since we can only return an AnsiChar here, let's convert
+  // the decoded characters, surrogates and all, into their Ansi
+  // representation. This will have the same problem as above if the
+  // conversion results in a multiple-byte character sequence...
+  SetString(LWTmp, PWideChar(LChars), NumChars);
+  LATmp := AnsiString(LWTmp);
+  Assert(Length(LATmp) = 1);
+  VChar := LATmp[1];
+  {$ENDIF}
 end;
 
 procedure WriteTIdBytesToStream(const AStream: TStream; const ABytes: TIdBytes;
