@@ -977,37 +977,51 @@ end;
 
 function TIdIOHandler.ReadChar(AEncoding: TIdTextEncoding = nil): Char;
 var
-  I, NumChars: Integer;
+  I, NumChars, NumBytes: Integer;
   LBytes: TIdBytes;
   {$IFDEF DOTNET}
   LChars: array[0..1] of Char;
   {$ELSE}
   LChars: TIdWideChars;
     {$IFNDEF UNICODESTRING}
-  LTmp: WideString;
+  LWTmp: WideString;
+  LATmp: AnsiString;
     {$ENDIF}
   {$ENDIF}
 begin
   AEncoding := iif(AEncoding, FDefStringEncoding);
-  SetLength(LBytes, AEncoding.GetMaxByteCount(1));
+  // 2 Chars to handle UTF-16 surrogates
+  NumBytes := AEncoding.GetMaxByteCount(2);
+  SetLength(LBytes, NumBytes);
   {$IFNDEF DOTNET}
   SetLength(LChars, 2);
   {$ENDIF}
   NumChars := 0;
-  for I := 0 to Length(LBytes)-1 do
+  for I := 1 to NumBytes do
   begin
-    LBytes[I] := ReadByte;
-    NumChars := AEncoding.GetChars(LBytes, 0, I+1, LChars, 0);
+    LBytes[I-1] := ReadByte;
+    NumChars := AEncoding.GetChars(LBytes, 0, I, LChars, 0);
     if NumChars > 0 then begin
       Break;
     end;
   end;
-  Assert(NumChars > 0);
   {$IFDEF DOTNET_OR_UNICODESTRING}
+  // RLebeau: if the bytes were decoded into surrogates, the second
+  // surrogate is lost here, as it can't be returned unless we cache
+  // it somewhere for the the next ReadChar() call to retreive.  Just
+  // raise an error for now.  Users will have to update their code to
+  // read surrogates differently...
+  Assert(NumChars = 1);
   Result := LChars[0];
   {$ELSE}
-  SetString(LTmp, PWideChar(LChars), NumChars);
-  Result := AnsiString(LTmp)[1];
+  // RLebeau: since we can only return an AnsiChar here, let's convert
+  // the decoded characters, surrogates and all, into their Ansi
+  // representation. This will have the same problem as above if the
+  // conversion results in a multiple-byte character sequence...
+  SetString(LWTmp, PWideChar(LChars), NumChars);
+  LATmp := AnsiString(LWTmp);
+  Assert(Length(LATmp) = 1);
+  Result := LATmp[1];
   {$ENDIF}
 end;
 
