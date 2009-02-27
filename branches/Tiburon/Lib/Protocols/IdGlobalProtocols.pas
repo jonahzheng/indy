@@ -1116,8 +1116,8 @@ begin
     Yr := IndyStrToInt(sYear, High(Word));
     if Yr = High(Word) then begin // Is sTime valid Integer?
       sTime := sYear;
-      sYear := Value;
-      Value := sTime;
+      sYear := Fetch(Value);
+      Value := TrimRight(sTime + ' ' + Value);
       Yr := IndyStrToInt(sYear);
     end;
 
