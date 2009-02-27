@@ -1499,14 +1499,12 @@ begin
     // keep-alive feature for now
     FConnection.IOHandler.WriteLn('HTTP/1.1 ' + IntToStr(ResponseNo) + ' ' + ResponseText);    {Do not Localize}
     // Write headers
-    for i := 0 to RawHeaders.Count-1 do begin
-      FConnection.IOHandler.WriteLn(RawHeaders[i]);
-    end;
+    FConnection.IOHandler.Write(RawHeaders);
     // Write cookies
     for i := 0 to Cookies.Count - 1 do begin
       FConnection.IOHandler.WriteLn('Set-Cookie: ' + Cookies[i].ServerCookie);    {Do not Localize}
     end;
-    // HTTP headers ends with a double CR+LF
+    // HTTP headers end with a double CR+LF
     FConnection.IOHandler.WriteLn;
   finally
     FConnection.IOHandler.WriteBufferClose;
