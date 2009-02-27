@@ -234,35 +234,65 @@ procedure TIdHTTPProxyServer.TransferData(AContext: TIdHTTPProxyServerContext;
   ASrc, ADest: TIdTCPConnection);
 var
   LStream: TStream;
-  LSize: Integer;
+  LSize: TIdStreamSize;
+  S: String;
 begin
+  // RLebeau: determine how many bytes to read
+  S := AContext.Headers.Values['Content-Length']; {Do not Localize}
+  if S <> '' then
+  begin
+    LSize := IndyStrToStreamSize(S, -1) ; {Do not Localize}
+    if LSize < 0 then begin
+      // Write HTTP error status response
+      if AContext.TransferSource = tsClient then begin
+        ASrc.IOHandler.WriteLn('HTTP/1.0 400 Bad Request');    {Do not Localize}
+      end else begin
+        ASrc.IOHandler.WriteLn('HTTP/1.0 502 Bad Gateway');    {Do not Localize}
+      end;
+      ASrc.IOHandler.WriteLn;
+      Exit;
+    end;
+  end else begin
+    LSize := -1;
+  end;
+
   if AContext.TransferSource = tsClient then begin
     ADest.IOHandler.WriteLn(AContext.Command + ' ' + AContext.Document + ' HTTP/1.0'); {Do not Localize}
   end;
-  ADest.IOHandler.Write(AContext.Headers);
-  ADest.IOHandler.WriteLn;
-
-  LSize := IndyStrToInt(AContext.Headers.Values['Content-Length'], -1) ; {Do not Localize}
 
   if (AContext.TransferSource = tsServer) or (LSize > 0) then
   begin
-    if AContext.TransferMode = tmFullDocument then begin
-      //TODO: Have an event to let the user perform stream creation
-      LStream := TMemoryStream.Create;
-    end else begin
-      LStream := TIdTCPStream.Create(ADest);
-    end;
-
+    LStream := nil;
     try
-      ASrc.IOHandler.ReadStream(LStream, LSize, LSize < 0);
-      if AContext.TransferMode = tmFullDocument then begin
+      if AContext.TransferMode = tmFullDocument then
+      begin
+        //TODO: Have an event to let the user perform stream creation
+        LStream := TMemoryStream.Create;
+        // RLebeau: do not write the source headers until the OnHTTPDocument
+        // event has had a chance to update them if it alters the document data...
+        ASrc.IOHandler.ReadStream(LStream, LSize, LSize < 0);
         LStream.Position := 0;
         DoHTTPDocument(AContext, LStream);
+        ADest.IOHandler.Write(AContext.Headers);
+        ADest.IOHandler.WriteLn;
         ADest.IOHandler.Write(LStream);
+      end else
+      begin
+        // RLebeau: direct pass-through, send everything as-is...
+        LStream := TIdTCPStream.Create(ADest);
+        ADest.IOHandler.Write(AContext.Headers);
+        ADest.IOHandler.WriteLn;
+        ASrc.IOHandler.ReadStream(LStream, LSize, LSize < 0);
       end;
     finally
       FreeAndNil(LStream);
     end;
+  end else
+  begin
+    // RLebeau: the client sent a document with no data in it, so just pass
+    // along the headers by themselves ...
+    ADest.IOHandler.Write(AContext.Headers);
+    ADest.IOHandler.WriteLn;
   end;
 end;
 
@@ -276,9 +306,6 @@ begin
   LContext := TIdHTTPProxyServerContext(ASender.Context);
   LContext.FCommand := ASender.CommandHandler.Command;
 
-  LContext.Headers.Clear;
-  LContext.Connection.IOHandler.Capture(LContext.Headers, '');
-
   LContext.FOutboundClient := TIdTCPClient.Create(nil);
   try
     LURI := TIdURI.Create(ASender.Params.Strings[0]);
@@ -291,6 +318,8 @@ begin
       FreeAndNil(LURI);
     end;
 
+    LContext.Headers.Clear;
+    LContext.Connection.IOHandler.Capture(LContext.Headers, '');
     LContext.FTransferMode := FDefTransferMode;
     LContext.FTransferSource := tsClient;
     DoHTTPBeforeCommand(LContext);
@@ -298,14 +327,12 @@ begin
     TIdTCPClient(LContext.FOutboundClient).Connect;
     try
       TransferData(LContext, LContext.Connection, LContext.FOutboundClient);
-      
+
       LContext.Headers.Clear;
       LContext.FOutboundClient.IOHandler.Capture(LContext.Headers, '');
-
       LContext.FTransferMode := FDefTransferMode;
       LContext.FTransferSource := tsServer;
       DoHTTPResponse(LContext);
-
       TransferData(LContext, LContext.FOutboundClient, LContext.Connection);
     finally
       LContext.FOutboundClient.Disconnect;
@@ -317,14 +344,13 @@ end;
 
 procedure TIdHTTPProxyServer.CommandCONNECT(ASender: TIdCommand);
 var
-  LRemoteHost: string;
-  LBuffer: TIdBytes;
+  LRemoteHost, S: string;
   LContext: TIdHTTPProxyServerContext;
 begin
   ASender.PerformReply := False;
 
   LContext := TIdHTTPProxyServerContext(ASender.Context);
-  LContext.FCommand := 'CONNECT';
+  LContext.FCommand := ASender.CommandHandler.Command;
 
   LContext.Headers.Clear;
   LContext.Connection.IOHandler.Capture(LContext.Headers, '');
@@ -350,12 +376,22 @@ begin
 
       while LContext.Connection.Connected and LContext.FOutboundClient.Connected do
       begin
-        SetLength(LBuffer, 0);
-        LContext.Connection.IOHandler.ReadBytes(LBuffer, -1, True);
-        LContext.FOutboundClient.IOHandler.Write(LBuffer);
-        SetLength(LBuffer, 0);
-        LContext.FOutboundClient.IOHandler.ReadBytes(LBuffer, -1, True);
-        LContext.Connection.IOHandler.Write(LBuffer);
+        S := LContext.Connection.IOHandler.ReadLn;
+        LContext.FCommand := Fetch(S);
+
+        LContext.Headers.Clear;
+        LContext.Connection.IOHandler.Capture(LContext.Headers, '');
+        LContext.FTransferMode := FDefTransferMode;
+        LContext.FTransferSource := tsClient;
+        DoHTTPBeforeCommand(LContext);
+        TransferData(LContext, LContext.Connection, LContext.FOutboundClient);
+
+        LContext.Headers.Clear;
+        LContext.FOutboundClient.IOHandler.Capture(LContext.Headers, '');
+        LContext.FTransferMode := FDefTransferMode;
+        LContext.FTransferSource := tsServer;
+        DoHTTPResponse(LContext);
+        TransferData(LContext, LContext.FOutboundClient, LContext.Connection);
       end;
     finally
       LContext.FOutboundClient.Disconnect;
