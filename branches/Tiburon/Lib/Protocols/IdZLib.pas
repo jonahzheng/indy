@@ -193,7 +193,7 @@ const
 implementation
 
 uses
-  IdStream, IdZLibConst;
+  IdGlobalProtocols, IdStream, IdZLibConst;
 
 const
   Levels: array [TCompressionLevel] of ShortInt =
@@ -939,6 +939,7 @@ var
   LName: AnsiString;
 begin
   inherited Create(Dest);
+  LBytes := nil; // keep the compiler happy
   FZRec.next_out := FBuffer;
   FZRec.avail_out := SizeOf(FBuffer);
   FStreamType := StreamType;
@@ -954,10 +955,10 @@ begin
     //must be translated to the ISO LATIN-1 character set.
 
     // Rebeau 2/20/09: Indy's 8-bit encoding class currently uses ISO-8859-1
-    // (codepage 28591), so we could technically use that, but since the RFC
-    // is very specific about the charset, we'll force it here in case Indy's
-    // 8-bit encoding class is changed later on...
-    LEncoding := TIdTextEncoding.GetEncoding(28591);
+    // so we could technically use that, but since the RFC is very specific
+    // about the charset, we'll force it here in case Indy's 8-bit encoding
+    // class is changed later on...
+    LEncoding := CharsetToEncoding('ISO-8859-1');
     try
       LBytes := TIdTextEncoding.Convert(
         TIdTextEncoding.Unicode,
