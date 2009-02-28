@@ -6,13 +6,18 @@ interface
 uses
   Classes,
   IdGlobal, IdHash,
-  {$IFNDEF DOTNET}
+  {$IFDEF DOTNET}
+  System.Security.Cryptography,
+  IdException
+  {$ELSE}
   IdSSLOpenSSLHeaders
   {$ENDIF}
   ;
 
 type
   {$IFDEF DOTNET}
+  TIdHashInst = System.Security.Cryptography.HashAlgorithm;
+  TIdHashIntCtx =  TIdHashInst;
   {$ELSE}
   TIdHashInst = PEVP_MD;
   TIdHashIntCtx = EVP_MD_CTX;
@@ -43,7 +48,10 @@ type
   protected
     function GetHashInst : TIdHashInst; override;
   end;
-  {$IFNDEF DOTNET}
+  {$IFDEF DOTNET}
+  EIdSecurityAPIException = class(EIdException);
+  EIdSHA224NotSupported = class(EIdSecurityAPIException);
+  {$ELSE}
   EIdDigestError = class(EIdOpenSSLAPICryptoError);
   EIdDigestFinalEx = class(EIdDigestError);
   EIdDigestInitEx = class(EIdDigestError);
@@ -58,11 +66,21 @@ uses IdCTypes;
 { TIdHashInt }
 
 function TIdHashInt.FinalHash(ACtx: TIdHashIntCtx): TIdBytes;
-{$IFNDEF DOTNET}
-var LLen, LRet : TIdC_UInt;
+var
+{$IFDEF DOTNET}
+  LDummy : TIdBytes;
+{$ELSE}
+  LLen, LRet : TIdC_UInt;
 {$ENDIF}
 begin
-  {$IFNDEF DOTNET}
+  {$IFDEF DOTNET}
+  //This is a funny way of coding.  I have to pass a dummy value to
+  //TransformFinalBlock so that things can work similarly to the OpenSSL
+  //Crypto API.  You can't pass nul to TransformFinalBlock without an exception.
+  SetLength(LDummy,0);
+   ACtx.TransformFinalBlock(LDummy,0,0);
+  Result := ACtx.Hash;
+  {$ELSE}
   SetLength(Result,OPENSSL_EVP_MAX_MD_SIZE);
   LRet := IdSslEvpDigestFinalEx(@ACtx,@Result[0],LLen);
   if LRet <> 1 then begin
@@ -103,13 +121,16 @@ begin
 end;
 
 function TIdHashInt.InitHash: TIdHashIntCtx;
-var LHash : TIdHashInst;
  {$IFNDEF DOTNET}
+var
+  LHash : TIdHashInst;
   LRet : TIdC_Int;
   {$ENDIF}
 begin
+  {$IFDEF DOTNET}
+   Result := GetHashInst;
+  {$ELSE}
   LHash := GetHashInst;
-  {$IFNDEF DOTNET}
   IdSslEvpMDCtxInit(@Result);
   LRet := IdSslEvpDigestInitEx(@Result, LHash, nil);
   if LRet <> 1 then begin
@@ -123,7 +144,9 @@ procedure TIdHashInt.UpdateHash(ACtx: TIdHashIntCtx; const AIn: TIdBytes);
 var LRet : TIdC_Int;
 {$ENDIF}
 begin
-   {$IFNDEF DOTNET}
+   {$IFDEF DOTNET}
+   ACtx.TransformBlock(AIn,0,Length(AIn),AIn,0);
+   {$ELSE}
   LRet := IdSslEvpDigestUpdate(@ACtx,@Ain[0],Length(AIn));
   if LRet <> 1 then begin
     EIdDigestInitEx.RaiseException('EVP_DigestUpdate error');
@@ -135,7 +158,10 @@ end;
 
 function TIdHashSHA224.GetHashInst: TIdHashInst;
 begin
-   {$IFNDEF DOTNET}
+  {$IFDEF DOTNET}
+  Result := nil;
+  Raise EIdSHA224NotSupported.Create('SHA224 not supported.');
+  {$ELSE}
   Result := IdSslEvpSHA224;
   {$ENDIF}
 end;
@@ -144,7 +170,9 @@ end;
 
 function TIdHashSHA256.GetHashInst: TIdHashInst;
 begin
-   {$IFNDEF DOTNET}
+   {$IFDEF DOTNET}
+   Result := System.Security.Cryptography.SHA256Managed.Create;
+   {$ELSE}
   Result := IdSslEvpSHA256;
   {$ENDIF}
 end;
@@ -153,7 +181,9 @@ end;
 
 function TIdHashSHA386.GetHashInst: TIdHashInst;
 begin
-   {$IFNDEF DOTNET}
+  {$IFDEF DOTNET}
+   Result := System.Security.Cryptography.SHA384Managed.Create;
+  {$ELSE}
   Result := IdSslEvpSHA386;
   {$ENDIF}
 end;
@@ -162,7 +192,9 @@ end;
 
 function TIdHashSHA512.GetHashInst: TIdHashInst;
 begin
-   {$IFNDEF DOTNET}
+  {$IFDEF DOTNET}
+   Result := System.Security.Cryptography.SHA512Managed.Create;
+  {$ELSE}
   Result := IdSslEvpSHA512;
   {$ENDIF}
 end;
