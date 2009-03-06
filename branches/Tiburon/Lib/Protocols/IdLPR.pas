@@ -174,6 +174,8 @@ type
   published
     property Queue: String read FQueue write FQueue;
     property ControlFile: TIdLPRControlFile read FControlFile write SeTIdLPRControlFile;
+    property Host;
+    property Port default IdPORT_LPD;
     property OnLPRStatus: TIdLPRStatusEvent read FOnLPRStatus write FOnLPRStatus;
   end;
 
