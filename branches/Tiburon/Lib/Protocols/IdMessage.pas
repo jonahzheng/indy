@@ -825,7 +825,7 @@ begin
             LContentType := LContentType + '; charset="' + FCharSet + '"';  {do not localize}
           end;
           if (MessageParts.Count > 0) and (LMIMEBoundary <> '') then begin
-            LContentType := LContentType + '; boundary="' + LMIMEBoundary + '"'; {do not localize}
+            LContentType := RemoveHeaderEntry(LContentType, 'boundary') + '; boundary="' + LMIMEBoundary + '"'; {do not localize}
           end;
           Values['Content-Type'] := LContentType; {do not localize}
         end;
@@ -957,7 +957,8 @@ begin
     Priority := GetMsgPriority(Headers.Values['X-Priority']) {do not localize}
   end;
   {Note that the following code ensures MIMEBoundary.Count is 0 for single-part MIME messages...}
-  LBoundary := ExtractHeaderSubItem(Headers.Values['Content-Type'], 'boundary');  {do not localize}
+  LBoundary := ExtractHeaderSubItem(FContentType, 'boundary');  {do not localize}
+  FContentType := RemoveHeaderEntry(FContentType, 'boundary');  {do not localize}
   if LBoundary <> '' then begin
     MIMEBoundary.Push(LBoundary, -1);
   end;
