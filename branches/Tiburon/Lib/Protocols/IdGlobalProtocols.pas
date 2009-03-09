@@ -771,7 +771,7 @@ end;
 function LongWordToFourChar(AValue : LongWord): string;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
-  Result := BytesToString(ToBytes(AValue));
+  Result := BytesToString(ToBytes(AValue), Get8BitEncoding);
 end;
 
 procedure WordToTwoBytes(AWord : Word; ByteArray: TIdBytes; Index: integer);
@@ -801,7 +801,7 @@ function WordToStr(const Value: Word): String;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   {$IFDEF DOTNET_OR_UNICODESTRING}
-  Result := BytesToString(ToBytes(Value));
+  Result := BytesToString(ToBytes(Value), Get8BitEncoding);
   {$ELSE}
   SetLength(Result, SizeOf(Value));
   Move(Value, Result[1], SizeOf(Value));
@@ -1151,17 +1151,26 @@ begin
       LPM := True;
       Value := Fetch(Value, 'PM');  {do not localize}
     end;
-    i := IndyPos(':', Value);       {do not localize}
+
+    // RLebeau 03/04/2009: some countries use dot instead of colon
+    // for the time separator
+    i := IndyPos('.', Value);       {do not localize}
+    if i > 0 then begin
+      sDelim := '.';                {do not localize}
+    end else begin
+      sDelim := ':';                {do not localize}
+    end;
+    i := IndyPos(sDelim, Value);
     if i > 0 then begin
       // Copy time string up until next space (before GMT offset)
       sTime := Fetch(Value, ' ');  {do not localize}
       {Hour}
-      Ho  := IndyStrToInt( Fetch(sTime, ':'), 0);  {do not localize}
+      Ho  := IndyStrToInt( Fetch(sTime, sDelim), 0);
       {Minute}
-      Min := IndyStrToInt( Fetch(sTime, ':'), 0);  {do not localize}
+      Min := IndyStrToInt( Fetch(sTime, sDelim), 0);
       {Second}
       Sec := IndyStrToInt( Fetch(sTime), 0);
-      {AM/PM part if preasent}
+      {AM/PM part if present}
       Value := TrimLeft(Value);
       if LAM then begin
         if Ho = 12 then begin
@@ -1725,6 +1734,7 @@ end;
 function StrToDay(const ADay: string): Byte;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
+  // RLebeau 03/04/2009: TODO - support localized strings as well...
   Result := Succ(
     PosInStrArray(ADay,
       ['SUN','MON','TUE','WED','THU','FRI','SAT'], {do not localize}
@@ -1738,15 +1748,30 @@ const
   // Unicode codepoint value, depending on the codepage used for the source code.
   // For instance, #128 may become #$20AC...
   Months: array[0..7] of array[1..12] of string = (
-    ('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'),   // English
-	  //Netware Print Services may return a 4 char month such as Sept
-    ('',    '',    '',    '',    '',   'JUNE','JULY', '',   'SEPT', '',    '',    ''),      // English - alt. 4 letter abbreviations
-    ('',    '',    'MRZ', '',    'MAI', '',    '',    '',    '',    'OKT', '',    'DEZ'),   // German
-    ('ENO', 'FBRO','MZO', 'AB',  '',    '',    '',    'AGTO','SBRE','OBRE','NBRE','DBRE'),  // Spanish
-    ('',    '',    'MRT', '',    'MEI', '',    '',    '',    '',    'OKT', '',    ''),      // Dutch
-    ('JANV','F'+Char($C9)+'V', 'MARS','AVR', 'MAI', 'JUIN','JUIL','AO'+Char($DB), 'SEPT','',    '',    'D'+Char($C9)+'C'),   // French
-    ('',    'F'+Char($C9)+'VR','',    '',    '',    '',    'JUI',    'AO'+Char($DB)+'T','',    '',    '',    ''),   // French (alt)
-    ('',    '',     '',   '', 'MAJ',    '',    '',       '',     'AVG',    '',    '',  ''));     // Slovenian
+
+    // English
+    ('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'),
+
+    // English - alt. 4 letter abbreviations (Netware Print Services may return a 4 char month such as Sept)
+    ('',    '',    '',    '',    '',   'JUNE','JULY', '',   'SEPT', '',    '',    ''),
+
+    // German
+    ('',    '',    'MRZ', '',    'MAI', '',    '',    '',    '',    'OKT', '',    'DEZ'),
+
+    // Spanish
+    ('ENO', 'FBRO','MZO', 'AB',  '',    '',    '',    'AGTO','SBRE','OBRE','NBRE','DBRE'),
+
+    // Dutch
+    ('',    '',    'MRT', '',    'MEI', '',    '',    '',    '',    'OKT', '',    ''),
+
+    // French
+    ('JANV','F'+Char($C9)+'V', 'MARS','AVR', 'MAI', 'JUIN','JUIL','AO'+Char($DB), 'SEPT','',    '',    'D'+Char($C9)+'C'),
+
+    // French (alt)
+    ('',    'F'+Char($C9)+'VR','',    '',    '',    '',    'JUI',    'AO'+Char($DB)+'T','',    '',    '',    ''),
+
+    // Slovenian
+    ('',    '',     '',   '', 'MAJ',    '',    '',       '',     'AVG',    '',    '',  ''));
 var
   i: Integer;
 begin
@@ -1918,6 +1943,166 @@ begin
   end;
 end;
 
+// RLebeau: According to RFC 2822 Section 4.3:
+//
+// In the obsolete time zone, "UT" and "GMT" are indications of
+// "Universal Time" and "Greenwich Mean Time" respectively and are both
+// semantically identical to "+0000".
+//
+// The remaining three character zones are the US time zones.  The first
+// letter, "E", "C", "M", or "P" stands for "Eastern", "Central",
+// "Mountain" and "Pacific".  The second letter is either "S" for
+// "Standard" time, or "D" for "Daylight" (or summer) time.  Their
+// interpretations are as follows:
+//
+// EDT is semantically equivalent to -0400
+// EST is semantically equivalent to -0500
+// CDT is semantically equivalent to -0500
+// CST is semantically equivalent to -0600
+// MDT is semantically equivalent to -0600
+// MST is semantically equivalent to -0700
+// PDT is semantically equivalent to -0700
+// PST is semantically equivalent to -0800
+//
+// The 1 character military time zones were defined in a non-standard
+// way in [RFC822] and are therefore unpredictable in their meaning.
+// The original definitions of the military zones "A" through "I" are
+// equivalent to "+0100" through "+0900" respectively; "K", "L", and "M"
+// are equivalent to  "+1000", "+1100", and "+1200" respectively; "N"
+// through "Y" are equivalent to "-0100" through "-1200" respectively;
+// and "Z" is equivalent to "+0000".  However, because of the error in
+// [RFC822], they SHOULD all be considered equivalent to "-0000" unless
+// there is out-of-band information confirming their meaning.
+//
+// Other multi-character (usually between 3 and 5) alphabetic time zones
+// have been used in Internet messages.  Any such time zone whose
+// meaning is not known SHOULD be considered equivalent to "-0000"
+// unless there is out-of-band information confirming their meaning.
+
+// RLebeau: according to http://en.wikipedia.org/wiki/Central_European_Time:
+//
+// Central European Time (CET) is one of the names of the time zone that is
+// 1 hour ahead of Coordinated Universal Time. It is used in most European
+// and some North African countries.
+//
+// Its time offset is normally UTC+1. During daylight saving time, Central
+// European Summer Time (CEST) is used instead (UTC+2). The current time
+// offset is UTC+1.
+
+// RLebeau: other abbreviations taken from:
+// http://www.timeanddate.com/library/abbreviations/timezones/
+
+function TimeZoneToGmtOffsetStr(const ATimeZone: String): String;
+type
+  TimeZoneOffset = record
+    TimeZone: String;
+    Offset: String;
+  end;
+const
+  cTimeZones: array[0..89] of TimeZoneOffset = (
+    (TimeZone:'A';    Offset:'+0100'), // Alpha Time Zone - Military                             {do not localize}
+    (TimeZone:'ACDT'; Offset:'+1030'), // Australian Central Daylight Time                       {do not localize}
+    (TimeZone:'ACST'; Offset:'+0930'), // Australian Central Standard Time                       {do not localize}
+    (TimeZone:'ADT';  Offset:'-0300'), // Atlantic Daylight Time - North America                 {do not localize}
+    (TimeZone:'AEDT'; Offset:'+1100'), // Australian Eastern Daylight Time                       {do not localize}
+    (TimeZone:'AEST'; Offset:'+1000'), // Australian Eastern Standard Time                       {do not localize}
+    (TimeZone:'AKDT'; Offset:'-0800'), // Alaska Daylight Time                                   {do not localize}
+    (TimeZone:'AKST'; Offset:'-0900'), // Alaska Standard Time                                   {do not localize}
+    (TimeZone:'AST';  Offset:'-0400'), // Atlantic Standard Time - North America                 {do not localize}
+    (TimeZone:'AWDT'; Offset:'+0900'), // Australian Western Daylight Time                       {do not localize}
+    (TimeZone:'AWST'; Offset:'+0800'), // Australian Western Standard Time                       {do not localize}
+    (TimeZone:'B';    Offset:'+0200'), // Bravo Time Zone - Military                             {do not localize}
+    (TimeZone:'BST';  Offset:'+0100'), // British Summer Time - Europe                           {do not localize}
+    (TimeZone:'C';    Offset:'+0300'), // Charlie Time Zone - Military                           {do not localize}
+    (TimeZone:'CDT';  Offset:'+1030'), // Central Daylight Time - Australia                      {do not localize}
+    (TimeZone:'CDT';  Offset:'-0500'), // Central Daylight Time - North America                  {do not localize}
+    (TimeZone:'CEDT'; Offset:'+0200'), // Central European Daylight Time                         {do not localize}
+    (TimeZone:'CEST'; Offset:'+0200'), // Central European Summer Time                           {do not localize}
+    (TimeZone:'CET';  Offset:'+0100'), // Central European Time                                  {do not localize}
+    (TimeZone:'CST';  Offset:'+1030'), // Central Summer Time - Australia                        {do not localize}
+    (TimeZone:'CST';  Offset:'+0930'), // Central Standard Time - Australia                      {do not localize}
+    (TimeZone:'CST';  Offset:'-0600'), // Central Standard Time - North America                  {do not localize}
+    (TimeZone:'CXT';  Offset:'+0700'), // Christmas Island Time - Australia                      {do not localize}
+    (TimeZone:'D';    Offset:'+0400'), // Delta Time Zone - Military                             {do not localize}
+    (TimeZone:'E';    Offset:'+0500'), // Echo Time Zone - Military                              {do not localize}
+    (TimeZone:'EDT';  Offset:'+1100'), // Eastern Daylight Time - Australia                      {do not localize}
+    (TimeZone:'EDT';  Offset:'-0400'), // Eastern Daylight Time - North America                  {do not localize}
+    (TimeZone:'EEDT'; Offset:'+0300'), // Eastern European Daylight Time                         {do not localize}
+    (TimeZone:'EEST'; Offset:'+0300'), // Eastern European Summer Time                           {do not localize}
+    (TimeZone:'EET';  Offset:'+0200'), // Eastern European Time                                  {do not localize}
+    (TimeZone:'EST';  Offset:'+1100'), // Eastern Summer Time - Australia                        {do not localize}
+    (TimeZone:'EST';  Offset:'+1000'), // Eastern Standard Time - Australia                      {do not localize}
+    (TimeZone:'EST';  Offset:'-0500'), // Eastern Standard Time - North America                  {do not localize}
+    (TimeZone:'F';    Offset:'+0600'), // Foxtrot Time Zone - Military                           {do not localize}
+    (TimeZone:'G';    Offset:'+0700'), // Golf Time Zone - Military                              {do not localize}
+    (TimeZone:'GMT';  Offset:'+0000'), // Greenwich Mean Time - Europe                           {do not localize}
+    (TimeZone:'H';    Offset:'+0800'), // Hotel Time Zone - Military                             {do not localize}
+    (TimeZone:'HAA';  Offset:'-0300'), // Heure Avancée de l'Atlantique - North America          {do not localize}
+    (TimeZone:'HAC';  Offset:'-0500'), // Heure Avancée du Centre - North America                {do not localize}
+    (TimeZone:'HADT'; Offset:'-0900'), // Hawaii-Aleutian Daylight Time - North America          {do not localize}
+    (TimeZone:'HAE';  Offset:'-0400'), // Heure Avancée de l'Est - North America                 {do not localize}
+    (TimeZone:'HAP';  Offset:'-0700'), // Heure Avancée du Pacifique - North America             {do not localize}
+    (TimeZone:'HAR';  Offset:'-0600'), // Heure Avancée des Rocheuses - North America            {do not localize}
+    (TimeZone:'HAST'; Offset:'-1000'), // Hawaii-Aleutian Standard Time - North America          {do not localize}
+    (TimeZone:'HAT';  Offset:'-0230'), // Heure Avancée de Terre-Neuve - North America           {do not localize}
+    (TimeZone:'HAY';  Offset:'-0800'), // Heure Avancée du Yukon - North America                 {do not localize}
+    (TimeZone:'HNA';  Offset:'-0400'), // Heure Normale de l'Atlantique - North America          {do not localize}
+    (TimeZone:'HNC';  Offset:'-0600'), // Heure Normale du Centre - North America                {do not localize}
+    (TimeZone:'HNE';  Offset:'-0500'), // Heure Normale de l'Est - North America                 {do not localize}
+    (TimeZone:'HNP';  Offset:'-0800'), // Heure Normale du Pacifique - North America             {do not localize}
+    (TimeZone:'HNR';  Offset:'-0700'), // Heure Normale des Rocheuses - North America            {do not localize}
+    (TimeZone:'HNT';  Offset:'-0330'), // Heure Normale de Terre-Neuve - North America           {do not localize}
+    (TimeZone:'HNY';  Offset:'-0900'), // Heure Normale du Yukon - North America                 {do not localize}
+    (TimeZone:'I';    Offset:'+0900'), // India Time Zone - Military                             {do not localize}
+    (TimeZone:'IST';  Offset:'+0100'), // Irish Summer Time - Europe                             {do not localize}
+    (TimeZone:'K';    Offset:'+1000'), // Kilo Time Zone - Military                              {do not localize}
+    (TimeZone:'L';    Offset:'+1100'), // Lima Time Zone - Military                              {do not localize}
+    (TimeZone:'M';    Offset:'+1200'), // Mike Time Zone - Military                              {do not localize}
+    (TimeZone:'MDT';  Offset:'-0600'), // Mountain Daylight Time - North America                 {do not localize}
+    (TimeZone:'MEHSZ';Offset:'+0300'), // Mitteleuropäische Hochsommerzeit - Europe              {do not localize}
+    (TimeZone:'MESZ'; Offset:'+0200'), // Mitteleuroäische Sommerzeit - Europe                   {do not localize}
+    (TimeZone:'MEZ';  Offset:'+0100'), // Mitteleuropäische Zeit - Europe                        {do not localize}
+    (TimeZone:'MSD';  Offset:'+0400'), // Moscow Daylight Time - Europe                          {do not localize}
+    (TimeZone:'MSK';  Offset:'+0300'), // Moscow Standard Time - Europe                          {do not localize}
+    (TimeZone:'MST';  Offset:'-0700'), // Mountain Standard Time - North America                 {do not localize}
+    (TimeZone:'N';    Offset:'-0100'), // November Time Zone - Military                          {do not localize}
+    (TimeZone:'NDT';  Offset:'-0230'), // Newfoundland Daylight Time - North America             {do not localize}
+    (TimeZone:'NFT';  Offset:'+1130'), // Norfolk (Island), Time - Australia                      {do not localize}
+    (TimeZone:'NST';  Offset:'-0330'), // Newfoundland Standard Time - North America             {do not localize}
+    (TimeZone:'O';    Offset:'-0200'), // Oscar Time Zone - Military                             {do not localize}
+    (TimeZone:'P';    Offset:'-0300'), // Papa Time Zone - Military                              {do not localize}
+    (TimeZone:'PDT';  Offset:'-0700'), // Pacific Daylight Time - North America                  {do not localize}
+    (TimeZone:'PST';  Offset:'-0800'), // Pacific Standard Time - North America                  {do not localize}
+    (TimeZone:'Q';    Offset:'-0400'), // Quebec Time Zone - Military                            {do not localize}
+    (TimeZone:'R';    Offset:'-0500'), // Romeo Time Zone - Military                             {do not localize}
+    (TimeZone:'S';    Offset:'-0600'), // Sierra Time Zone - Military                            {do not localize}
+    (TimeZone:'T';    Offset:'-0700'), // Tango Time Zone - Military                             {do not localize}
+    (TimeZone:'U';    Offset:'-0800'), // Uniform Time Zone - Military                           {do not localize}
+    (TimeZone:'UTC';  Offset:'+0000'), // Coordinated Universal Time - Europe                    {do not localize}
+    (TimeZone:'V';    Offset:'-0900'), // Victor Time Zone - Military                            {do not localize}
+    (TimeZone:'W';    Offset:'-1000'), // Whiskey Time Zone - Military                           {do not localize}
+    (TimeZone:'WDT';  Offset:'+0900'), // Western Daylight Time - Australia                      {do not localize}
+    (TimeZone:'WEDT'; Offset:'+0100'), // Western European Daylight Time - Europe                {do not localize}
+    (TimeZone:'WEST'; Offset:'+0100'), // Western European Summer Time - Europe                  {do not localize}
+    (TimeZone:'WET';  Offset:'+0000'), // Western European Time - Europe                         {do not localize}
+    (TimeZone:'WST';  Offset:'+0900'), // Western Summer Time - Australia                        {do not localize}
+    (TimeZone:'WST';  Offset:'+0800'), // Western Standard Time - Australia                      {do not localize}
+    (TimeZone:'X';    Offset:'-1100'), // X-ray Time Zone - Military                             {do not localize}
+    (TimeZone:'Y';    Offset:'-1200'), // Yankee Time Zone - Military                            {do not localize}
+    (TimeZone:'Z';    Offset:'+0000')  // Zulu Time Zone - Military                              {do not localize}
+  );
+var
+  I: Integer;
+begin
+  for I := Low(cTimeZones) to High(cTimeZones) do begin
+    if TextIsSame(ATimeZone, cTimeZones[I].TimeZone) then begin
+      Result := cTimeZones[I].Offset;
+      Exit;
+    end;
+  end;
+  Result := '-0000' {do not localize}
+end;
+
 function GmtOffsetStrToDateTime(const S: string): TDateTime;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 var
@@ -1927,65 +2112,17 @@ begin
   sTmp := Trim(S);
   sTmp := Fetch(sTmp);
   if Length(sTmp) > 0 then begin
-    // RLebeau: According to RFC 2822 Section 4.3:
-    //
-    // In the obsolete time zone, "UT" and "GMT" are indications of
-    // "Universal Time" and "Greenwich Mean Time" respectively and are both
-    // semantically identical to "+0000".
-    //
-    // The remaining three character zones are the US time zones.  The first
-    // letter, "E", "C", "M", or "P" stands for "Eastern", "Central",
-    // "Mountain" and "Pacific".  The second letter is either "S" for
-    // "Standard" time, or "D" for "Daylight" (or summer) time.  Their
-    // interpretations are as follows:
-    //
-    // EDT is semantically equivalent to -0400
-    // EST is semantically equivalent to -0500
-    // CDT is semantically equivalent to -0500
-    // CST is semantically equivalent to -0600
-    // MDT is semantically equivalent to -0600
-    // MST is semantically equivalent to -0700
-    // PDT is semantically equivalent to -0700
-    // PST is semantically equivalent to -0800
-    //
-    // The 1 character military time zones were defined in a non-standard
-    // way in [RFC822] and are therefore unpredictable in their meaning.
-    // The original definitions of the military zones "A" through "I" are
-    // equivalent to "+0100" through "+0900" respectively; "K", "L", and "M"
-    // are equivalent to  "+1000", "+1100", and "+1200" respectively; "N"
-    // through "Y" are equivalent to "-0100" through "-1200" respectively;
-    // and "Z" is equivalent to "+0000".  However, because of the error in
-    // [RFC822], they SHOULD all be considered equivalent to "-0000" unless
-    // there is out-of-band information confirming their meaning.
-    //
-    // Other multi-character (usually between 3 and 5) alphabetic time zones
-    // have been used in Internet messages.  Any such time zone whose
-    // meaning is not known SHOULD be considered equivalent to "-0000"
-    // unless there is out-of-band information confirming their meaning.
-
-    if (sTmp[1] <> '-') and (sTmp[1] <> '+') then {do not localize}
-    begin
-      case PosInStrArray(sTmp, ['UT','GMT','EDT','EST','CDT','CST','MDT','MST','PDT','PST']) of {do not localize}
-        0, 1: sTmp := '+0000'; {do not localize}
-        2:    sTmp := '-0400'; {do not localize}
-        3, 4: sTmp := '-0500'; {do not localize}
-        5, 6: sTmp := '-0600'; {do not localize}
-        7, 8: sTmp := '-0700'; {do not localize}
-        9:    sTmp := '-0800'; {do not localize}
-      else
-        sTmp := '-0000' {do not localize}
-      end;
+    if (sTmp[1] <> '-') and (sTmp[1] <> '+') then begin {do not localize}
+      sTmp := TimeZoneToGmtOffsetStr(sTmp);
     end;
-    if Length(sTmp) = 5 then begin
-      if (sTmp[1] = '-') or (sTmp[1] = '+') then begin  {do not localize}
-        try
-          Result := EncodeTime(IndyStrToInt(Copy(sTmp, 2, 2)), IndyStrToInt(Copy(sTmp, 4, 2)), 0, 0);
-          if sTmp[1] = '-' then begin  {do not localize}
-            Result := -Result;
-          end;
-        except
-          Result := 0.0;
+    if (Length(sTmp) = 5) and ((sTmp[1] = '-') or (sTmp[1] = '+')) then begin  {do not localize}
+      try
+        Result := EncodeTime(IndyStrToInt(Copy(sTmp, 2, 2)), IndyStrToInt(Copy(sTmp, 4, 2)), 0, 0);
+        if sTmp[1] = '-' then begin  {do not localize}
+          Result := -Result;
         end;
+      except
+        Result := 0.0;
       end;
     end;
   end;
