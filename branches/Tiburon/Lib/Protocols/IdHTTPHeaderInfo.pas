@@ -366,7 +366,21 @@ begin
       FContentRangeInstanceLength := IndyStrToInt64(lILength, 0);
     end;
 
-    FDate := GMTToLocalDateTime(Values['Date']); {do not localize}
+    // RLebeau 03/04/2009: RFC 2616 Section 14.18 says:
+    //    
+    // "A received message that does not have a Date header field MUST be
+    // assigned one by the recipient if the message will be cached by that
+    // recipient or gatewayed via a protocol which requires a Date."
+   
+    lValue := Values['Date']; {do not localize}
+    if lValue <> '' then
+    begin
+      FDate := GMTToLocalDateTime(lValue);
+    end else
+    begin
+      FDate := Now;
+    end;
+
     FLastModified := GMTToLocalDateTime(Values['Last-Modified']); {do not localize}
 
     // RLebeau 01/23/2006 - IIS fix
@@ -376,14 +390,30 @@ begin
       // This is happening when expires is an integer number in seconds
       LSecs := IndyStrToInt(lValue);
       // RLebeau 01/23/2005 - IIS sometimes sends an 'Expires: -1' header
+      // should we be handling it as actually meaning "Now minus 1 second" instead?
       if LSecs >= 0 then begin
-        FExpires := Now +  (LSecs / SecsPerDay);
+        FExpires := Now + (LSecs / SecsPerDay);
       end else begin
         FExpires := 0.0;
       end;
     end else
     begin
-      FExpires := GMTToLocalDateTime(lValue);
+      // RLebeau 03/04/2009: RFC 2616 Section 14.21 says:
+      //
+      // "The format is an absolute date and time as defined by HTTP-date in
+      //  section 3.3.1; it MUST be in RFC 1123 date format:
+      //
+      //   Expires = "Expires" ":" HTTP-date
+      //
+      // HTTP/1.1 clients and caches MUST treat other invalid date formats,
+      // especially including the value "0", as in the past (i.e., "already
+      // expired")."
+
+      try
+        FExpires := GMTToLocalDateTime(lValue);
+      except
+        FExpires := Now - (1 / SecsPerDay);
+      end;
     end;
 
     FETag := Values['ETag'];  {do not localize}
