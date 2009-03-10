@@ -360,13 +360,13 @@ begin
 
     BoundaryStart := '--' + MIMEBoundary; {Do not Localize}
     BoundaryEnd := BoundaryStart + '--'; {Do not Localize}
-    IsBinaryContentTransferEncoding := TextIsSame(LContentTransferEncoding, 'binary'); {do not localize}
+    IsBinaryContentTransferEncoding := (PosInStrArray(LContentTransferEncoding, ['binary', '8bit'], False) <> -1); {do not localize}
 
     repeat
       if not FProcessFirstLine then begin
         if IsBinaryContentTransferEncoding then begin
           //For binary, need EOL because the default LF causes spurious CRs in the output...
-          LLine := ReadLnRFC(VMsgEnd, EOL);
+          LLine := ReadLnRFC(VMsgEnd, EOL, '.', en8Bit); {do not localize}
         end else begin
           LLine := ReadLnRFC(VMsgEnd);
         end;
@@ -405,15 +405,13 @@ begin
             //In this case, we have to make sure we dont write out an EOL at the
             //end of the file.
             if LIsThisTheFirstLine then begin
-              WriteStringToStream(ADestStream, LLine);
               LIsThisTheFirstLine := False;
             end else begin
-              WriteStringToStream(ADestStream, EOL);
-              WriteStringToStream(ADestStream, LLine);
+              WriteStringToStream(ADestStream, EOL, en8Bit);
             end;
+            WriteStringToStream(ADestStream, LLine, en8Bit);
           end else begin
-            LLine := LLine + EOL;
-            WriteStringToStream(ADestStream, LLine);
+            WriteStringToStream(ADestStream, LLine + EOL);
           end;
         // Data to decode
         end else begin
@@ -670,9 +668,7 @@ begin
       {CC2: added 8bit below, changed to TextIsSame.  Reason is that many emails
       set the Content-Transfer-Encoding to 8bit, have multiple parts, and display
       the part header in plain-text.}
-      (not TextIsSame(TIdMessage(Owner).ContentTransferEncoding, '8bit')) and  {do not localize}
-      (not TextIsSame(TIdMessage(Owner).ContentTransferEncoding, '7bit')) and  {do not localize}
-      (not TextIsSame(TIdMessage(Owner).ContentTransferEncoding, 'binary'))    {do not localize}
+      (PosInStrArray(TIdMessage(Owner).ContentTransferEncoding, ['8bit', '7bit', 'binary'], False) = -1)    {do not localize}
       then
     begin
       FBodyEncoded := True;
