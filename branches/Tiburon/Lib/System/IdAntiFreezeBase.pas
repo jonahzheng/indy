@@ -111,7 +111,9 @@ uses
 
 destructor TIdAntiFreezeBase.Destroy;
 begin
-  GAntiFreeze := nil;
+  if GAntiFreeze = Self then begin
+    GAntiFreeze := nil;
+  end;
   inherited Destroy;
 end;
 
