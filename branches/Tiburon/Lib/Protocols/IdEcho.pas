@@ -95,12 +95,18 @@ end;
 
 function TIdEcho.Echo(const AText: String): String;
 var
+  LEncoding: TIdTextEncoding;
   LBuffer: TIdBytes;
   LLen: Integer;
   StartTime: Cardinal;
 begin
+  {$IFDEF DOTNET_OR_UNICODESTRING}
+  LEncoding := TIdTextEncoding.Unicode;
+  {$ELSE}
+  LEncoding := en8Bit;
+  {$ENDIF}
   {Send time monitoring}
-  LBuffer := ToBytes(AText);
+  LBuffer := ToBytes(AText, LEncoding);
   LLen := Length(LBuffer);
   {Send time monitoring}
   StartTime := Ticks;
@@ -108,7 +114,7 @@ begin
   IOHandler.ReadBytes(LBuffer, LLen, False);
   {This is just in case the TickCount rolled back to zero}
   FEchoTime := GetTickDiff(StartTime, Ticks);
-  Result := BytesToString(LBuffer);
+  Result := BytesToString(LBuffer, LEncoding);
 end;
 
 end.
