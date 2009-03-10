@@ -1575,7 +1575,9 @@ begin
       finally
         if i > 0 then begin
           TIdStreamHelper.Write(AStream, LBuf, i);
-          Dec(LWorkCount, i);
+          if LWorkCount <> cSizeUnknown then begin
+            Dec(LWorkCount, i);
+          end;
         end;
       end;
     until False;
