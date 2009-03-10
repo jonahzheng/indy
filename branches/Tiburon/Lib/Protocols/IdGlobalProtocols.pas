@@ -771,7 +771,7 @@ end;
 function LongWordToFourChar(AValue : LongWord): string;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
-  Result := BytesToString(ToBytes(AValue), Get8BitEncoding);
+  Result := BytesToString(ToBytes(AValue), en8Bit);
 end;
 
 procedure WordToTwoBytes(AWord : Word; ByteArray: TIdBytes; Index: integer);
@@ -801,7 +801,7 @@ function WordToStr(const Value: Word): String;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   {$IFDEF DOTNET_OR_UNICODESTRING}
-  Result := BytesToString(ToBytes(Value), Get8BitEncoding);
+  Result := BytesToString(ToBytes(Value), en8Bit);
   {$ELSE}
   SetLength(Result, SizeOf(Value));
   Move(Value, Result[1], SizeOf(Value));
@@ -2104,7 +2104,6 @@ begin
 end;
 
 function GmtOffsetStrToDateTime(const S: string): TDateTime;
-{$IFDEF USEINLINE} inline; {$ENDIF}
 var
   sTmp: String;
 begin
