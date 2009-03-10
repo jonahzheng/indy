@@ -491,7 +491,7 @@ var
     for I := 0 to Length(LBuf)-1 do begin
       LBuf[I] := Byte(Ord(AStart)+I);
     end;
-    Result := BytesToString(LBuf);
+    Result := BytesToString(LBuf, en8Bit);
   end;
 
 begin
