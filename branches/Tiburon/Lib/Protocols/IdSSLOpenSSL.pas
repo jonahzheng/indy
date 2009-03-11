@@ -16,6 +16,10 @@
   $Log$
 }
 {
+  Rev 1.40    03/11/2009 09:04:00  AWinkelsdorf
+  Implemented fix for Vista+ SSL_Read and SSL_Write to allow connection
+  timeout.
+
   Rev 1.39    16/02/2005 23:26:08  CCostelloe
   Changed OnVerifyPeer.  Breaks existing implementation of OnVerifyPeer.  See
   long comment near top of file.
@@ -1260,6 +1264,16 @@ begin
           raise EIdOSSLCouldNotLoadSSLLibrary.Create(RSOSSLCouldNotLoadSSLLibrary);
         end;
       end;
+      {$IFDEF WIN32_OR_WIN64}
+      // begin bug fix
+      end
+      else if BindingAllocated and (Win32MajorVersion >= 6) then
+      begin
+        // disables Vista+ SSL_Read and SSL_Write timeout fix
+        Binding.SetSockOpt(Id_SOL_SOCKET, Id_SO_RCVTIMEO, 0);
+        Binding.SetSockOpt(Id_SOL_SOCKET, Id_SO_SNDTIMEO, 0);
+      // end bug fix
+      {$ENDIF}
     end;
     fPassThrough := Value;
   end;
@@ -1351,6 +1365,17 @@ begin
   end;
   Assert(fSSLSocket.fSSLContext=nil);
   fSSLSocket.fSSLContext := fSSLContext;
+  {$IFDEF WIN32_OR_WIN64}
+    // begin bug fix
+    if Win32MajorVersion >= 6 then
+    begin
+      // Note: Fix needed to allow SSL_Read and SSL_Write to timeout under
+      // Vista+ when connection is dropped
+      Binding.SetSockOpt(Id_SOL_SOCKET, Id_SO_RCVTIMEO, FReadTimeOut);
+      Binding.SetSockOpt(Id_SOL_SOCKET, Id_SO_SNDTIMEO, FReadTimeOut);
+    end;
+    // end bug fix
+  {$ENDIF}
   if IsPeer then begin
     fSSLSocket.Accept(Binding.Handle);
   end else begin
