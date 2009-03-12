@@ -1414,7 +1414,7 @@ var
   LDest: TMemoryStream;
   LTrans : TIdFTPTransferType;
 begin
-  if UseMLIS and FCanUseMLS then begin
+  if ADetails and UseMLIS and FCanUseMLS then begin
     ExtListDir(ADest);
     Exit;
   end;
@@ -2239,7 +2239,7 @@ begin
   if IsExtSupported('UTF8') then begin {do not localize}
     // trying non-standard UTF-8 extension first, many servers use this...
     if SendCmd('OPTS UTF8 ON') <> 200 then begin {do not localize}
-      // trying draft-ietf-ftpext-utf-8-option-00.txt first...
+      // trying draft-ietf-ftpext-utf-8-option-00.txt next...
       if SendCmd('OPTS UTF-8 NLST') <> 200 then begin {do not localize}
         Exit;
       end;
