@@ -814,7 +814,7 @@ type
     procedure SendInternalPassive(const ACmd : String; var VIP: string; var VPort: TIdPort);
     procedure SendCPassive(var VIP: string; var VPort: TIdPort);
     function FindAuthCmd : String;
-    function GetReplyClass:TIdReplyClass; override;
+    function GetReplyClass: TIdReplyClass; override;
     //
     procedure ParseFTPList;
     procedure SetPassive(const AValue : Boolean);
@@ -2060,13 +2060,30 @@ end;
 
 function TIdFTP.Size(const AFileName: String): Int64;
 var
+  LTrans : TIdFTPTransferType;
   SizeStr: String;
 begin
   Result := -1;
-  if SendCmd('SIZE ' + AFileName) = 213 then begin  {do not localize}
-    SizeStr := Trim(LastCmdResult.Text.Text);
-    IdDelete(SizeStr, 1, IndyPos(' ', SizeStr)); // delete the response   {do not localize}
-    Result := IndyStrToInt64(SizeStr, -1);
+  // RLebeau 03/13/2009: some servers refuse to accept the SIZE command in
+  // ASCII mode, returning a "550 SIZE not allowed in ASCII mode" reply.
+  // We put the connection in BINARY mode, even though no data connection is
+  // actually being used. We restore it if the original mode was not BINARY.
+  // It's a good idea to do this anyway because some other clients do this
+  // as well.
+  LTrans := TransferType;
+  if LTrans <> ftBinary then begin
+    Self.TransferType := ftBinary;
+  end;
+  try
+    if SendCmd('SIZE ' + AFileName) = 213 then begin  {do not localize}
+      SizeStr := Trim(LastCmdResult.Text.Text);
+      IdDelete(SizeStr, 1, IndyPos(' ', SizeStr)); // delete the response   {do not localize}
+      Result := IndyStrToInt64(SizeStr, -1);
+    end;
+  finally
+    if LTrans <> ftBinary then begin
+      TransferType := LTrans;
+    end;
   end;
 end;
 
