@@ -53,7 +53,7 @@ begin
       // behave the same as TIdHeaderCoderPlain.  The output of this class needs
       // to be a string that contains codeunits in the UTF-16 range, not
       // codeunits that have been converted back to the input encoding...
-      LBytes := Get8BitEncoding.GetBytes(AData);
+      LBytes := Indy8BitEncoding.GetBytes(AData);
       {$ELSE}
       // RLebeau 2/12/09: Not using TIdTextEncoding.GetBytes() here. Although
       // the input string (should) contain the correct values, the conversion
@@ -108,7 +108,7 @@ begin
       // behave the same as TIdHeaderCoderPlain.  The output of this class needs
       // to be a string that contains codeunits in the UTF-7/8 Ansi range, not
       // codeunits that have been converted back to UTF-16...
-      Result := Get8BitEncoding.GetString(LBytes, 0, Length(LBytes));
+      Result := Indy8BitEncoding.GetString(LBytes, 0, Length(LBytes));
       {$ELSE}
       // RLebeau 2/12/09: Not using TIdTextEncoding.GetString() here. Although
       // the encoded bytes contain the correct values, the conversion performed
