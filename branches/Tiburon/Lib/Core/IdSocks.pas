@@ -282,8 +282,12 @@ procedure TIdSocksInfo.MakeSocks4Request(AIOHandler: TIdIOHandler; const AHost: 
 var
   LIpAddr: String;
   LTempPort : TIdPort;
+  LBufferingStarted: Boolean;
 begin
-  AIOHandler.WriteBufferOpen;
+  LBufferingStarted := not AIOHandler.WriteBufferingActive;
+  if LBufferingStarted then begin
+    AIOHandler.WriteBufferOpen;
+  end;
   try
     AIOHandler.Write(ToBytes(Byte(4))); // Version
     AIOHandler.Write(ToBytes(ARequest)); // Opcode
@@ -310,9 +314,13 @@ begin
       AIOHandler.Write(ToBytes(Byte(0)));// Host
     end;
 
-    AIOHandler.WriteBufferClose; //flush everything
+    if LBufferingStarted then begin
+      AIOHandler.WriteBufferClose; //flush everything
+    end;
   except
-    AIOHandler.WriteBufferCancel; //cancel everything
+    if LBufferingStarted then begin
+      AIOHandler.WriteBufferCancel; //cancel everything
+    end;
     raise;
   end;
 end;
