@@ -912,9 +912,13 @@ procedure TIdIOHandler.Write(AValue: TStrings; AWriteLinesCount: Boolean = False
   AEncoding: TIdTextEncoding = nil);
 var
   i: Integer;
+  LBufferingStarted: Boolean;
 begin
   AEncoding := iif(AEncoding, FDefStringEncoding);
-  WriteBufferOpen;
+  LBufferingStarted := not WriteBufferingActive;
+  if LBufferingStarted then begin
+    WriteBufferOpen;
+  end;
   try
     if AWriteLinesCount then begin
       Write(AValue.Count);
@@ -922,11 +926,14 @@ begin
     for i := 0 to AValue.Count - 1 do begin
       WriteLn(AValue.Strings[i], AEncoding);
     end;
-    // Kudzu: I had an except here and a close, but really even if error we should
-    // write out whatever we have. Very doubtful any errors will occur in above
-    // code anyways unless given bad input, which incurs bigger problems anyways.
-  finally
-    WriteBufferClose;
+    if LBufferingStarted then begin
+      WriteBufferClose;
+    end;
+  except
+    if LBufferingStarted then begin
+      WriteBufferCancel;
+    end;
+    raise;
   end;
 end;
 
