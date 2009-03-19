@@ -309,7 +309,11 @@ end;
 
 procedure TIdTelnetReadThread.HandleIncomingData;
 begin
-  FClient.Negotiate(FClient.IOHandler.InputBufferAsString);
+  // RLebeau: TODO - TIdTelnet should process the data as raw bytes instead of strings.
+  // There are sub-negotiation options available for handling charsets for strings.
+  // Until then, at least use the 8-bit encoding so the bytes are handled as Unicode
+  // properly in .NET and D2009+.
+  FClient.Negotiate(FClient.IOHandler.InputBufferAsString(Indy8BitEncoding));
 end;
 
 { TIdTelnet }
