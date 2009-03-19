@@ -366,7 +366,7 @@ begin
       if not FProcessFirstLine then begin
         if IsBinaryContentTransferEncoding then begin
           //For binary, need EOL because the default LF causes spurious CRs in the output...
-          LLine := ReadLnRFC(VMsgEnd, EOL, '.', en8Bit); {do not localize}
+          LLine := ReadLnRFC(VMsgEnd, EOL, '.', Indy8BitEncoding); {do not localize}
         end else begin
           LLine := ReadLnRFC(VMsgEnd);
         end;
@@ -407,9 +407,9 @@ begin
             if LIsThisTheFirstLine then begin
               LIsThisTheFirstLine := False;
             end else begin
-              WriteStringToStream(ADestStream, EOL, en8Bit);
+              WriteStringToStream(ADestStream, EOL, Indy8BitEncoding);
             end;
-            WriteStringToStream(ADestStream, LLine, en8Bit);
+            WriteStringToStream(ADestStream, LLine, Indy8BitEncoding);
           end else begin
             WriteStringToStream(ADestStream, LLine + EOL);
           end;
