@@ -2751,7 +2751,7 @@ begin
   LContext := ASender.Context as TIdFTPServerContext;
   if LContext.IsAuthenticated(ASender) then begin
     LContext.ReInitialize;
-    LContext.Connection.IOHandler.DefStringEncoding := en8Bit;
+    LContext.Connection.IOHandler.DefStringEncoding := Indy8BitEncoding;
     ASender.Reply.SetReply(220, RSFTPServiceOpen);
     if (FUseTLS in ExplicitTLSVals) then
     begin
@@ -3454,7 +3454,7 @@ var
         LEncoding := TIdTextEncoding.ASCII;
       end;
     end else begin
-      LEncoding := Get8BitEncoding;
+      LEncoding := Indy8BitEncoding;
     end;
 
     if AContext.DataMode = dmDeflate then
@@ -3671,9 +3671,9 @@ begin
         //reply could throw off a FTP client.
         LContext.Connection.IOHandler.WriteLn(IndyFormat('213-%s', [RSFTPDataConnToOpen])); {Do not Localize}
         if TIdFTPServerContext(ASender.Context).NLSTUtf8 then begin
-          LEncoding := enUTF8;
+          LEncoding := TIdTextEncoding.UTF8;
         end else begin
-          LEncoding := en7bit;
+          LEncoding := TIdTextEncoding.ASCII;
         end;
         LContext.Connection.IOHandler.Write(LStream, False, LEncoding);
         ASender.PerformReply := True;
@@ -4568,7 +4568,7 @@ procedure TIdFTPServer.DoConnect(AContext: TIdContext);
 var
   LGreeting : TIdReplyRFC;
 begin
-  AContext.Connection.IOHandler.DefStringEncoding := en8Bit;
+  AContext.Connection.IOHandler.DefStringEncoding := Indy8BitEncoding;
   if AContext.Connection.IOHandler is TIdSSLIOHandlerSocketBase then begin
     if FUseTLS = utUseImplicitTLS then begin
       TIdSSLIOHandlerSocketBase(AContext.Connection.IOHandler).PassThrough := False;
@@ -6742,7 +6742,7 @@ begin
       Exit;
     end;
     // enable UTF-8 over control connection
-    LContext.Connection.IOHandler.DefStringEncoding := enUTF8;
+    LContext.Connection.IOHandler.DefStringEncoding := TIdTextEncoding.UTF8;
   end else
   begin
     // OPTS UTF8 <ON|OFF>
@@ -6750,11 +6750,11 @@ begin
     case PosInStrArray(s, OnOffStates, False) of
       0: begin // 'ON'
            LContext.NLSTUtf8 := True;
-           LContext.Connection.IOHandler.DefStringEncoding := enUTF8;
+           LContext.Connection.IOHandler.DefStringEncoding := TIdTextEncoding.UTF8;
          end;
       1: begin // 'OFF'
            LContext.NLSTUtf8 := False;
-           LContext.Connection.IOHandler.DefStringEncoding := en8Bit;
+           LContext.Connection.IOHandler.DefStringEncoding := Indy8BitEncoding;
          end;
       else
         begin
