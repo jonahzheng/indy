@@ -103,7 +103,7 @@ begin
   {$IFDEF DOTNET_OR_UNICODESTRING}
   LEncoding := TIdTextEncoding.Unicode;
   {$ELSE}
-  LEncoding := en8Bit;
+  LEncoding := Indy8BitEncoding;
   {$ENDIF}
   {Send time monitoring}
   LBuffer := ToBytes(AText, LEncoding);
