@@ -282,7 +282,7 @@ begin
   //ie while not eof
   LSourceSize := ASrcStream.Size;
   while ASrcStream.Position < LSourceSize do begin
-    SourceLine := ReadLnFromStream(ASrcStream, -1, False, en8bit);
+    SourceLine := ReadLnFromStream(ASrcStream, -1, False, Indy8BitEncoding);
     CurrentLen := 0;
     for I := 1 to Length(SourceLine) do begin
       if not CharIsInSet(SourceLine, I, SafeChars) then

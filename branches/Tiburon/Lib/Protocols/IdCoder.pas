@@ -157,7 +157,7 @@ var
 begin
   LStream := TMemoryStream.Create;
   try
-    WriteStringToStream(LStream, AIn, en8bit);
+    WriteStringToStream(LStream, AIn, Indy8BitEncoding);
     LStream.Position := 0;
     Decode(LStream);
   finally
@@ -181,7 +181,7 @@ begin
         LDecoder.DecodeEnd;
       end;
       LStream.Position := 0;
-      Result := IdGlobal.ReadStringFromStream(LStream, -1, en8Bit);
+      Result := IdGlobal.ReadStringFromStream(LStream, -1, Indy8BitEncoding);
     finally
       FreeAndNil(LDecoder);
     end;
@@ -225,7 +225,7 @@ begin
   if AIn <> '' then begin
     LStream := TMemoryStream.Create;
     try
-      WriteStringToStream(LStream, AIn, en8bit);
+      WriteStringToStream(LStream, AIn, Indy8BitEncoding);
       LStream.Position := 0;
       Result := Encode(LStream);
     finally
@@ -242,7 +242,7 @@ var
 begin
   LStream := TMemoryStream.Create;
   try
-    IdGlobal.WriteStringToStream(LStream, AIn, en8bit);
+    IdGlobal.WriteStringToStream(LStream, AIn, Indy8BitEncoding);
     LStream.Position := 0;
     Encode(LStream, ADestStrings);
   finally
@@ -256,7 +256,7 @@ var
 begin
   LStream := TMemoryStream.Create;
   try
-    IdGlobal.WriteStringToStream(LStream, AIn, en8bit);
+    IdGlobal.WriteStringToStream(LStream, AIn, Indy8BitEncoding);
     LStream.Position := 0;
     Encode(LStream, ADestStream);
   finally
@@ -272,7 +272,7 @@ begin
   try
     Encode(ASrcStream, LStream, ABytes);
     LStream.Position := 0;
-    Result := IdGlobal.ReadStringFromStream(LStream, -1, en8Bit);
+    Result := IdGlobal.ReadStringFromStream(LStream, -1, Indy8BitEncoding);
   finally
     FreeAndNil(LStream);
   end;
