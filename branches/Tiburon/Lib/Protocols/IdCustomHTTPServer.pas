@@ -1494,20 +1494,40 @@ begin
   SetHeaders;
   FConnection.IOHandler.WriteBufferOpen;
   try
-    // Write HTTP status response
-    // Client will be forced to close the connection. We are not going to support
-    // keep-alive feature for now
-    FConnection.IOHandler.WriteLn('HTTP/1.1 ' + IntToStr(ResponseNo) + ' ' + ResponseText);    {Do not Localize}
-    // Write headers
-    FConnection.IOHandler.Write(RawHeaders);
-    // Write cookies
-    for i := 0 to Cookies.Count - 1 do begin
-      FConnection.IOHandler.WriteLn('Set-Cookie: ' + Cookies[i].ServerCookie);    {Do not Localize}
+    try
+      // Write HTTP status response
+      // Client will be forced to close the connection. We are not going to support
+      // keep-alive feature for now
+      FConnection.IOHandler.WriteLn('HTTP/1.1 ' + IntToStr(ResponseNo) + ' ' + ResponseText);    {Do not Localize}
+
+      // RLebeau 3/19/2009: tried to use TIdIOHandler.Write(TStrings) below,
+      // but it does not work correctly, so reverting back to old logic for
+      // now.  Turns out that TIdIOHandler.Write(TStrings) uses its own write
+      // buffering internally, which interfers with the write buffering being
+      // used here because Indy does not (currently) support nested buffered
+      // operations.  As soon as TIdIOHandler.Write(TStrings) calls
+      // TIdIOHandler.WriteBufferOpen(), it wipes out the data that was
+      // already buffered above.  And then when TIdIOHandler.Write(TStrings)
+      // calls TIdIOHandler.WriteBufferClose(), it releases the write buffer
+      // so that the data further below is not buffered anymore...
+
+      // Write headers
+      //FConnection.IOHandler.Write(RawHeaders);
+      for i := 0 to RawHeaders.Count-1 do begin
+        FConnection.IOHandler.WriteLn(RawHeaders[i]);
+      end;
+      // Write cookies
+      for i := 0 to Cookies.Count - 1 do begin
+        FConnection.IOHandler.WriteLn('Set-Cookie: ' + Cookies[i].ServerCookie);    {Do not Localize}
+      end;
+      // HTTP headers end with a double CR+LF
+      FConnection.IOHandler.WriteLn;
+    finally
+      FConnection.IOHandler.WriteBufferClose;
     end;
-    // HTTP headers end with a double CR+LF
-    FConnection.IOHandler.WriteLn;
-  finally
-    FConnection.IOHandler.WriteBufferClose;
+  except
+    FConnection.IOHandler.WriteBufferCancel;
+    raise;
   end;
 end;
 
