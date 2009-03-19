@@ -281,7 +281,7 @@ var
 begin
   SetLength(LBuffer, BufferSize);
   i := ReceiveBuffer(LBuffer, VPeerIP, VPeerPort, AMSec);
-  Result := BytesToString(LBuffer, 0, i);
+  Result := BytesToString(LBuffer, 0, i, Indy8BitEncoding);
 end;
 
 function TIdUDPBase.ReceiveString(const AMSec: Integer): string;
