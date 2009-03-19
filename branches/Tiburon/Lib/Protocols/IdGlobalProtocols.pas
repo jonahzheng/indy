@@ -771,7 +771,7 @@ end;
 function LongWordToFourChar(AValue : LongWord): string;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
-  Result := BytesToString(ToBytes(AValue), en8Bit);
+  Result := BytesToString(ToBytes(AValue), Indy8BitEncoding);
 end;
 
 procedure WordToTwoBytes(AWord : Word; ByteArray: TIdBytes; Index: integer);
@@ -801,7 +801,7 @@ function WordToStr(const Value: Word): String;
 {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   {$IFDEF DOTNET_OR_UNICODESTRING}
-  Result := BytesToString(ToBytes(Value), en8Bit);
+  Result := BytesToString(ToBytes(Value), Indy8BitEncoding);
   {$ELSE}
   SetLength(Result, SizeOf(Value));
   Move(Value, Result[1], SizeOf(Value));
@@ -3425,33 +3425,47 @@ var
   CP: Word;
 {$ENDIF}
 begin
+  Result := nil;
   if ACharSet <> '' then
   begin
-    {$IFDEF DOTNET}
-    Result := TIdTextEncoding.GetEncoding(ACharset);
-    {$ELSE}
-    CP := CharsetToCodePage(ACharset);
-    Assert(CP <> 0);
-    Result := TIdTextEncoding.GetEncoding(CP);
+    // RLebeau 3/13/09: if there is a problem initializing an encoding
+    // class for the requested charset, either because the charset is
+    // not known to Indy, or because the OS does not support it natively,
+    // just return the 8-bit encoding as a fallback for now.  The data
+    // being handled by it likely won't be encoded/decoded properly, but
+    // at least the error won't cause exceptions in the user's code, and
+    // maybe the user will know how to encode/decode the data manually
+    // as a workaround...
+    try
+      {$IFDEF DOTNET}
+      Result := TIdTextEncoding.GetEncoding(ACharset);
+      {$ELSE}
+      CP := CharsetToCodePage(ACharset);
+      if CP <> 0 then begin
+        Result := TIdTextEncoding.GetEncoding(CP);
+      end;
+    except end;
     {$ENDIF}
-  end else
-  begin
-    {JPM - I have decided to temporarily make this en8bit because I'm concerned
-    about how binary files will be handled by the en7bit encoder (where there may
-    be 8bit byte-values.  In addition, there are numerous charsets for various
-    languages and code that does some special mapping for them would be a mess.}
+  end;
 
-    {RLebeau: technically, we should be returning a 7-bit encoding, as the
-    default charset for "text/" content types is "us-ascii".
+  {JPM - I have decided to temporarily make this 8-bit because I'm concerned
+  about how binary files will be handled by the ASCII encoder (where there may
+  be 8bit byte-values.  In addition, there are numerous charsets for various
+  languages and code that does some special mapping for them would be a mess.}
+
+  {RLebeau: technically, we should be returning a 7-bit encoding, as the
+  default charset for "text/" content types is "us-ascii".
     
-    Using TIdTextEncoding.GetEncoding() instead of en8bit().  This way, the
-    caller does not have to figure out whether or not to free the output
-    TIdTextEncoding.  Standard TIdTextEncoding objects (ASCII, UTF8, etc) are
-    owned by the RTL and the 8-bit encoding object (that en8bit uses) is owned
-    by IdGlobal.pas, and thus should not be freed, but objects returned by
-    GetEncoding are not owned by anyone and must always be freed.}
+  Setting the AOwnedByIndy parameter of Indy8BitEncoding() to False.  This way,
+  the caller does not have to figure out whether or not to free the output
+  TIdTextEncoding.  Standard TIdTextEncoding objects (ASCII, UTF8, etc) are
+  owned by the RTL, and the 8-bit encoding object that Indy8BitEncoding()
+  normally returns is owned by IdGlobal.pas, and thus should not be freed.
+  Objects returned by TIdTextEncoding.GetEncoding() and Indy8BitEncoding(False)
+  are not owned by anyone and must always be freed.}
 
-    Result := Create8BitEncoding;
+  if not Assigned(Result) then begin
+    Result := Indy8BitEncoding(False);
   end;
 end;
 
