@@ -74,13 +74,13 @@ begin
 begin
   LLen := Length(ALastResponse);
   SetLength(LMsg,LLen);
-  CopyTIdString(ALastResponse,LMsg,0,LLen,en8bit);
+  CopyTIdString(ALastResponse, LMsg, 0, LLen, Indy8BitEncoding);
 
-  IdNTLMv2.ReadType2Msg(LMsg,LFlags,LTargetName,LTargetInfo,LNonce);
+  IdNTLMv2.ReadType2Msg(LMsg, LFlags, LTargetName, LTargetInfo, LNonce);
   IdGlobal.DebugOutput('Type 2 Flags = '+ DumpFlags(LFlags));
-  GetDomain(GetUsername,LUsername,LDomain);
-  Result := BytesToString( BuildType3Msg(LDomain,LDomain,GetUsername,GetPassword,
-    LFlags,LNonce,LTargetName,LTargetInfo,FLMCompatibility ),en8bit);
+  GetDomain(GetUsername, LUsername, LDomain);
+  Result := BytesToString( BuildType3Msg(LDomain, LDomain, GetUsername, GetPassword,
+    LFlags, LNonce, LTargetName, LTargetInfo, FLMCompatibility ), Indy8BitEncoding);
 end;
 
 procedure TIdSASLNTLM.InitComponent;
@@ -111,7 +111,9 @@ begin
   begin
     LDomain := FDomain;
   end;
-  Result := BytesToString( IdNTLMv2.BuildType1Msg(LDomain,LDomain,FLMCompatibility),en8bit);
+  Result := BytesToString(
+    IdNTLMv2.BuildType1Msg(LDomain,LDomain,FLMCompatibility),
+    Indy8BitEncoding);
 //  Result := BuildType1Message(LDomain,AHost);
 end;
 
