@@ -131,7 +131,7 @@ begin
   FServer := '';
   try
     inherited Connect;
-    IOHandler.DefStringEncoding := enUTF8;
+    IOHandler.DefStringEncoding := TIdTextEncoding.UTF8;
     GetResponse(220);
     if LastCmdResult.Text.Count > 0 then
     begin
