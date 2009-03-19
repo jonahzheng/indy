@@ -340,7 +340,7 @@ begin
           TIdStreamHelper.ReadBytes(FContentStream, LBytes);
           {$IFDEF DOTNET}
           // RLebeau: how to handle this correctly in .NET?
-          Result := AnsiString(BytesToString(LBytes, Get8BitEncoding));
+          Result := AnsiString(BytesToString(LBytes, Indy8BitEncoding));
           {$ELSE}
           SetString(Result, PAnsiChar(LBytes), Length(LBytes));
             {$IFDEF UNICODESTRING}
@@ -393,7 +393,7 @@ begin
   TIdStreamHelper.ReadBytes(FContentStream, LBytes, Count);
   {$IFDEF DOTNET}
   // RLebeau: how to handle this correctly in .NET?
-  Result := AnsiString(BytesToString(LBytes, Get8BitEncoding));
+  Result := AnsiString(BytesToString(LBytes, Indy8BitEncoding));
   {$ELSE}
   SetString(Result, PAnsiChar(LBytes), Length(LBytes));
     {$IFDEF UNICODESTRING}
@@ -484,7 +484,7 @@ begin
       TIdTextEncoding.Unicode.GetBytes(FResponseInfo.ContentText));
     {$IFDEF DOTNET}
     // RLebeau: how to handle this correctly in .NET?
-    Result := AnsiString(BytesToString(LBytes, Get8BitEncoding));
+    Result := AnsiString(BytesToString(LBytes, Indy8BitEncoding));
     {$ELSE}
     SetString(Result, PAnsiChar(LBytes), Length(LBytes));
     SetCodePage(PRawByteString(@Result)^, CP, False);
