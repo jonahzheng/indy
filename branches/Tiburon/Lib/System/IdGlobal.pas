@@ -783,21 +783,28 @@ type
   {$ENDIF}
 
   // These are for backwards compatibility with past Indy 10 releases
-  function enDefault: TIdTextEncoding;
+  function enDefault: TIdTextEncoding; {$IFDEF DEPRECATED}deprecated{$IFDEF DEPRECATED_MSG} 'Use a nil TIdTextEncoding pointer'{$ENDIF};{$ENDIF}
   {$NODEFINE enDefault}
-  function en7Bit: TIdTextEncoding;
+  function en7Bit: TIdTextEncoding; {$IFDEF DEPRECATED}deprecated{$IFDEF DEPRECATED_MSG} 'Use TIdTextEncoding.ASCII property'{$ENDIF};{$ENDIF}
   {$NODEFINE en7Bit}
-  function en8Bit: TIdTextEncoding;
+  function en8Bit: TIdTextEncoding; {$IFDEF DEPRECATED}deprecated{$IFDEF DEPRECATED_MSG} 'Use Indy8BitEncoding()'{$ENDIF};{$ENDIF}
   {$NODEFINE en8Bit}
-  function enUTF8: TIdTextEncoding;
+  function enUTF8: TIdTextEncoding; {$IFDEF DEPRECATED}deprecated{$IFDEF DEPRECATED_MSG} 'Use TIdTextEncoding.UTF8 property'{$ENDIF};{$ENDIF}
   {$NODEFINE enUTF8}
 
-  function Get8BitEncoding: TIdTextEncoding;
-  function Create8BitEncoding: TIdTextEncoding;
+  {$IFDEF DOTNET}
+  function Indy8BitEncoding: TIdTextEncoding;
+  {$ELSE}
+  function Indy8BitEncoding(const AOwnedByIndy: Boolean = True): TIdTextEncoding;
+  {$ENDIF}
 
   (*$HPPEMIT '// These are for backwards compatibility with past Indy 10 releases'*)
   (*$HPPEMIT '#define enDefault ( TIdTextEncoding* )NULL'*)
-  (*$HPPEMIT '#define en8Bit Get8BitEncoding()'*)
+  {$IFDEF DOTNET}
+  (*$HPPEMIT '#define en8Bit Indy8BitEncoding()'*)
+  {$ELSE}
+  (*$HPPEMIT '#define en8Bit Indy8BitEncoding(true)'*)
+  {$ENDIF}
   {$IFDEF CLASSPROPERTIES}
   (*$HPPEMIT '#define en7Bit TIdTextEncoding::ASCII'*)
   (*$HPPEMIT '#define enUTF8 TIdTextEncoding::UTF8'*)
@@ -1972,22 +1979,6 @@ end;
 
 {$ENDIF}
 
-function Create8BitEncoding: TIdTextEncoding;
-{$IFDEF USEINLINE}inline;{$ENDIF}
-begin
-  // RLebeau: TODO - implement a custom 8-bit encoding class?
-  //
-  // We need a class that converts UFT-16 codeunits in the $00-$FF range
-  // to/from their numeric values as-is.  Was previously using "Windows-1252"
-  // (codepage 1252) for that, which does so for most codeunits, however
-  // codeunits $80-$9F in Windows-1252 map to different codepoints in Unicode,
-  // which we don't want.  "ISO 8859-1" (codepage 28591), on the other hand,
-  // treats codeunits $00-$FF as-is, and seems to be just as widely supported
-  // as codepage 1252 on most systems, so we'll use that now...
-
-  Result := TIdTextEncoding.GetEncoding(28591);
-end;
-
 function enDefault: TIdTextEncoding;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
@@ -2003,7 +1994,7 @@ end;
 function en8Bit: TIdTextEncoding;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
-  Result := Get8BitEncoding;
+  Result := Indy8BitEncoding;
 end;
 
 function enUTF8: TIdTextEncoding;
@@ -2012,26 +2003,41 @@ begin
   Result := TIdTextEncoding.UTF8;
 end;
 
-function Get8BitEncoding: TIdTextEncoding;
+// RLebeau: TODO - implement a custom 8-bit encoding class?
+//
+// We need a class that converts UFT-16 codeunits in the $00-$FF range
+// to/from their numeric values as-is.  Was previously using "Windows-1252"
+// (codepage 1252) for that, which does so for most codeunits, however
+// codeunits $80-$9F in Windows-1252 map to different codepoints in Unicode,
+// which we don't want.  "ISO 8859-1" (codepage 28591), on the other hand,
+// treats codeunits $00-$FF as-is, and seems to be just as widely supported
+// as codepage 1252 on most systems, so we'll use that for now...
+
 {$IFDEF DOTNET}
-  {$IFDEF USEINLINE}inline;{$ENDIF}
+function Indy8BitEncoding: TIdTextEncoding;
+{$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  Result := TIdTextEncoding.GetEncoding(28591);
+end;
 {$ELSE}
+function Indy8BitEncoding(const AOwnedByIndy: Boolean = True): TIdTextEncoding;
 var
   LEncoding: TIdTextEncoding;
-{$ENDIF}
 begin
-  {$IFDEF DOTNET}
-  Result := Create8BitEncoding;
-  {$ELSE}
-  if GId8BitEncoding = nil then begin
-    LEncoding := Create8BitEncoding;
-    if InterlockedCompareExchangePtr(Pointer(GId8BitEncoding), LEncoding, nil) <> nil then begin
-      LEncoding.Free;
+  if not AOwnedByIndy then begin
+    Result := TIdTextEncoding.GetEncoding(28591);
+  end else
+  begin
+    if GId8BitEncoding = nil then begin
+      LEncoding := TIdTextEncoding.GetEncoding(28591);
+      if InterlockedCompareExchangePtr(Pointer(GId8BitEncoding), LEncoding, nil) <> nil then begin
+        LEncoding.Free;
+      end;
     end;
+    Result := GId8BitEncoding;
   end;
-  Result := GId8BitEncoding;
-  {$ENDIF}
 end;
+{$ENDIF}
 
 {$IFDEF UNIX}
 function HackLoad(const ALibName : String; const ALibVersions : array of String) : HMODULE;
@@ -4522,7 +4528,7 @@ begin
     Result := AEncoding.GetBytes(Copy(AValue, AIndex, LLength));
     {$ELSE}
     Result := TIdTextEncoding.Convert(
-      Get8BitEncoding,
+      Indy8BitEncoding,
       AEncoding,
       RawToBytes(AValue[AIndex], LLength));
     {$ENDIF}
@@ -4893,7 +4899,7 @@ begin
     {$ELSE}
     LBytes := TIdTextEncoding.Convert(
       AEncoding,
-      Get8BitEncoding,
+      Indy8BitEncoding,
       AValue, AStartIndex, LLength);
     SetString(Result, PAnsiChar(LBytes), Length(LBytes));
     {$ENDIF}
