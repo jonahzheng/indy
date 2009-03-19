@@ -655,16 +655,30 @@ end;
 procedure TIdTCPConnection.WriteHeader(AHeader: TStrings);
 var
   i: Integer;
+  LBufferingStarted: Boolean;
 begin
   CheckConnected;
-  with IOHandler do begin
-    WriteBufferOpen; try
+  with IOHandler do
+  begin
+    LBufferingStarted := not WriteBufferingActive;
+    if LBufferingStarted then begin
+      WriteBufferOpen;
+    end;
+    try
       for i := 0 to AHeader.Count -1 do begin
         // No ReplaceAll flag - we only want to replace the first one
         WriteLn(ReplaceOnlyFirst(AHeader[i], '=', ': '));
       end;
       WriteLn;
-    finally WriteBufferClose; end;
+      if LBufferingStarted then begin
+         WriteBufferClose;
+      end;
+    except
+      if LBufferingStarted then begin
+        WriteBufferCancel;
+      end;
+      raise;
+    end;
   end;
 end;
 
