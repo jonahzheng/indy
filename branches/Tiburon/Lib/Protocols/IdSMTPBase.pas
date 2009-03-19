@@ -262,6 +262,7 @@ procedure TIdSMTPBase.SendPipelining(AMsg: TIdMessage; const AFrom: String; ARec
 var
   LError : TIdReplySMTP;
   I, LFailedRecips : Integer;
+  LBufferingStarted: Boolean;
 
   function SetupErrorReply: TIdReplySMTP;
   begin
@@ -274,14 +275,23 @@ var
 begin
   LError := nil;
   try
-    IOHandler.WriteBufferOpen;
+    LBufferingStarted := not IOHandler.WriteBufferingActive;
+    if LBufferingStarted then begin
+      IOHandler.WriteBufferOpen;
+    end;
     try
       IOHandler.WriteLn(RSET_CMD);
       IOHandler.WriteLn(MAILFROM_CMD + ' <' + AFrom + '>');
       WriteRecipientsPipeLine(ARecipients);
       IOHandler.WriteLn(DATA_CMD);
-    finally
-      IOHandler.WriteBufferClose;
+      if LBufferingStarted then begin
+        IOHandler.WriteBufferClose;
+      end;
+    except
+      if LBufferingStarted then begin
+        IOHandler.WriteBufferCancel;
+      end;
+      raise;
     end;
     //RSET
     if PosInSmallIntArray(GetResponse, RSET_ACCEPT) = -1 then begin
