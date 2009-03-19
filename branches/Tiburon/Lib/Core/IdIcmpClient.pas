@@ -410,7 +410,7 @@ begin
       Id_ICMP_ECHOREPLY, Id_ICMP_ECHO:
       begin
         FReplyStatus.ReplyStatusType := rsEcho;
-        FReplyData := BytesToString(FBufReceive, LIdx);
+        FReplyData := BytesToString(FBufReceive, LIdx, -1, Indy8BitEncoding);
         // result is only valid if the seq. number is correct
       end;
       Id_ICMP_UNREACH:
@@ -595,7 +595,10 @@ procedure TIdCustomIcmpClient.PrepareEchoRequestIPv4(const ABuffer: String);
 var
   LIcmp: TIdICMPHdr;
   LIdx: LongWord;
+  LBuffer: TIdBytes;
 begin
+  LBuffer := nil; // keep the compiler happy
+
   SetLength(FBufIcmp, ICMP_MIN + SizeOf(LongWord) + FPacketSize);
   FillBytes(FBufIcmp, Length(FBufIcmp), 0);
   SetLength(FBufReceive, Length(FBufIcmp) + Id_IP_HSIZE);
@@ -612,7 +615,8 @@ begin
     CopyTIdLongWord(Ticks, FBufIcmp, LIdx);
     Inc(LIdx, 4);
     if Length(ABuffer) > 0 then begin
-      CopyTIdString(ABuffer, FBufIcmp, LIdx, IndyMin(Length(ABuffer), FPacketSize));
+      LBuffer := ToBytes(ABuffer, Indy8BitEncoding);
+      CopyTIdBytes(LBuffer, 0, FBufIcmp, LIdx, IndyMin(Length(LBuffer), FPacketSize));
     end;
   finally
     FreeAndNil(LIcmp);
