@@ -1654,6 +1654,7 @@ var
   RRData, Tmp: TIdBytes;
   Pref : Word;
 begin
+  Tmp := nil; // keep the compiler happy
   if Length(FAnswer) = 0 then begin
     Pref := IndyStrToInt(
       {$IFDEF UNICODESTRING}
