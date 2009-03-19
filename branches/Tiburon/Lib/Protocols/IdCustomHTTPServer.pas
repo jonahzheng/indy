@@ -722,6 +722,7 @@ var
     LResponseNo: Integer;
     LResponseText, LContentText, S: String;
     LMajor, LMinor: Integer;
+    LBufferingStarted: Boolean;
   begin
     // let the user decide if the request headers are acceptable
     Result := DoHeadersAvailable(AContext, LRequestInfo.RawHeaders);
@@ -777,11 +778,21 @@ var
       // the client requested a '100-continue' expectation so send
       // a '100 Continue' reply now before the request body can be read
       with AContext.Connection.IOHandler do begin
-        WriteBufferOpen; try
+        LBufferingStarted := not WriteBufferingActive;
+        if LBufferingStarted then begin
+          WriteBufferOpen;
+        end;
+        try
           WriteLn(LRequestInfo.Version + ' 100 ' + RSHTTPContinue);    {Do not Localize}
           WriteLn;
-        finally
-          WriteBufferClose;
+          if LBufferingStarted then begin
+            WriteBufferClose;
+          end;
+        except
+          if LBufferingStarted then begin
+            WriteBufferCancel;
+          end;
+          raise;
         end;
       end;
     end;
@@ -1469,6 +1480,7 @@ procedure TIdHTTPResponseInfo.WriteHeader;
 var
   i: Integer;
   LEncoding: TIdTextEncoding;
+  LBufferingStarted: Boolean;
 begin
   EIdHTTPHeaderAlreadyWritten.IfTrue(HeaderHasBeenWritten, RSHTTPHeaderAlreadyWritten);
   FHeaderHasBeenWritten := True;
@@ -1492,41 +1504,30 @@ begin
     end;
   end;
   SetHeaders;
-  FConnection.IOHandler.WriteBufferOpen;
+  LBufferingStarted := not FConnection.IOHandler.WriteBufferingActive;
+  if LBufferingStarted then begin
+    FConnection.IOHandler.WriteBufferOpen;
+  end;
   try
-    try
-      // Write HTTP status response
-      // Client will be forced to close the connection. We are not going to support
-      // keep-alive feature for now
-      FConnection.IOHandler.WriteLn('HTTP/1.1 ' + IntToStr(ResponseNo) + ' ' + ResponseText);    {Do not Localize}
-
-      // RLebeau 3/19/2009: tried to use TIdIOHandler.Write(TStrings) below,
-      // but it does not work correctly, so reverting back to old logic for
-      // now.  Turns out that TIdIOHandler.Write(TStrings) uses its own write
-      // buffering internally, which interfers with the write buffering being
-      // used here because Indy does not (currently) support nested buffered
-      // operations.  As soon as TIdIOHandler.Write(TStrings) calls
-      // TIdIOHandler.WriteBufferOpen(), it wipes out the data that was
-      // already buffered above.  And then when TIdIOHandler.Write(TStrings)
-      // calls TIdIOHandler.WriteBufferClose(), it releases the write buffer
-      // so that the data further below is not buffered anymore...
-
-      // Write headers
-      //FConnection.IOHandler.Write(RawHeaders);
-      for i := 0 to RawHeaders.Count-1 do begin
-        FConnection.IOHandler.WriteLn(RawHeaders[i]);
-      end;
-      // Write cookies
-      for i := 0 to Cookies.Count - 1 do begin
-        FConnection.IOHandler.WriteLn('Set-Cookie: ' + Cookies[i].ServerCookie);    {Do not Localize}
-      end;
-      // HTTP headers end with a double CR+LF
-      FConnection.IOHandler.WriteLn;
-    finally
+    // Write HTTP status response
+    // Client will be forced to close the connection. We are not going to support
+    // keep-alive feature for now
+    FConnection.IOHandler.WriteLn('HTTP/1.1 ' + IntToStr(ResponseNo) + ' ' + ResponseText);    {Do not Localize}
+    // Write headers
+    FConnection.IOHandler.Write(RawHeaders);
+    // Write cookies
+    for i := 0 to Cookies.Count - 1 do begin
+      FConnection.IOHandler.WriteLn('Set-Cookie: ' + Cookies[i].ServerCookie);    {Do not Localize}
+    end;
+    // HTTP headers end with a double CR+LF
+    FConnection.IOHandler.WriteLn;
+    if LBufferingStarted then begin
       FConnection.IOHandler.WriteBufferClose;
     end;
   except
-    FConnection.IOHandler.WriteBufferCancel;
+    if LBufferingStarted then begin
+      FConnection.IOHandler.WriteBufferCancel;
+    end;
     raise;
   end;
 end;
