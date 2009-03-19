@@ -240,7 +240,7 @@ begin
     // break something, and storing in an extra buffer will just eat space
     while True do
     begin
-      LLine := ReadLnRFC(LMsgEnd, en8Bit);
+      LLine := ReadLnRFC(LMsgEnd, Indy8BitEncoding);
       if (IndyPos('=yend', LowerCase(LLine)) <> 0) or LMsgEnd then {Do not Localize}
       begin
         Break;
