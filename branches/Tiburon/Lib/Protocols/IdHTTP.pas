@@ -1752,6 +1752,7 @@ end;
 procedure TIdHTTPProtocol.BuildAndSendRequest(AURI: TIdURI);
 var
   i: Integer;
+  LBufferingStarted: Boolean;
 begin
   Request.SetHeaders;
   FHTTP.ProxyParams.SetHeaders(Request.RawHeaders);
@@ -1760,7 +1761,10 @@ begin
   end;
   // This is a workaround for some HTTP servers which do not implement
   // the HTTP protocol properly
-  FHTTP.IOHandler.WriteBufferOpen;
+  LBufferingStarted := not FHTTP.IOHandler.WriteBufferingActive;
+  if LBufferingStarted then begin
+    FHTTP.IOHandler.WriteBufferOpen;
+  end;
   try
     FHTTP.IOHandler.WriteLn(Request.Method + ' ' + Request.URL + ' HTTP/' + ProtocolVersionString[FHTTP.ProtocolVersion]); {do not localize}
     // write the headers
@@ -1771,9 +1775,13 @@ begin
       end;
     end;
     FHTTP.IOHandler.WriteLn('');     {do not localize}
-    FHTTP.IOHandler.WriteBufferClose;
+    if LBufferingStarted then begin
+      FHTTP.IOHandler.WriteBufferClose;
+    end;
   except
-    FHTTP.IOHandler.WriteBufferCancel;
+    if LBufferingStarted then begin
+      FHTTP.IOHandler.WriteBufferCancel;
+    end;
     raise;
   end;
 end;
