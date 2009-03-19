@@ -139,6 +139,7 @@ type
     FSendStream: TStream;
     FStreamType: TIdIOHandlerStreamType;
     //
+    procedure InitComponent; override;
     function ReadDataFromSource(var VBuffer: TIdBytes): Integer; override;
     function WriteDataToTarget(const ABuffer: TIdBytes; const AOffset, ALength: Integer): Integer; override;
     function SourceIsAvailable: Boolean; override;
@@ -167,6 +168,12 @@ uses
   SysUtils;
 
 { TIdIOHandlerStream }
+
+procedure TIdIOHandlerStream.InitComponent;
+begin
+  inherited InitComponent;
+  FDefStringEncoding := Indy8BitEncoding;
+end;
 
 procedure TIdIOHandlerStream.CheckForDisconnect(
   ARaiseExceptionIfDisconnected: Boolean = True;
