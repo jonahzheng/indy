@@ -604,14 +604,18 @@ begin
     if Assigned(IOHandler) and Assigned(IOHandler.Intercept) and Assigned(AValue) then begin
       EIdException.IfTrue(AValue <> IOHandler.Intercept, RSInterceptIsDifferent);
     end;
+    // remove self from the Intercept's free notification list
+    if Assigned(FIntercept) then begin
+      FIntercept.RemoveFreeNotification(Self);
+    end;
+    FIntercept := AValue;
     // add self to the Intercept's free notification list
-    if Assigned(AValue) then begin
-      AValue.FreeNotification(Self);
+    if Assigned(FIntercept) then begin
+      FIntercept.FreeNotification(Self);
     end;
     if Assigned(IOHandler) then begin
       IOHandler.Intercept := AValue;
     end;
-    FIntercept := AValue;
   end;
 end;
 
@@ -632,6 +636,7 @@ begin
     // Clear out old values whether setting AValue to nil, or setting a new value
     if Assigned(FIOHandler) then begin
       FIOHandler.WorkTarget := nil;
+      FIOHandler.RemoveFreeNotification(Self);
     end;
     if Assigned(AValue) then begin
       // add self to the IOHandler's free notification list

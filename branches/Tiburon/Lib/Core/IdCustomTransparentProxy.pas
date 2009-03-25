@@ -187,9 +187,12 @@ begin
     end;
     LNextValue := LNextValue.FChainedProxy;
   end;
+  if Assigned(FChainedProxy) then begin
+    FChainedProxy.RemoveFreeNotification(Self);
+  end;
   FChainedProxy := AValue;
-  if Assigned(AValue) then begin
-    AValue.FreeNotification(Self);
+  if Assigned(FChainedProxy) then begin
+    FChainedProxy.FreeNotification(Self);
   end;
 end;
 

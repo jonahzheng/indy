@@ -748,6 +748,10 @@ end;
 procedure TIdIOHandler.SetIntercept(AValue: TIdConnectionIntercept);
 begin
   if (AValue <> FIntercept) then begin
+    // remove self from the Intercept's free notification list
+    if Assigned(FIntercept) then begin
+      FIntercept.RemoveFreeNotification(Self);
+    end;
     FIntercept := AValue;
     // add self to the Intercept's free notification list
     if Assigned(FIntercept) then begin

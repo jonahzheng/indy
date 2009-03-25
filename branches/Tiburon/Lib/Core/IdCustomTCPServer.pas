@@ -587,6 +587,10 @@ end;
 procedure TIdCustomTCPServer.SetIntercept(const AValue: TIdServerIntercept);
 begin
   if FIntercept <> AValue then begin
+    // Remove self from the intercept's notification list
+    if Assigned(FIntercept) then begin
+      FIntercept.RemoveFreeNotification(Self);
+    end;
     FIntercept := AValue;
     // Add self to the intercept's notification list
     if Assigned(FIntercept) then begin
@@ -618,12 +622,17 @@ begin
     FImplicitScheduler := False;
   end;
 
+  // Ensure we will no longer be notified when the component is freed
+  if FScheduler <> nil then begin
+    FScheduler.RemoveFreeNotification(Self);
+  end;
   FScheduler := AValue;
   // Ensure we will be notified when the component is freed, even is it's on
   // another form
-  if AValue <> nil then begin
-    AValue.FreeNotification(Self);
+  if FScheduler <> nil then begin
+    FScheduler.FreeNotification(Self);
   end;
+
   if FIOHandler <> nil then begin
     FIOHandler.SetScheduler(FScheduler);
   end;
@@ -632,9 +641,13 @@ end;
 procedure TIdCustomTCPServer.SetIOHandler(const AValue: TIdServerIOHandler);
 begin
   if FIOHandler <> AValue then begin
-    if Assigned(FIOHandler) and FImplicitIOHandler then begin
-      FImplicitIOHandler := False;
-      FreeAndNil(FIOHandler);
+    if Assigned(FIOHandler) then begin
+      if FImplicitIOHandler then begin
+        FImplicitIOHandler := False;
+        FreeAndNil(FIOHandler);
+      end else begin
+        FIOHandler.RemoveFreeNotification(Self);
+      end;
     end;
     FIOHandler := AValue;
     if FIOHandler <> nil then begin

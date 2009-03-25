@@ -381,6 +381,7 @@ begin
     if not Assigned(AProxy.Owner) then begin
       if Assigned(FTransparentProxy) then begin
         if Assigned(FTransparentProxy.Owner) then begin
+          FTransparentProxy.RemoveFreeNotification(Self);
           FTransparentProxy := nil;
         end;
       end;
@@ -393,17 +394,22 @@ begin
       end;
       FTransparentProxy.Assign(AProxy);
     end else begin
-      if Assigned(FTransparentProxy) and not Assigned(FTransparentProxy.Owner) then begin
-        FreeAndNil(FTransparentProxy);
+      if Assigned(FTransparentProxy) then begin
+        if not Assigned(FTransparentProxy.Owner) then begin
+          FreeAndNil(FTransparentProxy);
+        end else begin
+          FTransparentProxy.RemoveFreeNotification(Self);
+        end;
       end;
       FTransparentProxy := AProxy;
       FTransparentProxy.FreeNotification(Self);
     end;
   end
-  else begin
-    if Assigned(FTransparentProxy) and not Assigned(FTransparentProxy.Owner) then begin
+  else if Assigned(FTransparentProxy) then begin
+    if not Assigned(FTransparentProxy.Owner) then begin
       FreeAndNil(FTransparentProxy);
     end else begin
+      FTransparentProxy.RemoveFreeNotification(Self);
       FTransparentProxy := nil; //remove link
     end;
   end;
