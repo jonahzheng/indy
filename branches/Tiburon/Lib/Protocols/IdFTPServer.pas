@@ -2462,17 +2462,27 @@ end;
 
 procedure TIdFTPServer.SetUserAccounts(const AValue: TIdCustomUserManager);
 begin
-  FUserAccounts := AValue;
-  if Assigned(FUserAccounts) then begin
-    FUserAccounts.FreeNotification(Self);
+  if FUserAccounts <> AValue then begin
+    if Assigned(FUserAccounts) then begin
+      FUserAccounts.RemoveFreeNotification(Self);
+    end;
+    FUserAccounts := AValue;
+    if Assigned(FUserAccounts) then begin
+      FUserAccounts.FreeNotification(Self);
+    end;
   end;
 end;
 
 procedure TIdFTPServer.SetFTPFileSystem(const AValue: TIdFTPBaseFileSystem);
 begin
-  FFTPFileSystem := AValue;
-  if Assigned(FFTPFileSystem) then begin
-    FFTPFileSystem.FreeNotification(Self);
+  if FFTPFileSystem <> AValue then begin
+    if Assigned(FFTPFileSystem) then begin
+      FFTPFileSystem.RemoveFreeNotification(Self);
+    end;
+    FFTPFileSystem := AValue;
+    if Assigned(FFTPFileSystem) then begin
+      FFTPFileSystem.FreeNotification(Self);
+    end;
   end;
 end;
 
