@@ -857,6 +857,7 @@ type
     procedure SendEPassive(var VIP: string; var VPort: TIdPort);
     procedure SetProxySettings(const Value: TIdFtpProxySettings);
     procedure SetClientInfo(const AValue: TIdFTPClientIdentifier);
+    procedure SetCompressor(AValue: TIdZLibCompressorBase);
     procedure SendTransferType;
     procedure SetTransferType(AValue: TIdFTPTransferType);
     procedure DoBeforeGet; virtual;
@@ -985,8 +986,8 @@ type
     property IPVersion;
     {$ENDIF}
     property AutoLogin: Boolean read FAutoLogin write FAutoLogin;
-    // This is an object that can compress and decompress HTTP Deflate encoding
-    property Compressor : TIdZLibCompressorBase read FCompressor write FCompressor;
+    // This is an object that can compress and decompress FTP Deflate encoding
+    property Compressor : TIdZLibCompressorBase read FCompressor write SetCompressor;
     property Host;
     property UseCCC : Boolean read FUseCCC write SetUseCCC default DEF_Id_FTP_UseCCC;
     property Passive: boolean read FPassive write SetPassive default Id_TIdFTP_Passive;
@@ -1057,6 +1058,11 @@ type
   EIdFTPAUTHException = class(EIdFTPException);
   EIdFTPNoAUTHWOSSL = class(EIdFTPAUTHException);
   EIdFTPCanNotSetAUTHCon = class(EIdFTPAUTHException);
+
+  EIdFTPMissingCompressor = class(EIdFTPException);
+  EIdFTPCompressorNotReady = class(EIdFTPException);
+  EIdFTPUnsupportedTransferMode = class(EIdFTPException);
+  EIdFTPUnsupportedTransferType = class(EIdFTPException);
 
 implementation
 
@@ -1192,7 +1198,7 @@ begin
     end;
 
     // RLebeau: must not send/receive UTF-8 before negotiating for it...
-    IOHandler.DefStringEncoding := en8Bit;
+    IOHandler.DefStringEncoding := Indy8BitEncoding;
 
     // RLebeau: RFC 959 says that the greeting can be preceeded by a 1xx
     // reply and that the client should wait for the 220 reply when this 
@@ -1298,11 +1304,11 @@ procedure TIdFTP.SetTransferType(AValue: TIdFTPTransferType);
 begin
   if AValue <> FTransferType then begin
     if not Assigned(FDataChannel) then begin
-      FTransferType := AValue;
       if Connected then begin
         SendTransferType;
       end;
-    end
+      FTransferType := AValue;
+    end;
   end;
 end;
 
@@ -1310,9 +1316,13 @@ procedure TIdFTP.SendTransferType;
 var
   s: string;
 begin
+  s := '';
   case TransferType of
     ftAscii: s := 'A';      {do not localize}
     ftBinary: s := 'I';     {do not localize}
+  end;
+  if s = '' then begin
+    raise EIdFTPUnsupportedTransferType.Create(RSFTPUnsupportedTransferType);
   end;
   SendCmd('TYPE ' + s, 200); {do not localize}
 end;
@@ -1541,6 +1551,17 @@ var
   LPortSv : TIdSimpleServer;
 begin
   FAbortFlag.Value := False;
+
+  if FCurrentTransferMode = dmDeflate then
+  begin
+    if not Assigned(FCompressor) then begin
+      raise EIdFTPMissingCompressor.Create(RSFTPMissingCompressor);
+    end;
+    if not FCompressor.IsReady then begin
+      raise EIdFTPCompressorNotReady.Create(RSFTPCompressorNotReady);
+    end;
+  end;
+
   //for SSL FXP, we have to do it here because there is no command were a client
   //submits data through a data port where the SSCN setting is ignored.
   ClearSSCN;
@@ -1583,7 +1604,7 @@ begin
             if FUsingSFTP and (FDataPortProtection = ftpdpsPrivate) then begin
               TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).Passthrough := False;
             end;
-            if (FCurrentTransferMode = dmDeflate) and FCompressor.IsReady then
+            if FCurrentTransferMode = dmDeflate then
             begin
               FCompressor.CompressFTPToIO(ASource, FDataChannel.IOHandler,
                 FZLibCompressionLevel, FZLibWindowBits, FZLibMemLevel, FZLibStratagy);
@@ -1637,9 +1658,10 @@ begin
         if FUsingSFTP and (FDataPortProtection = ftpdpsPrivate) then begin
           TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).PassThrough := False;
         end;
-        if (FCurrentTransferMode = dmDeflate) and FCompressor.IsReady then
+        if FCurrentTransferMode = dmDeflate then
         begin
-          FCompressor.CompressFTPToIO(ASource, FDataChannel.IOHandler, FZLibCompressionLevel, FZLibWindowBits, FZLibMemLevel, FZLibStratagy);
+          FCompressor.CompressFTPToIO(ASource, FDataChannel.IOHandler,
+            FZLibCompressionLevel, FZLibWindowBits, FZLibMemLevel, FZLibStratagy);
         end else
         begin
           if AFromBeginning then begin
@@ -1679,6 +1701,17 @@ var
   LPortSv : TIdSimpleServer;
 begin
   FAbortFlag.Value := False;
+
+  if FCurrentTransferMode = dmDeflate then
+  begin
+    if not Assigned(FCompressor) then begin
+      raise EIdFTPMissingCompressor.Create(RSFTPMissingCompressor);
+    end;
+    if not FCompressor.IsReady then begin
+      raise EIdFTPCompressorNotReady.Create(RSFTPCompressorNotReady);
+    end;
+  end;
+
   DoStatus(ftpTransfer, [RSFTPStatusStartTransfer]);
   if FPassive then begin
     SendPret(ACommand);
@@ -1725,7 +1758,7 @@ begin
           if (FDataPortProtection = ftpdpsPrivate) then begin
             TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).Passthrough := False;
           end;
-          if (FCurrentTransferMode = dmDeflate) and FCompressor.IsReady then begin
+          if FCurrentTransferMode = dmDeflate then begin
             FCompressor.DecompressFTPFromIO(LPasvCl.IOHandler, ADest, FZLibWindowBits);
           end else begin
             LPasvCl.IOHandler.ReadStream(ADest, -1, True);
@@ -1768,7 +1801,7 @@ begin
       if FUsingSFTP and (FDataPortProtection = ftpdpsPrivate) then begin
         TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).PassThrough := False;
       end;
-      if (FCurrentTransferMode = dmDeflate) and FCompressor.IsReady then begin
+      if FCurrentTransferMode = dmDeflate then begin
         FCompressor.DecompressFTPFromIO(LPortSv.IOHandler, ADest, FZLibWindowBits);
       end else begin
         FDataChannel.IOHandler.ReadStream(ADest, -1, True);
@@ -1882,7 +1915,7 @@ begin
   FDataChannel.IOHandler.SendBufferSize := IOHandler.SendBufferSize;
   FDataChannel.IOHandler.RecvBufferSize := IOHandler.RecvBufferSize;
   FDataChannel.IOHandler.LargeStream := True;
- // FDataChannel.IOHandler.DefStringEncoding := en8bit;
+ // FDataChannel.IOHandler.DefStringEncoding := Indy8BitEncoding;
   FDataChannel.WorkTarget := Self;
 end;
 
@@ -2104,7 +2137,7 @@ begin
     FResumeTested := False;
     FSystemDesc := '';
     FTransferType := Id_TIdFTP_TransferType;
-    IOHandler.DefStringEncoding := en8Bit;
+    IOHandler.DefStringEncoding := Indy8BitEncoding;
     if FUsingSFTP and (FUseTLS <> utUseImplicitTLS) then begin
       (IOHandler as TIdSSLIOHandlerSocketBase).PassThrough := True;
       FUsingSFTP := False;
@@ -2159,39 +2192,39 @@ var
   i : Integer;
   LBuf : String;
 begin
-  if (ATransferMode = dmStream) or (ATransferMode = dmDeflate) then begin
+  if FCurrentTransferMode <> ATransferMode then
+  begin
+    s := '';
     case ATransferMode of
-//      dmBlock: begin
-//        s := 'B';                {do not localize}
-//      end;
-//      dmCompressed: begin
-//        s := 'C';                {do not localize}
-//      end;
+//    dmBlock: begin
+//      s := 'B';                {do not localize}
+//    end;
+//    dmCompressed: begin
+//      s := 'C';                {do not localize}
+//    end;
       dmStream: begin
         s := 'S';                {do not localize}
       end;
       dmDeflate: begin
-        if Assigned(FCompressor) then begin
-          //we parse this way because IxExtensionSupported can only work
-          //with one word.
-          for i := 0 to FCapabilities.Count-1 do begin
-            LBuf := Trim(FCapabilities[i]);
-            if LBuf = 'MODE Z' then begin {do not localize}
-              s := 'Z'; {do not localize}
-              Break;
-            end;
+        if not Assigned(FCompressor) then begin
+          raise EIdFTPMissingCompressor.Create(RSFTPMissingCompressor);
+        end;
+        //we parse this way because IxExtensionSupported can only work
+        //with one word.
+        for i := 0 to FCapabilities.Count-1 do begin
+          LBuf := Trim(FCapabilities[i]);
+          if LBuf = 'MODE Z' then begin {do not localize}
+            s := 'Z'; {do not localize}
+            Break;
           end;
-          if s <> 'Z' then begin
-            Exit;
-          end;
-        end else begin
-          Exit;
         end;
       end;
     end;
-    if SendCmd('MODE ' + s) = 200 then begin {do not localize}
-      FCurrentTransferMode := ATransferMode;
+    if s = '' then begin
+      raise EIdFTPUnsupportedTransferMode.Create(RSFTPUnsupportedTransferMode);
     end;
+    SendCmd('MODE ' + s, 200); {do not localize}
+    FCurrentTransferMode := ATransferMode;
   end;
 end;
 
@@ -2261,7 +2294,7 @@ begin
         Exit;
       end;
     end;
-    IOHandler.DefStringEncoding := enUTF8;
+    IOHandler.DefStringEncoding := TIdTextEncoding.UTF8;
   end;
 end;
 
@@ -3033,6 +3066,23 @@ begin
   FClientInfo.Assign(AValue);
 end;
 
+procedure TIdFTP.SetCompressor(AValue: TIdZLibCompressorBase);
+begin
+  if FCompressor <> AValue then
+  begin
+    if Assigned(FCompressor) then begin
+      FCompressor.RemoveFreeNotification(Self);
+    end;
+    FCompressor := AValue;
+    if Assigned(FCompressor) then begin
+      FCompressor.FreeNotification(Self);
+    end
+    else if Connected then begin
+      TransferMode(dmStream);
+    end;
+  end;
+end;
+
 function TIdFTP.GetReplyClass: TIdReplyClass;
 begin
   Result := TIdReplyFTP;
@@ -3487,10 +3537,7 @@ procedure TIdFTP.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
   if (Operation = opRemove) and (AComponent = FCompressor) then begin
-    FCompressor := nil;
-    if Connected then begin
-      TransferMode(dmStream);
-    end;
+    SetCompressor(nil);
   end;
 end;
 
