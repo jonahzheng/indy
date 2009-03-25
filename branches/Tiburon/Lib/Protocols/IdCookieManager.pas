@@ -79,7 +79,7 @@ Type
     FCookieCollection: TIdCookies;
 
     procedure CleanupCookieList;
-    procedure DoAdd(ACookie: TIdCookieRFC2109; ACookieText, AHost: String);
+    procedure DoAdd(ACookie: TIdCookieRFC2109; ACookieText: String; AURL: TIdURI);
     procedure DoOnCreate; virtual;
     procedure DoOnDestroy; virtual;
     function DoOnNewCookie(ACookie: TIdCookieRFC2109): Boolean; virtual;
@@ -87,8 +87,8 @@ Type
   public
     destructor Destroy; override;
     //
-    procedure AddCookie(ACookie, AHost: String);
-    procedure AddCookie2(ACookie, AHost: String);
+    procedure AddCookie(ACookie: String; AURL: TIdURI);
+    procedure AddCookie2(ACookie: String; AURL: TIdURI);
     procedure AddCookies(ASource: TIdCookieManager);
     procedure CopyCookie(ACookie: TIdCookieRFC2109);
     //
@@ -104,15 +104,45 @@ Type
 implementation
 
 uses
-  IdGlobal, IdGlobalProtocols, SysUtils;
+  IdAssignedNumbers, IdGlobal, IdGlobalProtocols, SysUtils;
+
+function EffectiveHostName(const AHost: String): String;
+begin
+  if Pos('.', AHost) = 0 then begin {Do not Localize}
+    Result := AHost + '.local'; {Do not Localize}
+  end else begin
+    Result := AHost;
+  end;
+end;
 
 function IsDomainMatch(const AHost, ADomain: String): Boolean;
+var
+  S: String;
 begin
+  {
+  Per RFC 2109:
+
+  Hosts names can be specified either as an IP address or a FQHN
+  string.  Sometimes we compare one host name with another.  Host A's
+  name domain-matches host B's if
+
+  * both host names are IP addresses and their host name strings match
+    exactly; or
+
+  * both host names are FQDN strings and their host name strings match
+    exactly; or
+
+  * A is a FQDN string and has the form NB, where N is a non-empty name
+    string, B has the form .B', and B' is a FQDN string.  (So, x.y.com
+    domain-matches .y.com but not y.com.)
+
+  Note that domain-match is not a commutative operation: a.b.c.com
+  domain-matches .c.com, but not the reverse.
+  }  
+
   {
   Per RFC 2965:
   
-  ...
-
   Host names can be specified either as an IP address or a HDN string.
   Sometimes we compare one host name with another.  (Such comparisons
   SHALL be case-insensitive.)  Host A's name domain-matches host B's if
@@ -129,28 +159,111 @@ begin
   
   if IsValidIP(AHost) then
   begin
-    Result := AHost = ADomain;
+    Result := TextIsSame(AHost, ADomain);
   end
   else if IsHostName(AHost) then
   begin
-    if CharEquals(ADomain, 1, '.') then begin
-      Result := TextEndsWith(AHost, ADomain);
+    if CharEquals(ADomain, 1, '.') then {do not localize}
+    begin
+      S := Copy(ADomain, 2, MaxInt);
+      if TextEndsWith(AHost, ADomain) then
+      begin
+        Result := IsHostName(S) and
+	          (Copy(AHost, 1, Length(AHost)-Length(ADomain)) <> '');
+        Exit;
+      end;
     end else
     begin
-      Result := TextIsSame(AHost, ADomain);
+      S := ADomain;
     end;
-  end
-  else begin
+    Result := TextIsSame(AHost, S);
+  end else
+  begin
     Result := False;
   end;
 end;
 
-function IsRejectedCookie(ACookie: TIdCookieRFC2109; const AHost: string): Boolean;
+function IsPortMatch(ACookie: TIdCookieRFC2965; const APort: String): Boolean;
+var
+  LPort: TIdPort;
+  I: Integer;
 begin
   {
   Per RFC 2965:
-
+  
   ...
+
+  Port Selection
+      There are three possible behaviors, depending on the Port
+      attribute in the Set-Cookie2 response header:
+
+      1. By default (no Port attribute), the cookie MAY be sent to any
+         port.
+
+      2. If the attribute is present but has no value (e.g., Port), the
+         cookie MUST only be sent to the request-port it was received
+         from.
+
+      3. If the attribute has a port-list, the cookie MUST only be
+         returned if the new request-port is one of those listed in
+         port-list.
+  }
+
+  if not ACookie.UsePort then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  LPort := IndyStrToInt(APort, IdPORT_HTTP);
+
+  if ACookie.PortCount = 0 then
+  begin
+    Result := (ACookie.RecvPort = LPort);
+    Exit;
+  end;
+
+  for I := 0 to ACookie.PortCount-1 do
+  begin
+    if ACookie.PortList[I] = LPort then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+  
+  Result := False;
+end;
+  
+function IsRejectedCookie(ACookie: TIdCookieRFC2109; AURL: TIdURI): Boolean;
+var
+  S: string;
+begin
+  Result := True;
+
+  {
+  Per RFC 2109:
+
+  To prevent possible security or privacy violations, a user agent
+  rejects a cookie (shall not store its information) if any of the
+  following is true:
+
+   * The value for the Path attribute is not a prefix of the request-
+     URI.
+
+   * The value for the Domain attribute contains no embedded dots or
+     does not start with a dot.
+
+   * The value for the request-host does not domain-match the Domain
+     attribute.
+
+   * The request-host is a FQDN (not IP address) and has the form HD,
+     where D is the value of the Domain attribute, and H is a string
+     that contains one or more dots.
+  }
+
+  {
+  Per RFC 2965:
 
   A user agent rejects (SHALL NOT store its information) if the Version
   attribute is missing.  Moreover, a user agent rejects (SHALL NOT
@@ -174,9 +287,56 @@ begin
        not in the list.
   }
   
-  Result := not IsDomainMatch(AHost, ACookie.Domain);
+  if not TextStartsWith(AURL.Path, ACookie.Path) then begin
+    Exit;
+  end;
 
-  // TODO: validate other attribute values as well
+  S := ACookie.Domain;
+
+  if ACookie is TIdCookieRFC2965 then
+  begin
+    if ACookie.Version < 1 then begin
+      Exit;
+    end;
+    if CharEquals(s, 1, '.') then begin
+      S := Copy(S, 2, MaxInt);
+    end;
+    if (Pos('.', S) = 0) and (not TextIsSame(ACookie.Domain, '.local')) then begin
+      Exit;
+    end;
+    if not IsDomainMatch(EffectiveHostName(AURL.Host), ACookie.Domain) then begin
+      Exit;
+    end;
+  end else
+  begin
+    if not CharEquals(s, 1, '.') then begin
+      Exit;
+    end;
+    S := Copy(S, 2, MaxInt);
+    if Pos('.', S) = 0 then begin
+      Exit;
+    end;
+    if not IsDomainMatch(AURL.Host, ACookie.Domain) then begin
+      Exit;
+    end;
+  end;
+
+  if IsHostName(AURL.Host) and TextEndsWith(AURL.Host, ACookie.Domain) then
+  begin
+    S := Copy(AURL.Host, 1, Length(AURL.Host)-Length(ACookie.Domain));
+    if Pos('.', S) <> 0 then begin
+      Exit;
+    end;
+  end;
+  
+  if ACookie is TIdCookieRFC2965 then
+  begin
+    if not IsPortMatch(TIdCookieRFC2965(ACookie), AURL.Port) then begin
+      Exit;
+    end;
+  end;
+  
+  Result := False;
 end;
 
 { TIdCookieManager }
@@ -194,6 +354,7 @@ Var
   S: String;
   i, j: Integer;
   LCookieList: TIdCookieList;
+  LCookie: TIdNetscapeCookie;
   LResultList: TIdCookieList;
   LCookiesByDomain: TIdCookieDomainList;
 begin
@@ -204,25 +365,24 @@ begin
     if LCookiesByDomain.Count > 0 then
     begin
       LResultList := TIdCookieList.Create;
-
       try
         // Search for cookies for this domain
         for i := 0 to LCookiesByDomain.Count - 1 do
         begin
-          if IsDomainMatch(URL.Host, LCookiesByDomain.Strings[i]) then
+          if IsDomainMatch(EffectiveHostName(URL.Host), LCookiesByDomain.Strings[i]) then
           begin
             LCookieList := LCookiesByDomain.CookieList[i];
-
             for j := LCookieList.Count - 1 downto 0 do
             begin
-              if Pos(LCookieList.Cookies[j].Path, URL.Path) = 1 then
+              LCookie := LCookieList.Cookies[j];
+              if (LCookie is TIdCookieRFC2965) and (not IsPortMatch(TIdCookieRFC2965(LCookie), URL.Port)) then begin
+                Continue;
+              end;
+              if TextStartsWith(URL.Path, LCookie.Path) then
               begin
-                with LCookieList.Cookies[j] do
+                if ((LCookie.Secure and SecureConnection) or (not LCookie.Secure)) and (LCookie.Value <> '') then    {Do not Localize}
                 begin
-                  if ((Secure and SecureConnection) or (not Secure)) and (Value <> '') then    {Do not Localize}
-                  begin
-                    LResultList.AddObject(Path, LCookieList.Cookies[j]);
-                  end;
+                  LResultList.AddObject(LCookie.Path, LCookie);
                 end;
               end;
             end;
@@ -231,8 +391,11 @@ begin
 
         for i := LResultList.Count - 1 downto 0 do
         begin
-          if Length(S) > 0  then S := S + '; ';    {Do not Localize}
-          S := S + LResultList.Cookies[i].CookieName + '=' + LResultList.Cookies[i].Value;    {Do not Localize}
+          if Length(S) > 0 then begin
+            S := S + '; ';    {Do not Localize}
+          end;
+          LCookie := LResultList.Cookies[i];
+          S := S + LCookie.CookieName + '=' + LCookie.Value;    {Do not Localize}
         end;
       finally
         LResultList.Free;
@@ -244,18 +407,32 @@ begin
   Result := S;
 end;
 
-procedure TIdCookieManager.DoAdd(ACookie: TIdCookieRFC2109; ACookieText, AHost: String);
+procedure TIdCookieManager.DoAdd(ACookie: TIdCookieRFC2109; ACookieText: String; AURL: TIdURI);
 begin
   ACookie.CookieText := ACookieText;
 
-  if Length(ACookie.Domain) = 0 then begin
-    ACookie.Domain := AHost;
+  if Length(ACookie.Domain) = 0 then
+  begin
+    if ACookie is TIdCookieRFC2965 then begin
+      ACookie.Domain := '.' + EffectiveHostName(AURL.Host); {Do not Localize}
+    end else begin
+      ACookie.Domain := '.' + AURL.Host; {Do not Localize}
+    end;
   end
-  else if not TextStartsWith(ACookie.Domain, '.') then begin {do not localize}
+  else if (not TextStartsWith(ACookie.Domain, '.')) and {do not localize}
+          (ACookie is TIdCookieRFC2965) then
+  begin
     ACookie.Domain := '.' + ACookie.Domain; {do not localize}
   end;
 
-  if not IsRejectedCookie(ACookie, AHost) then
+  if Length(ACookie.Path) = 0 then begin
+    ACookie.Path := AURL.Path;
+    if CharEquals(ACookie.Path, Length(ACookie.Path), '/') then begin
+      ACookie.Path := Copy(ACookie.Path, 1, Length(ACookie.Path)-1);
+    end;
+  end;
+
+  if not IsRejectedCookie(ACookie, AURL) then
   begin
     if DoOnNewCookie(ACookie) then
     begin
@@ -268,20 +445,25 @@ begin
   ACookie.Free;
 end;
 
-procedure TIdCookieManager.AddCookie(ACookie, AHost: String);
+procedure TIdCookieManager.AddCookie(ACookie: String; AURL: TIdURI);
 var
   LCookie: TIdCookieRFC2109;
 begin
   LCookie := FCookieCollection.Add;
-  DoAdd(LCookie, ACookie, AHost);
+  DoAdd(LCookie, ACookie, AURL);
 end;
 
-procedure TIdCookieManager.AddCookie2(ACookie, AHost: String);
+type
+  TIdCookieRFC2965Access = class(TIdCookieRFC2965)
+  end;
+
+procedure TIdCookieManager.AddCookie2(ACookie: String; AURL: TIdURI);
 var
   LCookie: TIdCookieRFC2965;
 begin
   LCookie := FCookieCollection.Add2;
-  DoAdd(LCookie, ACookie, AHost);
+  TIdCookieRFC2965Access(LCookie).FRecvPort := IndyStrToInt(AURL.Port, IdPORT_HTTP);
+  DoAdd(LCookie, ACookie, AURL);
 end;
 
 procedure TIdCookieManager.AddCookies(ASource: TIdCookieManager);
@@ -300,9 +482,14 @@ begin
     LCookie.Assign(ACookie);
 
     // RLebeau: copied from DoAdd()...
-    if (Length(LCookie.Domain) > 0) and (not TextStartsWith(LCookie.Domain, '.')) then begin {do not localize}
+
+    if (Length(LCookie.Domain) > 0) and
+       (not TextStartsWith(ACookie.Domain, '.')) and {do not localize}
+       (ACookie is TIdCookieRFC2965) then
+    begin
       LCookie.Domain := '.' + LCookie.Domain; {do not localize}
     end;
+
     if Length(LCookie.Domain) > 0 then
     begin
       if DoOnNewCookie(LCookie) then
