@@ -891,9 +891,28 @@ var
 begin
   if Assigned(FCookieManager) then begin
     // Send secure cookies only if we have Secured connection
-    S := FCookieManager.GenerateCookieList(AURL, (IOHandler is TIdSSLIOHandlerSocketBase));
+    S := FCookieManager.GenerateCookieList(AURL, TextIsSame(AURL.Protocol, 'HTTPS')); {do not localize}
     if Length(S) > 0 then begin
       ARequest.RawHeaders.Values['Cookie'] := S;  {do not localize}
+
+      // RLebeau: per RFC 2965:
+      //
+      // "A user agent that supports both this specification and Netscape-style
+      // cookies SHOULD send a Cookie request header that follows the older
+      // Netscape specification if it received the cookie in a Set-Cookie
+      // response header and not in a Set-Cookie2 response header.  However,
+      // it SHOULD send the following request header as well:
+      //
+      // Cookie2: $Version="1"
+      //
+      // The Cookie2 header advises the server that the user agent understands
+      // new-style cookies.  If the server understands new-style cookies, as
+      // well, it SHOULD continue the stateful session by sending a Set-
+      // Cookie2 response header, rather than Set-Cookie.  A server that does
+      // not understand new-style cookies will simply ignore the Cookie2
+      // request header.
+
+      ARequest.RawHeaders.Values['Cookie2'] := '$Version="1"';  {do not localize}
     end;
   end;
 end;
@@ -1320,7 +1339,7 @@ end;
 procedure TIdCustomHTTP.ProcessCookies(ARequest: TIdHTTPRequest; AResponse: TIdHTTPResponse);
 var
   Cookies, Cookies2: TStringList;
-  i: Integer;
+  i, j: Integer;
 begin
   Cookies := nil;
   Cookies2 := nil;
@@ -1339,11 +1358,29 @@ begin
       AResponse.RawHeaders.Extract('Set-cookie', Cookies);    {do not localize}
       AResponse.RawHeaders.Extract('Set-cookie2', Cookies2);  {do not localize}
 
-      for i := 0 to Cookies.Count - 1 do
-        CookieManager.AddCookie(Cookies[i], FURI.Host);
+      // RLebeau: per RFC 2965:
+      //
+      // "User agents that receive in the same response both a
+      // Set-Cookie and Set-Cookie2 response header for the same
+      // cookie MUST discard the Set-Cookie information and use
+      // only the Set-Cookie2 information."
+      
+      for i := 0 to Cookies2.Count-1 do
+      begin
+        j := Cookies.IndexOfName(Cookies2.Names[i]);
+        if j <> -1 then begin
+          Cookies.Delete(j);
+        end;
+      end;
 
-      for i := 0 to Cookies2.Count - 1 do
-        CookieManager.AddCookie2(Cookies2[i], FURI.Host);
+      for i := 0 to Cookies.Count - 1 do begin
+        CookieManager.AddCookie(Cookies[i], FURI);
+      end;
+
+      for i := 0 to Cookies2.Count - 1 do begin
+        CookieManager.AddCookie2(Cookies2[i], FURI);
+      end;
+      
     end;
   finally
     FreeAndNil(Cookies);
