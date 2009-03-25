@@ -133,7 +133,7 @@ type
   end;
 
   // TIdBaseComponent is the base class for all Indy components. Utility components, and other non
-  // socket based components typically inherit directly from this. While socket components ineherit
+  // socket based components typically inherit directly from this. While socket components inherit
   // from TIdComponent instead as it introduces OnWork, OnStatus, etc.
   TIdBaseComponent = class(TIdInitializerComponent)
   protected
@@ -145,6 +145,9 @@ type
     // This does not work in .net, but we always test in VCL so this will catch it.
     {$IFNDEF DotNet}
     constructor Create(AOwner: TComponent); reintroduce; overload;
+    {$ENDIF}
+    {$IFNDEF REMOVEFREENOTIFICATION}
+    procedure RemoveFreeNotification(AComponent: TComponent);
     {$ENDIF}
     property Version: string read GetIndyVersion;
   published
@@ -302,6 +305,12 @@ begin
 end;
 {$ENDIF}
 
+{$IFNDEF REMOVEFREENOTIFICATION}
+procedure TIdBaseComponent.RemoveFreeNotification(AComponent: TComponent);
+begin
+  // this is a no-op for now, as we can't access the private TComponent.FFreeNotifies list
+end;
+{$ENDIF}
 
 function TIdBaseComponent.GetIndyVersion: string;
 begin
