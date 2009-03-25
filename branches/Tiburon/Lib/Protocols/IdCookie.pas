@@ -63,15 +63,16 @@ unit IdCookie;
 
 REFERENCES
 -------------------
- [Netscape] "Persistent Client State -- HTTP Cookies", available at
-            <http://www.netscape.com/newsref/std/cookie_spec.html>,
-            undated.
+ [Netscape] "Persistent Client State -- HTTP Cookies",
+            formerly available at <http://www.netscape.com/newsref/std/cookie_spec.html>,
+            now at <http://curl.haxx.se/rfc/cookie_spec.html>,
+	    undated.
 
- [RFC2109]  Kristol, D. and L. Montulli, "HTTP State Management
-            Mechanism", RFC 2109, February 1997.
+ [RFC2109]  Kristol, D. and L. Montulli, "HTTP State Management Mechanism",
+            RFC 2109, February 1997.
 
- [RFC2965]  Kristol, D. and L. Montulli, "HTTP State Management
-            Mechanism", RFC 2965, October 2000.
+ [RFC2965]  Kristol, D. and L. Montulli, "HTTP State Management Mechanism",
+            RFC 2965, October 2000.
 
 Implementation status
 --------------------------
@@ -92,12 +93,10 @@ uses
   IdGlobal, IdException, IdGlobalProtocols, SysUtils;
   //must keep for now
 
-Const
+const
   GFMaxAge = -1;
 
-Type
-  TIdCookieVersion = (cvNetscape, cvRFC2109, cvRFC2965);
-
+type
   TIdNetscapeCookie = class;
 
   TIdCookieList = class(TStringList)
@@ -129,8 +128,6 @@ Type
     FSecure: Boolean;
     FValue: String;
 
-    FInternalVersion: TIdCookieVersion;
-
     function GetCookie: String; virtual;
     procedure SetExpires(const AValue: String); virtual;
     procedure SetCookie(const AValue: String);
@@ -161,7 +158,7 @@ Type
   TIdCookieRFC2109 = class(TIdNetscapeCookie)
   protected
     FMax_Age: Int64;
-    FVersion: String;
+    FVersion: Integer;
     FComment: String;
 
     function GetClientCookie: String; override;
@@ -173,27 +170,34 @@ Type
 
     property Comment: String read FComment write FComment;
     property MaxAge: Int64 read FMax_Age write FMax_Age;
-    property Version: String read FVersion write FVersion;
+    property Version: Integer read FVersion write FVersion;
   end;
 
   { Cookie as described in [RFC2965] }
-  // Adds CommentURL, Discard, Port and Version is now requerd
+  // Adds CommentURL, Discard, Port and Version is now required
   TIdCookieRFC2965 = class(TIdCookieRFC2109)
   protected
     FCommentURL: String;
     FDiscard: Boolean;
-    FPortList: array of Integer;
+    FPortList: array of TIdPort;
+    FRecvPort: TIdPort;
+    FUsePort: Boolean;
 
     function GetCookie: String; override;
+    function GetPort(AIndex: Integer): TIdPort;
+    function GetPortCount: Integer;
     procedure LoadProperties(APropertyList: TStrings); override;
-    procedure SetPort(AIndex, AValue: Integer);
-    function GetPort(AIndex: Integer): Integer;
+    procedure SetPort(AIndex: Integer; AValue: TIdPort);
   public
     constructor Create(ACollection: TCollection); override;
+    procedure Assign(Source: TPersistent); override;
 
     property CommentURL: String read FCommentURL write FCommentURL;
     property Discard: Boolean read FDiscard write FDiscard;
-    property PortList[AIndex: Integer]: Integer read GetPort write SetPort;
+    property PortCount: Integer read GetPortCount;
+    property PortList[AIndex: Integer]: TIdPort read GetPort write SetPort;
+    property UsePort: Boolean read FUsePort;
+    property RecvPort: TIdPort read FRecvPort;
   end;
 
   TIdNetscapeCookieClass = class of TIdNetscapeCookie;
@@ -306,7 +310,6 @@ end;
 constructor TIdNetscapeCookie.Create(ACollection: TCollection);
 begin
   inherited Create(ACollection);
-  FInternalVersion := cvNetscape;
 end;
 
 destructor TIdNetscapeCookie.Destroy;
@@ -341,7 +344,6 @@ begin
   if Source is TIdCookieRFC2109 then
   begin
     CookieText := TIdCookieRFC2109(Source).CookieText;
-    FInternalVersion := TIdCookieRFC2109(Source).FInternalVersion;
   end else begin
     inherited Assign(Source);
   end;
@@ -373,10 +375,7 @@ function TIdNetscapeCookie.GetCookie: String;
 begin
   Result := AddCookieProperty(FName, FValue, '');    {Do not Localize}
   Result := AddCookieProperty('path', FPath, Result);    {Do not Localize}
-  if FInternalVersion = cvNetscape then
-  begin
-    Result := AddCookieProperty('expires', FExpires, Result);    {Do not Localize}
-  end;
+  Result := AddCookieProperty('expires', FExpires, Result);    {Do not Localize}
   Result := AddCookieProperty('domain', FDomain, Result);    {Do not Localize}
   if FSecure then
   begin
@@ -389,6 +388,8 @@ begin
 end;
 
 procedure TIdNetscapeCookie.LoadProperties(APropertyList: TStrings);
+var
+  s: string;
 begin
   FPath := APropertyList.Values['PATH'];    {Do not Localize}
   // Tomcat can return SetCookie2 with path wrapped in "
@@ -405,14 +406,22 @@ begin
     FPath := '/'; {Do not Localize}
   end;
   Expires := APropertyList.Values['EXPIRES'];    {Do not Localize}
-  FDomain := APropertyList.Values['DOMAIN'];    {Do not Localize}
-  FSecure := APropertyList.IndexOf('SECURE') <> -1;    {Do not Localize}
-  FHttpOnly := APropertyList.IndexOf('HTTPONLY') <> -1;    {Do not Localize}
+
+  // RLebeau: have encountered one cookie in the 'Set-Cookie' header that
+  // includes a port number in the domain, though the RFCs do not indicate
+  // this is allowed. RFC 2965 defines an explicit "port" attribute in the
+  // 'Set-Cookie2' header for that purpose instead. We'll just strip it off
+  // here if present...
+  s := APropertyList.Values['DOMAIN'];    {Do not Localize}
+  FDomain := Fetch(s, ':');    {Do not Localize}
+
+  FSecure := APropertyList.IndexOfName('SECURE') <> -1;    {Do not Localize}
+  FHttpOnly := APropertyList.IndexOfName('HTTPONLY') <> -1;    {Do not Localize}
 end;
 
 procedure TIdNetscapeCookie.SetCookie(const AValue: String);
 Var
-  i: Integer;
+  i, j: Integer;
   CookieProp: TStringList;
   LTemp: String;
 begin
@@ -435,12 +444,11 @@ begin
 
       for i := 0 to CookieProp.Count - 1 do
       begin
-        if Pos('=', CookieProp[i]) = 0 then    {Do not Localize}
-        begin
-          CookieProp[i] := UpperCase(CookieProp[i]);  // This is for cookie flags (secure)
-        end
-        else begin
-          CookieProp[i] := UpperCase(CookieProp.Names[i]) + '=' + CookieProp.Values[CookieProp.Names[i]];    {Do not Localize}
+        j := Pos('=', CookieProp[i]);    {Do not Localize}
+        if j = 0 then begin    {Do not Localize}
+          CookieProp[i] := UpperCase(CookieProp[i]) + '=';  // This is for cookie flags (secure)
+        end else begin
+          CookieProp[i] := UpperCase(CookieProp.Names[i]) + '=' + Copy(CookieProp[i], j+1, MaxInt);    {Do not Localize}
         end;
       end;
 
@@ -457,7 +465,6 @@ constructor TIdCookieRFC2109.Create(ACollection: TCollection);
 begin
   inherited Create(ACollection);
   FMax_Age := GFMaxAge;
-  FInternalVersion := cvRFC2109;
 end;
 
 procedure TIdCookieRFC2109.SetExpires(const AValue: String);
@@ -516,16 +523,32 @@ end;
                    |       "Version" "=" 1*DIGIT
 }
 function TIdCookieRFC2109.GetCookie: String;
+var
+  LExpires: String;
 begin
-  Result := inherited GetCookie;
-
-  if (FMax_Age > -1) and (Length(FExpires) = 0) then
+  if FVersion > 0 then
   begin
-    Result := AddCookieProperty('max-age', IntToStr(FMax_Age), Result);    {Do not Localize}
+    LExpires := FExpires;
+    try
+      FExpires := '';
+      Result := inherited GetCookie;
+    finally
+      FExpires := LExpires;
+    end;
+    if FMax_Age > -1 then
+    begin
+      Result := AddCookieProperty('max-age', IntToStr(FMax_Age), Result);    {Do not Localize}
+    end;
+  end else
+  begin
+    Result := inherited GetCookie;
   end;
 
   Result := AddCookieProperty('comment', FComment, Result);    {Do not Localize}
-  Result := AddCookieProperty('version', FVersion, Result);    {Do not Localize}
+
+  if FVersion > 0 then begin
+    Result := AddCookieProperty('version', IntToStr(FVersion), Result);    {Do not Localize}
+  end;
 end;
 
 procedure TIdCookieRFC2109.LoadProperties(APropertyList: TStrings);
@@ -533,15 +556,11 @@ begin
   inherited LoadProperties(APropertyList);
 
   FMax_Age := IndyStrToInt(APropertyList.Values['MAX-AGE'], -1);    {Do not Localize}
-  FVersion := APropertyList.Values['VERSION'];    {Do not Localize}
+  FVersion := IndyStrToInt(APropertyList.Values['VERSION'], 0);    {Do not Localize}
   FComment := APropertyList.Values['COMMENT'];    {Do not Localize}
 
-  if Length(Expires) = 0 then begin
-    FInternalVersion := cvNetscape;
-    if FMax_Age >= 0 then begin
-	  Expires := LocalDateTimeToCookieStr(Now + FMax_Age * 1000 / MSecsPerDay);
-    end;
-    // else   Free this cookie
+  if (Length(Expires) = 0) and (FMax_Age > -1) then begin
+    Expires := LocalDateTimeToCookieStr(Now + FMax_Age * 1000 / MSecsPerDay);
   end;
 end;
 
@@ -550,54 +569,76 @@ end;
 constructor TIdCookieRFC2965.Create(ACollection: TCollection);
 begin
   inherited Create(ACollection);
-  FInternalVersion := cvRFC2965;
+  SetLength(FPortList, 0);
+end;
+
+procedure TIdCookieRFC2965.Assign(Source: TPersistent);
+begin
+  if Source is TIdCookieRFC2965 then begin
+    FRecvPort := TIdCookieRFC2965(Source).RecvPort;
+  end;
+  inherited Assign(Source);
 end;
 
 function TIdCookieRFC2965.GetCookie: String;
+var
+  s: String;
+  i: Integer;
 begin
-  result := inherited GetCookie;
+  Result := inherited GetCookie;
+
+  if FUsePort then
+  begin
+    if PortCount > 0 then
+    begin
+      s := IntToStr(PortList[0]);
+      for i := 1 to PortCount-1 do begin
+        s := s + ',' + IntToStr(PortList[i]); {Do not Localize}
+      end;
+      Result := AddCookieProperty('port', '"' + s + '"', Result); {Do not Localize}
+    end else begin
+      Result := AddCookieFlag('port', Result); {Do not Localize}
+    end;
+  end;
 end;
 
 procedure TIdCookieRFC2965.LoadProperties(APropertyList: TStrings);
 Var
-  PortListAsString: TStringList;
+  LPortList: TStringList;
   i: Integer;
   S: String;
 begin
+  SetLength(FPortList, 0);
   inherited LoadProperties(APropertyList);
 
-  FCommentURL := APropertyList.Values['CommentURL'];    {Do not Localize}
-  FDiscard := APropertyList.IndexOf('DISCARD') <> -1;    {Do not Localize}
+  FCommentURL := APropertyList.Values['COMMENTURL'];    {Do not Localize}
+  FDiscard := APropertyList.IndexOfName('DISCARD') <> -1;    {Do not Localize}
+  FUsePort := APropertyList.IndexOfName('PORT') <> -1;  {Do not Localize}
 
-  PortListAsString := TStringList.Create;
-  try
-    S := APropertyList.Values['Port'];    {Do not Localize}
-    if Length(S) > 0 then
-    begin
-      if (S[1] = '"') and (S[Length(S)] = '"') then    {Do not Localize}
+  if FUsePort then
+  begin
+    LPortList := TStringList.Create;
+    try
+      S := APropertyList.Values['PORT'];    {Do not Localize}
+      if Length(S) > 0 then
       begin
-        PortListAsString.CommaText := Copy(S, 2, Length(S) - 2);
-        if PortListAsString.Count = 0 then
+        if (S[1] = '"') and (S[Length(S)] = '"') then    {Do not Localize}
         begin
-          PortList[0] := IdPORT_HTTP;
-        end
-        else begin
-          for i := 0 to PortListAsString.Count - 1 do
+          LPortList.CommaText := Copy(S, 2, Length(S) - 2);
+          SetLength(FPortList, LPortList.Count);
+          for i := 0 to LPortList.Count - 1 do
           begin
-            PortList[i] := IndyStrToInt(PortListAsString[i]);
+            PortList[i] := IndyStrToInt(LPortList[i]);
           end;
         end;
       end;
-    end
-    else begin
-      PortList[0] := IdPORT_HTTP;
+    finally
+      LPortList.Free;
     end;
-  finally
-    PortListAsString.Free;
   end;
 end;
 
-procedure TIdCookieRFC2965.SetPort(AIndex, AValue: Integer);
+procedure TIdCookieRFC2965.SetPort(AIndex: Integer; AValue: TIdPort);
 begin
   if ((AIndex - High(FPortList)) > 1) or (AIndex < Low(FPortList)) then
   begin
@@ -610,7 +651,12 @@ begin
   FPortList[AIndex] := AValue;
 end;
 
-function TIdCookieRFC2965.GetPort(AIndex: Integer): Integer;
+function TIdCookieRFC2965.GetPortCount: Integer;
+begin
+  Result := Length(FPortList);
+end;
+
+function TIdCookieRFC2965.GetPort(AIndex: Integer): TIdPort;
 begin
   if (AIndex > High(FPortList)) or (AIndex < Low(FPortList)) then
   begin
@@ -624,7 +670,6 @@ end;
 constructor TIdServerCookie.Create(ACollection: TCollection);
 begin
   inherited Create(ACollection);
-  FInternalVersion := cvNetscape;
   // Version := '1';    {Do not Localize}
 end;
 
@@ -632,16 +677,17 @@ function TIdServerCookie.GetCookie: String;
 begin
   if FMax_Age >= 0 then
   begin
-	FExpires := LocalDateTimeToCookieStr(Now + FMax_Age * 1000 / MSecsPerDay);
+    FExpires := LocalDateTimeToCookieStr(Now + FMax_Age * 1000 / MSecsPerDay);
   end;
   Result := inherited GetCookie;
 end;
 
 procedure TIdServerCookie.AddAttribute(const Attribute, Value: String);
 begin
-  case PosInStrArray(Attribute, ['$PATH', '$DOMAIN'], False) of    {Do not Localize}
+  case PosInStrArray(Attribute, ['$PATH', '$DOMAIN', '$VERSION'], False) of    {Do not Localize}
     0: Path := Value;
     1: Domain := Value;
+    2: FVersion := IndyStrToInt(Value, 0);
   end;
 end;
 
