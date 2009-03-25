@@ -1405,18 +1405,22 @@ end;
 
 procedure TIdCustomHTTP.SetCookieManager(ACookieManager: TIdCookieManager);
 begin
-  if Assigned(FCookieManager) then
-  begin
-    if FFreeCookieManager then begin
-      FreeAndNil(FCookieManager);
+  if FCookieManager <> ACookieManager then begin
+    if Assigned(FCookieManager) then
+    begin
+      if FFreeCookieManager then begin
+        FreeAndNil(FCookieManager);
+      end else begin
+        FCookieManager.RemoveFreeNotification(Self);
+      end;
     end;
-  end;
 
-  FCookieManager := ACookieManager;
-  FFreeCookieManager := False;
+    FCookieManager := ACookieManager;
+    FFreeCookieManager := False;
 
-  if Assigned(FCookieManager) then begin
-    FCookieManager.FreeNotification(Self);
+    if Assigned(FCookieManager) then begin
+      FCookieManager.FreeNotification(Self);
+    end;
   end;
 end;
 
@@ -1441,14 +1445,16 @@ begin
       end;
     end;
 
-    if not Assigned(Auth) then begin
-      Result := False;
-      Exit;
-    end;
-
+    // let the user override us, if desired.
     if Assigned(FOnSelectAuthorization) then
     begin
       OnSelectAuthorization(Self, Auth, AResponse.WWWAuthenticate);
+    end;
+
+    if not Assigned(Auth) then
+    begin
+      Result := False;
+      Exit;
     end;
 
     ARequest.Authentication := Auth.Create;
@@ -1461,56 +1467,58 @@ begin
   end;}
   // S.G. 20/10/2003: Added part about the password. Not testing user name as some
   // S.G. 20/10/2003: web sites do not require user name, only password.
-  result := Assigned(FOnAuthorization) or (Trim(ARequest.Password) <> '');
+  Result := Assigned(FOnAuthorization) or (Trim(ARequest.Password) <> '');
 
-  if Result then
+  if not Result then
   begin
-    with ARequest.Authentication do
-    begin
-      Username := ARequest.Username;
-      Password := ARequest.Password;
-      // S.G. 20/10/2003: ToDo: We need to have a marker here to prevent the code to test with the same username/password combo
-      // S.G. 20/10/2003: if they are picked up from properties.
-      Params.Values['Authorization'] := ARequest.Authentication.Authentication; {do not localize}
-      AuthParams := AResponse.WWWAuthenticate;
-    end;
+    Exit;
+  end;
+  
+  with ARequest.Authentication do
+  begin
+    Username := ARequest.Username;
+    Password := ARequest.Password;
+    // S.G. 20/10/2003: ToDo: We need to have a marker here to prevent the code to test with the same username/password combo
+    // S.G. 20/10/2003: if they are picked up from properties.
+    Params.Values['Authorization'] := ARequest.Authentication.Authentication; {do not localize}
+    AuthParams := AResponse.WWWAuthenticate;
+  end;
 
-    Result := False;
+  Result := False;
 
-    repeat
-      case ARequest.Authentication.Next of
-        wnAskTheProgram:
-          begin // Ask the user porgram to supply us with authorization information
-            if Assigned(FOnAuthorization) then
-            begin
-              ARequest.Authentication.UserName := ARequest.Username;
-              ARequest.Authentication.Password := ARequest.Password;
+  repeat
+    case ARequest.Authentication.Next of
+      wnAskTheProgram:
+        begin // Ask the user porgram to supply us with authorization information
+          if Assigned(FOnAuthorization) then
+          begin
+            ARequest.Authentication.UserName := ARequest.Username;
+            ARequest.Authentication.Password := ARequest.Password;
 
-              OnAuthorization(Self, ARequest.Authentication, Result);
+            OnAuthorization(Self, ARequest.Authentication, Result);
 
-              if Result then begin
-                ARequest.BasicAuthentication := True;
-                ARequest.Username := ARequest.Authentication.UserName;
-                ARequest.Password := ARequest.Authentication.Password;
-              end
-              else begin
-                Break;
-              end;
+            if Result then begin
+              ARequest.BasicAuthentication := True;
+              ARequest.Username := ARequest.Authentication.UserName;
+              ARequest.Password := ARequest.Authentication.Password;
+            end
+            else begin
+              Break;
             end;
           end;
-        wnDoRequest:
-          begin
-            Result := True;
-            Break;
-          end;
-        wnFail:
-          begin
-            Result := False;
-            Break;
-          end;
-      end;
-    until False;
-  end;
+        end;
+      wnDoRequest:
+        begin
+          Result := True;
+          Break;
+        end;
+      wnFail:
+        begin
+          Result := False;
+          Break;
+        end;
+    end;
+  until False;
 end;
 
 function TIdCustomHTTP.DoOnProxyAuthorization(ARequest: TIdHTTPRequest; AResponse: TIdHTTPResponse): Boolean;
@@ -1524,6 +1532,7 @@ begin
   begin
     // Find which Authentication method is supported from us.
     Auth := nil;
+
     for i := 0 to AResponse.ProxyAuthenticate.Count-1 do
     begin
       S := AResponse.ProxyAuthenticate[i];
@@ -1533,23 +1542,23 @@ begin
       end;
     end;
 
+    // let the user override us, if desired.
+    if Assigned(FOnSelectProxyAuthorization) then
+    begin
+      OnSelectProxyAuthorization(self, Auth, AResponse.ProxyAuthenticate);
+    end;
+
     if not Assigned(Auth) then
     begin
       Result := False;
       Exit;
     end;
 
-    if Assigned(FOnSelectProxyAuthorization) then
-    begin
-      OnSelectProxyAuthorization(self, Auth, AResponse.ProxyAuthenticate);
-    end;
-
-    if Assigned(Auth) then begin
-      ProxyParams.Authentication := Auth.Create;
-    end;
+    ProxyParams.Authentication := Auth.Create;
   end;
 
-  Result := Assigned(ProxyParams.Authentication) and Assigned(OnProxyAuthorization);
+  // RLebeau: should we be looking for a Password as well, like the OnAuthorization handling does?
+  Result := Assigned(OnProxyAuthorization) {or (Trim(ARequest.Password) <> '')};
 
   {
   this is commented out as it breaks SSPI proxy authentication.
@@ -1649,12 +1658,17 @@ end;
 
 procedure TIdCustomHTTP.SetAuthenticationManager(Value: TIdAuthenticationManager);
 begin
-  FAuthenticationManager := Value;
-  if Assigned(FAuthenticationManager) then
-  begin
-    FAuthenticationManager.FreeNotification(self);
+  if FAuthenticationManager <> Value then begin
+    if Assigned(FAuthenticationManager) then begin
+      FAuthenticationManager.RemoveFreeNotification(self);
+    end;
+    FAuthenticationManager := Value;
+    if Assigned(FAuthenticationManager) then begin
+      FAuthenticationManager.FreeNotification(Self);
+    end;
   end;
 end;
+
 {
 procedure TIdCustomHTTP.SetHost(const Value: string);
 begin
