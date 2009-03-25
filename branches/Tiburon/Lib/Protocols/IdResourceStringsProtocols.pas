@@ -369,6 +369,10 @@ resourcestring
   RSFTPNoAUTHCon = 'Can not set AUTH while connected.';
   RSFTPSToSTransferModesMusbtSame = 'Transfer modes must be the same.';
   RSFTPNoListParseUnitsRegistered = 'No FTP list parsers have been registered.';
+  RSFTPMissingCompressor = 'No Compressor is assigned.';
+  RSFTPCompressorNotReady = 'Compressor is not ready.';
+  RSFTPUnsupportedTransferMode = 'Unsupported transfer mode.';
+  RSFTPUnsupportedTransferType = 'Unsupported transfer type.';
 
   // Property editor exceptions
   // Stack Error Messages
