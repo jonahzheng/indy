@@ -460,6 +460,9 @@ begin
       LOpt := Id_IPV6_MULTICAST_HOPS;
     end;
     else begin
+      // keep the compiler happy
+      LLevel := 0;
+      LOpt := 0;
       IPVersionUnsupported;
     end;
   end;
@@ -482,6 +485,9 @@ begin
       LOpt := Id_IPV6_MULTICAST_LOOP;
     end;
     else begin
+      // keep the compiler happy
+      LLevel := 0;
+      LOpt := 0;
       IPVersionUnsupported;
     end;
   end;
