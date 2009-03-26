@@ -450,12 +450,18 @@ procedure TIdStackBSDBase.SetMulticastTTL(AHandle: TIdStackSocketHandle;
 var
   LLevel, LOpt, LTTL: Integer;
 begin
-  if AIPVersion = Id_IPv4 then begin
-    LLevel := Id_IPPROTO_IP;
-    LOpt := Id_IP_MULTICAST_TTL;
-  end else begin
-    LLevel := Id_IPPROTO_IPv6;
-    LOpt := Id_IPV6_MULTICAST_HOPS;
+  case AIPVersion of
+    Id_IPv4: begin
+      LLevel := Id_IPPROTO_IP;
+      LOpt := Id_IP_MULTICAST_TTL;
+    end;
+    id_IPv6: begin
+      LLevel := Id_IPPROTO_IPv6;
+      LOpt := Id_IPV6_MULTICAST_HOPS;
+    end;
+    else begin
+      IPVersionUnsupported;
+    end;
   end;
   LTTL := AValue;
   GBSDStack.SetSocketOption(AHandle, LLevel, LOpt, PAnsiChar(@LTTL), SizeOf(LTTL));
@@ -466,12 +472,18 @@ procedure TIdStackBSDBase.SetLoopBack(AHandle: TIdStackSocketHandle;
 var
   LLevel, LOpt, LLoopback: Integer;
 begin
-  if AIPVersion = Id_IPv4 then begin
-    LLevel := Id_IPPROTO_IP;
-    LOpt := Id_IP_MULTICAST_LOOP;
-  end else begin
-    LLevel := Id_IPPROTO_IPv6;
-    LOpt := Id_IPV6_MULTICAST_LOOP;
+  case AIPVersion of
+    Id_IPv4: begin
+      LLevel := Id_IPPROTO_IP;
+      LOpt := Id_IP_MULTICAST_LOOP;
+    end;
+    Id_IPv6: begin
+      LLevel := Id_IPPROTO_IPv6;
+      LOpt := Id_IPV6_MULTICAST_LOOP;
+    end;
+    else begin
+      IPVersionUnsupported;
+    end;
   end;
   LLoopback := Ord(AValue);
   GBSDStack.SetSocketOption(AHandle, LLevel, LOpt, PAnsiChar(@LLoopback), SizeOf(LLoopback));
@@ -484,21 +496,30 @@ var
   LIP4: TIdIPMreq;
   LIP6: TIdIPv6Mreq;
 begin
-  if IsValidIPv4MulticastGroup(AGroupIP) then
-  begin
-    GBSDStack.TranslateStringToTInAddr(AGroupIP, LIP4.IMRMultiAddr, Id_IPv4);
-    GBSDStack.TranslateStringToTInAddr(ALocalIP, LIP4.IMRInterface, Id_IPv4);
-    GBSDStack.SetSocketOption(AHandle, Id_IPPROTO_IP, ASockOpt, PAnsiChar(@LIP4), SizeOf(LIP4));
-  end
-  else if IsValidIPv6MulticastGroup(AGroupIP) then
-  begin
-    GBSDStack.TranslateStringToTInAddr(AGroupIP, LIP6.ipv6mr_multiaddr, Id_IPv6);
-    //this should be safe meaning any adaptor
-    //we can't support a localhost address in IPv6 because we can't get that
-    //and even if you could, you would have to convert it into a network adaptor
-    //index - Yuk
-    LIP6.ipv6mr_interface := 0;
-    GBSDStack.SetSocketOption(AHandle, Id_IPPROTO_IPv6, ASockOpt, PAnsiChar(@LIP6), SizeOf(LIP6));
+  case AIPVersion of
+    Id_IPv4: begin
+      if IsValidIPv4MulticastGroup(AGroupIP) then
+      begin
+        GBSDStack.TranslateStringToTInAddr(AGroupIP, LIP4.IMRMultiAddr, Id_IPv4);
+        GBSDStack.TranslateStringToTInAddr(ALocalIP, LIP4.IMRInterface, Id_IPv4);
+        GBSDStack.SetSocketOption(AHandle, Id_IPPROTO_IP, ASockOpt, PAnsiChar(@LIP4), SizeOf(LIP4));
+      end;
+    end;
+    Id_IPv6: begin
+      if IsValidIPv6MulticastGroup(AGroupIP) then
+      begin
+        GBSDStack.TranslateStringToTInAddr(AGroupIP, LIP6.ipv6mr_multiaddr, Id_IPv6);
+        //this should be safe meaning any adaptor
+        //we can't support a localhost address in IPv6 because we can't get that
+        //and even if you could, you would have to convert it into a network adaptor
+        //index - Yuk
+        LIP6.ipv6mr_interface := 0;
+        GBSDStack.SetSocketOption(AHandle, Id_IPPROTO_IPv6, ASockOpt, PAnsiChar(@LIP6), SizeOf(LIP6));
+      end;
+    end;
+    else begin
+      IPVersionUnsupported;
+    end;
   end;
 end;
 
