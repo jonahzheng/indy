@@ -1561,13 +1561,12 @@ begin
           Break;
         end;
       end;
+      SetLength(LBuf, 0); // clear the buffer
       //TODO: Improve this - dont like the use of the exception handler
       //DONE -oAPR: Dont use a string, use a memory buffer or better yet the buffer itself.
       try
         try
-          SetLength(LBuf, 0); // clear the buffer
           ReadBytes(LBuf, i, False);
-          TIdAntiFreezeBase.DoProcess;
         except
           on E: Exception do begin
             // RLebeau - ReadFromSource() inside of ReadBytes()
@@ -1583,6 +1582,7 @@ begin
             end;
           end;
         end;
+        TIdAntiFreezeBase.DoProcess;
       finally
         if i > 0 then begin
           TIdStreamHelper.Write(AStream, LBuf, i);
