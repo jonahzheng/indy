@@ -2258,7 +2258,7 @@ begin
   end;
   inherited Create(AFile, LFlags);
   if LFlags <> fmCreate then begin
-    Position := Size;
+    TIdStreamHelper.Seek(Self, 0, soEnd);
   end;
 end;
 
