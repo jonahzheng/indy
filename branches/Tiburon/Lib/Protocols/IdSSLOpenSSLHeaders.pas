@@ -58,21 +58,19 @@ Configuring for mingw
     no-jpake        [experimental] OPENSSL_NO_JPAKE (skip dir)
     no-krb5         [krb5-flavor not specified] OPENSSL_NO_KRB5
     no-mdc2         [default]  OPENSSL_NO_MDC2 (skip dir)
-    no-montasm      [default]
+    no-montasm      [default] 
     no-rc5          [default]  OPENSSL_NO_RC5 (skip dir)
     no-rfc3779      [default]  OPENSSL_NO_RFC3779 (skip dir)
     no-seed         [default]  OPENSSL_NO_SEED (skip dir)
-    no-shared       [default]
-    no-zlib         [default]
-    no-zlib-dynamic [default]
+    no-shared       [default] 
+    no-zlib         [default] 
+    no-zlib-dynamic [default] 
 IsMK1MF=1
 CC            =gcc
-CFLAG         =-DOPENSSL_THREADS  -DDSO_WIN32 -mno-cygwin -DL_ENDIAN -fomit-fram
-e-pointer -O3 -march=i486 -Wall -D_WIN32_WINNT=0x333 -DOPENSSL_BN_ASM_PART_WORDS
- -DOPENSSL_IA32_SSE2 -DSHA1_ASM -DMD5_ASM -DRMD160_ASM -DAES_ASM
+CFLAG         =-DOPENSSL_THREADS  -DDSO_WIN32 -mno-cygwin -DL_ENDIAN -fomit-frame-pointer -O3 -march=i486 -Wall -D_WIN32_WINNT=0x333 -DOPENSSL_BN_ASM_PART_WORDS -DOPENSSL_IA32_SSE2 -DSHA1_ASM -DMD5_ASM -DRMD160_ASM -DAES_ASM
 EX_LIBS       =-lwsock32 -lgdi32
 CPUID_OBJ     =x86cpuid-cof.o
-BN_ASM        =bn86-cof.o co86-cof.o
+BN_ASM        =bn86-cof.o co86-cof.o 
 DES_ENC       =dx86-cof.o yx86-cof.o
 AES_ASM_OBJ   =ax86-cof.o
 BF_ENC        =bx86-cof.o
@@ -111,8 +109,12 @@ Generating makefile
 Generating DLL definition files
 Building the libraries
 Building OpenSSL
-==================
 ===== Win64 ======
+Targeting Windows Server 2003 X64 RETAIL
+
+perl Configure VC-WIN64A
+
+W:\openssl\openssl-0.9.8k>perl Configure VC-WIN64A
 Configuring for VC-WIN64A
     no-camellia     [default]  OPENSSL_NO_CAMELLIA (skip dir)
     no-capieng      [default]  OPENSSL_NO_CAPIENG (skip dir)
@@ -153,27 +155,35 @@ RC4_CHUNK is unsigned long long
 
 Configured for VC-WIN64A.
 
-W:\openssl\openssl-0.9.8j>ms\do_win64a
+W:\openssl\openssl-0.9.8k>ms\do_win64a
 
-W:\openssl\openssl-0.9.8j>perl util\mkfiles.pl  1>MINFO
+W:\openssl\openssl-0.9.8k>perl util\mkfiles.pl  1>MINFO
 
-W:\openssl\openssl-0.9.8j>perl ms\uplink.pl win64a  1>ms\uptable.asm
+W:\openssl\openssl-0.9.8k>perl ms\uplink.pl win64a  1>ms\uptable.asm
 
-W:\openssl\openssl-0.9.8j>ml64 -c -Foms\uptable.obj ms\uptable.asm
+W:\openssl\openssl-0.9.8k>ml64 -c -Foms\uptable.obj ms\uptable.asm
 Microsoft (R) Macro Assembler (AMD64) Version 8.00.40310.39
 Copyright (C) Microsoft Corporation.  All rights reserved.
 
  Assembling: ms\uptable.asm
 
-W:\openssl\openssl-0.9.8j>perl util\mk1mf.pl no-asm VC-WIN64A  1>ms\nt.mak
+W:\openssl\openssl-0.9.8k>perl util\mk1mf.pl no-asm VC-WIN64A  1>ms\nt.mak
 
-W:\openssl\openssl-0.9.8j>perl util\mk1mf.pl dll no-asm VC-WIN64A  1>ms\ntdll.ma
+W:\openssl\openssl-0.9.8k>perl util\mk1mf.pl dll no-asm VC-WIN64A  1>ms\ntdll.ma
 k
 
-W:\openssl\openssl-0.9.8j>perl util\mkdef.pl 32 libeay  1>ms\libeay32.def
+W:\openssl\openssl-0.9.8k>perl util\mkdef.pl 32 libeay  1>ms\libeay32.def
 
-W:\openssl\openssl-0.9.8j>perl util\mkdef.pl 32 ssleay  1>ms\ssleay32.def
-==========
+W:\openssl\openssl-0.9.8k>perl util\mkdef.pl 32 ssleay  1>ms\ssleay32.def
+
+CFLAG= /MD /Ox /W3 /Gs0 /GF /Gy /nologo
+-DWIN32_LEAN_AND_MEAN -DL_ENDIAN -DDSO_WIN32 -DOPENSSL_SYSNAME_WIN32
+-DOPENSSL_SYSNAME_WINNT -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_DEPRECATE
+-D_CRT_NONSTDC_NO_DEPRECATE -DOPENSSL_USE_APPLINK -I. /Fdout32dll
+-DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_SEED -DOPENSSL_NO_RC5 -DOPENSSL_NO_MDC2
+-DOPENSSL_NO_CMS -DOPENSSL_NO_JPAKE -DOPENSSL_NO_CAPIENG -DOPENSSL_NO_KRB5
+-DOPENSSL_NO_DYNAMIC_ENGINE
+
 }
 
 interface
@@ -1019,6 +1029,7 @@ const
   OPENSSL_ASN1_R_BAD_OBJECT_HEADER = 102;
   OPENSSL_ASN1_R_BAD_PASSWORD_READ = 103;
   OPENSSL_ASN1_R_BAD_TAG = 104;
+  OPENSSL_ASN1_R_BMPSTRING_IS_WRONG_LENGTH = 210;
   OPENSSL_ASN1_R_BN_LIB	= 105;
   OPENSSL_ASN1_R_BOOLEAN_IS_WRONG_LENGTH = 106;
   OPENSSL_ASN1_R_BUFFER_TOO_SMALL = 107;
@@ -1108,6 +1119,7 @@ const
   OPENSSL_ASN1_R_UNABLE_TO_DECODE_RSA_KEY	= 157;
   OPENSSL_ASN1_R_UNABLE_TO_DECODE_RSA_PRIVATE_KEY	= 158;
   OPENSSL_ASN1_R_UNEXPECTED_EOC	= 159;
+  OPENSSL_ASN1_R_UNIVERSALSTRING_IS_WRONG_LENGTH = 211;
   OPENSSL_ASN1_R_UNKNOWN_FORMAT	= 160;
   OPENSSL_ASN1_R_UNKNOWN_MESSAGE_DIGEST_ALGORITHM	= 161;
   OPENSSL_ASN1_R_UNKNOWN_OBJECT_TYPE = 162;
@@ -1459,7 +1471,9 @@ const
   OPENSSL_B_ASN1_SEQUENCE = $10000;
   OPENSSL_B_ASN1_TIME = OPENSSL_B_ASN1_UTCTIME or
                         OPENSSL_B_ASN1_GENERALIZEDTIME;
-  OPENSSL_B_ASN1_PRINTABLE = OPENSSL_B_ASN1_PRINTABLESTRING or
+
+  OPENSSL_B_ASN1_PRINTABLE = OPENSSL_B_ASN1_NUMERICSTRING or
+        OPENSSL_B_ASN1_PRINTABLESTRING or
         OPENSSL_B_ASN1_T61STRING or
         OPENSSL_B_ASN1_IA5STRING or
         OPENSSL_B_ASN1_BIT_STRING or
@@ -2689,12 +2703,13 @@ const
   OPENSSL_OBJ_NAME_TYPE_UNDEF = $00;
   OPENSSL_OBJ_R_MALLOC_FAILURE = 100;
   OPENSSL_OBJ_R_UNKNOWN_NID = 101;
-  OPENSSL_OPENSSL_VERSION_NUMBER  = $009080af;
+  OPENSSL_OPENSSL_VERSION_NUMBER	= $009080bf;
 {$IFDEF OPENSSL_FIPS}
-  OPENSSL_OPENSSL_VERSION_TEXT = 'OpenSSL 0.9.8j-fips 07 Jan 2009'; {Do not localize}
+  OPENSSL_OPENSSL_VERSION_TEXT = 'OpenSSL 0.9.8k-fips 25 Mar 2009'; {Do not localize}
 {$ELSE}
-  OPENSSL_OPENSSL_VERSION_TEXT = 'OpenSSL 0.9.8j 07 Jan 2009'; {Do not localize}
+  OPENSSL_OPENSSL_VERSION_TEXT = 'OpenSSL 0.9.8k 25 Mar 2009'; {Do not localize}
 {$ENDIF}
+  OPENSSL_OPENSSL_VERSION_PTEXT = ' part of '+ OPENSSL_OPENSSL_VERSION_TEXT;  {Do not localize}
   OPENSSL_PEM_BUFSIZE = 1024;
   OPENSSL_PEM_DEK_DES_CBC = 40;
   OPENSSL_PEM_DEK_DES_ECB = 60;
