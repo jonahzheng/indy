@@ -1,18 +1,13 @@
 package Indy110Net;
 
 {$ALIGN 0}
-{$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO ON}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
-{$IOCHECKS ON}
 {$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
 {$OPTIMIZATION ON}
-{$OVERFLOWCHECKS ON}
-{$RANGECHECKS ON}
 {$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
 {$STACKFRAMES OFF}
@@ -160,9 +155,9 @@ contains
   IdHashSHA1 in 'Protocols\IdHashSHA1.pas',
   IdHeaderCoder2022JP in 'Protocols\IdHeaderCoder2022JP.pas',
   IdHeaderCoderBase in 'Protocols\IdHeaderCoderBase.pas',
-  IdHeaderCoderDotNet in 'Protocols\IdHeaderCoderDotNet.pas',
+  IdHeaderCoderIndy in 'Protocols\IdHeaderCoderIndy.pas',
   IdHeaderCoderPlain in 'Protocols\IdHeaderCoderPlain.pas',
-  IdHeaderCoderUTF8 in 'Protocols\IdHeaderCoderUTF8.pas',
+  IdHeaderCoderUTF in 'Protocols\IdHeaderCoderUTF.pas',
   IdHeaderList in 'Protocols\IdHeaderList.pas',
   IdIMAP4 in 'Protocols\IdIMAP4.pas',
   IdIMAP4Server in 'Protocols\IdIMAP4Server.pas',
@@ -201,6 +196,7 @@ contains
   IdMessageBuilder in 'Protocols\IdMessageBuilder.pas',
   IdMessageClient in 'Protocols\IdMessageClient.pas',
   IdMessageCoder in 'Protocols\IdMessageCoder.pas',
+  IdMessageCoderBinHex4 in 'Protocols\IdMessageCoderBinHex4.pas',
   IdMessageCoderMIME in 'Protocols\IdMessageCoderMIME.pas',
   IdMessageCoderQuotedPrintable in 'Protocols\IdMessageCoderQuotedPrintable.pas',
   IdMessageCoderUUE in 'Protocols\IdMessageCoderUUE.pas',

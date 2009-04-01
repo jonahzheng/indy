@@ -1,18 +1,13 @@
 package IndyProtocols50;
 
 {$R *.res}
-{$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO ON}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
-{$IOCHECKS ON}
 {$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
 {$OPTIMIZATION ON}
-{$OVERFLOWCHECKS ON}
-{$RANGECHECKS ON}
 {$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
 {$STACKFRAMES OFF}
@@ -132,7 +127,6 @@ contains
   IdGopher in 'IdGopher.pas',
   IdGopherConsts in 'IdGopherConsts.pas',
   IdGopherServer in 'IdGopherServer.pas',
-  IdHL7 in 'IdHL7.pas',
   IdHMAC in 'IdHMAC.pas',
   IdHMACMD5 in 'IdHMACMD5.pas',
   IdHMACSHA1 in 'IdHMACSHA1.pas',
@@ -154,16 +148,12 @@ contains
   IdIMAP4 in 'IdIMAP4.pas',
   IdIMAP4Server in 'IdIMAP4Server.pas',
   IdIPAddrMon in 'IdIPAddrMon.pas',
-  IdIPMCastBase in 'IdIPMCastBase.pas',
-  IdIPMCastClient in 'IdIPMCastClient.pas',
-  IdIPMCastServer in 'IdIPMCastServer.pas',
   IdIPWatch in 'IdIPWatch.pas',
   IdIRC in 'IdIRC.pas',
   IdIdent in 'IdIdent.pas',
   IdIdentServer in 'IdIdentServer.pas',
   IdIrcServer in 'IdIrcServer.pas',
   IdLPR in 'IdLPR.pas',
-  IdMIMETypes in 'IdMIMETypes.pas',
   IdMailBox in 'IdMailBox.pas',
   IdMappedFTP in 'IdMappedFTP.pas',
   IdMappedPOP3 in 'IdMappedPOP3.pas',
