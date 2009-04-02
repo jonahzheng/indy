@@ -195,7 +195,6 @@ implicitunits=IdASN1Util \
   IdLogEvent \
   IdLogFile \
   IdLogStream \
-  IdMIMETypes \
   IdMailBox \
   IdMappedFTP \
   IdMappedPOP3 \
@@ -203,6 +202,7 @@ implicitunits=IdASN1Util \
   IdMappedPortUDP \
   IdMappedTelnet \
   IdMessage \
+  IdMessageBuilder \
   IdMessageClient \
   IdMessageCoder \
   IdMessageCoderBinHex4 \
@@ -247,13 +247,16 @@ implicitunits=IdASN1Util \
   IdSASL \
   IdSASLAnonymous \
   IdSASLCollection \
+  IdSASLDigest \
   IdSASLExternal \
   IdSASLLogin \
   IdSASLOTP \
   IdSASLPlain \
   IdSASLSKey \
   IdSASLUserPass \
+  IdSASL_CRAMBase \
   IdSASL_CRAM_MD5 \
+  IdSASL_CRAM_SHA1 \
   IdSMTP \
   IdSMTPBase \
   IdSMTPRelay \
