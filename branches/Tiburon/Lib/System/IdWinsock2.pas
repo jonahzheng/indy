@@ -3205,6 +3205,7 @@ const
   {$EXTERNALSYM SIO_GET_MULTICAST_FILTER}
   SIO_GET_MULTICAST_FILTER  = IOC_IN or ((SizeOf(u_long) and IOCPARM_MASK) shl 16) or (Ord('t') shl 8) or (124 or IOC_IN);    {Do not Localize}
 
+  {$IFNDEF UNDER_CE}
 // Options for use with [gs]etsockopt at the IP level.
   {$EXTERNALSYM IP_OPTIONS}
   IP_OPTIONS                =  1; // set/get IP options
@@ -3224,6 +3225,23 @@ const
   IP_ADD_MEMBERSHIP         = 12; // add an IP group membership
   {$EXTERNALSYM IP_DROP_MEMBERSHIP}
   IP_DROP_MEMBERSHIP        = 13; // drop an IP group membership
+  {$ELSE}
+  {$EXTERNALSYM IP_TOS}
+  IP_TOS                    =  8; //* IP type of service and preced*/
+  {$EXTERNALSYM IP_TTL}
+  IP_TTL                    =  7; //* IP time to live */
+  {$EXTERNALSYM IP_MULTICAST_IF}
+  IP_MULTICAST_IF           =  2; //* set/get IP multicast i/f  */
+  {$EXTERNALSYM IP_MULTICAST_TTL}
+  IP_MULTICAST_TTL          =  3; //* set/get IP multicast ttl */
+  {$EXTERNALSYM IP_MULTICAST_LOOP}
+  IP_MULTICAST_LOOP         =  4; //*set/get IP multicast loopback */
+  {$EXTERNALSYM IP_ADD_MEMBERSHIP}
+  IP_ADD_MEMBERSHIP         =  5; //* add an IP group membership */
+  {$EXTERNALSYM IP_DROP_MEMBERSHIP}
+  IP_DROP_MEMBERSHIP        =  6/* drop an IP group membership */
+  {$ENDIF}
+
   {$EXTERNALSYM IP_DONTFRAGMENT}
   IP_DONTFRAGMENT           = 14; // don't fragment IP datagrams    {Do not Localize}
   {$EXTERNALSYM IP_ADD_SOURCE_MEMBERSHIP}
