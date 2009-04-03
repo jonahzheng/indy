@@ -682,16 +682,26 @@ const
   AF_UNKNOWN1     = 20;              // somebody is using this!
   {$EXTERNALSYM AF_BAN}
   AF_BAN          = 21;              // banyan
+  {$IFDEF UNDER_CE}
+  {$EXTERNALSYM AF_IRDA}
+  AF_IRDA         = 22;              //* IrDA */
+  {$ELSE}
   {$EXTERNALSYM AF_ATM}
   AF_ATM          = 22;              // native ATM Services
+  {$ENDIF}
   {$EXTERNALSYM AF_INET6}
   AF_INET6        = 23;              // internetwork Version 6
   {$EXTERNALSYM AF_CLUSTER}
   AF_CLUSTER      = 24;              // microsoft Wolfpack
   {$EXTERNALSYM AF_12844}
   AF_12844        = 25;              // ieeE 1284.4 WG AF
+  {$IFDEF UNDER_CE}
+  {$EXTERNALSYM AF_ATM}
+  AF_ATM          = 26;              //* Native ATM Services */
+  {$ELSE}
   {$EXTERNALSYM AF_IRDA}
   AF_IRDA         = 26;              // irdA
+  {$ENDIF}
   {$EXTERNALSYM AF_NETDES}
   AF_NETDES       = 28;              // network Designers OSI & gateway enabled protocols
   {$EXTERNALSYM AF_TCNPROCESS}
