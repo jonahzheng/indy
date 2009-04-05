@@ -2076,6 +2076,7 @@ const
 // Return flags
   {$EXTERNALSYM RESULT_IS_ALIAS}
   RESULT_IS_ALIAS         = $0001;
+  //These are not supported in WinCE 4.2 but are available in later versions.
   {$EXTERNALSYM RESULT_IS_ADDED}
   RESULT_IS_ADDED         = $0010;
   {$EXTERNALSYM RESULT_IS_CHANGED}
@@ -2722,10 +2723,11 @@ type
   {$ELSE}
   LPFN_WSALOOKUPSERVICENEXT = LPFN_WSALOOKUPSERVICENEXTA;
   {$ENDIF}
-  {$IFNDEF UNDER_CE}
+
+  //WinCE 4.20 doesn't support WSANSPIoctl but later versions do.
   {$EXTERNALSYM LPFN_WSANSPIOCTL}
   LPFN_WSANSPIOCTL = function(const hLookup : THANDLE; const dwControlCode : DWORD;  lpvInBuffer : Pointer; var cbInBuffer : DWORD; lpvOutBuffer : Pointer; var cbOutBuffer : DWORD; var lpcbBytesReturned : DWORD; lpCompletion : LPWSACOMPLETION) : Integer; stdcall;
-  {$ENDIF}
+
   {$EXTERNALSYM LPFN_WSALOOKUPSERVICEEND}
   LPFN_WSALOOKUPSERVICEEND = function(const hLookup : THandle): Integer; stdcall;
 
@@ -3101,14 +3103,16 @@ var
   WSARecvMsg : LPFN_WSARECVMSG = nil;
   {$EXTERNALSYM TransmitPackets}
   TransmitPackets : LPFN_TRANSMITPACKETS = nil;
-  {$EXTERNALSYM WSANSPIoctl}
-  WSANSPIoctl : LPFN_WSANSPIOCTL = nil;
+
   //Windows Vista, Windows Server 2008
   {$EXTERNALSYM WSASendMsg}
   WSASendMsg: LPFN_WSASENDMSG = nil;
   {$EXTERNALSYM WSAPoll}
   WSAPoll: LPFN_WSAPOLL = nil;
   {$ENDIF}
+  //WSANSPIoctl is not supported in WinCE 4.20 but is supported in later versions.
+  {$EXTERNALSYM WSANSPIoctl}
+  WSANSPIoctl : LPFN_WSANSPIOCTL = nil;
 {$ENDIF} // $IFDEF WS2_DLL_FUNC_VARS
 
   { Macros }
@@ -3249,7 +3253,10 @@ const
   {$EXTERNALSYM IP_ADD_MEMBERSHIP}
   IP_ADD_MEMBERSHIP         =  5; //* add an IP group membership */
   {$EXTERNALSYM IP_DROP_MEMBERSHIP}
-  IP_DROP_MEMBERSHIP        =  6/* drop an IP group membership */
+  IP_DROP_MEMBERSHIP        =  6; //* drop an IP group membership */
+  //JPM Notes. IP_HDRINCL is not supported in WinCE 4.0.
+  {$EXTERNALSYM IP_HDRINCL}
+  IP_HDRINCL                =  9; //* header is included with data */
   {$ENDIF}
 
   {$EXTERNALSYM IP_DONTFRAGMENT}
@@ -3295,6 +3302,7 @@ const
   IPV6_PKTINFO               = 19; // Receive packet information for ipv6
   {$EXTERNALSYM IPV6_HOPLIMIT}
   IPV6_HOPLIMIT              = 21; // Receive packet hop limit
+  //Note that IPV6_PROTECTION_LEVEL is not supported for WinCE 4.2
   {$EXTERNALSYM IPV6_PROTECTION_LEVEL}
   IPV6_PROTECTION_LEVEL      = 23; // Set/get IPv6 protection level
 
@@ -5613,7 +5621,7 @@ begin
   Result := WSALookupServiceEnd(hLookup);
 end;
 
-{$IFNDEF UNDER_CE}
+
 function Stub_WSANSPIoctl(const hLookup : THANDLE; const dwControlCode : DWORD;
   lpvInBuffer : Pointer; var cbInBuffer : DWORD; lpvOutBuffer : Pointer;
   var cbOutBuffer : DWORD; var lpcbBytesReturned : DWORD;
@@ -5624,6 +5632,7 @@ begin
     cbOutBuffer, lpcbBytesReturned,lpCompletion);
 end;
 
+{$IFNDEF UNDER_CE}
 function Stub_WSAInstallServiceClassA(const lpServiceClassInfo: LPWSASERVICECLASSINFOA): Integer; stdcall;
 begin
   @WSAInstallServiceClassA := FixupStub(hWinSockDll, 'WSAInstallServiceClassA'); {Do not Localize}
@@ -5936,9 +5945,10 @@ begin
   WSALookupServiceNextA            := Stub_WSALookupServiceNextA;
   WSALookupServiceNextW            := Stub_WSALookupServiceNextW;
   WSALookupServiceNext             := Stub_WSALookupServiceNext;
-  {$IFNDEF UNDER_CE}
+
+  // WSANSPIoctl is not supported in WinCE 4.20 but is in later versions.
   WSANSPIoctl                      := Stub_WSANSPIoctl;
-  {$ENDIF}
+
   WSANtohl                         := Stub_WSANtohl;
   WSANtohs                         := Stub_WSANtohs;
   {$IFNDEF UNDER_CE}
