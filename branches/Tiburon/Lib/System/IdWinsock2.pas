@@ -474,6 +474,14 @@ const
   {$EXTERNALSYM ipport_reserved}
   IPPORT_RESERVED    =1024;
 
+  IPPORT_REGISTERED_MIN  = IPPORT_RESERVED;
+
+  {$IFNDEF UNDER_CE}
+  IPPORT_REGISTERED_MAX = $bfff;
+  IPPORT_DYNAMIC_MIN    = $c000;
+  IPPORT_DYNAMIC_MAX    = $ffff;
+  {$ENDIF}
+
 // Link numbers
   {$EXTERNALSYM IMPLINK_IP}
   IMPLINK_IP         = 155;
@@ -632,7 +640,12 @@ const
                                     // connection is not ack-ed to the
                                     // other side until conditional
                                     // function returns CF_ACCEPT
-
+  {$IFNDEF UNDER_CE}
+  {$EXTERNALSYM SO_RANDOMIZE_PORT}
+  SO_RANDOMIZE_PORT        = $3005;    // randomize assignment of wildcard ports
+  {$EXTERNALSYM SO_PORT_SCALABILITY}
+  SO_PORT_SCALABILITY      = $3006;  // enable port scalability
+  {$ENDIF}
 // Address families.
   {$EXTERNALSYM AF_UNSPEC}
   AF_UNSPEC       = 0;               // unspecified
@@ -1721,6 +1734,14 @@ const
   {$EXTERNALSYM IOC_VENDOR}
   IOC_VENDOR    = $18000000;
 
+  {$IFNDEF UNDER_CE}
+///*
+// * WSK-specific IO control codes are Winsock2 codes with the highest-order
+// * 3 bits of the Vendor/AddressFamily-specific field set to 1.
+// */
+  {$EXTERNALSYM IOC_WSK}
+  IOC_WSK       = IOC_WS2 or $07000000;
+  {$ENDIF}
   {$EXTERNALSYM SIO_ASSOCIATE_HANDLE}
   SIO_ASSOCIATE_HANDLE                =  DWORD(IOC_IN or IOC_WS2 or 1);
   {$EXTERNALSYM SIO_ENABLE_CIRCULAR_QUEUEING}
@@ -1761,6 +1782,12 @@ const
   SIO_NSP_NOTIFY_CHANGE               =  DWORD(IOC_IN or IOC_WS2 or 25);
   {$EXTERNALSYM SIO_ADDRESS_LIST_SORT}
   SIO_ADDRESS_LIST_SORT               = DWORD(IOC_INOUT or IOC_WS2 or 25);
+  {$IFNDEF UNDER_CE}
+  {$EXTERNALSYM SIO_RESERVED_1}
+  SIO_RESERVED_1 = DWORD(IOC_IN or IOC_WS2 or 26);
+  {$EXTERNALSYM SIO_RESERVED_2}
+  SIO_RESERVED_2 = DWORD(IOC_IN or IOC_WS2 or 33);
+  {$ENDIF}
 
 //  WinSock 2 extension -- manifest constants for SIO_TRANSLATE_HANDLE ioctl
   {$EXTERNALSYM TH_NETDEV}
@@ -3218,6 +3245,25 @@ const
   SIO_SET_MULTICAST_FILTER  = IOC_IN or ((SizeOf(u_long) and IOCPARM_MASK) shl 16) or (Ord('t') shl 8) or 125;    {Do not Localize}
   {$EXTERNALSYM SIO_GET_MULTICAST_FILTER}
   SIO_GET_MULTICAST_FILTER  = IOC_IN or ((SizeOf(u_long) and IOCPARM_MASK) shl 16) or (Ord('t') shl 8) or (124 or IOC_IN);    {Do not Localize}
+  {$EXTERNALSYM SIOCSIPMSFILTER}
+  SIOCSIPMSFILTER           = SIO_SET_MULTICAST_FILTER;
+  {$EXTERNALSYM SIOCGIPMSFILTER}
+  SIOCGIPMSFILTER           = SIO_GET_MULTICAST_FILTER;
+//
+// Protocol independent ioctls for setting and retrieving multicast filters.
+//
+  {$EXTERNALSYM SIOCSMSFILTER}
+  SIOCSMSFILTER             = IOC_IN or ((SizeOf(u_long) and IOCPARM_MASK) shl 16) or (Ord('t') shl 8) or 126;    {Do not Localize}
+  {$EXTERNALSYM SIOCGMSFILTER}
+  SIOCGMSFILTER             = IOC_IN or ((SizeOf(u_long) and IOCPARM_MASK) shl 16) or (Ord('t') shl 8) or (127 or IOC_IN);    {Do not Localize}
+
+  {$IFNDEF UNDER_CE}
+  //Windows 2008 and Windows Vista SP1 additions
+  {$EXTERNALSYM SIO_IDEAL_SEND_BACKLOG_QUERY}
+  SIO_IDEAL_SEND_BACKLOG_QUERY = IOC_OUT or ((SizeOf(u_long) and IOCPARM_MASK) shl 16) or (Ord('t') shl 8) or 123;
+  {$EXTERNALSYM SIO_IDEAL_SEND_BACKLOG_CHANGE}
+  SIO_IDEAL_SEND_BACKLOG_CHANGE = IOC_VOID or (Ord('t') shl 8) or 122;
+  {$ENDIF}
 
   {$IFNDEF UNDER_CE}
 // Options for use with [gs]etsockopt at the IP level.
