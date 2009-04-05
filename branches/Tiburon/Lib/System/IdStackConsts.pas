@@ -113,7 +113,7 @@ type
   {$ENDIF}
 
   TIdStackSocketHandle = {$IFDEF DOTNET}Socket{$ELSE}TSocket{$ENDIF};
-  
+
 var
   Id_SO_True: Integer = 1;
   Id_SO_False: Integer = 0;
@@ -169,13 +169,13 @@ const
   Id_IP_MULTICAST_LOOP    = IP_MULTICAST_LOOP; // TODO integrate into IdStackConsts
   Id_IP_ADD_MEMBERSHIP    = IP_ADD_MEMBERSHIP; // TODO integrate into IdStackConsts
   Id_IP_DROP_MEMBERSHIP   = IP_DROP_MEMBERSHIP; // TODO integrate into IdStackConsts
+
+  //In Windows CE 4.2, IP_HDRINCL may not be supported.
   Id_IP_HDR_INCLUDED      = IP_HDRINCL; // TODO integrate into IdStackConsts
   {$ENDIF}
 
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-    {$IFNDEF UNDER_CE}
   Id_IPV6_HDRINCL         = IPV6_HDRINCL;
-     {$ENDIF}
   Id_IPV6_UNICAST_HOPS    = IPV6_UNICAST_HOPS;
   Id_IPV6_MULTICAST_IF    = IPV6_MULTICAST_IF;
   Id_IPV6_MULTICAST_HOPS  = IPV6_MULTICAST_HOPS;
