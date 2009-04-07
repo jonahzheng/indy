@@ -182,7 +182,7 @@ type
     // Returns True if error was ignored (Matches iIgnore), false if no error occurred
     procedure Assign(Source: TPersistent); override;
     procedure Bind;
-    procedure Broadcast(const AData: string; const APort: TIdPort; const AIP: String = ''); overload;
+    procedure Broadcast(const AData: string; const APort: TIdPort; const AIP: String = ''; AEncoding: TIdTextEncoding = nil); overload;
     procedure Broadcast(const AData: TIdBytes; const APort: TIdPort; const AIP: String = ''); overload;
     procedure CloseSocket; virtual;
     procedure Connect; virtual;
@@ -333,9 +333,9 @@ begin
 end;
 
 procedure TIdSocketHandle.Broadcast(const AData: string; const APort: TIdPort;
-  const AIP: String = '');
+  const AIP: String = ''; AEncoding: TIdTextEncoding = nil);
 begin
-  Broadcast(ToBytes(AData), APort, AIP);
+  Broadcast(ToBytes(AData, AEncoding), APort, AIP);
 end;
 
 procedure TIdSocketHandle.Broadcast(const AData: TIdBytes; const APort: TIdPort;
