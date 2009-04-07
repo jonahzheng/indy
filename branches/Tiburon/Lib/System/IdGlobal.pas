@@ -1449,10 +1449,18 @@ class function TIdTextEncoding.ASCII: TIdTextEncoding;
 {$ENDIF}
 var
   LEncoding: TIdTextEncoding;
+  LCPInfo: TCPInfo;
+  CP: Integer;
 begin
   if GIdASCIIEncoding = nil then
   begin
-    LEncoding := TIdMBCSEncoding.Create(20127, 0, 0);
+    // RLebeau: 20127 is the official codepage for ASCII, but older OS versions
+    // do not support codepage 20127, so fallback to 1252 when needed...
+    CP := 20127;
+    if not GetCPInfo(CP, LCPInfo) then begin
+      CP := 1252;
+    end;
+    LEncoding := TIdMBCSEncoding.Create(CP, 0, 0);
     if InterlockedCompareExchangePtr(Pointer(GIdASCIIEncoding), LEncoding, nil) <> nil then
       LEncoding.Free;
   end;
@@ -1674,7 +1682,16 @@ begin
 end;
 
 class function TIdTextEncoding.GetEncoding(ACodePage: Integer): TIdTextEncoding;
+var
+  LCPInfo: TCPInfo;
 begin
+  // RLebeau: 20127 is the official codepage for ASCII, but older OS versions
+  // do not support codepage 20127, so fallback to 1252 when needed...
+  if ACodePage = 20127 then begin
+    if not GetCPInfo(ACodePage, LCPInfo) then begin
+      ACodePage := 1252;
+    end;
+  end;
   Result := TIdMBCSEncoding.Create(ACodePage);
 end;
 
