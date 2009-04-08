@@ -2696,11 +2696,9 @@ type
   LPFN_WSASOCKET = LPFN_WSASOCKETA;
   {$ENDIF}
 
-  {$IFNDEF UNDER_CE}
   {$EXTERNALSYM LPFN_WSAWAITFORMULTIPLEEVENTS}
   LPFN_WSAWAITFORMULTIPLEEVENTS = function(cEvents : DWORD; lphEvents : PWSAEVENT; fWaitAll : LongBool;
       dwTimeout : DWORD; fAlertable : LongBool): DWORD; stdcall;
-  {$ENDIF}
 
   {$EXTERNALSYM LPFN_WSAADDRESSTOSTRINGA}
   LPFN_WSAADDRESSTOSTRINGA = function(lpsaAddress : PSOCKADDR; const dwAddressLength : DWORD; const lpProtocolInfo : LPWSAPROTOCOL_INFOA;
@@ -5562,13 +5560,11 @@ begin
   Result := WSASocket(af, iType, protocol, lpProtocolInfo, g, dwFlags);
 end;
 
-{$IFNDEF UNDER_CE}
 function Stub_WSAWaitForMultipleEvents(cEvents: DWORD; lphEvents: Pwsaevent; fWaitAll: LongBool; dwTimeout: DWORD; fAlertable: LongBool): DWORD; stdcall;
 begin
   @WSAWaitForMultipleEvents := FixupStub(hWinSockDll, 'WSAWaitForMultipleEvents'); {Do not Localize}
   Result := WSAWaitForMultipleEvents(cEvents, lphEvents, fWaitAll, dwTimeout, fAlertable);
 end;
-{$ENDIF}
 
 function Stub_WSAAddressToStringA(lpsaAddress: PSockAddr; const dwAddressLength: DWORD; const lpProtocolInfo: LPWSAPROTOCOL_INFOA; const lpszAddressString: PAnsiChar; var lpdwAddressStringLength: DWORD): Integer; stdcall;
 begin
@@ -6035,8 +6031,8 @@ begin
   WSAStringToAddress               := Stub_WSAStringToAddress;
   {$IFNDEF UNDER_CE}
   WSAUnhookBlockingHook            := Stub_WSAUnhookBlockingHook;
-  WSAWaitForMultipleEvents         := Stub_WSAWaitForMultipleEvents;
   {$ENDIF}
+  WSAWaitForMultipleEvents         := Stub_WSAWaitForMultipleEvents;
 end;
 
 function WSAMakeSyncReply(Buflen, AError: Word): Longint;
