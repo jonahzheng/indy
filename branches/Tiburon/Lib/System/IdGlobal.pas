@@ -5582,16 +5582,19 @@ end;
 function IndyRegisterExpectedMemoryLeak(AAddress: Pointer): Boolean;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
-  {$IFDEF VCL2006ORABOVE}
+  {$IFDEF USEFASTMM4}
+  // RLebeau 4/9/2009: the user can override the RTL's version of FastMM
+  // (2006+ only) with the full version of FastMM in order to enable
+  // advanced debugging features, so check for that first...
+  Result := FastMM4.RegisterExpectedMemoryLeak(AAddress);
+  {$ELSE}
+    {$IFDEF VCL2006ORABOVE}
   // RLebeau 4/21/08: not quite sure what the difference is between the
   // SysRegisterExpectedMemoryLeak() and RegisterExpectedMemoryLeak()
   // functions in the System unit, but calling RegisterExpectedMemoryLeak()
   // is causing stack overflows when FastMM is not active, so call
   // SysRegisterExpectedMemoryLeak() instead...
   Result := System.SysRegisterExpectedMemoryLeak(AAddress);
-  {$ELSE}
-    {$IFDEF USEFASTMM4}
-  Result := FastMM4.RegisterExpectedMemoryLeak(AAddress);
     {$ELSE}
   Result := False;
     {$ENDIF}
