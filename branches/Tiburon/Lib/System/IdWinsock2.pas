@@ -163,7 +163,7 @@ To deal with this, I use the FPC predefined FPC_REQUIRES_PROPER_ALIGNMENT.
   {$IFDEF WIN32}
     {$ALIGN OFF}
   {$ELSE}
-    //It turns out that Win64 does require alignment
+    //It turns out that Win64 and WinCE require record alignment
     {$PACKRECORDS C}
   {$ENDIF}
 {$ELSE}
@@ -1922,10 +1922,10 @@ const
   SERVICE_TYPE_VALUE_UDPPORT : PWideChar = 'UdpPort';     {Do not Localize}
   SERVICE_TYPE_VALUE_OBJECTID : PWideChar = 'ObjectId';   {Do not Localize}
   {$ELSE}
-  SERVICE_TYPE_VALUE_SAPID : PAnsiChar = SERVICE_TYPE_VALUE_SAPIDA;
-  SERVICE_TYPE_VALUE_TCPPORT : PAnsiChar = SERVICE_TYPE_VALUE_TCPPORTA;
-  SERVICE_TYPE_VALUE_UDPPORT : PAnsiChar = SERVICE_TYPE_VALUE_UDPPORTA;
-  SERVICE_TYPE_VALUE_OBJECTID : PAnsiChar = SERVICE_TYPE_VALUE_OBJECTIDA;
+  SERVICE_TYPE_VALUE_SAPID : PAnsiChar =  'SapId';        {Do not Localize}
+  SERVICE_TYPE_VALUE_TCPPORT : PAnsiChar = 'TcpPort';     {Do not Localize}
+  SERVICE_TYPE_VALUE_UDPPORT : PAnsiChar = 'UdpPort';     {Do not Localize}
+  SERVICE_TYPE_VALUE_OBJECTID : PAnsiChar = 'ObjectId';   {Do not Localize}
   {$ENDIF}
 
 // SockAddr Information
@@ -6114,7 +6114,6 @@ begin
   FDSet.fd_count := 0;
 end;
 
-{$IFNDEF UNDER_CE}
 function WSA_CMSGHDR_ALIGN(const Alength: PtrUint): PtrUInt;
 type
   {$IFDEF WIN32}
@@ -6125,7 +6124,7 @@ type
   end;
   {$ALIGN OFF}
   {$ELSE}
-  //Win64 seems to require alignment for everything.
+  //Win64 and WinCE seem to require alignment for API records
   TempRec = record
     x: AnsiChar;
     test: WSACMSGHDR;
@@ -6193,8 +6192,6 @@ function IP_MSFILTER_SIZE(const numsrc: DWORD): PtrUInt;
 begin
   Result := SIZE_IP_MSFILTER - SIZE_TINADDR + (numsrc*SIZE_TINADDR);
 end;
-
-{$ENDIF}
 
 function SS_PORT(ssp: PSockAddrIn): u_short;
 {$IFDEF USEINLINE}inline;{$ENDIF}
