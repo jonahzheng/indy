@@ -525,7 +525,11 @@ uses
   System.Text,
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+    {$IFDEF FPC}
+  windows,
+    {$ELSE}
   Windows,
+    {$ENDIF}
   {$ENDIF}
   Classes,
   SyncObjs,
@@ -1332,6 +1336,15 @@ uses
   IdResourceStrings,
   IdStream;
 
+{$IFDEF FPC}
+  {$IFDEF WINCE}
+//The constants are only available in Windows CE 5.0.
+const
+  CP_UTF7 = 65000;
+  CP_UTF8 = 65001;
+  {$ENDIF}
+{$ENDIF}
+
 {$IFNDEF DOTNET_OR_TEncoding}
 type
   TIdMBCSEncoding = class(TIdTextEncoding)
@@ -2111,7 +2124,11 @@ begin
   // pointers.
   //TODO: Figure out what to do about FreePascal 2.0.x but that might not be
   //as important as older versions since you download and install FPC for free.
-  Result := InterlockedCompareExchange(VTarget, AValue, Compare);
+    {$IFDEF CPU64}
+  Result := Pointer(InterlockedCompareExchange64(PtrInt(VTarget), PtrInt(AValue), PtrInt(Compare)));
+    {$ELSE}
+  Result := Pointer(InterlockedCompareExchange(PtrInt(VTarget), PtrInt(AValue), PtrInt(Compare)));
+    {$ENDIF}
   {$ELSE}
     {$IFDEF VCL2009ORABOVE}
   Result := InterlockedCompareExchangePointer(VTarget, AValue, Compare);
