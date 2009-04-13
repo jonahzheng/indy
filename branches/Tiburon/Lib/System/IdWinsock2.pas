@@ -1506,7 +1506,6 @@ const
   {$EXTERNALSYM TP_USE_KERNEL_APC}
   TP_USE_KERNEL_APC     = TF_USE_KERNEL_APC;
 
-{$IFNDEF UNDER_CE}
 type
   {$EXTERNALSYM TRANSMIT_PACKETS_ELEMENT}
   TRANSMIT_PACKETS_ELEMENT = record
@@ -1530,7 +1529,7 @@ type
   LPTRANSMIT_PACKETS_ELEMENT = PTRANSMIT_PACKETS_ELEMENT;
 
 //  WinSock 2 extension -- WSAPROTOCOL_INFO structure
-{$ENDIF}
+
 
 {$IFNDEF FPC}
 type
@@ -2128,6 +2127,7 @@ const
   {$EXTERNALSYM MSG_MCAST}
   MSG_MCAST     =  $0800;
 
+{$IFNDEF UNDER_CE}
   //Windows Vista WSAPoll
 //* Event flag definitions for WSAPoll(). */
   {$EXTERNALSYM POLLRDNORM}
@@ -2150,6 +2150,7 @@ const
   POLLHUP     = $0002;
   {$EXTERNALSYM POLLNVAL}
   POLLNVAL    = $0004;
+{$ENDIF}
 
 type
 // Service Address Registration and Deregistration Data Types.
@@ -2353,7 +2354,19 @@ type
   LPWSANAMESPACE_INFO = LPWSANAMESPACE_INFOA;
   {$ENDIF}
 
-{$IFNDEF UNDER_CE}
+  {$IFDEF UNDER_CE}
+  {$EXTERNALSYM DSCP_TRAFFIC_TYPE}
+  DSCP_TRAFFIC_TYPE = (
+    DSCPTypeNotSet        = 0,
+    DSCPBestEffort        = 1,
+    DSCPBackground        = 2,
+    DSCPExcellentEffort   = 3,
+    DSCPVideo             = 4,
+    DSCPAudio             = 5,
+    DSCPControl           = 6,
+    NumDSCPTrafficTypes   = 6);
+  {$ENDIF}
+
   {$EXTERNALSYM WSAMSG}
   WSAMSG = record
     name : PSOCKADDR;  ///* Remote address */
@@ -2384,6 +2397,7 @@ type
   {$EXTERNALSYM LPWSACMSGHDR}
   LPWSACMSGHDR = PWSACMSGHDR;
 
+{$IFNDEF UNDER_CE}
   {$EXTERNALSYM WSAPOLLFD}
   WSAPOLLFD = record
     fd : TSocket;
@@ -2576,7 +2590,7 @@ type
   {$EXTERNALSYM LPFN_WSARECVFROM}
   LPFN_WSARECVFROM = function(const s : TSocket; lpBuffers : LPWSABUF; dwBufferCount : DWORD; var lpNumberOfBytesRecvd : DWORD; var lpFlags : DWORD;
     lpFrom : PSOCKADDR; lpFromlen : PInteger; AOverlapped: Pointer; lpCompletionRoutine : LPWSAOVERLAPPED_COMPLETION_ROUTINE): Integer; stdcall;
-{$IFNDEF UNDER_CE} 
+
   {$EXTERNALSYM LPFN_TRANSMITFILE}
   LPFN_TRANSMITFILE = function(hSocket: TSocket; hFile: THandle; nNumberOfBytesToWrite, nNumberOfBytesPerSend: DWORD;
     lpOverlapped: POverlapped; lpTransmitBuffers: LPTRANSMIT_FILE_BUFFERS; dwReserved: DWORD): BOOL; stdcall;
@@ -2585,6 +2599,7 @@ type
     lpOutputBuffer: Pointer; dwReceiveDataLength, dwLocalAddressLength,
     dwRemoteAddressLength: DWORD; var lpdwBytesReceived: DWORD;
     lpOverlapped: POverlapped): BOOL; stdcall;
+  {$IFNDEF UNDER_CE}   
   {$EXTERNALSYM LPFN_WSACONNECTBYLIST}
   LPFN_WSACONNECTBYLIST = function(const s : TSocket; SocketAddressList : PSOCKET_ADDRESS_LIST;
     var LocalAddressLength : DWORD;  LocalAddress : LPSOCKADDR;
@@ -2644,10 +2659,8 @@ type
 
   {$EXTERNALSYM LPFN_WSAEVENTSELECT}
   LPFN_WSAEVENTSELECT = function(const s : TSocket; const hEventObject : WSAEVENT; lNetworkEvents : LongInt): Integer; stdcall;
-  {$IFNDEF UNDER_CE}
   {$EXTERNALSYM LPFN_WSAGETQOSBYNAME}
   LPFN_WSAGETQOSBYNAME = function(const s : TSocket; lpQOSName : LPWSABUF; lpQOS : LPQOS): WordBool; stdcall;
-  {$ENDIF}
   {$EXTERNALSYM LPFN_WSAHTONL}
   LPFN_WSAHTONL = function(const s : TSocket; hostlong : u_long; var lpnetlong : DWORD): Integer; stdcall;
   {$EXTERNALSYM LPFN_WSAHTONS}
@@ -2674,10 +2687,8 @@ type
   {$EXTERNALSYM LPFN_WSASEND}
   LPFN_WSASEND = function(const s : TSocket; lpBuffers : LPWSABUF; dwBufferCount : DWORD; var lpNumberOfBytesSent : DWORD; dwFlags : DWORD;
     lpOverlapped : LPWSAOVERLAPPED; lpCompletionRoutine : LPWSAOVERLAPPED_COMPLETION_ROUTINE): Integer; stdcall;
-  {$IFNDEF UNDER_CE}
   {$EXTERNALSYM LPFN_WSASENDDISCONNECT}
   LPFN_WSASENDDISCONNECT = function(const s : TSocket; lpOutboundDisconnectData : LPWSABUF): Integer; stdcall;
-   {$ENDIF}
   {$EXTERNALSYM LPFN_WSASENDTO}
   LPFN_WSASENDTO = function(const s : TSocket; lpBuffers : LPWSABUF; dwBufferCount : DWORD; var lpNumberOfBytesSent : DWORD; dwFlags : DWORD;
     lpTo : LPSOCKADDR; iTolen : Integer; lpOverlapped : LPWSAOVERLAPPED; lpCompletionRoutine : LPWSAOVERLAPPED_COMPLETION_ROUTINE): Integer; stdcall;
@@ -2756,7 +2767,7 @@ type
   {$EXTERNALSYM LPFN_WSALOOKUPSERVICEEND}
   LPFN_WSALOOKUPSERVICEEND = function(const hLookup : THandle): Integer; stdcall;
 
-  {$IFNDEF UNDER_CE}
+
   {$EXTERNALSYM LPFN_WSAINSTALLSERVICECLASSA}
   LPFN_WSAINSTALLSERVICECLASSA = function(const lpServiceClassInfo : LPWSASERVICECLASSINFOA) : Integer; stdcall;
   {$EXTERNALSYM LPFN_WSAINSTALLSERVICECLASSW}
@@ -2784,7 +2795,7 @@ type
   LPFN_WSAGETSERVICECLASSINFO = LPFN_WSAGETSERVICECLASSINFOA;
     {$ENDIF}
   {$ENDIF}
-  {
+
   {$EXTERNALSYM LPFN_WSAENUMNAMESPACEPROVIDERSA}
   LPFN_WSAENUMNAMESPACEPROVIDERSA = function(var lpdwBufferLength: DWORD; const lpnspBuffer: LPWSANAMESPACE_INFOA): Integer; stdcall;
   {$EXTERNALSYM LPFN_WSAENUMNAMESPACEPROVIDERSW}
@@ -2796,17 +2807,15 @@ type
   LPFN_WSAENUMNAMESPACEPROVIDERS = LPFN_WSAENUMNAMESPACEPROVIDERSA;
     {$ENDIF}
 
-  {$IFNDEF UNDER_CE}
   {$EXTERNALSYM LPFN_WSAGETSERVICECLASSNAMEBYCLASSIDA}
   LPFN_WSAGETSERVICECLASSNAMEBYCLASSIDA = function(const lpServiceClassId: LPGUID; lpszServiceClassName: PAnsiChar; var lpdwBufferLength: DWORD): Integer; stdcall;
   {$EXTERNALSYM LPFN_WSAGETSERVICECLASSNAMEBYCLASSIDW}
   LPFN_WSAGETSERVICECLASSNAMEBYCLASSIDW = function(const lpServiceClassId: LPGUID; lpszServiceClassName: PWideChar; var lpdwBufferLength: DWORD): Integer; stdcall;
   {$EXTERNALSYM LPFN_WSAGETSERVICECLASSNAMEBYCLASSID}
-    {$IFDEF UNICODE}
+  {$IFDEF UNICODE}
   LPFN_WSAGETSERVICECLASSNAMEBYCLASSID = LPFN_WSAGETSERVICECLASSNAMEBYCLASSIDW;
-    {$ELSE}
+  {$ELSE}
   LPFN_WSAGETSERVICECLASSNAMEBYCLASSID = LPFN_WSAGETSERVICECLASSNAMEBYCLASSIDA;
-    {$ENDIF}
   {$ENDIF}
 
   {$EXTERNALSYM LPFN_WSASETSERVICEA}
@@ -2820,7 +2829,6 @@ type
   LPFN_WSASETSERVICE = LPFN_WSASETSERVICEA;
   {$ENDIF}
 
-  {$IFNDEF UNDER_CE}
   {$EXTERNALSYM LPFN_WSAPROVIDERCONFIGCHANGE}
   LPFN_WSAPROVIDERCONFIGCHANGE = function(var lpNotificationHandle : THandle; lpOverlapped : LPWSAOVERLAPPED; lpCompletionRoutine : LPWSAOVERLAPPED_COMPLETION_ROUTINE) : Integer; stdcall;
 
@@ -2830,8 +2838,14 @@ type
     dwReceiveDataLength, dwLocalAddressLength, dwRemoteAddressLength: DWORD;
     var LocalSockaddr: TSockAddr; var LocalSockaddrLength: Integer;
     var RemoteSockaddr: TSockAddr; var RemoteSockaddrLength: Integer); stdcall;
+
+  {$IFNDEF UNDER_CE}
+  //This is defined in the Windows Mobile 6 Standard SDK Refresh
+  //but I'm not sure what .DLL the function is in.  I also couldn't find a WSAID
+  //constant for it.
   {$EXTERNALSYM LPFN_WSARECVEX}
   LPFN_WSARECVEX = function(s: TSocket; var buf; len: Integer; var flags: Integer): Integer; stdcall;
+  {$ENDIF}
 
   //Windows Server 2003, Windows Vista
   {$EXTERNALSYM LPFN_CONNECTEX}
@@ -2843,14 +2857,14 @@ type
   {$EXTERNALSYM LPFN_TRANSMITPACKETS}
   LPFN_TRANSMITPACKETS = function(s: TSocket; lpPacketArray: LPTRANSMIT_PACKETS_ELEMENT; nElementCount: DWORD; nSendSize: DWORD; lpOverlapped: LPWSAOVERLAPPED; dwFlags: DWORD): BOOL; stdcall;
   //Windows Vista, Windows Server 2008
+{$IFNDEF UNDER_CE}
   {$EXTERNALSYM LPFN_WSASENDMSG}
   LPFN_WSASENDMSG = function(const s : TSocket; lpMsg : LPWSAMSG; const dwFlags : DWORD; var lpNumberOfBytesSent : DWORD;  lpOverlapped : LPWSAOVERLAPPED;  lpCompletionRoutine : LPWSAOVERLAPPED_COMPLETION_ROUTINE) : Integer; stdcall;
   {$EXTERNALSYM LPFN_WSAPOLL}
   LPFN_WSAPOLL = function(fdarray : LPWSAPOLLFD; const nfds : u_long; const timeout : Integer) : Integer; stdcall;
-  {$ENDIF}
 {$ENDIF} // $IFDEF INCL_WINSOCK_API_TYPEDEFS
 
-{$IFNDEF UNDER_CE}
+
 const
   //GUID's for Microsoft extensions
   {$EXTERNALSYM WSAID_ACCEPTEX}
@@ -2865,10 +2879,13 @@ const
   WSAID_TRANSMITFILE: TGuid = (D1:$b5367df0; D2:$cbac; D3:$11cf; D4:($95, $ca, $00, $80, $5f, $48, $a1, $92));
   {$EXTERNALSYM WSAID_TRANSMITPACKETS}
   WSAID_TRANSMITPACKETS: TGuid = (D1:$d9689da0;D2:$1f90;D3:$11d3;D4:($99,$71,$00,$c0,$4f,$68,$c8,$76));
+{$IFNDEF UNDER_CE}
   {$EXTERNALSYM WSAID_WSAPOLL}
   WSAID_WSAPOLL: TGuid = (D1:$18C76F85;D2:$DC66;D3:$4964;D4:($97,$2E,$23,$C2,$72,$38,$31,$2B));
+{$ENDIF}
   {$EXTERNALSYM WSAID_WSARECVMSG}
   WSAID_WSARECVMSG: TGuid = (D1:$f689d7c8;D2:$6f1f;D3:$436b;D4:($8a,$53,$e5,$4f,$e3,$51,$c3,$22));
+{$IFNDEF UNDER_CE}
   {$EXTERNALSYM WSAID_WSASENDMSG}
   WSAID_WSASENDMSG : TGuid = (D1:$a441e712;D2:$754f;D3:$43ca;D4:($84,$a7,$0d,$ee,$44,$cf,$60,$6d));
 {$ENDIF}
@@ -3015,7 +3032,7 @@ var
   WSAEventSelect : LPFN_WSAEVENTSELECT = nil;
   {$EXTERNALSYM WSAGetOverlappedResult}
   WSAGetOverlappedResult : LPFN_WSAGETOVERLAPPEDRESULT = nil;
-  {$IFNDEF UNDER_CE}
+
   {$EXTERNALSYM WSAGetQosByName}
   WSAGetQosByName : LPFN_WSAGETQOSBYNAME = nil;
   {$EXTERNALSYM WSAGetServiceClassInfoA}
@@ -3030,21 +3047,19 @@ var
   WSAGetServiceClassNameByClassIdW : LPFN_WSAGETSERVICECLASSNAMEBYCLASSIDW = nil;
   {$EXTERNALSYM WSAGetServiceClassNameByClassId}
   WSAGetServiceClassNameByClassId : LPFN_WSAGETSERVICECLASSNAMEBYCLASSID = nil;
-  {$ENDIF}
+
   {$EXTERNALSYM WSAHtonl}
   WSAHtonl : LPFN_WSAHTONL = nil;
   {$EXTERNALSYM WSAHtons}
   WSAHtons : LPFN_WSAHTONS = nil;
   {$EXTERNALSYM WSAIoctl}
   WSAIoctl : LPFN_WSAIOCTL = nil;
-  {$IFNDEF UNDER_CE}
   {$EXTERNALSYM WSAInstallServiceClassA}
   WSAInstallServiceClassA : LPFN_WSAINSTALLSERVICECLASSA = nil;
   {$EXTERNALSYM WSAInstallServiceClassW}
   WSAInstallServiceClassW : LPFN_WSAINSTALLSERVICECLASSW = nil;
   {$EXTERNALSYM WSAInstallServiceClass}
   WSAInstallServiceClass : LPFN_WSAINSTALLSERVICECLASS = nil;
-  {$ENDIF}
   {$EXTERNALSYM WSAJoinLeaf}
   WSAJoinLeaf : LPFN_WSAJOINLEAF = nil;
   {$EXTERNALSYM WSALookupServiceBeginA}
@@ -3067,24 +3082,18 @@ var
   WSANtohs : LPFN_WSANTOHS = nil;
   {$EXTERNALSYM WSARecv}
   WSARecv : LPFN_WSARECV = nil;
-  {$IFNDEF UNDER_CE}
   {$EXTERNALSYM WSARecvDisconnect}
   WSARecvDisconnect : LPFN_WSARECVDISCONNECT = nil;
-  {$ENDIF}
   {$EXTERNALSYM WSARecvFrom}
   WSARecvFrom : LPFN_WSARECVFROM = nil;
-  {$IFNDEF UNDER_CE}
   {$EXTERNALSYM WSARemoveServiceClass}
   WSARemoveServiceClass : LPFN_WSAREMOVESERVICECLASS = nil;
-  {$ENDIF}
   {$EXTERNALSYM WSAResetEvent}
   WSAResetEvent : LPFN_WSARESETEVENT = nil;
   {$EXTERNALSYM WSASend}
   WSASend : LPFN_WSASEND = nil;
-  {$IFNDEF UNDER_CE}
   {$EXTERNALSYM WSASendDisconnect}
   WSASendDisconnect : LPFN_WSASENDDISCONNECT = nil;
-  {$ENDIF}
   {$EXTERNALSYM WSASendTo}
   WSASendTo : LPFN_WSASENDTO = nil;
   {$EXTERNALSYM WSASetEvent}
@@ -3107,7 +3116,7 @@ var
   WSAStringToAddressW : LPFN_WSASTRINGTOADDRESSW = nil;
   {$EXTERNALSYM WSAStringToAddress}
   WSAStringToAddress : LPFN_WSASTRINGTOADDRESS = nil;
-  {$IFNDEF UNDER_CE}
+
   {$EXTERNALSYM WSAWaitForMultipleEvents}
   WSAWaitForMultipleEvents : LPFN_WSAWAITFORMULTIPLEEVENTS = nil;
   {$EXTERNALSYM WSAProviderConfigChange}
@@ -3118,8 +3127,13 @@ var
   AcceptEx : LPFN_ACCEPTEX = nil;
   {$EXTERNALSYM GetAcceptExSockaddrs}
   GetAcceptExSockaddrs : LPFN_GETACCEPTEXSOCKADDRS = nil;
+  {$IFNDEF UNDER_CE}
+  //This is defined in the Windows Mobile 6 Standard SDK Refresh
+  //but I'm not sure what .DLL the function is in.  I also couldn't find a WSAID
+  //constant for it.
   {$EXTERNALSYM WSARecvEx}
   WSARecvEx : LPFN_WSARECVEX = nil;
+  {$ENDIF}
   {$EXTERNALSYM ConnectEx}
   ConnectEx : LPFN_CONNECTEX = nil;
   {$EXTERNALSYM DisconnectEx}
@@ -3128,7 +3142,7 @@ var
   WSARecvMsg : LPFN_WSARECVMSG = nil;
   {$EXTERNALSYM TransmitPackets}
   TransmitPackets : LPFN_TRANSMITPACKETS = nil;
-
+  {$IFNDEF UNDER_CE}
   //Windows Vista, Windows Server 2008
   {$EXTERNALSYM WSASendMsg}
   WSASendMsg: LPFN_WSASENDMSG = nil;
@@ -3200,7 +3214,6 @@ var
 	Rev 0.4	Dec 15, 1996
 }
 
-{$IFNDEF UNDER_CE}
 type
 // Argument structure for IP_ADD_MEMBERSHIP and IP_DROP_MEMBERSHIP
   {$EXTERNALSYM ip_mreq}
@@ -3230,7 +3243,6 @@ type
 
   {$EXTERNALSYM IP_MSFILTER_SIZE}
   function IP_MSFILTER_SIZE(const numsrc: DWORD): PtrUInt;
-{$ENDIF}
 
 // TCP/IP specific Ioctl codes
 const
@@ -4908,18 +4920,14 @@ so it should give us the numbers.
 
 }
 const
-  {$IFNDEF UNDER_CE}
   {$EXTERNALSYM SIZE_WSACMSGHDR}
   SIZE_WSACMSGHDR = DWORD(SizeOf(WSACMSGHDR));
-  {$ENDIF}
   {$EXTERNALSYM SIZE_FARPROC}
   SIZE_FARPROC = DWORD(SizeOf(FARPROC));
   {$EXTERNALSYM MAX_NATURAL_ALIGNMENT_SUB_1}
   MAX_NATURAL_ALIGNMENT_SUB_1 = DWORD(MAX_NATURAL_ALIGNMENT - 1);
-  {$IFNDEF UNDER_CE}
   {$EXTERNALSYM SIZE_IP_MSFILTER}
   SIZE_IP_MSFILTER = DWORD(SizeOf(ip_msfilter));
-  {$ENDIF}
   {$EXTERNALSYM SIZE_TINADDR}
   SIZE_TINADDR = DWORD(SizeOf(TInAddr));
   {$EXTERNALSYM SIZE_TIN6ADDR}
@@ -5492,13 +5500,11 @@ begin
   Result := WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, AOverlapped, lpCompletionRoutine);
 end;
 
-{$IFNDEF UNDER_CE}
 function Stub_WSARecvDisconnect(const s: TSocket; lpInboundDisconnectData: LPWSABUF): Integer; stdcall;
 begin
   @WSARecvDisconnect := FixupStub(hWinSockDll, 'WSARecvDisconnect'); {Do not Localize}
   Result := WSARecvDisconnect(s, lpInboundDisconnectData);
 end;
-{$ENDIF}
 
 function Stub_WSARecvFrom(const s: TSocket; lpBuffers: LPWSABUF; dwBufferCount: DWORD; var lpNumberOfBytesRecvd: DWORD; var lpFlags: DWORD; lpFrom: PSockAddr; lpFromlen: PInteger; AOverlapped: Pointer; lpCompletionRoutine: LPWSAOVERLAPPED_COMPLETION_ROUTINE): Integer; stdcall;
 begin
@@ -5674,7 +5680,6 @@ begin
     cbOutBuffer, lpcbBytesReturned,lpCompletion);
 end;
 
-{$IFNDEF UNDER_CE}
 function Stub_WSAInstallServiceClassA(const lpServiceClassInfo: LPWSASERVICECLASSINFOA): Integer; stdcall;
 begin
   @WSAInstallServiceClassA := FixupStub(hWinSockDll, 'WSAInstallServiceClassA'); {Do not Localize}
@@ -5724,7 +5729,6 @@ begin
   {$ENDIF}
   Result := WSAGetServiceClassInfo(lpProviderId, lpServiceClassId, lpdwBufSize, lpServiceClassInfo);
 end;
-{$ENDIF}
 
 function Stub_WSAEnumNameSpaceProvidersA(var lpdwBufferLength: DWORD; const lpnspBuffer: LPWSANAMESPACE_INFOA): Integer; stdcall;
 begin
@@ -5748,7 +5752,6 @@ begin
   Result := WSAEnumNameSpaceProviders(lpdwBufferLength, lpnspBuffer);
 end;
 
-{$IFNDEF UNDER_CE}
 function Stub_WSAGetServiceClassNameByClassIdA(const lpServiceClassId: PGUID; lpszServiceClassName: PAnsiChar; var lpdwBufferLength: DWORD): Integer; stdcall;
 begin
   @WSAGetServiceClassNameByClassIdA := FixupStub(hWinSockDll, 'WSAGetServiceClassNameByClassIdA'); {Do not Localize}
@@ -5772,7 +5775,6 @@ begin
   {$ENDIF}
   Result := WSAGetServiceClassNameByClassId(lpServiceClassId, lpszServiceClassName, lpdwBufferLength);
 end;
-{$ENDIF}
 
 function Stub_WSASetServiceA(const lpqsRegInfo: LPWSAQUERYSETA; const essoperation: WSAESETSERVICEOP; const dwControlFlags: DWORD): Integer; stdcall;
 begin
@@ -5796,7 +5798,6 @@ begin
   Result := WSASetService(lpqsRegInfo, essoperation, dwControlFlags);
 end;
 
-{$IFNDEF WINCE}
 function Stub_WSAProviderConfigChange(var lpNotificationHandle: THandle; AOverlapped: LPWSAOVERLAPPED; lpCompletionRoutine: LPWSAOVERLAPPED_COMPLETION_ROUTINE): Integer; stdcall;
 begin
   @WSAProviderConfigChange := FixupStub(hWinSockDll, 'WSAProviderConfigChange'); {Do not Localize}
@@ -5810,14 +5811,12 @@ begin
   @TransmitFile := FixupStubEx(hSocket, 'TransmitFile', WSAID_TRANSMITFILE); {Do not localize}
   Result := TransmitFile(hSocket, hFile, nNumberOfBytesToWrite, nNumberOfBytesPerSend, lpOverlapped, lpTransmitBuffers, dwReserved);
 end;
-{$ENDIF}
 
 {RLebeau 1/26/2006 - loading GetAcceptExSockaddrs() at the same time as AcceptEx().
 This is because GetAcceptExSockaddrs() is not passed a SOCKET that can be passed to
 WSAIoCtrl() to get the function pointer. Also, GetAcceptExSockaddrs() is needed to
 parse AcceptEx()'s return data, so there is no point in calling AcceptEx() unless
 its data can be parsed afterwards.}
-{$IFNDEF UNDER_CE}
 function Stub_AcceptEx(sListenSocket, sAcceptSocket: TSocket;
   lpOutputBuffer: Pointer; dwReceiveDataLength, dwLocalAddressLength,
   dwRemoteAddressLength: DWORD; var lpdwBytesReceived: DWORD;
@@ -5830,12 +5829,14 @@ begin
     dwLocalAddressLength, dwRemoteAddressLength, lpdwBytesReceived, lpOverlapped);
 end;
 
+{$IFNDEF UNDER_CE}
 function Stub_WSARecvEx(s: TSocket; var buf; len: Integer; var flags: Integer): Integer; stdcall;
 begin
   LoadMSWSock;
   @WSARecvEx := FixupStub(hMSWSockDll, 'WSARecvEx'); {Do not localize}
   Result := WSARecvEx(s, buf, len, flags);
 end;
+{$ENDIF}
 
 function Stub_ConnectEx(const s : TSocket; const name: PSockAddr; const namelen: Integer; lpSendBuffer : Pointer;
   dwSendDataLength : DWORD; var lpdwBytesSent : DWORD; lpOverlapped : LPWSAOVERLAPPED) : BOOL;  stdcall;
@@ -5863,6 +5864,7 @@ begin
   Result := TransmitPackets(s, lpPacketArray, nElementCount, nSendSize, lpOverlapped, dwFlags);
 end;
 
+{$IFNDEF UNDER_CE}
 function Stub_WSASendMsg(const s : TSocket; lpMsg : LPWSAMSG; const dwFlags : DWORD; var lpNumberOfBytesSent : DWORD;  lpOverlapped : LPWSAOVERLAPPED;  lpCompletionRoutine : LPWSAOVERLAPPED_COMPLETION_ROUTINE) : Integer; stdcall;
 begin
   @WSASendMsg := FixupStubEx(s, 'WSASendMsg', WSAID_WSASENDMSG); {Do not localize}
@@ -6003,10 +6005,8 @@ begin
   WSARecvEx                        := Stub_WSARecvEx;
   {$ENDIF}
   WSARecvFrom                      := Stub_WSARecvFrom;
-  {$IFNDEF UNDER_CE}
   WSARecvMsg                       := Stub_WSARecvMsg;
   WSARemoveServiceClass            := Stub_WSARemoveServiceClass;
-  {$ENDIF}
   WSAResetEvent                    := Stub_WSAResetEvent;
   WSASend                          := Stub_WSASend;
   {$IFNDEF UNDER_CE}
