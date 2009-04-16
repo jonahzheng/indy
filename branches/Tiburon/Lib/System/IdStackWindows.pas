@@ -316,15 +316,19 @@ implementation
 uses
   IdResourceStrings, IdWship6;
 
+{$IFNDEF WINCE}
 type
   TGetFileSizeEx = function (hFile : THandle; var lpFileSize : LARGE_INTEGER) : BOOL; stdcall;
+{$ENDIF}
 
 const
   SIZE_HOSTNAME = 250;
 
 var
   GStarted: Boolean = False;
+{$IFNDEF WINCE}
   GetFileSizeEx : TGetFileSizeEx = nil;
+{$ENDIF}
 
 constructor TIdStackWindows.Create;
 begin
