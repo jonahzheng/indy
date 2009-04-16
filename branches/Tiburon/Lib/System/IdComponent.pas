@@ -62,7 +62,7 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  IdAntiFreezeBase, IdBaseComponent, IdGlobal, IdResourceStrings,
+  IdBaseComponent, IdGlobal, IdResourceStrings,
   IdStack;
 
 type

@@ -96,9 +96,6 @@ implementation
 uses
   //facilitate inlining only.
   {$IFDEF USEINLINE}
-    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  Windows,
-    {$ENDIF}
     {$IFDEF DOTNET}
   System.Threading,
     {$ENDIF}

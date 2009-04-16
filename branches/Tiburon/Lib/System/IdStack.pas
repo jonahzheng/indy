@@ -361,7 +361,7 @@ uses
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     {$IFDEF USEINLINE}
-    Windows,
+ //   Windows,
     {$ENDIF}
   IdStackWindows,
   {$ENDIF}
