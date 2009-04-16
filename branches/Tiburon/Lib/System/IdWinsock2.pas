@@ -2356,6 +2356,14 @@ type
 
   {$IFDEF UNDER_CE}
   {$EXTERNALSYM DSCP_TRAFFIC_TYPE}
+  {$EXTERNALSYM DSCPTYPENOTSET}
+  {$EXTERNALSYM DSCPBESTEFFORT}
+  {$EXTERNALSYM DSCPBACKGROUND}
+  {$EXTERNALSYM DSCPEXCELLENTEFFORT}
+  {$EXTERNALSYM DSCPVIDEO}
+  {$EXTERNALSYM DSCPAUDIO}
+  {$EXTERNALSYM DSCPCONTROL}
+  {$EXTERNALSYM NUMDSCPTRAFFICTYPES}
   DSCP_TRAFFIC_TYPE = (
     DSCPTypeNotSet        = 0,
     DSCPBestEffort        = 1,
@@ -2363,8 +2371,26 @@ type
     DSCPExcellentEffort   = 3,
     DSCPVideo             = 4,
     DSCPAudio             = 5,
-    DSCPControl           = 6,
-    NumDSCPTrafficTypes   = 6);
+    DSCPControl           = 6);
+//  Define NumDSCPTrafficTypes as DSCPControl
+//because FPC warns that enumerations must be descending.
+//The original definition for  DSCP_TRAFFIC_TYPE is:
+//
+///* differential service traffic types */
+//typedef enum _DSCP_TRAFFIC_TYPE
+//{
+//    DSCPTypeNotSet        = 0,
+//    DSCPBestEffort        = 1,
+//    DSCPBackground        = 2,
+//    DSCPExcellentEffort   = 3,
+//    DSCPVideo             = 4,
+//    DSCPAudio             = 5,
+//    DSCPControl           = 6,
+//    NumDSCPTrafficTypes   = 6
+//} //DSCP_TRAFFIC_TYPE;
+const
+  NumDSCPTrafficTypes : DSCP_TRAFFIC_TYPE = DSCPControl;
+type
   {$ENDIF}
 
   {$EXTERNALSYM WSAMSG}
@@ -3328,12 +3354,20 @@ const
   {$EXTERNALSYM IP_PKTINFO}
   IP_PKTINFO                = 19; // receive packet information for ipv4
 
+  {$IFDEF UNDER_CE}
+  {$EXTERNALSYM IP_DSCP_TRAFFIC_TYPE}
+  IP_DSCP_TRAFFIC_TYPE    = 100; //* differential services */
+  {$EXTERNALSYM IP_RELOAD_DSCP_MAPPINGS}
+  IP_RELOAD_DSCP_MAPPINGS = 101; //* reload DSCP registry mappings */
+  {$ENDIF}
+
   {$EXTERNALSYM IP_DEFAULT_MULTICAST_TTL}
   IP_DEFAULT_MULTICAST_TTL   = 1;    // normally limit m'casts to 1 hop    {Do not Localize}
   {$EXTERNALSYM IP_DEFAULT_MULTICAST_LOOP}
   IP_DEFAULT_MULTICAST_LOOP  = 1;    // normally hear sends if a member
   {$EXTERNALSYM IP_MAX_MEMBERSHIPS}
   IP_MAX_MEMBERSHIPS         = 20;   // per socket; must fit in one mbuf
+
 
   // Option to use with [gs]etsockopt at the IPPROTO_IPV6 level
   {$EXTERNALSYM IPV6_HDRINCL}
