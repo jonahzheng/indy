@@ -1338,7 +1338,7 @@ uses
 
 {$IFDEF FPC}
   {$IFDEF WINCE}
-//The constants are only available in Windows CE 5.0.
+  //FreePascal for WindowsCE may not define these.
 const
   CP_UTF7 = 65000;
   CP_UTF8 = 65001;
@@ -1415,6 +1415,18 @@ begin
     VEncoding := TIdTextEncoding.ASCII;
   end;
 end;
+
+{$IFDEF FPC}
+   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+//FreePascal may not define this for non-Windows systems.
+//#define MAKEWORD(a, b)      ((WORD)(((BYTE)(a)) | ((WORD)((BYTE)(b))) << 8))
+function MakeWord(const a, b : Byte) : Word;
+{$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  Result := (a) or (b shl 8);
+end;
+   {$ENDIF}
+{$ENDIF}
 
 {$IFNDEF DOTNET}
 var
@@ -1930,10 +1942,25 @@ end;
 
 function TIdLEUTF16Encoding.GetBytes(Chars: PWideChar; CharCount: Integer;
   Bytes: PByte; ByteCount: Integer): Integer;
+{$IFDEF ENDIAN_BIG}
+var
+  I: Integer;
+begin
+  for I := CharCount - 1 downto 0 do
+  begin
+    Bytes^ := Hi(Word(Chars^));
+    Inc(Bytes);
+    Bytes^ := Lo(Word(Chars^));
+    Inc(Bytes);
+    Inc(Chars);
+  end;
+  Result := CharCount * SizeOf(WideChar);
+{$ELSE}
 begin
   Result := CharCount * SizeOf(WideChar);
   Move(Chars^, Bytes^, Result);
 end;
+{$ENDIF}
 
 function TIdLEUTF16Encoding.GetCharCount(Bytes: PByte; ByteCount: Integer): Integer;
 begin
@@ -1942,10 +1969,28 @@ end;
 
 function TIdLEUTF16Encoding.GetChars(Bytes: PByte; ByteCount: Integer;
   Chars: PWideChar; CharCount: Integer): Integer;
+{$IFDEF ENDIAN_BIG}
+var
+  P: PByte;
+  I: Integer;
+begin
+  P := Bytes;
+  Inc(P);
+  for I := 0 to CharCount - 1 do
+  begin
+    Chars^ := WideChar(MakeWord(P^, Bytes^));
+    Inc(Bytes, 2);
+    Inc(P, 2);
+    Inc(Chars);
+  end;
+  Result := CharCount;
+end;
+{$ELSE}
 begin
   Result := ByteCount div SizeOf(WideChar);
   Move(Bytes^, Chars^, Result * SizeOf(WideChar));
 end;
+{$ENDIF}
 
 function TIdLEUTF16Encoding.GetMaxByteCount(CharCount: Integer): Integer;
 begin
@@ -1968,10 +2013,11 @@ end;
 
 function TIdBEUTF16Encoding.GetBytes(Chars: PWideChar; CharCount: Integer;
   Bytes: PByte; ByteCount: Integer): Integer;
+{$IFDEF ENDIAN_LITTLE}
 var
   I: Integer;
 begin
-  for I := 0 to CharCount - 1 do
+  for I := CharCount - 1 downto 0 do
   begin
     Bytes^ := Hi(Word(Chars^));
     Inc(Bytes);
@@ -1981,9 +2027,21 @@ begin
   end;
   Result := CharCount * SizeOf(WideChar);
 end;
+{$ELSE}
+begin
+  Result := CharCount * SizeOf(WideChar);
+  Move(Chars^, Bytes^, Result);
+end;
+{$ENDIF}
 
 function TIdBEUTF16Encoding.GetChars(Bytes: PByte; ByteCount: Integer;
   Chars: PWideChar; CharCount: Integer): Integer;
+{$IFDEF ENDIAN_BIG}
+begin
+  Result := ByteCount div SizeOf(WideChar);
+  Move(Bytes^, Chars^, Result * SizeOf(WideChar));
+end;
+{$ELSE}
 var
   P: PByte;
   I: Integer;
@@ -1999,6 +2057,7 @@ begin
   end;
   Result := CharCount;
 end;
+{$ENDIF}
 
 function TIdBEUTF16Encoding.GetPreamble: TIdBytes;
 begin
