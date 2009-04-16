@@ -170,8 +170,13 @@ type
   TIdInt64Parts = packed record
     case Integer of
     0: (
+       {$IFDEF ENDIAN_BIG}
+      HighPart: LongWord;
+      LowPart: LongWord);
+       {$ELSE}
       LowPart: LongWord;
       HighPart: LongWord);
+      {$ENDIF}
     1: (
       QuadPart: Int64);
   end;
@@ -318,7 +323,7 @@ uses
   {$IFDEF DOTNET}
   IdStackDotNet,
   {$ENDIF}
-  IdResourceStrings, SysUtils;
+  SysUtils;
 
 { TIdStackBSDBase }
 
