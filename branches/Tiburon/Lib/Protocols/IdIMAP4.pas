@@ -787,6 +787,10 @@ varies between servers.  A typical line that gets parsed into this is:
           var ABufferLength: Integer; {NOTE: var args cannot have default params}
           ADestFileNameAndPath: string = '';                     {Do not Localize}
           AContentTransferEncoding: string = 'text'): Boolean;             {Do not Localize}
+    //Retrieves the specified number of headers of the selected mailbox to the specified TIdMessageCollection.
+    function  InternalRetrieveHeaders(AMsgList: TIdMessageCollection; ACount: LongInt): Boolean;
+    //Retrieves the specified number of messages of the selected mailbox to the specified TIdMessageCollection.
+    function  InternalRetrieveMsgs(AMsgList: TIdMessageCollection; ACount: LongInt): Boolean;
     function  ParseBodyStructureSectionAsEquates(AParam: string): string;
     function  ParseBodyStructureSectionAsEquates2(AParam: string): string;
     function  InternalRetrieveText(const AMsgNum: Integer; var AText: string;
@@ -901,8 +905,12 @@ varies between servers.  A typical line that gets parsed into this is:
     function  RetrieveAllEnvelopes(AMsgList: TIdMessageCollection): Boolean;
     //Retrieves all headers of the selected mailbox to the specified TIdMessageCollection.
     function  RetrieveAllHeaders(AMsgList: TIdMessageCollection): Boolean;
+    //Retrieves the first NN headers of the selected mailbox to the specified TIdMessageCollection.
+    function  RetrieveFirstHeaders(AMsgList: TIdMessageCollection; ACount: LongInt): Boolean;
     //Retrieves all messages of the selected mailbox to the specified TIdMessageCollection.
     function  RetrieveAllMsgs(AMsgList: TIdMessageCollection): Boolean;
+    //Retrieves the first NN messages of the selected mailbox to the specified TIdMessageCollection.
+    function  RetrieveFirstMsgs(AMsgList: TIdMessageCollection; ACount: LongInt): Boolean;
     //Retrieves the message envelope, parses it, and discards the envelope.
     function  RetrieveEnvelope(const AMsgNum: Integer; AMsg: TIdMessage): Boolean;
     //Retrieves the message envelope into a TStringList but does NOT parse it.
@@ -3936,6 +3944,16 @@ begin
 end;
 
 function TIdIMAP4.RetrieveAllHeaders(AMsgList: TIdMessageCollection): Boolean;
+begin
+  Result := InternalRetrieveHeaders(AMsgList, -1);
+end;
+
+function TIdIMAP4.RetrieveFirstHeaders(AMsgList: TIdMessageCollection; ACount: LongInt): Boolean;
+begin
+  Result := InternalRetrieveHeaders(AMsgList, ACount);
+end;
+
+function TIdIMAP4.InternalRetrieveHeaders(AMsgList: TIdMessageCollection; ACount: Integer): Boolean;
 var
   LMsgItem : TIdMessageItem;
   Ln : Integer;
@@ -3944,7 +3962,10 @@ begin
   CheckConnectionState(csSelected);
   Result := False;
   if AMsgList <> nil then begin
-    for Ln := 1 to FMailBox.TotalMsgs do begin
+    if (ACount < 0) or (ACount > FMailBox.TotalMsgs) then begin
+      ACount := FMailBox.TotalMsgs;
+    end;
+    for Ln := 1 to ACount do begin
       LMsgItem := AMsgList.Add;
       if not RetrieveHeader(Ln, LMsgItem.Msg) then begin
         Exit;
@@ -3955,14 +3976,28 @@ begin
 end;
 
 function TIdIMAP4.RetrieveAllMsgs(AMsgList: TIdMessageCollection): Boolean;
-var LMsgItem : TIdMessageItem;
+begin
+  Result := InternalRetrieveMsgs(AMsgList, -1);
+end;
+
+function TIdIMAP4.RetrieveFirstMsgs(AMsgList: TIdMessageCollection; ACount: LongInt): Boolean;
+begin
+  Result := InternalRetrieveMsgs(AMsgList, ACount);
+end;
+
+function TIdIMAP4.InternalRetrieveMsgs(AMsgList: TIdMessageCollection; ACount: LongInt): Boolean;
+var
+  LMsgItem : TIdMessageItem;
   Ln : Integer;
 begin
   {CC2: This may get a response of "OK completed" if there are no messages}
   CheckConnectionState(csSelected);
   Result := False;
   if AMsgList <> nil then begin
-    for Ln := 1 to FMailBox.TotalMsgs do begin
+    if (ACount < 0) or (ACount > FMailBox.TotalMsgs) then begin
+      ACount := FMailBox.TotalMsgs;
+    end;
+    for Ln := 1 to ACount do begin
       LMsgItem := AMsgList.Add;
       if not Retrieve(Ln, LMsgItem.Msg) then begin
         Exit;
