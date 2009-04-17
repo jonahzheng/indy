@@ -643,6 +643,7 @@ var
   LLine: string;
   LParentPart: integer;
   LPreviousParentPart: integer;
+  LEncoding: TIdTextEncoding;
 
   {Only set AUseBodyAsTarget to True if you want the input stream stored in TIdMessage.Body
   instead of TIdText.Body: this happens with some single-part messages.}
@@ -765,8 +766,18 @@ var
 
 begin
   LMsgEnd := False;
+  case PosInStrArray(AMsg.ContentTransferEncoding, ['7bit', 'quoted-printable', 'base64', '8bit', 'binary'], False) of {do not localize}
+    0..2: LEncoding := TIdTextEncoding.ASCII;
+    3..4: LEncoding := Indy8BitEncoding();
+  else
+    // According to RFC 2045 Section 6.4:
+    // "Any entity with an unrecognized Content-Transfer-Encoding must be
+    // treated as if it has a Content-Type of "application/octet-stream",
+    // regardless of what the Content-Type header field actually says."
+    LEncoding := Indy8BitEncoding();
+  end;
   if AMsg.NoDecode then begin
-    IOHandler.Capture(AMsg.Body, ADelim);
+    IOHandler.Capture(AMsg.Body, ADelim, True, LEncoding);
   end else begin
     BeginWork(wmRead); try
       if (
@@ -780,7 +791,7 @@ begin
           {CC: This code assumes the preamble text (before the first boundary)
           is plain text.  I cannot imagine it not being, but if it arises, lines
           will have to be decoded.}
-          LLine := IOHandler.ReadLnRFC(LMsgEnd, LF, ADelim);
+          LLine := IOHandler.ReadLnRFC(LMsgEnd, LF, ADelim, LEncoding);
           if LMsgEnd then begin
             Break;
           end;
