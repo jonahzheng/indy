@@ -360,7 +360,17 @@ begin
 
     BoundaryStart := '--' + MIMEBoundary; {Do not Localize}
     BoundaryEnd := BoundaryStart + '--'; {Do not Localize}
-    IsBinaryContentTransferEncoding := (PosInStrArray(LContentTransferEncoding, ['binary', '8bit'], False) <> -1); {do not localize}
+
+    case PosInStrArray(LContentTransferEncoding, ['7bit', 'quoted-printable', 'base64', '8bit', 'binary'], False) of {do not localize}
+      0..2: IsBinaryContentTransferEncoding := False;
+      3..4: IsBinaryContentTransferEncoding := True;
+    else
+      // According to RFC 2045 Section 6.4:
+      // "Any entity with an unrecognized Content-Transfer-Encoding must be
+      // treated as if it has a Content-Type of "application/octet-stream",
+      // regardless of what the Content-Type header field actually says."
+      IsBinaryContentTransferEncoding := True;
+    end;
 
     repeat
       if not FProcessFirstLine then begin
