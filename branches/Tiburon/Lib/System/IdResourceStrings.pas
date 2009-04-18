@@ -31,6 +31,18 @@ unit IdResourceStrings;
 
 interface
 {$I IdCompilerDefines.inc}
+// RLebeau: TODO - fill these in...
+resourcestring
+  RSInvalidSourceArray = '';
+  RSInvalidDestinationArray = '';
+  RSCharIndexOutOfBounds = '%d';
+  RSInvalidCharCount = '%d';
+  RSInvalidDestinationIndex = '%d';
+  RSByteIndexOutOfBounds = '%d';
+
+resourcestring
+  RSInvalidCodePage = 'Invalid codepage';
+    
 resourcestring
   //IdSys
   RSFailedTimeZoneInfo = 'Failed attempting to retrieve time zone information.';

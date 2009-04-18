@@ -1581,15 +1581,6 @@ begin
   GetBytes(AChars, 0, Length(AChars), Result, 0);
 end;
 
-// RLebeau: TODO - fill these in...
-resourcestring
-  RSInvalidSourceArray = '';
-  RSInvalidDestinationArray = '';
-  RSCharIndexOutOfBounds = '%d';
-  RSInvalidCharCount = '%d';
-  RSInvalidDestinationIndex = '%d';
-  RSByteIndexOutOfBounds = '%d';
-
 function TIdTextEncoding.GetBytes(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer;
   var VBytes: TIdBytes; AByteIndex: Integer): Integer;
 begin
@@ -1807,9 +1798,6 @@ constructor TIdMBCSEncoding.Create(CodePage: Integer);
 begin
   Create(CodePage, 0, 0);
 end;
-
-resourcestring
-  RSInvalidCodePage = 'Invalid codepage';
 
 constructor TIdMBCSEncoding.Create(CodePage, MBToWCharFlags, WCharToMBFlags: Integer);
 var
