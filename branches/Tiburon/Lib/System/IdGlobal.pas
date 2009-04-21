@@ -1417,7 +1417,7 @@ begin
 end;
 
 {$IFDEF FPC}
-   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+   {$IFNDEF WIN32_OR_WIN64_OR_WINCE}
 //FreePascal may not define this for non-Windows systems.
 //#define MAKEWORD(a, b)      ((WORD)(((BYTE)(a)) | ((WORD)((BYTE)(b))) << 8))
 function MakeWord(const a, b : Byte) : Word;
@@ -1474,17 +1474,21 @@ class function TIdTextEncoding.ASCII: TIdTextEncoding;
 {$ENDIF}
 var
   LEncoding: TIdTextEncoding;
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
   LCPInfo: TCPInfo;
+{$ENDIF}
   CP: Integer;
 begin
   if GIdASCIIEncoding = nil then
   begin
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}s
     // RLebeau: 20127 is the official codepage for ASCII, but older OS versions
     // do not support codepage 20127, so fallback to 1252 when needed...
     CP := 20127;
     if not GetCPInfo(CP, LCPInfo) then begin
       CP := 1252;
     end;
+{$ENDIF}
     LEncoding := TIdMBCSEncoding.Create(CP, 0, 0);
     if InterlockedCompareExchangePtr(Pointer(GIdASCIIEncoding), LEncoding, nil) <> nil then
       LEncoding.Free;
@@ -1690,7 +1694,9 @@ var
 begin
   if GIdDefaultEncoding = nil then
   begin
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}  
     LEncoding := TIdMBCSEncoding.Create(CP_ACP, 0, 0);
+{$ENDIF}
     if InterlockedCompareExchangePtr(Pointer(GIdDefaultEncoding), LEncoding, nil) <> nil then
       LEncoding.Free;
   end;
@@ -1698,6 +1704,7 @@ begin
 end;
 
 class function TIdTextEncoding.GetEncoding(ACodePage: Integer): TIdTextEncoding;
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
 var
   LCPInfo: TCPInfo;
 begin
@@ -1708,6 +1715,10 @@ begin
       ACodePage := 1252;
     end;
   end;
+{$ELSE}
+begin
+{$ENDIF}
+
   Result := TIdMBCSEncoding.Create(ACodePage);
 end;
 
@@ -1790,8 +1801,10 @@ end;
 { TIdMBCSEncoding }
 
 constructor TIdMBCSEncoding.Create;
-begin
+begin 
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Create(CP_ACP, 0, 0);
+  {$ENDIF}
 end;
 
 constructor TIdMBCSEncoding.Create(CodePage: Integer);
@@ -1800,6 +1813,7 @@ begin
 end;
 
 constructor TIdMBCSEncoding.Create(CodePage, MBToWCharFlags, WCharToMBFlags: Integer);
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
 var
   LCPInfo: TCPInfo;
 begin
@@ -1812,28 +1826,39 @@ begin
 
   FMaxCharSize := LCPInfo.MaxCharSize;
   FIsSingleByte := FMaxCharSize = 1;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 function TIdMBCSEncoding.GetByteCount(Chars: PWideChar; CharCount: Integer): Integer;
 begin
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags, Chars, CharCount, nil, 0, nil, nil);
+{$ENDIF}
 end;
 
 function TIdMBCSEncoding.GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte;
   ByteCount: Integer): Integer;
 begin
+{$IFDEF  WIN32_OR_WIN64_OR_WINCE}
   Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags, Chars, CharCount, PAnsiChar(Bytes), ByteCount, nil, nil);
+{$ENDIF}
 end;
 
 function TIdMBCSEncoding.GetCharCount(Bytes: PByte; ByteCount: Integer): Integer;
 begin
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(Bytes), ByteCount, nil, 0);
+{$ENDIF}
 end;
 
 function TIdMBCSEncoding.GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar;
   CharCount: Integer): Integer;
 begin
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(Bytes), ByteCount, Chars, CharCount);
+{$ENDIF}
 end;
 
 function TIdMBCSEncoding.GetMaxByteCount(CharCount: Integer): Integer;
@@ -1855,7 +1880,9 @@ end;
 
 constructor TIdUTF7Encoding.Create;
 begin
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
   inherited Create(CP_UTF7);
+{$ENDIF}
 end;
 
 function TIdUTF7Encoding.GetByteCount(Chars: PWideChar; CharCount: Integer): Integer;
@@ -1894,7 +1921,9 @@ end;
 
 constructor TIdUTF8Encoding.Create;
 begin
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
   inherited Create(CP_UTF8);
+{$ENDIF}
 end;
 
 function TIdUTF8Encoding.GetMaxByteCount(CharCount: Integer): Integer;
