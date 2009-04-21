@@ -155,7 +155,7 @@ type
   public
     procedure Send(AMsg: TIdMessage); overload; virtual;
     procedure Send(AMsg: TIdMessage; ARecipients: TIdEMailAddressList); overload; virtual;
-    procedure Send(AMsg: TIdMessage; const AEnvelopeSender: string; Recipients: TIdEMailAddressList); overload; virtual;
+    procedure Send(AMsg: TIdMessage; const AEnvelopeSender: string; ARecipients: TIdEMailAddressList); overload; virtual;
   published
     property MailAgent: string read FMailAgent write FMailAgent;
     property HeloName : string read FHeloName write FHeloName;
