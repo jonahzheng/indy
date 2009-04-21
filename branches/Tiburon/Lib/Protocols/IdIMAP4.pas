@@ -2707,75 +2707,74 @@ begin
     AAlternativeHeaders, in the Date header, if nothing else.}
     LTempPathname := MakeTempFilename;
     AMsg.SaveToFile(LTempPathname);
-
-    LLength := FileSizeByName(LTempPathname);
-    {Get the size of the headers (by opening it as a text file) which
-    SaveToFile may have generated, and will be different from the ones
-    in AMsg...}
-    AssignFile(LText, LTempPathname);
-    Reset(LText);
-    LLengthOfFileHeaders := 0;
-    while True do begin
-      Readln(LText, LLine);
-      if Length(LLine) = 0 then begin
-        break;
-      end;
-      LLengthOfFileHeaders := LLengthOfFileHeaders + Length(LLine) + 2;
-    end;
-    CloseFile(LText);
-    {We have to subtract the size of the headers in the file and
-    add back the size of the headers we are to use
-    to get the size of the message we are going to send...}
-    LLength := LLength - LLengthOfFileHeaders + LLengthOfAMsgHeaders;
-    {Some servers may want the message termination sequence CRLF.CRLF
-    and some may want CRLFCRLF so pass both by using CRLF.CRLFCRLF}
-    LLength := LLength + 2;
-    LMsgLiteral := '{' + IntToStr ( LLength ) + '}';            {Do not Localize}
-    {CC: The original code sent the APPEND command first, then followed it with the
-    message.  Maybe this worked with some server, but most send a
-    response like "+ Send the additional command..." between the two,
-    which was not expected by the client and caused an exception.}
-
-    //CC: Added double quotes around mailbox name, else mailbox names with spaces will cause server parsing error
-    LCmd := IMAP4Commands[cmdAppend] + ' "' + AMBName + '" ';         {Do not Localize}
-    if Length(LFlags) <> 0 then begin
-      LCmd := LCmd + LFlags + ' ';                    {Do not Localize}
-    end;
-    LCmd := LCmd + LMsgLiteral;                       {Do not Localize}
-
-    {Used to add the message to LCmd here.  Try sending the APPEND command, get
-    the + response, then send the message...}
-    SendCmd (NewCmdCounter, LCmd, []);
-    if LastCmdResult.Code = IMAP_CONT then begin
-      LHelper := TIdIMAP4WorkHelper.Create(Self);
+    try
+      LLength := FileSizeByName(LTempPathname);
+      {Get the size of the headers (by opening it as a text file) which
+      SaveToFile may have generated, and will be different from the ones
+      in AMsg...}
+      AssignFile(LText, LTempPathname);
       try
-        LSourceStream := TIdReadFileExclusiveStream.Create(LTempPathname);
-        try
-          IOHandler.Write(LHeadersAsString);
-          //Change from CopyFrom to WriteStream (I think) to get OnWork invoked, as we do elsewhere
-          //with LSourceStream.Connection.IOHandler.ReadStream(LUnstrippedStream, ABufferLength);
-          //ReadStream uses OnWork, most other methods dont
-          LSourceStream.Position := LLengthOfFileHeaders;
-          IOHandler.Write(LSourceStream, LSourceStream.Size - LLengthOfFileHeaders);
-          {Adding another CRLF so that the ending is CRLF.CRLFCRLF}
-          WriteLn;
-
-          {WARNING: After we send the message (which should be exactly
-          LLength bytes long), we need to send an EXTRA CRLF which is in
-          addition to to count in LLength, because this CRLF terminates the
-          APPEND command...}
-          WriteLn;
-        finally
-          FreeAndNil(LSourceStream);
+        Reset(LText);
+        LLengthOfFileHeaders := 0;
+        while True do begin
+          Readln(LText, LLine);
+          if Length(LLine) = 0 then begin
+            Break;
+          end;
+          LLengthOfFileHeaders := LLengthOfFileHeaders + Length(LLine) + 2;
         end;
       finally
-        FreeAndNil(LHelper);
+        CloseFile(LText);
       end;
+      {We have to subtract the size of the headers in the file and
+      add back the size of the headers we are to use
+      to get the size of the message we are going to send...}
+      LLength := LLength - LLengthOfFileHeaders + LLengthOfAMsgHeaders;
+      LMsgLiteral := '{' + IntToStr ( LLength ) + '}';            {Do not Localize}
+      {CC: The original code sent the APPEND command first, then followed it with the
+      message.  Maybe this worked with some server, but most send a
+      response like "+ Send the additional command..." between the two,
+      which was not expected by the client and caused an exception.}
+
+      //CC: Added double quotes around mailbox name, else mailbox names with spaces will cause server parsing error
+      LCmd := IMAP4Commands[cmdAppend] + ' "' + AMBName + '" ';         {Do not Localize}
+      if Length(LFlags) <> 0 then begin
+        LCmd := LCmd + LFlags + ' ';                    {Do not Localize}
+      end;
+      LCmd := LCmd + LMsgLiteral;                       {Do not Localize}
+
+      {Used to add the message to LCmd here.  Try sending the APPEND command, get
+      the + response, then send the message...}
+      SendCmd (NewCmdCounter, LCmd, []);
+      if LastCmdResult.Code = IMAP_CONT then begin
+        LHelper := TIdIMAP4WorkHelper.Create(Self);
+        try
+          LSourceStream := TIdReadFileExclusiveStream.Create(LTempPathname);
+          try
+            IOHandler.Write(LHeadersAsString);
+            //Change from CopyFrom to WriteStream (I think) to get OnWork invoked, as we do elsewhere
+            //with LSourceStream.Connection.IOHandler.ReadStream(LUnstrippedStream, ABufferLength);
+            //ReadStream uses OnWork, most other methods dont
+            LSourceStream.Position := LLengthOfFileHeaders;
+            IOHandler.Write(LSourceStream, LSourceStream.Size - LLengthOfFileHeaders);
+          finally
+            FreeAndNil(LSourceStream);
+          end;
+        finally
+          FreeAndNil(LHelper);
+        end;
+        {WARNING: After we send the message (which should be exactly
+        LLength bytes long), we need to send an EXTRA CRLF which is in
+        addition to to count in LLength, because this CRLF terminates the
+        APPEND command...}
+        WriteLn;
+        if GetInternalResponse(LastCmdCounter, [IMAP4Commands[cmdAppend]], False) = IMAP_OK then begin
+          Result := True;
+        end;
+      end;
+    finally
       {Delete the file, don't need it anymore...}
       SysUtils.DeleteFile(LTempPathname);
-      if GetInternalResponse(LastCmdCounter, [IMAP4Commands[cmdAppend]], False) = IMAP_OK then begin
-        Result := True;
-      end;
     end;
   end;
 end;
@@ -2816,6 +2815,14 @@ begin
     LTempStream := TMemoryStream.Create;
     try
       //Hunt for CRLF.CRLF, if present then we need to remove it...
+
+      // RLebeau: why?  The lines of the message data are not required to be
+      // dot-prefixed like in SMTP, so why should TIdIMAP care about any
+      // termination sequences in the file?  We are telling the server exactly
+      // how large the message actually is.  What if the message data actually
+      // contains a valid line with just a dot on it? This code would end up
+      // truncating the message that is stored on the server...
+
       SetLength(LBuf, 5);
       LTempStream.CopyFrom(AStream, LLength);
       LTempStream.Position := 0;
@@ -2837,10 +2844,6 @@ begin
         TIdStreamHelper.Seek(LTempStream, -4, soCurrent);
       until False;
 
-      {Some servers may want the message termination sequence CRLF.CRLF
-      and some may want CRLFCRLF so pass both by using CRLF.CRLFCRLF}
-      Inc(LLength, 2);
-
       LMsgLiteral := '{' + IntToStr(LLength) + '}';           {Do not Localize}
       {CC: The original code sent the APPEND command first, then followed it with the
       message.  Maybe this worked with some server, but most send a
@@ -2858,19 +2861,18 @@ begin
       the + response, then send the message...}
       SendCmd(NewCmdCounter, LCmd, []);
       if LastCmdResult.Code = IMAP_CONT then begin
+        LTempStream.Position := 0;
         LHelper := TIdIMAP4WorkHelper.Create(Self);
         try
-          LTempStream.Position := 0;
           IOHandler.Write(LTempStream, LLength);
-          IOHandler.WriteLn(EOL+'.'+EOL);
-          {WARNING: After we send the message (which should be exactly
-          LLength bytes long), we need to send an EXTRA CRLF which is in
-          addition to the count in LLength, because this CRLF terminates the
-          APPEND command...}
-          IOHandler.WriteLn;
         finally
           FreeAndNil(LHelper);
         end;
+        {WARNING: After we send the message (which should be exactly
+        LLength bytes long), we need to send an EXTRA CRLF which is in
+        addition to the count in LLength, because this CRLF terminates the
+        APPEND command...}
+        IOHandler.WriteLn;
         if GetInternalResponse(LastCmdCounter, [IMAP4Commands[cmdAppend]], False) = IMAP_OK then begin
           Result := True;
         end;
