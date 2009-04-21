@@ -637,37 +637,6 @@ uses
 const
   ProtocolVersionString: array[TIdHTTPProtocolVersion] of string = ('1.0', '1.1'); {do not localize}
 
-{ TIdDiscardStream }
-
-type
-  TIdDiscardStream = class(TIdBaseStream)
-  protected
-    function IdRead(var VBuffer: TIdBytes; AOffset, ACount: Longint): Longint; override;
-    function IdWrite(const ABuffer: TIdBytes; AOffset, ACount: Longint): Longint; override;
-    function IdSeek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64; override;
-    procedure IdSetSize(ASize: Int64); override;
-  end;
-
-function TIdDiscardStream.IdRead(var VBuffer: TIdBytes; AOffset, ACount: Longint): Longint;
-begin
-  Result := 0;
-end;
-
-function TIdDiscardStream.IdSeek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64;
-begin
-  Result := 0;
-end;
-
-procedure TIdDiscardStream.IdSetSize(ASize: Int64);
-begin
-//
-end;
-
-function TIdDiscardStream.IdWrite(const ABuffer: TIdBytes; AOffset, ACount: Longint): Longint;
-begin
-  Result := ACount;
-end;
-
 { EIdHTTPProtocolException }
 
 constructor EIdHTTPProtocolException.CreateError(const anErrCode: Integer;
@@ -1012,12 +981,13 @@ var
 begin
   LDecMeth := 0;
 
-  if Assigned(AResponse.ContentStream) then // Only for Get and Post
+  // we need to determine what type of decompression may need to be used
+  // before we read from the IOHandler.  If there is compression, then we
+  // use a local stream to download the compressed data and decompress it.
+  // If no compression is used, ContentStream will be used directly
+
+  if Assigned(AResponse.ContentStream) then
   begin
-    //we need to determine what type of decompression may need to used
-    //before we read from the IOHandler.  If there is compression,
-    //then we use the LM stream to hold the compressed data that was downloaded
-    //and decompress it.  If no compression is used, LS will equal ContentStream
     if Assigned(Compressor) and Compressor.IsReady then
     begin
        case PosInStrArray(AResponse.ContentEncoding, ['deflate', 'gzip'], False) of  {do not localize}
@@ -1025,72 +995,101 @@ begin
          1: LDecMeth := 2;
        end;
     end;
-
     if LDecMeth > 0 then begin
       LS := TMemoryStream.Create;
     end else begin
       LS := AResponse.ContentStream;
     end;
+  end else
+  begin
+    LS := nil;
+  end;
 
-    try
-      if IndyPos('chunked', LowerCase(AResponse.RawHeaders.Values['Transfer-Encoding'])) > 0 then {do not localize}
-      begin // Chunked
-        DoStatus(hsStatusText, [RSHTTPChunkStarted]);
-        BeginWork(wmRead);
-        try
-          Size := ChunkSize;
-          while Size > 0 do
-          begin
+  try
+    if IndyPos('chunked', LowerCase(AResponse.RawHeaders.Values['Transfer-Encoding'])) > 0 then {do not localize}
+    begin // Chunked
+      DoStatus(hsStatusText, [RSHTTPChunkStarted]);
+      BeginWork(wmRead);
+      try
+        Size := ChunkSize;
+        while Size > 0 do
+        begin
+          if Assigned(LS) then begin
             IOHandler.ReadStream(LS, Size);
-            InternalReadLn; // blank line
-            Size := ChunkSize;
+          end else begin
+            IOHandler.Discard(Size);
           end;
           InternalReadLn; // blank line
-        finally
-          EndWork(wmRead);
+          Size := ChunkSize;
         end;
-      end
-      else if AResponse.ContentLength > 0 then // If chunked then this is also 0
-      begin
-        // RLebeau 6/30/2006: DO NOT READ IF THE REQUEST IS HEAD!!!
-        // The server is supposed to send a 'Content-Length' header
-        // without sending the actual data...
-        try
-          if AUnexpectedContentTimeout > 0 then begin
+        InternalReadLn; // blank line
+      finally
+        EndWork(wmRead);
+      end;
+    end
+    else if AResponse.ContentLength > 0 then // If chunked then this is also 0
+    begin
+      // RLebeau 6/30/2006: DO NOT READ IF THE REQUEST IS HEAD!!!
+      // The server is supposed to send a 'Content-Length' header
+      // without sending the actual data...
+      try
+        if AUnexpectedContentTimeout > 0 then
+        begin
+          if IOHandler.InputBufferIsEmpty then begin
             IOHandler.CheckForDataOnSource(AUnexpectedContentTimeout);
-            if not IOHandler.InputBufferIsEmpty then begin
+          end;
+          if not IOHandler.InputBufferIsEmpty then
+          begin
+            if Assigned(LS) then begin
               IOHandler.ReadStream(LS, AResponse.ContentLength);
+            end else begin
+              IOHandler.Discard(AResponse.ContentLength);
             end;
-          end else begin
+          end;
+        end else
+        begin
+          if Assigned(LS) then begin
             IOHandler.ReadStream(LS, AResponse.ContentLength);
+          end else begin
+            IOHandler.Discard(AResponse.ContentLength);
           end;
-        except
-          on E: EIdConnClosedGracefully do
         end;
-      end
-      else if not AResponse.HasContentLength then
-      begin
-        // RLebeau 2/15/2006: only read if an entity body is actually expected
-        if AUnexpectedContentTimeout > 0 then begin
+      except
+        on E: EIdConnClosedGracefully do
+      end;
+    end
+    else if not AResponse.HasContentLength then
+    begin
+      // RLebeau 2/15/2006: only read if an entity body is actually expected
+      if AUnexpectedContentTimeout > 0 then begin
+        if IOHandler.InputBufferIsEmpty then begin
           IOHandler.CheckForDataOnSource(AUnexpectedContentTimeout);
-          if not IOHandler.InputBufferIsEmpty then begin
+        end;
+        if not IOHandler.InputBufferIsEmpty then begin
+          if Assigned(LS) then begin
             IOHandler.ReadStream(LS, -1, True);
+          end else begin
+            IOHandler.DiscardAll;
           end;
-        end else begin
+        end;
+      end else begin
+        if Assigned(LS) then begin
           IOHandler.ReadStream(LS, -1, True);
+        end else begin
+          IOHandler.DiscardAll;
         end;
       end;
-      if LDecMeth > 0 then begin
-        LS.Position := 0;
-      end;
+    end;
+    if LDecMeth > 0 then begin
+      LS.Position := 0;
       case LDecMeth of
         1 :  Compressor.DecompressDeflateStream(LS, AResponse.ContentStream);
         2 :  Compressor.DecompressGZipStream(LS, AResponse.ContentStream);
       end;
-    finally
-      if LDecMeth > 0 then begin
-        FreeAndNil(LS);
-      end;
+    end;
+  finally
+    if LDecMeth > 0 then begin
+      FreeAndNil(LS);
     end;
   end;
 end;
@@ -1901,17 +1900,14 @@ function TIdHTTPProtocol.ProcessResponse(AIgnoreReplies: array of SmallInt): TId
 
   procedure DiscardContent(AUnexpectedContentTimeout: Integer = IdTimeoutDefault);
   var
-    LTempResponse: TIdDiscardStream;
-    LTempStream: TStream;
+    LOrigStream: TStream;
   begin
-    LTempResponse := TIdDiscardStream.Create;
-    LTempStream := Response.ContentStream;
-    Response.ContentStream := LTempResponse;
+    LOrigStream := Response.ContentStream;
+    Response.ContentStream := nil;
     try
       FHTTP.ReadResult(Response, AUnexpectedContentTimeout);
     finally
-      Response.ContentStream := LTempStream;
-      FreeAndNil(LTempResponse);
+      Response.ContentStream := LOrigStream;
     end;
   end;
 
