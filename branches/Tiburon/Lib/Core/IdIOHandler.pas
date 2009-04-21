@@ -608,6 +608,9 @@ type
     procedure ReadStrings(ADest: TStrings; AReadLinesCount: Integer = -1;
       AEncoding: TIdTextEncoding = nil);
     //
+    procedure Discard(AByteCount: Int64);
+    procedure DiscardAll;
+    //
     // WriteBuffering Methods
     //
     procedure WriteBufferCancel; virtual;
@@ -1497,8 +1500,10 @@ procedure TIdIOHandler.ReadStream(AStream: TStream; AByteCount: TIdStreamSize;
 var
   i: Integer;
   LBuf: TIdBytes;
-  LPos: TIdStreamSize;
-  LByteCount, LWorkCount: Int64;
+  LByteCount, LPos: TIdStreamSize;
+  {$IFNDEF SIZE64STREAM}
+  LTmp: Int64;
+  {$ENDIF}
 const
   cSizeUnknown = -1;
 begin
@@ -1507,9 +1512,12 @@ begin
   if (AByteCount = cSizeUnknown) and (not AReadUntilDisconnect) then begin
     // Read size from connection
     if LargeStream then begin
+      {$IFDEF SIZE64STREAM}
       LByteCount := ReadInt64;
-      {$IFNDEF SIZE64STREAM}
-      EIdIOHandlerStreamDataTooLarge.IfTrue(LByteCount > High(Integer), RSDataTooLarge);
+      {$ELSE}
+      LTmp := ReadInt64;
+      EIdIOHandlerStreamDataTooLarge.IfTrue(LTmp > MaxInt, RSDataTooLarge);
+      LByteCount := TIdStreamSize(LTmp);
       {$ENDIF}
     end else begin
       LByteCount := ReadLongInt;
@@ -1526,23 +1534,25 @@ begin
     AdjustStreamSize(AStream, LPos + LByteCount);
   end;
 
-  if (LByteCount <= cSizeUnknown) or AReadUntilDisconnect then begin
-    LWorkCount := cSizeUnknown;
+  if (LByteCount <= cSizeUnknown) and (not AReadUntilDisconnect) then begin
+    AReadUntilDisconnect := True;
+  end;
+
+  if AReadUntilDisconnect then begin
     BeginWork(wmRead);
   end else begin
-    LWorkCount := LByteCount;
-    BeginWork(wmRead, LWorkCount);
+    BeginWork(wmRead, LByteCount);
   end;
 
   try
     // If data already exists in the buffer, write it out first.
     // should this loop for all data in buffer up to workcount? not just one block?
     if FInputBuffer.Size > 0 then begin
-      if LWorkCount = cSizeUnknown then begin
+      if AReadUntilDisconnect then begin
         i := FInputBuffer.Size;
       end else begin
-        i := IndyMin(FInputBuffer.Size, LWorkCount);
-        Dec(LWorkCount, i);
+        i := IndyMin(FInputBuffer.Size, LByteCount);
+        Dec(LByteCount, i);
       end;
       FInputBuffer.ExtractToStream(AStream, i);
     end;
@@ -1553,10 +1563,10 @@ begin
     // prematurely and thus leave unread bytes in the InputBuffer.
     // Let the loop catch the exception before exiting...
     repeat
-      if LWorkCount = cSizeUnknown then begin
+      if AReadUntilDisconnect then begin
         i := RecvBufferSize;
       end else begin
-        i := IndyMin(LWorkCount, RecvBufferSize);
+        i := IndyMin(LByteCount, RecvBufferSize);
         if i < 1 then begin
           Break;
         end;
@@ -1586,8 +1596,8 @@ begin
       finally
         if i > 0 then begin
           TIdStreamHelper.Write(AStream, LBuf, i);
-          if LWorkCount <> cSizeUnknown then begin
-            Dec(LWorkCount, i);
+          if not AReadUntilDisconnect then begin
+            Dec(LByteCount, i);
           end;
         end;
       end;
@@ -1598,6 +1608,81 @@ begin
       AStream.Size := AStream.Position;
     end;
     LBuf := nil;
+  end;
+end;
+
+{ TIdDiscardStream }
+
+type
+  TIdDiscardStream = class(TIdBaseStream)
+  protected
+    function IdRead(var VBuffer: TIdBytes; AOffset, ACount: Longint): Longint; override;
+    function IdWrite(const ABuffer: TIdBytes; AOffset, ACount: Longint): Longint; override;
+    function IdSeek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64; override;
+    procedure IdSetSize(ASize: Int64); override;
+  end;
+
+function TIdDiscardStream.IdRead(var VBuffer: TIdBytes; AOffset, ACount: Longint): Longint;
+begin
+  Result := 0;
+end;
+
+function TIdDiscardStream.IdSeek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64;
+begin
+  Result := 0;
+end;
+
+procedure TIdDiscardStream.IdSetSize(ASize: Int64);
+begin
+//
+end;
+
+function TIdDiscardStream.IdWrite(const ABuffer: TIdBytes; AOffset, ACount: Longint): Longint;
+begin
+  Result := ACount;
+end;
+
+procedure TIdIOHandler.Discard(AByteCount: Int64);
+var
+  LStream: TIdDiscardStream;
+  LSize: TIdStreamSize;
+begin
+  // TODO: reimplement to not use TIdDiscardStream, just read bytes and throw them away
+  Assert(AByteCount >= 0);
+  if AByteCount > 0 then
+  begin
+    LStream := TIdDiscardStream.Create;
+    try
+      BeginWork(wmRead, AByteCount);
+      try
+        repeat
+          if AByteCount < Int64(High(TIdStreamSize)) then begin
+            LSize := TIdStreamSize(AByteCount);
+          end else begin
+            LSize := High(TIdStreamSize);
+          end;
+          ReadStream(LStream, LSize, False);
+          Dec(AByteCount, LSize);
+        until AByteCount < 1;
+      finally
+        EndWork(wmRead);
+      end;
+    finally
+      LStream.Free;
+    end;
+  end;
+end;
+
+procedure TIdIOHandler.DiscardAll;
+var
+  LStream: TIdDiscardStream;
+begin
+  // TODO: reimplement to not use TIdDiscardStream, just read bytes and throw them away
+  LStream := TIdDiscardStream.Create;
+  try
+    ReadStream(LStream, -1, True);
+  finally
+    LStream.Free;
   end;
 end;
 
