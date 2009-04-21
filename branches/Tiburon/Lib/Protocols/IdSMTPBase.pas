@@ -99,10 +99,12 @@ uses
 //default property values
 const
   DEF_SMTP_PIPELINE = False;
-  IdDEF_UseEhlo = TRUE; //APR: default behavior
+  IdDEF_UseEhlo = True; //APR: default behavior
+  IdDEF_UseVerp = True;
 
 const
   CAPAPIPELINE = 'PIPELINING';  {do not localize}
+  CAPAVERP = 'VERP';            {do not localize}
   XMAILER_HEADER = 'X-Mailer';  {do not localize}
 
 const
@@ -127,7 +129,9 @@ type
     FMailAgent: string;
     FHeloName : String;
     FPipeline : Boolean;
-    FUseEHLO : Boolean;
+    FUseEhlo : Boolean;
+    FUseVerp : Boolean;
+    FVerpDelims: string;
     FOnFailedRecipient: TIdSMTPFailedRecipient;
     //
     function GetSupportsTLS : Boolean; override;
@@ -151,11 +155,14 @@ type
   public
     procedure Send(AMsg: TIdMessage); overload; virtual;
     procedure Send(AMsg: TIdMessage; ARecipients: TIdEMailAddressList); overload; virtual;
+    procedure Send(AMsg: TIdMessage; const AEnvelopeSender: string; Recipients: TIdEMailAddressList); overload; virtual;
   published
     property MailAgent: string read FMailAgent write FMailAgent;
     property HeloName : string read FHeloName write FHeloName;
     property UseEhlo: Boolean read FUseEhlo write SetUseEhlo default IdDEF_UseEhlo;
     property PipeLine : Boolean read FPipeLine write SetPipeline default DEF_SMTP_PIPELINE;
+    property UseVerp: Boolean read FUseVerp write FUseVerp default IdDEF_UseVerp;
+    property VerpDelims: string read FVerpDelims write FVerpDelims;
     //
     property OnFailedRecipient: TIdSMTPFailedRecipient read FOnFailedRecipient write FOnFailedRecipient;
   end;
@@ -183,6 +190,7 @@ begin
   FRegularProtPort := IdPORT_SMTP;
   FPipeLine := DEF_SMTP_PIPELINE;
   FUseEhlo := IdDEF_UseEhlo;
+  FUseVerp := IdDEF_UseVerp;
   FMailAgent := '';
   FHeloName := '';
   Port := IdPORT_SMTP;
@@ -242,9 +250,22 @@ begin
 end;
 
 procedure TIdSMTPBase.SendNoPipelining(AMsg: TIdMessage; const AFrom: String; ARecipients: TIdEMailAddressList);
+var
+  LCmd: string;
 begin
+  LCmd := MAILFROM_CMD + ' <' + AFrom + '>';    {Do not Localize}
+  if FUseVerp then begin
+    if Capabilities.IndexOf(CAPAVERP) > -1 then begin
+      LCmd := LCmd + ' VERP';                   {Do not Localize}
+    end else begin
+      LCmd := LCmd + ' XVERP';                  {Do not Localize}
+    end;
+    if FVerpDelims <> '' then begin
+     LCmd := LCmd + '=' + FVerpDelims;          {Do not Localize}
+    end;
+  end;
   SendCmd(RSET_CMD);
-  SendCmd(MAILFROM_CMD + ' <' + AFrom + '>', MAILFROM_ACCEPT);    {Do not Localize}
+  SendCmd(LCmd, MAILFROM_ACCEPT);
   try
     WriteRecipientsNoPipelining(ARecipients);
     SendCmd(DATA_CMD, DATA_ACCEPT);
@@ -262,6 +283,7 @@ procedure TIdSMTPBase.SendPipelining(AMsg: TIdMessage; const AFrom: String; ARec
 var
   LError : TIdReplySMTP;
   I, LFailedRecips : Integer;
+  LCmd: string;
   LBufferingStarted: Boolean;
 
   function SetupErrorReply: TIdReplySMTP;
@@ -274,6 +296,17 @@ var
 
 begin
   LError := nil;
+  LCmd := MAILFROM_CMD + ' <' + AFrom + '>';    {Do not Localize}
+  if FUseVerp then begin
+    if Capabilities.IndexOf(CAPAVERP) > -1 then begin
+      LCmd := LCmd + ' VERP';                   {Do not Localize}
+    end else begin
+      LCmd := LCmd + ' XVERP';                  {Do not Localize}
+    end;
+    if FVerpDelims <> '' then begin
+     LCmd := LCmd + '=' + FVerpDelims;          {Do not Localize}
+    end;
+  end;
   try
     LBufferingStarted := not IOHandler.WriteBufferingActive;
     if LBufferingStarted then begin
@@ -281,7 +314,7 @@ begin
     end;
     try
       IOHandler.WriteLn(RSET_CMD);
-      IOHandler.WriteLn(MAILFROM_CMD + ' <' + AFrom + '>');
+      IOHandler.WriteLn(LCmd);
       WriteRecipientsPipeLine(ARecipients);
       IOHandler.WriteLn(DATA_CMD);
       if LBufferingStarted then begin
@@ -454,7 +487,22 @@ end;
 
 procedure TIdSMTPBase.Send(AMsg: TIdMessage; ARecipients: TIdEMailAddressList);
 begin
-  InternalSend(AMsg, AMsg.From.Address, ARecipients);
+  Send(AMsg, '', ARecipients);
+end;
+
+procedure TIdSMTPBase.Send(AMsg: TIdMessage; const AEnvelopeSender: string;
+  ARecipients: TIdEMailAddressList);
+var
+  LSender: string;
+begin
+  LSender := Trim(AEnvelopeSender);
+  if LSender = '' then begin
+    LSender := Trim(AMsg.Sender.Address);
+    if LSender = '' then begin
+      LSender := Trim(AMsg.From.Address);
+    end;
+  end;
+  InternalSend(AMsg, LSender, ARecipients);
 end;
 
 end.
