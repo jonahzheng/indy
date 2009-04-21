@@ -155,7 +155,8 @@ type
   public
     procedure Send(AMsg: TIdMessage); overload; virtual;
     procedure Send(AMsg: TIdMessage; ARecipients: TIdEMailAddressList); overload; virtual;
-    procedure Send(AMsg: TIdMessage; const AEnvelopeSender: string; ARecipients: TIdEMailAddressList); overload; virtual;
+    procedure Send(AMsg: TIdMessage; const AFrom: string); overload; virtual;
+    procedure Send(AMsg: TIdMessage; ARecipients: TIdEMailAddressList; const AFrom: string); overload; virtual;
   published
     property MailAgent: string read FMailAgent write FMailAgent;
     property HeloName : string read FHeloName write FHeloName;
@@ -470,6 +471,8 @@ begin
   end;
 end;
 
+// this version of Send() uses the TIdMessage to determine both the
+// sender and the recipients...
 procedure TIdSMTPBase.Send(AMsg: TIdMessage);
 var
   LRecipients: TIdEMailAddressList;
@@ -485,24 +488,45 @@ begin
   end;
 end;
 
+// this version of Send() uses the TIdMessage to determine the
+// sender, but sends to the caller's specified recipients
 procedure TIdSMTPBase.Send(AMsg: TIdMessage; ARecipients: TIdEMailAddressList);
-begin
-  Send(AMsg, '', ARecipients);
-end;
-
-procedure TIdSMTPBase.Send(AMsg: TIdMessage; const AEnvelopeSender: string;
-  ARecipients: TIdEMailAddressList);
 var
   LSender: string;
 begin
-  LSender := Trim(AEnvelopeSender);
+  LSender := Trim(AMsg.Sender.Address);
   if LSender = '' then begin
-    LSender := Trim(AMsg.Sender.Address);
-    if LSender = '' then begin
-      LSender := Trim(AMsg.From.Address);
-    end;
+    LSender := Trim(AMsg.From.Address);
   end;
   InternalSend(AMsg, LSender, ARecipients);
+end;
+
+// this version of Send() uses the TIdMessage to determine the
+// recipients, but sends using the caller's specified sender.
+// The sender can be empty, which is useful for server-generated
+// error messages...
+procedure TIdSMTPBase.Send(AMsg: TIdMessage; const AFrom: string);
+var
+  LRecipients: TIdEMailAddressList;
+begin
+  LRecipients := TIdEMailAddressList.Create(Self);
+  try
+    LRecipients.AddItems(AMsg.Recipients);
+    LRecipients.AddItems(AMsg.CCList);
+    LRecipients.AddItems(AMsg.BccList);
+    Send(AMsg, LRecipients, AFrom);
+  finally
+    FreeAndNil(LRecipients);
+  end;
+end;
+
+// this version of Send() uses the caller's specified sender and
+// recipients.  The sender can be empty, which is useful for
+// server-generated error messages...
+procedure TIdSMTPBase.Send(AMsg: TIdMessage; ARecipients: TIdEMailAddressList;
+  const AFrom: string);
+begin
+  InternalSend(AMsg, AFrom, ARecipients);
 end;
 
 end.
