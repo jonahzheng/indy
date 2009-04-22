@@ -45,6 +45,10 @@
 {$UNDEF UNICODE_BUT_NO_UNICODESTRING}
 {$UNDEF TEncoding}
 
+// Make sure that this is defined only for environments where we are using
+// the iconv library to charactor conversions.
+{$UNDEF USE_ICONV}
+
 // Delphi 4
 {$IFDEF VER120}
   {$DEFINE VCL4ORABOVE}
@@ -587,6 +591,13 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$ENDIF}
 {$ENDIF}
 //
+//iconv defines section.  
+{$IFDEF UNIX}
+  {$DEFINE USE_ICONV}
+{$ENDIF}
+{$IFDEF NETWARELIBC}
+  {$DEFINE USE_ICONV}
+{$ENDIF}
 
 {$UNDEF SIZE64STREAM}
 {$IFDEF FPC}
