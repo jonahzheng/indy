@@ -146,12 +146,13 @@ type
     //No pipeline send methods
     function WriteRecipientNoPipelining(const AEmailAddress: TIdEmailAddressItem): Boolean;
     procedure WriteRecipientsNoPipelining(AList: TIdEmailAddressList);
-    procedure SendNoPipelining(AMsg: TIdMessage; const AFrom: String; ARecipients: TIdEMailAddressList); overload;
+    procedure SendNoPipelining(AMsg: TIdMessage; const AFrom: String; ARecipients: TIdEMailAddressList);
     //pipeline send methods
     procedure WriteRecipientPipeLine(const AEmailAddress: TIdEmailAddressItem);
     procedure WriteRecipientsPipeLine(AList: TIdEmailAddressList);
     procedure SendPipelining(AMsg: TIdMessage; const AFrom: String; ARecipients: TIdEMailAddressList);
-    procedure InternalSend(AMsg: TIdMessage; const AFrom: String; ARecipients: TIdEMailAddressList); overload;
+    //
+    procedure InternalSend(AMsg: TIdMessage; const AFrom: String; ARecipients: TIdEMailAddressList); virtual;
   public
     procedure Send(AMsg: TIdMessage); overload; virtual;
     procedure Send(AMsg: TIdMessage; ARecipients: TIdEMailAddressList); overload; virtual;
