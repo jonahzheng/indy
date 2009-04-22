@@ -466,10 +466,8 @@ begin
         begin
           {$IFDEF UNICODESTRING}
           LTemp := AnsiString(AAddress); // convert to Ansi
-          LAddr := inet_addr(PAnsiChar(LTemp));
-          {$ELSE}
-          LAddr := inet_addr(PAnsiChar(AAddress));
           {$ENDIF}
+          LAddr := inet_addr(PAnsiChar({$IFDEF UNICODESTRING}LTemp{$ELSE}AAddress{$ENDIF}));
           Host := gethostbyAddr(@LAddr, SIZE_TADDRINFO, AF_INET);
           if Host = nil then begin
             CheckForSocketError(SOCKET_ERROR);
@@ -497,25 +495,26 @@ begin
 
   {$IFDEF UNICODE_BUT_NO_UNICODESTRING}
   LTemp := AAddress; // convert to Unicode
-  RetVal := getaddrinfo(PWideChar(LTemp),
-  {$ELSE}
-  RetVal := getaddrinfo(PChar(AAddress),
   {$ENDIF}
-    nil, @Hints, @LAddrInfo);
 
+  RetVal := getaddrinfo(
+    {$IFDEF UNICODE_BUT_NO_UNICODESTRING}PWideChar(LTemp){$ELSE}PChar(AAddress){$ENDIF},
+    nil, @Hints, @LAddrInfo);
+  if RetVal <> 0 then begin
+    RaiseSocketError(gaiErrorToWsaError(RetVal));
+  end;
   try
+    SetLength(
+      {$IFDEF UNICODE_BUT_NO_UNICODESTRING}LTemp{$ELSE}Result{$ENDIF},
+      NI_MAXHOST);
+    RetVal := getnameinfo(
+      LAddrInfo.ai_addr, LAddrInfo.ai_addrlen,
+      {$IFDEF UNICODE_BUT_NO_UNICODESTRING}PWideChar(LTemp){$ELSE}PChar(Result){$ENDIF},
+      NI_MAXHOST, nil, 0, NI_NAMEREQD);
     if RetVal <> 0 then begin
       RaiseSocketError(gaiErrorToWsaError(RetVal));
     end;
-    {$IFDEF UNICODE_BUT_NO_UNICODESTRING}
-    SetLength(LTemp, NI_MAXHOST);
-    getnameinfo(LAddrInfo.ai_addr, LAddrInfo.ai_addrlen, PWideChar(LTemp), NI_MAXHOST, nil, 0, NI_NAMEREQD);
-    Result := PWideChar(LTemp);
-    {$ELSE}
-    SetLength(Result, NI_MAXHOST);
-    getnameinfo(LAddrInfo.ai_addr, LAddrInfo.ai_addrlen, PChar(Result), NI_MAXHOST, nil, 0, NI_NAMEREQD);
-    Result := PChar(Result);
-    {$ENDIF}
+    Result := {$IFDEF UNICODE_BUT_NO_UNICODESTRING}PWideChar(LTemp){$ELSE}PChar(Result){$ENDIF};
   finally
     freeaddrinfo(LAddrInfo);
   end;
@@ -528,7 +527,7 @@ begin
   SetLength(LStr, SIZE_HOSTNAME);
   gethostname(PAnsiChar(LStr), SIZE_HOSTNAME);
   //we have to specifically type cast a PAnsiChar to a string for Tiburon.
-  //otherwise, we will get a warning about implicit typetast from AnsiString
+  //otherwise, we will get a warning about implicit typecast from AnsiString
   //to string   Note that there is no Unicode version of gethostname.
   Result := String(PAnsiChar(LStr));
 end;
@@ -661,10 +660,10 @@ var
 begin
   {$IFDEF UNICODESTRING}
   LTemp := AnsiString(AServiceName); // convert to Ansi
-  ps := getservbyname(PAnsiChar(LTemp), nil);
-  {$ELSE}
-  ps := getservbyname(PAnsiChar(AServiceName), nil);
   {$ENDIF}
+  ps := getservbyname(
+    PAnsiChar({$IFDEF UNICODESTRING}LTemp{$ELSE}AServiceName{$ENDIF}),
+    nil);
   if ps <> nil then begin
     Result := ntohs(ps^.s_port);
   end else begin
@@ -693,16 +692,13 @@ begin
     if ps <> nil then
     begin
   //we have to specifically type cast a PAnsiChar to a string for Tiburon.
-  //otherwise, we will get a warning about implicit typetast from AnsiString
-  //to string   Note that there is no Unicode version of gethostname.
+  //otherwise, we will get a warning about implicit typecast from AnsiString
+  //to string   Note that there is no Unicode version of getservbyport.
       Result.Add(String(PAnsiChar(ps^.s_name)));
       i := 0;
       p := Pointer(ps^.s_aliases);
       while p[i] <> nil do
       begin
-  //we have to specifically type cast a PAnsiChar to a string for Tiburon.
-  //otherwise, we will get a warning about implicit typetast from AnsiString
-  //to string   Note that there is no Unicode version of gethostname.
         Result.Add(String(PAnsiChar(p[i])));
         Inc(i);
       end;
@@ -792,10 +788,9 @@ begin
   begin
     {$IFDEF UNICODESTRING}
     LTemp := AnsiString(LHostName); // convert to Ansi
-    AHost := gethostbyname(PAnsiChar(LTemp));
-    {$ELSE}
-    AHost := gethostbyname(PAnsiChar(LHostName));
     {$ENDIF}
+    AHost := gethostbyname(
+      PAnsiChar({$IFDEF UNICODESTRING}LTemp{$ELSE}LHostName{$ENDIF}));
     if AHost = nil then begin
       RaiseLastSocketError;
     end;
@@ -822,27 +817,23 @@ begin
 
   {$IFDEF UNICODE_BUT_NO_UNICODESTRING}
   LTemp := LHostName; // convert to Unicode
-  RetVal := getaddrinfo(PWideChar(LTemp),
-  {$ELSE}
-  RetVal := getaddrinfo(PChar(LHostName),
   {$ENDIF}
-    nil, @Hints, @LAddrInfo);
 
+  RetVal := getaddrinfo(
+    {$IFDEF UNICODE_BUT_NO_UNICODESTRING}PWideChar(LTemp){$ELSE}PChar(LHostName){$ENDIF},
+    nil, @Hints, @LAddrInfo);
+  if RetVal <> 0 then begin
+    RaiseSocketError(gaiErrorToWsaError(RetVal));
+  end;
   try
-    if RetVal <> 0 then begin
-      RaiseSocketError(gaiErrorToWsaError(RetVal));
-    end;
-    if LAddrInfo <> nil then
-    begin
-      AAddresses.BeginUpdate;
-      try
-        repeat
-	  AAddresses.Add(TranslateTInAddrToString(LAddrInfo^.ai_addr^.sin_addr, Id_IPv4));
-          LAddrInfo := LAddrInfo^.ai_next;
-        until LAddrInfo = nil;
-      finally;
-        AAddresses.EndUpdate;
-      end;
+    AAddresses.BeginUpdate;
+    try
+      repeat
+        AAddresses.Add(TranslateTInAddrToString(LAddrInfo^.ai_addr^.sin_addr, Id_IPv4));
+        LAddrInfo := LAddrInfo^.ai_next;
+      until LAddrInfo = nil;
+    finally;
+      AAddresses.EndUpdate;
     end;
   finally
     freeaddrinfo(LAddrInfo);
@@ -1169,10 +1160,9 @@ begin
         begin
           {$IFDEF UNICODESTRING}
           LTemp := AnsiString(AHostName); // convert to Ansi
-          LHost := IdWinsock2.gethostbyname(PAnsiChar(LTemp));
-          {$ELSE}
-          LHost := IdWinsock2.gethostbyname(PAnsiChar(AHostName));
           {$ENDIF}
+          LHost := IdWinsock2.gethostbyname(
+	    PAnsiChar({$IFDEF UNICODESTRING}LTemp{$ELSE}AHostName{$ENDIF}));
           if LHost = nil then begin
             RaiseLastSocketError;
           end;
@@ -1202,16 +1192,15 @@ begin
 
   {$IFDEF UNICODE_BUT_NO_UNICODESTRING}
   LTemp := AHostName; // convert to Unicode
-  RetVal := getaddrinfo(PWideChar(LTemp),
-  {$ELSE}
-  RetVal := getaddrinfo(PChar(AHostName),
   {$ENDIF}
-    nil, @Hints, @LAddrInfo);
 
+  RetVal := getaddrinfo(
+    {$IFDEF UNICODE_BUT_NO_UNICODESTRING}PWideChar(LTemp){$ELSE}PChar(AHostName){$ENDIF},
+    nil, @Hints, @LAddrInfo);
+  if RetVal <> 0 then begin
+    RaiseSocketError(gaiErrorToWsaError(RetVal));
+  end;
   try
-    if RetVal <> 0 then begin
-      RaiseSocketError(gaiErrorToWsaError(RetVal));
-    end;
     if AIPVersion = Id_IPv4 then begin
       Result := TranslateTInAddrToString(LAddrInfo^.ai_addr^.sin_addr, AIPVersion)
     end else begin
