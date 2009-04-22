@@ -3440,10 +3440,15 @@ begin
       {$IFDEF DOTNET}
       Result := TIdTextEncoding.GetEncoding(ACharset);
       {$ELSE}
+        {$IFDEF WIN32_OR_WIN64_OR_WINCE}
       CP := CharsetToCodePage(ACharset);
       if CP <> 0 then begin
         Result := TIdTextEncoding.GetEncoding(CP);
       end;
+        {$ENDIF}
+	{$IFDEF USE_ICONV}
+      Result := TIdTextEncoding.GetEncoding(ACharset);
+	{$ENDIF}
     except end;
     {$ENDIF}
   end;

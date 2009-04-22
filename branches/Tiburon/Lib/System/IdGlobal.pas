@@ -532,7 +532,7 @@ uses
     {$ENDIF}
   {$ENDIF}
   Classes,
-  SyncObjs,
+  syncobs,
   {$IFDEF UNIX}
     {$IFDEF KYLIX}
     Libc,
@@ -757,7 +757,12 @@ type
     function GetChars(const ABytes: TIdBytes): TIdWideChars; overload;
     function GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): TIdWideChars; overload;
     function GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer; var VChars: TIdWideChars; ACharIndex: Integer): Integer; overload;
+    {$IFDEF WIN32_OR_WIN64_OR_WINCE}}   
     class function GetEncoding(ACodePage: Integer): TIdTextEncoding;
+    {$ENDIF}
+    {$IFDEF USE_ICONV}
+    class function GetEncoding(ACodePage: String): TIdTextEncoding;
+    {$ENDIF}
     function GetMaxByteCount(ACharCount: Integer): Integer; virtual; abstract;
     function GetMaxCharCount(AByteCount: Integer): Integer; virtual; abstract;
     function GetPreamble: TIdBytes; virtual; abstract;
@@ -1333,6 +1338,7 @@ uses
   {$ENDIF}
   {$IFDEF USELIBC}Libc,{$ENDIF}
   {$IFDEF VCL6ORABOVE}DateUtils,{$ENDIF}
+  {$IFDEF USE_ICONV}IdIconv,{$ENDIF}
   IdResourceStrings,
   IdStream;
 
@@ -1345,13 +1351,20 @@ const
   {$ENDIF}
 {$ENDIF}
 
+
+
 {$IFNDEF DOTNET_OR_TEncoding}
 type
   TIdMBCSEncoding = class(TIdTextEncoding)
   private
+    {$IFDEF USE_ICONV}
+    FIconv : iconv_t;
+    {$ENDIF}  
+    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     FCodePage: Cardinal;
     FMBToWCharFlags: Cardinal;
     FWCharToMBFlags: Cardinal;
+    {$ENDIF}
   protected
     function GetByteCount(Chars: PWideChar; CharCount: Integer): Integer; overload; override;
     function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
@@ -1359,8 +1372,15 @@ type
     function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
   public
     constructor Create; overload; virtual;
+     {$IFDEF WIN32_OR_WIN64_OR_WINCE}    
+    //disable these constructors when using iconv.  In that API, you just pass the
+    //code-page name instead of the number. 
     constructor Create(CodePage: Integer); overload; virtual;
     constructor Create(CodePage, MBToWCharFlags, WCharToMBFlags: Integer); overload; virtual;
+    {$ENDIF}
+    {$IFDEF USE_ICONV}
+    constructor Create(CodePage : AnsiString); overload; virtual;
+    {$ENDIF}
     function GetMaxByteCount(CharCount: Integer): Integer; override;
     function GetMaxCharCount(ByteCount: Integer): Integer; override;
     function GetPreamble: TIdBytes; override;
@@ -1481,15 +1501,18 @@ var
 begin
   if GIdASCIIEncoding = nil then
   begin
-{$IFDEF WIN32_OR_WIN64_OR_WINCE}s
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
     // RLebeau: 20127 is the official codepage for ASCII, but older OS versions
     // do not support codepage 20127, so fallback to 1252 when needed...
     CP := 20127;
     if not GetCPInfo(CP, LCPInfo) then begin
       CP := 1252;
     end;
-{$ENDIF}
     LEncoding := TIdMBCSEncoding.Create(CP, 0, 0);
+{$ENDIF}    
+{$IFDEF USE_ICONV}
+    LEncoding := TIdMBCSEncoding.Create('ASCII');  {Do not localize}
+{$ENDIF}
     if InterlockedCompareExchangePtr(Pointer(GIdASCIIEncoding), LEncoding, nil) <> nil then
       LEncoding.Free;
   end;
@@ -1697,14 +1720,17 @@ begin
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}  
     LEncoding := TIdMBCSEncoding.Create(CP_ACP, 0, 0);
 {$ENDIF}
+{$IFDEF USE_ICONV}
+    LEncoding :=  TIdMBCSEncoding.Create('ASCII');
+{$ENDIF}
     if InterlockedCompareExchangePtr(Pointer(GIdDefaultEncoding), LEncoding, nil) <> nil then
       LEncoding.Free;
   end;
   Result := GIdDefaultEncoding;
 end;
 
-class function TIdTextEncoding.GetEncoding(ACodePage: Integer): TIdTextEncoding;
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+class function TIdTextEncoding.GetEncoding(ACodePage: Integer): TIdTextEncoding;
 var
   LCPInfo: TCPInfo;
 begin
@@ -1715,12 +1741,17 @@ begin
       ACodePage := 1252;
     end;
   end;
-{$ELSE}
-begin
-{$ENDIF}
 
+begin
   Result := TIdMBCSEncoding.Create(ACodePage);
 end;
+{$ENDIF}
+{$IFDEF USE_ICONV}
+class function TIdTextEncoding.GetEncoding(ACodePage: String): TIdTextEncoding;
+begin
+  Result := TIdMBCSEncoding.Create(ACodePage);
+end;
+{$ENDIF}
 
 function TIdTextEncoding.GetString(const ABytes: TIdBytes): WideString;
 begin
@@ -1807,13 +1838,13 @@ begin
   {$ENDIF}
 end;
 
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
 constructor TIdMBCSEncoding.Create(CodePage: Integer);
 begin
   Create(CodePage, 0, 0);
 end;
 
 constructor TIdMBCSEncoding.Create(CodePage, MBToWCharFlags, WCharToMBFlags: Integer);
-{$IFDEF WIN32_OR_WIN64_OR_WINCE}
 var
   LCPInfo: TCPInfo;
 begin
@@ -1826,10 +1857,14 @@ begin
 
   FMaxCharSize := LCPInfo.MaxCharSize;
   FIsSingleByte := FMaxCharSize = 1;
-{$ELSE}
-begin
-{$ENDIF}
 end;
+{$ENDIF}
+{$IFDEF USE_ICONV}
+constructor TIdMBCSEncoding.Create(CodePage: AnsiString);
+begin
+  Create(CodePage);
+end;
+{$ENDIF}
 
 function TIdMBCSEncoding.GetByteCount(Chars: PWideChar; CharCount: Integer): Integer;
 begin
@@ -2126,6 +2161,7 @@ begin
   Result := TIdTextEncoding.GetEncoding(28591);
 end;
 {$ELSE}
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
 function Indy8BitEncoding(const AOwnedByIndy: Boolean = True): TIdTextEncoding;
 var
   LEncoding: TIdTextEncoding;
@@ -2143,6 +2179,12 @@ begin
     Result := GId8BitEncoding;
   end;
 end;
+  {$ENDIF}
+  {$IFDEF USE_ICONV}
+function Indy8BitEncoding(const AOwnedByIndy: Boolean = True): TIdTextEncoding;
+begin
+end;  
+  {$ENDIF}
 {$ENDIF}
 
 {$IFDEF UNIX}

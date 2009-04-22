@@ -17,22 +17,28 @@ type
 
 implementation
 
-uses
   {$IFDEF DOTNET}
-  System.Text
+uses
+  System.Text;
   {$ELSE}
+    {$IFNDEF USE_ICONV}
+uses
   IdCharsets
-    {$IFDEF MSWINDOWS}
+      {$IFDEF MSWINDOWS}
   , Windows
+      {$ENDIF} 
+    ;  
     {$ENDIF}
-  {$ENDIF};
+  {$ENDIF}
 
 class function TIdHeaderCoderIndy.Decode(const ACharSet, AData: String): String;
 var
   LEncoding: TIdTextEncoding;
   LBytes: TIdBytes;
   {$IFNDEF DOTNET}
+    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   CP: Word;
+    {$ENDIF}
   {$ENDIF}
 begin
   Result := '';
@@ -41,9 +47,14 @@ begin
     {$IFDEF DOTNET}
     LEncoding := TIdTextEncoding.GetEncoding(ACharSet);
     {$ELSE}
+      {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     CP := CharsetToCodePage(ACharSet);
     Assert(CP <> 0);
     LEncoding := TIdTextEncoding.GetEncoding(CP);
+      {$ENDIF}
+      {$IFDEF USE_ICONV}
+   LEncoding := TIdTextEncoding.GetEncoding(ACharSet);   
+      {$ENDIF}
     try
     {$ENDIF}
       {$IFDEF DOTNET_OR_UNICODESTRING}
@@ -92,9 +103,14 @@ begin
     {$IFDEF DOTNET}
     LEncoding := TIdTextEncoding.GetEncoding(ACharSet);
     {$ELSE}
+        {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     CP := CharsetToCodePage(ACharSet);
     Assert(CP <> 0);
     LEncoding := TIdTextEncoding.GetEncoding(CP);
+        {$ENDIF}
+	{$IFDEF USE_ICONV}
+    LEncoding := TIdTextEncoding.GetEncoding(ACharSet);
+	{$ENDIF}
     try
     {$ENDIF}
       LBytes := TIdTextEncoding.Convert(
