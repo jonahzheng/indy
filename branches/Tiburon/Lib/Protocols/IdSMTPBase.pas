@@ -100,7 +100,7 @@ uses
 const
   DEF_SMTP_PIPELINE = False;
   IdDEF_UseEhlo = True; //APR: default behavior
-  IdDEF_UseVerp = True;
+  IdDEF_UseVerp = False;
 
 const
   CAPAPIPELINE = 'PIPELINING';  {do not localize}
