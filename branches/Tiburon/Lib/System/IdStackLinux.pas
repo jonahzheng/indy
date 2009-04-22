@@ -373,10 +373,9 @@ begin
     Id_IPv4: begin
       {$IFDEF UNICODESTRING}
       LAStr := AHostName; // convert to Ansi
-      LHost := Libc.gethostbyname(PAnsiChar(LAStr));
-      {$ELSE}
-      LHost := Libc.gethostbyname(PAnsiChar(AHostName));
       {$ENDIF}
+      LHost := Libc.gethostbyname(
+        PAnsiChar({$IFDEF UNICODESTRING}LAStr{$ELSE}AHostName{$ENDIF}));
       if LHost <> nil then begin
         Lpa := LHost^.h_addr_list^;
         Lsa.S_un_b.s_b1 := Ord(Lpa[0]);
@@ -397,20 +396,20 @@ begin
 
       {$IFDEF UNICODESTRING}
       LAStr := AHostName; // convert to Ansi
-      LRetVal := getaddrinfo(PAnsiChar(LAStr),
-      {$ELSE}
-      LRetVal := getaddrinfo(PAnsiChar(AHostName),
       {$ENDIF}
+      LRetVal := getaddrinfo(
+        PAnsiChar({$IFDEF UNICODESTRING}LAStr{$ELSE}AHostName{$ENDIF}),
         nil, @LHints, {$IFDEF KYLIX}LAddrInfo{$ELSE}@LAddrInfo{$ENDIF});
-
       if LRetVal <> 0 then begin
         if LRetVal = EAI_SYSTEM then begin
           IndyRaiseLastError;
         end else begin
           raise EIdResolveError.CreateFmt(RSResolveError, [AHostName, gai_strerror(LRetVal), LRetVal]);
         end;
-      end else begin
+      end;
+      try
         Result := TranslateTInAddrToString(LAddrInfo^.ai_addr^.sin_zero, Id_IPv6);
+      finally
         freeaddrinfo(LAddrInfo);
       end;
     end;
@@ -651,10 +650,10 @@ var
 begin
   {$IFDEF UNICODESTRING}
   LAStr := AServiceName; // convert to Ansi
-  Lps := Libc.getservbyname(LAStr, nil);
-  {$ELSE}
-  Lps := Libc.getservbyname(PAnsiChar(AServiceName), nil);
   {$ENDIF}
+  Lps := Libc.getservbyname(
+    PAnsiChar({$IFDEF UNICODESTRING}LAStr{$ELSE}AServiceName{$ENDIF},
+    nil);
   if Lps <> nil then begin
     Result := ntohs(Lps^.s_port);
   end else begin
@@ -804,20 +803,20 @@ begin
 
       {$IFDEF UNICODESTRING}
       LAStr := AAddress; // Convert to Ansi
-      LRetVal := getaddrinfo(PAnsiChar(LAStr),
-      {$ELSE}
-      LRetVal := getaddrinfo(PAnsiChar(AAddress),
       {$ENDIF}
+      LRetVal := getaddrinfo(
+        PAnsiChar({$IFDEF UNICODESTRING}LAStr{$ELSE}AAddress{$ENDIF}),
         nil, @LHints, {$IFDEF KYLIX}LAddrInfo{$ELSE}@LAddrInfo{$ENDIF});
-
       if LRetVal <> 0 then begin
         if LRetVal = EAI_SYSTEM then begin
           IndyRaiseLastError;
         end else begin
           raise EIdReverseResolveError.CreateFmt(RSReverseResolveError, [AAddress, gai_strerror(LRetVal), LRetVal]);
         end;
-      end else begin
+      end;
+      try
         Result := LAddrInfo^.ai_canonname;
+      finally
         freeaddrinfo(LAddrInfo);
       end;
     end;
