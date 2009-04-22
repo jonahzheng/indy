@@ -370,6 +370,7 @@
   {$DEFINE WIDGETWINFORMS}
   {$DEFINE DOTNET_OR_TEncoding}
   {$DEFINE DOTNET_OR_UNICODESTRING}
+  {$DEFINE DOTNET_OR_ICONV}
   // Platform specific conditional. Used for platform specific code.
   {$DEFINE DOTNET}
   //differences in DotNET Framework versions.
@@ -594,9 +595,11 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
 //iconv defines section.  
 {$IFDEF UNIX}
   {$DEFINE USE_ICONV}
+  {$DEFINE DOTNET_OR_ICONV}
 {$ENDIF}
 {$IFDEF NETWARELIBC}
   {$DEFINE USE_ICONV}
+  {$DEFINE DOTNET_OR_ICONV}
 {$ENDIF}
 
 {$UNDEF SIZE64STREAM}
