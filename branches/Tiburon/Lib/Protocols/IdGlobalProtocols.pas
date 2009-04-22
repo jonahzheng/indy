@@ -3421,8 +3421,10 @@ end;
 function CharsetToEncoding(const ACharset: String): TIdTextEncoding;
 //TODO:  Figure out what should happen with Unicode content type.
 {$IFNDEF DOTNET}
+  {$IFNDEF USE_ICONV}
 var
   CP: Word;
+  {$ENDIF}
 {$ENDIF}
 begin
   Result := nil;
@@ -3440,17 +3442,16 @@ begin
       {$IFDEF DOTNET}
       Result := TIdTextEncoding.GetEncoding(ACharset);
       {$ELSE}
-        {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+        {$IFDEF USE_ICONV}
+      Result := TIdTextEncoding.GetEncoding(ACharset);
+        {$ELSE}
       CP := CharsetToCodePage(ACharset);
       if CP <> 0 then begin
         Result := TIdTextEncoding.GetEncoding(CP);
       end;
         {$ENDIF}
-	{$IFDEF USE_ICONV}
-      Result := TIdTextEncoding.GetEncoding(ACharset);
-	{$ENDIF}
+      {$ENDIF}
     except end;
-    {$ENDIF}
   end;
 
   {JPM - I have decided to temporarily make this 8-bit because I'm concerned
@@ -3470,7 +3471,7 @@ begin
   are not owned by anyone and must always be freed.}
 
   if not Assigned(Result) then begin
-    Result := Indy8BitEncoding(False);
+    Result := Indy8BitEncoding({$IFNDEF DOTNET}False{$ENDIF});
   end;
 end;
 
