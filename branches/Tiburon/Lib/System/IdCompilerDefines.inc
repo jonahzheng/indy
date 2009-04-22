@@ -599,6 +599,13 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$DEFINE USE_ICONV}
 {$ENDIF}
 
+{$IFDEF DOTNET}
+  {$DEFINE DOTNET_OR_ICONV}
+{$ENDIF}
+{$IFDEF USE_ICONV}
+  {$DEFINE DOTNET_OR_ICONV}
+{$ENDIF}
+
 {$UNDEF SIZE64STREAM}
 {$IFDEF FPC}
   {$DEFINE SIZE64STREAM}
