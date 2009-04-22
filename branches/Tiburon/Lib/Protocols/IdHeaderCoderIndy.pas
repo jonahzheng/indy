@@ -17,44 +17,34 @@ type
 
 implementation
 
-  {$IFDEF DOTNET}
-uses
-  System.Text;
-  {$ELSE}
-    {$IFNDEF USE_ICONV}
+{$IFNDEF DOTNET_OR_ICONV}
 uses
   IdCharsets
-      {$IFDEF MSWINDOWS}
+  {$IFDEF MSWINDOWS}
   , Windows
-      {$ENDIF} 
-    ;  
-    {$ENDIF}
   {$ENDIF}
+  ;
+{$ENDIF}
 
 class function TIdHeaderCoderIndy.Decode(const ACharSet, AData: String): String;
 var
   LEncoding: TIdTextEncoding;
   LBytes: TIdBytes;
-  {$IFNDEF DOTNET}
-    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  {$IFNDEF DOTNET_OR_ICONV}
   CP: Word;
-    {$ENDIF}
   {$ENDIF}
 begin
   Result := '';
   LBytes := nil;
   try
-    {$IFDEF DOTNET}
+    {$IFDEF DOTNET_OR_ICONV}
     LEncoding := TIdTextEncoding.GetEncoding(ACharSet);
     {$ELSE}
-      {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     CP := CharsetToCodePage(ACharSet);
     Assert(CP <> 0);
     LEncoding := TIdTextEncoding.GetEncoding(CP);
-      {$ENDIF}
-      {$IFDEF USE_ICONV}
-   LEncoding := TIdTextEncoding.GetEncoding(ACharSet);   
-      {$ENDIF}
+    {$ENDIF}
+    {$IFNDEF DOTNET}
     try
     {$ENDIF}
       {$IFDEF DOTNET_OR_UNICODESTRING}
@@ -93,24 +83,21 @@ class function TIdHeaderCoderIndy.Encode(const ACharSet, AData: String): String;
 var
   LEncoding: TIdTextEncoding;
   LBytes: TIdBytes;
-  {$IFNDEF DOTNET}
+  {$IFNDEF DOTNET_OR_ICONV}
   CP: Word;
   {$ENDIF}
 begin
   Result := '';
   LBytes := nil;
   try
-    {$IFDEF DOTNET}
+    {$IFDEF DOTNET_OR_ICONV}
     LEncoding := TIdTextEncoding.GetEncoding(ACharSet);
     {$ELSE}
-        {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     CP := CharsetToCodePage(ACharSet);
     Assert(CP <> 0);
     LEncoding := TIdTextEncoding.GetEncoding(CP);
-        {$ENDIF}
-	{$IFDEF USE_ICONV}
-    LEncoding := TIdTextEncoding.GetEncoding(ACharSet);
-	{$ENDIF}
+    {$ENDIF}
+    {$IFNDEF DOTNET}
     try
     {$ENDIF}
       LBytes := TIdTextEncoding.Convert(
@@ -143,7 +130,7 @@ begin
 end;
 
 class function TIdHeaderCoderIndy.CanHandle(const ACharSet: String): Boolean;
-{$IFDEF DOTNET}
+{$IFDEF DOTNET_OR_ICONV}
 var
   LEncoding: TIdTextEncoding;
 {$ELSE}
@@ -155,7 +142,7 @@ var
 {$ENDIF}
 begin
   Result := False;
-  {$IFDEF DOTNET}
+  {$IFDEF DOTNET_OR_ICONV}
   try
     LEncoding := TIdTextEncoding.GetEncoding(ACharSet);
     Result := Assigned(LEncoding);

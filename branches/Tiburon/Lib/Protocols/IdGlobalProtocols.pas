@@ -3418,13 +3418,11 @@ begin
   Result := CharsetToEncoding(LCharset);
 end;
 
-function CharsetToEncoding(const ACharset: String): TIdTextEncoding;
 //TODO:  Figure out what should happen with Unicode content type.
-{$IFNDEF DOTNET}
-  {$IFNDEF USE_ICONV}
+function CharsetToEncoding(const ACharset: String): TIdTextEncoding;
+{$IFNDEF DOTNET_OR_ICONV}
 var
   CP: Word;
-  {$ENDIF}
 {$ENDIF}
 begin
   Result := nil;
@@ -3439,17 +3437,13 @@ begin
     // maybe the user will know how to encode/decode the data manually
     // as a workaround...
     try
-      {$IFDEF DOTNET}
+      {$IFDEF DOTNET_OR_ICONV}
       Result := TIdTextEncoding.GetEncoding(ACharset);
       {$ELSE}
-        {$IFDEF USE_ICONV}
-      Result := TIdTextEncoding.GetEncoding(ACharset);
-        {$ELSE}
       CP := CharsetToCodePage(ACharset);
       if CP <> 0 then begin
         Result := TIdTextEncoding.GetEncoding(CP);
       end;
-        {$ENDIF}
       {$ENDIF}
     except end;
   end;
