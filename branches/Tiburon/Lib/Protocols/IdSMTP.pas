@@ -224,6 +224,7 @@ type
     procedure SetUseTLS(AValue: TIdUseTLS); override;
     procedure SetSASLMechanisms(AValue: TIdSASLEntries);
     procedure InitComponent; override;
+    procedure InternalSend(AMsg: TIdMessage; const AFrom: String; ARecipients: TIdEMailAddressList); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
     //
@@ -237,7 +238,6 @@ type
     procedure Disconnect(ANotifyPeer: Boolean); override;
     procedure DisconnectNotifyPeer; override;
     class procedure QuickSend(const AHost, ASubject, ATo, AFrom, AText: string);
-    procedure Send(AMsg: TIdMessage; ARecipients: TIdEMailAddressList); override;
     procedure Expand(AUserName : String; AResults : TStrings); virtual;
     function Verify(AUserName : String) : String; virtual;
     //
@@ -405,14 +405,14 @@ begin
   finally FreeAndNil(LSMTP); end;
 end;
 
-procedure TIdSMTP.Send(AMsg: TIdMessage; ARecipients: TIdEMailAddressList);
+procedure TIdSMTP.InternalSend(AMsg: TIdMessage; const AFrom: String; ARecipients: TIdEMailAddressList);
 begin
   //Authenticate now calls StartTLS
   //so that you do not send login information before TLS negotiation (big oops security wise).
   //It also should see if authentication should be done according to your settings.
   Authenticate;
   AMsg.ExtraHeaders.Values[XMAILER_HEADER] := MailAgent;
-  inherited Send(AMsg, ARecipients);
+  inherited InternalSend(AMsg, AFrom, ARecipients);
 end;
 
 procedure TIdSMTP.SetAuthType(const AValue: TIdSMTPAuthenticationType);
