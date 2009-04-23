@@ -113,7 +113,9 @@ end;
 function Fixup(const AName: string): Pointer;
 begin
   if hIconv = 0 then begin
-    EIdIconvStubError.Build(Format(RSIconvCallError, [AName]), 0);
+    if not Load then begin
+      EIdIconvStubError.Build(Format(RSIconvCallError, [AName]), 0);
+    end;
   end;
   Result := GetProcAddress(hIconv, PChar(AName));
   if Result = nil then begin
