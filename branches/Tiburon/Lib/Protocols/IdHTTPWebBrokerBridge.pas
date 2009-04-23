@@ -473,8 +473,7 @@ begin
   // to it as well so it can be converted correctly if assigned to other
   // string variables later on...
   Result := '';
-  CP := CharsetToCodePage(FResponseInfo.CharSet);
-  LEncoding := TIdTextEncoding.GetEncoding(CP);
+  LEncoding := CharsetToEncoding(FResponseInfo.CharSet);
     {$IFNDEF DOTNET}
   try
     {$ENDIF}
@@ -487,7 +486,7 @@ begin
     Result := AnsiString(BytesToString(LBytes, Indy8BitEncoding));
     {$ELSE}
     SetString(Result, PAnsiChar(LBytes), Length(LBytes));
-    SetCodePage(PRawByteString(@Result)^, CP, False);
+    SetCodePage(PRawByteString(@Result)^, CharsetToCodePage(FResponseInfo.CharSet), False);
     {$ENDIF}
     {$IFNDEF DOTNET}
   finally
