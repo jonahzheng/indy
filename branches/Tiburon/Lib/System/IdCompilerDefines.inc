@@ -594,8 +594,14 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
 //iconv defines section.  
 {$IFDEF UNIX}
   {$DEFINE USE_ICONV}
+  {$IFDEF USEBASEUNIX}
+  //important!!  Iconv functions are defined in the libc.pas Kylix compatible unit.
+    {$DEFINE USE_ICONVUNIT}
+  {$ENDIF}
 {$ENDIF}
 {$IFDEF NETWARELIBC}
+  //important!!! iconv functions are defined in the libc.pas Novell Netware header.
+  //Do not define USE_ICONVUNIT
   {$DEFINE USE_ICONV}
 {$ENDIF}
 
