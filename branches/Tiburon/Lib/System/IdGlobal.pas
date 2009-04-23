@@ -1348,7 +1348,8 @@ uses
   {$ENDIF}
   {$IFDEF USELIBC}Libc,{$ENDIF}
   {$IFDEF VCL6ORABOVE}DateUtils,{$ENDIF}
-  {$IFDEF USE_ICONV}IdIconv,{$ENDIF}
+  //do not bring in our IdIconv unit if we are using the libc unit directly.
+  {$IFDEF USE_ICONVUNIT}IdIconv,{$ENDIF}  
   IdResourceStrings,
   IdStream;
 
@@ -1974,7 +1975,13 @@ begin
   LBytes := PAnsiChar(Bytes);
   LByteCount := ByteCount;
   LResult := 0;
+  //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
+  //while in FreePascal's libc and our IdIconv units define it as a pSize_t
+    {$IFDEF KYLIX}
   Result := iconv(FToUTF16, @LBytes, @LByteCount, nil, LResult);
+    {$ELSE}
+  Result := iconv(FToUTF16, @LBytes, @LByteCount, nil, @LResult);
+    {$ENDIF}
   {$ELSE}
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(Bytes), ByteCount, nil, 0);
