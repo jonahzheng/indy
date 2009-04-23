@@ -480,11 +480,7 @@ begin
 end;
 
 procedure TIdMessageDecoderMIME.CheckAndSetType(const AContentType: string; AContentDisposition: string);
-var
-  LDisposition: string;
 begin
-  LDisposition := Fetch(AContentDisposition, ';');    {Do not Localize}
-
   {The new world order: Indy now defines a TIdAttachment as a part that either has
   a filename, or else does NOT have a ContentType starting with text/ or multipart/.
   Anything left is a TIdText.}
@@ -497,7 +493,7 @@ begin
 
   {see what type the part is...}
   if (TextStartsWith(AContentType, MIMEGenericText) or TextStartsWith(AContentType, MIMEGenericMultiPart)) and
-    (not TextIsSame(LDisposition, MIMEAttachment)) then
+    (not TextIsSame(ExtractHeaderItem(AContentDisposition), MIMEAttachment)) then
   begin
     FPartType := mcptText;
   end else begin
