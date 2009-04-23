@@ -1,13 +1,16 @@
 unit IdIconv;
+
 interface
+
 {$I IdCompilerDefines.inc}
+
 uses
   IdCTypes,
   IdException,
   {$IFDEF KYLIXCOMPAT}
   libc;
   {$ENDIF}
- {$IFDEF UseBaseUnix}
+  {$IFDEF UseBaseUnix}
   UnixType, 
   DynLibs;
   {$ENDIF}
@@ -60,7 +63,9 @@ procedure Unload;
 function Loaded : Boolean;
   
 implementation
-uses IdResourceStrings, SysUtils;
+
+uses
+  IdResourceStrings, SysUtils;
 
 var
   {$IFDEF UNIX}
@@ -73,6 +78,9 @@ const
   {$IFDEF UNIX}
   LIBC = 'libc.so.6';
   LICONV = 'libiconv.so';
+  {$ELSE}
+  // TODO: support static linking, such as via the "win_iconv" library
+  LICONV = 'libiconv.dll';
   {$ENDIF}
   
 constructor EIdIconvStubError.Build(const ATitle : String; AError : LongWord);
