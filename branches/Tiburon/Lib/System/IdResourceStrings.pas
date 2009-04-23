@@ -44,7 +44,10 @@ resourcestring
 resourcestring
   RSInvalidCodePage = 'Invalid codepage';
   RSInvalidCharSet = 'Invalid character set';
-
+  //IdIconv
+  {$IFDEF USE_ICONVUNIT}
+  RSIconvCallError = 'Error on call to Iconv library function %s';
+  {$ENDIF} 
   //IdSys
   RSFailedTimeZoneInfo = 'Failed attempting to retrieve time zone information.';
   // Winsock
