@@ -1853,12 +1853,13 @@ constructor TIdMBCSEncoding.Create;
 begin 
   {$IFDEF USE_ICONV}
   Create('ASCII'); {do not localize}
-  {$ENDIF}
+  {$ELSE}
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Create(CP_ACP, 0, 0);
     {$ELSE}
   ToDo;
     {$ENDIF}
+ {$ENDIF}
 end;
 
 {$IFDEF USE_ICONV}
