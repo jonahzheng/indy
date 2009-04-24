@@ -176,7 +176,7 @@ type
   public
     constructor Create(AOwner: TComponent; const ALine: string); reintroduce; overload;
     function ReadBody(ADestStream: TStream; var VMsgEnd: Boolean): TIdMessageDecoder; override;
-    procedure CheckAndSetType(const AContentType: string; AContentDisposition: string);
+    procedure CheckAndSetType(const AContentType, AContentDisposition: string);
     procedure ReadHeader; override;
     function GetAttachmentFilename(const AContentType, AContentDisposition: string): string;
     function RemoveInvalidCharsFromFilename(const AFilename: string): string;
@@ -479,7 +479,7 @@ begin
   end;
 end;
 
-procedure TIdMessageDecoderMIME.CheckAndSetType(const AContentType: string; AContentDisposition: string);
+procedure TIdMessageDecoderMIME.CheckAndSetType(const AContentType, AContentDisposition: string);
 begin
   {The new world order: Indy now defines a TIdAttachment as a part that either has
   a filename, or else does NOT have a ContentType starting with text/ or multipart/.
