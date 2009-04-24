@@ -776,10 +776,11 @@ begin
     // regardless of what the Content-Type header field actually says."
     LEncoding := Indy8BitEncoding();
   end;
-  if AMsg.NoDecode then begin
-    IOHandler.Capture(AMsg.Body, ADelim, True, LEncoding);
-  end else begin
-    BeginWork(wmRead); try
+  BeginWork(wmRead);
+  try
+    if AMsg.NoDecode then begin
+      IOHandler.Capture(AMsg.Body, ADelim, True, LEncoding);
+    end else begin
       if (
        ((AMsg.Encoding = meMIME) and (AMsg.MIMEBoundary.Count > 0)) or
        ((AMsg.Encoding = mePlainText) and (PosInStrArray(AMsg.ContentTransferEncoding, ['base64', 'quoted-printable'], False) = -1))  {do not localize}
@@ -830,9 +831,9 @@ begin
           mcptIgnore:     FreeAndNil(LActiveDecoder);
         end;
       end;
-    finally
-      EndWork(wmRead);
     end;
+  finally
+    EndWork(wmRead);
   end;
 end;
 
@@ -1266,19 +1267,22 @@ end;
 
 procedure TIdMessageClient.SendMsg(AMsg: TIdMessage; AHeadersOnly: Boolean = False);
 begin
-  if AMsg.NoEncode then begin
-    BeginWork(wmWrite); try
+  BeginWork(wmWrite);
+  try
+    if AMsg.NoEncode then begin
       IOHandler.Write(AMsg.Headers);
       IOHandler.WriteLn;
       if not AHeadersOnly then begin
         IOHandler.WriteRFCStrings(AMsg.Body, False);
       end;
-    finally EndWork(wmWrite); end;
-  end else begin
-    SendHeader(AMsg);
-    if (not AHeadersOnly) then begin
-      SendBody(AMsg);
+    end else begin
+      SendHeader(AMsg);
+      if (not AHeadersOnly) then begin
+        SendBody(AMsg);
+      end;
     end;
+  finally
+    EndWork(wmWrite);
   end;
 end;
 
@@ -1286,7 +1290,8 @@ function TIdMessageClient.ReceiveHeader(AMsg: TIdMessage; const AAltTerm: string
 var
   LMsgEnd: Boolean;
 begin
-  BeginWork(wmRead); try
+  BeginWork(wmRead);
+  try
     repeat
       Result := IOHandler.ReadLnRFC(LMsgEnd);
       // Exchange Bug: Exchange sometimes returns . when getting a message instead of
@@ -1300,7 +1305,9 @@ begin
       end;
     until False;
     AMsg.ProcessHeaders;
-  finally EndWork(wmRead); end;
+  finally
+    EndWork(wmRead);
+  end;
 end;
 
 procedure TIdMessageClient.ProcessMessage(AMsg: TIdMessage; AHeaderOnly: Boolean = False);
@@ -1308,10 +1315,15 @@ begin
   if IOHandler <> nil then begin
     //Don't call ReceiveBody if the message ended at the end of the headers
     //(ReceiveHeader() would have returned '.' in that case)...
-    if ReceiveHeader(AMsg) = '' then begin
-      if not AHeaderOnly then begin
-        ReceiveBody(AMsg);
+    BeginWork(wmRead);
+    try
+      if ReceiveHeader(AMsg) = '' then begin
+        if not AHeaderOnly then begin
+          ReceiveBody(AMsg);
+        end;
       end;
+    finally
+      EndWork(wmRead);
     end;
   end;
 end;
