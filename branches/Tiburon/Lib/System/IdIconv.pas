@@ -5,21 +5,35 @@ interface
 {$I IdCompilerDefines.inc}
 
 uses
+  {$IFDEF FPC}
+  DynLibs,  
+  {$ENDIF}
   IdCTypes,
   IdException,
-  {$IFDEF KYLIXCOMPAT}
-  libc;
-  {$ENDIF}
   {$IFDEF UseBaseUnix}
-  UnixType, 
-  DynLibs;
+  UnixType; 
+  {$ENDIF}
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  Windows;
   {$ENDIF}
 
+{.$DEFINE STATICLOAD_ICONV}
 //These should be defined in libc.pas.
 type
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  {$EXTERNALSYM SIZE_T}
+      {$IFDEF CPU64}
+  size_t = QWord;
+       {$ELSE}
+  size_t = DWord;
+      {$ENDIF}
+  Psize_t = ^size_t;
+  {$ENDIF}
+
   Piconv_tv = ^iconv_t;
   iconv_t = Pointer;
-  
+
+{$IFNDEF STATICLOAD_ICONV}
 //   This function is a possible cancellation points and therefore not
 //   marked with __THROW.  */
 //extern iconv_t iconv_open (__const char *__tocode, __const char *__fromcode);
@@ -31,8 +45,8 @@ type
 //		     size_t *__restrict __inbytesleft,
 //		     char **__restrict __outbuf,
 //		     size_t *__restrict __outbytesleft);
-  TIdiconv = function (__cd : iconv_t; __inbuf : PPAnsiChar; 
-                    __inbytesleft : Psize_t; 
+  TIdiconv = function (__cd : iconv_t; __inbuf : PPAnsiChar;
+                    __inbytesleft : Psize_t;
 		    __outbuf : PPAnsiChar;
 		    __outbytesleft : Psize_t ) : size_t; cdecl;
 //   This function is a possible cancellation points and therefore not
@@ -56,14 +70,58 @@ type
 var
   iconv_open  : TIdiconv_open = nil;
   iconv        : TIdiconv = nil;
-  iconv_close :  TIdiconv_close = nil; 
-    
+  iconv_close :  TIdiconv_close = nil;
+{$ENDIF}
+
+const
+  FN_ICONV_OPEN = 'iconv_open';  {Do not localize}
+  FN_ICONV = 'iconv';   {Do not localize}
+  FN_ICONV_CLOSE = 'iconv_close';  {Do not localize}
+  {$IFDEF UNIX}
+  LIBC = 'libc.so.6';  {Do not localize}
+  LICONV = 'libiconv.so';  {Do not localize}
+  {$ELSE}
+  // TODO: support static linking, such as via the "win_iconv" library
+    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  //http://yukihiro.nakadaira.googlepages.com/ seems to use the iconv.dll name.
+  LICONV = 'iconv.dll';   {Do not localize}
+  LICONV_ALT = 'libiconv.dll';   {Do not localize}
+    {$ENDIF}
+  {$ENDIF}
+
 function Load : Boolean;
 procedure Unload;
 function Loaded : Boolean;
-  
-implementation
 
+{$IFDEF STATICLOAD_ICONV}
+function iconv_open(__tocode : PAnsiChar; __fromcode : PAnsiChar) : iconv_t; cdecl;
+  external LICONV name FN_ICONV_OPEN;
+function iconv(__cd : iconv_t; __inbuf : PPAnsiChar;
+                    __inbytesleft : Psize_t;
+		    __outbuf : PPAnsiChar;
+		    __outbytesleft : Psize_t ) : size_t; cdecl;
+  external LICONV name FN_ICONV;
+function iconv_close(__cd : iconv_t) : TIdC_INT; cdecl;
+  external LICONV name FN_ICONV_CLOSE;
+{$ENDIF}
+
+implementation
+{$IFDEF STATICLOAD_ICONV}
+function Load : Boolean; {$IFDEF USEINLINE} inline; {$ENDIF}
+begin
+  Result := True;
+end;
+
+procedure Unload; {$IFDEF USEINLINE} inline; {$ENDIF}
+begin
+
+end;
+
+function Loaded : Boolean; {$IFDEF USEINLINE} inline; {$ENDIF}
+begin
+  Result := True;
+end;
+{$ELSE}
 uses
   IdResourceStrings, SysUtils;
 
@@ -74,15 +132,6 @@ var
   hIconv: THandle = 0;
   {$ENDIF}
 
-const
-  {$IFDEF UNIX}
-  LIBC = 'libc.so.6';
-  LICONV = 'libiconv.so';
-  {$ELSE}
-  // TODO: support static linking, such as via the "win_iconv" library
-  LICONV = 'libiconv.dll';
-  {$ENDIF}
-  
 constructor EIdIconvStubError.Build(const ATitle : String; AError : LongWord);
 begin
   FTitle := ATitle;
@@ -104,6 +153,9 @@ begin
     //call because LoadLibrary messes with the FPU control word.
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     hIconv := SafeLoadLibrary(LICONV);
+    if hIconv = 0 then begin
+      hIconv := SafeLoadLibrary(LICONV_ALT);
+    end;
     {$ELSE}
       {$IFDEF UNIX}
     hIconv := LoadLibrary(LICONV);
@@ -135,7 +187,7 @@ end;
 
 function Stub_iconv_open(__tocode : PAnsiChar; __fromcode : PAnsiChar) : iconv_t;  cdecl;
 begin
-  iconv_open := Fixup('iconv_open');
+  iconv_open := Fixup(FN_ICONV_OPEN);
   Result := iconv_open(__tocode, __fromcode);
 end;
 
@@ -144,13 +196,13 @@ function stub_iconv(__cd : iconv_t; __inbuf : PPAnsiChar;
 		    __outbuf : PPAnsiChar;
 		    __outbytesleft : Psize_t ) : size_t; cdecl;
 begin
-  iconv := Fixup('iconv');
+  iconv := Fixup(FN_ICONV);
   Result := iconv(__cd,__inbuf,__inbytesleft,__outbuf,__outbytesleft);
 end;
 
 function stub_iconv_close(__cd : iconv_t) : TIdC_INT; cdecl;
 begin
-  iconv_close := Fixup('iconv_close');
+  iconv_close := Fixup(FN_ICONV_CLOSE);
   Result := iconv_close(__cd);
 end;
 
@@ -160,7 +212,7 @@ procedure InitializeStubs;
 begin
   iconv_open  := Stub_iconv_open;
   iconv       := Stub_iconv;
-  iconv_close := iconv_close;
+  iconv_close := Stub_iconv_close;
 end;
 
 procedure Unload;
@@ -179,8 +231,10 @@ end;
 
 initialization
   InitializeStubs;
-  Load;
+//  Load;
 
 finalization
   Unload;
+{$ENDIF}
+
 end.
