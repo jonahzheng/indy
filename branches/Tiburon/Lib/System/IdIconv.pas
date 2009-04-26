@@ -30,7 +30,7 @@ type
   Psize_t = ^size_t;
   {$ENDIF}
 
-  Piconv_tv = ^iconv_t;
+  Piconv_t = ^iconv_t;
   iconv_t = Pointer;
 
 {$IFNDEF STATICLOAD_ICONV}
