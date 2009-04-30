@@ -1349,7 +1349,8 @@ uses
   {$IFDEF USELIBC}Libc,{$ENDIF}
   {$IFDEF VCL6ORABOVE}DateUtils,{$ENDIF}
   //do not bring in our IdIconv unit if we are using the libc unit directly.
-  {$IFDEF USE_ICONVUNIT}IdIconv,{$ENDIF}  
+  {$IFDEF USE_ICONVENC}iconvenc, {$ENDIF}
+  {$IFDEF USE_ICONVUNIT}IdIconv, {$ENDIF}  
   IdResourceStrings,
   IdStream;
 
