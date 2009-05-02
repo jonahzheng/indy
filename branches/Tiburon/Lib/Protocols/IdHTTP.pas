@@ -781,7 +781,7 @@ begin
   try
     Post(AURL, ASource, LResponse);
     LResponse.Position := 0;
-    Result := ReadStringAsContentType(LResponse, Response.FContentType);
+    Result := ReadStringAsCharset(LResponse, Response.CharSet);
   finally
     FreeAndNil(LResponse);
   end;
@@ -797,7 +797,7 @@ begin
   try
     Post(AURL, ASource, LResponse);
     LResponse.Position := 0;
-    Result := ReadStringAsContentType(LResponse, Response.FContentType);
+    Result := ReadStringAsCharset(LResponse, Response.CharSet);
   finally
     FreeAndNil(LResponse);
   end;
@@ -821,7 +821,7 @@ begin
   try
     Put(AURL, ASource, LResponse);
     LResponse.Position := 0;
-    Result := ReadStringAsContentType(LResponse, Response.FContentType);
+    Result := ReadStringAsCharset(LResponse, Response.CharSet);
   finally
     FreeAndNil(LResponse);
   end;
@@ -840,7 +840,7 @@ begin
   try
     Trace(AURL, LResponse);
     LResponse.Position := 0;
-    Result := ReadStringAsContentType(LResponse, Response.FContentType);
+    Result := ReadStringAsCharset(LResponse, Response.CharSet);
   finally
     FreeAndNil(LResponse);
   end;
@@ -1691,8 +1691,8 @@ procedure TIdCustomHTTP.Post(AURL: string;
 begin
   Assert(ASource<>nil);
   Assert(AResponseContent<>nil);
-
   Request.ContentType := ASource.RequestContentType;
+  // TODO: Request.CharSet := ASource.RequestCharSet;
   Post(AURL, TStream(ASource), AResponseContent);
 end;
 
@@ -1700,9 +1700,9 @@ function TIdCustomHTTP.Post(AURL: string;
   ASource: TIdMultiPartFormDataStream): string;
 begin
   Assert(ASource<>nil);
-
   Request.ContentType := ASource.RequestContentType;
-  result := Post(AURL, TStream(ASource));
+  // TODO: Request.CharSet := ASource.RequestCharSet;
+  Result := Post(AURL, TStream(ASource));
 end;
 
 { TIdHTTPResponse }
@@ -1889,7 +1889,7 @@ function TIdHTTPProtocol.ProcessResponse(AIgnoreReplies: array of SmallInt): TId
         end;
         LTempResponse.Position := 0;
         raise EIdHTTPProtocolException.CreateError(AResponseCode, FHTTP.ResponseText,
-          ReadStringAsContentType(LTempResponse, FHTTP.Response.FContentType));
+          ReadStringAsCharset(LTempResponse, FHTTP.Response.CharSet));
       finally
         Response.ContentStream := LTempStream;
       end;
@@ -2117,7 +2117,7 @@ begin
   try
     Get(AURL, LStream, AIgnoreReplies);
     LStream.Position := 0;
-    Result := ReadStringAsContentType(LStream, Response.FContentType);
+    Result := ReadStringAsCharset(LStream, Response.CharSet);
   finally
     FreeAndNil(LStream);
   end;
