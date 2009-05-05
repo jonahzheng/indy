@@ -339,7 +339,7 @@ begin
     FContentEncoding := Values['Content-Encoding']; {do not localize}
     FContentLanguage := Values['Content-Language']; {do not localize}
     ContentType := Values['Content-Type']; {do not localize}
-    FContentLength := IndyStrToInt(Values['Content-Length'], -1); {do not localize}
+    FContentLength := IndyStrToInt64(Values['Content-Length'], -1); {do not localize}
     FHasContentLength := FContentLength >= 0;
 
     FContentRangeStart := 0;
