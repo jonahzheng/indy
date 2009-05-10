@@ -650,7 +650,9 @@ var
   function ProcessTextPart(ADecoder: TIdMessageDecoder; AUseBodyAsTarget: Boolean): TIdMessageDecoder;
   var
     LMStream: TMemoryStream;
+    i: integer;
     LTxt : TIdText;
+    LHdrs: TStrings;
   begin
     LMStream := TMemoryStream.Create;
     try
@@ -664,24 +666,34 @@ var
           ReadStringsAsContentType(LMStream, AMsg.Body, ADecoder.Headers.Values[SContentType]);
         end;
       end else begin
+        if AMsg.IsMsgSinglePartMime then begin
+          LHdrs := AMsg.Headers;
+        end else begin
+          LHdrs := ADecoder.Headers;
+        end;
         LTxt := TIdText.Create(AMsg.MessageParts);
-        try
-          if AMsg.IsMsgSinglePartMime then begin
-            LTxt.Headers.Assign(AMsg.Headers);
-          end else begin
-            LTxt.Headers.AddStdValues(ADecoder.Headers);
+        ReadStringsAsContentType(LMStream, LTxt.Body, LHdrs.Values[SContentType]);
+        RemoveLastBlankLine(LTxt.Body);
+        LTxt.ContentType := LTxt.ResolveContentType(LHdrs.Values[SContentType]);
+        LTxt.CharSet := LTxt.GetCharSet(LHdrs.Values[SContentType]);       {do not localize}
+        LTxt.ContentTransfer := LHdrs.Values[SContentTransferEncoding];    {do not localize}
+        LTxt.ContentID := LHdrs.Values['Content-ID'];  {do not localize}
+        LTxt.ContentLocation := LHdrs.Values['Content-Location'];  {do not localize}
+        LTxt.ContentDescription := LHdrs.Values['Content-Description'];  {do not localize}
+        LTxt.ContentDisposition := LHdrs.Values['Content-Disposition'];  {do not localize}
+        if not AMsg.IsMsgSinglePartMime then begin
+          LTxt.ExtraHeaders.NameValueSeparator := '='; {do not localize}
+          for i := 0 to LHdrs.Count-1 do begin
+            if LTxt.Headers.IndexOfName(LHdrs.Names[i]) < 0 then begin
+              LTxt.ExtraHeaders.Add(LHdrs.Strings[i]);
+            end;
           end;
-          LTxt.ProcessHeaders;
-          ReadStringsAsCharset(LMStream, LTxt.Body, LTxt.CharSet);
-          RemoveLastBlankLine(LTxt.Body);
-          if TextStartsWith(LTxt.ContentType, 'multipart/') then begin {do not localize}
-            LTxt.ParentPart := LPreviousParentPart;
-          end else begin
-            LTxt.ParentPart := LParentPart;
-          end;
-        except
-          LTxt.Free;
-          raise;
+        end;
+        LTxt.Filename := ADecoder.Filename;
+        if TextStartsWith(LTxt.ContentType, 'multipart/') then begin {do not localize}
+          LTxt.ParentPart := LPreviousParentPart;
+        end else begin
+          LTxt.ParentPart := LParentPart;
         end;
       end;
       ADecoder.Free;
@@ -693,7 +705,9 @@ var
   function ProcessAttachment(ADecoder: TIdMessageDecoder): TIdMessageDecoder;
   var
     LDestStream: TStream;
+    i: integer;
     LAttachment: TIdAttachment;
+    LHdrs: TStrings;
   begin
     Result := nil; // suppress warnings
     LParentPart := AMsg.MIMEBoundary.ParentPart;
@@ -704,11 +718,12 @@ var
       try
         Result := ADecoder.ReadBody(LDestStream, LMsgEnd);
         if AMsg.IsMsgSinglePartMime then begin
-          LAttachment.Headers.Assign(AMsg.Headers);
+          LHdrs := AMsg.Headers;
         end else begin
-          LAttachment.Headers.AddStdValues(ADecoder.Headers);
+          LHdrs := ADecoder.Headers;
         end;
-        LAttachment.ProcessHeaders;
+        LAttachment.ContentType := LAttachment.ResolveContentType(LHdrs.Values[SContentType]);
+        LAttachment.CharSet := LAttachment.GetCharSet(LHdrs.Values[SContentType]);
         if ADecoder is TIdMessageDecoderUUE then begin
           LAttachment.ContentTransfer := TIdMessageDecoderUUE(ADecoder).CodingType;  {do not localize}
         end else begin
@@ -716,6 +731,20 @@ var
           //in the header, but we need to set it to something meaningful for us...
           if TextStartsWith(LAttachment.ContentType, 'application/mac-binhex40') then begin {do not localize}
             LAttachment.ContentTransfer := 'binhex40'; {do not localize}
+          end else begin
+            LAttachment.ContentTransfer := LHdrs.Values[SContentTransferEncoding];
+          end;
+        end;
+        LAttachment.ContentDisposition := LHdrs.Values['Content-Disposition']; {do not localize}
+        LAttachment.ContentID := LHdrs.Values['Content-ID'];                   {do not localize}
+        LAttachment.ContentLocation := LHdrs.Values['Content-Location'];       {do not localize}
+        LAttachment.ContentDescription := LHdrs.Values['Content-Description']; {do not localize}
+        if not AMsg.IsMsgSinglePartMime then begin
+          LAttachment.ExtraHeaders.NameValueSeparator := '=';                               {do not localize}
+          for i := 0 to LHdrs.Count-1 do begin
+            if LAttachment.Headers.IndexOfName(LHdrs.Names[i]) < 0 then begin
+              LAttachment.ExtraHeaders.Add(LHdrs.Strings[i]);
+            end;
           end;
         end;
         LAttachment.Filename := ADecoder.Filename;
@@ -864,9 +893,54 @@ var
   procedure WriteTextPart(ATextPart: TIdText);
   var
     LEncoding: TIdTextEncoding;
+    LFileName: String;
   begin
-    ATextPart.PrepareHeaders(HeaderEncoding, ISOCharSet);
-    IOHandler.Write(ATextPart.Headers);
+    if ATextPart.ContentType = '' then begin
+      ATextPart.ContentType := 'text/plain'; {do not localize}
+    end;
+    if ATextPart.ContentTransfer = '' then begin
+      ATextPart.ContentTransfer := 'quoted-printable'; {do not localize}
+    end
+    else if (PosInStrArray(ATextPart.ContentTransfer, ['quoted-printable', 'base64'], False) = -1) {do not localize}
+      and ATextPart.IsBodyEncodingRequired then
+    begin
+      ATextPart.ContentTransfer := '8bit';                    {do not localize}
+    end;
+    if ATextPart.ContentDisposition = '' then begin
+      ATextPart.ContentDisposition := 'inline'; {do not localize}
+    end;
+
+    LFileName := EncodeHeader(ExtractFileName(ATextPart.FileName), '', HeaderEncoding, ISOCharSet); {do not localize}
+
+    if ATextPart.ContentType <> '' then begin
+      IOHandler.Write('Content-Type: ' + ATextPart.ContentType); {do not localize}
+      if ATextPart.CharSet <> '' then begin
+        IOHandler.Write('; charset="' + ATextPart.CharSet + '"'); {do not localize}
+      end;
+      if LFileName <> '' then begin
+        IOHandler.WriteLn(';');  {do not localize}
+        IOHandler.Write(TAB + 'name="' + LFileName + '"'); {do not localize}
+      end;
+      IOHandler.WriteLn;
+    end;
+
+    IOHandler.WriteLn(SContentTransferEncoding + ': ' + ATextPart.ContentTransfer); {do not localize}
+    IOHandler.Write('Content-Disposition: ' + ATextPart.ContentDisposition); {do not localize}
+    if LFileName <> '' then begin
+      IOHandler.WriteLn(';'); {do not localize}
+      IOHandler.Write(TAB + 'filename="' + LFileName + '"'); {do not localize}
+    end;
+    IOHandler.WriteLn;
+
+    if ATextPart.ContentID <> '' then begin
+      IOHandler.WriteLn('Content-ID: ' + ATextPart.ContentID);  {do not localize}
+    end;
+
+    if ATextPart.ContentDescription <> '' then begin
+      IOHandler.WriteLn('Content-Description: ' + ATextPart.ContentDescription); {do not localize}
+    end;
+
+    IOHandler.Write(ATextPart.ExtraHeaders);
     IOHandler.WriteLn;
 
     LEncoding := CharsetToEncoding(ATextPart.CharSet);
@@ -891,6 +965,7 @@ var
   end;
 
 var
+  LFileName: String;
   LTextPart: TIdText;
   LAddedTextPart: Boolean;
   LLastPart: Integer;
@@ -1090,9 +1165,62 @@ begin
           else if AMsg.MessageParts.Items[i] is TIdAttachment then begin
             LAttachment := TIdAttachment(AMsg.MessageParts[i]);
             DoStatus(hsStatusText, [RSMsgClientEncodingAttachment]);
+            if LAttachment.ContentTransfer = '' then begin
+              LAttachment.ContentTransfer := 'base64'; {do not localize}
+            end;
+            if LAttachment.ContentDisposition = '' then begin
+              LAttachment.ContentDisposition := 'attachment'; {do not localize}
+            end;
+            if LAttachment.ContentType = '' then begin
+              if TextIsSame(LAttachment.ContentTransfer, 'base64') then begin {do not localize}
+                LAttachment.ContentType := 'application/octet-stream'; {do not localize}
+              end else begin
+                {CC4: Set default type if not base64 encoded...}
+                LAttachment.ContentType := 'text/plain'; {do not localize}
+              end;
+            end;
+            LFileName := EncodeHeader(ExtractFileName(LAttachment.FileName), '', HeaderEncoding, ISOCharSet); {do not localize}
+            if TextIsSame(LAttachment.ContentTransfer, 'binhex40') then begin   {do not localize}
+              //This is special - you do NOT write out any Content-Transfer-Encoding
+              //header!  We also have to write a Content-Type specified in RFC 1741
+              //(overriding any ContentType present, if necessary).
+              LAttachment.ContentType := 'application/mac-binhex40';            {do not localize}
+              IOHandler.Write('Content-Type: ' + LAttachment.ContentType); {do not localize}
+              if LAttachment.CharSet <> '' then begin
+                IOHandler.Write('; charset="' + LAttachment.CharSet + '"'); {do not localize}
+              end;
+              if LFileName <> '' then begin
+                IOHandler.WriteLn(';'); {do not localize}
+                IOHandler.Write(TAB + 'name="' + LFileName + '"'); {do not localize}
+              end;
+              IOHandler.WriteLn;
+            end
+            else begin
+              IOHandler.Write('Content-Type: ' + LAttachment.ContentType); {do not localize}
+              if LAttachment.CharSet <> '' then begin
+                IOHandler.Write('; charset="' + LAttachment.CharSet + '"'); {do not localize}
+              end;
+              if LFileName <> '' then begin
+                IOHandler.WriteLn(';');
+                IOHandler.Write(TAB + 'name="' + LFileName + '"'); {do not localize}
+              end;
+              IOHandler.WriteLn;
+              IOHandler.WriteLn('Content-Transfer-Encoding: ' + LAttachment.ContentTransfer); {do not localize}
+              IOHandler.Write('Content-Disposition: ' + LAttachment.ContentDisposition); {do not localize}
+              if LFileName <> '' then begin
+                IOHandler.WriteLn(';');
+                IOHandler.Write(TAB + 'filename="' + LFileName + '"'); {do not localize}
+              end;
+              IOHandler.WriteLn;
+            end;
+            if LAttachment.ContentID <> '' then begin
+              IOHandler.WriteLn('Content-ID: '+ LAttachment.ContentID); {Do not Localize}
+            end;
+            if LAttachment.ContentDescription <> '' then begin
+              IOHandler.WriteLn('Content-Description: ' + LAttachment.ContentDescription); {Do not localize}
+            end;
 
-            LAttachment.PrepareHeaders(HeaderEncoding, ISOCharSet);
-            IOHandler.Write(LAttachment.Headers);
+            IOHandler.Write(LAttachment.ExtraHeaders);
             IOHandler.WriteLn;
 
             case PosInStrArray(LAttachment.ContentTransfer, ['base64', 'quoted-printable', 'binhex40'], False) of {do not localize}
