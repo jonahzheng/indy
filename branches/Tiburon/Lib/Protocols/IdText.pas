@@ -68,7 +68,7 @@ type
 implementation
 
 uses
-  IdGlobal,
+  IdGlobal, IdGlobalProtocols,
   SysUtils;
 
 { TIdText }
@@ -99,19 +99,13 @@ begin
 end;
 
 function TIdText.GetContentDisposition: string;
-var
-  S: String;
 begin
-  S := inherited GetContentDisposition;
-  Result := Fetch(S, ';');  {do not localize}
+  Result := ExtractHeaderItem(inherited GetContentDisposition);
 end;
 
 function TIdText.GetContentType: string;
-var
-  S: String;
 begin
-  S := inherited GetContentType;
-  Result := Fetch(S, ';');  {do not localize}
+  Result := ExtractHeaderItem(inherited GetContentType);
 end;
 
 function TIdText.IsBodyEncodingRequired: Boolean;
