@@ -532,7 +532,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     property Version : TIdC_LONG read GetVersion;
     //
     property SigInfo : TIdX509SigInfo read FSigInfo;
-    property Fingerprints : TIdX509Fingerprints read  FFingerprints;
+    property Fingerprints : TIdX509Fingerprints read FFingerprints;
     //
     property Fingerprint: TEVP_MD read RFingerprint;
     property FingerprintAsString: String read RFingerprintAsString;
@@ -1933,7 +1933,7 @@ end;
 constructor TIdX509Info.Create(aX509: PX509);
 begin
   inherited Create;
-  Self.FX509 :=  aX509;
+  FX509 := aX509;
 end;
 
 { TIdX509Fingerprints }
@@ -2067,6 +2067,8 @@ begin
   FreeAndNil(FDisplayInfo);
   FreeAndNil(FSubject);
   FreeAndNil(FIssuer);
+  FreeAndNil(FFingerprints);
+  FreeAndNil(FSigInfo);
   { If the X.509 certificate handle was obtained from a certificate
   store or from the SSL connection as a peer certificate, then DO NOT
   free it here!  The memory is owned by the OpenSSL library and will
