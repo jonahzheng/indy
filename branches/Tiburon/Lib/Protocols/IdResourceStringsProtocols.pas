@@ -976,6 +976,9 @@ resourcestring
   RSUTF16MissingLowSurrogate = 'Missing a Low Surrogate in UTF-16 sequence';
   {$ENDIF}
   {$ENDIF}
+
+  // Message Header Encoding
+  RSHeaderEncodeError = 'Could not encode header data using charset "%s"';
   
 implementation
 
