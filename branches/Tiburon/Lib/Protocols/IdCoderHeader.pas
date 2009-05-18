@@ -190,6 +190,7 @@ end;
 function DecodeHeader(const Header: string): string;
 var
   HeaderCharSet, HeaderEncoding, HeaderData, S: string;
+  LDecoded: Boolean;
   LStartPos, LLength, LEncodingStartPos, LEncodingEndPos, LLastStartPos: Integer;
   LLastWordWasEncoded: Boolean;
 
@@ -315,17 +316,27 @@ begin
     end;
     if ExtractEncoding(Result, LEncodingStartPos, LEncodingEndPos, HeaderCharSet, HeaderEncoding, HeaderData) then
     begin
+      LDecoded := False;
       if ExtractEncodedData(HeaderEncoding, HeaderData, S) then begin
-        S := DecodeHeaderData(HeaderCharSet, S);
+        LDecoded := DecodeHeaderData(HeaderCharSet, S, S);
       end;
-      //replace old substring in header with decoded string,
-      // ignoring whitespace that separates encoded words:
-      if LLastWordWasEncoded then begin
-        Result := Copy(Result, 1, LLastStartPos - 1) + S + Copy(Result, LEncodingEndPos + 1, MaxInt);
-        LStartPos := LLastStartPos + Length(S);
-      end else begin
-        Result := Copy(Result, 1, LEncodingStartPos - 1) + S + Copy(Result, LEncodingEndPos + 1, MaxInt);
-        LStartPos := LEncodingStartPos + Length(S);
+      if LDecoded then
+      begin
+        //replace old substring in header with decoded string,
+        // ignoring whitespace that separates encoded words:
+        if LLastWordWasEncoded then begin
+          Result := Copy(Result, 1, LLastStartPos - 1) + S + Copy(Result, LEncodingEndPos + 1, MaxInt);
+          LStartPos := LLastStartPos + Length(S);
+        end else begin
+          Result := Copy(Result, 1, LEncodingStartPos - 1) + S + Copy(Result, LEncodingEndPos + 1, MaxInt);
+          LStartPos := LEncodingStartPos + Length(S);
+        end;
+      end else
+      begin
+        // could not decode the data, so preserve it in case the user
+        // wants to do it manually.  Though, they really should use the
+        // IdHeaderCoderBase.GHeaderDecodingNeeded hook for that instead...
+        LStartPos := LEncodingEndPos + 1;
       end;
       LLength := Length(Result);
       LLastWordWasEncoded := True;
