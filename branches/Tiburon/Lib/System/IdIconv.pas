@@ -22,11 +22,11 @@ uses
 type
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   {$EXTERNALSYM SIZE_T}
-      {$IFDEF CPU64}
+    {$IFDEF CPU64}
   size_t = QWord;
-       {$ELSE}
+    {$ELSE}
   size_t = DWord;
-      {$ENDIF}
+    {$ENDIF}
   Psize_t = ^size_t;
   {$ENDIF}
 
@@ -79,43 +79,81 @@ var
 //These are defined in other operating systems.
 
 const
+  {$EXTERNALSYM EPERM}
   EPERM          =  1;
+  {$EXTERNALSYM ENOENT}
   ENOENT         =  2;
+  {$EXTERNALSYM ESRCH}
   ESRCH          =  3;
+  {$EXTERNALSYM EINTR}
   EINTR          =  4;
+  {$EXTERNALSYM EIO}
   EIO            =  5;
+  {$EXTERNALSYM ENXIO}
   ENXIO          =  6;
+  {$EXTERNALSYM E2BIG}
   E2BIG          =  7;
+  {$EXTERNALSYM ENOEXEC}
   ENOEXEC        =  8;
+  {$EXTERNALSYM EBADF}
   EBADF          =  9;
+  {$EXTERNALSYM ECHILD}
   ECHILD         = 10;
+  {$EXTERNALSYM EAGAIN}
   EAGAIN         = 11;
+  {$EXTERNALSYM ENOMEM}
   ENOMEM         = 12;
+  {$EXTERNALSYM EACCES}
   EACCES         = 13;
+  {$EXTERNALSYM EFAULT}
   EFAULT         = 14;
+  {$EXTERNALSYM EBUSY}
   EBUSY          = 16;
+  {$EXTERNALSYM EEXIST}
   EEXIST         = 17;
+  {$EXTERNALSYM EXDEV}
   EXDEV          = 18;
+  {$EXTERNALSYM ENODEV}
   ENODEV         = 19;
+  {$EXTERNALSYM ENOTDIR}
   ENOTDIR        = 20;
+  {$EXTERNALSYM EISDIR}
   EISDIR         = 21;
+  {$EXTERNALSYM EINVAL}
   EINVAL         = 22;
+  {$EXTERNALSYM ENFILE}
   ENFILE         = 23;
+  {$EXTERNALSYM EMFILE}
   EMFILE         = 24;
+  {$EXTERNALSYM ENOTTY}
   ENOTTY         = 25;
+  {$EXTERNALSYM EFBIG}
   EFBIG          = 27;
+  {$EXTERNALSYM ENOSPC}
   ENOSPC         = 28;
+  {$EXTERNALSYM ESPIPE}
   ESPIPE         = 29;
+  {$EXTERNALSYM EROFS}
   EROFS          = 30;
+  {$EXTERNALSYM EMLINK}
   EMLINK         = 31;
+  {$EXTERNALSYM EPIPE}
   EPIPE          = 32;
+  {$EXTERNALSYM EDOM}
   EDOM           = 33;
+  {$EXTERNALSYM ERANGE}
   ERANGE         = 34;
+  {$EXTERNALSYM EDEADLK}
   EDEADLK        = 36;
+  {$EXTERNALSYM ENAMETOOLONG}
   ENAMETOOLONG   = 38;
+  {$EXTERNALSYM ENOLCK}
   ENOLCK         = 39;
+  {$EXTERNALSYM ENOSYS}
   ENOSYS         = 40;
+  {$EXTERNALSYM ENOTEMPTY}
   ENOTEMPTY      = 41;
+  {$EXTERNALSYM EILSEQ}
   EILSEQ         = 42;
 
 type
@@ -202,10 +240,10 @@ end;
 procedure Unload; {$IFDEF USEINLINE} inline; {$ENDIF}
 begin
   {$IFDEF WIN32_OR_WIN64}
-   if hmsvcrt <> 0 then begin
-     FreeLibrary(hmsvcrt);
-     hmsvcrt := 0;
-   end;
+  if hmsvcrt <> 0 then begin
+    FreeLibrary(hmsvcrt);
+    hmsvcrt := 0;
+  end;
   {$ENDIF}
 end;
 
@@ -410,7 +448,7 @@ end;
 
 function stub_errno : PIdC_INT; cdecl;
 begin
-  if (hmsvcrt = 0) then begin
+  if hmsvcrt = 0 then begin
      hmsvcrt := SafeLoadLibrary(LIBMSVCRTL);
      if hmsvcrt = 0 then begin
        raise EIdMSVCRTStubError.Build('Failed to load '+LIBMSVCRTL,0);
