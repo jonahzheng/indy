@@ -168,8 +168,7 @@ begin
       S := Copy(ADomain, 2, MaxInt);
       if TextEndsWith(AHost, ADomain) then
       begin
-        Result := IsHostName(S) and
-	          (Copy(AHost, 1, Length(AHost)-Length(ADomain)) <> '');
+        Result := IsHostName(S) and (Length(AHost) > Length(ADomain));
         Exit;
       end;
     end else
