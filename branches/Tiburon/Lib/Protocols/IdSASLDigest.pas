@@ -169,13 +169,21 @@ begin
       Lqop := 'auth-int';
     end;
     if LQopOptions.IndexOf('auth-conf') > -1 then begin
-      EIdSASLDigestAuthConfNotSupported.IfFalse(LQopOptions.IndexOf('auth')>-1,RSSASLDigestAuthConfNotSupported);
+      if LQopOptions.IndexOf('auth') = -1 then begin
+        EIdSASLDigestAuthConfNotSupported.Toss(RSSASLDigestAuthConfNotSupported);
+      end;
     end;
     LNonce := LChallange.Values['nonce'];
     LRealm :=  LChallange.Values['realm'];
     LAlgorithm :=  LChallange.Values['algorithm'];
-    EIdSASLDigestChallNoAlgorithm.IfFalse(LAlgorithm<>'',RSSASLDigestMissingAlgorithm);
-//    EIdSASLDigestChallInvalidAlg.IfFalse(LAlgorithm = 'md5-sess',RSSASLDigestInvalidAlgorithm);
+    if LAlgorithm = '' then begin
+      EIdSASLDigestChallNoAlgorithm.Toss(RSSASLDigestMissingAlgorithm);
+    end;
+    {
+    if LAlgorithm <> 'md5-sess' then begin
+      EIdSASLDigestChallInvalidAlg.Toss(RSSASLDigestInvalidAlgorithm);
+    end;
+    }
 
     //Commented out for case test mentioned in RFC 2831
     LstrCNonce := HashResultAsHex(DateTimeToStr(Now));
@@ -187,7 +195,9 @@ begin
 
 
 //    if LQopOptions.IndexOf('auth-conf') > -1 then begin
-//      EIdSASLDigestAuthConfNotSupported.IfFalse(LQopOptions.IndexOf('auth')>-1,RSSASLDigestAuthConfNotSupported);
+//      if LQopOptions.IndexOf('auth') = -1 then begin
+//        EIdSASLDigestAuthConfNotSupported.Toss(RSSASLDigestAuthConfNotSupported);
+//      end;
 //    end;
 
    if LCharset='' then
