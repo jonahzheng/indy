@@ -586,8 +586,12 @@ begin
   GStackCriticalSection.Acquire;
   try
     if GInstanceCount = 0 then begin
-      EIdException.IfTrue(GStack <> nil, RSStackAlreadyCreated);
-      EIdException.IfTrue(GStackClass = nil, RSStackClassUndefined);
+      if GStack <> nil then begin
+        EIdException.Toss(RSStackAlreadyCreated);
+      end;
+      if GStackClass = nil then begin
+        EIdException.Toss(RSStackClassUndefined);
+      end;
       GStack := GStackClass.Create;
     end;
     Inc(GInstanceCount);

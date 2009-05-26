@@ -127,7 +127,9 @@ procedure TIdAntiFreezeBase.InitComponent;
 begin
   inherited InitComponent;
   if not IsDesignTime then begin
-    EIdException.IfAssigned(GAntiFreeze, RSAntiFreezeOnlyOne);
+    if Assigned(GAntiFreeze) then begin
+      EIdException.Toss(RSAntiFreezeOnlyOne);
+    end;
     GAntiFreeze := Self;
   end;
   FActive := ID_Default_TIdAntiFreezeBase_Active;

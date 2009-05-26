@@ -1352,7 +1352,11 @@ var
   LAddr : TSockAddrIn6;
   Bytes : LongWord;
 begin
-//  EIdIPv6Unavailable.IfFalse(GIdIPv6FuncsAvailable, RSIPv6Unavailable);
+  {
+  if not GIdIPv6FuncsAvailable then begin
+    EIdIPv6Unavailable.Toss(RSIPv6Unavailable);
+  end;
+  }
   //make our LAddrInfo structure
   FillChar(LAddr, SizeOf(LAddr), 0);
   with LAddr do

@@ -5682,7 +5682,9 @@ var
 {$ENDIF}
 begin
   Result := 0;
-  EIdException.IfTrue(ACharPos < 1, 'Invalid ACharPos');{ do not localize }
+  if ACharPos < 1 then begin
+    EIdException.Toss('Invalid ACharPos');{ do not localize }
+  end;
   if ACharPos <= Length(AString) then begin
     {$IFDEF DOTNET}
     Result := ASet.IndexOf(AString[ACharPos]) + 1;
@@ -5720,7 +5722,9 @@ end;
 function CharEquals(const AString: string; const ACharPos: Integer; const AValue: Char): Boolean;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
-  EIdException.IfTrue(ACharPos < 1, 'Invalid ACharPos');{ do not localize }
+  if ACharPos < 1 then begin
+    EIdException.Toss('Invalid ACharPos');{ do not localize }
+  end;
   Result := ACharPos <= Length(AString);
   if Result then begin
     Result := AString[ACharPos] = AValue;
@@ -5743,7 +5747,9 @@ end;
 function ByteIdxInSet(const ABytes: TIdBytes; const AIndex: Integer; const ASet: TIdBytes): Integer;
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
-  EIdException.IfTrue(AIndex < 0, 'Invalid AIndex'); {do not localize}
+  if AIndex < 0 then begin
+    EIdException.Toss('Invalid AIndex'); {do not localize}
+  end;
   if AIndex < Length(ABytes) then begin
     Result := ByteIndex(ABytes[AIndex], ASet);
   end else begin
@@ -5770,8 +5776,8 @@ end;
 function ReadLnFromStream(AStream: TStream; AMaxLineLength: Integer = -1;
   AExceptionIfEOF: Boolean = False; AEncoding: TIdTextEncoding = nil): String;
 begin
-  if not ReadLnFromStream(AStream, Result, AMaxLineLength, AEncoding) then begin
-    EIdEndOfStream.IfTrue(AExceptionIfEOF, IndyFormat(RSEndOfStream, ['', AStream.Position]));
+  if (not ReadLnFromStream(AStream, Result, AMaxLineLength, AEncoding)) and AExceptionIfEOF then begin
+    EIdEndOfStream.Toss(IndyFormat(RSEndOfStream, ['', AStream.Position]));
   end;
 end;
 
