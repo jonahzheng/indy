@@ -2651,13 +2651,17 @@ begin
   { Check and fix extension }
   LExt := IndyLowerCase(Ext);
   if Length(LExt) = 0 then begin
-    EIdException.IfTrue(ARaiseOnError, RSMIMEExtensionEmpty);
+    if ARaiseOnError then begin
+      EIdException.Toss(RSMIMEExtensionEmpty);
+    end;
     Exit;
   end;
   { Check and fix MIMEType }
   LMIMEType := IndyLowerCase(MIMEType);
   if Length(LMIMEType) = 0 then begin
-    EIdException.IfTrue(ARaiseOnError, RSMIMEMIMETypeEmpty);
+    if ARaiseOnError then begin
+      EIdException.Toss(RSMIMEMIMETypeEmpty);
+    end;
     Exit;
   end;
   if LExt[1] <> '.' then begin    {do not localize}
@@ -2668,7 +2672,9 @@ begin
     FFileExt.Add(LExt);
     FMIMEList.Add(LMIMEType);
   end else begin
-    EIdException.IfTrue(ARaiseOnError, RSMIMEMIMEExtAlreadyExists);
+    if ARaiseOnError then begin
+      EIdException.Toss(RSMIMEMIMEExtAlreadyExists);
+    end;
     Exit;
   end;
 end;
