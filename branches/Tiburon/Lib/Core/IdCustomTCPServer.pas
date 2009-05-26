@@ -606,7 +606,9 @@ begin
   // RLebeau - is this really needed?  What should happen if this
   // gets called by Notification() if the Scheduler is freed while
   // the server is still Active?
-  EIdException.IfTrue(Active, RSTCPServerSchedulerAlreadyActive);
+  if Active then begin
+    EIdException.Toss(RSTCPServerSchedulerAlreadyActive);
+  end;
 
   // If implicit one already exists free it
   // Free the default Thread manager

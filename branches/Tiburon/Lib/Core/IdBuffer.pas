@@ -387,16 +387,18 @@ uses
 
 procedure TIdBuffer.CheckAdd(AByteCount : Integer; const AIndex : Integer);
 begin
-  EIdTooMuchDataInBuffer.IfTrue(MaxInt - AByteCount < (Size + AIndex), RSTooMuchDataInBuffer);
+  if (MaxInt - AByteCount) < (Size + AIndex) then begin
+    EIdTooMuchDataInBuffer.Toss(RSTooMuchDataInBuffer);
+  end;
 end;
 
 procedure TIdBuffer.CheckByteCount(var VByteCount : Integer; const AIndex : Integer);
 begin
   if VByteCount = -1 then begin
     VByteCount := Size+AIndex;
-  end else begin
-    EIdNotEnoughDataInBuffer.IfTrue(VByteCount > (Size+AIndex),
-      RSNotEnoughDataInBuffer + ' (' + IntToStr(VByteCount) + '/' + IntToStr(Size) + ')'); {do not localize}
+  end
+  else if VByteCount > (Size+AIndex) then begin
+    EIdNotEnoughDataInBuffer.Toss(RSNotEnoughDataInBuffer + ' (' + IntToStr(VByteCount) + '/' + IntToStr(Size) + ')'); {do not localize}
   end;
 end;
 
@@ -611,8 +613,12 @@ begin
   Result := -1;
   // Dont search if it empty
   if Size > 0 then begin
-    EIdException.IfTrue(Length(ABytes) = 0, RSBufferMissingTerminator);
-    EIdException.IfNotInRange(AStartPos, 0, Size - 1, RSBufferInvalidStartPos);
+    if Length(ABytes) = 0 then begin
+      EIdException.Toss(RSBufferMissingTerminator);
+    end;
+    if (AStartPos < 0) or (AStartPos >= Size) then begin
+      EIdException.Toss(RSBufferInvalidStartPos);
+    end;
     BytesLen := Length(ABytes);
     LEnd := FHeadIndex + Size;
     for i := FHeadIndex + AStartPos to LEnd - BytesLen do begin
@@ -651,7 +657,9 @@ end;
 
 procedure TIdBuffer.SetCapacity(AValue: Integer);
 begin
-  EIdException.IfTrue(AValue < Size, 'Capacity cannot be smaller than Size'); {do not localize}
+  if AValue < Size then begin
+    EIdException.Toss('Capacity cannot be smaller than Size'); {do not localize}
+  end;
   CompactHead;
   SetLength(FBytes, AValue);
 end;
@@ -666,8 +674,12 @@ end;
 
 function TIdBuffer.PeekByte(AIndex: Integer): Byte;
 begin
-  EIdException.IfTrue(Size = 0, 'No bytes in buffer.'); {do not localize}
-  EIdException.IfNotInRange(AIndex, 0, Size - 1, 'Index out of bounds.'); {do not localize}
+  if Size = 0 then begin
+    EIdException.Toss('No bytes in buffer.'); {do not localize}
+  end;
+  if (AIndex < 0) or (AIndex >= Size) then begin
+    EIdException.Toss('Index out of bounds.'); {do not localize}
+  end;
   Result := FBytes[FHeadIndex + AIndex];
 end;
 

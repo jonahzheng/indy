@@ -474,7 +474,9 @@ end;
 
 procedure TIdTCPConnection.CreateIOHandler(ABaseType:TIdIOHandlerClass=nil);
 begin
-  EIdException.IfTrue(Connected, RSIOHandlerCannotChange);
+  if Connected then begin
+    EIdException.Toss(RSIOHandlerCannotChange);
+  end;
   if Assigned(ABaseType) then begin
     IOHandler := TIdIOHandler.MakeIOHandler(ABaseType);
   end else begin
@@ -601,8 +603,8 @@ procedure TIdTCPConnection.SetIntercept(AValue: TIdConnectionIntercept);
 begin
   if AValue <> FIntercept then
   begin
-    if Assigned(IOHandler) and Assigned(IOHandler.Intercept) and Assigned(AValue) then begin
-      EIdException.IfTrue(AValue <> IOHandler.Intercept, RSInterceptIsDifferent);
+    if Assigned(IOHandler) and Assigned(IOHandler.Intercept) and Assigned(AValue) and (AValue <> IOHandler.Intercept) then begin
+      EIdException.Toss(RSInterceptIsDifferent);
     end;
     // remove self from the Intercept's free notification list
     if Assigned(FIntercept) then begin
@@ -622,8 +624,8 @@ end;
 procedure TIdTCPConnection.SetIOHandler(AValue: TIdIOHandler);
 begin
   if AValue <> FIOHandler then begin
-    if Assigned(AValue) and Assigned(AValue.Intercept) and Assigned(FIntercept) then begin
-      EIdException.IfTrue(AValue.Intercept <> FIntercept, RSInterceptIsDifferent);
+    if Assigned(AValue) and Assigned(AValue.Intercept) and Assigned(FIntercept) and (AValue.Intercept <> FIntercept) then begin
+      EIdException.Toss(RSInterceptIsDifferent);
     end;
     if ManagedIOHandler and Assigned(FIOHandler) then begin
       FreeAndNil(FIOHandler);
@@ -814,7 +816,9 @@ end;
 
 procedure TIdTCPConnection.CheckConnected;
 begin
-  EIdNotConnected.IfNotAssigned(IOHandler, RSNotConnected);
+  if not Assigned(IOHandler) then begin
+    EIdNotConnected.Toss(RSNotConnected);
+  end;
 end;
 
 procedure TIdTCPConnection.SetGreeting(AValue: TIdReply);

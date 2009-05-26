@@ -1126,7 +1126,9 @@ begin
       LStartPos := IndyMax(LInputBufferSize-(Length(LTerm)-1), 0);
     end;
     if (AMaxLineLength > 0) and (LTermPos > AMaxLineLength) then begin
-      EIdReadLnMaxLineLengthExceeded.IfTrue(MaxLineAction = maException, RSReadLnMaxLineLengthExceeded);
+      if MaxLineAction = maException then begin
+        EIdReadLnMaxLineLengthExceeded.Toss(RSReadLnMaxLineLengthExceeded);
+      end;
       FReadLnSplit := True;
       Result := FInputBuffer.Extract(AMaxLineLength, AEncoding);
       Exit;
@@ -1136,7 +1138,9 @@ begin
       // logic as above and should have been handled there...
       {
       if (AMaxLineLength > 0) and (LStartPos > AMaxLineLength) then begin
-        EIdReadLnMaxLineLengthExceeded.IfTrue(MaxLineAction = maException, RSReadLnMaxLineLengthExceeded);
+        if MaxLineAction = maException then begin
+          EIdReadLnMaxLineLengthExceeded.Toss(RSReadLnMaxLineLengthExceeded);
+        end;
         FReadLnSplit := True;
         Result := FInputBuffer.Extract(AMaxLineLength, AEncoding);
         Exit;
@@ -1296,7 +1300,9 @@ begin
           end;
         end else begin
           LByteCount := 0;
-          EIdNotConnected.IfTrue(ARaiseExceptionIfDisconnected, RSNotConnected);
+          if ARaiseExceptionIfDisconnected then begin
+            EIdNotConnected.Toss(RSNotConnected);
+          end;
         end;
         if LByteCount < 0 then
         begin
@@ -1317,7 +1323,9 @@ begin
         Result := LByteCount;
       end else begin
         // Timeout
-        EIdReadTimeout.IfTrue(ARaiseExceptionOnTimeout, RSReadTimeout);
+        if ARaiseExceptionOnTimeout then begin
+          EIdReadTimeout.Toss(RSReadTimeout);
+        end;
         Result := -1;
         Break;
       end;
@@ -1358,7 +1366,9 @@ begin
 
   //else ">0" ACount bytes
   {$IFDEF SIZE64STREAM}
-  EIdIOHandlerRequiresLargeStream.IfTrue((ASize > High(Integer)) and (not LargeStream), RSRequiresLargeStream);
+  if (ASize > High(Integer)) and (not LargeStream) then begin
+    EIdIOHandlerRequiresLargeStream.Toss(RSRequiresLargeStream);
+  end;
   {$ENDIF}
 
   // RLebeau 3/19/2006: DO NOT ENABLE WRITE BUFFERING IN THIS METHOD!
@@ -1516,7 +1526,9 @@ begin
       LByteCount := ReadInt64;
       {$ELSE}
       LTmp := ReadInt64;
-      EIdIOHandlerStreamDataTooLarge.IfTrue(LTmp > MaxInt, RSDataTooLarge);
+      if LTmp > MaxInt then begin
+        EIdIOHandlerStreamDataTooLarge.Toss(RSDataTooLarge);
+      end;
       LByteCount := TIdStreamSize(LTmp);
       {$ENDIF}
     end else begin
@@ -1530,7 +1542,9 @@ begin
   // Have an option for this? user might not want to presize, eg for int64 files
   if LByteCount > -1 then begin
     LPos := AStream.Position;
-    EIdIOHandlerStreamDataTooLarge.IfTrue(High(TIdStreamSize) - LPos < LByteCount, RSDataTooLarge);
+    if (High(TIdStreamSize) - LPos) < LByteCount then begin
+      EIdIOHandlerStreamDataTooLarge.Toss(RSDataTooLarge);
+    end;
     AdjustStreamSize(AStream, LPos + LByteCount);
   end;
 
