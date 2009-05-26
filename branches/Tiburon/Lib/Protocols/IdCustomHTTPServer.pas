@@ -1482,7 +1482,9 @@ var
   LEncoding: TIdTextEncoding;
   LBufferingStarted: Boolean;
 begin
-  EIdHTTPHeaderAlreadyWritten.IfTrue(HeaderHasBeenWritten, RSHTTPHeaderAlreadyWritten);
+  if HeaderHasBeenWritten then begin
+    EIdHTTPHeaderAlreadyWritten.Toss(RSHTTPHeaderAlreadyWritten);
+  end;
   FHeaderHasBeenWritten := True;
 
   if ContentLength = -1 then begin
