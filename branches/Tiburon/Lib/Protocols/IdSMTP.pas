@@ -338,13 +338,17 @@ begin
         RLebeau: TODO - implement the following code in the future
         instead of the code above.  This way, TIdSASLLogin can be utilized.
 
-        EIdSASLMechNeeded.IfTrue(SASLMechanisms.Count = 0, RSASLRequired);
+        if SASLMechanisms.Count = 0 then begin
+          EIdSASLMechNeeded.Toss(RSASLRequired);
+        end;
         FDidAuthenticate := SASLMechanisms.LoginSASL('AUTH', 'LOGIN', ['235'], ['334'], Self, Capabilities);
 }
       end;
     satSASL:
       begin
-        EIdSASLMechNeeded.IfTrue(SASLMechanisms.Count = 0, RSASLRequired);
+        if SASLMechanisms.Count = 0 then begin
+          EIdSASLMechNeeded.Toss(RSASLRequired);
+        end;
         FDidAuthenticate := SASLMechanisms.LoginSASL('AUTH',FHost,IdGSKSSN_smtp, ['235'], ['334'], Self, Capabilities); {do not localize}
       end;
   end;
