@@ -1093,7 +1093,9 @@ procedure TIdMessage.LoadFromFile(const AFileName: string; const AHeadersOnly: B
 var
   LStream: TIdReadFileExclusiveStream;
 begin
-  EIdMessageCannotLoad.IfFalse(FileExists(AFilename), IndyFormat(RSIdMessageCannotLoad, [AFilename]));
+  if not FileExists(AFilename) then begin
+    EIdMessageCannotLoad.Toss(IndyFormat(RSIdMessageCannotLoad, [AFilename]));
+  end;
   LStream := TIdReadFileExclusiveStream.Create(AFilename); try
     LoadFromStream(LStream, AHeadersOnly);
   finally FreeAndNil(LStream); end;
