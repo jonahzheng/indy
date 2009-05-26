@@ -41,6 +41,7 @@
 unit IdException;
 
 interface
+
 {$I IdCompilerDefines.inc}
 
 uses
@@ -60,28 +61,6 @@ type
     constructor Create(
       const AMsg: string
       ); overload; virtual;
-    class procedure IfAssigned(
-      const ACheck: TObject;
-      const AMsg: string = ''
-      );
-    class procedure IfFalse(
-      const ACheck: Boolean;
-      const AMsg: string = ''
-      );
-    class procedure IfNotAssigned(
-      const ACheck: TObject;
-      const AMsg: string = ''
-      );
-    class procedure IfNotInRange(
-      const AValue: Integer;
-      const AMin: Integer;
-      const AMax: Integer;
-      const AMsg: string = ''
-      );
-    class procedure IfTrue(
-      const ACheck: Boolean;
-      const AMsg: string = ''
-      );
     class procedure Toss(
       const AMsg: string
       );
@@ -129,48 +108,6 @@ implementation
 constructor EIdException.Create(const AMsg : String);
 begin
   inherited Create(AMsg);
-end;
-
-class procedure EIdException.IfAssigned(const ACheck: TObject;
-  const AMsg: string);
-begin
-  if ACheck <> nil then begin
-    Toss(AMsg);
-  end;
-end;
-
-class procedure EIdException.IfFalse(const ACheck: Boolean; const AMsg: string);
-begin
-  if not ACheck then begin
-    Toss(AMsg);
-  end;
-end;
-
-class procedure EIdException.IfNotAssigned(const ACheck: TObject;
-  const AMsg: string);
-begin
-  if ACheck = nil then begin
-    Toss(AMsg);
-  end;
-end;
-
-class procedure EIdException.IfNotInRange(
-  const AValue: Integer;
-  const AMin: Integer;
-  const AMax: Integer;
-  const AMsg: string = ''
-  );
-begin
-  if (AValue < AMin) or (AValue > AMax) then begin
-    Toss(AMsg);
-  end;
-end;
-
-class procedure EIdException.IfTrue(const ACheck: Boolean; const AMsg: string);
-begin
-  if ACheck then begin
-    Toss(AMsg);
-  end;
 end;
 
 class procedure EIdException.Toss(const AMsg: string);
