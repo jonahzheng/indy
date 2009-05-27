@@ -237,7 +237,8 @@ type
     procedure Connect; override;
     procedure Disconnect(ANotifyPeer: Boolean); override;
     procedure DisconnectNotifyPeer; override;
-    class procedure QuickSend(const AHost, ASubject, ATo, AFrom, AText: string);
+    class procedure QuickSend(const AHost, ASubject, ATo, AFrom, AText: string); overload; {$IFDEF DEPRECATED}deprecated{$IFDEF DEPRECATED_MSG} 'Use newer overload of QuickSend()'{$ENDIF};{$ENDIF}
+    class procedure QuickSend(const AHost, ASubject, ATo, AFrom, AText, AContentType, ACharset, AContentTransferEncoding: string); overload;
     procedure Expand(AUserName : String; AResults : TStrings); virtual;
     function Verify(AUserName : String) : String; virtual;
     //
@@ -386,7 +387,14 @@ begin
   SendCMD('EXPN ' + AUserName, [250, 251]);    {Do not Localize}
 end;
 
-class procedure TIdSMTP.QuickSend(const AHost, ASubject, ATo, AFrom, AText : String);
+class procedure TIdSMTP.QuickSend(const AHost, ASubject, ATo, AFrom, AText: String);
+{$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  QuickSend(AHost, ASubject, ATo, AFrom, AText, '', '', '');
+end;
+
+class procedure TIdSMTP.QuickSend(const AHost, ASubject, ATo, AFrom, AText,
+  AContentType, ACharset, AContentTransferEncoding: String);
 var
   LSMTP: TIdSMTP;
   LMsg: TIdMessage;
@@ -398,6 +406,9 @@ begin
         Recipients.EMailAddresses := ATo;
         From.Text := AFrom;
         Body.Text := AText;
+        ContentType := AContentType;
+        CharSet := ACharset;
+        ContentTransferEncoding := AContentTransferEncoding;
       end;
       with LSMTP do begin
         Host := AHost;
