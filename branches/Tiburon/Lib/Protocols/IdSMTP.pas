@@ -387,14 +387,9 @@ begin
   SendCMD('EXPN ' + AUserName, [250, 251]);    {Do not Localize}
 end;
 
-class procedure TIdSMTP.QuickSend(const AHost, ASubject, ATo, AFrom, AText: String);
-{$IFDEF USEINLINE}inline;{$ENDIF}
-begin
-  QuickSend(AHost, ASubject, ATo, AFrom, AText, '', '', '');
-end;
-
-class procedure TIdSMTP.QuickSend(const AHost, ASubject, ATo, AFrom, AText,
+procedure InternalQuickSend(const AHost, ASubject, ATo, AFrom, AText,
   AContentType, ACharset, AContentTransferEncoding: String);
+{$IFDEF USEINLINE}inline;{$ENDIF}
 var
   LSMTP: TIdSMTP;
   LMsg: TIdMessage;
@@ -418,6 +413,17 @@ begin
       end;
     finally FreeAndNil(LMsg); end;
   finally FreeAndNil(LSMTP); end;
+end;
+
+class procedure TIdSMTP.QuickSend(const AHost, ASubject, ATo, AFrom, AText: String);
+begin
+  InternalQuickSend(AHost, ASubject, ATo, AFrom, AText, '', '', '');
+end;
+
+class procedure TIdSMTP.QuickSend(const AHost, ASubject, ATo, AFrom, AText,
+  AContentType, ACharset, AContentTransferEncoding: String);
+begin
+  InternalQuickSend(AHost, ASubject, ATo, AFrom, AText, AContentType, ACharset, AContentTransferEncoding);
 end;
 
 procedure TIdSMTP.InternalSend(AMsg: TIdMessage; const AFrom: String; ARecipients: TIdEMailAddressList);
