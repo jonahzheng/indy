@@ -858,7 +858,7 @@ type
     procedure SetProxySettings(const Value: TIdFtpProxySettings);
     procedure SetClientInfo(const AValue: TIdFTPClientIdentifier);
     procedure SetCompressor(AValue: TIdZLibCompressorBase);
-    procedure SendTransferType;
+    procedure SendTransferType(AValue: TIdFTPTransferType);
     procedure SetTransferType(AValue: TIdFTPTransferType);
     procedure DoBeforeGet; virtual;
     procedure DoBeforePut(AStream: TStream); virtual;
@@ -1275,7 +1275,7 @@ begin
         end;
       end;
 
-      SendTransferType;
+      SendTransferType(FTransferType);
       DoStatus(ftpReady, [RSFTPStatusReady]);
     end
     else
@@ -1305,24 +1305,23 @@ begin
   if AValue <> FTransferType then begin
     if not Assigned(FDataChannel) then begin
       if Connected then begin
-        SendTransferType;
+        SendTransferType(AValue);
       end;
       FTransferType := AValue;
     end;
   end;
 end;
 
-procedure TIdFTP.SendTransferType;
+procedure TIdFTP.SendTransferType(AValue: TIdFTPTransferType);
 var
   s: string;
 begin
   s := '';
-  case TransferType of
+  case AValue of
     ftAscii: s := 'A';      {do not localize}
     ftBinary: s := 'I';     {do not localize}
-  end;
-  if s = '' then begin
-    raise EIdFTPUnsupportedTransferType.Create(RSFTPUnsupportedTransferType);
+    else
+      raise EIdFTPUnsupportedTransferType.Create(RSFTPUnsupportedTransferType);
   end;
   SendCmd('TYPE ' + s, 200); {do not localize}
 end;
@@ -2562,7 +2561,7 @@ Connection: close}
     IssueFEAT;
   end;
 
-  SendTransferType;
+  SendTransferType(FTransferType);
 end;
 
 procedure TIdFTP.DoAfterLogin;
