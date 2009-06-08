@@ -575,7 +575,7 @@ type
     // Read___
     // Cannot overload, compiler cannot overload on return values
     //
-    procedure ReadBytes(var VBuffer: TIdBytes; AByteCount: Integer; AAppend:boolean=true); virtual;
+    procedure ReadBytes(var VBuffer: TIdBytes; AByteCount: Integer; AAppend: Boolean = True); virtual;
     // ReadLn
     function ReadLn(AEncoding: TIdTextEncoding = nil): string; overload; // .Net overload
     function ReadLn(ATerminator: string; AEncoding: TIdTextEncoding): string; overload;
@@ -1337,11 +1337,19 @@ begin
 end;
 
 function TIdIOHandler.CheckForDataOnSource(ATimeout: Integer = 0): Boolean;
+var
+  LPrevSize: Integer;
 begin
-  // return whether at least 1 byte was received
   Result := False;
+  // RLebeau - Connected() might read data into the InputBuffer, thus
+  // leaving no data for ReadFromSource() to receive a second time,
+  // causing a result of False when it should be True instead.  So we
+  // save the current size of the InputBuffer before calling Connected()
+  // and then compare it afterwards....
+  LPrevSize := InputBuffer.Size;
   if Connected then begin
-    Result := ReadFromSource(False, ATimeout, False) > 0;
+    // return whether at least 1 byte was received
+    Result := (InputBuffer.Size > LPrevSize) or (ReadFromSource(False, ATimeout, False) > 0);
   end;
 end;
 
@@ -1639,7 +1647,7 @@ type
 function TIdDiscardStream.IdRead(var VBuffer: TIdBytes; AOffset, ACount: Longint): Longint;
 begin
   Result := 0;
-end;
+  end;
 
 function TIdDiscardStream.IdSeek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64;
 begin
@@ -1667,19 +1675,19 @@ begin
   begin
     LStream := TIdDiscardStream.Create;
     try
-      BeginWork(wmRead, AByteCount);
-      try
-        repeat
+    BeginWork(wmRead, AByteCount);
+    try
+      repeat
           if AByteCount < Int64(High(TIdStreamSize)) then begin
             LSize := TIdStreamSize(AByteCount);
           end else begin
             LSize := High(TIdStreamSize);
-          end;
+        end;
           ReadStream(LStream, LSize, False);
           Dec(AByteCount, LSize);
         until AByteCount < 1;
-      finally
-        EndWork(wmRead);
+    finally
+      EndWork(wmRead);
       end;
     finally
       LStream.Free;
@@ -1693,7 +1701,7 @@ var
 begin
   // TODO: reimplement to not use TIdDiscardStream, just read bytes and throw them away
   LStream := TIdDiscardStream.Create;
-  try
+      try
     ReadStream(LStream, -1, True);
   finally
     LStream.Free;
