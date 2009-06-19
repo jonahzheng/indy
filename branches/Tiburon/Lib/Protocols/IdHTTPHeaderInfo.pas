@@ -325,7 +325,7 @@ end;
 
 procedure TIdEntityHeaderInfo.ProcessHeaders;
 var
-  LSecs: Integer;
+  LSecs: Int64;
   lValue: string;
   lCRange: string;
   lILength: string;
@@ -388,7 +388,7 @@ begin
     if IsNumeric(lValue) then
     begin
       // This is happening when expires is an integer number in seconds
-      LSecs := IndyStrToInt(lValue);
+      LSecs := IndyStrToInt64(lValue);
       // RLebeau 01/23/2005 - IIS sometimes sends an 'Expires: -1' header
       // should we be handling it as actually meaning "Now minus 1 second" instead?
       if LSecs >= 0 then begin
