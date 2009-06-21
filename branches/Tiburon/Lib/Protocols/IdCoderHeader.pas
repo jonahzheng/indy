@@ -205,13 +205,14 @@ var
     //to find the end of the substring, we can't just search for '?=',    {Do not Localize}
     //example: '=?ISO-8859-1?Q?=E4?='    {Do not Localize}
 
-    if not (CharEquals(AHeader, AStartPos, '=') and CharEquals(AHeader, AStartPos+1, '?')) then begin {do not localize}
+    LCharSet := PosIdx('=?', AHeader, AStartPos);  {Do not Localize}
+    if (LCharSet = 0) or (LCharSet > VEndPos) then begin
       Exit;
     end;
-    LCharSet := AStartPos + 2;
+    Inc(LCharSet, 2);
 
     LEncoding := PosIdx('?', AHeader, LCharSet);  {Do not Localize}
-    if (LEncoding = 0) or (LEncoding > VEndPos)then begin
+    if (LEncoding = 0) or (LEncoding > VEndPos) then begin
       Exit;
     end;
     Inc(LEncoding);
