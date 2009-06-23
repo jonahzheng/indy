@@ -606,9 +606,13 @@ type
 initialization
   SetThreadName('Main');  {do not localize}
   GThreadCount := TIdThreadSafeInteger.Create;
-  {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
+  {$IFNDEF DOTNET}
+    {$IFNDEF IDFREEONFINAL}
+      {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
   IndyRegisterExpectedMemoryLeak(GThreadCount);
   IndyRegisterExpectedMemoryLeak(TIdThreadSafeIntegerAccess(GThreadCount).FCriticalSection);
+      {$ENDIF}
+    {$ENDIF}
   {$ENDIF}
 finalization
   // This call hangs if not all threads have been properly destroyed.
