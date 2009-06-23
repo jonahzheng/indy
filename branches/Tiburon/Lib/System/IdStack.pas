@@ -892,8 +892,10 @@ initialization
     {$ENDIF}
   GStackCriticalSection := TIdCriticalSection.Create;
   {$IFNDEF DOTNET}
-    {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
+    {$IFNDEF IDFREEONFINAL}
+      {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
   IndyRegisterExpectedMemoryLeak(GStackCriticalSection);
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
 finalization
