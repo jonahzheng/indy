@@ -1321,6 +1321,10 @@ function Ticks: LongWord;
 procedure ToDo;
 function TwoByteToWord(AByte1, AByte2: Byte): Word;
 
+{$IFDEF WIN32_OR_WIN64}
+function IsDebuggerPresent : Boolean;
+{$ENDIF}
+
 procedure EnsureEncoding(var VEncoding : TIdTextEncoding);
 
 var
@@ -1339,6 +1343,9 @@ const
   LIBEXT = '.so'; {do not localize}
   {$ENDIF}
 {$ENDIF}
+
+var
+  GIsDebuggerPresent : function : BOOL stdcall = nil;
 
 implementation
 
@@ -4143,9 +4150,20 @@ begin
   end;
 end;
 
+{$IFDEF WIN32_OR_WIN64}
+function IsDebuggerPresent : Boolean; {$IFDEF USEINLINE} inline; {$ENDIF}
+begin
+  if Assigned(GIsDebuggerPresent) then begin
+    Result := GIsDebuggerPresent;
+  end else begin
+    Result := False;
+  end;
+end;
+{$ENDIF}
+
 procedure SetThreadName(const AName: string);
-{$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  {$IFDEF ALLOW_NAMED_THREADS}
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+    {$IFDEF ALLOW_NAMED_THREADS}
 const
   MS_VC_EXCEPTION = $406D1388;
 type
@@ -4157,44 +4175,46 @@ type
   end;
 var
   LThreadNameInfo: TThreadNameInfo;
-    {$IFDEF UNICODESTRING}
+      {$IFDEF UNICODESTRING}
   LName: AnsiString;
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
-{$ENDIF}
 begin
-{$IFDEF ALLOW_NAMED_THREADS}
-  {$IFDEF DOTNET}
+  {$IFDEF ALLOW_NAMED_THREADS}
+    {$IFDEF DOTNET}
   // cannot rename a previously-named thread
   if System.Threading.Thread.CurrentThread.Name = nil then begin
     System.Threading.Thread.CurrentThread.Name := AName;
   end;
-  {$ENDIF}
+    {$ENDIF}
 
-  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-    {$IFDEF UNICODESTRING}
+    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+      {$IFDEF UNICODESTRING}
   LName := AnsiString(AName); // explicit convert to Ansi
-    {$ENDIF}
+      {$ENDIF}
+  if IsDebuggerPresent then begin
 
-  with LThreadNameInfo do begin
-    RecType := $1000;
-    {$IFDEF UNICODESTRING}
-    Name := PAnsiChar(LName);
-    {$ELSE}
-    Name := PChar(AName);
-    {$ENDIF}
-    ThreadID := $FFFFFFFF;
-    Flags := 0;
-  end;
-  try
+    with LThreadNameInfo do begin
+      RecType := $1000;
+        {$IFDEF UNICODESTRING}
+      Name := PAnsiChar(LName);
+        {$ELSE}
+      Name := PChar(AName);
+        {$ENDIF}
+      ThreadID := $FFFFFFFF;
+      Flags := 0;
+    end;
+    try
     // This is a wierdo Windows way to pass the info in
-    RaiseException(MS_VC_EXCEPTION, 0, SizeOf(LThreadNameInfo) div SizeOf(LongWord),
-      PDWord(@LThreadNameInfo));
-  except
+      RaiseException(MS_VC_EXCEPTION, 0, SizeOf(LThreadNameInfo) div SizeOf(LongWord),
+        PDWord(@LThreadNameInfo));
+    except
+    end;
   end;
-  {$ENDIF}
+    {$ENDIF}
   // Do nothing. No support in this compiler for it.
-{$ENDIF}
+  {$ENDIF}
 end;
 
 procedure SplitColumns(const AData: string; AStrings: TStrings; const ADelim: string);
@@ -5908,6 +5928,10 @@ end;
 {$ENDIF}
 
 initialization
+{$IFDEF WIN32_OR_WIN64}
+//This is not always going to be available but we should use it if it is.
+  GIsDebuggerPresent := GetProcAddress(GetModuleHandle('Kernel32.dll'), 'IsDebuggerPresent');
+{$ENDIF}
   // AnsiPos does not handle strings with #0 and is also very slow compared to Pos
   {$IFDEF DOTNET}
   IndyPos := SBPos;
