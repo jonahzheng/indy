@@ -114,10 +114,12 @@ implementation
 
 uses
   //facilitate inlining only.
+  //facilitate inlining only.
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  Windows,
+  {$ENDIF}
   {$IFDEF DOTNET}
-    {$IFDEF USEINLINE}
   System.Threading,
-    {$ENDIF}
   {$ENDIF}
   SysUtils;
 
