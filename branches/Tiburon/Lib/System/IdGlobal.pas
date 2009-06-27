@@ -1368,8 +1368,11 @@ type
   TIdMBCSEncoding = class(TIdTextEncoding)
   private
     {$IFDEF USE_ICONV}
-    FToUTF16 : iconv_t;
-    FFromUTF16 : iconv_t;
+    //The thing is that I'm not sure if an iconv_t handle could be
+    //used in multiple threads simultaniously.
+    FCharSet : AnsiString;
+//    FToUTF16 : iconv_t;
+//    FFromUTF16 : iconv_t;
     {$ELSE}
       {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     FCodePage: Cardinal;
@@ -1867,11 +1870,11 @@ end;
 constructor TIdMBCSEncoding.Create(const CharSet: AnsiString);
 begin
   inherited Create;
+  FCharSet := Charset;
+{  FToUTF16 := iconv_open(PAnsiChar(CharSet), 'UTF-16');    {do not localize}
+{  FFromUTF16 := iconv_open('UTF-16', PAnsiChar(CharSet));  {do not localize}
 
-  FToUTF16 := iconv_open(PAnsiChar(CharSet), 'UTF-16');    {do not localize}
-  FFromUTF16 := iconv_open('UTF-16', PAnsiChar(CharSet));  {do not localize}
-
-  if (FToUTF16 = iconv_t(-1)) or (FFromUTF16 = iconv_t(-1)) then begin
+{  if (FToUTF16 = iconv_t(-1)) or (FFromUTF16 = iconv_t(-1)) then begin
     if FToUTF16 <> iconv_t(-1) then begin
       iconv_close(FToUTF16);
       FToUTF16 := iconv_t(-1);
@@ -1881,20 +1884,21 @@ begin
       FFromUTF16 := iconv_t(-1);
     end;
     raise EIdException.CreateRes(@RSInvalidCharSet);
-  end;
+  end;  }
 
-  ToDo; //FMaxCharSize := ?;
+  FMaxCharSize := 0;
+ // ToDo; //FMaxCharSize := ?;
   FIsSingleByte := FMaxCharSize = 1;
 end;
 
 destructor TIdMBCSEncoding.Destroy;
 begin
-  if FToUTF16 <> iconv_t(-1) then begin
+{  if FToUTF16 <> iconv_t(-1) then begin
     iconv_close(FToUTF16);
   end;
   if FFromUTF16 <> iconv_t(-1) then begin
     iconv_close(FFromUTF16);
-  end;
+  end;     }
   inherited;
 end;
 {$ELSE}
@@ -1933,7 +1937,7 @@ begin
   LChars := PAnsiChar(Chars);
   LCountCount := CharCount * SizeOf(WideChar);
   LResult := 0;
-  Result := iconv(FFromUTF16, @LChars, @LCountCount, nil, @LResult);
+ // Result := iconv(FFromUTF16, @LChars[0], @LCountCount, nil, @LResult);
   {$ELSE}
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags, Chars, CharCount, nil, 0, nil, nil);
@@ -2018,7 +2022,11 @@ end;
 
 function TIdMBCSEncoding.GetMaxByteCount(CharCount: Integer): Integer;
 begin
+  {$IFDEF USE_ICONV}
+  raise EIdException.Create('Iconv does not support this');
+  {$ELSE}
   Result := (CharCount + 1) * FMaxCharSize;
+  {$ENDIF}
 end;
 
 function TIdMBCSEncoding.GetMaxCharCount(ByteCount: Integer): Integer;
