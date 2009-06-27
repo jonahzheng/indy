@@ -96,6 +96,11 @@ implementation
 
 uses
   //facilitate inlining only.
+  {$IFDEF VCL2010ORABOVE}
+    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  Windows,
+    {$ENDIF}
+  {$ENDIF}
   {$IFDEF DOTNET}
     {$IFDEF USEINLINE}
   System.Threading,
