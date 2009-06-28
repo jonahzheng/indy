@@ -266,9 +266,7 @@ implementation
 uses
   //facilitate inlining only.
   {$IFDEF DOTNET}
-    {$IFDEF USEINLINE}
   System.Threading,
-    {$ENDIF}
   {$ENDIF}
   IdResourceStringsCore;
 

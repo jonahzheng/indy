@@ -410,10 +410,8 @@ uses
   Windows,
   {$ENDIF}
   {$IFDEF DOTNET}
-    {$IFDEF USEINLINE}
   System.IO,
   System.Threading,
-    {$ENDIF}
   {$ENDIF}  
   IdComponent, IdGlobalProtocols, IdResourceStringsProtocols, IdStack, IdStream, SysUtils;
 

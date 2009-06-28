@@ -475,10 +475,8 @@ implementation
 
 uses
   {$IFDEF DOTNET}
-    {$IFDEF USEINLINE}
   System.IO,
   System.Threading,
-    {$ENDIF}
   {$ENDIF}
   IdCoderMIME, IdResourceStringsProtocols, IdURI, IdIOHandlerSocket, IdSSL;
 

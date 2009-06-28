@@ -525,9 +525,7 @@ implementation
 uses
   //facilitate inlining only.
   {$IFDEF DOTNET}
-    {$IFDEF USEINLINE}
   System.IO,
-    {$ENDIF}
   {$ENDIF}
   IdIOHandlerStream, IdGlobal,
   IdMessageCoderMIME, // Here so the 'MIME' in create will always suceed

@@ -609,10 +609,8 @@ implementation
 
 uses
   {$IFDEF DOTNET}
-    {$IFDEF USEINLINE}
   System.Threading,
   System.IO,
-    {$ENDIF}
   {$ENDIF}
   IdIOHandler,
   IdStack,

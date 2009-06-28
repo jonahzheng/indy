@@ -70,14 +70,10 @@ implementation
 uses
   //facilitate inlining only.
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-     {$IFDEF USEINLINE}
   Windows,
-     {$ENDIF}
   {$ENDIF}
   {$IFDEF DOTNET}
-    {$IFDEF USEINLINE}
   System.IO,
-    {$ENDIF}
   {$ENDIF}
   IdGlobal, IdGlobalProtocols, IdException, IdResourceStringsProtocols,
   IdMessage, SysUtils;

@@ -1072,10 +1072,8 @@ uses
   Windows,
   {$ENDIF}
   {$IFDEF DOTNET}
-    {$IFDEF USEINLINE}
   System.IO,
   System.Threading,
-    {$ENDIF}
   {$ENDIF}  
   IdComponent, IdResourceStringsCore, IdIOHandlerStack, IdResourceStringsProtocols,
   IdSSL, IdGlobalProtocols, IdHash, IdHashCRC, IdHashSHA1, IdHashMessageDigest,
