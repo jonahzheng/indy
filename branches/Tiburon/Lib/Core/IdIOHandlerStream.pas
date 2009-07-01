@@ -155,9 +155,9 @@ type
     //
     property ReceiveStream: TStream read FReceiveStream;
     property SendStream: TStream read FSendStream;
+    property StreamType: TIdIOHandlerStreamType read FStreamType;
   published
     property FreeStreams: Boolean read FFreeStreams write FFreeStreams;
-    property StreamType: TIdIOHandlerStreamType read FStreamType;
     //
     property OnGetStreams: TIdOnGetStreams read FOnGetStreams write FOnGetStreams;
   end;
