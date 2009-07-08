@@ -193,6 +193,8 @@ type
     procedure SetNagleOpt(AEnabled: Boolean);
     //
     function SourceIsAvailable: Boolean; override;
+    function CheckForError(ALastResult: Integer): Integer; override;
+    procedure RaiseError(AError: Integer); override;
   public
     destructor Destroy; override;
     function BindingAllocated: Boolean;
@@ -455,6 +457,16 @@ end;
 function TIdIOHandlerSocket.SourceIsAvailable: Boolean;
 begin
   Result := BindingAllocated;
+end;
+
+function TIdIOHandlerSocket.CheckForError(ALastResult: Integer): Integer;
+begin
+  Result := GStack.CheckForSocketError(ALastResult, [Id_WSAESHUTDOWN, Id_WSAECONNABORTED]);
+end;
+
+procedure TIdIOHandlerSocket.RaiseError(AError: Integer);
+begin
+  GStack.RaiseSocketError(AError);
 end;
 
 end.

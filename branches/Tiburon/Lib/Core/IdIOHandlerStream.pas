@@ -143,6 +143,8 @@ type
     function ReadDataFromSource(var VBuffer: TIdBytes): Integer; override;
     function WriteDataToTarget(const ABuffer: TIdBytes; const AOffset, ALength: Integer): Integer; override;
     function SourceIsAvailable: Boolean; override;
+    function CheckForError(ALastResult: Integer): Integer; override;
+    procedure RaiseError(AError: Integer); override;
   public
     procedure CheckForDisconnect(ARaiseExceptionIfDisconnected: Boolean = True;
       AIgnoreBuffer: Boolean = False); override;
@@ -165,7 +167,7 @@ type
 implementation
 
 uses
-  SysUtils;
+  IdException, SysUtils;
 
 { TIdIOHandlerStream }
 
@@ -275,6 +277,19 @@ end;
 function TIdIOHandlerStream.SourceIsAvailable: Boolean;
 begin
   Result := Assigned(ReceiveStream);
+end;
+
+function TIdIOHandlerStream.CheckForError(ALastResult: Integer): Integer;
+begin
+  Result := ALastResult;
+  if Result < 0 then begin
+    raise EIdException.Create('Stream error'); {do not localize}
+  end;
+end;
+
+procedure TIdIOHandlerStream.RaiseError(AError: Integer);
+begin
+  raise EIdException.Create('Stream error'); {do not localize}
 end;
 
 end.
