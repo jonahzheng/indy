@@ -225,6 +225,8 @@ uses
 
 type
   TIdSSLVersion = (sslvSSLv2, sslvSSLv23, sslvSSLv3, sslvTLSv1);
+  TUdSSLVer = (SSLv2, SSLv3, TLSv1);
+  TIdSSLVers = set of TUdSSLVer;
   TIdSSLMode = (sslmUnassigned, sslmClient, sslmServer, sslmBoth);
   TIdSSLVerifyMode = (sslvrfPeer, sslvrfFailIfNoPeerCert, sslvrfClientOnce);
   TIdSSLVerifyModeSet = set of TIdSSLVerifyMode;
@@ -233,6 +235,7 @@ type
 
 const
   DEF_SSLVERSION = sslvTLSv1;
+  DEF_SSLVERS = [TLSv1];
   
 type
   TIdX509 = class;
@@ -257,7 +260,6 @@ type
 
   TIdSSLIOHandlerSocketOpenSSL = class;
   TIdSSLCipher = class;
-
   TCallbackEvent  = procedure(const AMsg: String) of object;
   TPasswordEvent  = procedure(var Password: AnsiString) of object;
   TVerifyPeerEvent  = function(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean of object;
@@ -265,14 +267,19 @@ type
 
   TIdSSLOptions = class(TPersistent)
   protected
-    fsRootCertFile, fsCertFile, fsKeyFile: String;
+    fsRootCertFile,
+    fsCertFile,
+    fsKeyFile: String;
     fMethod: TIdSSLVersion;
+    fSSLVersions : TIdSSLVers;
     fMode: TIdSSLMode;
     fVerifyDepth: Integer;
     fVerifyMode: TIdSSLVerifyModeSet;
     //fVerifyFile,
     fVerifyDirs, fCipherList: AnsiString;
     procedure AssignTo(ASource: TPersistent); override;
+    procedure SetSSLVersions(const AValue : TIdSSLVers );
+    procedure SetMethod(const AValue : TIdSSLVersion);
   public
     constructor Create;
   published
@@ -280,6 +287,7 @@ type
     property CertFile: String read fsCertFile write fsCertFile;
     property KeyFile: String read fsKeyFile write fsKeyFile;
     property Method: TIdSSLVersion read fMethod write fMethod default DEF_SSLVERSION;
+    property SSLVersions : TIdSSLVers read fSSLVersions write SetSSLVersions default DEF_SSLVERS;
     property Mode: TIdSSLMode read fMode write fMode;
     property VerifyMode: TIdSSLVerifyModeSet read fVerifyMode write fVerifyMode;
     property VerifyDepth: Integer read fVerifyDepth write fVerifyDepth;
@@ -293,6 +301,7 @@ type
   TIdSSLContext = class(TObject)
   protected
     fMethod: TIdSSLVersion;
+    fSSLVersions : TIdSSLVers;
     fMode: TIdSSLMode;
     fsRootCertFile, fsCertFile, fsKeyFile: AnsiString;
     fVerifyDepth: Integer;
@@ -324,6 +333,7 @@ type
     property VerifyOn: Boolean read fVerifyOn write fVerifyOn;
 //THese can't be published in a TObject without a compiler warning.
  // published
+    property SSLVersions : TIdSSLVers read fSSLVersions write fSSLVersions;
     property Method: TIdSSLVersion read fMethod write fMethod;
     property Mode: TIdSSLMode read fMode write fMode;
     property RootCertFile: AnsiString read fsRootCertFile write fsRootCertFile;
@@ -565,18 +575,13 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     property Bits: Integer read GetBits;
     property Version: String read GetVersion;
   end;
-
-
   EIdOSSLCouldNotLoadSSLLibrary = class(EIdOpenSSLError);
   EIdOSSLModeNotSet             = class(EIdOpenSSLError);
   EIdOSSLGetMethodError         = class(EIdOpenSSLError);
   EIdOSSLCreatingContextError   = class(EIdOpenSSLError);
-  
-
   EIdOSSLLoadingRootCertError = class(EIdOpenSSLAPICryptoError);
   EIdOSSLLoadingCertError = class(EIdOpenSSLAPICryptoError);
   EIdOSSLLoadingKeyError = class(EIdOpenSSLAPICryptoError);
-
   EIdOSSLSettingCipherError = class(EIdOpenSSLError);
   EIdOSSLFDSetError = class(EIdOpenSSLAPISSLError);
   EIdOSSLDataBindingError = class(EIdOpenSSLAPISSLError);
@@ -607,8 +612,6 @@ var
   LockPassCB: TIdCriticalSection = nil;
   LockVerifyCB: TIdCriticalSection = nil;
   CallbackLockList: TThreadList = nil;
-
-
 
 function PasswordCallback(buf: PAnsiChar; size: TIdC_INT; rwflag: TIdC_INT; userdata: Pointer): TIdC_INT; cdecl;
 var
@@ -1013,6 +1016,24 @@ begin
   Method := DEF_SSLVERSION;
 end;
 
+procedure TIdSSLOptions.SetMethod(const AValue: TIdSSLVersion);
+begin
+  fMethod := AValue;
+  case AValue of
+    sslvSSLv2 : fSSLVersions := [SSLv2];
+    sslvSSLv23 : fSSLVersions := [SSLv3,TLSv1];
+    sslvSSLv3 : fSSLVersions := [SSLv3];
+    sslvTLSv1 : fSSLVersions := [TLSv1];
+  end;
+end;
+
+procedure TIdSSLOptions.SetSSLVersions(const AValue: TIdSSLVers);
+begin
+  if (AValue <> []) and (fMethod = sslvSSLv23) then begin
+    fSSLVersions := AValue;
+  end;
+end;
+
 procedure TIdSSLOptions.AssignTo(ASource: TPersistent);
 begin
   if ASource is TIdSSLOptions then
@@ -1021,6 +1042,7 @@ begin
       CertFile := Self.CertFile;
       KeyFile := Self.KeyFile;
       Method := Self.Method;
+      SSLVersions := Self.SSLVersions;
       Mode := Self.Mode;
       VerifyMode := Self.VerifyMode;
       VerifyDepth := Self.VerifyDepth;
@@ -1077,6 +1099,8 @@ begin
     //PasswordRoutineOn := Assigned(fOnGetPassword);
     fMethod :=  SSLOptions.Method;
     fMode := SSLOptions.Mode;
+    fSSLVersions := SSLOptions.SSLVersions;
+
     fSSLContext.InitContext(sslCtxServer);
   end;
 end;
@@ -1331,7 +1355,9 @@ begin
       StatusInfoOn := Assigned(fOnStatusInfo);
       //PasswordRoutineOn := Assigned(fOnGetPassword);
       fMethod :=  SSLOptions.Method;
+      fSSLVersions := SSLOptions.SSLVersions;
       fMode := SSLOptions.Mode;
+
       fSSLContext.InitContext(sslCtxClient);
     end;
   end;
@@ -1459,6 +1485,19 @@ begin
   if fContext = nil then begin
     raise EIdOSSLCreatingContextError.Create(RSSSLCreatingContextError);
   end;
+  //set SSL Versions we will use
+  if fMethod = sslvSSLv23  then begin
+
+    if not (SSLv2 in SSLVersions) then begin
+       IdSslCtxSetOptions(fContext,OPENSSL_SSL_OP_NO_SSLv2);
+    end;
+    if not (SSLv3 in SSLVersions) then begin
+       IdSslCtxSetOptions(fContext,OPENSSL_SSL_OP_NO_SSLv3);
+    end;
+    if not (TLSv1 in SSLVersions) then begin
+      IdSslCtxSetOptions(fContext,OPENSSL_SSL_OP_NO_TLSv1);
+    end;
+  end;
   IdSslCtxSetMode(fContext,OPENSSL_SSL_MODE_AUTO_RETRY);
   // assign a password lookup routine
 //  if PasswordRoutineOn then begin
@@ -1556,13 +1595,13 @@ begin
         Result := IdSslMethodV2;
       end;
     sslvSSLv23:
-      case fMode of
-        sslmServer : Result := IdSslMethodServerV23;
-        sslmClient : Result := IdSslMethodClientV23;
-        sslmBoth   : Result := IdSslMethodV23;
-      else
-        Result := IdSslMethodV23;
-      end;
+        case fMode of
+          sslmServer : Result := IdSslMethodServerV23;
+          sslmClient : Result := IdSslMethodClientV23;
+          sslmBoth   : Result := IdSslMethodV23;
+        else
+          Result := IdSslMethodV23;
+        end;
     sslvSSLv3:
       case fMode of
         sslmServer : Result := IdSslMethodServerV3;
@@ -1629,6 +1668,7 @@ begin
 //    property PasswordRoutineOn: Boolean read fPasswordRoutineOn write fPasswordRoutineOn;
   Result.VerifyOn := VerifyOn;
   Result.Method := Method;
+  Result.SSLVersions := SSLVersions;
   Result.Mode := Mode;
   Result.RootCertFile := RootCertFile;
   Result.CertFile := CertFile;
