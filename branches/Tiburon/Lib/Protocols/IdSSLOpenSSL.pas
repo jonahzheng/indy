@@ -395,6 +395,8 @@ type
     //some overrides from base classes
     procedure InitComponent; override;
     procedure ConnectClient; override;
+    function CheckForError(ALastResult: Integer): Integer; override;
+    procedure RaiseError(AError: Integer); override;
   public
     destructor Destroy; override;
     function Clone :  TIdSSLIOHandlerSocketBase; override;
@@ -587,7 +589,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
   EIdOSSLDataBindingError = class(EIdOpenSSLAPISSLError);
   EIdOSSLAcceptError = class(EIdOpenSSLAPISSLError);
   EIdOSSLConnectError = class(EIdOpenSSLAPISSLError);
-
+  
 function LogicalAnd(A, B: Integer): Boolean;
 
 function LoadOpenSSLLibrary: Boolean;
@@ -1212,7 +1214,7 @@ end;
 
 procedure TIdSSLIOHandlerSocketOpenSSL.InitComponent;
 begin
-  inherited;
+  inherited InitComponent;
   IsPeer := False;
   fxSSLOptions := TIdSSLOptions.Create;
   fSSLLayerClosed := True;
@@ -1431,6 +1433,38 @@ begin
   LIO.OnGetPassword := DoGetPassword;
   LIO.OnVerifyPeer := DoVerifyPeer;
   Result := LIO;
+end;
+
+function TIdSSLIOHandlerSocketOpenSSL.CheckForError(ALastResult: Integer): Integer;
+var
+  err: Integer;
+begin
+  if PassThrough then begin
+    Result := inherited CheckForError(ALastResult);
+  end else
+  begin
+    Result := fSSLSocket.GetSSLError(ALastResult);
+    if Result = OPENSSL_SSL_ERROR_NONE then
+    begin
+      Result := 0;
+      Exit;
+    end
+    if Result = OPENSSL_SSL_ERROR_SYSCALL then
+    begin
+      Result := inherited CheckForError(Id_SOCKET_ERROR);
+      Exit;
+    end;
+    EIdOpenSSLAPISSLError.RaiseException(fSSLSocket.fSSL, Result, '');
+  end;
+end;
+
+procedure TIdSSLIOHandlerSocketOpenSSL.RaiseError(AError: Integer);
+begin
+  if (PassThrough) or (AError = Id_WSAESHUTDOWN) or (AError = Id_WSAECONNABORTED) then begin
+    inherited RaiseError(AError);
+  end else begin
+    EIdOpenSSLAPISSLError.RaiseException(fSSLSocket.fSSL, AError, '');
+  end;
 end;
 
 { TIdSSLContext }
@@ -1818,22 +1852,22 @@ end;
 
 function TIdSSLSocket.Recv(var ABuffer: TIdBytes): Integer;
 var
-  err: Integer;
+  ret, err: Integer;
 begin
   repeat
-    err := IdSslRead(fSSL, @ABuffer[0], Length(ABuffer));
-    if err > 0 then begin
-      Result := err;
+    ret := IdSslRead(fSSL, @ABuffer[0], Length(ABuffer));
+    if ret > 0 then begin
+      Result := ret;
       Exit;
     end;
-    err := GetSSLError(err);
+    err := GetSSLError(ret);
     if (err = OPENSSL_SSL_ERROR_WANT_READ) or (err = OPENSSL_SSL_ERROR_WANT_WRITE) then begin
       Continue;
     end;
     if err = OPENSSL_SSL_ERROR_ZERO_RETURN then begin
       Result := 0;
     end else begin
-      Result := -1;
+      Result := ret;
     end;
     Exit;
   until False;
@@ -1841,27 +1875,31 @@ end;
 
 function TIdSSLSocket.Send(const ABuffer: TIdBytes; AOffset, ALength: Integer): Integer;
 var
-  err: Integer;
+  ret, err: Integer;
 begin
   Result := 0;
   repeat
-    err := IdSslWrite(fSSL, @ABuffer[AOffset], ALength);
-    if err < 1 then begin
-      err := GetSSLError(err);
-      if (err = OPENSSL_SSL_ERROR_WANT_READ) or (err = OPENSSL_SSL_ERROR_WANT_WRITE) then begin
-        Continue;
+    ret := IdSslWrite(fSSL, @ABuffer[AOffset], ALength);
+    if ret > 0 then begin
+      Inc(Result, ret);
+      Inc(AOffset, ret);
+      Dec(ALength, ret);
+      if ALength < 1 then begin
+        Exit;
       end;
-      if err = OPENSSL_SSL_ERROR_ZERO_RETURN then begin
-        Result := 0;
-      end else begin
-        Result := -1;
-      end;
-      Exit;
+      Continue;
     end;
-    Inc(Result, err);
-    Inc(AOffset, err);
-    Dec(ALength, err);
-  until ALength < 1;
+    err := GetSSLError(ret);
+    if (err = OPENSSL_SSL_ERROR_WANT_READ) or (err = OPENSSL_SSL_ERROR_WANT_WRITE) then begin
+      Continue;
+    end;
+    if err = OPENSSL_SSL_ERROR_ZERO_RETURN then begin
+      Result := 0;
+    end else begin
+      Result := ret;
+    end;
+    Exit;
+  until False;
 end;
 
 function TIdSSLSocket.GetPeerCert: TIdX509;
