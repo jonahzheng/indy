@@ -1448,7 +1448,7 @@ begin
     begin
       Result := 0;
       Exit;
-    end
+    end;
     if Result = OPENSSL_SSL_ERROR_SYSCALL then
     begin
       Result := inherited CheckForError(Id_SOCKET_ERROR);
