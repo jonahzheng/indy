@@ -8519,6 +8519,10 @@ procedure IdSslCtxSetInfoCallback(ctx: PSSL_CTX; cb: PSSL_CTX_info_callback);
 function IdSslCtxSetOptions(ctx: PSSL_CTX; op: TIdC_LONG): TIdC_LONG;
 function IdSslCtxSetMode(ctx : PSSL_CTX; op : TIdC_LONG) : TIdC_LONG;
 function IdSslCtxGetMode(ctx : PSSL_CTX) : TIdC_LONG;
+
+function IdSslSetOptions(ssl: PSSL; op : TIdC_LONG): TIdC_LONG;
+
+
 function IdSslSetMtu(ssl : PSSL; mtu : TIdC_LONG) : TIdC_LONG;
 function IdSslCtxSessNumber(ctx : PSSL_CTX) : TIdC_LONG;
 function IdSslCtxSessConnect(ctx : PSSL_CTX) : TIdC_LONG;
