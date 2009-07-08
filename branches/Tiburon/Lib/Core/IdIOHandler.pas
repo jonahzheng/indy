@@ -486,6 +486,8 @@ type
     function ReadDataFromSource(var VBuffer: TIdBytes): Integer; virtual; abstract;
     function WriteDataToTarget(const ABuffer: TIdBytes; const AOffset, ALength: Integer): Integer; virtual; abstract;
     function SourceIsAvailable: Boolean; virtual; abstract;
+    function CheckForError(ALastResult: Integer): Integer; virtual; abstract;
+    procedure RaiseError(AError: Integer); virtual; abstract;
   public
     procedure AfterAccept; virtual;
     function Connected: Boolean; virtual;
@@ -1304,12 +1306,12 @@ begin
         end;
         if LByteCount < 0 then
         begin
-          LLastError := GStack.CheckForSocketError(LByteCount, [Id_WSAESHUTDOWN, Id_WSAECONNABORTED]);
+          LLastError := CheckForError(LByteCount);
           FClosedGracefully := True;
           Close;
           // Do not raise unless all data has been read by the user
           if InputBufferIsEmpty then begin
-            GStack.RaiseSocketError(LLastError);
+            RaiseError(LLastError);
           end;
           LByteCount := 0;
         end;
@@ -1686,7 +1688,7 @@ begin
         until AByteCount < 1;
     finally
       EndWork(wmRead);
-      end;
+    end;
     finally
       LStream.Free;
     end;
