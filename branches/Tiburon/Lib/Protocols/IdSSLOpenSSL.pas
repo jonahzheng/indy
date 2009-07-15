@@ -261,6 +261,9 @@ type
   TIdSSLIOHandlerSocketOpenSSL = class;
   TIdSSLCipher = class;
   TCallbackEvent  = procedure(const AMsg: String) of object;
+  TCallbackExEvent = procedure(ASender : TObject;
+    const AsslSocket: PSSL;
+    const AWhere, Aret: TIdC_INT; const AType, AMsg : String ) of object;
   TPasswordEvent  = procedure(var Password: AnsiString) of object;
   TVerifyPeerEvent  = function(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean of object;
   TIOHandlerNotify = procedure(ASender: TIdSSLIOHandlerSocketOpenSSL) of object;
@@ -376,6 +379,7 @@ type
     fSSLSocket: TIdSSLSocket;
     //fPeerCert: TIdX509;
     fOnStatusInfo: TCallbackEvent;
+    FOnStatusInfoEx : TCallbackExEvent;
     fOnGetPassword: TPasswordEvent;
     fOnVerifyPeer: TVerifyPeerEvent;
     fSSLLayerClosed: Boolean;
@@ -386,6 +390,8 @@ type
     procedure SetPassThrough(const Value: Boolean); override;
     procedure DoBeforeConnect(ASender: TIdSSLIOHandlerSocketOpenSSL); virtual;
     procedure DoStatusInfo(const AMsg: String); virtual;
+    procedure DoStatusInfoEx(const AsslSocket: PSSL;
+    const AWhere, Aret: TIdC_INT; const AWhereStr, ARetStr : String );
     procedure DoGetPassword(var Password: AnsiString); virtual;
     function DoVerifyPeer(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean; virtual;
     function RecvEnc(var VBuffer: TIdBytes): Integer; override;
@@ -410,6 +416,7 @@ type
   published
     property SSLOptions: TIdSSLOptions read fxSSLOptions write fxSSLOptions;
     property OnStatusInfo: TCallbackEvent read fOnStatusInfo write fOnStatusInfo;
+    property OnStatusInfoEx: TCallbackExEvent read fOnStatusInfoEx write fOnStatusInfoEx;
     property OnGetPassword: TPasswordEvent read fOnGetPassword write fOnGetPassword;
     property OnVerifyPeer: TVerifyPeerEvent read fOnVerifyPeer write fOnVerifyPeer;
   end;
@@ -419,6 +426,7 @@ type
     fxSSLOptions: TIdSSLOptions;
     fSSLContext: TIdSSLContext;
     fOnStatusInfo: TCallbackEvent;
+    FOnStatusInfoEx : TCallbackExEvent;
     fOnGetPassword: TPasswordEvent;
     fOnVerifyPeer: TVerifyPeerEvent;
     //
@@ -426,6 +434,8 @@ type
     //procedure CreateSSLContext;
     //
     procedure DoStatusInfo(const AMsg: String); virtual;
+    procedure DoStatusInfoEx(const AsslSocket: PSSL;
+      const AWhere, Aret: TIdC_INT; const AWhereStr, ARetStr : String );
     procedure DoGetPassword(var Password: AnsiString); virtual;
     function DoVerifyPeer(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean; virtual;
     procedure InitComponent; override;
@@ -446,6 +456,7 @@ type
   published
     property SSLOptions: TIdSSLOptions read fxSSLOptions write fxSSLOptions;
     property OnStatusInfo: TCallbackEvent read fOnStatusInfo write fOnStatusInfo;
+    property OnStatusInfoEx: TCallbackExEvent read fOnStatusInfoEx write fOnStatusInfoEx;
     property OnGetPassword: TPasswordEvent read fOnGetPassword write fOnGetPassword;
     property OnVerifyPeer: TVerifyPeerEvent read fOnVerifyPeer write fOnVerifyPeer;
   end;
@@ -639,11 +650,120 @@ begin
   end;
 end;
 
+procedure GetStateVars(const sslSocket: PSSL; AWhere, Aret: TIdC_INT; var VTypeStr, VMsg : String);
+  {$IFDEF USEINLINE}inline;{$ENDIF}
+begin
+  case AWhere of
+    OPENSSL_SSL_CB_ALERT :
+    begin
+      VTypeStr := IndyFormat( RSOSSLAlert,[IdSslAlertTypeStringLong(Aret)]);
+      VMsg := String(IdSslAlertTypeStringLong(Aret));
+    end;
+    OPENSSL_SSL_CB_READ_ALERT :
+    begin
+      VTypeStr := IndyFormat(RSOSSLReadAlert,[IdSslAlertTypeStringLong(Aret)]);
+      VMsg := String(IdSslAlertDescStringLong(Aret));
+    end;
+    OPENSSL_SSL_CB_WRITE_ALERT :
+    begin
+      VTypeStr := IndyFormat(RSOSSLWriteAlert,[IdSslAlertTypeStringLong(Aret)]);
+      VMsg := String( IdSslAlertDescStringLong(Aret));
+    end;
+    OPENSSL_SSL_CB_ACCEPT_LOOP :
+    begin
+      VTypeStr :=  RSOSSLAcceptLoop;
+      VMsg := String( IdSslStateStringLong(sslSocket));
+    end;
+    OPENSSL_SSL_CB_ACCEPT_EXIT :
+    begin
+      if ARet < 0  then begin
+        VTypeStr := RSOSSLAcceptError;
+      end else begin
+        if ARet = 0 then begin
+          VTypeStr := RSOSSLAcceptFailed;
+        end else begin
+          VTypeStr := RSOSSLAcceptExit;
+        end;
+      end;
+      VMsg := String( IdSslStateStringLong(sslSocket) );
+    end;
+    OPENSSL_SSL_CB_CONNECT_LOOP :
+    begin
+      VTypeStr := RSOSSLConnectLoop;
+      VMsg := String( IdSslStateStringLong(sslSocket) );
+    end;
+  OPENSSL_SSL_CB_CONNECT_EXIT :
+    begin
+      if ARet < 0  then begin
+        VTypeStr := RSOSSLConnectError;
+      end else begin
+        if ARet = 0 then begin
+          VTypeStr := RSOSSLConnectFailed
+        end else begin
+          VTypeStr := RSOSSLConnectExit;
+        end;
+      end;
+      VMsg := String( IdSslStateStringLong(sslSocket) );
+    end;
+  OPENSSL_SSL_CB_HANDSHAKE_START :
+    begin
+      VTypeStr :=  RSOSSLHandshakeStart;
+      VMsg := String( IdSslStateStringLong(sslSocket) );
+    end;
+  OPENSSL_SSL_CB_HANDSHAKE_DONE :
+    begin
+      VTypeStr := RSOSSLHandshakeDone;
+      VMsg := String( IdSslStateStringLong(sslSocket) );
+    end;
+  end;
+{var LW : TIdC_INT;
+begin
+  VMsg := '';
+  LW := Awhere and (not OPENSSL_SSL_ST_MASK);
+  if (LW and OPENSSL_SSL_ST_CONNECT) > 0 then begin
+    VWhereStr :=   'SSL_connect:';
+  end else begin
+    if (LW and OPENSSL_SSL_ST_ACCEPT) > 0 then begin
+      VWhereStr := ' SSL_accept:';
+    end else begin
+      VWhereStr := '  undefined:';
+    end;
+  end;
+//  IdSslStateStringLong
+  if (Awhere and OPENSSL_SSL_CB_LOOP) > 0 then begin
+       VMsg := IdSslStateStringLong(sslSocket);
+  end else begin
+    if (Awhere and OPENSSL_SSL_CB_ALERT) > 0 then begin
+       if (Awhere and OPENSSL_SSL_CB_READ > 0) then begin
+         VWhereStr := VWhereStr + ' read:'+ IdSslAlertTypeStringLong(Aret);
+       end else begin
+         VWhereStr := VWhereStr + 'write:'+ IdSslAlertTypeStringLong(Aret);
+       end;;
+       VMsg := IdSslAlertDescStringLong(Aret);
+    end else begin
+       if (Awhere and OPENSSL_SSL_CB_EXIT) > 0 then begin
+         if ARet = 0 then begin
+
+          VWhereStr := VWhereStr +'failed';
+          VMsg := IdSslStateStringLong(sslSocket);
+         end else begin
+           if ARet < 0  then  begin
+               VWhereStr := VWhereStr +'error';
+               VMsg := IdSslStateStringLong(sslSocket);
+           end;
+         end;
+       end;
+    end;
+  end;          }
+end;
+
 procedure InfoCallback(const sslSocket: PSSL; where, ret: TIdC_INT); cdecl;
 var
   IdSSLSocket: TIdSSLSocket;
   StatusStr : String;
+  LMsg : String;
   LErr : Integer;
+
 begin
 {
 You have to save the value of WSGetLastError as some Operating System API
@@ -661,9 +781,18 @@ JPM.
       StatusStr := IndyFormat(RSOSSLStatusString, [StrPas(IdSslStateStringLong(sslSocket))]);
       if (IdSSLSocket.fParent is TIdSSLIOHandlerSocketOpenSSL) then begin
         TIdSSLIOHandlerSocketOpenSSL(IdSSLSocket.fParent).DoStatusInfo(StatusStr);
+//GetStateVars
+        if Assigned(TIdSSLIOHandlerSocketOpenSSL(IdSSLSocket.fParent).fOnStatusInfoEx) then begin
+          GetStateVars(sslSocket,where,ret,StatusStr,LMsg);
+          TIdSSLIOHandlerSocketOpenSSL(IdSSLSocket.fParent).DoStatusInfoEx(sslSocket,where,ret,StatusStr,LMsg);
+        end;
       end;
       if (IdSSLSocket.fParent is TIdServerIOHandlerSSLOpenSSL) then begin
         TIdServerIOHandlerSSLOpenSSL(IdSSLSocket.fParent).DoStatusInfo(StatusStr);
+        if Assigned(TIdServerIOHandlerSSLOpenSSL(IdSSLSocket.fParent).fOnStatusInfoEx) then begin
+          GetStateVars(sslSocket,where,ret,StatusStr,LMsg);
+          TIdServerIOHandlerSSLOpenSSL(IdSSLSocket.fParent).DoStatusInfoEx(sslSocket,where,ret,StatusStr,LMsg);
+        end;
       end;
     finally
       LockInfoCB.Leave;
@@ -1097,7 +1226,7 @@ begin
     fVerifyDirs := String(SSLOptions.fVerifyDirs);
     fCipherList := AnsiString(SSLOptions.fCipherList);
     VerifyOn := Assigned(fOnVerifyPeer);
-    StatusInfoOn := Assigned(fOnStatusInfo);
+    StatusInfoOn := Assigned(fOnStatusInfo) or Assigned(FOnStatusInfoEx);
     //PasswordRoutineOn := Assigned(fOnGetPassword);
     fMethod :=  SSLOptions.Method;
     fMode := SSLOptions.Mode;
@@ -1135,6 +1264,14 @@ procedure TIdServerIOHandlerSSLOpenSSL.DoStatusInfo(const AMsg: String);
 begin
   if Assigned(fOnStatusInfo) then begin
     fOnStatusInfo(AMsg);
+  end;
+end;
+
+procedure TIdServerIOHandlerSSLOpenSSL.DoStatusInfoEx(const AsslSocket: PSSL;
+  const AWhere, Aret: TIdC_INT; const AWhereStr, ARetStr: String);
+begin
+  if Assigned(FOnStatusInfoEx) then begin
+    FOnStatusInfoEx(Self,AsslSocket,AWhere,Aret,AWHereStr,ARetStr);
   end;
 end;
 
@@ -1354,7 +1491,7 @@ begin
       fVerifyDirs := String(SSLOptions.fVerifyDirs);
       fCipherList := AnsiString(SSLOptions.fCipherList);
       VerifyOn := Assigned(fOnVerifyPeer);
-      StatusInfoOn := Assigned(fOnStatusInfo);
+      StatusInfoOn := Assigned(fOnStatusInfo) or Assigned(fOnStatusInfoEx);
       //PasswordRoutineOn := Assigned(fOnGetPassword);
       fMethod :=  SSLOptions.Method;
       fSSLVersions := SSLOptions.SSLVersions;
@@ -1370,6 +1507,15 @@ procedure TIdSSLIOHandlerSocketOpenSSL.DoStatusInfo(const AMsg: String);
 begin
   if Assigned(fOnStatusInfo) then begin
     fOnStatusInfo(AMsg);
+  end;
+end;
+
+procedure TIdSSLIOHandlerSocketOpenSSL.DoStatusInfoEx(
+  const AsslSocket: PSSL; const AWhere, Aret: TIdC_INT; const AWhereStr,
+  ARetStr: String);
+begin
+  if Assigned(FOnStatusInfoEx) then begin
+    FOnStatusInfoEx(Self,AsslSocket,AWhere,Aret,AWHereStr,ARetStr);
   end;
 end;
 
@@ -1436,8 +1582,8 @@ begin
 end;
 
 function TIdSSLIOHandlerSocketOpenSSL.CheckForError(ALastResult: Integer): Integer;
-var
-  err: Integer;
+//var
+//  err: Integer;
 begin
   if PassThrough then begin
     Result := inherited CheckForError(ALastResult);
