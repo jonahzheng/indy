@@ -595,6 +595,7 @@ resourcestring
   RSInvalidSyslogPacketSize = 'Invalid Syslog message: packet too large (%d bytes)';
   RSInvalidHostName = 'Invalid host name. A SYSLOG host name cannot contain any space ("%s")+';
 
+   {$IFDEF USEOPENSSL}
   {IdOpenSSL}
   RSOSSLModeNotSet = 'Mode has not been set.';
   RSOSSLCouldNotLoadSSLLibrary = 'Could not load SSL library.';
@@ -602,6 +603,21 @@ resourcestring
   RSOSSLConnectionDropped = 'SSL connection has dropped.';
   RSOSSLCertificateLookup = 'SSL certificate request error.';
   RSOSSLInternal = 'SSL library internal error.';
+  //callback where strings
+  RSOSSLAlert =  '%s Alert';
+  RSOSSLReadAlert =  '%s Read Alert';
+  RSOSSLWriteAlert =  '%s Write Alert';
+  RSOSSLAcceptLoop = 'Accept Loop';
+  RSOSSLAcceptError = 'Accept Error';
+  RSOSSLAcceptFailed = 'Accept Failed';
+  RSOSSLAcceptExit =  'Accept Exit';
+  RSOSSLConnectLoop =  'Connect Loop';
+  RSOSSLConnectError = 'Connect Error';
+  RSOSSLConnectFailed = 'Connect Failed';
+  RSOSSLConnectExit =  'Connect Exit';
+  RSOSSLHandshakeStart = 'Handshake Start';
+  RSOSSLHandshakeDone =  'Handshake Done';
+  {$ENDIF}
 
   {IdWinsockStack}
   RSWSockStack = 'Winsock stack';
