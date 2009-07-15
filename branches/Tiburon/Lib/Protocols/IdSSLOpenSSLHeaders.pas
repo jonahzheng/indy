@@ -3600,19 +3600,21 @@ const
   OPENSSL_SSL_AD_CERTIFICATE_UNOBTAINABLE = OPENSSL_TLS1_AD_CERTIFICATE_UNOBTAINABLE;
   OPENSSL_SSL_AD_UNRECOGNIZED_NAME = OPENSSL_TLS1_AD_UNRECOGNIZED_NAME;
   OPENSSL_SSL_AD_BAD_CERTIFICATE_STATUS_RESPONSE = OPENSSL_TLS1_AD_BAD_CERTIFICATE_STATUS_RESPONSE;
-  OPENSSL_SSL_CB_EXIT = $02;
-  OPENSSL_SSL_CB_ACCEPT_EXIT = OPENSSL_SSL_ST_ACCEPT or OPENSSL_SSL_CB_EXIT;
+
   OPENSSL_SSL_CB_LOOP = $01;
-  OPENSSL_SSL_CB_ACCEPT_LOOP = OPENSSL_SSL_ST_ACCEPT or OPENSSL_SSL_CB_LOOP;
-  OPENSSL_SSL_CB_ALERT = $4000;
-  OPENSSL_SSL_CB_CONNECT_EXIT = OPENSSL_SSL_ST_CONNECT or OPENSSL_SSL_CB_EXIT;
-  OPENSSL_SSL_CB_CONNECT_LOOP = OPENSSL_SSL_ST_CONNECT or OPENSSL_SSL_CB_LOOP;
-  OPENSSL_SSL_CB_HANDSHAKE_DONE = $20;
-  OPENSSL_SSL_CB_HANDSHAKE_START = $10;
+  OPENSSL_SSL_CB_EXIT = $02;
   OPENSSL_SSL_CB_READ = $04;
-  OPENSSL_SSL_CB_READ_ALERT = OPENSSL_SSL_CB_ALERT or OPENSSL_SSL_CB_READ;
   OPENSSL_SSL_CB_WRITE = $08;
+  OPENSSL_SSL_CB_ALERT = $4000;
+  OPENSSL_SSL_CB_READ_ALERT = OPENSSL_SSL_CB_ALERT or OPENSSL_SSL_CB_READ;
   OPENSSL_SSL_CB_WRITE_ALERT = OPENSSL_SSL_CB_ALERT or OPENSSL_SSL_CB_WRITE;
+  OPENSSL_SSL_CB_ACCEPT_LOOP = OPENSSL_SSL_ST_ACCEPT or OPENSSL_SSL_CB_LOOP;
+  OPENSSL_SSL_CB_ACCEPT_EXIT = OPENSSL_SSL_ST_ACCEPT or OPENSSL_SSL_CB_EXIT;
+  OPENSSL_SSL_CB_CONNECT_LOOP = OPENSSL_SSL_ST_CONNECT or OPENSSL_SSL_CB_LOOP;
+  OPENSSL_SSL_CB_CONNECT_EXIT = OPENSSL_SSL_ST_CONNECT or OPENSSL_SSL_CB_EXIT;
+  OPENSSL_SSL_CB_HANDSHAKE_START = $10;
+  OPENSSL_SSL_CB_HANDSHAKE_DONE = $20;
+
   OPENSSL_SSL_CTRL_NEED_TMP_RSA = 1;
   OPENSSL_SSL_CTRL_SET_TMP_RSA = 2;
   OPENSSL_SSL_CTRL_SET_TMP_DH = 3;
@@ -8368,6 +8370,9 @@ var
   IdSslCtxUseCertificateFile : function(ctx: PSSL_CTX; const _file: PAnsiChar; _type: TIdC_INT): TIdC_INT cdecl = nil;
   IdSslLoadErrorStrings : procedure cdecl = nil;
   IdSslStateStringLong : function(s: PSSL): PAnsiChar cdecl = nil;
+  IdSslAlertDescStringLong : function(value : TIdC_INT) : PAnsiChar cdecl = nil;
+  IdSslAlertTypeStringLong : function(value : TIdC_INT) : PAnsiChar cdecl = nil;
+
   IdSslGetPeerCertificate : function(s: PSSL): PX509 cdecl = nil;
   IdSslCtxSetVerify : procedure(ctx: PSSL_CTX; mode: TIdC_INT; callback: TSSL_CTX_set_verify_callback) cdecl = nil;
   IdSslCtxSetVerifyDepth : procedure(ctx: PSSL_CTX; depth: TIdC_INT) cdecl = nil;
@@ -11164,9 +11169,9 @@ them in case we use them later.}
   fn_SSL_shutdown = 'SSL_shutdown';  {Do not localize}
   {CH fn_SSL_get_ssl_method = 'SSL_get_ssl_method'; }  {Do not localize}
   {CH fn_SSL_set_ssl_method = 'SSL_set_ssl_method'; }  {Do not localize}
-  {CH fn_SSL_alert_type_string_long = 'SSL_alert_type_string_long'; }  {Do not localize}
+   fn_SSL_alert_type_string_long = 'SSL_alert_type_string_long';   {Do not localize}
   {CH fn_SSL_alert_type_string = 'SSL_alert_type_string'; }  {Do not localize}
-  {CH fn_SSL_alert_desc_string_long = 'SSL_alert_desc_string_long'; }  {Do not localize}
+  fn_SSL_alert_desc_string_long = 'SSL_alert_desc_string_long';   {Do not localize}
   {CH fn_SSL_alert_desc_string = 'SSL_alert_desc_string'; }  {Do not localize}
   {CH fn_SSL_set_client_CA_list = 'SSL_set_client_CA_list'; }  {Do not localize}
   fn_SSL_CTX_set_client_CA_list = 'SSL_CTX_set_client_CA_list';  {Do not localize}
@@ -11649,6 +11654,9 @@ begin
   @IdSslCtxUseCertificateFile := LoadFunction(fn_SSL_CTX_use_certificate_file);
   @IdSslLoadErrorStrings := LoadFunction(fn_SSL_load_error_strings);
   @IdSslStateStringLong := LoadFunction(fn_SSL_state_string_long);
+  @IdSslAlertDescStringLong := LoadFunction(fn_SSL_alert_desc_string_long);
+  @IdSslAlertTypeStringLong := LoadFunction(fn_SSL_alert_type_string_long);
+
   @IdSslGetPeerCertificate := LoadFunction(fn_SSL_get_peer_certificate);
   @IdSslCtxSetVerify := LoadFunction(fn_SSL_CTX_set_verify);
   @IdSslCtxSetVerifyDepth := LoadFunction(fn_SSL_CTX_set_verify_depth);
