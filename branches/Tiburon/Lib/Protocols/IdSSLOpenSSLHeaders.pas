@@ -11238,7 +11238,6 @@ them in case we use them later.}
   // RLebeau: because it is not an actual function of its own to begin with.
   // It is a precompiler macro that maps to another function
   fn_SSLeay_add_ssl_algorithms = 'SSL_library_init';   {Do not localize}
-  //fn_SSL_CTX_set_info_callback = 'SSL_CTX_set_info_callback_indy'; // GREGOR  {Do not localize}
   fn_SSL_SESSION_get_id = 'SSL_SESSION_get_id';  {Do not localize}
   {CH fn_SSL_is_init_finished = 'mi_SSL_is_init_finished'; }  {Do not localize}
   {CH fn_SSL_in_init = 'mi_SSL_in_init'; }  {Do not localize}
