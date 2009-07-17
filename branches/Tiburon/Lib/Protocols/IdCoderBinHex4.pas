@@ -390,7 +390,7 @@ begin
   LSSize := IndyLength(ASrcStream, ABytes);
   //BinHex4.0 allows filenames to be only 255 bytes long (because the length
   //is stored in a byte), so truncate the filename to 255 bytes...
-  {$IFDEF UNICODESTRING}
+  {$IFDEF STRING_IS_UNICODE}
   LFileName := AnsiString(FFileName); // explicit convert to Ansi
   {$ELSE}
   LFileName := FFileName;

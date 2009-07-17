@@ -237,7 +237,7 @@ type
     procedure Connect; override;
     procedure Disconnect(ANotifyPeer: Boolean); override;
     procedure DisconnectNotifyPeer; override;
-    class procedure QuickSend(const AHost, ASubject, ATo, AFrom, AText: string); overload; {$IFDEF DEPRECATED}deprecated{$IFDEF DEPRECATED_MSG} 'Use newer overload of QuickSend()'{$ENDIF};{$ENDIF}
+    class procedure QuickSend(const AHost, ASubject, ATo, AFrom, AText: string); overload; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use newer overload of QuickSend()'{$ENDIF};{$ENDIF}
     class procedure QuickSend(const AHost, ASubject, ATo, AFrom, AText, AContentType, ACharset, AContentTransferEncoding: string); overload;
     procedure Expand(AUserName : String; AResults : TStrings); virtual;
     function Verify(AUserName : String) : String; virtual;
@@ -389,7 +389,7 @@ end;
 
 procedure InternalQuickSend(const AHost, ASubject, ATo, AFrom, AText,
   AContentType, ACharset, AContentTransferEncoding: String);
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 var
   LSMTP: TIdSMTP;
   LMsg: TIdMessage;

@@ -38,13 +38,13 @@ const
   SASL_DIGEST_METHOD = 'AUTHENTICATE:';  {do not localize}
 
 function NCToStr(const AValue : Integer):String;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := IntToHex(AValue,8);
 end;
 
 function RemoveQuote(const aStr:string):string;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   if (Length(aStr)>=2) and (aStr[1]='"') and (astr[Length(aStr)]='"') then begin
     Result := Copy(aStr, 2, Length(astr)-2)
@@ -55,7 +55,7 @@ end;
 
 //
 function HashResult(const AStr : String): TIdBytes;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   with TIdHashMessageDigest5.Create do
   try
@@ -66,7 +66,7 @@ begin
 end;
 
 function HashResultAsHex(const ABytes : TIdBytes) : String;  overload;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   with TIdHashMessageDigest5.Create do
   try
@@ -77,7 +77,7 @@ begin
 end;
 
 function HashResultAsHex(const AStr : String) : String; overload;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   with TIdHashMessageDigest5.Create do
   try

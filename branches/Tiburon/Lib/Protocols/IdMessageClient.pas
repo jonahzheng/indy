@@ -458,7 +458,9 @@ implementation
 uses
   //facilitate inlining only.
   {$IFDEF DOTNET}
+    {$IFDEF USE_INLINE}
   System.IO,
+    {$ENDIF}
   {$ENDIF}
   //TODO: Remove these references and make it completely pluggable. Check other spots in Indy as well
   IdMessageCoderBinHex4, IdMessageCoderQuotedPrintable, IdMessageCoderMIME,
@@ -861,7 +863,7 @@ var
     LStrings := TStringList.Create; try
       LEncoder := AEncoderClass.Create(Self); try
         LStrStream := TMemoryStream.Create; try
-          {$IFDEF TEncoding}
+          {$IFDEF HAS_TEncoding}
           AStrings.SaveToStream(LStrStream, AEncoding);
           {$ELSE}
           WriteStringToStream(LStrStream, AStrings.Text, AEncoding);

@@ -49,25 +49,25 @@ interface
 
 uses
   Classes,
-  {$IFDEF VCL2005ORABOVE}
-     {$IFDEF DOTNET}
-      Borland.Vcl.Design.DesignIntF,
-      Borland.Vcl.Design.DesignEditors;
-     {$ELSE}
-      DesignIntf,
-      DesignEditors;
-     {$ENDIF}
+  {$IFDEF VCL_2005_OR_ABOVE}
+    {$IFDEF DOTNET}
+  Borland.Vcl.Design.DesignIntF,
+  Borland.Vcl.Design.DesignEditors;
+    {$ELSE}
+  DesignIntf,
+  DesignEditors;
+    {$ENDIF}
   {$ELSE}
-    {$IFDEF VCL6ORABOVE}
+    {$IFDEF VCL_6_OR_ABOVE}
       {$IFDEF FPC}
-      PropEdits,
-      ComponentEditors;
+  PropEdits,
+  ComponentEditors;
       {$ELSE}
-      DesignIntf,
-      DesignEditors;
+  DesignIntf,
+  DesignEditors;
       {$ENDIF}
     {$ELSE}
-       Dsgnintf;
+  Dsgnintf;
     {$ENDIF}
   {$ENDIF}
 // Procs
@@ -99,11 +99,11 @@ implementation
 
 uses
   IdDsnResourceStrings,
-  {$IFDEF WidgetWinforms}
+  {$IFDEF WIDGET_WINFORMS}
   IdDsnSASLListEditorFormNET,
   {$R 'IdDsnSASLListEditorFormNET.TfrmSASLListEditor.resources' 'IdDsnSASLListEditorFormNET.resx'}
   {$ENDIF}
-  {$IFDEF WidgetVCLLikeOrKylix}
+  {$IFDEF WIDGET_VCL_LIKE_OR_KYLIX}
   IdDsnSASLListEditorFormVCL,
   {$ENDIF}
   {$IFDEF TSelectionEditor}
@@ -118,7 +118,7 @@ uses
   {IdDsnNewMessagePart, }
 
 type
-  {$IFDEF WidgetWinforms}
+  {$IFDEF WIDGET_WINFORMS}
   //we make a create here because I'm not sure how the Visual Designer for WinForms
   //we behave in a package.  I know it can act weird if something is renamed
   TfrmSASLListEditor = class(IdDsnSASLListEditorFormNET.TfrmSASLListEditor)
@@ -126,13 +126,13 @@ type
     constructor Create(AOwner : TComponent);
   end;
   {$ENDIF}
-  {$IFDEF WidgetVCLLikeOrKylix}
+  {$IFDEF WIDGET_VCL_LIKE_OR_KYLIX}
   TfrmSASLListEditor = class(TfrmSASLListEditorVCL);
   {$ENDIF}
 
 { TfrmSASLListEditor }
 
-{$IFDEF WidgetWinForms}
+{$IFDEF WIDGET_WINFORMS}
 constructor TfrmSASLListEditor.Create(AOwner : TComponent);
 begin
   inherited Create;

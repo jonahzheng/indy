@@ -814,6 +814,7 @@ type
     procedure SendInternalPassive(const ACmd : String; var VIP: string; var VPort: TIdPort);
     procedure SendCPassive(var VIP: string; var VPort: TIdPort);
     function FindAuthCmd : String;
+    //
     function GetReplyClass: TIdReplyClass; override;
     //
     procedure ParseFTPList;
@@ -883,7 +884,7 @@ type
     function CheckAccount: Boolean;
     function IsAccountNeeded : Boolean;
     function GetSupportsVerification : Boolean;
-    {$IFDEF DOTNET1_1}
+    {$IFNDEF DOTNET_2_OR_ABOVE}
     //
     // holger: .NET compatibility change
     //
@@ -892,6 +893,8 @@ type
     //
     {$ENDIF}
   public
+    procedure GetInternalResponse(AEncoding: TIdTextEncoding = nil); override;
+
     function IsExtSupported(const ACmd : String):Boolean;
     procedure ExtractFeatFacts(const ACmd : String; AResults : TStrings);
     //this function transparantly handles OTP based on the Last command response
@@ -936,7 +939,7 @@ type
     procedure SiteToSiteUpload(const AToSite : TIdFTP; const ASourceFile : String; const ADestFile : String = '');
     procedure SiteToSiteDownload(const AFromSite: TIdFTP; const ASourceFile : String; const ADestFile : String = '');
     procedure DisconnectNotifyPeer; override;
-    procedure Quit; //deprecated;
+    procedure Quit; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPECATED_MSG} 'Use Disconnect() instead'{$ENDIF};{$ENDIF}
     function  Quote(const ACommand: String): SmallInt;
     procedure RemoveDir(const ADirName: string);
     procedure Rename(const ASourceFile, ADestFile: string);
@@ -982,7 +985,7 @@ type
     property UsingSFTP : Boolean read FUsingSFTP;
     property CurrentTransferMode : TIdFTPTransferMode read FCurrentTransferMode write TransferMode;
   published
-    {$IFNDEF DOTNET1_1}
+    {$IFDEF DOTNET_2_OR_ABOVE}
     property IPVersion;
     {$ENDIF}
     property AutoLogin: Boolean read FAutoLogin write FAutoLogin;
@@ -1069,11 +1072,15 @@ implementation
 uses
   //facilitate inlining only.
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+    {$IFDEF USE_INLINE}
   Windows,
+    {$ENDIF}
   {$ENDIF}
   {$IFDEF DOTNET}
+    {$IFDEF USE_INLINE}
   System.IO,
   System.Threading,
+    {$ENDIF}
   {$ENDIF}  
   IdComponent, IdResourceStringsCore, IdIOHandlerStack, IdResourceStringsProtocols,
   IdSSL, IdGlobalProtocols, IdHash, IdHashCRC, IdHashSHA1, IdHashMessageDigest,
@@ -1423,10 +1430,11 @@ begin
     ExtListDir(ADest);
     Exit;
   end;
-  //Note that for LIST, it might be best to put the connection in ASCII
-  //mode because some old servers such as TOPS20 might require this.  We restore it
-  //if the original mode was not ASCII.  It's a good idea to do this anyway
-  //because some clients still do this such as WS_FTP Pro and Microsoft's FTP Client.
+  // Note that for LIST, it might be best to put the connection in ASCII mode
+  // because some old servers such as TOPS20 might require this.  We restore
+  // it if the original mode was not ASCII.  It's a good idea to do this
+  // anyway because some clients still do this such as WS_FTP Pro and
+  // Microsoft's FTP Client.
   LTrans := TransferType;
   if LTrans <> ftASCII then begin
     Self.TransferType := ftASCII;
@@ -1437,7 +1445,7 @@ begin
       InternalGet(Trim(iif(ADetails, 'LIST', 'NLST') + ' ' + ASpecifier), LDest); {do not localize}
       FreeAndNil(FDirectoryListing);
       LDest.Position := 0;
-      {$IFDEF TEncoding}
+      {$IFDEF HAS_TEncoding}
       FListResult.LoadFromStream(LDest, IOHandler.DefStringEncoding);
       {$ELSE}
       FListResult.Text := ReadStringFromStream(LDest, -1, IOHandler.DefStringEncoding);
@@ -2778,16 +2786,31 @@ procedure TIdFTP.ExtListDir(ADest: TStrings = nil; const ADirectory: string = ''
 var
   LDest: TMemoryStream;
 begin
+  // RLebeau 6/4/2009: According to RFC 3659 Section 7.2:
+  //
+  // The data connection opened for a MLSD response shall be a connection
+  // as if the "TYPE L 8", "MODE S", and "STRU F" commands had been given,
+  // whatever FTP transfer type, mode and structure had actually been set,
+  // and without causing those settings to be altered for future commands.
+  // That is, this transfer type shall be set for the duration of the data
+  // connection established for this command only.  While the content of
+  // the data sent can be viewed as a series of lines, implementations
+  // should note that there is no maximum line length defined.
+  // Implementations should be prepared to deal with arbitrarily long
+  // lines.
+
   LDest := TMemoryStream.Create;
   try
     InternalGet(Trim('MLSD ' + ADirectory), LDest);  {do not localize}
     FreeAndNil(FDirectoryListing);
     DoOnRetrievedDir;
     LDest.Position := 0;
-    {$IFDEF TEncoding}
-    FListResult.LoadFromStream(LDest, IOHandler.DefStringEncoding);
+    // RLebeau: using Indy8BitEncoding() here.  TIdFTPListParseBase will
+    // decode UTF-8 sequences later on...
+    {$IFDEF HAS_TEncoding}
+    FListResult.LoadFromStream(LDest, Indy8BitEncoding);
     {$ELSE}
-    FListResult.Text := ReadStringFromStream(LDest, -1, IOHandler.DefStringEncoding);
+    FListResult.Text := ReadStringFromStream(LDest, -1, Indy8BitEncoding);
     {$ENDIF}
     with TIdFTPListResult(FListResult) do begin
       FDetails := True;
@@ -3085,6 +3108,46 @@ begin
     else if Connected then begin
       TransferMode(dmStream);
     end;
+  end;
+end;
+
+procedure TIdFTP.GetInternalResponse(AEncoding: TIdTextEncoding = nil);
+var
+  LLine: string;
+  LResponse: TStringList;
+  LReplyCode: string;
+begin
+  CheckConnected;
+  LResponse := TStringList.Create;
+  try
+    // Some servers with bugs send blank lines before reply. Dont remember
+    // which ones, but I do remember we changed this for a reason
+    //
+    // RLebeau 9/14/06: this can happen in between lines of the reply as well
+
+    // RLebeau 3/9/09: according to RFC 959, when reading a multi-line reply,
+    // we are supposed to look at the first line's reply code and then keep
+    // reading until that specific reply code is encountered again, and
+    // everything in between is the text.  So, do not just look for arbitrary
+    // 3-digit values on each line, but instead look for the specific reply
+    // code...
+
+    LLine := IOHandler.ReadLnWait(MaxInt, AEncoding);
+    LResponse.Add(LLine);
+
+    if CharEquals(LLine, 4, '-') then
+    begin
+      LReplyCode := Copy(LLine, 1, 3);
+      repeat
+        LLine := IOHandler.ReadLnWait(MaxInt, AEncoding);
+        LResponse.Add(LLine);
+      until TIdReplyFTP(FLastCmdResult).IsEndReply(LReplyCode, LLine);
+    end;
+
+    //Note that FormattedReply uses an assign in it's property set method.
+    FLastCmdResult.FormattedReply := LResponse;
+  finally
+    FreeAndNil(LResponse);
   end;
 end;
 

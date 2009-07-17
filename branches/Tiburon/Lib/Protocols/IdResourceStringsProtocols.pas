@@ -595,7 +595,7 @@ resourcestring
   RSInvalidSyslogPacketSize = 'Invalid Syslog message: packet too large (%d bytes)';
   RSInvalidHostName = 'Invalid host name. A SYSLOG host name cannot contain any space ("%s")+';
 
-   {$IFDEF USEOPENSSL}
+  {$IFDEF USE_OPENSSL}
   {IdOpenSSL}
   RSOSSLModeNotSet = 'Mode has not been set.';
   RSOSSLCouldNotLoadSSLLibrary = 'Could not load SSL library.';
@@ -908,7 +908,7 @@ resourcestring
   { TIdURI exceptions }
   RSURINoProto                 = 'Protocol field is empty';
   RSURINoHost                  = 'Host field is empty';
-  {$IFNDEF TCharacter}
+  {$IFNDEF HAS_TCharacter}
   RSUTF16IndexOutOfRange       = 'UTF16 Index Out Of Range';
   RSUTF16InvalidHighSurrogate  = 'UTF16 Invalid High Surrogate';
 
@@ -978,19 +978,19 @@ resourcestring
   RSFTPFSysErrMsg = 'Permission Denied';
   RSOTPUnknownMethod = 'Unknown OTP method';
 
-  {$IFDEF DOTNET2_OR_ABOVE}
+  {$IFDEF DOTNET_2_OR_ABOVE}
   RSSSLNETNotAuthenticated = 'Not authenticated';
   RSSSLNETCertificateRequired = 'Certificate required for servers';
   {$ENDIF}
 
   // TIdURI
-  {$IFDEF UNICODESTRING}
-  {$IFNDEF TCharacter}
+  {$IFDEF STRING_IS_UNICODE}
+    {$IFNDEF HAS_TCharacter}
   RSUTF16IndexOutOfRange = 'Character Index %d out of Range, Length = %d';
   RSUTF16InvalidHighSurrogate = 'Character at Index %d is not a valid UTF-16 High Surrogate';
   RSUTF16InvalidLowSurrogate = 'Character at Index %d is not a valid UTF-16 Low Surrogate';
   RSUTF16MissingLowSurrogate = 'Missing a Low Surrogate in UTF-16 sequence';
-  {$ENDIF}
+    {$ENDIF}
   {$ENDIF}
 
   // Message Header Encoding

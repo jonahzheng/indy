@@ -342,15 +342,13 @@ const
     ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'); {do not localize}
 
 type
-  //WinceCE only has WideString functions for files.
+  //WinCE only has Unicode functions for files.
   {$IFDEF WINCE}
-    {$IFDEF UNICODESTRING}
-  TIdFileName = UnicodeString;
-    {$ELSE}
-  TIdFileName = WideString;
-    {$ENDIF}
+  TIdFileName = TIdUnicodeString;
+  PIdFileNameChar = PWideChar;
   {$ELSE}
   TIdFileName = String;
+  PIdFileNameChar = PChar;
   {$ENDIF}
 
   TIdReadLnFunction = function: string of object;
@@ -465,8 +463,8 @@ type
   function IsBinary(const AChar : Char) : Boolean;
   function IsHex(const AChar : Char) : Boolean;
   function IsHostname(const S: String): Boolean;
-  {$IFNDEF UNICODESTRING}
-  function IsLeadChar(ACh : Char):Boolean;
+  {$IFDEF STRING_IS_ANSI}
+  function IsLeadChar(ACh : Char): Boolean;
   {$ENDIF}
   function IsTopDomain(const AStr: string): Boolean;
   function IsValidIP(const S: String): Boolean;
@@ -555,7 +553,7 @@ uses
       {$IFDEF KYLIXCOMPAT}
       libc,
       {$ENDIF}
-      {$IFDEF USEBASEUNIX}
+      {$IFDEF USE_BASEUNIX}
       BaseUnix,
       Unix,
       DateUtils,
@@ -651,17 +649,19 @@ begin
 end;
 
 function IndyCurrentYear : Integer;
-{$IFDEF VCL2007ORABOVE}
-{$IFDEF USEINLINE} inline; {$ENDIF}
-begin
-  Result := CurrentYear;
+{$IFDEF VCL_2007_OR_ABOVE}
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 {$ELSE}
 var
   LYear, LMonth, LDay : Word;
+{$ENDIF}
 begin
+  {$IFDEF VCL_2007_OR_ABOVE}
+  Result := CurrentYear;
+  {$ELSE}
   DecodeDate(Now, LYear, LMonth, LDay);
   Result := LYear;
-{$ENDIF}
+  {$ENDIF}
 end;
 
 function CharRange(const AMin, AMax : Char): String;
@@ -690,7 +690,7 @@ var
 {$ENDIF}
 
 function StartsWith(const ANSIStr, APattern : String) : Boolean;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := TextStartsWith(ANSIStr, APattern) {do not localize}
   //tentative fix for a problem with Korean indicated by "SungDong Kim" <infi@acrosoft.pe.kr>
@@ -702,7 +702,7 @@ begin
 end;
 
 function UnixDateTimeToDelphiDateTime(UnixDateTime: LongWord): TDateTime;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
    Result := (UnixDateTime / 86400) + UnixStartDate;
 {
@@ -712,7 +712,7 @@ From: http://homepages.borland.com/efg2lab/Library/UseNet/1999/0309b.txt
 end;
 
 function DateTimeToUnix(ADateTime: TDateTime): LongWord;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   //example: DateTimeToUnix(now);
   Result := Round((ADateTime - UnixStartDate) * 86400);
@@ -720,7 +720,7 @@ end;
 
 procedure CopyBytesToHostWord(const ASource : TIdBytes; const ASourceIndex: Integer;
   var VDest : Word);
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   VDest := IdGlobal.BytesToWord(ASource, ASourceIndex);
   VDest := GStack.NetworkToHost(VDest);
@@ -728,7 +728,7 @@ end;
 
 procedure CopyBytesToHostLongWord(const ASource : TIdBytes; const ASourceIndex: Integer;
   var VDest : LongWord);
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   VDest := IdGlobal.BytesToLongWord(ASource, ASourceIndex);
   VDest := GStack.NetworkToHost(VDest);
@@ -736,14 +736,14 @@ end;
 
 procedure CopyTIdNetworkWord(const ASource: Word;
     var VDest: TIdBytes; const ADestIndex: Integer);
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   CopyTIdWord(GStack.HostToNetwork(ASource),VDest,ADestIndex);
 end;
 
 procedure CopyTIdNetworkLongWord(const ASource: LongWord;
     var VDest: TIdBytes; const ADestIndex: Integer);
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   CopyTIdLongWord(GStack.HostToNetwork(ASource),VDest,ADestIndex);
 end;
@@ -769,13 +769,13 @@ begin
 end;
 
 function LongWordToFourChar(AValue : LongWord): string;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := BytesToString(ToBytes(AValue), Indy8BitEncoding);
 end;
 
 procedure WordToTwoBytes(AWord : Word; ByteArray: TIdBytes; Index: integer);
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   //ByteArray[Index] := AWord div 256;
   //ByteArray[Index + 1] := AWord mod 256;
@@ -784,10 +784,10 @@ begin
 end;
 
 function StrToWord(const Value: String): Word;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   if Length(Value) > 1 then begin
-    {$IFDEF DOTNET_OR_UNICODESTRING}
+    {$IFDEF STRING_IS_UNICODE}
     Result := TwoCharToWord(Value[1], Value[2]);
     {$ELSE}
     Result := Word(Pointer(Value)^);
@@ -798,9 +798,9 @@ begin
 end;
 
 function WordToStr(const Value: Word): String;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  {$IFDEF DOTNET_OR_UNICODESTRING}
+  {$IFDEF STRING_IS_UNICODE}
   Result := BytesToString(ToBytes(Value), Indy8BitEncoding);
   {$ELSE}
   SetLength(Result, SizeOf(Value));
@@ -809,7 +809,7 @@ begin
 end;
 
 function OrdFourByteToLongWord(AByte1, AByte2, AByte3, AByte4 : Byte): LongWord;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 var
   LValue: TIdBytes;
 begin
@@ -822,7 +822,7 @@ begin
 end;
 
 procedure LongWordToOrdFourByte(const AValue: LongWord; var VByte1, VByte2, VByte3, VByte4 : Byte);
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 var
   LValue: TIdBytes;
 begin
@@ -1229,7 +1229,7 @@ begin
 end;
 
 function FTPMLSToLocalDateTime(const ATimeStamp : String):TDateTime;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := 0.0;
   if ATimeStamp <> '' then begin
@@ -1240,8 +1240,9 @@ begin
 end;
 
 function FTPGMTDateTimeToMLS(const ATimeStamp : TDateTime; const AIncludeMSecs : Boolean=True): String;
-var LYear, LMonth, LDay,
-    LHour, LMin, LSec, LMSec : Word;
+var
+  LYear, LMonth, LDay,
+  LHour, LMin, LSec, LMSec : Word;
 begin
   DecodeDate(ATimeStamp,LYear,LMonth,LDay);
   DecodeTime(ATimeStamp,LHour,LMin,LSec,LMSec);
@@ -1258,7 +1259,7 @@ Note that MS-DOS displays the time in the Local Time Zone - MLISx commands use
 stamps based on GMT)
 }
 function FTPLocalDateTimeToMLS(const ATimeStamp : TDateTime; const AIncludeMSecs : Boolean=True): String;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := FTPGMTDateTimeToMLS(ATimeStamp - OffsetFromUTC, AIncludeMSecs);
 end;
@@ -1317,17 +1318,17 @@ begin
   end ;
 end;
 
-{$UNDEF APICOPYFILETO}
+{$UNDEF API_COPYFILETO}
 {$IFDEF DOTNET}
-  {$DEFINE APICOPYFILETO}
+  {$DEFINE API_COPYFILETO}
 {$ENDIF}
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  {$DEFINE APICOPYFILETO}
+  {$DEFINE API_COPYFILETO}
 {$ENDIF}
 
 function CopyFileTo(const Source, Destination: TIdFileName): Boolean;
-{$IFDEF APICOPYFILETO} 
-  {$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF API_COPYFILETO}
+  {$IFDEF USE_INLINE}inline;{$ENDIF}
 {$ELSE}
 var
   SourceF, DestF : File;
@@ -1345,7 +1346,7 @@ begin
   {$IFDEF WIN32_OR_WIN64}
   Result := CopyFile(PChar(Source), PChar(Destination), False);
   {$ENDIF}
-  {$IFNDEF APICOPYFILETO}
+  {$IFNDEF API_COPYFILETO}
   //mostly from  http://delphi.about.com/od/fileio/a/untypedfiles.htm
 
   //note that I do use the I+ and I- directive.
@@ -1391,7 +1392,7 @@ var
   i: Integer;
 begin
   SetLength(Result, MAX_PATH);
-  i := GetTempPath(MAX_PATH, {$IFDEF UNICODE}PWideChar{$ELSE}PChar{$ENDIF}(Result));
+  i := GetTempPath(MAX_PATH, PIdFileNameChar(Result));
   if i > 0 then begin
     SetLength(Result, i);
     Result := IndyIncludeTrailingPathDelimiter(Result);
@@ -1517,7 +1518,7 @@ function FileSizeByName(const AFilename: TIdFileName): Int64;
 var
   LFile : System.IO.FileInfo;
 {$ELSE}
-  {$IFDEF USEINLINE} inline; {$ENDIF}
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
 var
   LHandle : THandle;
@@ -1533,7 +1534,7 @@ begin
   end;
   {$ELSE}
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  LHandle := Windows.FindFirstFile({$IFDEF WINCE}PWideChar(AFileName){$ELSE}PChar(AFileName){$ENDIF}, LRec);
+  LHandle := Windows.FindFirstFile(PIdFileNameChar(AFileName), LRec);
   if LHandle <> INVALID_HANDLE_VALUE then begin
     Windows.FindClose(LHandle);
     Result := (Int64(LRec.nFileSizeHigh) shl 32) + LRec.nFileSizeLow;
@@ -1569,7 +1570,7 @@ var
 begin
   Result := -1;
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  LHandle := Windows.FindFirstFile({$IFDEF WINCE}PWideChar(AFileName){$ELSE}PChar(AFileName){$ENDIF}, LRec);
+  LHandle := Windows.FindFirstFile(PIdFileNameChar(AFileName), LRec);
   if LHandle <> INVALID_HANDLE_VALUE then begin
     Windows.FindClose(LHandle);
     if (LRec.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY) = 0 then begin
@@ -1617,7 +1618,7 @@ begin
 end;
 
 function TimeZoneBias: TDateTime;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   {$IFDEF UNIX}
   //TODO: Fix TimeZoneBias for Linux to be automatic
@@ -1647,7 +1648,7 @@ end;
 
 function IndySetLocalTime(Value: TDateTime): Boolean;
 {$IFNDEF WIN32_OR_WIN64_OR_WINCE}
-  {$IFDEF USEINLINE}inline;{$ENDIF}
+  {$IFDEF USE_INLINE}inline;{$ENDIF}
 {$ELSE}
 var
   dSysTime: TSystemTime;
@@ -1732,7 +1733,7 @@ begin
 end;
 
 function StrToDay(const ADay: string): Byte;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   // RLebeau 03/04/2009: TODO - support localized strings as well...
   Result := Succ(
@@ -1788,7 +1789,7 @@ begin
 end;
 
 function UpCaseFirst(const AStr: string): string;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := LowerCase(TrimLeft(AStr));
   if Result <> '' then begin   {Do not Localize}
@@ -1813,13 +1814,13 @@ begin
 end;
 
 function IsHex(const AChar : Char) : Boolean;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := IndyPos(UpperCase(AChar), HexNumbers) > 0;
 end;
 
 function IsBinary(const AChar : Char) : Boolean;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := IndyPos(UpperCase(AChar), BinNumbers) > 0;
 end;
@@ -2810,7 +2811,7 @@ end;
 
 //everything that does not start with '.' is treated as hostname
 function IsHostname(const S: String): Boolean;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := (not TextStartsWith(S, '.')) and (not IsValidIP(S));    {Do not Localize}
 end;
@@ -2853,19 +2854,19 @@ begin
 end;
 
 function IsDomain(const S: String): Boolean;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := (not IsHostname(S)) and (IndyPos('.', S) > 0) and (not IsTopDomain(S));    {Do not Localize}
 end;
 
 function DomainName(const AHost: String): String;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := Copy(AHost, IndyPos('.', AHost), Length(AHost));    {Do not Localize}
 end;
 
 function IsFQDN(const S: String): Boolean;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := IsHostName(S) and IsDomain(DomainName(S));
 end;
@@ -2873,7 +2874,7 @@ end;
 // The password for extracting password.bin from password.zip is indyrules
 
 function PadString(const AString : String; const ALen : Integer; const AChar: Char): String;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   if Length(Result) >= ALen then begin
     Result := AString;
@@ -2946,7 +2947,7 @@ end;
 
 // make sure that an RFC MsgID has angle brackets on it
 function EnsureMsgIDBrackets(const AMsgID: String): String;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := AMsgID;
   if Length(Result) > 0 then begin
@@ -3036,7 +3037,7 @@ end;
 function ExtractHeaderSubItem(const AHeaderLine, ASubItem: String): String;
 var
   LItems: TStringList;
-  {$IFNDEF VCL6ORABOVE}
+  {$IFNDEF VCL_6_OR_ABOVE}
   I: Integer;
   LTmp: string;
   {$ENDIF}
@@ -3045,7 +3046,7 @@ begin
   LItems := TStringList.Create;
   try
     SplitHeaderSubItems(AHeaderLine, LItems);
-    {$IFDEF VCL6ORABOVE}
+    {$IFDEF VCL_6_OR_ABOVE}
     LItems.CaseSensitive := False;
     Result := LItems.Values[ASubItem];
     {$ELSE}
@@ -3069,11 +3070,11 @@ var
   LItems: TStringList;
   I: Integer;
   LTmp: string;
-  {$IFNDEF VCL6ORABOVE}
+  {$IFNDEF VCL_6_OR_ABOVE}
   LValue: string;
   {$ENDIF}
 
-  {$IFNDEF VCL6ORABOVE}
+  {$IFNDEF VCL_6_OR_ABOVE}
   function FindIndexOfItem: Integer;
   var
     I: Integer;
@@ -3114,7 +3115,7 @@ begin
   LItems := TStringList.Create;
   try
     SplitHeaderSubItems(AHeaderLine, LItems);
-    {$IFDEF VCL6ORABOVE}
+    {$IFDEF VCL_6_OR_ABOVE}
     LItems.CaseSensitive := False;
     LItems.Values[ASubItem] := Trim(AValue);
     {$ELSE}
@@ -3145,7 +3146,7 @@ end;
 
 function GetClockValue : Int64;
 {$IFDEF DOTNET}
-  {$IFDEF USEINLINE} inline; {$ENDIF}
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 {$ENDIF}
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
 type
@@ -3175,32 +3176,32 @@ begin
   {$ENDIF}
   {$IFDEF UNIX}
   //Is the following correct?
-  Result := {$IFDEF USEBASEUNIX}fptimes{$ELSE}Libc.Times{$ENDIF}(TheTms);
+  Result := {$IFDEF USE_BASEUNIX}fptimes{$ELSE}Libc.Times{$ENDIF}(TheTms);
   {$ENDIF}
   {$IFDEF DOTNET}
   Result := System.DateTime.Now.Ticks;
   {$ENDIF}
 end;
 
-{$UNDEF DONTHAVENATIVEX86}
+{$UNDEF NO_NATIVE_X86}
 {$IFDEF DOTNET}
-  {$DEFINE DONTHAVENATIVEX86}
+  {$DEFINE NO_NATIVE_X86}
 {$ENDIF}
 {$IFDEF FPC}
   {$IFNDEF CPUI386}
-     {$DEFINE DONTHAVENATIVEX86}
+     {$DEFINE NO_NATIVE_X86}
   {$ENDIF}
 {$ENDIF}
 
-{$IFDEF DONTHAVENATIVEX86}
+{$IFDEF NO_NATIVE_X86}
 function ROL(const AVal: LongWord; AShift: Byte): LongWord;
-  {$IFDEF USEINLINE} inline; {$ENDIF}
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
    Result := (AVal shl AShift) or (AVal shr (32 - AShift));
 end;
 
 function ROR(const AVal: LongWord; AShift: Byte): LongWord;
-  {$IFDEF USEINLINE} inline; {$ENDIF}
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
    Result := (AVal shr AShift) or (AVal shl (32 - AShift)) ;
 end;
@@ -3223,7 +3224,7 @@ end;
 
 function IndyComputerName: string;
 {$IFDEF DOTNET}
-  {$IFDEF USEINLINE} inline; {$ENDIF}
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 {$ENDIF}
 {$IFDEF UNIX}
 var
@@ -3262,20 +3263,16 @@ begin
   {$ENDIF}
 end;
 
-{$IFNDEF UNICODESTRING}
-function IsLeadChar(ACh : Char):Boolean;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF STRING_IS_ANSI}
+function IsLeadChar(ACh : Char): Boolean;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  {$IFDEF DOTNET}
-  Result := False;
-  {$ELSE}
   Result := ACh in LeadBytes;
-  {$ENDIF}
 end;
 {$ENDIF}
 
 function IdGetDefaultCharSet: TIdCharSet;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   {$IFDEF UNIX}
   Result := GIdDefaultCharSet;
@@ -3293,31 +3290,31 @@ begin
   case SysLocale.PriLangID of
     LANG_CHINESE: begin
       if SysLocale.SubLangID = SUBLANG_CHINESE_SIMPLIFIED then begin
-        Result := idcsGB2312;
+        Result := idcs_GB2312;
       end else begin
-        Result := idcsBig5;
+        Result := idcs_Big5;
       end;
     end;
-    LANG_JAPANESE: Result := idcsISO_2022_JP;
-    LANG_KOREAN: Result := idcscsEUCKR;
+    LANG_JAPANESE: Result := idcs_ISO_2022_JP;
+    LANG_KOREAN: Result := idcs_csEUCKR;
     // Kudzu
     // 1251 is the Windows standard for Russian but its not used in emails.
     // KOI8-R is by far the most widely used and thus the default.
-    LANG_RUSSIAN: Result := idcsKOI8_R;
+    LANG_RUSSIAN: Result := idcs_KOI8_R;
     // Kudzu
     // Ukranian is about 50/50 KOI8u and 1251, but 1251 is the newer one and
     // the Windows one so we default to it.
-    LANG_UKRAINIAN: Result := idcswindows_1251;
+    LANG_UKRAINIAN: Result := idcs_windows_1251;
     else begin
-      {$IFDEF UNICODESTRING}
-      Result := idcsUNICODE_1_1;
+      {$IFDEF STRING_IS_UNICODE}
+      Result := idcs_UNICODE_1_1;
       // not a particular Unicode encoding - just unicode in general
       // i.e. Delphi/C++Builder 2009+ native string is 2 byte Unicode,
       // we do not concern ourselves with Byte order. (though we have
       // to concern ourselves once we start writing to some stream or
       // Bytes
       {$ELSE}
-      Result := idcsISO_8859_1;
+      Result := idcs_ISO_8859_1;
       {$ENDIF}
     end;
   end;
@@ -3328,7 +3325,7 @@ end;
 //For example, to remove the boundary from the ContentType header, call
 //ContentType := RemoveHeaderEntry(ContentType, 'boundary');
 function RemoveHeaderEntry(const AHeader, AEntry: string): string;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := ReplaceHeaderSubItem(AHeader, AEntry, '');
 end;
@@ -3460,18 +3457,32 @@ begin
   languages and code that does some special mapping for them would be a mess.}
 
   {RLebeau: technically, we should be returning a 7-bit encoding, as the
-  default charset for "text/" content types is "us-ascii".
-    
-  Setting the AOwnedByIndy parameter of Indy8BitEncoding() to False.  This way,
-  the caller does not have to figure out whether or not to free the output
-  TIdTextEncoding.  Standard TIdTextEncoding objects (ASCII, UTF8, etc) are
-  owned by the RTL, and the 8-bit encoding object that Indy8BitEncoding()
-  normally returns is owned by IdGlobal.pas, and thus should not be freed.
-  Objects returned by TIdTextEncoding.GetEncoding() and Indy8BitEncoding(False)
-  are not owned by anyone and must always be freed.}
+  default charset for "text/" content types is "us-ascii".}
 
-  if not Assigned(Result) then begin
-    Result := Indy8BitEncoding({$IFNDEF DOTNET}False{$ENDIF});
+  if not Assigned(Result) then
+  begin
+    { TODO: finish implementing this
+    if PosInStrArray(
+      ACharSet,
+      ['ISO-2022-JP', 'ISO-2022-JP-1', 'ISO-2022-JP-2', 'ISO-2022-JP-3', 'ISO-2022-JP-2004'], {do not localize
+      False) <> -1 then
+    begin
+      Result := TIdTextEncoding_ISO2022JP.Create;
+      Exit;
+    end;
+    }
+    {$IFDEF DOTNET}
+    Result := Indy8BitEncoding;
+    {$ELSE}
+    {Rlebeau: Setting the AOwnedByIndy parameter of Indy8BitEncoding() to False.
+    This way, the caller does not have to figure out whether or not to free the
+    output TIdTextEncoding.  Standard TIdTextEncoding objects (ASCII, UTF8, etc)
+    are owned by the RTL, and the 8-bit encoding object that Indy8BitEncoding()
+    normally returns is owned by IdGlobal.pas, and thus should not be freed.
+    Objects returned by TIdTextEncoding.GetEncoding() and Indy8BitEncoding(False)
+    are not owned by anyone and must always be freed.}
+    Result := Indy8BitEncoding(False);
+    {$ENDIF}
   end;
 end;
 
@@ -3500,7 +3511,7 @@ begin
   {$IFNDEF DOTNET}
   try
   {$ENDIF}
-    {$IFDEF TEncoding}
+    {$IFDEF HAS_TEncoding}
     AStrings.LoadFromStream(AStream, LEncoding);
     {$ELSE}
     AStrings.Text := ReadStringFromStream(AStream, -1, LEncoding);
@@ -3538,7 +3549,7 @@ begin
   {$IFNDEF DOTNET}
   try
   {$ENDIF}
-    {$IFDEF TEncoding}
+    {$IFDEF HAS_TEncoding}
     AStrings.LoadFromStream(AStream, LEncoding);
     {$ELSE}
     AStrings.Text := ReadStringFromStream(AStream, -1, LEncoding);

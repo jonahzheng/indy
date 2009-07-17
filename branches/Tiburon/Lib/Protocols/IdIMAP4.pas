@@ -1119,10 +1119,14 @@ implementation
 uses
   //facilitate inlining only.
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+    {$IFDEF USE_INLINE}
   Windows,
+    {$ENDIF}
   {$ENDIF}
-  {$IFDEF DOTNET}}
+  {$IFDEF DOTNET}
+    {$IFDEF USE_INLINE}
   System.IO,
+    {$ENDIF}
   {$ENDIF} 
   IdCoder,
   IdEMailAddress,

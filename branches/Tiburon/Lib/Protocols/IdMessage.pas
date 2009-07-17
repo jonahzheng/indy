@@ -525,7 +525,9 @@ implementation
 uses
   //facilitate inlining only.
   {$IFDEF DOTNET}
+    {$IFDEF USE_INLINE}
   System.IO,
+    {$ENDIF}
   {$ENDIF}
   IdIOHandlerStream, IdGlobal,
   IdMessageCoderMIME, // Here so the 'MIME' in create will always suceed
@@ -955,7 +957,7 @@ begin
     Priority := GetMsgPriority(Headers.Values['X-Priority']) {do not localize}
   end;
   {Note that the following code ensures MIMEBoundary.Count is 0 for single-part MIME messages...}
-  LBoundary := ExtractHeaderSubItem(FContentType, 'boundary');  {do not localize}
+  LBoundary := Headers.Params['Content-Type', 'boundary'];  {do not localize}
   FContentType := RemoveHeaderEntry(FContentType, 'boundary');  {do not localize}
   if LBoundary <> '' then begin
     MIMEBoundary.Push(LBoundary, -1);
@@ -1153,8 +1155,8 @@ Begin
   // Comments welcome on atozedsoftware.indy.general
 
   case IdGetDefaultCharSet of
-    idcsISO_8859_1 : VHeaderEncoding := 'Q';    {Do not Localize}
-    idcsUNICODE_1_1 : VCharSet := IdCharsetNames[idcsUTF_8];
+    idcs_ISO_8859_1 : VHeaderEncoding := 'Q';    {Do not Localize}
+    idcs_UNICODE_1_1 : VCharSet := IdCharsetNames[idcs_UTF_8];
   else
     // nothing
   end;

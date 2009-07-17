@@ -821,17 +821,20 @@ begin
   Result := RSA;
 end;}
 
-function AddMins (const DT: TDateTime; const Mins: Extended): TDateTime;  {$IFDEF USEINLINE} inline; {$ENDIF}
+function AddMins (const DT: TDateTime; const Mins: Extended): TDateTime;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := DT + Mins / (60 * 24)
 end;
 
-function AddHrs (const DT: TDateTime; const Hrs: Extended): TDateTime;  {$IFDEF USEINLINE} inline; {$ENDIF}
+function AddHrs (const DT: TDateTime; const Hrs: Extended): TDateTime;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := DT + Hrs / 24.0;
 end;
 
-function GetLocalTime (const DT: TDateTime): TDateTime;   {$IFDEF USEINLINE} inline; {$ENDIF}
+function GetLocalTime (const DT: TDateTime): TDateTime;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := DT - TimeZoneBias{ / (24 * 60)};
 end;
@@ -891,19 +894,19 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF IDOPENSSLMEMORY}
-function IdMalloc(num:Cardinal):Pointer cdecl;
+{$IFDEF OPENSSL_SET_MEMORY_FUNCS}
+function IdMalloc(num: Cardinal): Pointer cdecl;
 begin
-  Result:=AllocMem(num);
+  Result := AllocMem(num);
 end;
 
-function IdRealloc(addr:Pointer;num:Cardinal):Pointer cdecl;
+function IdRealloc(addr: Pointer; num: Cardinal): Pointer cdecl;
 begin
-  Result:=addr;
-  ReallocMem(Result,num);
+  Result := addr;
+  ReallocMem(Result, num);
 end;
 
-procedure IdFree(addr:Pointer) cdecl;
+procedure IdFree(addr: Pointer) cdecl;
 begin
   FreeMem(addr);
 end;
@@ -916,7 +919,7 @@ var
  r: Integer;
 begin
  r := IdSslCryptoSetMemFunctions(@IdMalloc, @IdRealloc, @IdFree);
- Assert(r<>0);
+ Assert(r <> 0);
 end;
 {$ENDIF}
 
@@ -935,7 +938,7 @@ begin
     begin
       Exit;
     end;
-    {$IFDEF IDOPENSSLMEMORY}
+    {$IFDEF OPENSSL_SET_MEMORY_FUNCS}
     //has to be done before anything that uses memory
     IdSslCryptoMallocInit;
     {$ENDIF}
@@ -1003,7 +1006,8 @@ begin
 end;
 
 //Note that I define UCTTime as  PASN1_STRING
-function UTCTime2DateTime(UCTTime: PASN1_UTCTIME):TDateTime; {$IFDEF USEINLINE} inline; {$ENDIF}
+function UTCTime2DateTime(UCTTime: PASN1_UTCTIME):TDateTime;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 var
   year  : Word;
   month : Word;
@@ -1023,7 +1027,8 @@ begin
   end;
 end;
 
-function TranslateInternalVerifyToSSL(Mode: TIdSSLVerifyModeSet): Integer;  {$IFDEF USEINLINE} inline; {$ENDIF}
+function TranslateInternalVerifyToSSL(Mode: TIdSSLVerifyModeSet): Integer;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := OPENSSL_SSL_VERIFY_NONE;
   if sslvrfPeer in Mode then 
@@ -1041,13 +1046,13 @@ begin
 end;
 
 function LogicalAnd(A, B: Integer): Boolean;
- {$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := (A and B) = B;
 end;
 
 function BytesToHexString(APtr : Pointer; ALen : Integer) : String;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 var
   i : PtrInt;
 begin
@@ -1063,7 +1068,7 @@ begin
 end;
 
 function MDAsString(const AMD : TEVP_MD) : String;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 var
   I : Integer;
 begin
@@ -1210,7 +1215,7 @@ begin
   fSSLContext := TIdSSLContext.Create;
   with fSSLContext do begin
     Parent := Self;
-    {$IFDEF UNICODESTRING}
+    {$IFDEF STRING_IS_UNICODE}
     // explicit convert to Ansi
     RootCertFile := AnsiString(SSLOptions.RootCertFile);
     CertFile := AnsiString(SSLOptions.CertFile);
@@ -1475,7 +1480,7 @@ begin
     fSSLContext := TIdSSLContext.Create;
     with fSSLContext do begin
       Parent := Self;
-      {$IFDEF UNICODESTRING}
+      {$IFDEF STRING_IS_UNICODE}
       // explicit convert to Ansi
       RootCertFile := AnsiString(SSLOptions.RootCertFile);
       CertFile := AnsiString(SSLOptions.CertFile);
@@ -2308,9 +2313,10 @@ begin
 end;
 
 procedure DumpCert(AOut : TStrings; AX509 : PX509);
-  {$IFDEF USEINLINE} inline; {$ENDIF}
-  {$IFNDEF OPENSSL_NO_BIO}
-var LMem : pBIO;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+{$IFNDEF OPENSSL_NO_BIO}
+var
+  LMem : pBIO;
   LBuf,s : AnsiString;
   LRes : TIdC_INT;
 const

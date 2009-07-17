@@ -268,7 +268,9 @@ implementation
 uses
   //facilitate inlining only.
   {$IFDEF DOTNET}
+    {$IFDEF USE_INLINE}
   System.IO,
+    {$ENDIF}
   {$ENDIF}
   IdContainers, IdGlobal, IdFTPCommon, IdGlobalProtocols, IdStrings, SysUtils;
 

@@ -135,8 +135,10 @@ implementation
 
 uses
   {$IFDEF DOTNET}
+    {$IFDEF USE_INLINE}
   System.Threading,
   System.IO,
+    {$ENDIF}
   {$ENDIF}
   IdGlobal, IdStack, SysUtils;
 

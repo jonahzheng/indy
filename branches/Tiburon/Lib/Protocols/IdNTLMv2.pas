@@ -146,7 +146,7 @@ function BuildType3Msg(const ADomain, AHost, AUsername, APassword : String;
 {
 function BuildType1Message( ADomain, AHost: String; const AEncodeMsg : Boolean = True): String;
 procedure ReadType2Message(const AMsg : String; var VNonce : nonceArray; var Flags : LongWord);
-function BuildType3Message( ADomain, AHost, AUsername: WideString; APassword : String; AServerNonce : nonceArray): String;
+function BuildType3Message( ADomain, AHost, AUsername: TIdUnicodeString; APassword : String; AServerNonce : nonceArray): String;
  }
 
 function NTLMFunctionsLoaded : Boolean;
@@ -236,12 +236,12 @@ We do things this way because in Win64, FILETIME may not be a simple typecast
 of Int64.  It might be a two dword record that's aligned on an 8-byte
 boundery.
 }
-{$UNDEF USEFILETIMETYPECAST}
+{$UNDEF USE_FILETIME_TYPECAST}
 {$IFDEF WINCE}
-  {$DEFINE USEFILETIMETYPECAST}
+  {$DEFINE USE_FILETIME_TYPECAST}
 {$ENDIF}
 {$IFDEF WIN32}
-  {$DEFINE USEFILETIMETYPECAST}
+  {$DEFINE USE_FILETIME_TYPECAST}
 {$ENDIF}
 
 function UnixTimeToFileTime(const AUnixTime : LongWord) : FILETIME;
@@ -252,7 +252,7 @@ begin
   Result := Int64ToFileTime((AUnixTime + 11644473600) * 10000000);
   {$ELSE}
   i := (AUnixTime + 11644473600) * 10000000;
-    {$IFDEF USEFILETIMETYPECAST}
+    {$IFDEF USE_FILETIME_TYPECAST}
   Result := FILETIME(i);
     {$ELSE}
   Result.dwLowDateTime := i and $FFFFFFFF;
@@ -263,7 +263,7 @@ end;
 
 function NowAsFileTime : FILETIME;
 {$IFDEF DOTNET}
-  {$IFDEF USEINLINE} inline; {$ENDIF}
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 {$ENDIF}
 
 {$IFDEF UNIX}
@@ -280,10 +280,11 @@ begin
   {$ENDIF}
   {$IFDEF UNIX}
   //Is the following correct?
-  UnixTimeToFileTime({$IFDEF USEBASEUNIX}fptimes{$ELSE}Libc.Times{$ENDIF}(TheTms));
+  UnixTimeToFileTime({$IFDEF USE_BASEUNIX}fptimes{$ELSE}Libc.Times{$ENDIF}(TheTms));
   {$ENDIF}
   {$IFDEF DOTNET}
    Result := Int64ToFileTime(DateTime.Now.ToFileTimeUtc);
+ // Result := System.DateTime.Now.Ticks;
   {$ENDIF}
 end;
 
@@ -337,13 +338,13 @@ end;
 //end misc routines
 
 function DumpFlags(const ABytes : TIdBytes): String;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := DumpFlags( LittleEndianToHost(BytesToLongWord(ABytes)));
 end;
 
 function DumpFlags(const AFlags : LongWord): String;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := IntToHex(AFlags,8)+' -';
   if AFlags and IdNTLMSSP_NEGOTIATE_UNICODE <> 0 then
@@ -485,7 +486,7 @@ Microsoft.NET does not have this functionality when it really should have it.
 }
 
 procedure SetDesKeyOddParity(var VKey : TIdBytes);
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 var i, l : Integer;
 begin
   l := Length( VKey);
@@ -496,7 +497,7 @@ end;
 {$ENDIF}
 
 procedure GetDomain(const AUserName : String; var VUserName, VDomain : String);
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 var i : Integer;
 begin
 {
@@ -526,7 +527,7 @@ end;
 
 {$IFDEF DOTNET}
 function NTLMFunctionsLoaded : Boolean;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := True;
 end;
@@ -564,7 +565,7 @@ end;
 
 //* create NT hashed password */
 function NTOWFv1(const APassword : String): TIdBytes;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   with TIdHashMessageDigest4.Create do try
     Result := HashBytes(TIdTextEncoding.Unicode.GetBytes(APassword));
@@ -579,7 +580,7 @@ end;
  * The key schedule ks is also set.
  */}
 procedure setup_des_key(key_56: des_cblock; Var ks: des_key_schedule);
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 Var
   key: des_cblock;
 begin
@@ -722,7 +723,7 @@ end;    }
 
 
 procedure setup_des_key(const Akey_56: TIdBytes; out Key : TIdBytes; const AIndex : Integer = 0);
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   SetLength( key, 8);
   key[0] := Akey_56[ AIndex];
@@ -739,10 +740,10 @@ end;
 
 
 procedure DESL(const Akeys: TIdBytes; const AServerNonce: TIdBytes; out results: TIdBytes);
-var LKey : TIdBytes;
+var
+  LKey : TIdBytes;
   LDes : System.Security.Cryptography.DES;
   LEnc : ICryptoTransform;
-
 begin
   SetLength( Results, 24);
   SetLength( LKey, 8);
@@ -820,7 +821,7 @@ end;
 
 
 procedure AddWord(var VBytes: TIdBytes; const AWord : Word);
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 var LBytes : TIdBytes;
 begin
   SetLength(LBytes,SizeOf(AWord));
@@ -829,7 +830,7 @@ begin
 end;
 
 procedure AddLongWord(var VBytes: TIdBytes; const ALongWord : LongWord);
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 var LBytes : TIdBytes;
 begin
   SetLength(LBytes,SizeOf(ALongWord));
@@ -971,7 +972,7 @@ begin
 end;
 
 function LMUserSessionKey(const AHash : TIdBytes) : TIdBytes;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 //   1. The 16-byte LM hash (calculated previously) is truncated to 8 bytes.
 //   2. This is null-padded to 16 bytes. This value is the LM User Session Key.
 
@@ -982,7 +983,7 @@ begin
 end;
 
 function UserNTLMv1SessionKey(const AHash : TIdBytes) : TIdBytes;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   with TIdHashMessageDigest4.Create do try
     Result := HashBytes(AHash);
@@ -992,7 +993,7 @@ begin
 end;
 
 function UserLMv2SessionKey(const AHash : TIdBytes; const ABlob : TIdBytes; ACNonce : TIdBytes) : TIdBytes;
- {$IFDEF USEINLINE} inline; {$ENDIF}
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
 var LBuf : TIdBytes;
 begin
   LBuf := ABlob;
@@ -1007,14 +1008,14 @@ begin
 end;
 
 function UserNTLMv2SessionKey(const AHash : TIdBytes; const ABlob : TIdBytes; const AServerNonce : TIdBytes) : TIdBytes;
- {$IFDEF USEINLINE} inline; {$ENDIF}
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
 //extremely similar to the above except that the nonce is used.
 begin
   Result := UserLMv2SessionKey(AHash,ABlob,AServerNonce);
 end;
 
 function UserNTLM2SessionSecSessionKey(const ANTLMv1SessionKey : TIdBytes; const AServerNonce : TIdBytes): TIdBytes;
- {$IFDEF USEINLINE} inline; {$ENDIF}
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   with TIdHMACMD5.Create do
   try
@@ -1107,7 +1108,7 @@ end;
 //Todo:  This does not match the results from
 //http://davenport.sourceforge.net/ntlm.html
 function TDateTimeToNTLMTime(const ADateTime : TDateTime):Int64;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := DateTimeToUnix((ADateTime+11644473600)* 10000);
 end;
@@ -1597,7 +1598,8 @@ NTLMv1 data flags
 }
 
 procedure DoMSTests;
-var LFlags : LongWord;
+var
+  LFlags : LongWord;
   LHash : TIdBytes;
 begin
   LFlags := IdNTLMSSP_NEGOTIATE_KEY_EXCH or
@@ -1635,7 +1637,7 @@ initialization
   SetLength(IdNTLM_SSP_SIG,8);
   IdNTLM_SSP_SIG[0] :=$4e;  //N
   IdNTLM_SSP_SIG[1] :=$54;  //T
-   IdNTLM_SSP_SIG[2] :=$4c; //L
+  IdNTLM_SSP_SIG[2] :=$4c;  //L
   IdNTLM_SSP_SIG[3] :=$4d;  //M
   IdNTLM_SSP_SIG[4] :=$53;  //S
   IdNTLM_SSP_SIG[5] :=$53;  //S

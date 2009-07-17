@@ -151,7 +151,9 @@ implementation
 
 uses
   {$IFDEF DOTNET}
+    {$IFDEF USE_INLINE}
   System.Threading,
+    {$ENDIF}
   {$ENDIF}
   IdGlobal,
   IdStack,

@@ -1254,7 +1254,9 @@ implementation
 
 uses
   {$IFDEF DOTNET}
+    {$IFDEF USE_INLINE}
   System.Threading,
+    {$ENDIF}
   {$ENDIF}
   IdHash, IdHashCRC, IdHashMessageDigest, IdHashSHA1, IdIOHandlerSocket,
   IdResourceStringsProtocols, IdGlobalProtocols, IdSimpleServer, IdSSL,
