@@ -225,7 +225,7 @@ type
   {$EXTERNALSYM LPWSAEVENT}
   LPWSAEVENT = PWSAEVENT;
   {$IFNDEF FPC}
-	{$IFNDEF VCL2007ORABOVE}
+  {$IFNDEF VCL_2007_OR_ABOVE}
       {$EXTERNALSYM ULONG_PTR}
       {$IFDEF CPU64}
   ULONG_PTR = Int64;
@@ -632,11 +632,11 @@ const
   {$EXTERNALSYM SO_PROTOCOL_INFOW}
   SO_PROTOCOL_INFOW        = $2005; // WSAPROTOCOL_INFOW structure
   {$EXTERNALSYM SO_PROTOCOL_INFO}
-{$IFDEF UNICODE}
+  {$IFDEF UNICODE}
   SO_PROTOCOL_INFO         = SO_PROTOCOL_INFOW;
-{$ELSE}
+  {$ELSE}
   SO_PROTOCOL_INFO         = SO_PROTOCOL_INFOA;
-{$ENDIF}
+  {$ENDIF}
   {$EXTERNALSYM PVD_CONFIG}
   PVD_CONFIG               = $3001; // configuration info for service provider
   {$EXTERNALSYM SO_CONDITIONAL_ACCEPT}
@@ -1475,7 +1475,7 @@ type
 
 //TransmitFile types used for the TransmitFile API function in WinNT/2000/XP
 //not sure why its defined in WinCE when TransmitFile is not available.
-  {$IFNDEF NOREDECLARE}
+  {$IFNDEF NO_REDECLARE}
   {$EXTERNALSYM TRANSMIT_FILE_BUFFERS}
   TRANSMIT_FILE_BUFFERS = record
       Head: Pointer;
@@ -1537,7 +1537,7 @@ type
 
 {$IFNDEF FPC}
 type
-  {$IFNDEF VCL2007ORABOVE}
+  {$IFNDEF VCL_2007_OR_ABOVE}
   {$NODEFINE PGUID}
   PGUID = ^TGUID;
   {$ENDIF}
@@ -1801,7 +1801,7 @@ const
 type
 //  Manifest constants and type definitions related to name resolution and
 //  registration (RNR) API
-  {$IFNDEF NOREDECLARE}
+  {$IFNDEF NO_REDECLARE}
   {$EXTERNALSYM BLOB}
   BLOB = record
     cbSize : U_LONG;
@@ -2469,6 +2469,7 @@ type
     uMsg : UINT;
     context : WPARAM;
   end;
+  {$EXTERNALSYM WSACOMPLETION_EVENT}
   WSACOMPLETION_EVENT = record
     lpOverlapped : LPWSAOVERLAPPED;
   end;
@@ -3428,7 +3429,7 @@ type
   LPIN6_ADDR = PIN6_ADDR;
 
 {$IFNDEF UNDER_CE}
-  {$IFNDEF NOREDECLARE}
+  {$IFNDEF NO_REDECLARE}
   // Argument structure for IPV6_JOIN_GROUP and IPV6_LEAVE_GROUP
   {$EXTERNALSYM ipv6_mreq}
   ipv6_mreq = record
@@ -3631,7 +3632,7 @@ type
   {$EXTERNALSYM ProviderType_Service}
   // The Pascal compiler in Delphi/BCB prior to v6 does not
   // support specifying values for individual enum items
-  {$IFDEF VCL6ORABOVE}
+  {$IFDEF VCL_6_OR_ABOVE}
   NAPI_PROVIDER_TYPE = (ProviderType_Application = 1, ProviderType_Service);
   {$ELSE}
   NAPI_PROVIDER_TYPE = (nptUnused, ProviderType_Application, ProviderType_Service);
@@ -3696,7 +3697,7 @@ type
   LPSERVICE_ADDRESSES = PSERVICE_ADDRESSES;
   {$ENDIF}
 
-{$IFNDEF VCL2007ORABOVE}
+{$IFNDEF VCL_2007_OR_ABOVE}
 const
   {$EXTERNALSYM  RESOURCEDISPLAYTYPE_GENERIC}
   RESOURCEDISPLAYTYPE_GENERIC        = $00000000;
@@ -3769,13 +3770,13 @@ type
   {$EXTERNALSYM SYSTEM_CRITICAL_SOCKET}
   // The Pascal compiler in Delphi/BCB prior to v6 does not
   // support specifying values for individual enum items
-  {$IFDEF VCL6ORABOVE}
+  {$IFDEF VCL_6_OR_ABOVE}
   SOCKET_USAGE_TYPE = (SYSTEM_CRITICAL_SOCKET = 1);
   {$ELSE}
   SOCKET_USAGE_TYPE = (sutUnused, SYSTEM_CRITICAL_SOCKET);
   {$ENDIF}
 
-  {$IFNDEF NOREDECLARE}
+  {$IFNDEF NO_REDECLARE}
   {$EXTERNALSYM SERVICE_INFO}
     {$IFDEF UNICODE}
   SERVICE_INFO = SERVICE_INFOW;
@@ -3801,7 +3802,7 @@ type
   PNS_SERVICE_INFOW = ^NS_SERVICE_INFOW;
   {$EXTERNALSYM LPNS_SERVICE_INFOW}
   LPNS_SERVICE_INFOW = NS_SERVICE_INFOW;
-  {$IFNDEF NOREDECLARE}
+  {$IFNDEF NO_REDECLARE}
   {$EXTERNALSYM NS_SERVICE_INFO}
   {$EXTERNALSYM PNS_SERVICE_INFO}
   {$EXTERNALSYM LPNS_SERVICE_INFO}
@@ -5036,7 +5037,7 @@ end;
 
 {$IFNDEF WINCE}
 procedure LoadMSWSock;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if hMSWSockDll = 0 then begin
     hMSWSockDll := SafeLoadLibrary(MSWSOCK_DLL);
@@ -5084,8 +5085,8 @@ a version of GetProcAddress in the FreePascal dynlibs unit but that does a
 conversion from ASCII to Unicode which might not be necessary since most calls
 pass a constant anyway.
 }
-function FixupStub(hDll: THandle; const AName:{$IFDEF UNDER_CE}WideString{$ELSE}string{$ENDIF}): Pointer;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+function FixupStub(hDll: THandle; const AName:{$IFDEF UNDER_CE}TIdUnicodeString{$ELSE}string{$ENDIF}): Pointer;
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if hDll = 0 then begin
     raise EIdWinsockStubError.Build(WSANOTINITIALISED, RSWinsockCallError, [AName]);
@@ -6074,37 +6075,37 @@ begin
 end;
 
 function WSAMakeSyncReply(Buflen, AError: Word): Longint;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := MakeLong(Buflen, AError);
 end;
 
 function WSAMakeSelectReply(Event, AError: Word): Longint;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := MakeLong(Event, AError);
 end;
 
 function WSAGetAsyncBuflen(Param: Longint): Word;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := LOWORD(Param);
 end;
 
 function WSAGetAsyncError(Param: Longint): Word;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := HIWORD(Param);
 end;
 
 function WSAGetSelectEvent(Param: Longint): Word;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := LOWORD(Param);
 end;
 
 function WSAGetSelectError(Param: Longint): Word;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   WSAGetSelectError := HIWORD(Param);
 end;
@@ -6131,13 +6132,13 @@ begin
 end;
 
 function FD_ISSET(ASocket: TSocket; var FDSet: TFDSet): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := __WSAFDIsSet(ASocket, FDSet);
 end;
 
 procedure FD_SET(ASocket: TSocket; var FDSet: TFDSet);
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if FDSet.fd_count < fd_setsize then
   begin
@@ -6147,7 +6148,7 @@ begin
 end;
 
 procedure FD_ZERO(var FDSet: TFDSet);
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   FDSet.fd_count := 0;
 end;
@@ -6178,13 +6179,13 @@ begin
 end;
 
 function WSA_CMSGDATA_ALIGN(const Alength: PtrUInt): PtrUInt;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := (Alength + MAX_NATURAL_ALIGNMENT_SUB_1) and not (MAX_NATURAL_ALIGNMENT_SUB_1);
 end;
 
 function WSA_CMSG_FIRSTHDR(const msg: LPWSAMSG): LPWSACMSGHDR;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if (msg <> nil) and (msg^.Control.len >= SIZE_WSACMSGHDR) then begin
     Result := LPWSACMSGHDR(msg^.Control.buf);
@@ -6194,7 +6195,7 @@ begin
 end;
 
 function WSA_CMSG_NXTHDR(const msg: LPWSAMSG; const cmsg: LPWSACMSGHDR): LPWSACMSGHDR;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if cmsg = nil then begin
     Result := WSA_CMSG_FIRSTHDR(msg);
@@ -6208,31 +6209,31 @@ begin
 end;
 
 function WSA_CMSG_DATA(const cmsg: LPWSACMSGHDR): PByte;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := PByte(PtrUInt(cmsg) + WSA_CMSGDATA_ALIGN(SIZE_WSACMSGHDR));
 end;
 
 function WSA_CMSG_SPACE(const Alength: PtrUInt): PtrUInt;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := WSA_CMSGDATA_ALIGN(PtrUInt(SIZE_WSACMSGHDR + WSA_CMSGHDR_ALIGN(Alength)));
 end;
 
 function WSA_CMSG_LEN(const Alength: PtrUInt): PtrUInt;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := (WSA_CMSGDATA_ALIGN(SizeOf(WSACMSGHDR)) + Alength);
 end;
 
 function IP_MSFILTER_SIZE(const numsrc: DWORD): PtrUInt;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := SIZE_IP_MSFILTER - SIZE_TINADDR + (numsrc*SIZE_TINADDR);
 end;
 
 function SS_PORT(ssp: PSockAddrIn): u_short;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if ssp <> nil then begin
     Result := ssp^.sin_port;
@@ -6242,7 +6243,7 @@ begin
 end;
 
 function IN6ADDR_ANY_INIT: TIn6Addr;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   with Result do begin
     System.FillChar(s6_addr, SIZE_TIN6ADDR, 0);    {Do not Localize}
@@ -6250,7 +6251,7 @@ begin
 end;
 
 function IN6ADDR_LOOPBACK_INIT: TIn6Addr;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   with Result do begin
     System.FillChar(s6_addr, SIZE_TIN6ADDR, 0);    {Do not Localize}
@@ -6259,7 +6260,7 @@ begin
 end;
 
 procedure IN6ADDR_SETANY(sa: PSockAddrIn6);
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if sa <> nil then begin
     with sa^ do begin
@@ -6275,7 +6276,7 @@ begin
 end;
 
 procedure IN6ADDR_SETLOOPBACK(sa: PSockAddrIn6);
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if sa <> nil then begin
     with sa^ do begin
@@ -6291,7 +6292,7 @@ begin
 end;
 
 function IN6ADDR_ISANY(sa: PSockAddrIn6): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if sa <> nil then begin
     with sa^ do begin
@@ -6307,7 +6308,7 @@ begin
 end;
 
 function IN6ADDR_ISLOOPBACK(sa: PSockAddrIn6): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if sa <> nil then begin
     with sa^ do begin
@@ -6323,25 +6324,25 @@ begin
 end;
 
 function IN6_ADDR_EQUAL(const a: PIn6Addr; const b: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := SysUtils.CompareMem(a, b, SIZE_TIN6ADDR);
 end;
 
 function IN6_IS_ADDR_UNSPECIFIED(const a: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := IN6_ADDR_EQUAL(a, @in6addr_any);
 end;
 
 function IN6_IS_ADDR_LOOPBACK(const a: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := IN6_ADDR_EQUAL(a, @in6addr_loopback);
 end;
 
 function IN6_IS_ADDR_MULTICAST(const a: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if a <> nil then begin
     Result := (a^.s6_addr[0] = $FF);
@@ -6351,7 +6352,7 @@ begin
 end;
 
 function IN6_IS_ADDR_LINKLOCAL(const a: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if a <> nil then begin
     Result := (a^.s6_addr[0] = $FE) and ((a^.s6_addr[1] and $C0) = $80);
@@ -6361,7 +6362,7 @@ begin
 end;
 
 function IN6_IS_ADDR_SITELOCAL(const a: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if a <> nil then begin
     Result := (a^.s6_addr[0] = $FE) and ((a^.s6_addr[1] and $C0) = $C0);
@@ -6371,7 +6372,7 @@ begin
 end;
 
 function IN6_IS_ADDR_V4MAPPED(const a: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if a <> nil then begin
     with a^ do begin
@@ -6388,7 +6389,7 @@ begin
 end;
 
 function IN6_IS_ADDR_V4COMPAT(const a: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if a <> nil then begin
     with a^ do begin
@@ -6407,7 +6408,7 @@ begin
 end;
 
 function IN6_IS_ADDR_MC_NODELOCAL(const a: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if a <> nil then begin
     Result := IN6_IS_ADDR_MULTICAST(a) and ((a^.s6_addr[1] and $F) = 1);
@@ -6417,7 +6418,7 @@ begin
 end;
 
 function IN6_IS_ADDR_MC_LINKLOCAL(const a: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if a <> nil then begin
     Result := IN6_IS_ADDR_MULTICAST(a) and ((a^.s6_addr[1] and $F) = 2);
@@ -6427,7 +6428,7 @@ begin
 end;
 
 function IN6_IS_ADDR_MC_SITELOCAL(const a: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if a <> nil then begin
     Result := IN6_IS_ADDR_MULTICAST(a) and ((a^.s6_addr[1] and $F) = 5);
@@ -6437,7 +6438,7 @@ begin
 end;
 
 function IN6_IS_ADDR_MC_ORGLOCAL(const a: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if a <> nil then begin
     Result := IN6_IS_ADDR_MULTICAST(a) and ((a^.s6_addr[1] and $F) = 8);
@@ -6447,7 +6448,7 @@ begin
 end;
 
 function IN6_IS_ADDR_MC_GLOBAL(const a: PIn6Addr): Boolean;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   if a <> nil then begin
     Result := IN6_IS_ADDR_MULTICAST(a) and ((a^.s6_addr[1] and $F) = $E);
@@ -6484,7 +6485,7 @@ begin
 end;
 
 function GROUP_FILTER_SIZE(const numsrc : DWord) : PtrUInt;
-{$IFDEF USEINLINE}inline;{$ENDIF}
+{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
    Result := (SIZE_GROUP_FILTER - SIZE_SOCKADDR_STORAGE) +
      (numsrc * SIZE_SOCKADDR_STORAGE);

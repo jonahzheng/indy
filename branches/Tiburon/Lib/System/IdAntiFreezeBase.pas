@@ -95,8 +95,10 @@ implementation
 
 uses
   //facilitate inlining only.
-  {$IFDEF DOTNET}
+  {$IFDEF USE_INLINE}
+    {$IFDEF DOTNET}
   System.Threading,
+    {$ENDIF}
   {$ENDIF}
   IdGlobal,
   IdResourceStrings,

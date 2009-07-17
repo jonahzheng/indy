@@ -360,6 +360,9 @@ uses
     {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+    {$IFDEF USE_INLINE}
+ //   Windows,
+    {$ENDIF}
   IdStackWindows,
   {$ENDIF}
   {$IFDEF DOTNET}
@@ -877,7 +880,7 @@ initialization
       {$IFDEF KYLIXCOMPAT}
       TIdStackLinux;
       {$ENDIF}
-      {$IFDEF USEBASEUNIX}
+      {$IFDEF USE_BASEUNIX}
       TIdStackUnix;
       {$ENDIF}
     {$ENDIF}
@@ -889,16 +892,14 @@ initialization
     {$ENDIF}
   GStackCriticalSection := TIdCriticalSection.Create;
   {$IFNDEF DOTNET}
-    {$IFNDEF IDFREEONFINAL}
-      {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
+    {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
   IndyRegisterExpectedMemoryLeak(GStackCriticalSection);
-      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
 finalization
   // Dont Free. If shutdown is from another Init section, it can cause GPF when stack
   // tries to access it. App will kill it off anyways, so just let it leak
-  {$IFDEF IDFREEONFINAL}
+  {$IFDEF FREE_ON_FINAL}
   FreeAndNil(GStackCriticalSection);
   {$ENDIF}
 end.

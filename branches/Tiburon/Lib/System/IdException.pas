@@ -58,12 +58,8 @@ type
     Otherwise, it will not compile in that IDE. Also it's overloaded so that it doesn't close
     the other methods declared by the DotNet exception (particularly InnerException constructors)
     }
-    constructor Create(
-      const AMsg: string
-      ); overload; virtual;
-    class procedure Toss(
-      const AMsg: string
-      );
+    constructor Create(const AMsg: string); overload; virtual;
+    class procedure Toss(const AMsg: string);
   end;
 
   TClassIdException = class of EIdException;
@@ -74,7 +70,8 @@ type
 
   // EIdConnClosedGracefully is raised when remote side closes connection normally
   EIdConnClosedGracefully = class(EIdSilentException);
-   {$IFDEF DOTNET}
+
+  {$IFDEF DOTNET}
   // This class used in DotNet. Under windows/linux, all errors that come out the
   // indy layer descend from IdException (actually not all errors in theory, but
   // certainly all errors in practice)

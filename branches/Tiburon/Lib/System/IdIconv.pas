@@ -10,7 +10,7 @@ uses
   {$ENDIF}
   IdCTypes,
   IdException,
-  {$IFDEF UseBaseUnix}
+  {$IFDEF USE_BASEUNIX}
   UnixType; 
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
@@ -232,12 +232,14 @@ var
   hmsvcrt : THandle = 0;
   {$ENDIF}
 
-function Load : Boolean; {$IFDEF USEINLINE} inline; {$ENDIF}
+function Load : Boolean;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := True;
 end;
 
-procedure Unload; {$IFDEF USEINLINE} inline; {$ENDIF}
+procedure Unload;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   {$IFDEF WIN32_OR_WIN64}
   if hmsvcrt <> 0 then begin
@@ -247,7 +249,8 @@ begin
   {$ENDIF}
 end;
 
-function Loaded : Boolean; {$IFDEF USEINLINE} inline; {$ENDIF}
+function Loaded : Boolean;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := True;
 end;
@@ -400,7 +403,7 @@ begin
 end;
 
 function errnoStr(const AErrNo : TIdC_INT) : String;
-{$IFDEF USEINLINE} inline; {$ENDIF}
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
  case AErrNo of
   EPERM        : Result := 'EPERM';

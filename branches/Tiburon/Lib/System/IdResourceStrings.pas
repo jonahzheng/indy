@@ -45,7 +45,7 @@ resourcestring
   RSInvalidCodePage = 'Invalid codepage';
   RSInvalidCharSet = 'Invalid character set';
   //IdIconv
-  {$IFDEF USE_ICONVUNIT}
+  {$IFDEF USE_ICONV_UNIT}
   RSIconvCallError = 'Error on call to Iconv library function %s';
   {$ENDIF} 
   //IdSys
@@ -136,7 +136,7 @@ resourcestring
   RSReverseResolveError = 'Error resolving Address %s: %s (%d)'; { address, errorstring, errornumber }
     {$ENDIF}
   {$ENDIF}
- {$IFDEF DOTNET1_1}
+ {$IFDEF DOTNET_1_1}
  RSNotSupportedInMicrosoftNET11 = 'Not Supported in Microsoft.NET 1.1';
  {$ENDIF}
 
