@@ -266,7 +266,9 @@ implementation
 uses
   //facilitate inlining only.
   {$IFDEF DOTNET}
+    {$IFDEF USE_INLINE}
   System.Threading,
+    {$ENDIF}
   {$ENDIF}
   IdResourceStringsCore;
 
@@ -414,7 +416,7 @@ begin
   // Most things BEFORE inherited - inherited creates the actual thread and if
   // not suspended will start before we initialize
   inherited Create(ACreateSuspended);
-    {$IFNDEF VCL6ORABOVE}
+    {$IFNDEF VCL_6_OR_ABOVE}
     // Delphi 6 and above raise an exception when an error occures while
     // creating a thread (eg. not enough address space to allocate a stack)
     // Delphi 5 and below don't do that, which results in a TIdThread
@@ -604,12 +606,10 @@ type
 initialization
   SetThreadName('Main');  {do not localize}
   GThreadCount := TIdThreadSafeInteger.Create;
-  {$IFNDEF DOTNET}
-    {$IFNDEF IDFREEONFINAL}
-      {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
+  {$IFNDEF FREE_ON_FINAL}
+    {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
   IndyRegisterExpectedMemoryLeak(GThreadCount);
   IndyRegisterExpectedMemoryLeak(TIdThreadSafeIntegerAccess(GThreadCount).FCriticalSection);
-      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
 finalization
@@ -617,7 +617,7 @@ finalization
   // But without this, bad threads can often have worse results. Catch 22.
 //  TIdThread.WaitAllThreadsTerminated;
 
-  {$IFDEF IDFREEONFINAL}
+  {$IFDEF FREE_ON_FINAL}
   //only enable this if you know your code exits thread-clean
   FreeAndNil(GThreadCount);
   {$ENDIF}

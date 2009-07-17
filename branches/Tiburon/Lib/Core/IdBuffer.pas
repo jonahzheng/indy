@@ -233,7 +233,7 @@ unit IdBuffer;
   The copy is a separate issue and we considered several options. For .net we will
   always have to copy data to send or to receive to translate it to binary. For
   example if we have a string it must be converted to bytes. This conversion
-  requires a copy. All strings are WideString and must be converted to single
+  requires a copy. All strings are Unicode and must be converted to single
   bytes by a convertor. This is not limited to strings.
 
   In VCL previously all strings were AnsiString so we used a pointer and just
@@ -300,7 +300,10 @@ type
     function GetAsString: string;
   protected
     FBytes: TIdBytes;
-    FEncoding: TIdTextEncoding;
+    FByteEncoding: TIdTextEncoding;
+    {$IFDEF STRING_IS_ANSI}
+    FAnsiEncoding: TIdTextEncoding;
+    {$ENDIF}
     FGrowthFactor: Integer;
     FHeadIndex: Integer;
     FOnBytesRemoved: TIdBufferBytesRemoved;
@@ -328,7 +331,9 @@ type
 
     }
     // will extract number of bytes and decode as specified
-    function Extract(AByteCount: Integer = -1; AEncoding: TIdTextEncoding = nil): string;
+    function Extract(AByteCount: Integer = -1; AByteEncoding: TIdTextEncoding = nil
+      {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+      ): string;
     // all 3 extract routines append to existing data, if any
     procedure ExtractToStream(const AStream: TStream; AByteCount: Integer = -1; const AIndex: Integer = -1);
     procedure ExtractToIdBuffer(ABuffer: TIdBuffer; AByteCount: Integer = -1; const AIndex : Integer = -1);
@@ -339,9 +344,12 @@ type
     function ExtractToLongWord(const AIndex : Integer): LongWord;
     function ExtractToInt64(const AIndex : Integer): Int64;
     procedure ExtractToIPv6(const AIndex : Integer; var VAddress: TIdIPv6Address);
+    function IndexOf(const AByte: Byte; AStartPos: Integer = 0): Integer; overload;
     function IndexOf(const ABytes: TIdBytes; AStartPos: Integer = 0): Integer; overload;
     function IndexOf(const AString: string; AStartPos: Integer = 0;
-      AEncoding: TIdTextEncoding = nil): Integer; overload;
+      AByteEncoding: TIdTextEncoding = nil
+      {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF}
+      ): Integer; overload;
     function PeekByte(AIndex: Integer): Byte;
     procedure Remove(AByteCount: Integer);
     procedure SaveToStream(const AStream: TStream);
@@ -352,8 +360,10 @@ type
         location in a random access manner.
       }
     // Write
-    procedure Write(const AString: string; AEncoding: TIdTextEncoding = nil;
-      const ADestIndex: Integer = -1); overload;
+    procedure Write(const AString: string; AByteEncoding: TIdTextEncoding = nil;
+      const ADestIndex: Integer = -1
+      {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF}
+      ); overload;
     procedure Write(const ABytes: TIdBytes; const ADestIndex: Integer = -1); overload;
     procedure Write(const ABytes: TIdBytes; const ALength, AOffset : Integer; const ADestIndex: Integer = -1); overload;
     procedure Write(AStream: TStream; AByteCount: Integer = 0); overload;
@@ -371,7 +381,10 @@ type
     // the reference was kept.
     //
     property Capacity: Integer read GetCapacity write SetCapacity;
-    property Encoding: TIdTextEncoding read FEncoding write FEncoding;
+    property Encoding: TIdTextEncoding read FByteEncoding write FByteEncoding;
+    {$IFDEF STRING_IS_ANSI}
+    property AnsiEncoding: TIdTextEncoding read FAnsiEncoding write FAnsiEncoding;
+    {$ENDIF}
     property GrowthFactor: Integer read FGrowthFactor write FGrowthFactor;
     property Size: Integer read FSize;
     //useful for testing. returns buffer as string without extraction.
@@ -447,7 +460,9 @@ begin
   TIdStack.DecUsage;
 end;
 
-function TIdBuffer.Extract(AByteCount: Integer = -1; AEncoding: TIdTextEncoding = nil): string;
+function TIdBuffer.Extract(AByteCount: Integer = -1; AByteEncoding: TIdTextEncoding = nil
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+  ): string;
 var
   LBytes: TIdBytes;
 begin
@@ -456,12 +471,20 @@ begin
   end;
   if AByteCount > 0 then
   begin
-    if AEncoding = nil then begin
-      AEncoding := FEncoding;
-      EnsureEncoding(AEncoding);
+    if AByteEncoding = nil then begin
+      AByteEncoding := FByteEncoding;
+      EnsureEncoding(AByteEncoding);
     end;
+    {$IFDEF STRING_IS_ANSI}
+    if ADestEncoding = nil then begin
+      ADestEncoding := FAnsiEncoding;
+      EnsureEncoding(ADestEncoding, encOSDefault);
+    end;
+    {$ENDIF}
     ExtractToBytes(LBytes, AByteCount);
-    Result := BytesToString(LBytes, AEncoding);
+    Result := BytesToString(LBytes, AByteEncoding
+      {$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF}
+      );
   end else begin
     Result := '';
   end;
@@ -566,7 +589,7 @@ begin
 end;
 
 procedure TIdBuffer.Write(const ABytes: TIdBytes; const ADestIndex: Integer = -1);
-{$IFDEF USECLASSINLINE}inline;{$ENDIF}
+{$IFDEF USE_CLASSINLINE}inline;{$ENDIF}
 begin
   Write(ABytes, Length(ABytes), 0, ADestIndex);
 end;
@@ -597,12 +620,21 @@ begin
 end;
 
 function TIdBuffer.IndexOf(const AString: string; AStartPos: Integer = 0;
-  AEncoding: TIdTextEncoding = nil): Integer;
+  AByteEncoding: TIdTextEncoding = nil
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF}
+  ): Integer;
 begin
-  if AEncoding = nil then begin
-    AEncoding := FEncoding;
+  if AByteEncoding = nil then begin
+    AByteEncoding := FByteEncoding;
   end;
-  Result := IndexOf(ToBytes(AString, AEncoding), AStartPos);
+  {$IFDEF STRING_IS_ANSI}
+  if ASrcEncoding = nil then begin
+    ASrcEncoding := FAnsiEncoding;
+  end;
+  {$ENDIF}
+  Result := IndexOf(
+    ToBytes(AString, AByteEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF}),
+    AStartPos);
 end;
 
 function TIdBuffer.IndexOf(const ABytes: TIdBytes; AStartPos: Integer = 0): Integer;
@@ -634,20 +666,47 @@ begin
       end;
       if LFound then begin
         Result := i - FHeadIndex;
-        if Result <> -1 then
-          Break;
+        Break;
       end;
     end;
   end;
 end;
 
-procedure TIdBuffer.Write(const AString: string; AEncoding: TIdTextEncoding = nil;
-  const ADestIndex : Integer = -1);
+function TIdBuffer.IndexOf(const AByte: Byte; AStartPos: Integer = 0): Integer;
+var
+  i: Integer;
 begin
-  if AEncoding = nil then begin
-    AEncoding := FEncoding;
+  Result := -1;
+  // Dont search if it empty
+  if Size > 0 then begin
+    if (AStartPos < 0) or (AStartPos >= Size) then begin
+      EIdException.Toss(RSBufferInvalidStartPos);
+    end;
+    for i := (FHeadIndex + AStartPos) to (FHeadIndex + Size - 1) do begin
+      if FBytes[i] = AByte then begin
+        Result := i - FHeadIndex;
+        Break;
+      end;
+    end;
   end;
-  Write(ToBytes(AString, AEncoding), ADestIndex);
+end;
+
+procedure TIdBuffer.Write(const AString: string; AByteEncoding: TIdTextEncoding = nil;
+  const ADestIndex : Integer = -1
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF}
+  );
+begin
+  if AByteEncoding = nil then begin
+    AByteEncoding := FByteEncoding;
+  end;
+  {$IFDEF STRING_IS_ANSI}
+  if ASrcEncoding = nil then begin
+    ASrcEncoding := FAnsiEncoding;
+  end;
+  {$ENDIF}
+  Write(
+    ToBytes(AString, AByteEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF}),
+    ADestIndex);
 end;
 
 function TIdBuffer.GetCapacity: Integer;
@@ -912,7 +971,9 @@ end;
 
 function TIdBuffer.GetAsString: string;
 begin
-  Result := BytesToString(FBytes, FEncoding);
+  Result := BytesToString(FBytes, FByteEncoding
+    {$IFDEF STRING_IS_ANSI}, FAnsiEncoding{$ENDIF}
+    );
 end;
 
 end.

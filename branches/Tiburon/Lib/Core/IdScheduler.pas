@@ -96,11 +96,10 @@ implementation
 
 uses
   //facilitate inlining only.
-  {$IFDEF VCL2010ORABOVE}
-  Windows,
-  {$ENDIF}
   {$IFDEF DOTNET}
+    {$IFDEF USE_INLINE}
   System.Threading,
+    {$ENDIF}
   {$ENDIF}
   IdGlobal, SysUtils;
 
@@ -134,7 +133,7 @@ begin
   Assert(FActiveYarns<>nil);
 
   while True do begin
-    // Must unlock each time to allow yarns that are temrinating to remove themselves from the list
+    // Must unlock each time to allow yarns that are terminating to remove themselves from the list
     with FActiveYarns.LockList do try
       if Count = 0 then begin
         Break;

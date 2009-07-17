@@ -746,10 +746,10 @@ begin
   end;
 end;
 
-{$IFDEF UNICODESTRING}
-//This is an ugly hack that's required because a short does not seem to be acceptable
-//to Tiburon's Assert function.
-procedure AssertClassName(const ABool : Boolean; AString : String); inline;
+{$IFDEF STRING_IS_UNICODE}
+//This is an ugly hack that's required because a ShortString does not seem
+//to be acceptable to D2009's Assert function.
+procedure AssertClassName(const ABool : Boolean; const AString : String); inline;
 begin
   Assert(ABool, AString);
 end;
@@ -770,7 +770,7 @@ begin
       for i := 0 to Count - 1 do begin
         LContext := TIdContext(Items[i]);
         Assert(LContext<>nil);
-        {$IFDEF UNICODESTRING}
+        {$IFDEF STRING_IS_UNICODE}
         AssertClassName(LContext.Connection<>nil, LContext.ClassName);
         {$ELSE}
         Assert(LContext.Connection<>nil, LContext.ClassName);

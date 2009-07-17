@@ -225,7 +225,9 @@ implementation
 uses
   //facilitate inlining only.
   {$IFDEF DOTNET}
-    System.IO,
+    {$IFDEF USE_INLINE}
+  System.IO,
+    {$ENDIF}
   {$ENDIF}  
   SysUtils,
   IdStack,
