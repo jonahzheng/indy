@@ -2035,7 +2035,7 @@ begin
         LStrings.Add(s);
       end
       else if LStream <> nil then begin
-        WriteStringToStream(LStream, s+EOL, ADestEncoding
+        WriteStringToStream(LStream, s+EOL, AByteEncoding
           {$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF}
           );
       end;
