@@ -1370,7 +1370,7 @@ function IndyUpperCase(const A1: string): string;
 function IndyLowerCase(const A1: string): string;
 function IndyCompareStr(const A1: string; const A2: string): Integer;
 function Ticks: LongWord;
-procedure ToDo;
+procedure ToDo(const AMsg: string);
 function TwoByteToWord(AByte1, AByte2: Byte): Word;
 
 type
@@ -1592,9 +1592,9 @@ begin
     end;
     LEncoding := TIdMBCSEncoding.Create(CP, 0, 0);
       {$ELSE}
-    ToDo;
+    ToDo('ASCII property of TIdTextEncoding class is not implemented for this platform yet'); {do not localize}
       {$ENDIF}
-    {$ENDIF}    
+    {$ENDIF}
     if InterlockedCompareExchangePtr(Pointer(GIdASCIIEncoding), LEncoding, nil) <> nil then
       LEncoding.Free;
   end;
@@ -1805,7 +1805,7 @@ begin
       {$IFDEF WIN32_OR_WIN64_OR_WINCE}  
     LEncoding := TIdMBCSEncoding.Create(CP_ACP, 0, 0);
       {$ELSE}
-    ToDo;
+    ToDo('Default property of TIdTextEncoding class is not implemented for this platform yet'); {do not localize}
       {$ENDIF}
     {$ENDIF}
     if InterlockedCompareExchangePtr(Pointer(GIdDefaultEncoding), LEncoding, nil) <> nil then
@@ -1916,14 +1916,14 @@ end;
 { TIdMBCSEncoding }
 
 constructor TIdMBCSEncoding.Create;
-begin 
+begin
   {$IFDEF USE_ICONV}
   Create('ASCII'); {do not localize}
   {$ELSE}
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Create(CP_ACP, 0, 0);
     {$ELSE}
-  ToDo;
+  ToDo('Constructor of TIdMBCSEncoding class is not implemented for this platform yet'); {do not localize}
     {$ENDIF}
  {$ENDIF}
 end;
@@ -1948,7 +1948,9 @@ begin
     raise EIdException.CreateRes(@RSInvalidCharSet);
   end;
 
-  ToDo; //FMaxCharSize := ?;
+  //FMaxCharSize := ?;
+  ToDo('FMaxCharSize member of TIdMBCSEncoding class is not implemented for Iconv yet'); {do not localize}
+
   FIsSingleByte := FMaxCharSize = 1;
 end;
 
@@ -2003,7 +2005,7 @@ begin
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags, Chars, CharCount, nil, 0, nil, nil);
     {$ELSE}
-  ToDo;
+  ToDo('GetByteCount() metho of TIdMBCSEncoding class is not implemented for this platform yet'); {do not localize}
     {$ENDIF}
   {$ENDIF}
 end;
@@ -2026,7 +2028,7 @@ begin
     {$IFDEF  WIN32_OR_WIN64_OR_WINCE}
   Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags, Chars, CharCount, PAnsiChar(Bytes), ByteCount, nil, nil);
     {$ELSE}
-  ToDo;
+  ToDo('GetBytes() method of TIdMBCSEncoding class is not implemented for this platform yet'); {do not localize}
     {$ENDIF}
   {$ENDIF}
 end;
@@ -2053,7 +2055,7 @@ begin
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(Bytes), ByteCount, nil, 0);
     {$ELSE}
-  ToDo;
+  ToDo('GetCharCount() method of TIdMBCSEncoding class is not implemented for this platform yet'); {do not localize}
     {$ENDIF}
   {$ENDIF}
 end;
@@ -2076,7 +2078,7 @@ begin
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(Bytes), ByteCount, Chars, CharCount);
     {$ELSE}
-  ToDo;
+  ToDo('GetChars() method of TIdMBCSEncoding class is not implemented for this platform yet'); {do not localize}
     {$ENDIF}
   {$ENDIF}
 end;
@@ -2106,7 +2108,7 @@ begin
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   inherited Create(CP_UTF7);
   {$ELSE}
-  ToDo;
+  ToDo('Construtor of TIdUTF7Encoding class is not implemented for this platform yet'); {do not localize}
   {$ENDIF}
 {$ENDIF}
 end;
@@ -2153,7 +2155,7 @@ begin
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   inherited Create(CP_UTF8);
   {$ELSE}
-  ToDo;
+  ToDo('Constructor of TIdUTF8Encoding class is not implemented for this platform yet'); {do not localize}
   {$ENDIF}
 {$ENDIF}
 end;
@@ -2401,7 +2403,7 @@ end;
 function Indy8BitEncoding(const AOwnedByIndy: Boolean = True): TIdTextEncoding;
 begin
   Result := nil;
-  ToDo;
+  ToDo('Indy8BitEncoding() function is not implemented for this platform yet'); {do not localize}
 end;
     {$ENDIF}
   {$ENDIF}
@@ -4420,10 +4422,10 @@ begin
 end;
 {$ENDIF}
 
-procedure ToDo;
+procedure ToDo(const AMsg: string);
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  EIdException.Toss('To do item undone.'); {do not localize}
+  EIdException.Toss(AMsg);
 end;
 
 // RLebeau: the following three functions are utility functions
