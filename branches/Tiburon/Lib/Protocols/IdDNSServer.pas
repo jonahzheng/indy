@@ -874,7 +874,7 @@ begin
   DNSs := TStringList.Create;
   try
     DNSs.Add(ConvertToDNString);
-    ToDo;
+    ToDo('SaveToFile() method of TIdDNTreeNode class is not implemented yet'); {do not localized}
 //    DNSs.SaveToFile(Filename);
   finally
     FreeAndNil(DNSs);
@@ -1116,7 +1116,7 @@ begin
   if Result then begin
     FileStrings := TStringList.Create;
     try
-      Todo;
+      Todo('LoadZoneFromMasterFile() method of TIdDNS_UDPServer class is not implemented yet'); {do not localize}
 //      FileStrings.LoadFromFile(MasterFileName);
       Result := LoadZoneStrings(FileStrings, MasterFileName, Handed_Tree);
     finally
