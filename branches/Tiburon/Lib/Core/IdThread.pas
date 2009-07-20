@@ -604,7 +604,20 @@ type
 {$ENDIF}
   
 initialization
-  SetThreadName('Main');  {do not localize}
+  // RLebeau 7/19/09: According to RAID #271221:
+  //
+  // "Indy always names the main thread. It should not name the main thread,
+  // it should only name threads that it creates. This basically means that
+  // any app that uses Indy will end up with the main thread named "Main".
+  //
+  // The IDE currently names it's main thread, but because Indy is used by
+  // the dcldbx140.bpl package which gets loaded by the IDE, the name used
+  // for the main thread always ends up being overwritten with the name
+  // Indy gives it."
+  //
+  // So, DO NOT uncomment the following line...
+  // SetThreadName('Main');  {do not localize}
+
   GThreadCount := TIdThreadSafeInteger.Create;
   {$IFNDEF FREE_ON_FINAL}
     {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
