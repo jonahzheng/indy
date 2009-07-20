@@ -1351,7 +1351,11 @@ function PosInStrArray(const SearchStr: string; const Contents: array of string;
 function ServicesFilePath: string;
 {$ENDIF}
 procedure IndySetThreadPriority(AThread: TThread; const APriority: TIdThreadPriority; const APolicy: Integer = -MaxInt);
-procedure SetThreadName(const AName: string);
+{$IFDEF DOTNET}
+procedure SetThreadName(const AName: string; AThread: System.Threading.Thread = nil);
+{$ELSE}
+procedure SetThreadName(const AName: AnsiString; AThreadID: LongWord = $FFFFFFFF);
+{$ENDIF}
 procedure IndySleep(ATime: LongWord);
 //in Integer(Strings.Objects[i]) - column position in AData
 procedure SplitColumnsNoTrim(const AData: string; AStrings: TStrings; const ADelim: string = ' ');    {Do not Localize}
@@ -4197,9 +4201,24 @@ begin
   end;
 end;
 
-procedure SetThreadName(const AName: string);
-{$IFDEF HAS_NAMED_THREADS}
-  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+{$IFDEF DOTNET}
+procedure SetThreadName(const AName: string; AThread: System.Threading.Thread = nil);
+begin
+  if AThread = nil then begin
+    AThread := System.Threading.Thread.CurrentThread;
+  end;
+  // cannot rename a previously-named thread
+  if AThread.Name = nil then begin
+    AThread.Name := AName;
+  end;
+end;
+{$ELSE}
+procedure SetThreadName(const AName: AnsiString; AThreadID: LongWord = $FFFFFFFF);
+  {$IFDEF HAS_NAMED_THREADS}
+    {$IFDEF HAS_TThread_NameThreadForDebugging}
+      {$IFDEF USE_INLINE}inline;{$ENDIF}
+    {$ELSE}
+      {$IFDEF WIN32_OR_WIN64_OR_WINCE}
 const
   MS_VC_EXCEPTION = $406D1388;
 type
@@ -4211,29 +4230,19 @@ type
   end;
 var
   LThreadNameInfo: TThreadNameInfo;
-    {$IFDEF STRING_IS_UNICODE}
-  LName: AnsiString;
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
-{$ENDIF}
 begin
-{$IFDEF HAS_NAMED_THREADS}
-  {$IFDEF DOTNET}
-  // cannot rename a previously-named thread
-  if System.Threading.Thread.CurrentThread.Name = nil then begin
-    System.Threading.Thread.CurrentThread.Name := AName;
-  end;
-  {$ENDIF}
-
-  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-    {$IFDEF STRING_IS_UNICODE}
-  LName := AnsiString(AName); // explicit convert to Ansi
-    {$ENDIF}
-
+  {$IFDEF HAS_NAMED_THREADS}
+    {$IFDEF HAS_TThread_NameThreadForDebugging}
+  TThread.NameThreadForDebugging(AName, ThreadID);
+    {$ELSE}
+      {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   with LThreadNameInfo do begin
     RecType := $1000;
-    Name := {$IFDEF STRING_IS_UNICODE}PAnsiChar(LName){$ELSE}PChar(AName){$ENDIF};
-    ThreadID := $FFFFFFFF;
+    Name := {$IFDEF STRING_IS_UNICODE}PAnsiChar(AnsiString(AName)){$ELSE}PChar(AName){$ENDIF};
+    ThreadID := AThreadID;
     Flags := 0;
   end;
   try
@@ -4242,10 +4251,13 @@ begin
       PDWord(@LThreadNameInfo));
   except
   end;
-  {$ENDIF}
+      {$ENDIF}
+    {$ENDIF}
+  {$ELSE}
   // Do nothing. No support in this compiler for it.
-{$ENDIF}
+  {$ENDIF}
 end;
+{$ENDIF}
 
 procedure SplitColumns(const AData: string; AStrings: TStrings; const ADelim: string);
 var
