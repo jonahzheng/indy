@@ -216,6 +216,7 @@ type
     FProxyConnection: string;
     FProxyAuthenticate: TIdHeaderList;
     FWWWAuthenticate: TIdHeaderList;
+    FMetaHTTPEquiv : TIdHeaderList;
     //
     procedure SetProxyAuthenticate(const Value: TIdHeaderList);
     procedure SetWWWAuthenticate(const Value: TIdHeaderList);
@@ -223,6 +224,7 @@ type
     procedure ProcessHeaders; override;
     procedure SetHeaders; override;
   public
+
     procedure Clear; override;
     constructor Create; override;
     destructor Destroy; override;
@@ -233,6 +235,10 @@ type
     property ProxyAuthenticate: TIdHeaderList read FProxyAuthenticate write SetProxyAuthenticate;
     property Server: string read FServer write FServer;
     property WWWAuthenticate: TIdHeaderList read FWWWAuthenticate write SetWWWAuthenticate;
+  end;
+  TIdMetaHTTPEquiv = class(TIdEntityHeaderInfo)
+  public
+    procedure ProcessMetaHTTPEquiv(AStream : TStream) ;
   end;
 
 implementation
@@ -800,11 +806,13 @@ begin
   FContentType := 'text/html';  {do not localize}
   FWWWAuthenticate := TIdHeaderList.Create;
   FProxyAuthenticate := TIdHeaderList.Create;
+  FMetaHTTPEquiv := TIdHeaderList.Create;
   FAcceptRanges := '';
 end;
 
 destructor TIdResponseHeaderInfo.Destroy;
 begin
+  FreeAndNil(FMetaHTTPEquiv);
   FreeAndNil(FWWWAuthenticate);
   FreeAndNil(FProxyAuthenticate);
   inherited Destroy;
@@ -890,6 +898,38 @@ end;
 procedure TIdResponseHeaderInfo.SetAcceptRanges(const Value: string);
 begin
   FAcceptRanges := Value;
+end;
+
+{ TIdMetaHTTPEquiv }
+
+procedure TIdMetaHTTPEquiv.ProcessMetaHTTPEquiv(AStream: TStream);
+var LRawData, LLine : String;
+begin
+  FRawHeaders.Clear;
+  AStream.Position := 0;
+  LRawData := ReadStringFromStream(AStream);
+  AStream.Position := 0;
+  //we only want the head section of the document.
+  Fetch(LRawData,'<HEAD>',True,False);      {Do not localize}
+  LRawData := Fetch(LRawData,'</HEAD>',True,False);  {Do not localize}
+  //now create headers from this data.
+  repeat
+    if LRawData = '' then begin
+      Break;
+    end;
+    Fetch(LRawData,'<META HTTP-EQUIV="',True,False);  {Do not localize}
+    if LRawData = '' then begin
+      Break;
+    end;
+    LLine := Fetch(LRawData,'"');
+    LLine := LLine + ':';
+    Fetch(LRawData,'CONTENT="',True,False);  {Do not localize}
+    LLine := LLine + Fetch(LRawData,'"');
+    FRawHeaders.Add(LLine);
+  until False;
+  if FRawHeaders.Count > 0 then begin
+    ProcessHeaders;
+  end;
 end;
 
 end.
