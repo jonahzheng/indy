@@ -2247,13 +2247,13 @@ begin
 end;
 
 procedure TIdIOHandler.InputBufferToStream(AStream: TStream; AByteCount: Integer = -1);
-{$IFDEF USE_INLINE}inline;{$ENDIF}
+{$IFDEF USE_CLASSINLINE}inline;{$ENDIF}
 begin
   FInputBuffer.ExtractToStream(AStream, AByteCount);
 end;
 
 function TIdIOHandler.InputBufferIsEmpty: Boolean;
-{$IFDEF USE_INLINE}inline;{$ENDIF}
+{$IFDEF USE_CLASSINLINE}inline;{$ENDIF}
 begin
   Result := FInputBuffer.Size = 0;
 end;
@@ -2322,13 +2322,12 @@ begin
 end;
 
 function TIdIOHandler.WriteBufferingActive: Boolean;
-{$IFDEF USE_INLINE}inline;{$ENDIF}
+{$IFDEF USE_CLASSINLINE}inline;{$ENDIF}
 begin
   Result := FWriteBuffer <> nil;
 end;
 
 procedure TIdIOHandler.CloseGracefully;
-{$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   FClosedGracefully := True
 end;
