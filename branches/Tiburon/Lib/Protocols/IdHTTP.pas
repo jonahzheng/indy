@@ -759,7 +759,7 @@ end;
 
 function TIdCustomHTTP.IsRespHTML : Boolean;
 begin
-  Result := (TextIsSame(Request.ContentType, 'text/html'));
+  Result := (TextIsSame(Request.ContentType, 'text/html')); {do not localize}
 end;
 
 procedure TIdCustomHTTP.Post(AURL: string; ASource: TStrings; AResponseContent: TStream);
@@ -770,8 +770,9 @@ begin
   Assert(AResponseContent<>nil);
 
   // Usual posting request have default ContentType is application/x-www-form-urlencoded
-  if (Request.ContentType = '') or IsRespHTML then  {do not localize}
+  if (Request.ContentType = '') or IsRespHTML then begin
     Request.ContentType := 'application/x-www-form-urlencoded'; {do not localize}
+  end;
 
   LParams := TMemoryStream.Create;
   try
@@ -1378,6 +1379,8 @@ begin
       AResponse.RawHeaders.Extract('Set-cookie', Cookies);    {do not localize}
       AResponse.RawHeaders.Extract('Set-cookie2', Cookies2);  {do not localize}
 
+      FMetaHTTPEquiv.RawHeaders.Extract('Set-cookie', Cookies);    {do not localize}
+      FMetaHTTPEquiv.RawHeaders.Extract('Set-cookie2', Cookies2);  {do not localize}
       // RLebeau: per RFC 2965:
       //
       // "User agents that receive in the same response both a
