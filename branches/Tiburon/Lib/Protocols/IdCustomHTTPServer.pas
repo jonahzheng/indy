@@ -1318,8 +1318,11 @@ begin
     begin
       ResponseNo := 401;
       Values['WWW-Authenticate'] := 'Basic realm="' + AuthRealm + '"';    {Do not Localize}
-      Values['Content-Type'] := 'text/html';    {Do not Localize}
-      FContentText := '<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + RSHTTPUnauthorized + '</B></BODY></HTML>';    {Do not Localize}
+      if (Length(FContentText) = 0) and not Assigned(FContentStream) then
+      begin
+        Values['Content-Type'] := 'text/html';    {Do not Localize}
+        FContentText := '<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + RSHTTPUnauthorized + '</B></BODY></HTML>';    {Do not Localize}
+      end;
     end;
   end;
 end;
