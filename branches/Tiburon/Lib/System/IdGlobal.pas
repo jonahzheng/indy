@@ -738,15 +738,15 @@ type
 
   {$IFNDEF TIdTextEncoding_Defined}
   TIdTextEncoding = class
+  {$IFDEF HAS_CLASSPROPERTIES}
   private
-    {$IFDEF HAS_CLASSPROPERTIES}
     class function GetASCII: TIdTextEncoding; static;
     class function GetBigEndianUnicode: TIdTextEncoding; static;
     class function GetDefault: TIdTextEncoding; static;
     class function GetUnicode: TIdTextEncoding; static;
     class function GetUTF7: TIdTextEncoding; static;
     class function GetUTF8: TIdTextEncoding; static;
-    {$ENDIF}
+  {$ENDIF}
   protected
     FIsSingleByte: Boolean;
     FMaxCharSize: Integer;
@@ -1351,11 +1351,7 @@ function PosInStrArray(const SearchStr: string; const Contents: array of string;
 function ServicesFilePath: string;
 {$ENDIF}
 procedure IndySetThreadPriority(AThread: TThread; const APriority: TIdThreadPriority; const APolicy: Integer = -MaxInt);
-{$IFDEF DOTNET}
-procedure SetThreadName(const AName: string; AThread: System.Threading.Thread = nil);
-{$ELSE}
-procedure SetThreadName(const AName: AnsiString; AThreadID: LongWord = $FFFFFFFF);
-{$ENDIF}
+procedure SetThreadName(const AName: string; {$IFDEF DOTNET}AThread: System.Threading.Thread = nil{$ELSE}AThreadID: LongWord = $FFFFFFFF{$ENDIF});
 procedure IndySleep(ATime: LongWord);
 //in Integer(Strings.Objects[i]) - column position in AData
 procedure SplitColumnsNoTrim(const AData: string; AStrings: TStrings; const ADelim: string = ' ');    {Do not Localize}
@@ -4215,7 +4211,7 @@ begin
   end;
 end;
 {$ELSE}
-procedure SetThreadName(const AName: AnsiString; AThreadID: LongWord = $FFFFFFFF);
+procedure SetThreadName(const AName: string; AThreadID: LongWord = $FFFFFFFF);
   {$IFDEF HAS_NAMED_THREADS}
     {$IFDEF HAS_TThread_NameThreadForDebugging}
       {$IFDEF USE_INLINE}inline;{$ENDIF}
@@ -4238,7 +4234,7 @@ var
 begin
   {$IFDEF HAS_NAMED_THREADS}
     {$IFDEF HAS_TThread_NameThreadForDebugging}
-  TThread.NameThreadForDebugging(AName, ThreadID);
+  TThread.NameThreadForDebugging(AnsiString(AName), ThreadID);
     {$ELSE}
       {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   with LThreadNameInfo do begin
@@ -5886,7 +5882,7 @@ begin
   if (not ReadLnFromStream(AStream, Result, AMaxLineLength, AByteEncoding
     {$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF}
     )) and AExceptionIfEOF then
-  begin
+begin
     EIdEndOfStream.Toss(IndyFormat(RSEndOfStream, ['', AStream.Position]));
   end;
 end;
