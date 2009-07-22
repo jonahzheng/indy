@@ -519,6 +519,8 @@ type
   function FindFirstOf(const AFind, AText: string; const ALength: Integer = -1; const AStartPos: Integer = 1): Integer;
   function FindFirstNotOf(const AFind, AText: string; const ALength: Integer = -1; const AStartPos: Integer = 1): Integer;
   function TrimAllOf(const ATrim, AText: string): string;
+  procedure ProcessMetaHTTPEquiv(AStream: TStream; AStr : TStrings);
+
 
 var
   {$IFDEF UNIX}
@@ -2953,6 +2955,77 @@ begin
       Delete(Result, Length(Result), 1);
     end;
   end;
+end;
+
+procedure ProcessMetaHTTPEquiv(AStream: TStream; AStr : TStrings);
+var LRawData, LMeta, LLine : String;
+  i, j : Integer;
+  LStr : TStrings;
+  LPart : String;
+  LQuotedChar : Boolean;
+begin
+  AStr.Clear;
+  AStream.Position := 0;
+  LRawData := ReadStringFromStream(AStream);
+  AStream.Position := 0;
+  //we only want the head section of the document.
+  Fetch(LRawData,'<HEAD>',True,False);      {Do not localize}
+  LRawData := Fetch(LRawData,'</HEAD>',True,False);  {Do not localize}
+  //now create headers from this data.
+  repeat
+    if LRawData = '' then begin
+      Break;
+    end;
+    Fetch(LRawData,'<META',True,False);  {Do not localize}
+    LMeta := Trim(Fetch(LRawData,'>'));
+    i := RPos('/',LMeta);
+    if i = Length(LMeta) then begin
+      IdDelete(LMeta,Length(LMeta),1);
+      LMeta := TrimRight(LMeta);
+    end;
+
+    LStr := TStringList.Create;
+    try
+      repeat
+        //name
+        LQuotedChar := False;
+        LPart := Trim(Fetch(LMeta,'='));
+        LMeta := TrimLeft(LMeta);
+        if Copy(LMeta,1,1)='"' then begin
+          IdDelete(LMeta,1,1);
+          LQuotedChar := True;
+        end;
+        //value
+        i := IndyPos(' ',LMeta);
+        j := IndyPos('"',LMeta);
+        if LQuotedChar then begin
+          LPart := LPart + '='+Trim(Fetch(LMeta,'"'));
+        end else begin
+          if j < i then begin
+            LPart := LPart + '='+Trim(Fetch(LMeta,'"'));
+          end else begin
+            LPart := LPart + '='+Trim(Fetch(LMeta));
+          end;
+        end;
+        //add entry
+        LStr.Add(LPart);
+        if LMeta = '' then begin
+          break;
+        end;
+      until False;
+      //construct LLine
+      // extract header name
+      i := LStr.IndexOfName('HTTP-EQUIV');
+      if i > -1 then begin
+        LLine := Trim(LStr.ValueFromIndex[i]);
+        LLine := LLine + ': ' +LStr.Values['CONTENT'];
+         // extract the content value
+        AStr.Add(LLine);
+      end;
+    finally
+      FreeAndNil(LStr);
+    end;
+  until False;
 end;
 
 // make sure that an RFC MsgID has angle brackets on it

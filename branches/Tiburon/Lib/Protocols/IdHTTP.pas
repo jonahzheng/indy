@@ -1106,7 +1106,7 @@ begin
         FreeAndNil(LS);
       end;
     end;
-    FMetaHTTPEquiv.ProcessMetaHTTPEquiv(Response.ContentStream);
+    ProcessMetaHTTPEquiv(Response.ContentStream, Self.FMetaHTTPEquiv.RawHeaders );
   finally
     if LCreateTmpContent then begin
        Response.ContentStream.Position := 0;
