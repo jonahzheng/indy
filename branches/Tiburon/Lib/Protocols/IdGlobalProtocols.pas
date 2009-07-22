@@ -474,6 +474,7 @@ type
   procedure LongWordToOrdFourByte(const AValue: LongWord; var VByte1, VByte2, VByte3, VByte4 : Byte);
 
   function PadString(const AString : String; const ALen : Integer; const AChar: Char): String;
+  function UnquotedStr(const AStr : String): String;
 
   function ProcessPath(const ABasePath: String; const APath: String; const APathDelim: string = '/'): string;    {Do not Localize}
   function RightStr(const AStr: String; const Len: Integer): String;
@@ -572,6 +573,15 @@ uses
   IdResourceStringsCore,
   IdResourceStringsProtocols,
   IdStack;
+
+function UnquotedStr(const AStr : String): String;
+begin
+  Result := AStr;
+  if TextStartsWith(Result, '"') then begin
+    IdDelete(Result, 1, 1);
+    Result := Fetch(Result, '"');
+  end;
+end;
 
 {This is taken from Borland's SysUtils and modified for our folding}    {Do not Localize}
 function IndyWrapText(const ALine, ABreakStr, ABreakChars : string; MaxCol: Integer): string;

@@ -973,16 +973,6 @@ end;
 
 {Quoted strings}
 
-
-function UnquotedStr(const AStr : String): String;
-begin
-  Result := AStr;
-  if TextStartsWith(Result, '"') then begin
-    IdDelete(Result, 1, 1);
-    Result := Fetch(Result, '"');
-  end;
-end;
-
 procedure ParseQuotedArgs(const AParams : String; AStrings : TStrings);
 var
   lComma, LOpenQuote : Integer;
