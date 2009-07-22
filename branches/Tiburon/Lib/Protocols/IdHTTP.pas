@@ -997,7 +997,7 @@ var
 begin
   LDecMeth := 0;
   LParseHTML :=  IsRespHTML and Assigned(AResponse.ContentStream);
-  LCreateTmpContent := LParseHTML and (not (AResponse.ContentStream is TMemoryStream));
+  LCreateTmpContent := LParseHTML and (not (AResponse.ContentStream is TCustomMemoryStream));
   LTmpCnt := Response.ContentStream;
   if LCreateTmpContent then begin
     Response.ContentStream := TMemoryStream.Create;
@@ -1119,9 +1119,9 @@ end;
 
 function TIdCustomHTTP.RespCharset: String;
 begin
-  Result := Self.MetaHTTPEquiv.CharSet;
+  Result := Response.CharSet;
   if Result = '' then begin
-    Result := Self.Response.CharSet;
+    Result := MetaHTTPEquiv.CharSet;
   end;
 end;
 
