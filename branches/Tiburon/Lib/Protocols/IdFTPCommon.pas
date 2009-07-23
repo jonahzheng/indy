@@ -450,7 +450,6 @@ function IsSubDirContentsBanner(const AData: String): Boolean;
 {***
 Quoted strings
 ***}
-function UnquotedStr(const AStr : String): String;
 procedure ParseQuotedArgs(const AParams : String; AStrings : TStrings);
 
 {**
@@ -963,11 +962,11 @@ function IsTotalLine(const AData: String): Boolean;
 begin
   //just in case someone is doing a recursive listing and there's a dir with the name total
   Result := (not TextEndsWith(AData, ':')) and
-	(TextStartsWith(AData, 'TOTAL') or
-	 TextStartsWith(AData, 'GESAMT') or // German
-	 TextStartsWith(AData, 'INSGESAMT') or // German HPUX
-	 (IndyPos(KoreanTotal, AData) = 1) or // Korean (Unicode)
-	 (IndyPos(ChineseTotal, AData) = 1) or // Chinese (Unicode)
+   (TextStartsWith(AData, 'TOTAL') or
+   TextStartsWith(AData, 'GESAMT') or // German
+   TextStartsWith(AData, 'INSGESAMT') or // German HPUX
+   (IndyPos(KoreanTotal, AData) = 1) or // Korean (Unicode)
+   (IndyPos(ChineseTotal, AData) = 1) or // Chinese (Unicode)
    TextStartsWith(AData, JapaneseTotal));
 end;
 
