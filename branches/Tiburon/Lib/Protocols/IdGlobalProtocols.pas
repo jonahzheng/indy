@@ -2958,7 +2958,8 @@ begin
 end;
 
 procedure ParseMetaHTTPEquiv(AStream: TStream; AStr : TStrings);
-var LRawData, LMeta, LLine : String;
+var
+  LRawData, LMeta, LLine : String;
   i, j : Integer;
   LStr : TStrings;
   LPart : String;
@@ -2969,18 +2970,18 @@ begin
   LRawData := ReadStringFromStream(AStream);
   AStream.Position := 0;
   //we only want the head section of the document.
-  Fetch(LRawData,'<HEAD>',True,False);      {Do not localize}
-  LRawData := Fetch(LRawData,'</HEAD>',True,False);  {Do not localize}
+  Fetch(LRawData, '<HEAD', True, False);      {Do not localize}
+  LRawData := Fetch(LRawData, '</HEAD>', True, False);  {Do not localize}
   //now create headers from this data.
   repeat
     if LRawData = '' then begin
       Break;
     end;
-    Fetch(LRawData,'<META',True,False);  {Do not localize}
+    Fetch(LRawData, '<META', True, False);  {Do not localize}
     LMeta := Trim(Fetch(LRawData,'>'));
-    i := RPos('/',LMeta);
+    i := RPos('/', LMeta); {do not localize}
     if i = Length(LMeta) then begin
-      IdDelete(LMeta,Length(LMeta),1);
+      IdDelete(LMeta, Length(LMeta), 1);
       LMeta := TrimRight(LMeta);
     end;
 
@@ -2989,37 +2990,40 @@ begin
       repeat
         //name
         LQuotedChar := False;
-        LPart := Trim(Fetch(LMeta,'='));
+        LPart := Trim(Fetch(LMeta,'=')); {do not localize}
         LMeta := TrimLeft(LMeta);
-        if Copy(LMeta,1,1)='"' then begin
-          IdDelete(LMeta,1,1);
+        if TextStartsWith(LMeta, '"') then begin {do not localize}
+          IdDelete(LMeta, 1, 1);
           LQuotedChar := True;
         end;
         //value
-        i := IndyPos(' ',LMeta);
-        j := IndyPos('"',LMeta);
+        i := IndyPos(' ', LMeta); {do not localize}
+        j := IndyPos('"', LMeta); {do not localize}
         if LQuotedChar then begin
-          LPart := LPart + '='+Trim(Fetch(LMeta,'"'));
+          LPart := LPart + '=' + Trim(Fetch(LMeta, '"')); {do not localize}
+        end
+        else if j < i then begin
+          LPart := LPart + '=' + Trim(Fetch(LMeta, '"')); {do not localize}
         end else begin
-          if j < i then begin
-            LPart := LPart + '='+Trim(Fetch(LMeta,'"'));
-          end else begin
-            LPart := LPart + '='+Trim(Fetch(LMeta));
-          end;
+          LPart := LPart + '=' + Trim(Fetch(LMeta)); {do not localize}
         end;
         //add entry
         LStr.Add(LPart);
         if LMeta = '' then begin
-          break;
+          Break;
         end;
       until False;
       //construct LLine
       // extract header name
-      i := LStr.IndexOfName('HTTP-EQUIV');
+      i := LStr.IndexOfName('HTTP-EQUIV'); {do not localize}
       if i > -1 then begin
+        {$IFDEF VCL_2006_OR_ABOVE}
         LLine := Trim(LStr.ValueFromIndex[i]);
-        LLine := LLine + ': ' +LStr.Values['CONTENT'];
-         // extract the content value
+        {$ELSE}
+        LLine := Trim(Copy(LStr.Strings[i], 12, MaxInt));
+        {$ENDIF}
+        LLine := LLine + ': ' + LStr.Values['CONTENT']; {do not localize}
+        // extract the content value
         AStr.Add(LLine);
       end;
     finally
@@ -3034,11 +3038,11 @@ function EnsureMsgIDBrackets(const AMsgID: String): String;
 begin
   Result := AMsgID;
   if Length(Result) > 0 then begin
-    if Result[1] <> #60 then begin
-      Result := '<' + Result;
+    if Result[1] <> '<' then begin {do not localize}
+      Result := '<' + Result; {do not localize}
     end;
-    if Result[Length(Result)] <> #62 then begin
-      Result := Result + '>';
+    if Result[Length(Result)] <> '>' then begin {do not localize}
+      Result := Result + '>'; {do not localize}
     end;
   end;
 end;
