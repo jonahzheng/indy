@@ -822,20 +822,33 @@ type
   function Indy8BitEncoding(const AOwnedByIndy: Boolean = True): TIdTextEncoding;
   {$ENDIF}
 
-  (*$HPPEMIT '// These are for backwards compatibility with past Indy 10 releases'*)
-  (*$HPPEMIT '#define enDefault ( TIdTextEncoding* )NULL'*)
+  (*$HPPEMIT '// These are helper macros to handle differences in "class" properties between different C++Builder versions'*)
+  {$IFDEF HAS_CLASSPROPERTIES}
+  (*$HPPEMIT '#define TIdTextEncoding_ASCII TIdTextEncoding::ASCII'*)
+  (*$HPPEMIT '#define TIdTextEncoding_BigEndianUnicode TIdTextEncoding::BigEndianUnicode'*)
+  (*$HPPEMIT '#define TIdTextEncoding_Default TIdTextEncoding::Default'*)
+  (*$HPPEMIT '#define TIdTextEncoding_Unicode TIdTextEncoding::Unicode'*)
+  (*$HPPEMIT '#define TIdTextEncoding_UTF7 TIdTextEncoding::UTF7'*)
+  (*$HPPEMIT '#define TIdTextEncoding_UTF8 TIdTextEncoding::UTF8'*)
+  {$ELSE}
+  (*$HPPEMIT '#define TIdTextEncoding_ASCII TIdTextEncoding::ASCII(__classid(TIdTextEncoding))'*)
+  (*$HPPEMIT '#define TIdTextEncoding_BigEndianUnicode TIdTextEncoding::BigEndianUnicode(__classid(TIdTextEncoding))'*)
+  (*$HPPEMIT '#define TIdTextEncoding_Default TIdTextEncoding::Default(__classid(TIdTextEncoding))'*)
+  (*$HPPEMIT '#define TIdTextEncoding_Unicode TIdTextEncoding::Unicode(__classid(TIdTextEncoding))'*)
+  (*$HPPEMIT '#define TIdTextEncoding_UTF7 TIdTextEncoding::UTF7(__classid(TIdTextEncoding))'*)
+  (*$HPPEMIT '#define TIdTextEncoding_UTF8 TIdTextEncoding::UTF8(__classid(TIdTextEncoding))'*)
+  {$ENDIF}
+  (*$HPPEMIT ''*)
+
+  (*$HPPEMIT '// These are for backwards compatibility with earlier Indy 10 releases'*)
+  (*$HPPEMIT '#define enDefault ( ( TIdTextEncoding* )NULL )'*)
   {$IFDEF DOTNET}
   (*$HPPEMIT '#define en8Bit Indy8BitEncoding()'*)
   {$ELSE}
   (*$HPPEMIT '#define en8Bit Indy8BitEncoding(true)'*)
   {$ENDIF}
-  {$IFDEF HAS_CLASSPROPERTIES}
-  (*$HPPEMIT '#define en7Bit TIdTextEncoding::ASCII'*)
-  (*$HPPEMIT '#define enUTF8 TIdTextEncoding::UTF8'*)
-  {$ELSE}
-  (*$HPPEMIT '#define en7Bit TIdTextEncoding::ASCII(__classid(TIdTextEncoding))'*)
-  (*$HPPEMIT '#define enUTF8 TIdTextEncoding::UTF8(__classid(TIdTextEncoding))'*)
-  {$ENDIF}
+  (*$HPPEMIT '#define en7Bit TIdTextEncoding_ASCII'*)
+  (*$HPPEMIT '#define enUTF8 TIdTextEncoding_UTF8'*)
   (*$HPPEMIT ''*)
 
 type
@@ -1567,12 +1580,6 @@ class function TIdTextEncoding.ASCII: TIdTextEncoding;
 {$ENDIF}
 var
   LEncoding: TIdTextEncoding;
-{$IFNDEF USE_ICONV}
-  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  CP: Integer;
-  LCPInfo: TCPInfo;
-  {$ENDIF}
-{$ENDIF}
 begin
   if GIdASCIIEncoding = nil then
   begin
@@ -1580,13 +1587,7 @@ begin
     LEncoding := TIdMBCSEncoding.Create('ASCII');  {Do not localize}
     {$ELSE}
       {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-    // RLebeau: 20127 is the official codepage for ASCII, but older OS versions
-    // do not support codepage 20127, so fallback to 1252 when needed...
-    CP := 20127;
-    if not GetCPInfo(CP, LCPInfo) then begin
-      CP := 1252;
-    end;
-    LEncoding := TIdMBCSEncoding.Create(CP, 0, 0);
+    LEncoding := TIdMBCSEncoding.Create(20127, 0, 0);
       {$ELSE}
     ToDo('ASCII property of TIdTextEncoding class is not implemented for this platform yet'); {do not localize}
       {$ENDIF}
@@ -1818,16 +1819,7 @@ end;
 {$ELSE}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
 class function TIdTextEncoding.GetEncoding(ACodePage: Integer): TIdTextEncoding;
-var
-  LCPInfo: TCPInfo;
 begin
-  // RLebeau: 20127 is the official codepage for ASCII, but older OS versions
-  // do not support codepage 20127, so fallback to 1252 when needed...
-  if ACodePage = 20127 then begin
-    if not GetCPInfo(ACodePage, LCPInfo) then begin
-      ACodePage := 1252;
-    end;
-  end;
   Result := TIdMBCSEncoding.Create(ACodePage);
 end;
   {$ENDIF}
@@ -1970,12 +1962,20 @@ end;
 constructor TIdMBCSEncoding.Create(CodePage, MBToWCharFlags, WCharToMBFlags: Integer);
 var
   LCPInfo: TCPInfo;
+  LError: Boolean;
 begin
   FCodePage := CodePage;
   FMBToWCharFlags := MBToWCharFlags;
   FWCharToMBFlags := WCharToMBFlags;
 
-  if not GetCPInfo(FCodePage, LCPInfo) then begin
+  LError := not GetCPInfo(FCodePage, LCPInfo);
+  if LError and (FCodePage = 20127) then begin
+    // RLebeau: 20127 is the official codepage for ASCII, but older
+    // OS versions do not support codepage 20127, so fallback to 1252...
+    FCodePage := 1252;
+    LError := not GetCPInfo(FCodePage, LCPInfo);
+  end;
+  if LError then begin
     raise EIdException.CreateRes(@RSInvalidCodePage);
   end;
 
@@ -5269,7 +5269,7 @@ function BytesToString(const AValue: TIdBytes; const AStartIndex: Integer;
   ): string; overload;
 var
   LLength: Integer;
-  {$IFNDEF STRING_IS_UNICODE}
+  {$IFDEF STRING_IS_ANSI}
   LBytes: TIdBytes;
   {$ENDIF}
 begin
