@@ -759,7 +759,7 @@ end;
 
 function TIdCustomHTTP.IsRespHTML : Boolean;
 begin
-  Result := (TextIsSame(Request.ContentType, 'text/html')); {do not localize}
+  Result := TextIsSame( Response.ContentType, 'text/html'); {do not localize}
 end;
 
 procedure TIdCustomHTTP.Post(AURL: string; ASource: TStrings; AResponseContent: TStream);
@@ -1106,7 +1106,9 @@ begin
         FreeAndNil(LS);
       end;
     end;
-    ProcessMetaHTTPEquiv(Response.ContentStream, Self.FMetaHTTPEquiv.RawHeaders );
+    if LParseHTML then begin
+      FMetaHTTPEquiv.ProcessMetaHTTPEquiv(Response.ContentStream);
+    end;
   finally
     if LCreateTmpContent then begin
        Response.ContentStream.Position := 0;

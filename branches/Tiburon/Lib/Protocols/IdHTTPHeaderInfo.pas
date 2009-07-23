@@ -237,6 +237,8 @@ type
     property WWWAuthenticate: TIdHeaderList read FWWWAuthenticate write SetWWWAuthenticate;
   end;
   TIdMetaHTTPEquiv = class(TIdEntityHeaderInfo)
+  public
+    procedure ProcessMetaHTTPEquiv(AStream: TStream);
   end;
 
 implementation
@@ -896,6 +898,16 @@ end;
 procedure TIdResponseHeaderInfo.SetAcceptRanges(const Value: string);
 begin
   FAcceptRanges := Value;
+end;
+
+{ TIdMetaHTTPEquiv }
+
+procedure TIdMetaHTTPEquiv.ProcessMetaHTTPEquiv(AStream: TStream);
+begin
+  ParseMetaHTTPEquiv(AStream, RawHeaders );
+  if FRawHeaders.Count > 0 then begin
+    ProcessHeaders;
+  end;
 end;
 
 end.

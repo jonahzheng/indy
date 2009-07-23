@@ -519,7 +519,7 @@ type
   function FindFirstOf(const AFind, AText: string; const ALength: Integer = -1; const AStartPos: Integer = 1): Integer;
   function FindFirstNotOf(const AFind, AText: string; const ALength: Integer = -1; const AStartPos: Integer = 1): Integer;
   function TrimAllOf(const ATrim, AText: string): string;
-  procedure ProcessMetaHTTPEquiv(AStream: TStream; AStr : TStrings);
+  procedure ParseMetaHTTPEquiv(AStream: TStream; AStr : TStrings);
 
 
 var
@@ -2957,7 +2957,7 @@ begin
   end;
 end;
 
-procedure ProcessMetaHTTPEquiv(AStream: TStream; AStr : TStrings);
+procedure ParseMetaHTTPEquiv(AStream: TStream; AStr : TStrings);
 var LRawData, LMeta, LLine : String;
   i, j : Integer;
   LStr : TStrings;
