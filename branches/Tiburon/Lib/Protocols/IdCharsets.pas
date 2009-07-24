@@ -1854,7 +1854,7 @@ type
       ISO }
 
     { MIB: 113 }
-    idcs_GBK,                                           // Codepage: ?
+    idcs_GBK,                                           // Codepage: 936
     idcs_CP936,
     idcs_MS936,
     idcs_windows_936,
