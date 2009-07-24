@@ -4077,10 +4077,10 @@ const
     0,     // ISO646-CN
     0,     // csISO57GB1988
 
-    936,     // GB_2312-80
-    0,     // iso-ir-58
-    0,     // chinese
-    936,     // csISO58GB231280
+    936,   // GB_2312-80
+    936,   // iso-ir-58
+    936,   // chinese   //aliases to gb2312 on Windows
+    936,   // csISO58GB231280
 
     0,     // NS_4551-1
     0,     // iso-ir-60
