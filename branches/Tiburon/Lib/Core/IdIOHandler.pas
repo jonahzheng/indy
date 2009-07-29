@@ -753,17 +753,6 @@ var
   GIOHandlerClassDefault: TIdIOHandlerClass = nil;
   GIOHandlerClassList: TList = nil;
 
-function iif(const AEncoding, ADefEncoding: TIdTextEncoding; ADefEncodingType: IdAnsiEncodingType = encASCII): TIdTextEncoding; overload;
-{$IFDEF USE_INLINE}inline;{$ENDIF}
-begin
-  Result := AEncoding;
-  if Result = nil then
-  begin
-    Result := ADefEncoding;
-    EnsureEncoding(Result, ADefEncodingType);
-  end;
-end;
-
 { TIdIOHandler }
 
 procedure TIdIOHandler.Close;
