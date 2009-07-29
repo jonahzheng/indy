@@ -852,6 +852,11 @@ type
   (*$HPPEMIT ''*)
 
 type
+  IdAnsiEncodingType = (encOSDefault, encASCII, encUTF7, encUTF8);
+  
+  procedure EnsureEncoding(var VEncoding : TIdTextEncoding; ADefEncoding: IdAnsiEncodingType = encASCII);
+
+type
   TIdAppendFileStream = class(TFileStream)
   public
     constructor Create(const AFile : String);
@@ -1291,6 +1296,8 @@ function IdPorts: TList;
 function iif(ATest: Boolean; const ATrue: Integer; const AFalse: Integer): Integer; overload;
 function iif(ATest: Boolean; const ATrue: string; const AFalse: string = ''): string; overload; { do not localize }
 function iif(ATest: Boolean; const ATrue: Boolean; const AFalse: Boolean): Boolean; overload;
+function iif(const AEncoding, ADefEncoding: TIdTextEncoding; ADefEncodingType: IdAnsiEncodingType = encASCII): TIdTextEncoding; overload;
+
 function InMainThread: Boolean;
 function IPv6AddressToStr(const AValue: TIdIPv6Address): string;
 
@@ -1381,11 +1388,6 @@ function IndyCompareStr(const A1: string; const A2: string): Integer;
 function Ticks: LongWord;
 procedure ToDo(const AMsg: string);
 function TwoByteToWord(AByte1, AByte2: Byte): Word;
-
-type
-  IdAnsiEncodingType = (encOSDefault, encASCII, encUTF7, encUTF8);
-  
-procedure EnsureEncoding(var VEncoding : TIdTextEncoding; ADefEncoding: IdAnsiEncodingType = encASCII);
 
 var
   {$IFDEF UNIX}
@@ -1918,6 +1920,12 @@ end;
 
 {$IFDEF USE_ICONV}
 constructor TIdMBCSEncoding.Create(const CharSet: AnsiString);
+const
+  // RLebeau: iconv() does not provide a maximum character byte size like
+  // Microsoft does, so have to determine the max bytes by manually encoding
+  // an actual Unicode codepoint.  We'll encode the largest codepoint that
+  // UTF-16 supports, $10FFFD, for now...
+  cValue: array[0..1] of Word = ($DBFF, $DFFD);
 begin
   inherited Create;
 
@@ -1936,9 +1944,7 @@ begin
     raise EIdException.CreateRes(@RSInvalidCharSet);
   end;
 
-  //FMaxCharSize := ?;
-  ToDo('FMaxCharSize member of TIdMBCSEncoding class is not implemented for Iconv yet'); {do not localize}
-
+  FMaxCharSize := GetByteCount(PWideChar(@cValue[0]), 2);
   FIsSingleByte := FMaxCharSize = 1;
 end;
 
@@ -1988,20 +1994,38 @@ end;
 function TIdMBCSEncoding.GetByteCount(Chars: PWideChar; CharCount: Integer): Integer;
 {$IFDEF USE_ICONV}
 var
-  LChars: PAnsiChar;
-  LCountCount, LResult: size_t;
+  LBytes: array[0..3] of Byte;
+  LCharsPtr, LBytesPtr: PAnsiChar;
+  LCharCount, LByteCount: size_t;
 {$ENDIF}
 begin
   {$IFDEF USE_ICONV}
-  LChars := PAnsiChar(Chars);
-  LCountCount := CharCount * SizeOf(WideChar);
-  LResult := 0;
-  Result := iconv(FFromUTF16, @LChars, @LCountCount, nil, @LResult);
+  // RLebeau: iconv() does not allow for querying a pre-calculated byte size
+  // for the input like Microsoft does, so have to determine the max bytes
+  // by actually encoding the Unicode data.  We'll encode to a local buffer
+  // so we don't have to use a lot of memory...
+  Result := 0;
+  LCharsPtr := PAnsiChar(Chars);
+  LCharCount := CharCount * SizeOf(WideChar);
+  while LCountCount > 0 do
+  begin
+    LBytesPtr = PAnsiChar(@LBytes[0]);
+    LByteCount := SizeOf(LBytes);
+    //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
+    //while in FreePascal's libc and our IdIconv units define it as a pSize_t
+    if iconv(FFromUTF16, @LCharsPtr, @LCountCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) = iconv_t(-1) then
+    begin
+      Result := 0;
+      Exit;
+    end;
+    // LByteCount was decremented by the number of bytes stored in the output buffer
+    Inc(Result, SizeOf(LBytes)-LByteCount);
+  end;
   {$ELSE}
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags, Chars, CharCount, nil, 0, nil, nil);
     {$ELSE}
-  ToDo('GetByteCount() metho of TIdMBCSEncoding class is not implemented for this platform yet'); {do not localize}
+  ToDo('GetByteCount() method of TIdMBCSEncoding class is not implemented for this platform yet'); {do not localize}
     {$ENDIF}
   {$ENDIF}
 end;
@@ -2010,16 +2034,23 @@ function TIdMBCSEncoding.GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: P
   ByteCount: Integer): Integer;
 {$IFDEF USE_ICONV}
 var
-  LChars, LBytes: PAnsiChar;
+  LCharsPtr, LBytesPtr: PAnsiChar;
   LCharCount, LByteCount: size_t;
 {$ENDIF}
 begin
   {$IFDEF USE_ICONV}
-  LChars := PAnsiChar(Chars);
+  Result := 0;
+  LCharsPtr := PAnsiChar(Chars);
   LCharCount := CharCount * SizeOf(WideChar);
-  LBytes := PAnsiChar(Bytes);
+  LBytesPtr := PAnsiChar(Bytes);
   LByteCount := ByteCount;
-  Result := iconv(FFromUTF16, @LChars, @LCharCount, @LBytes, @LByteCount);
+  //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
+  //while in FreePascal's libc and our IdIconv units define it as a pSize_t
+  if iconv(FFromUTF16, @LCharsPtr, @LCharCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) <> iconv_t(-1) then
+  begin
+    // LByteCount was decremented by the number of bytes stored in the output buffer
+    Result := ByteCount-LByteCount;
+  end;
   {$ELSE}
     {$IFDEF  WIN32_OR_WIN64_OR_WINCE}
   Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags, Chars, CharCount, PAnsiChar(Bytes), ByteCount, nil, nil);
@@ -2032,21 +2063,33 @@ end;
 function TIdMBCSEncoding.GetCharCount(Bytes: PByte; ByteCount: Integer): Integer;
 {$IFDEF USE_ICONV}
 var
-  LBytes: PAnsiChar;
-  LByteCount, LResult: size_t;
+  LChars: array[0..3] of WideChar;
+  LBytesPtr, LCharsPtr: PAnsiChar;
+  LByteCount, LCharsSize: size_t;
 {$ENDIF}
 begin
   {$IFDEF USE_ICONV}
-  LBytes := PAnsiChar(Bytes);
+  // RLebeau: iconv() does not allow for querying a pre-calculated character count
+  // for the input like Microsoft does, so have to determine the max characters
+  // by actually encoding the Ansi data.  We'll encode to a local buffer so we
+  // don't have to use a lot of memory...
+  Result := 0;
+  LBytesPtr := PAnsiChar(Bytes);
   LByteCount := ByteCount;
-  LResult := 0;
-  //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
-  //while in FreePascal's libc and our IdIconv units define it as a pSize_t
-    {$IFDEF KYLIX}
-  Result := iconv(FToUTF16, @LBytes, @LByteCount, nil, LResult);
-    {$ELSE}
-  Result := iconv(FToUTF16, @LBytes, @LByteCount, nil, @LResult);
-    {$ENDIF}
+  while LByteCount > 0 do
+  begin
+    LCharsPtr = @LBuffer[0];
+    LCharsSize := SizeOf(LChars);
+    //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
+    //while in FreePascal's libc and our IdIconv units define it as a pSize_t
+    if iconv(FToUTF16, @LBytesPtr, @LByteCount, @LCharsPtr, {$IFNDEF KYLIX}@{$ENDIF}LCharsSize) = iconv_t(-1) then
+    begin
+      Result := 0;
+      Exit;
+    end;
+    // LBufferCount was decremented by the number of bytes stored in the output buffer
+    Inc(Result, (SizeOf(LChars)-LCharsSize) div SizeOf(WideChar));
+  end;
   {$ELSE}
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(Bytes), ByteCount, nil, 0);
@@ -2060,16 +2103,24 @@ function TIdMBCSEncoding.GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWide
   CharCount: Integer): Integer;
 {$IFDEF USE_ICONV}
 var
-  LBytes, LChars: PAnsiChar;
-  LByteCount, LCharCount: size_t;
+  LBytesPtr, LCharsPtr: PAnsiChar;
+  LByteCount, LCharsSize, LMaxCharsSize: size_t;
 {$ENDIF}
 begin
   {$IFDEF USE_ICONV}
-  LBytes := PAnsiChar(Bytes);
+  Result := 0;
+  LBytesPtr := PAnsiChar(Bytes);
   LByteCount := ByteCount;
-  LChars := PAnsiChar(Chars);
-  LCharCount := CharCount * SizeOf(WideChar);
-  Result := iconv(FToUTF16, @LBytes, @LByteCount, @LChars, @LCharCount);
+  LCharsPtr := PAnsiChar(Chars);
+  LMaxCharsSize := CharCount * SizeOf(WideChar);
+  LCharsSize := LMaxCharsSize;
+  //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
+  //while in FreePascal's libc and our IdIconv units define it as a pSize_t
+  if iconv(FToUTF16, @LBytesPtr, @LByteCount, @LCharsPtr, {$IFNDEF KYLIX}@{$ENDIF}LCharsSize) <> iconv_t(-1) then
+  begin
+    // LCharCount was decremented by the number of bytes stored in the output buffer
+    Inc(Result, (LMaxCharsSize-LCharsSize) div SizeOf(WideChar));
+  end;
   {$ELSE}
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(Bytes), ByteCount, Chars, CharCount);
@@ -3378,6 +3429,17 @@ begin
     Result := ATrue;
   end else begin
     Result := AFalse;
+  end;
+end;
+
+function iif(const AEncoding, ADefEncoding: TIdTextEncoding; ADefEncodingType: IdAnsiEncodingType = encASCII): TIdTextEncoding;
+{$IFDEF USE_INLINE}inline;{$ENDIF}
+begin
+  Result := AEncoding;
+  if Result = nil then
+  begin
+    Result := ADefEncoding;
+    EnsureEncoding(Result, ADefEncodingType);
   end;
 end;
 
