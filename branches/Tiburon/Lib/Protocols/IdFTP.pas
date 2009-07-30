@@ -661,6 +661,7 @@ will chop off a connection instead of closing it causing TIdFTP to wait forever 
   DEF_Id_FTP_UseHOST = True;
   DEF_Id_FTP_PassiveUseControlHost = False;
   DEF_Id_FTP_AutoIssueFEAT = True;
+  DEF_Id_FTP_AutoLogin = True;
 
 type
   //Added by SP
@@ -969,7 +970,6 @@ type
     //listed in the FEAT reply.
     function IsServerMDTZAndListTForm : Boolean;
     //
-    property AutoIssueFEAT : Boolean read FAutoIssueFEAT write FAutoIssueFEAT default DEF_Id_FTP_AutoIssueFEAT;
     property SupportsVerification : Boolean read GetSupportsVerification;
     property CanResume: Boolean read ResumeSupported;
     property DirectoryListing: TIdFTPListItems read GetDirectoryListing;
@@ -988,7 +988,8 @@ type
     {$IFDEF DOTNET_2_OR_ABOVE}
     property IPVersion;
     {$ENDIF}
-    property AutoLogin: Boolean read FAutoLogin write FAutoLogin;
+    property AutoIssueFEAT : Boolean read FAutoIssueFEAT write FAutoIssueFEAT default DEF_Id_FTP_AutoIssueFEAT;
+    property AutoLogin: Boolean read FAutoLogin write FAutoLogin default DEF_Id_FTP_AutoLogin;
     // This is an object that can compress and decompress FTP Deflate encoding
     property Compressor : TIdZLibCompressorBase read FCompressor write SetCompressor;
     property Host;
@@ -1103,7 +1104,7 @@ procedure TIdFTP.InitComponent;
 begin
   inherited InitComponent;
   //
-  FAutoLogin := True;
+  FAutoLogin := DEF_Id_FTP_AutoLogin;
   FRegularProtPort := IdPORT_FTP;
   FImplicitTLSProtPort := IdPORT_ftps;
   //
@@ -1225,11 +1226,11 @@ begin
     // whatever ftp.microsoft.com is running returns 504.
     if UseHOST then begin
       if FHost = Socket.Binding.PeerIP then begin
-        IOHandler.WriteLn('HOST [' + FHost + ']');
+        LBuf := 'HOST [' + FHost + ']';
       end else begin
-        IOHandler.WriteLn('HOST ' + FHost);
+        LBuf := 'HOST ' + FHost;
       end;
-      if GetResponse = 220 then begin
+      if SendCmd(LBuf) = 220 then begin
         FGreeting.Assign(LastCmdResult);
       end;
     end;
@@ -1751,12 +1752,11 @@ begin
         if AResume then begin
           Self.SendCmd('REST ' + IntToStr(ADest.Position), [350]);   {do not localize}
         end;
-        Self.IOHandler.WriteLn(ACommand);
         // APR: Ericsson Switch FTP
         //
         // RLebeau: some servers send 450 when no files are
         // present, so do not read the stream in that case
-        if Self.GetResponse([125, 150, 154, 450]) <> 450 then
+        if Self.SendCmd(ACommand, [125, 150, 154, 450]) <> 450 then
         begin
           if (FDataPortProtection = ftpdpsPrivate) then begin
             TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).Passthrough := False;
@@ -1943,7 +1943,7 @@ var
 begin
   LDestFileName := ADestFile;
   if LDestFileName = '' then begin
-   LDestFileName := ExtractFileName(ASourceFile);
+    LDestFileName := ExtractFileName(ASourceFile);
   end;
   LSourceStream := TIdReadFileNonExclusiveStream.Create(ASourceFile);
   try
