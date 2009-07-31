@@ -2002,18 +2002,18 @@ begin
   {$IFDEF USE_ICONV}
   // RLebeau: iconv() does not allow for querying a pre-calculated byte size
   // for the input like Microsoft does, so have to determine the max bytes
-  // by actually encoding the Unicode data.  We'll encode to a local buffer
-  // so we don't have to use a lot of memory...
+  // by actually encoding the Unicode data to a real buffer.  We'll encode
+  // to a small local buffer so we don't have to use a lot of memory...
   Result := 0;
   LCharsPtr := PAnsiChar(Chars);
   LCharCount := CharCount * SizeOf(WideChar);
-  while LCountCount > 0 do
+  while LCharCount > 0 do
   begin
-    LBytesPtr = PAnsiChar(@LBytes[0]);
+    LBytesPtr := PAnsiChar(@LBytes[0]);
     LByteCount := SizeOf(LBytes);
     //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
     //while in FreePascal's libc and our IdIconv units define it as a pSize_t
-    if iconv(FFromUTF16, @LCharsPtr, @LCountCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) = iconv_t(-1) then
+    if iconv(FFromUTF16, @LCharsPtr, @LCharCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) = iconv_t(-1) then
     begin
       Result := 0;
       Exit;
@@ -2046,11 +2046,12 @@ begin
   LByteCount := ByteCount;
   //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
   //while in FreePascal's libc and our IdIconv units define it as a pSize_t
-  if iconv(FFromUTF16, @LCharsPtr, @LCharCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) <> iconv_t(-1) then
+  if iconv(FFromUTF16, @LCharsPtr, @LCharCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) = iconv_t(-1) then
   begin
-    // LByteCount was decremented by the number of bytes stored in the output buffer
-    Result := ByteCount-LByteCount;
+    Exit;
   end;
+  // LByteCount was decremented by the number of bytes stored in the output buffer
+  Result := ByteCount-LByteCount;
   {$ELSE}
     {$IFDEF  WIN32_OR_WIN64_OR_WINCE}
   Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags, Chars, CharCount, PAnsiChar(Bytes), ByteCount, nil, nil);
@@ -2071,14 +2072,14 @@ begin
   {$IFDEF USE_ICONV}
   // RLebeau: iconv() does not allow for querying a pre-calculated character count
   // for the input like Microsoft does, so have to determine the max characters
-  // by actually encoding the Ansi data.  We'll encode to a local buffer so we
-  // don't have to use a lot of memory...
+  // by actually encoding the Ansi data to a real buffer.  We'll encode to a
+  // small local buffer so we don't have to use a lot of memory...
   Result := 0;
   LBytesPtr := PAnsiChar(Bytes);
   LByteCount := ByteCount;
   while LByteCount > 0 do
   begin
-    LCharsPtr = @LBuffer[0];
+    LCharsPtr = @LChars[0];
     LCharsSize := SizeOf(LChars);
     //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
     //while in FreePascal's libc and our IdIconv units define it as a pSize_t
@@ -2116,11 +2117,12 @@ begin
   LCharsSize := LMaxCharsSize;
   //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
   //while in FreePascal's libc and our IdIconv units define it as a pSize_t
-  if iconv(FToUTF16, @LBytesPtr, @LByteCount, @LCharsPtr, {$IFNDEF KYLIX}@{$ENDIF}LCharsSize) <> iconv_t(-1) then
+  if iconv(FToUTF16, @LBytesPtr, @LByteCount, @LCharsPtr, {$IFNDEF KYLIX}@{$ENDIF}LCharsSize) = iconv_t(-1) then
   begin
-    // LCharCount was decremented by the number of bytes stored in the output buffer
-    Inc(Result, (LMaxCharsSize-LCharsSize) div SizeOf(WideChar));
+    Exit;
   end;
+  // LCharCount was decremented by the number of bytes stored in the output buffer
+  Inc(Result, (LMaxCharsSize-LCharsSize) div SizeOf(WideChar));
   {$ELSE}
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(Bytes), ByteCount, Chars, CharCount);
@@ -2243,7 +2245,9 @@ function TIdLEUTF16Encoding.GetBytes(Chars: PWideChar; CharCount: Integer;
 {$IFDEF ENDIAN_BIG}
 var
   I: Integer;
+{$ENDIF}
 begin
+  {$IFDEF ENDIAN_BIG}
   for I := CharCount - 1 downto 0 do
   begin
     Bytes^ := Hi(Word(Chars^));
@@ -2253,12 +2257,11 @@ begin
     Inc(Chars);
   end;
   Result := CharCount * SizeOf(WideChar);
-{$ELSE}
-begin
+  {$ELSE}
   Result := CharCount * SizeOf(WideChar);
   Move(Chars^, Bytes^, Result);
+  {$ENDIF}
 end;
-{$ENDIF}
 
 function TIdLEUTF16Encoding.GetCharCount(Bytes: PByte; ByteCount: Integer): Integer;
 begin
@@ -2271,7 +2274,9 @@ function TIdLEUTF16Encoding.GetChars(Bytes: PByte; ByteCount: Integer;
 var
   P: PByte;
   I: Integer;
+{$ENDIF}
 begin
+  {$IFDEF ENDIAN_BIG}
   P := Bytes;
   Inc(P);
   for I := 0 to CharCount - 1 do
@@ -2282,13 +2287,11 @@ begin
     Inc(Chars);
   end;
   Result := CharCount;
-end;
-{$ELSE}
-begin
+  {$ELSE}
   Result := ByteCount div SizeOf(WideChar);
   Move(Bytes^, Chars^, Result * SizeOf(WideChar));
+  {$ENDIF}
 end;
-{$ENDIF}
 
 function TIdLEUTF16Encoding.GetMaxByteCount(CharCount: Integer): Integer;
 begin
@@ -2314,7 +2317,9 @@ function TIdBEUTF16Encoding.GetBytes(Chars: PWideChar; CharCount: Integer;
 {$IFDEF ENDIAN_LITTLE}
 var
   I: Integer;
+{$ENDIF}
 begin
+  {$IFDEF ENDIAN_LITTLE}
   for I := CharCount - 1 downto 0 do
   begin
     Bytes^ := Hi(Word(Chars^));
@@ -2324,26 +2329,21 @@ begin
     Inc(Chars);
   end;
   Result := CharCount * SizeOf(WideChar);
-end;
-{$ELSE}
-begin
+  {$ELSE}
   Result := CharCount * SizeOf(WideChar);
   Move(Chars^, Bytes^, Result);
+  {$ENDIF}
 end;
-{$ENDIF}
 
 function TIdBEUTF16Encoding.GetChars(Bytes: PByte; ByteCount: Integer;
   Chars: PWideChar; CharCount: Integer): Integer;
-{$IFDEF ENDIAN_BIG}
-begin
-  Result := ByteCount div SizeOf(WideChar);
-  Move(Bytes^, Chars^, Result * SizeOf(WideChar));
-end;
-{$ELSE}
+{$IFDEF ENDIAN_LITTLE}
 var
   P: PByte;
   I: Integer;
+{$ENDIF}
 begin
+  {$IFDEF ENDIAN_LITTLE}
   P := Bytes;
   Inc(P);
   for I := 0 to CharCount - 1 do
@@ -2354,8 +2354,11 @@ begin
     Inc(Chars);
   end;
   Result := CharCount;
+  {$ELSE}
+  Result := ByteCount div SizeOf(WideChar);
+  Move(Bytes^, Chars^, Result * SizeOf(WideChar));
+  {$ENDIF}
 end;
-{$ENDIF}
 
 function TIdBEUTF16Encoding.GetPreamble: TIdBytes;
 begin
