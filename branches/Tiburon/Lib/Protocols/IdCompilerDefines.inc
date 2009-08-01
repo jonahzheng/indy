@@ -280,7 +280,10 @@
     {$DEFINE WIDGET_VCL}
     {$DEFINE VCL_60_PLUS}
   {$ENDIF}
-  {$DEFINE HAS_CLASSPROPERTIES}
+  {$IFNDEF CBUILDER}
+    // class properties are broken in C++Builder 2007, causing AVs at compile-time
+    {$DEFINE HAS_CLASSPROPERTIES}
+  {$ENDIF}
   {$DEFINE HAS_DEPRECATED}
   {$DEFINE HAS_REMOVEFREENOTIFICATION}
 {$ENDIF}
@@ -310,7 +313,10 @@
     {$DEFINE VCL_2007}
     {$DEFINE DELPHI_2007}
   {$ENDIF}
-  {$DEFINE HAS_CLASSPROPERTIES}
+  {$IFNDEF CBUILDER}
+    // class properties are broken in C++Builder 2007, causing AVs at compile-time
+    {$DEFINE HAS_CLASSPROPERTIES}
+  {$ENDIF}
   {$DEFINE HAS_DEPRECATED}
   {$DEFINE HAS_REMOVEFREENOTIFICATION}
 {$ENDIF}
