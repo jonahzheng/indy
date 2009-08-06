@@ -635,14 +635,15 @@ procedure TIdPOP3Server.CommandSTLS(aCmd: TIdCommand);
 begin
   if (aCmd.Context.Connection.IOHandler is TIdSSLIOHandlerSocketBase) and (FUseTLS in ExplicitTLSVals) then begin
     if TIdPOP3ServerContext(aCmd.Context).UsingTLS then begin // we are already using TLS
-      aCmd.Reply.SetReply(ST_ERR, RSPOP3SvrNotPermittedWithTLS);    {Do not Localize}
+      aCmd.Reply.SetReply(ST_ERR, RSPOP3SvrNotPermittedWithTLS);
       Exit;
     end;
     if TIdPOP3ServerContext(aCmd.Context).Authenticated then begin //STLS only allowed in auth-state
-      aCmd.Reply.SetReply(ST_ERR, RSPOP3SvrNotInThisState);    {Do not Localize}
+      aCmd.Reply.SetReply(ST_ERR, RSPOP3SvrNotInThisState);
       Exit;
     end;
     aCmd.Reply.SetReply(ST_OK, RSPOP3SvrbeginTLSNegotiation);
+    aCmd.SendReply;
     TIdSSLIOHandlerSocketBase(aCmd.Context.Connection.IOHandler).Passthrough := False;
   end else begin
     aCmd.Reply.SetReply(ST_ERR, IndyFormat(RSPOP3SVRNotHandled, ['STLS']));    {do not localize}
@@ -656,7 +657,9 @@ begin
   // RLebeau: in case no capabilities are specified, the terminating '.' still has to be sent.
   aCmd.SendEmptyResponse := True;
 
-  if (aCmd.Context.Connection.IOHandler is TIdSSLIOHandlerSocketBase) and (FUseTLS in ExplicitTLSVals) then
+  if (aCmd.Context.Connection.IOHandler is TIdSSLIOHandlerSocketBase) and
+    TIdSSLIOHandlerSocketBase(aCmd.Context.Connection.IOHandler).Passthrough and
+    (FUseTLS in ExplicitTLSVals) then
   begin
     aCmd.Response.Add('STLS'); {do not localize}
   end;
