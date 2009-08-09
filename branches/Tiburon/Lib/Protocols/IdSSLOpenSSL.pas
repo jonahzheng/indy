@@ -280,7 +280,7 @@ type
     //fVerifyFile,
     fVerifyDirs, fCipherList: AnsiString;
     procedure AssignTo(ASource: TPersistent); override;
-    procedure SetSSLVersions(const AValue : TIdSSLVersions );
+    procedure SetSSLVersions(const AValue : TIdSSLVersions);
     procedure SetMethod(const AValue : TIdSSLVersion);
   public
     constructor Create;
@@ -288,7 +288,7 @@ type
     property RootCertFile: String read fsRootCertFile write fsRootCertFile;
     property CertFile: String read fsCertFile write fsCertFile;
     property KeyFile: String read fsKeyFile write fsKeyFile;
-    property Method: TIdSSLVersion read fMethod write fMethod default DEF_SSLVERSION;
+    property Method: TIdSSLVersion read fMethod write SetMethod default DEF_SSLVERSION;
     property SSLVersions : TIdSSLVersions read fSSLVersions write SetSSLVersions default DEF_SSLVERSIONS;
     property Mode: TIdSSLMode read fMode write fMode;
     property VerifyMode: TIdSSLVerifyModeSet read fVerifyMode write fVerifyMode;
@@ -1166,21 +1166,23 @@ end;
 procedure TIdSSLOptions.SetSSLVersions(const AValue: TIdSSLVersions);
 begin
   fSSLVersions := AValue;
-  Exclude(fSSLVersions, sslvSSLv23);
-  if (fSSLVersions * [sslvSSLv3,sslvTLSv1]) = [sslvSSLv2] then
-  begin
+  if fSSLVersions = [sslvSSLv2] then begin
     fMethod := sslvSSLv2;
   end
-  else if (fSSLVersions * [sslvSSLv2,sslvTLSv1]) = [sslvSSLv3] then
-  begin
+  else if fSSLVersions = [sslvSSLv3] then begin
     fMethod := sslvSSLv3;
   end
-  else if (fSSLVersions * [sslvSSLv2,sslvSSLv3]) = [sslvTLSv1] then
-  begin
+  else if fSSLVersions = [sslvTLSv1] then begin
     fMethod := sslvTLSv1;
   end
   else begin
     fMethod := sslvSSLv23;
+    if sslvSSLv23 in fSSLVersions then begin
+      Exclude(fSSLVersions, sslvSSLv23);
+      if fSSLVersions = [] then begin
+        fSSLVersions := [sslvSSLv2,sslvSSLv3,sslvTLSv1];
+      end;
+    end;
   end;
 end;
 
@@ -1686,13 +1688,13 @@ begin
   end;
   //set SSL Versions we will use
   if not (sslvSSLv2 in SSLVersions) then begin
-     IdSslCtxSetOptions(fContext, OPENSSL_SSL_OP_NO_SSLv2);
+    IdSslCtxSetOptions(fContext, OPENSSL_SSL_OP_NO_SSLv2);
   end;
   if not (sslvSSLv3 in SSLVersions) then begin
-     IdSslCtxSetOptions(fContext, OPENSSL_SSL_OP_NO_SSLv3);
+    IdSslCtxSetOptions(fContext,OPENSSL_SSL_OP_NO_SSLv3);
   end;
   if not (sslvTLSv1 in SSLVersions) then begin
-    IdSslCtxSetOptions(fContext, OPENSSL_SSL_OP_NO_TLSv1);
+    IdSslCtxSetOptions(fContext,OPENSSL_SSL_OP_NO_TLSv1);
   end;
   IdSslCtxSetMode(fContext,OPENSSL_SSL_MODE_AUTO_RETRY);
   // assign a password lookup routine
