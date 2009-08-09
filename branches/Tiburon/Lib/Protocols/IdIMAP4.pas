@@ -5664,6 +5664,20 @@ var
 const
   SContentType = 'Content-Type'; {do not localize}
 
+  procedure CaptureAndDecodeCharSet;
+  var
+    LMStream: TMemoryStream;
+  begin
+    LMStream := TMemoryStream.Create;
+    try
+      IOHandler.Capture(LMStream, LDelim, True, Indy8BitEncoding());
+      LMStream.Position := 0;
+      ReadStringsAsCharSet(LMStream, AMsg.Body, AMsg.CharSet);
+    finally
+      LMStream.Free;
+    end;
+  end;
+
   function ProcessTextPart(ADecoder: TIdMessageDecoder): TIdMessageDecoder;
   var
     LDestStream: TMemoryStream;
@@ -5759,7 +5773,7 @@ Begin
   end;                   {CC3: ...IMAP hack inserted lines end here}
   LMsgEnd := False;
   if AMsg.NoDecode then begin
-    IOHandler.Capture(AMsg.Body, LDelim);
+    CaptureAndDecodeCharSet;
   end else begin
     BeginWork(wmRead);
     try
