@@ -645,6 +645,21 @@ var
   LPreviousParentPart: integer;
   LEncoding: TIdTextEncoding;
 
+  // TODO - move this procedure into TIdIOHandler as a new Capture method.
+  procedure CaptureAndDecodeCharset(AByteEncoding: TIdTextEncoding);
+  var
+    LMStream: TMemoryStream;
+  begin
+    LMStream := TMemoryStream.Create;
+    try
+      IOHandler.Capture(LMStream, ADelim, True, AByteEncoding);
+      LMStream.Position := 0;
+      ReadStringsAsCharSet(LMStream, AMsg.Body, AMsg.CharSet);
+    finally
+      FreeAndNil(LMStream);
+    end;
+  end;
+
   {Only set AUseBodyAsTarget to True if you want the input stream stored in TIdMessage.Body
   instead of TIdText.Body: this happens with some single-part messages.}
   function ProcessTextPart(ADecoder: TIdMessageDecoder; AUseBodyAsTarget: Boolean): TIdMessageDecoder;
@@ -767,6 +782,13 @@ var
 
 begin
   LMsgEnd := False;
+
+  // RLebeau 08/09/09 - TIdNNTP.GetBody() calls TIdMessage.Clear() before then
+  // calling ReceiveBody(), thus the TIdMessage.ContentTransferEncoding value
+  // is not available for use below.  What is the best way to detect that so
+  // the user could be allowed to set up the IOHandler.DefStringEncoding
+  // beforehand?
+  
   case PosInStrArray(AMsg.ContentTransferEncoding, ['7bit', 'quoted-printable', 'base64', '8bit', 'binary'], False) of {do not localize}
     0..2: LEncoding := TIdTextEncoding.ASCII;
     3..4: LEncoding := Indy8BitEncoding();
@@ -780,7 +802,7 @@ begin
   BeginWork(wmRead);
   try
     if AMsg.NoDecode then begin
-      IOHandler.Capture(AMsg.Body, ADelim, True, LEncoding);
+      CaptureAndDecodeCharset(LEncoding);
     end else begin
       if (
        ((AMsg.Encoding = meMIME) and (AMsg.MIMEBoundary.Count > 0)) or
