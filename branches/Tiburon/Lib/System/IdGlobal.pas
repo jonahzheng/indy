@@ -1941,7 +1941,7 @@ begin
       iconv_close(FFromUTF16);
       FFromUTF16 := iconv_t(-1);
     end;
-    raise EIdException.CreateRes(@RSInvalidCharSet);
+    raise EIdException.CreateResFmt(@RSInvalidCharSet, [CharSet]);
   end;
 
   FMaxCharSize := GetByteCount(PWideChar(@cValue[0]), 2);
@@ -1982,7 +1982,7 @@ begin
     LError := not GetCPInfo(FCodePage, LCPInfo);
   end;
   if LError then begin
-    raise EIdException.CreateRes(@RSInvalidCodePage);
+    raise EIdException.CreateResFmt(@RSInvalidCodePage, [FCodePage]);
   end;
 
   FMaxCharSize := LCPInfo.MaxCharSize;

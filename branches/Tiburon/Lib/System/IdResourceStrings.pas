@@ -42,8 +42,8 @@ resourcestring
   RSByteIndexOutOfBounds = '%d';
 
 resourcestring
-  RSInvalidCodePage = 'Invalid codepage';
-  RSInvalidCharSet = 'Invalid character set';
+  RSInvalidCodePage = 'Invalid codepage (%d)';
+  RSInvalidCharSet = 'Invalid character set (%s)';
   //IdIconv
   {$IFDEF USE_ICONV_UNIT}
   RSIconvCallError = 'Error on call to Iconv library function %s';
