@@ -117,7 +117,7 @@ uses
 
 { TfrmSASLListEditorVCL }
 
-{$IFNDEF WIDGETLCL}
+{$IFNDEF WIDGET_LCL}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   {$R IdSASLListEditorForm.RES}
   {$ENDIF}
