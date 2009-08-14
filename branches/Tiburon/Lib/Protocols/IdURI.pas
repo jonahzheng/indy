@@ -158,14 +158,22 @@ begin
   if (AIndex >= Length(AStr)) or (AIndex < 0) then
     {$ENDIF}
   begin
+    {$IFDEF DOTNET}
+    raise EIdUTF16IndexOutOfRange.Create(RSUTF16IndexOutOfRange);
+    {$ELSE}
     raise EIdUTF16IndexOutOfRange.CreateRes(@RSUTF16IndexOutOfRange);
+    {$ENDIF}
   end;
   Result := 1;
   W := AStr[AIndex];
   if (W >= #$D800) and (W <= #$DFFF) then
   begin
     if W > #$DBFF then begin
+      {$IFDEF DOTNET}
+      raise EIdUTF16InvalidHighSurrogate.Create(RSUTF16InvalidHighSurrogate);
+      {$ELSE}
       raise EIdUTF16InvalidHighSurrogate.CreateRes(@RSUTF16InvalidHighSurrogate);
+      {$ENDIF}
     end;
     {$IFDEF STRING_IS_UNICODE}
     if AIndex = Length(AStr) then
@@ -173,11 +181,20 @@ begin
     if AIndex = (Length(AStr)-1) then
     {$ENDIF}
     begin
+      {$IFDEF DOTNET}
+      raise EIdUTF16MissingLowSurrogate.Create(RSUTF16MissingLowSurrogate);
+      {$ELSE}
       raise EIdUTF16MissingLowSurrogate.CreateRes(@RSUTF16MissingLowSurrogate);
+      {$ENDIF}
     end;
     W := AStr[AIndex+1];
     if (W < #$DC00) or (W > #$DFFF) then begin
+      {$IFDEF DOTNET}
+      raise EIdUTF16InvalidLowSurrogate.Create(RSUTF16InvalidLowSurrogate);
+
+      {$ELSE}
       raise EIdUTF16InvalidLowSurrogate.CreateRes(@RSUTF16InvalidLowSurrogate);
+      {$ENDIF}
     end;
     Inc(Result);
   end;
@@ -201,9 +218,10 @@ begin
   // Normalize the directory delimiters to follow the UNIX syntax
   i := 1;
   while i <= Length(APath) do begin
+    {$IFDEF STRING_IS_ANSI}
     if IsLeadChar(APath[i]) then begin
       inc(i, 2)
-    end else if APath[i] = '\' then begin    {Do not Localize}
+    end else {$ENDIF} if APath[i] = '\' then begin    {Do not Localize}
       APath[i] := '/';    {Do not Localize}
       inc(i, 1);
     end else begin
