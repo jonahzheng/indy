@@ -607,10 +607,12 @@ begin
   Result := '';    {Do not Localize}
   while LPos <= LLineLen do begin
     LCurChar := ALine[LPos];
+    {$IFDEF STRING_IS_ANSI}
     if IsLeadChar(LCurChar) then begin
       Inc(LPos);
       Inc(LCol);
     end else begin //if CurChar in LeadBytes then
+    {$ENDIF}
       if LCurChar = ABreakStr[1] then begin
         if LQuoteChar = ' ' then begin   {Do not Localize}
           LExistingBreak := TextIsSame(ABreakStr, Copy(ALine, LPos, LBreakLen));
@@ -636,7 +638,9 @@ begin
           end;
         end;
       end;
+    {$IFDEF STRING_IS_ANSI}
     end;
+    {$ENDIF}
     Inc(LPos);
     Inc(LCol);
     if not (CharIsInSet(LQuoteChar, 1, QuoteChars)) and
@@ -3365,7 +3369,7 @@ begin
   Result := GIdDefaultCharSet;
   {$ENDIF}
   {$IFDEF DOTNET}
-  Result := idcsUNICODE_1_1;
+  Result := idcs_UNICODE_1_1;
   // not a particular Unicode encoding - just unicode in general
   // i.e. DotNet native string is 2 byte Unicode, we do not concern ourselves
   // with Byte order. (though we have to concern ourselves once we start
