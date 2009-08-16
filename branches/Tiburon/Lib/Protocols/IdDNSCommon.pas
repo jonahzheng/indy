@@ -592,7 +592,7 @@ type
 
 {$IFDEF STRING_IS_UNICODE}
 function DomainNameToDNSStr(const ADomain : AnsiString): TIdBytes; overload;
-function DomainNameToDNSStr(const ADomain : UnicodeString): TIdBytes; overload;
+function DomainNameToDNSStr(const ADomain : TIdUnicodeString): TIdBytes; overload;
 {$ELSE}
 function DomainNameToDNSStr(const ADomain : String): TIdBytes;
 {$ENDIF}
@@ -638,10 +638,10 @@ end;
 function DomainNameToDNSStr(const ADomain : AnsiString): TIdBytes;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  Result := DomainNameToDNSStr(UnicodeString(ADomain));
+  Result := DomainNameToDNSStr(TIdUnicodeString(ADomain));
 end;
 
-function DomainNameToDNSStr(const ADomain : UnicodeString): TIdBytes;
+function DomainNameToDNSStr(const ADomain : TIdUnicodeString): TIdBytes;
 {$ELSE}
 function DomainNameToDNSStr(const ADomain : string): TIdBytes;
 {$ENDIF}
