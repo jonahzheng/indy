@@ -159,9 +159,9 @@ begin
     {$ENDIF}
   begin
     {$IFDEF DOTNET}
-    raise EIdUTF16IndexOutOfRange.Create(RSUTF16IndexOutOfRange);
+    raise EIdUTF16IndexOutOfRange.Create(IndyFormat(RSUTF16IndexOutOfRange, [AIndex, Length(AStr)]));
     {$ELSE}
-    raise EIdUTF16IndexOutOfRange.CreateRes(@RSUTF16IndexOutOfRange);
+    raise EIdUTF16IndexOutOfRange.CreateResFmt(@RSUTF16IndexOutOfRange, [AIndex, Length(AStr)]);
     {$ENDIF}
   end;
   Result := 1;
@@ -170,9 +170,9 @@ begin
   begin
     if W > #$DBFF then begin
       {$IFDEF DOTNET}
-      raise EIdUTF16InvalidHighSurrogate.Create(RSUTF16InvalidHighSurrogate);
+      raise EIdUTF16InvalidHighSurrogate.Create(IndyFormat(RSUTF16InvalidHighSurrogate, [AIndex]));
       {$ELSE}
-      raise EIdUTF16InvalidHighSurrogate.CreateRes(@RSUTF16InvalidHighSurrogate);
+      raise EIdUTF16InvalidHighSurrogate.CreateResFmt(@RSUTF16InvalidHighSurrogate, [AIndex]);
       {$ENDIF}
     end;
     {$IFDEF STRING_IS_UNICODE}
@@ -190,10 +190,9 @@ begin
     W := AStr[AIndex+1];
     if (W < #$DC00) or (W > #$DFFF) then begin
       {$IFDEF DOTNET}
-      raise EIdUTF16InvalidLowSurrogate.Create(RSUTF16InvalidLowSurrogate);
-
+      raise EIdUTF16InvalidLowSurrogate.Create(IndyFormat(RSUTF16InvalidLowSurrogate, [AIndex+1]));
       {$ELSE}
-      raise EIdUTF16InvalidLowSurrogate.CreateRes(@RSUTF16InvalidLowSurrogate);
+      raise EIdUTF16InvalidLowSurrogate.CreateResFmt(@RSUTF16InvalidLowSurrogate, [AIndex+1]);
       {$ENDIF}
     end;
     Inc(Result);
