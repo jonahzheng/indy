@@ -344,7 +344,7 @@ end;
 
 procedure TIdHTTPProxyServer.CommandCONNECT(ASender: TIdCommand);
 var
-  LRemoteHost, S: string;
+  LRemoteHost: string;
   LContext: TIdHTTPProxyServerContext;
   LReadList, LDataAvailList: TIdSocketList;
   LClientToServerStream, LServerToClientStream: TStream;
