@@ -323,7 +323,7 @@ end;
 
 function TIdMessageDecoderMIME.ReadBody(ADestStream: TStream; var VMsgEnd: Boolean): TIdMessageDecoder;
 var
-  LContentTransferEncoding: string;
+  LContentType, LContentTransferEncoding: string;
   LDecoder: TIdDecoder;
   LLine: string;
   LBuffer: string;  //Needed for binhex4 because cannot decode line-by-line.
@@ -335,8 +335,10 @@ begin
   VMsgEnd := False;
   Result := nil;
   if FBodyEncoded then begin
+    LContentType := TIdMessage(Owner).ContentType;
     LContentTransferEncoding := TIdMessage(Owner).ContentTransferEncoding;
   end else begin
+    LContentType := FHeaders.Values['Content-Type']; {Do not Localize}
     LContentTransferEncoding := FHeaders.Values['Content-Transfer-Encoding']; {Do not Localize}
     if LContentTransferEncoding = '' then begin
       if TextIsSame(ExtractHeaderItem(FHeaders.Values['Content-Type']), 'application/mac-binhex40') then begin  {Do not Localize}
@@ -344,6 +346,24 @@ begin
       end;
     end;
   end;
+
+  // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
+  // "If an entity is of type "multipart" the Content-Transfer-Encoding is not
+  // permitted to have any value other than "7bit", "8bit" or "binary"."
+  //
+  // However, came across one message where the "Content-Type" was set to
+  // "multipart/related" and the "Content-Transfer-Encoding" was set to
+  // "quoted-printable".  Outlook and Thunderbird were apparently able to parse
+  // the message correctly, but Indy was not.  So let's check for that scenario
+  // and ignore illegal "Content-Transfer-Encoding" values if present...
+
+  if TextStartsWith(LContentType, MIMEGenericMultiPart) and (LContentTransferEncoding <> '') then {do not localize}
+  begin
+    if PosInStrArray(LContentTransferEncoding, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
+      LContentTransferEncoding := '';
+    end;
+  end;
+
   if TextIsSame(LContentTransferEncoding, 'base64') then begin {Do not Localize}
     LDecoder := TIdDecoderMIMELineByLine.Create(nil);
   end else if TextIsSame(LContentTransferEncoding, 'quoted-printable') then begin {Do not Localize}
@@ -561,7 +581,7 @@ begin
     s := FHeaders.Values['Content-Type'];    {do not localize}
     //CC: Need to detect on "multipart" rather than boundary, because only the
     //"multipart" bit will be visible later...
-    if TextStartsWith(s, 'multipart/') then begin  {do not localize}
+    if TextStartsWith(s, MIMEGenericMultiPart) then begin  {do not localize}
       ABoundary := ExtractHeaderSubItem(s, 'boundary');  {do not localize}
       if Owner is TIdMessage then begin
         if Length(ABoundary) > 0 then begin

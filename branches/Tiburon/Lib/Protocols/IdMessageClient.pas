@@ -707,6 +707,22 @@ var
         LTxt.Filename := ADecoder.Filename;
         if TextStartsWith(LTxt.ContentType, 'multipart/') then begin {do not localize}
           LTxt.ParentPart := LPreviousParentPart;
+
+          // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
+          // "If an entity is of type "multipart" the Content-Transfer-Encoding is not
+          // permitted to have any value other than "7bit", "8bit" or "binary"."
+          //
+          // However, came across one message where the "Content-Type" was set to
+          // "multipart/related" and the "Content-Transfer-Encoding" was set to
+          // "quoted-printable".  Outlook and Thunderbird were apparently able to parse
+          // the message correctly, but Indy was not.  So let's check for that scenario
+          // and ignore illegal "Content-Transfer-Encoding" values if present...
+
+          if LTxt.ContentTransfer <> '' then begin
+            if PosInStrArray(LTxt.ContentTransfer, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
+              LTxt.ContentTransfer := '';
+            end;
+          end;
         end else begin
           LTxt.ParentPart := LParentPart;
         end;
@@ -765,6 +781,22 @@ var
         LAttachment.Filename := ADecoder.Filename;
         if TextStartsWith(LAttachment.ContentType, 'multipart/') then begin  {do not localize}
           LAttachment.ParentPart := LPreviousParentPart;
+
+          // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
+          // "If an entity is of type "multipart" the Content-Transfer-Encoding is not
+          // permitted to have any value other than "7bit", "8bit" or "binary"."
+          //
+          // However, came across one message where the "Content-Type" was set to
+          // "multipart/related" and the "Content-Transfer-Encoding" was set to
+          // "quoted-printable".  Outlook and Thunderbird were apparently able to parse
+          // the message correctly, but Indy was not.  So let's check for that scenario
+          // and ignore illegal "Content-Transfer-Encoding" values if present...
+
+          if LAttachment.ContentTransfer <> '' then begin
+            if PosInStrArray(LAttachment.ContentTransfer, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
+              LAttachment.ContentTransfer := '';
+            end;
+          end;
         end else begin
           LAttachment.ParentPart := LParentPart;
         end;
@@ -789,6 +821,23 @@ begin
   // the user could be allowed to set up the IOHandler.DefStringEncoding
   // beforehand?
   
+  // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
+  // "If an entity is of type "multipart" the Content-Transfer-Encoding is not
+  // permitted to have any value other than "7bit", "8bit" or "binary"."
+  //
+  // However, came across one message where the "Content-Type" was set to
+  // "multipart/related" and the "Content-Transfer-Encoding" was set to
+  // "quoted-printable".  Outlook and Thunderbird were apparently able to parse
+  // the message correctly, but Indy was not.  So let's check for that scenario
+  // and ignore illegal "Content-Transfer-Encoding" values if present...
+
+  if TextStartsWith(AMsg.ContentType, 'multipart/') and (AMsg.ContentTransferEncoding <> '') then {do not localize}
+  begin
+    if PosInStrArray(AMsg.ContentTransferEncoding, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
+      AMsg.ContentTransferEncoding := '';
+    end;
+  end;
+
   case PosInStrArray(AMsg.ContentTransferEncoding, ['7bit', 'quoted-printable', 'base64', '8bit', 'binary'], False) of {do not localize}
     0..2: LEncoding := TIdTextEncoding.ASCII;
     3..4: LEncoding := Indy8BitEncoding();
@@ -799,6 +848,7 @@ begin
     // regardless of what the Content-Type header field actually says."
     LEncoding := Indy8BitEncoding();
   end;
+
   BeginWork(wmRead);
   try
     if AMsg.NoDecode then begin
@@ -920,7 +970,25 @@ var
     if ATextPart.ContentType = '' then begin
       ATextPart.ContentType := 'text/plain'; {do not localize}
     end;
-    if ATextPart.ContentTransfer = '' then begin
+
+    // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
+    // "If an entity is of type "multipart" the Content-Transfer-Encoding is not
+    // permitted to have any value other than "7bit", "8bit" or "binary"."
+    //
+    // However, came across one message where the "Content-Type" was set to
+    // "multipart/related" and the "Content-Transfer-Encoding" was set to
+    // "quoted-printable".  Outlook and Thunderbird were apparently able to parse
+    // the message correctly, but Indy was not.  So let's check for that scenario
+    // and ignore illegal "Content-Transfer-Encoding" values if present...
+
+    if TextStartsWith(ATextPart.ContentType, 'multipart/') then begin {do not localize}
+      if ATextPart.ContentTransfer <> '' then begin
+        if PosInStrArray(ATextPart.ContentTransfer, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
+          ATextPart.ContentTransfer := '';
+        end;
+      end;
+    end
+    else if ATextPart.ContentTransfer = '' then begin
       ATextPart.ContentTransfer := 'quoted-printable'; {do not localize}
     end
     else if (PosInStrArray(ATextPart.ContentTransfer, ['quoted-printable', 'base64'], False) = -1) {do not localize}
@@ -928,6 +996,7 @@ var
     begin
       ATextPart.ContentTransfer := '8bit';                    {do not localize}
     end;
+
     if ATextPart.ContentDisposition = '' then begin
       ATextPart.ContentDisposition := 'inline'; {do not localize}
     end;
@@ -946,7 +1015,10 @@ var
       IOHandler.WriteLn;
     end;
 
-    IOHandler.WriteLn(SContentTransferEncoding + ': ' + ATextPart.ContentTransfer); {do not localize}
+    if ATextPart.ContentTransfer <> '' then begin
+      IOHandler.WriteLn(SContentTransferEncoding + ': ' + ATextPart.ContentTransfer); {do not localize}
+    end;
+
     IOHandler.Write('Content-Disposition: ' + ATextPart.ContentDisposition); {do not localize}
     if LFileName <> '' then begin
       IOHandler.WriteLn(';'); {do not localize}
