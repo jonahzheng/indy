@@ -211,6 +211,8 @@ type
     procedure AddObject(const AFieldName, AContentType, ACharset: string; AFileData: TObject; const AFileName: string = '');
     procedure AddFile(const AFieldName, AFileName, AContentType: string);
 
+    procedure Clear;
+    
     property Boundary: string read FBoundary;
     property RequestContentType: string read FRequestContentType;
   end;
@@ -330,6 +332,17 @@ begin
   end;
 
   FSize := FSize + LItem.FieldSize;
+end;
+
+procedure TIdMultiPartFormDataStream.Clear;
+begin
+  FInitialized := False;
+  FFields.Clear;
+  FInputStream := nil;
+  FCurrentItem := 0;
+  FPosition := 0;
+  FSize := 0;
+  SetLength(FInternalBuffer, 0);
 end;
 
 function TIdMultiPartFormDataStream.GenerateUniqueBoundary: string;
