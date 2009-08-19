@@ -70,7 +70,7 @@ implementation
 uses
   //facilitate inlining only.
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-    {$IFDEF USE_INLINE}
+    {$IFDEF VCL_2009_OR_ABOVE}
   Windows,
     {$ENDIF}
   {$ENDIF}
