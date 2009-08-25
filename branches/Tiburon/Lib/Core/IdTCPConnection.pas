@@ -603,8 +603,21 @@ procedure TIdTCPConnection.SetIntercept(AValue: TIdConnectionIntercept);
 begin
   if AValue <> FIntercept then
   begin
-    if Assigned(IOHandler) and Assigned(IOHandler.Intercept) and Assigned(AValue) and (AValue <> IOHandler.Intercept) then begin
-      EIdException.Toss(RSInterceptIsDifferent);
+    // RLebeau 8/25/09 - normally, short-circuit logic should skip all subsequent
+    // evaluations in a multi-condition statement once one of the conditions
+    // evaluates to False.  However, a user just ran into a situation where that
+    // was not the case!  It caused an AV in SetIOHandler() further below when
+    // AValue was nil (from Destroy() further above) because Assigned(AValue.Intercept)
+    // was still being evaluated even though Assigned(AValue) was returning False.
+    // SetIntercept() is using the same kind of short-circuit logic here as well.
+    // Let's not rely on short-circuiting anymore, just to be on the safe side.
+    //    
+    // old code: if Assigned(IOHandler) and Assigned(IOHandler.Intercept) and Assigned(AValue) and (AValue <> IOHandler.Intercept) then begin
+    //
+    if Assigned(IOHandler) and Assigned(AValue) then begin
+      if Assigned(IOHandler.Intercept) and (IOHandler.Intercept <> AValue) then begin
+        EIdException.Toss(RSInterceptIsDifferent);
+      end;
     end;
     // remove self from the Intercept's free notification list
     if Assigned(FIntercept) then begin
@@ -624,8 +637,20 @@ end;
 procedure TIdTCPConnection.SetIOHandler(AValue: TIdIOHandler);
 begin
   if AValue <> FIOHandler then begin
-    if Assigned(AValue) and Assigned(AValue.Intercept) and Assigned(FIntercept) and (AValue.Intercept <> FIntercept) then begin
-      EIdException.Toss(RSInterceptIsDifferent);
+    // RLebeau 8/25/09 - normally, short-circuit logic should skip all subsequent
+    // evaluations in a multi-condition statement once one of the conditions
+    // evaluates to False.  However, a user just ran into a situation where that
+    // was not the case!  It caused an AV when AValue was nil (from Destroy()
+    // further above) because Assigned(AValue.Intercept) was still being evaluated
+    // even though Assigned(AValue) was returning False.  Let's not rely on
+    // short-circuiting anymore, just to be on the safe side.
+    //    
+    // old code: if Assigned(AValue) and Assigned(AValue.Intercept) and Assigned(FIntercept) and (AValue.Intercept <> FIntercept) then begin
+    //
+    if Assigned(AValue) and Assigned(FIntercept) then begin
+      if Assigned(AValue.Intercept) and (AValue.Intercept <> FIntercept) then begin
+        EIdException.Toss(RSInterceptIsDifferent);
+      end;
     end;
     if ManagedIOHandler and Assigned(FIOHandler) then begin
       FreeAndNil(FIOHandler);
