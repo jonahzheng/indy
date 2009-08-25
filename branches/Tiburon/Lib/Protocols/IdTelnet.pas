@@ -197,6 +197,113 @@ const
   TNOS_REPLY             = $02;
   TNOS_NAME              = $03;
 
+  //Auth commands
+  TNOAUTH_IS             = $00;
+  TNOAUTH_SEND           = $01;
+  TNOAUTH_REPLY          = $02;
+  TNOAUTH_NAME           = $03;
+
+  // Auth options  $25
+  TNOAUTH_NULL           = $00;
+  TNOAUTH_KERBEROS_V4    = $01;
+  TNOAUTH_KERBEROS_V5    = $02;
+  TNOAUTH_SPX            = $03;
+  TNOAUTH_MINK           = $04;
+  TNOAUTH_SRP            = $05;
+  TNOAUTH_RSA            = $06;
+  TNOAUTH_SSL            = $07;
+  TNOAUTH_LOKI           = $0A;
+  TNOAUTH_SSA            = $0B;
+  TNOAUTH_KEA_SJ         = $0C;
+  TNOAUTH_KEA_SJ_INTEG   = $0D;
+  TNOAUTH_DSS            = $0E;
+  TNOAUTH_NTLM           = $0F;
+
+  //Kerberos4 Telnet Authentication suboption commands
+  TNOAUTH_KRB4_AUTH      = $00;
+  TNOAUTH_KRB4_REJECT    = $01;
+  TNOAUTH_KRB4_ACCEPT    = $02;
+  TNOAUTH_KRB4_CHALLENGE = $03;
+  TNOAUTH_KRB4_RESPONSE  = $04;
+  TNOAUTH_KRB4_FORWARD   = $05;
+  TNOAUTH_KRB4_FORWARD_ACCEPT = $06;
+  TNOAUTH_KRB4_FORWARD_REJECT = $07;
+  TNOAUTH_KRB4_EXP       = $08;
+  TNOAUTH_KRB4_PARAMS    = $09;
+
+  //Kerberos5 Telnet Authentication suboption commands
+  TNOAUTH_KRB5_AUTH      = $00;
+  TNOAUTH_KRB5_REJECT    = $01;
+  TNOAUTH_KRB5_ACCEPT    = $02;
+  TNOAUTH_KRB5_RESPONSE  = $03;
+  TNOAUTH_KRB5_FORWARD   = $04;
+  TNOAUTH_KRB5_FORWARD_ACCEPT = $05;
+  TNOAUTH_KRB5_FORWARD_REJECT = $06;
+
+  //DSS Telnet Authentication suboption commands
+  TNOAUTH_DSS_INITIALIZE = $01;
+  TNOAUTH_DSS_TOKENBA    = $02;
+  TNOAUTH_DSS_CERTA_TOKENAB = $03;
+  TNOAUTH_DSS_CERTB_TOKENBA2 = $04;
+
+  //SRP Telnet Authentication suboption commands
+  TNOAUTH_SRP_AUTH       = $00;
+  TNOAUTH_SRP_REJECT     = $01;
+  TNOAUTH_SRP_ACCEPT     = $02;
+  TNOAUTH_SRP_CHALLENGE  = $03;
+  TNOAUTH_SRP_RESPONSE   = $04;
+  TNOAUTH_SRP_EXP        = $08;
+  TNOAUTH_SRP_PARAMS     = $09;
+
+  // KEA_SJ and KEA_SJ_INTEG Telnet Authenticatio suboption commands
+  TNOAUTH_KEA_CERTA_RA   = $01;
+  TNOAUTH_KEA_CERTB_RB_IVB_NONCEB  = $02;
+  TNOAUTH_KEA_IVA_RESPONSEB_NONCEA = $03;
+  TNOAUTH_KEA_RESPONSEA  = $04;
+
+  //Telnet Encryption Types (Option 38)
+  //  commands
+  TNOENC_IS              = $00;
+  TNOENC_SUPPORT         = $01;
+  TNOENC_REPLY           = $02;
+  TNOENC_START           = $03;
+  TNOENC_END             = $04;
+  TNOENC_REQUEST_START   = $05;
+  TNOENC_REQUEST_END     = $06;
+  TNOENC_ENC_KEYID       = $07;
+  TNOENC_DEC_KEYID       = $08;
+  //  types
+  TNOENC_NULL            = $00;
+  TNOENC_DES_CFB64       = $01;
+  TNOENC_DES_OFB64       = $02;
+  TNOENC_DES3_CFB64      = $03;
+  TNOENC_DES3_OFB64      = $04;
+  TNOENC_CAST5_40_CFB64  = $08;
+  TNOENC_CAST5_40_OFB64  = $09;
+  TNOENC_CAST128_CFB64   = $0A;
+  TNOENC_CAST128_OFB64   = $0B;
+  TNOENC_AES_CCM         = $0C;
+
+  //DES3_CFB64 Telnet Encryption type suboption commands
+  TNOENC_CFB64_IV        = $01;
+  TNOENC_CFB64_IV_OK     = $02;
+  TNOENC_CFB64_IV_BAD    = $03;
+
+  //CAST5_40_OFB64 and CAST128_OFB64 Telnet Encryption types suboption commands
+  TNOENC_OFB64_IV        = $01;
+  TNOENC_OFB64_IV_OK     = $02;
+  TNOENC_OFB64_IV_BAD    = $03;
+
+  //CAST5_40_CFB64 and CAST128_CFB64 Telnet Encryption types suboption commands
+  //same as DES3_CFB64 Telnet Encryption type suboption commands
+
+  //DES_CFB64 Telnet Encryption type
+  //same as DES3_CFB64 Telnet Encryption type suboption commands
+
+  //DES_OFB64 Telnet Encryption type
+  //same as CAST5_40_OFB64 and CAST128_OFB64 Telnet Encryption types suboption commands
+
+
 type
   TIdTelnet = class;
 
