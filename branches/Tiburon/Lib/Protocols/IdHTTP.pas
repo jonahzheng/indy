@@ -515,6 +515,7 @@ type
 
     //misc internal stuff
     function IsRespHTML : Boolean;
+    function IsRequHTML : Boolean;
     function RespCharset : String;
   public
     destructor Destroy; override;
@@ -762,6 +763,11 @@ begin
   Result := TextIsSame( Response.ContentType, 'text/html'); {do not localize}
 end;
 
+function TIdCustomHTTP.IsRequHTML : Boolean;
+begin
+   Result := TextIsSame( Request.ContentType, 'text/html'); {Do not localize}
+end;
+
 procedure TIdCustomHTTP.Post(AURL: string; ASource: TStrings; AResponseContent: TStream);
 var
   LParams: TMemoryStream;
@@ -770,7 +776,7 @@ begin
   Assert(AResponseContent<>nil);
 
   // Usual posting request have default ContentType is application/x-www-form-urlencoded
-  if (Request.ContentType = '') or IsRespHTML then begin
+  if (Request.ContentType = '') or IsRequHTML then begin
     Request.ContentType := 'application/x-www-form-urlencoded'; {do not localize}
   end;
 
