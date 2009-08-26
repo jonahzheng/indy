@@ -4299,7 +4299,7 @@ var
 begin
   {$IFDEF HAS_NAMED_THREADS}
     {$IFDEF HAS_TThread_NameThreadForDebugging}
-  TThread.NameThreadForDebugging(AnsiString(AName), ThreadID);
+  TThread.NameThreadForDebugging(AnsiString(AName), AThreadID);
     {$ELSE}
       {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   with LThreadNameInfo do begin
