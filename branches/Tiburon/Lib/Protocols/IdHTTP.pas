@@ -514,8 +514,7 @@ type
     procedure DoOnDisconnected; override;
 
     //misc internal stuff
-    function IsContentTypeHtml(AInfo: TIdEntityHeaderInfo) : Boolean;
-    function RespCharset : String;
+    function ResponseCharset : String;
   public
     destructor Destroy; override;
 
@@ -655,6 +654,11 @@ end;
 
 { TIdHTTP }
 
+function IsContentTypeHtml(AInfo: TIdEntityHeaderInfo) : Boolean;
+begin
+  Result := TextIsSame(ExtractHeaderItem(AInfo.ContentType), 'text/html'); {do not localize}
+end;
+
 destructor TIdCustomHTTP.Destroy;
 begin
   FreeAndNil(FHTTPProto);
@@ -758,11 +762,6 @@ begin
   end;
 end;
 
-function TIdCustomHTTP.IsContentTypeHtml(AInfo: TIdEntityHeaderInfo) : Boolean;
-begin
-  Result := TextIsSame(ExtractHeaderItem(AInfo.ContentType), 'text/html'); {do not localize}
-end;
-
 function TIdCustomHTTP.Post(AURL: string; const ASourceFile: String): string;
 var
   LSource: TIdReadFileExclusiveStream;
@@ -819,7 +818,7 @@ begin
   try
     Post(AURL, ASource, LResponse);
     LResponse.Position := 0;
-    Result := ReadStringAsCharset(LResponse, RespCharset);
+    Result := ReadStringAsCharset(LResponse, ResponseCharset);
   finally
     FreeAndNil(LResponse);
   end;
@@ -835,7 +834,7 @@ begin
   try
     Post(AURL, ASource, LResponse);
     LResponse.Position := 0;
-    Result := ReadStringAsCharset(LResponse, RespCharset);
+    Result := ReadStringAsCharset(LResponse, ResponseCharset);
   finally
     FreeAndNil(LResponse);
   end;
@@ -859,7 +858,7 @@ begin
   try
     Put(AURL, ASource, LResponse);
     LResponse.Position := 0;
-    Result := ReadStringAsCharset(LResponse, RespCharset);
+    Result := ReadStringAsCharset(LResponse, ResponseCharset);
   finally
     FreeAndNil(LResponse);
   end;
@@ -878,7 +877,7 @@ begin
   try
     Trace(AURL, LResponse);
     LResponse.Position := 0;
-    Result := ReadStringAsCharset(LResponse, RespCharset);
+    Result := ReadStringAsCharset(LResponse, ResponseCharset);
   finally
     FreeAndNil(LResponse);
   end;
@@ -1147,7 +1146,7 @@ begin
   end;
 end;
 
-function TIdCustomHTTP.RespCharset: String;
+function TIdCustomHTTP.ResponseCharset: String;
 begin
   Result := Response.CharSet;
   if Result = '' then begin
@@ -2146,7 +2145,7 @@ begin
   try
     Get(AURL, LStream, AIgnoreReplies);
     LStream.Position := 0;
-    Result := ReadStringAsCharset(LStream, RespCharset);
+    Result := ReadStringAsCharset(LStream, ResponseCharset);
   finally
     FreeAndNil(LStream);
   end;
