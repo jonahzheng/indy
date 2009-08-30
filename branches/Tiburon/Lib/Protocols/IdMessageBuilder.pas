@@ -46,10 +46,10 @@ type
     FPlainTextCharSet: String;
     FPlainTextContentTransfer: String;
     procedure AddAttachments(AMsg: TIdMessage);
-    procedure InternalFill(AMsg: TIdMessage); virtual; abstract;
+    procedure FillBody(AMsg: TIdMessage); virtual; abstract;
+    procedure FillHeaders(AMsg: TIdMessage); virtual;
     procedure SetPlainText(AValue: TStrings);
     procedure SetAttachments(AValue: TStrings);
-    procedure SetContentTypeAndCharSet(AMsg: TIdMessage); virtual;
   public
     constructor Create; virtual;
     destructor Destroy; override;
@@ -66,8 +66,8 @@ type
 
   TIdMessageBuilderPlain = class(TIdCustomMessageBuilder)
   protected
-    procedure InternalFill(AMsg: TIdMessage); override;
-    procedure SetContentTypeAndCharSet(AMsg: TIdMessage); override;
+    procedure FillBody(AMsg: TIdMessage); override;
+    procedure FillHeaders(AMsg: TIdMessage); override;
   end;
 
   TIdMessageBuilderHtml = class(TIdCustomMessageBuilder)
@@ -77,8 +77,8 @@ type
     FHtmlContentTransfer: String;
     FHtmlFiles: TIdMessageBuilderAttachments;
     FHtmlViewerNeededMsg: String;
-    procedure InternalFill(AMsg: TIdMessage); override;
-    procedure SetContentTypeAndCharSet(AMsg: TIdMessage); override;
+    procedure FillBody(AMsg: TIdMessage); override;
+    procedure FillHeaders(AMsg: TIdMessage); override;
     procedure SetHtml(AValue: TStrings);
     procedure SetHtmlFiles(AValue: TIdMessageBuilderAttachments);
   public
@@ -101,8 +101,8 @@ type
     FRtf: TStrings;
     FRtfType: TIdMessageBuilderRtfType;
     FRtfViewerNeededMsg: String;
-    procedure InternalFill(AMsg: TIdMessage); override;
-    procedure SetContentTypeAndCharSet(AMsg: TIdMessage); override;
+    procedure FillBody(AMsg: TIdMessage); override;
+    procedure FillHeaders(AMsg: TIdMessage); override;
     procedure SetRtf(AValue: TStrings);
   public
     constructor Create; override;
@@ -235,11 +235,12 @@ begin
     Exit;
   end;
 
-  // Clear only the body, ContentType, and CharSet here...
+  // Clear only the body, ContentType, CharSet, and ContentTransferEncoding here...
   //
   AMsg.ClearBody;
   AMsg.ContentType := '';
   AMsg.CharSet := '';
+  AMsg.ContentTransferEncoding := '';
 
   // let the message decide how to encode itself
   // based on what parts are added in InternalFill()
@@ -248,15 +249,16 @@ begin
 
   // fill in type-specific content first
   //
-  InternalFill(AMsg);
+  FillBody(AMsg);
 
   // Are non-related attachments present?
   //
   AddAttachments(AMsg);
 
-  // Determine the top-level ContentType for the message now
+  // Determine the top-level ContentType and
+  // ContentTranferEncoding for the message now
   //
-  SetContentTypeAndCharSet(AMsg);
+  FillHeaders(AMsg);
 end;
 
 function TIdCustomMessageBuilder.NewMessage(AOwner: TComponent = nil): TIdMessage;
@@ -275,7 +277,7 @@ begin
   FAttachments.Assign(AValue);
 end;
 
-procedure TIdCustomMessageBuilder.SetContentTypeAndCharSet(AMsg: TIdMessage);
+procedure TIdCustomMessageBuilder.FillHeaders(AMsg: TIdMessage);
 begin
   if FAttachments.Count > 0 then
   begin
@@ -312,7 +314,7 @@ end;
 
 { TIdMessageBuilderPlain }
 
-procedure TIdMessageBuilderPlain.InternalFill(AMsg: TIdMessage);
+procedure TIdMessageBuilderPlain.FillBody(AMsg: TIdMessage);
 begin
   // Is plain text present?
   //
@@ -338,7 +340,7 @@ begin
   end;
 end;
 
-procedure TIdMessageBuilderPlain.SetContentTypeAndCharSet(AMsg: TIdMessage);
+procedure TIdMessageBuilderPlain.FillHeaders(AMsg: TIdMessage);
 begin
   if (FPlainText.Count > 0) and (FAttachments.Count = 0) then
   begin
@@ -349,7 +351,7 @@ begin
     AMsg.ContentTransferEncoding := FPlainTextContentTransfer;
   end else
   begin
-    inherited SetContentTypeAndCharSet(AMsg);
+    inherited FillHeaders(AMsg);
   end;
 end;
 
@@ -379,7 +381,7 @@ begin
   inherited Clear;
 end;
 
-procedure TIdMessageBuilderHtml.InternalFill(AMsg: TIdMessage);
+procedure TIdMessageBuilderHtml.FillBody(AMsg: TIdMessage);
 var
   LUsePlain, LUseHtml, LUseHtmlFiles, LUseAttachments: Boolean;
   I, LAlternativeIndex, LRelatedIndex: Integer;
@@ -461,7 +463,7 @@ begin
   // "multipart/alternative" piece is needed to wrap them if
   // non-related attachments are also present...
   //
-  if LUseHtml and LUseAttachments then
+  if LUsePlain and LUseHtml and LUseAttachments then
   begin
     with TIdText.Create(AMsg.MessageParts, nil) do
     begin
@@ -563,7 +565,7 @@ begin
   end;
 end;
 
-procedure TIdMessageBuilderHtml.SetContentTypeAndCharSet(AMsg: TIdMessage);
+procedure TIdMessageBuilderHtml.FillHeaders(AMsg: TIdMessage);
 begin
   if FAttachments.Count = 0 then
   begin
@@ -595,7 +597,7 @@ begin
     end;
   end else
   begin
-    inherited SetContentTypeAndCharSet(AMsg);
+    inherited FillHeaders(AMsg);
   end;
 end;
 
@@ -631,7 +633,7 @@ begin
   inherited Clear;
 end;
 
-procedure TIdMessageBuilderRtf.InternalFill(AMsg: TIdMessage);
+procedure TIdMessageBuilderRtf.FillBody(AMsg: TIdMessage);
 var
   LUsePlain, LUseRtf, LUseAttachments: Boolean;
   LAlternativeIndex: Integer;
@@ -672,7 +674,7 @@ begin
   // "multipart/alternative" piece is needed to wrap them if
   // attachments are also present...
   //
-  if LUseRtf and LUseAttachments then
+  if LUsePlain and LUseRtf and LUseAttachments then
   begin
     with TIdText.Create(AMsg.MessageParts, nil) do
     begin
@@ -710,7 +712,7 @@ begin
   end;
 end;
 
-procedure TIdMessageBuilderRtf.SetContentTypeAndCharSet(AMsg: TIdMessage);
+procedure TIdMessageBuilderRtf.FillHeaders(AMsg: TIdMessage);
 begin
   if FAttachments.Count = 0 then
   begin
@@ -739,7 +741,7 @@ begin
     end;
   end else
   begin
-    inherited SetContentTypeAndCharSet(AMsg);
+    inherited FillHeaders(AMsg);
   end;
 end;
 
