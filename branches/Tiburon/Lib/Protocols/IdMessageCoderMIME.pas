@@ -429,8 +429,9 @@ begin
             TIdMessage(Owner).MIMEBoundary.Pop;
           end;
           Break;
+        end
         // Data to save, but not decode
-        end else if LDecoder = nil then begin
+        else if LDecoder = nil then begin
           if IsBinaryContentTransferEncoding then begin {do not localize}
             //In this case, we have to make sure we dont write out an EOL at the
             //end of the file.
@@ -443,8 +444,9 @@ begin
           end else begin
             WriteStringToStream(ADestStream, LLine + EOL);
           end;
+        end
         // Data to decode
-        end else begin
+        else begin
           // For TIdDecoderQuotedPrintable, we have to make sure all EOLs are
           // intact
           if LDecoder is TIdDecoderQuotedPrintable then begin
@@ -458,14 +460,26 @@ begin
             LDecoder.Decode(LLine);
           end;
         end;
-      end else begin  {CC3: Added "else" for QP and base64 encoded message BODIES}
+      end
+      else begin  {CC3: Added "else" for QP and base64 encoded message BODIES}
         // For TIdDecoderQuotedPrintable, we have to make sure all EOLs are
         // intact
-        if LDecoder is TIdDecoderQuotedPrintable then begin
+        if LDecoder = nil then begin
+          if IsBinaryContentTransferEncoding then begin {do not localize}
+            //In this case, we have to make sure we dont write out an EOL at the
+            //end of the file.
+            if LIsThisTheFirstLine then begin
+              LIsThisTheFirstLine := False;
+            end else begin
+              WriteStringToStream(ADestStream, EOL, Indy8BitEncoding);
+            end;
+            WriteStringToStream(ADestStream, LLine, Indy8BitEncoding);
+          end else begin
+            WriteStringToStream(ADestStream, LLine + EOL);
+          end;
+        end
+        else if LDecoder is TIdDecoderQuotedPrintable then begin
           LDecoder.Decode(LLine + EOL);
-        end else if LDecoder = nil then begin
-          LLine := LLine + EOL;
-          WriteStringToStream(ADestStream, LLine);
         end else if LLine <> '' then begin
           LDecoder.Decode(LLine);
         end;
@@ -695,7 +709,7 @@ begin
       set the Content-Transfer-Encoding to 8bit, have multiple parts, and display
       the part header in plain-text.}
       (PosInStrArray(TIdMessage(Owner).ContentTransferEncoding, ['8bit', '7bit', 'binary'], False) = -1)    {do not localize}
-      then
+    then
     begin
       FBodyEncoded := True;
     end;
