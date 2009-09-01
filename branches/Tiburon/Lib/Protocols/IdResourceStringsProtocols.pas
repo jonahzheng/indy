@@ -986,6 +986,9 @@ resourcestring
 
   // Message Header Encoding
   RSHeaderEncodeError = 'Could not encode header data using charset "%s"';
+  // message builder strings
+  rsHtmlViewerNeeded = 'An HTML viewer is required to see this message';
+  rsRtfViewerNeeded = 'An RTF viewer is required to see this message';  
   
 implementation
 

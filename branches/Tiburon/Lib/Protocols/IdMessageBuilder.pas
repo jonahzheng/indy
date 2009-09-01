@@ -118,7 +118,8 @@ type
 implementation
 
 uses
-  IdGlobal, IdGlobalProtocols, IdAttachment, IdAttachmentFile, IdAttachmentMemory, IdText, SysUtils;
+  IdGlobal, IdGlobalProtocols, IdAttachment, IdAttachmentFile, IdAttachmentMemory, 
+  IdResourceStringsProtocols, IdText, SysUtils;
 
 const
   cTextPlain = 'text/plain'; {do not localize}
@@ -128,9 +129,7 @@ const
   cMultipartMixed = 'multipart/mixed'; {do not localize}
   cMultipartRelatedHtml = 'multipart/related; type="text/html"'; {do not localize}
 
-resourcestring
-  rsHtmlViewerNeeded = 'An HTML viewer is required to see this message';
-  rsRtfViewerNeeded = 'An RTF viewer is required to see this message';
+
 
 { TIdMessageBuilderAttachment }
 
