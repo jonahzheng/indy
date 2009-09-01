@@ -669,65 +669,77 @@ var
     LTxt : TIdText;
     LHdrs: TStrings;
   begin
+    Result := nil;
     LMStream := TMemoryStream.Create;
     try
       LParentPart := AMsg.MIMEBoundary.ParentPart;
       Result := ADecoder.ReadBody(LMStream, LMsgEnd);
-      LMStream.Position := 0;
-      if AUseBodyAsTarget then begin
-        if AMsg.IsMsgSinglePartMime then begin
-          ReadStringsAsCharSet(LMStream, AMsg.Body, AMsg.CharSet);
-        end else begin
-          ReadStringsAsContentType(LMStream, AMsg.Body, ADecoder.Headers.Values[SContentType]);
-        end;
-      end else begin
-        if AMsg.IsMsgSinglePartMime then begin
-          LHdrs := AMsg.Headers;
-        end else begin
-          LHdrs := ADecoder.Headers;
-        end;
-        LTxt := TIdText.Create(AMsg.MessageParts);
-        ReadStringsAsContentType(LMStream, LTxt.Body, LHdrs.Values[SContentType]);
-        RemoveLastBlankLine(LTxt.Body);
-        LTxt.ContentType := LTxt.ResolveContentType(LHdrs.Values[SContentType]);
-        LTxt.CharSet := LTxt.GetCharSet(LHdrs.Values[SContentType]);       {do not localize}
-        LTxt.ContentTransfer := LHdrs.Values[SContentTransferEncoding];    {do not localize}
-        LTxt.ContentID := LHdrs.Values['Content-ID'];  {do not localize}
-        LTxt.ContentLocation := LHdrs.Values['Content-Location'];  {do not localize}
-        LTxt.ContentDescription := LHdrs.Values['Content-Description'];  {do not localize}
-        LTxt.ContentDisposition := LHdrs.Values['Content-Disposition'];  {do not localize}
-        if not AMsg.IsMsgSinglePartMime then begin
-          LTxt.ExtraHeaders.NameValueSeparator := '='; {do not localize}
-          for i := 0 to LHdrs.Count-1 do begin
-            if LTxt.Headers.IndexOfName(LHdrs.Names[i]) < 0 then begin
-              LTxt.ExtraHeaders.Add(LHdrs.Strings[i]);
-            end;
-          end;
-        end;
-        LTxt.Filename := ADecoder.Filename;
-        if TextStartsWith(LTxt.ContentType, 'multipart/') then begin {do not localize}
-          LTxt.ParentPart := LPreviousParentPart;
-
-          // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
-          // "If an entity is of type "multipart" the Content-Transfer-Encoding is not
-          // permitted to have any value other than "7bit", "8bit" or "binary"."
-          //
-          // However, came across one message where the "Content-Type" was set to
-          // "multipart/related" and the "Content-Transfer-Encoding" was set to
-          // "quoted-printable".  Outlook and Thunderbird were apparently able to parse
-          // the message correctly, but Indy was not.  So let's check for that scenario
-          // and ignore illegal "Content-Transfer-Encoding" values if present...
-
-          if LTxt.ContentTransfer <> '' then begin
-            if PosInStrArray(LTxt.ContentTransfer, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
-              LTxt.ContentTransfer := '';
-            end;
+      try
+        LMStream.Position := 0;
+        if AUseBodyAsTarget then begin
+          if AMsg.IsMsgSinglePartMime then begin
+            ReadStringsAsCharSet(LMStream, AMsg.Body, AMsg.CharSet);
+          end else begin
+            ReadStringsAsContentType(LMStream, AMsg.Body, ADecoder.Headers.Values[SContentType]);
           end;
         end else begin
-          LTxt.ParentPart := LParentPart;
+          if AMsg.IsMsgSinglePartMime then begin
+            LHdrs := AMsg.Headers;
+          end else begin
+            LHdrs := ADecoder.Headers;
+          end;
+          LTxt := TIdText.Create(AMsg.MessageParts);
+          try
+            ReadStringsAsContentType(LMStream, LTxt.Body, LHdrs.Values[SContentType]);
+            RemoveLastBlankLine(LTxt.Body);
+            LTxt.ContentType := LTxt.ResolveContentType(LHdrs.Values[SContentType]);
+            LTxt.CharSet := LTxt.GetCharSet(LHdrs.Values[SContentType]);       {do not localize}
+            LTxt.ContentTransfer := LHdrs.Values[SContentTransferEncoding];    {do not localize}
+            LTxt.ContentID := LHdrs.Values['Content-ID'];  {do not localize}
+            LTxt.ContentLocation := LHdrs.Values['Content-Location'];  {do not localize}
+            LTxt.ContentDescription := LHdrs.Values['Content-Description'];  {do not localize}
+            LTxt.ContentDisposition := LHdrs.Values['Content-Disposition'];  {do not localize}
+            if not AMsg.IsMsgSinglePartMime then begin
+              LTxt.ExtraHeaders.NameValueSeparator := '='; {do not localize}
+              for i := 0 to LHdrs.Count-1 do begin
+                if LTxt.Headers.IndexOfName(LHdrs.Names[i]) < 0 then begin
+                  LTxt.ExtraHeaders.Add(LHdrs.Strings[i]);
+                end;
+              end;
+            end;
+            LTxt.Filename := ADecoder.Filename;
+            if TextStartsWith(LTxt.ContentType, 'multipart/') then begin {do not localize}
+              LTxt.ParentPart := LPreviousParentPart;
+
+              // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
+              // "If an entity is of type "multipart" the Content-Transfer-Encoding is not
+              // permitted to have any value other than "7bit", "8bit" or "binary"."
+              //
+              // However, came across one message where the "Content-Type" was set to
+              // "multipart/related" and the "Content-Transfer-Encoding" was set to
+              // "quoted-printable".  Outlook and Thunderbird were apparently able to parse
+              // the message correctly, but Indy was not.  So let's check for that scenario
+              // and ignore illegal "Content-Transfer-Encoding" values if present...
+
+              if LTxt.ContentTransfer <> '' then begin
+                if PosInStrArray(LTxt.ContentTransfer, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
+                  LTxt.ContentTransfer := '';
+                end;
+              end;
+            end else begin
+              LTxt.ParentPart := LParentPart;
+              end;
+            end;
+          except
+            LTxt.Free;
+            raise;
+          end;
         end;
+        ADecoder.Free;
+      except
+        FreeAndNil(Result);
+        raise;
       end;
-      ADecoder.Free;
     finally
       FreeAndNil(LMStream);
     end;
@@ -748,62 +760,62 @@ var
       LDestStream := LAttachment.PrepareTempStream;
       try
         Result := ADecoder.ReadBody(LDestStream, LMsgEnd);
-        if AMsg.IsMsgSinglePartMime then begin
-          LHdrs := AMsg.Headers;
-        end else begin
-          LHdrs := ADecoder.Headers;
-        end;
-        LAttachment.ContentType := LAttachment.ResolveContentType(LHdrs.Values[SContentType]);
-        LAttachment.CharSet := LAttachment.GetCharSet(LHdrs.Values[SContentType]);
-        if ADecoder is TIdMessageDecoderUUE then begin
-          LAttachment.ContentTransfer := TIdMessageDecoderUUE(ADecoder).CodingType;  {do not localize}
-        end else begin
-          //Watch out for BinHex 4.0 encoding: no ContentTransfer is specified
-          //in the header, but we need to set it to something meaningful for us...
-          if TextStartsWith(LAttachment.ContentType, 'application/mac-binhex40') then begin {do not localize}
-            LAttachment.ContentTransfer := 'binhex40'; {do not localize}
-          end else begin
-            LAttachment.ContentTransfer := LHdrs.Values[SContentTransferEncoding];
-          end;
-        end;
-        LAttachment.ContentDisposition := LHdrs.Values['Content-Disposition']; {do not localize}
-        LAttachment.ContentID := LHdrs.Values['Content-ID'];                   {do not localize}
-        LAttachment.ContentLocation := LHdrs.Values['Content-Location'];       {do not localize}
-        LAttachment.ContentDescription := LHdrs.Values['Content-Description']; {do not localize}
-        if not AMsg.IsMsgSinglePartMime then begin
-          LAttachment.ExtraHeaders.NameValueSeparator := '=';                               {do not localize}
-          for i := 0 to LHdrs.Count-1 do begin
-            if LAttachment.Headers.IndexOfName(LHdrs.Names[i]) < 0 then begin
-              LAttachment.ExtraHeaders.Add(LHdrs.Strings[i]);
-            end;
-          end;
-        end;
-        LAttachment.Filename := ADecoder.Filename;
-        if TextStartsWith(LAttachment.ContentType, 'multipart/') then begin  {do not localize}
-          LAttachment.ParentPart := LPreviousParentPart;
-
-          // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
-          // "If an entity is of type "multipart" the Content-Transfer-Encoding is not
-          // permitted to have any value other than "7bit", "8bit" or "binary"."
-          //
-          // However, came across one message where the "Content-Type" was set to
-          // "multipart/related" and the "Content-Transfer-Encoding" was set to
-          // "quoted-printable".  Outlook and Thunderbird were apparently able to parse
-          // the message correctly, but Indy was not.  So let's check for that scenario
-          // and ignore illegal "Content-Transfer-Encoding" values if present...
-
-          if LAttachment.ContentTransfer <> '' then begin
-            if PosInStrArray(LAttachment.ContentTransfer, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
-              LAttachment.ContentTransfer := '';
-            end;
-          end;
-        end else begin
-          LAttachment.ParentPart := LParentPart;
-        end;
-        ADecoder.Free;
       finally
         LAttachment.FinishTempStream;
       end;
+      if AMsg.IsMsgSinglePartMime then begin
+        LHdrs := AMsg.Headers;
+      end else begin
+        LHdrs := ADecoder.Headers;
+      end;
+      LAttachment.ContentType := LAttachment.ResolveContentType(LHdrs.Values[SContentType]);
+      LAttachment.CharSet := LAttachment.GetCharSet(LHdrs.Values[SContentType]);
+      if ADecoder is TIdMessageDecoderUUE then begin
+        LAttachment.ContentTransfer := TIdMessageDecoderUUE(ADecoder).CodingType;  {do not localize}
+      end else begin
+        //Watch out for BinHex 4.0 encoding: no ContentTransfer is specified
+        //in the header, but we need to set it to something meaningful for us...
+        if TextStartsWith(LAttachment.ContentType, 'application/mac-binhex40') then begin {do not localize}
+          LAttachment.ContentTransfer := 'binhex40'; {do not localize}
+        end else begin
+          LAttachment.ContentTransfer := LHdrs.Values[SContentTransferEncoding];
+        end;
+      end;
+      LAttachment.ContentDisposition := LHdrs.Values['Content-Disposition']; {do not localize}
+      LAttachment.ContentID := LHdrs.Values['Content-ID'];                   {do not localize}
+      LAttachment.ContentLocation := LHdrs.Values['Content-Location'];       {do not localize}
+      LAttachment.ContentDescription := LHdrs.Values['Content-Description']; {do not localize}
+      if not AMsg.IsMsgSinglePartMime then begin
+        LAttachment.ExtraHeaders.NameValueSeparator := '=';                               {do not localize}
+        for i := 0 to LHdrs.Count-1 do begin
+          if LAttachment.Headers.IndexOfName(LHdrs.Names[i]) < 0 then begin
+            LAttachment.ExtraHeaders.Add(LHdrs.Strings[i]);
+          end;
+        end;
+      end;
+      LAttachment.Filename := ADecoder.Filename;
+      if TextStartsWith(LAttachment.ContentType, 'multipart/') then begin  {do not localize}
+        LAttachment.ParentPart := LPreviousParentPart;
+
+        // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
+        // "If an entity is of type "multipart" the Content-Transfer-Encoding is not
+        // permitted to have any value other than "7bit", "8bit" or "binary"."
+        //
+        // However, came across one message where the "Content-Type" was set to
+        // "multipart/related" and the "Content-Transfer-Encoding" was set to
+        // "quoted-printable".  Outlook and Thunderbird were apparently able to parse
+        // the message correctly, but Indy was not.  So let's check for that scenario
+        // and ignore illegal "Content-Transfer-Encoding" values if present...
+
+        if LAttachment.ContentTransfer <> '' then begin
+          if PosInStrArray(LAttachment.ContentTransfer, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
+            LAttachment.ContentTransfer := '';
+          end;
+        end;
+      end else begin
+        LAttachment.ParentPart := LParentPart;
+      end;
+      ADecoder.Free;
     except
       //This should also remove the Item from the TCollection.
       //Note that Delete does not exist in the TCollection.
@@ -854,55 +866,61 @@ begin
     if AMsg.NoDecode then begin
       CaptureAndDecodeCharset(LEncoding);
     end else begin
-      if (
-       ((AMsg.Encoding = meMIME) and (AMsg.MIMEBoundary.Count > 0)) or
-       ((AMsg.Encoding = mePlainText) and (PosInStrArray(AMsg.ContentTransferEncoding, ['base64', 'quoted-printable'], False) = -1))  {do not localize}
-       ) then begin
-        {NOTE: You hit this code path with multipart MIME messages and with
-        plain-text messages (which may have UUE or XXE attachments embedded).}
-        LActiveDecoder := nil;
-        repeat
-          {CC: This code assumes the preamble text (before the first boundary)
-          is plain text.  I cannot imagine it not being, but if it arises, lines
-          will have to be decoded.}
-          LLine := IOHandler.ReadLnRFC(LMsgEnd, LF, ADelim, LEncoding);
-          if LMsgEnd then begin
-            Break;
-          end;
-          if LActiveDecoder = nil then begin
-            LActiveDecoder := TIdMessageDecoderList.CheckForStart(AMsg, LLine);
-          end;
-          // Check again, the if above can set it.
-          if LActiveDecoder = nil then begin
-            AMsg.Body.Add(LLine);
-          end else begin
-            RemoveLastBlankLine(AMsg.Body);
-            while LActiveDecoder <> nil do begin
-              LActiveDecoder.SourceStream := TIdTCPStream.Create(Self);
-              LPreviousParentPart := AMsg.MIMEBoundary.ParentPart;
-              LActiveDecoder.ReadHeader;
-              case LActiveDecoder.PartType of
-                mcptUnknown:    EIdException.Toss(RSMsgClientUnkownMessagePartType);
-                mcptText:       LActiveDecoder := ProcessTextPart(LActiveDecoder, False);
-                mcptAttachment: LActiveDecoder := ProcessAttachment(LActiveDecoder);
-                mcptIgnore:     FreeAndNil(LActiveDecoder);
+      LActiveDecoder := nil;
+      try
+        if (
+         ((AMsg.Encoding = meMIME) and (AMsg.MIMEBoundary.Count > 0)) or
+         ((AMsg.Encoding = mePlainText) and (PosInStrArray(AMsg.ContentTransferEncoding, ['base64', 'quoted-printable'], False) = -1))  {do not localize}
+         ) then begin
+          {NOTE: You hit this code path with multipart MIME messages and with
+          plain-text messages (which may have UUE or XXE attachments embedded).}
+          repeat
+            {CC: This code assumes the preamble text (before the first boundary)
+            is plain text.  I cannot imagine it not being, but if it arises, lines
+            will have to be decoded.}
+            LLine := IOHandler.ReadLnRFC(LMsgEnd, LF, ADelim, LEncoding);
+            if LMsgEnd then begin
+              Break;
+            end;
+            if LActiveDecoder = nil then begin
+              LActiveDecoder := TIdMessageDecoderList.CheckForStart(AMsg, LLine);
+            end;
+            // Check again, the if above can set it.
+            if LActiveDecoder = nil then begin
+              AMsg.Body.Add(LLine);
+            end else begin
+              RemoveLastBlankLine(AMsg.Body);
+              while LActiveDecoder <> nil do begin
+                LActiveDecoder.SourceStream := TIdTCPStream.Create(Self);
+                LPreviousParentPart := AMsg.MIMEBoundary.ParentPart;
+                LActiveDecoder.ReadHeader;
+                case LActiveDecoder.PartType of
+                  mcptUnknown:    EIdException.Toss(RSMsgClientUnkownMessagePartType);
+                  mcptText:       LActiveDecoder := ProcessTextPart(LActiveDecoder, False);
+                  mcptAttachment: LActiveDecoder := ProcessAttachment(LActiveDecoder);
+                  mcptIgnore:     FreeAndNil(LActiveDecoder);
+                end;
               end;
             end;
+          until LMsgEnd;
+          RemoveLastBlankLine(AMsg.Body);
+        end else begin
+          {These are single-part MIMEs, or else mePlainTexts with the body encoded QP/base64}
+          AMsg.IsMsgSinglePartMime := True;
+          LActiveDecoder := TIdMessageDecoderMime.Create(AMsg);
+          LActiveDecoder.SourceStream := TIdTCPStream.Create(Self);
+          // RLebeau: override what TIdMessageDecoderMime.InitComponent() assigns
+          TIdMessageDecoderMime(LActiveDecoder).BodyEncoded := True;
+          TIdMessageDecoderMime(LActiveDecoder).ReadHeader;
+          case LActiveDecoder.PartType of
+            mcptUnknown:    EIdException.Toss(RSMsgClientUnkownMessagePartType);
+            mcptText:       ProcessTextPart(LActiveDecoder, True); //Put the text into TIdMessage.Body
+            mcptAttachment: ProcessAttachment(LActiveDecoder);
+            mcptIgnore:     FreeAndNil(LActiveDecoder);
           end;
-        until LMsgEnd;
-        RemoveLastBlankLine(AMsg.Body);
-      end else begin
-        {These are single-part MIMEs, or else mePlainTexts with the body encoded QP/base64}
-        AMsg.IsMsgSinglePartMime := True;
-        LActiveDecoder := TIdMessageDecoderMime.Create(AMsg);
-        LActiveDecoder.SourceStream := TIdTCPStream.Create(Self);
-        TIdMessageDecoderMime(LActiveDecoder).CheckAndSetType(AMsg.ContentType, AMsg.ContentDisposition);
-        case LActiveDecoder.PartType of
-          mcptUnknown:    EIdException.Toss(RSMsgClientUnkownMessagePartType);
-          mcptText:       ProcessTextPart(LActiveDecoder, True); //Put the text into TIdMessage.Body
-          mcptAttachment: ProcessAttachment(LActiveDecoder);
-          mcptIgnore:     FreeAndNil(LActiveDecoder);
         end;
+      finally
+        FreeAndNil(LActiveDecoder);
       end;
     end;
   finally
