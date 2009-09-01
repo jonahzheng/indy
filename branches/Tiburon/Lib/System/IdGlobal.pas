@@ -2013,7 +2013,7 @@ begin
     LByteCount := SizeOf(LBytes);
     //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
     //while in FreePascal's libc and our IdIconv units define it as a pSize_t
-    if iconv(FFromUTF16, @LCharsPtr, @LCharCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) = iconv_t(-1) then
+    if iconv(FFromUTF16, @LCharsPtr, @LCharCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) = size_t(-1) then
     begin
       Result := 0;
       Exit;
@@ -2046,7 +2046,7 @@ begin
   LByteCount := ByteCount;
   //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
   //while in FreePascal's libc and our IdIconv units define it as a pSize_t
-  if iconv(FFromUTF16, @LCharsPtr, @LCharCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) = iconv_t(-1) then
+  if iconv(FFromUTF16, @LCharsPtr, @LCharCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) = size_t(-1) then
   begin
     Exit;
   end;
@@ -2079,11 +2079,11 @@ begin
   LByteCount := ByteCount;
   while LByteCount > 0 do
   begin
-    LCharsPtr = @LChars[0];
+    LCharsPtr := @LChars[0];
     LCharsSize := SizeOf(LChars);
     //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
     //while in FreePascal's libc and our IdIconv units define it as a pSize_t
-    if iconv(FToUTF16, @LBytesPtr, @LByteCount, @LCharsPtr, {$IFNDEF KYLIX}@{$ENDIF}LCharsSize) = iconv_t(-1) then
+    if iconv(FToUTF16, @LBytesPtr, @LByteCount, @LCharsPtr, {$IFNDEF KYLIX}@{$ENDIF}LCharsSize) = size_t(-1) then
     begin
       Result := 0;
       Exit;
@@ -2117,7 +2117,7 @@ begin
   LCharsSize := LMaxCharsSize;
   //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
   //while in FreePascal's libc and our IdIconv units define it as a pSize_t
-  if iconv(FToUTF16, @LBytesPtr, @LByteCount, @LCharsPtr, {$IFNDEF KYLIX}@{$ENDIF}LCharsSize) = iconv_t(-1) then
+  if iconv(FToUTF16, @LBytesPtr, @LByteCount, @LCharsPtr, {$IFNDEF KYLIX}@{$ENDIF}LCharsSize) = size_t(-1) then
   begin
     Exit;
   end;
