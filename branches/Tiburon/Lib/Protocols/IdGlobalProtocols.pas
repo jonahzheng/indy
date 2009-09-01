@@ -526,7 +526,7 @@ var
   {$IFDEF UNIX}
   // For linux the user needs to set these variables to be accurate where used (mail, etc)
   GTimeZoneBias: TDateTime = 0;
-  GIdDefaultCharSet : TIdCharSet = idcsISO_8859_1;
+  GIdDefaultCharSet : TIdCharSet = idcs_ISO_8859_1; // idcsISO_8859_1;
   {$ENDIF}
 
   IndyFalseBoolStrs : array of String;
