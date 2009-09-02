@@ -1062,7 +1062,7 @@ begin
     begin
       Result := Result + ':';    {Do not Localize}
     end;
-    Result := Result + IndyFormat('%.2x', [Byte(Pointer(PtrInt(APtr)+I)^)]);
+    Result := Result + IndyFormat('%.2x', [Byte(Pointer(PtrUInt(APtr)+I)^)]);
   end;
 end;
 
