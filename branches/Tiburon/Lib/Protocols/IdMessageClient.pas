@@ -728,7 +728,6 @@ var
               end;
             end else begin
               LTxt.ParentPart := LParentPart;
-              end;
             end;
           except
             LTxt.Free;
@@ -763,59 +762,64 @@ var
       finally
         LAttachment.FinishTempStream;
       end;
-      if AMsg.IsMsgSinglePartMime then begin
-        LHdrs := AMsg.Headers;
-      end else begin
-        LHdrs := ADecoder.Headers;
-      end;
-      LAttachment.ContentType := LAttachment.ResolveContentType(LHdrs.Values[SContentType]);
-      LAttachment.CharSet := LAttachment.GetCharSet(LHdrs.Values[SContentType]);
-      if ADecoder is TIdMessageDecoderUUE then begin
-        LAttachment.ContentTransfer := TIdMessageDecoderUUE(ADecoder).CodingType;  {do not localize}
-      end else begin
-        //Watch out for BinHex 4.0 encoding: no ContentTransfer is specified
-        //in the header, but we need to set it to something meaningful for us...
-        if TextStartsWith(LAttachment.ContentType, 'application/mac-binhex40') then begin {do not localize}
-          LAttachment.ContentTransfer := 'binhex40'; {do not localize}
+      try
+        if AMsg.IsMsgSinglePartMime then begin
+          LHdrs := AMsg.Headers;
         end else begin
-          LAttachment.ContentTransfer := LHdrs.Values[SContentTransferEncoding];
+          LHdrs := ADecoder.Headers;
         end;
-      end;
-      LAttachment.ContentDisposition := LHdrs.Values['Content-Disposition']; {do not localize}
-      LAttachment.ContentID := LHdrs.Values['Content-ID'];                   {do not localize}
-      LAttachment.ContentLocation := LHdrs.Values['Content-Location'];       {do not localize}
-      LAttachment.ContentDescription := LHdrs.Values['Content-Description']; {do not localize}
-      if not AMsg.IsMsgSinglePartMime then begin
-        LAttachment.ExtraHeaders.NameValueSeparator := '=';                               {do not localize}
-        for i := 0 to LHdrs.Count-1 do begin
-          if LAttachment.Headers.IndexOfName(LHdrs.Names[i]) < 0 then begin
-            LAttachment.ExtraHeaders.Add(LHdrs.Strings[i]);
+        LAttachment.ContentType := LAttachment.ResolveContentType(LHdrs.Values[SContentType]);
+        LAttachment.CharSet := LAttachment.GetCharSet(LHdrs.Values[SContentType]);
+        if ADecoder is TIdMessageDecoderUUE then begin
+          LAttachment.ContentTransfer := TIdMessageDecoderUUE(ADecoder).CodingType;  {do not localize}
+        end else begin
+          //Watch out for BinHex 4.0 encoding: no ContentTransfer is specified
+          //in the header, but we need to set it to something meaningful for us...
+          if TextStartsWith(LAttachment.ContentType, 'application/mac-binhex40') then begin {do not localize}
+            LAttachment.ContentTransfer := 'binhex40'; {do not localize}
+          end else begin
+            LAttachment.ContentTransfer := LHdrs.Values[SContentTransferEncoding];
           end;
         end;
-      end;
-      LAttachment.Filename := ADecoder.Filename;
-      if TextStartsWith(LAttachment.ContentType, 'multipart/') then begin  {do not localize}
-        LAttachment.ParentPart := LPreviousParentPart;
-
-        // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
-        // "If an entity is of type "multipart" the Content-Transfer-Encoding is not
-        // permitted to have any value other than "7bit", "8bit" or "binary"."
-        //
-        // However, came across one message where the "Content-Type" was set to
-        // "multipart/related" and the "Content-Transfer-Encoding" was set to
-        // "quoted-printable".  Outlook and Thunderbird were apparently able to parse
-        // the message correctly, but Indy was not.  So let's check for that scenario
-        // and ignore illegal "Content-Transfer-Encoding" values if present...
-
-        if LAttachment.ContentTransfer <> '' then begin
-          if PosInStrArray(LAttachment.ContentTransfer, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
-            LAttachment.ContentTransfer := '';
+        LAttachment.ContentDisposition := LHdrs.Values['Content-Disposition']; {do not localize}
+        LAttachment.ContentID := LHdrs.Values['Content-ID'];                   {do not localize}
+        LAttachment.ContentLocation := LHdrs.Values['Content-Location'];       {do not localize}
+        LAttachment.ContentDescription := LHdrs.Values['Content-Description']; {do not localize}
+        if not AMsg.IsMsgSinglePartMime then begin
+          LAttachment.ExtraHeaders.NameValueSeparator := '=';                               {do not localize}
+          for i := 0 to LHdrs.Count-1 do begin
+            if LAttachment.Headers.IndexOfName(LHdrs.Names[i]) < 0 then begin
+              LAttachment.ExtraHeaders.Add(LHdrs.Strings[i]);
+            end;
           end;
         end;
-      end else begin
-        LAttachment.ParentPart := LParentPart;
+        LAttachment.Filename := ADecoder.Filename;
+        if TextStartsWith(LAttachment.ContentType, 'multipart/') then begin  {do not localize}
+          LAttachment.ParentPart := LPreviousParentPart;
+
+          // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
+          // "If an entity is of type "multipart" the Content-Transfer-Encoding is not
+          // permitted to have any value other than "7bit", "8bit" or "binary"."
+          //
+          // However, came across one message where the "Content-Type" was set to
+          // "multipart/related" and the "Content-Transfer-Encoding" was set to
+          // "quoted-printable".  Outlook and Thunderbird were apparently able to parse
+          // the message correctly, but Indy was not.  So let's check for that scenario
+          // and ignore illegal "Content-Transfer-Encoding" values if present...
+
+          if LAttachment.ContentTransfer <> '' then begin
+            if PosInStrArray(LAttachment.ContentTransfer, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
+              LAttachment.ContentTransfer := '';
+            end;
+          end;
+        end else begin
+          LAttachment.ParentPart := LParentPart;
+        end;
+        ADecoder.Free;
+      except
+        FreeAndNil(Result);
+        raise;
       end;
-      ADecoder.Free;
     except
       //This should also remove the Item from the TCollection.
       //Note that Delete does not exist in the TCollection.
