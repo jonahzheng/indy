@@ -1011,11 +1011,11 @@ var
     s: string;
   begin
     s := InternalReadLn;
-    j := IndyPos(' ', s);
+    j := IndyPos(';', s); {do not localize}
     if j > 0 then begin
       s := Copy(s, 1, j - 1);
     end;
-    Result := IndyStrToInt('$' + s, 0);      {do not localize}
+    Result := IndyStrToInt('$' + Trim(s), 0);      {do not localize}
   end;
 
 begin
@@ -1051,21 +1051,22 @@ begin
     end;
 
     try
-      if IndyPos('chunked', LowerCase(AResponse.RawHeaders.Values['Transfer-Encoding'])) > 0 then begin {do not localize}
+      if IndyPos('chunked', LowerCase(AResponse.TransferEncoding)) > 0 then begin {do not localize}
         DoStatus(hsStatusText, [RSHTTPChunkStarted]);
         BeginWork(wmRead);
         try
           Size := ChunkSize;
-          while Size > 0 do begin
+          while Size <> 0 do begin
             if Assigned(LS) then begin
               IOHandler.ReadStream(LS, Size);
             end else begin
               IOHandler.Discard(Size);
             end;
-            InternalReadLn; // blank line
+            InternalReadLn; // CRLF at end of chunk data
             Size := ChunkSize;
           end;
-          InternalReadLn; // blank line
+          // skip trailer headers
+          repeat until InternalReadLn = '';
         finally
           EndWork(wmRead);
         end;
