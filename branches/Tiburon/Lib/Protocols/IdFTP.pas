@@ -985,7 +985,11 @@ type
     property UsingSFTP : Boolean read FUsingSFTP;
     property CurrentTransferMode : TIdFTPTransferMode read FCurrentTransferMode write TransferMode;
   published
-    {$IFDEF DOTNET_2_OR_ABOVE}
+    {$IFDEF DOTNET}}
+      {$IFDEF DOTNET_2_OR_ABOVE}
+    property IPVersion;
+      {$ENDIF}
+    {$ELSE}
     property IPVersion;
     {$ENDIF}
     property AutoIssueFEAT : Boolean read FAutoIssueFEAT write FAutoIssueFEAT default DEF_Id_FTP_AutoIssueFEAT;
