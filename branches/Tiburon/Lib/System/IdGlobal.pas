@@ -532,12 +532,12 @@ uses
     {$ENDIF}
   {$ENDIF}
   Classes,
-  SyncObjs,
+  syncobjs,
   {$IFDEF UNIX}
     {$IFDEF KYLIX}
     Libc,
     {$ELSE}
-      DynLibs, // better add DynLibs only for fpc 
+      DynLibs, // better add DynLibs only for fpc
       {$IFDEF KYLIXCOMPAT}
       Libc,
       {$ENDIF}
@@ -648,7 +648,7 @@ type
   {$ENDIF}
 
   {$IFDEF INT_THREAD_PRIORITY}
-const  
+const
   // approximate values, its finer grained on Linux
   tpIdle = 19;
   tpLowest = 12;
@@ -713,7 +713,7 @@ type
   in .NET.  For earlier versions, or when the libiconv library is enabled,
   TIdTextEncoding is a wrapper class, otherwise it maps directly to the OS/RTL's
   encoding class.
-  
+
   This way, Indy can have a unified internal interface for String<->Byte conversions
   without using IFDEFs everywhere.
 
@@ -853,7 +853,7 @@ type
 
 type
   IdAnsiEncodingType = (encOSDefault, encASCII, encUTF7, encUTF8);
-  
+
   procedure EnsureEncoding(var VEncoding : TIdTextEncoding; ADefEncoding: IdAnsiEncodingType = encASCII);
 
 type
@@ -1454,7 +1454,7 @@ type
     constructor Create(const CharSet : AnsiString); overload; virtual;
     destructor Destroy; override;
     {$ELSE}
-      {$IFDEF WIN32_OR_WIN64_OR_WINCE}    
+      {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     constructor Create(CodePage: Integer); overload; virtual;
     constructor Create(CodePage, MBToWCharFlags, WCharToMBFlags: Integer); overload; virtual;
       {$ENDIF}
@@ -1801,7 +1801,7 @@ begin
     {$IFDEF USE_ICONV}
     LEncoding := TIdMBCSEncoding.Create('ASCII');
     {$ELSE}
-      {$IFDEF WIN32_OR_WIN64_OR_WINCE}  
+      {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     LEncoding := TIdMBCSEncoding.Create(CP_ACP, 0, 0);
       {$ELSE}
     ToDo('Default property of TIdTextEncoding class is not implemented for this platform yet'); {do not localize}
@@ -2011,6 +2011,7 @@ begin
   begin
     LBytesPtr := PAnsiChar(@LBytes[0]);
     LByteCount := SizeOf(LBytes);
+    Assert (LBytesPtr <> nil,'TIdMBCSEncoding.GetByteCount LBytesPtr can not be nil');
     //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
     //while in FreePascal's libc and our IdIconv units define it as a pSize_t
     if iconv(FFromUTF16, @LCharsPtr, @LCharCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) = size_t(-1) then
@@ -2044,6 +2045,8 @@ begin
   LCharCount := CharCount * SizeOf(WideChar);
   LBytesPtr := PAnsiChar(Bytes);
   LByteCount := ByteCount;
+  Assert (LBytesPtr <> nil,'TIdMBCSEncoding.GetBytes LBytesPtr can not be nil');
+
   //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
   //while in FreePascal's libc and our IdIconv units define it as a pSize_t
   if iconv(FFromUTF16, @LCharsPtr, @LCharCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) = size_t(-1) then
@@ -2081,6 +2084,8 @@ begin
   begin
     LCharsPtr := @LChars[0];
     LCharsSize := SizeOf(LChars);
+    Assert (LCharsPtr <> nil,'TIdMBCSEncoding.GetCharCount LCharsPtr can not be nil');
+
     //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
     //while in FreePascal's libc and our IdIconv units define it as a pSize_t
     if iconv(FToUTF16, @LBytesPtr, @LByteCount, @LCharsPtr, {$IFNDEF KYLIX}@{$ENDIF}LCharsSize) = size_t(-1) then
@@ -2115,6 +2120,9 @@ begin
   LCharsPtr := PAnsiChar(Chars);
   LMaxCharsSize := CharCount * SizeOf(WideChar);
   LCharsSize := LMaxCharsSize;
+
+    Assert (LCharsPtr <> nil,'TIdMBCSEncoding.GetChars LCharsPtr can not be nil');
+
   //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
   //while in FreePascal's libc and our IdIconv units define it as a pSize_t
   if iconv(FToUTF16, @LBytesPtr, @LByteCount, @LCharsPtr, {$IFNDEF KYLIX}@{$ENDIF}LCharsSize) = size_t(-1) then
@@ -2428,7 +2436,7 @@ begin
     LEncoding := GId8BitEncoding;
   end;
   Result := LEncoding;
-end;  
+end;
   {$ELSE}
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
 function Indy8BitEncoding(const AOwnedByIndy: Boolean = True): TIdTextEncoding;
@@ -5431,7 +5439,7 @@ begin
   {$IFDEF STRING_IS_ANSI}
   LATmp := nil; // keep the compiler happy
   {$ENDIF}
-  
+
   EnsureEncoding(AByteEncoding);
   StartPos := AStream.Position;
 
@@ -6017,7 +6025,7 @@ begin
     Result := False;
     Exit;
   end;
-  
+
   SetLength(LBuf, LBUFMAXSIZE);
   LCrEncountered := False;
 
