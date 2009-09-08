@@ -885,14 +885,6 @@ type
     function CheckAccount: Boolean;
     function IsAccountNeeded : Boolean;
     function GetSupportsVerification : Boolean;
-    {$IFNDEF DOTNET_2_OR_ABOVE}
-    //
-    // holger: .NET compatibility change
-    //
-    //ifdefed workaround for an old problem.
-    property IPVersion;
-    //
-    {$ENDIF}
   public
     procedure GetInternalResponse(AEncoding: TIdTextEncoding = nil); override;
 
@@ -985,7 +977,7 @@ type
     property UsingSFTP : Boolean read FUsingSFTP;
     property CurrentTransferMode : TIdFTPTransferMode read FCurrentTransferMode write TransferMode;
   published
-    {$IFDEF DOTNET}}
+    {$IFDEF DOTNET}
       {$IFDEF DOTNET_2_OR_ABOVE}
     property IPVersion;
       {$ENDIF}
@@ -1762,7 +1754,7 @@ begin
         // present, so do not read the stream in that case
         if Self.SendCmd(ACommand, [125, 150, 154, 450]) <> 450 then
         begin
-          if (FDataPortProtection = ftpdpsPrivate) then begin
+          if FUsingSFTP and (FDataPortProtection = ftpdpsPrivate) then begin
             TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).Passthrough := False;
           end;
           if FCurrentTransferMode = dmDeflate then begin
