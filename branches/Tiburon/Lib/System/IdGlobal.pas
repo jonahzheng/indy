@@ -2011,7 +2011,6 @@ begin
   begin
     LBytesPtr := PAnsiChar(@LBytes[0]);
     LByteCount := SizeOf(LBytes);
-    Assert (LBytesPtr <> nil,'TIdMBCSEncoding.GetByteCount LBytesPtr can not be nil');
     //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
     //while in FreePascal's libc and our IdIconv units define it as a pSize_t
     if iconv(FFromUTF16, @LCharsPtr, @LCharCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) = size_t(-1) then
@@ -2046,7 +2045,6 @@ begin
   LBytesPtr := PAnsiChar(Bytes);
   LByteCount := ByteCount;
   Assert (LBytesPtr <> nil,'TIdMBCSEncoding.GetBytes LBytesPtr can not be nil');
-
   //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
   //while in FreePascal's libc and our IdIconv units define it as a pSize_t
   if iconv(FFromUTF16, @LCharsPtr, @LCharCount, @LBytesPtr, {$IFNDEF KYLIX}@{$ENDIF}LByteCount) = size_t(-1) then
@@ -2082,10 +2080,8 @@ begin
   LByteCount := ByteCount;
   while LByteCount > 0 do
   begin
-    LCharsPtr := @LChars[0];
+    LCharsPtr := PAnsiChar(@LChars[0]);
     LCharsSize := SizeOf(LChars);
-    Assert (LCharsPtr <> nil,'TIdMBCSEncoding.GetCharCount LCharsPtr can not be nil');
-
     //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
     //while in FreePascal's libc and our IdIconv units define it as a pSize_t
     if iconv(FToUTF16, @LBytesPtr, @LByteCount, @LCharsPtr, {$IFNDEF KYLIX}@{$ENDIF}LCharsSize) = size_t(-1) then
@@ -2120,9 +2116,7 @@ begin
   LCharsPtr := PAnsiChar(Chars);
   LMaxCharsSize := CharCount * SizeOf(WideChar);
   LCharsSize := LMaxCharsSize;
-
-    Assert (LCharsPtr <> nil,'TIdMBCSEncoding.GetChars LCharsPtr can not be nil');
-
+  Assert (LCharsPtr <> nil,'TIdMBCSEncoding.GetChars LCharsPtr can not be nil');
   //Kylix has an odd definition in iconv.  In Kylix, __outbytesleft is defined as a var
   //while in FreePascal's libc and our IdIconv units define it as a pSize_t
   if iconv(FToUTF16, @LBytesPtr, @LByteCount, @LCharsPtr, {$IFNDEF KYLIX}@{$ENDIF}LCharsSize) = size_t(-1) then
