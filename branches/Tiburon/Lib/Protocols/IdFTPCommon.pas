@@ -1592,7 +1592,8 @@ begin
       CharIsInSet(SData, 9, 'TSRWX-') and   {Do not Localize}
       CharIsInSet(SData, 10, 'TSRWX-');     {Do not Localize}
   end else begin
-    Result := CharIsInSet(AData, 1, 'd-') and   {Do not Localize}
+    Result := (Length(SData) > 9) and
+      CharIsInSet(AData, 1, 'd-') and   {Do not Localize}
       CharIsInSet(AData, 2, 'tsrwx-') and    {Do not Localize}
       CharIsInSet(AData, 3, 'tsrwx-') and    {Do not Localize}
       CharIsInSet(AData, 4, 'tsrwx-') and    {Do not Localize}
