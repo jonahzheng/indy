@@ -445,7 +445,7 @@ begin
       begin
         AItem.ModifiedDate := MVSDate(s[3]);
         {    Name     VV.MM  Created     Changed     Size  Init   Mod   Id}
-        {$README   01.10 89/04/19 94/12/15 18:55    90     1     0 EWZ}
+        { $README   01.10 89/04/19 94/12/15 18:55    90     1     0 EWZ }
         if s.Count > 4 then
         begin
           AItem.ModifiedDate := AItem.ModifiedDate + TimeHHMMSS(s[4]);
