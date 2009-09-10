@@ -1054,15 +1054,18 @@ function BytesToHexString(APtr : Pointer; ALen : Integer) : String;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 var
   i : PtrInt;
+  LPtr: PByte;
 begin
   Result := '';
+  LPtr := PByte(APtr);
   for i := 0 to (ALen - 1) do
   begin
     if I <> 0 then
     begin
       Result := Result + ':';    {Do not Localize}
     end;
-    Result := Result + IndyFormat('%.2x', [Byte(Pointer(PtrUInt(APtr)+I)^)]);
+    Result := Result + IndyFormat('%.2x', [LPtr^]);
+    Inc(LPtr);
   end;
 end;
 
