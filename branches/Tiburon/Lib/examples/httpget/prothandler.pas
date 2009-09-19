@@ -1,6 +1,8 @@
 unit prothandler;
 interface
+{$IFDEF FPC}
 {$mode delphi}{$H+}
+{$ENDIF}
 uses
 {$IFDEF UNIX}
   {$define usezlib}

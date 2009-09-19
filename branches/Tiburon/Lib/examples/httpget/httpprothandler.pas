@@ -1,7 +1,8 @@
 unit httpprothandler;
 interface
+{$IFDEF FPC}
 {$mode delphi}{$H+}
-
+{$ENDIF}
 {$ifdef unix}
   {$define usezlib}
   {$define useopenssl}
@@ -95,7 +96,7 @@ Mozilla/4.0 (compatible; MyProgram)
         FLogData.Add(LHTTP.Request.RawHeaders[i]);
         if FVerbose then
         begin
-          WriteLn(stdout,LHTTP.Request.RawHeaders[i]);
+          WriteLn({$IFDEF FPC}stdout{$ELSE}output{$ENDIF},LHTTP.Request.RawHeaders[i]);
         end;
       end;
       LHTTP.Get(AURL.URI,LStr);
@@ -104,7 +105,7 @@ Mozilla/4.0 (compatible; MyProgram)
         FLogData.Add(LHTTP.Response.RawHeaders[i]);       
         if FVerbose then
         begin
-          WriteLn(stdout,LHTTP.Response.RawHeaders[i]);
+          WriteLn({$IFDEF FPC}stdout{$ELSE}output{$ENDIF},LHTTP.Response.RawHeaders[i]);
         end;
       end;
       LFName := GetTargetFileName(LHTTP,AURL);
@@ -119,19 +120,19 @@ Mozilla/4.0 (compatible; MyProgram)
         if E is EIdHTTPProtocolException then
         begin
           LHE := E as EIdHTTPProtocolException;
-          WriteLn(stderr,'HTTP Protocol Error - '+IntToStr(LHE.ErrorCode));
-          WriteLn(stderr,LHE.ErrorMessage);
+          WriteLn({$IFDEF FPC}stderr{$ELSE}ErrOutput {$ENDIF},'HTTP Protocol Error - '+IntToStr(LHE.ErrorCode));
+          WriteLn({$IFDEF FPC}stderr{$ELSE}ErrOutput {$ENDIF},LHE.ErrorMessage);
           if Verbose = False then
           begin
             for i := 0 to FLogData.Count -1 do
             begin
-              Writeln(stderr,FLogData[i]);
+              Writeln({$IFDEF FPC}stderr{$ELSE}ErrOutput {$ENDIF},FLogData[i]);
             end;
           end;
         end
         else
         begin
-          Writeln(stderr,E.Message);
+          Writeln({$IFDEF FPC}stderr{$ELSE}ErrOutput {$ENDIF},E.Message);
         end;
       end;
     end;

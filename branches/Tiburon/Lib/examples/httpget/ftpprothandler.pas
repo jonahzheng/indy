@@ -1,5 +1,7 @@
 unit ftpprothandler;
+{$IFDEF FPC}
 {$mode delphi}{$H+}
+{$ENDIF}
 interface
 uses
   prothandler,
@@ -116,7 +118,7 @@ begin
         begin
           for i := 0 to LF.ListResult.Count -1 do
           begin
-            WriteLn(stdout,LF.ListResult[i]);
+            WriteLn({$IFDEF FPC}stdout{$ELSE}output{$ENDIF},LF.ListResult[i]);
           end;
         end;
         MakeHTMLDirTable(AURL,LF);
@@ -263,7 +265,7 @@ begin
   FLogData.Text := FLogData.Text + AData;
   if FVerbose then
   begin
-    Write(stdOut,AData);
+    Write({$IFDEF FPC}stdout{$ELSE}output{$ENDIF},AData);
   end;
 end;
 
@@ -272,7 +274,7 @@ begin
    FLogData.Text := FLogData.Text + AData;
   if FVerbose then
   begin
-    Write(stdOut,AData);
+    Write({$IFDEF FPC}stdout{$ELSE}output{$ENDIF},AData);
   end;
 end;
 
