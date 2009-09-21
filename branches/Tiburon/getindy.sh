@@ -9,6 +9,9 @@ if [ "$1" != "buildonly" ]
 then
   rm -rf $INDYDIR
   mkdir -p $INDYDIR/fpc 
+  cp /mnt/hgfs/IndyTiburon/lib/fpcnotes/* $INDYDIR
+  cp /mnt/hgfs/IndyTiburon/lib/makeindyrpm.sh $INDYDIR
+  cp /mnt/hgfs/IndyTiburon/lib/indy-fpc.spec.template $INDYDIR
   FILENAMES=$(cat /mnt/hgfs/IndyTiburon/lib/RTFileList.txt | dos2unix | tr '\\' '/') 
   for i in $FILENAMES
   do
@@ -19,26 +22,29 @@ then
   cp /mnt/hgfs/IndyTiburon/lib/System/indysystemfpc.pas $FPCINDYDIR
   cp /mnt/hgfs/IndyTiburon/lib/Core/indycorefpc.pas $FPCINDYDIR
   cp /mnt/hgfs/IndyTiburon/lib/Protocols/indyprotocolsfpc.pas $FPCINDYDIR
-  cp -r /mnt/hgfs/IndyTiburon/lib/Examples $FPCINDYDIR/examples 
   cp /mnt/hgfs/IndyTiburon/lib/indymaster-Makefile.fpc $FPCINDYDIR/Makefile.fpc
+  mkdir $FPCINDYDIR/examples
+  cp -r /mnt/hgfs/IndyTiburon/lib/Examples/* $FPCINDYDIR/examples 
+  find $FPCINDYDIR/examples -type d -name ".svn" -exec rm -rf '{}' \;
+  mkdir $FPCINDYDIR/debian
+  cp -r /mnt/hgfs/IndyTiburon/lib/debian/* $FPCINDYDIR/debian
+  find $FPCINDYDIR/debian -type d -name ".svn" -exec rm -rf '{}' \;
 fi
+make
 FPCSRC=/usr/share/fpcsrc/$(fpc -iV)
 if [ ! -d $FPCSRC ]
 then
   FPCSRC=/usr/share/fpcsrc
 fi
-
 FPCDIR=$FPCSRC;export FPCDIR
-echo $FPCDIR
-cp /etc/fpc.cfg $FPCINDYDIR
 cd $FPCINDYDIR
 echo $(pwd)
-mkdir fakeinstall
-fpcmake
-echo -Fu$HOME/$FPCINDYDIR/fakeinstall >> fpc.cfg
-make install INSTALL_PREFIX=$HOME/$FPCINDYDIR/fakeinstall
 fpcmake -rTall
-cd ../..
-rm $FPCINDYDIR/fpc.cfg
+make
+cd examples
+fpcmake -rTall
+cd ..
+
+
 
 
