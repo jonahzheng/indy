@@ -774,6 +774,7 @@ type
     FUseCCC: Boolean;
     //is the SSCN Client method on for this connection?
     FSSCNOn : Boolean;
+    FIsCompressionSupported : Boolean;
 
     FOnBannerBeforeLogin : TIdFTPBannerEvent;
     FOnBannerAfterLogin : TIdFTPBannerEvent;
@@ -961,6 +962,7 @@ type
     //This is true for servers that are known to support these even if they aren't
     //listed in the FEAT reply.
     function IsServerMDTZAndListTForm : Boolean;
+    property IsCompressionSupported : Boolean read FIsCompressionSupported;
     //
     property SupportsVerification : Boolean read GetSupportsVerification;
     property CanResume: Boolean read ResumeSupported;
@@ -976,6 +978,7 @@ type
     property UsingNATFastTrack : Boolean read FUsingNATFastTrack;
     property UsingSFTP : Boolean read FUsingSFTP;
     property CurrentTransferMode : TIdFTPTransferMode read FCurrentTransferMode write TransferMode;
+
   published
     {$IFDEF DOTNET}
       {$IFDEF DOTNET_2_OR_ABOVE}
@@ -2190,8 +2193,7 @@ end;
 procedure TIdFTP.TransferMode(ATransferMode: TIdFTPTransferMode);
 var
   s: String;
-  i : Integer;
-  LBuf : String;
+
 begin
   if FCurrentTransferMode <> ATransferMode then
   begin
@@ -2210,14 +2212,8 @@ begin
         if not Assigned(FCompressor) then begin
           raise EIdFTPMissingCompressor.Create(RSFTPMissingCompressor);
         end;
-        //we parse this way because IxExtensionSupported can only work
-        //with one word.
-        for i := 0 to FCapabilities.Count-1 do begin
-          LBuf := Trim(FCapabilities[i]);
-          if LBuf = 'MODE Z' then begin {do not localize}
-            s := 'Z'; {do not localize}
-            Break;
-          end;
+        if Self.IsCompressionSupported then begin
+          s := 'Z';  {Do not localize}
         end;
       end;
     end;
@@ -2250,6 +2246,8 @@ end;
 procedure TIdFTP.IssueFEAT;
 var
   LClnt: String;
+  LBuf : String;
+  i : Integer;
 begin
   //Feat data
 
@@ -2296,6 +2294,17 @@ begin
       end;
     end;
     IOHandler.DefStringEncoding := TIdTextEncoding.UTF8;
+  end;
+  //see if compression is supported.
+  //we parse this way because IxExtensionSupported can only work
+  //with one word.
+  FIsCompressionSupported := False;
+  for i := 0 to FCapabilities.Count-1 do begin
+    LBuf := Trim(FCapabilities[i]);
+    if LBuf = 'MODE Z' then begin {do not localize}
+      FIsCompressionSupported := True;
+      Break;
+    end;
   end;
 end;
 
