@@ -69,7 +69,7 @@ type
     function LongWordHashToHex(const AHash: TIdBytes; const ACount: Integer): String;
   public
     constructor Create; virtual;
-    function IsAvailable : Boolean; virtual;
+    class function IsAvailable : Boolean; virtual;
     function HashString(const ASrc: string; AEncoding: TIdTextEncoding = nil): TIdBytes;
     function HashStringAsHex(const AStr: String; AEncoding: TIdTextEncoding = nil): String;
     function HashBytes(const ASrc: TIdBytes): TIdBytes;
@@ -203,7 +203,7 @@ begin
   Result := ToHex(AHash,ACount*SizeOf(LongWord));
 end;
 
-function TIdHash.IsAvailable : Boolean;
+class function TIdHash.IsAvailable : Boolean;
 begin
   Result := True;
 end;
