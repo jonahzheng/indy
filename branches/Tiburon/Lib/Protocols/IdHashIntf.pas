@@ -127,6 +127,8 @@ begin
         SetLength(LBuf,LSize);
         UpdateHash(LCtx,LBuf);
         break;
+      end else begin
+        UpdateHash(LCtx,LBuf);
       end;
     until False;
   finally
