@@ -2275,6 +2275,18 @@ begin
   FCanUseMLS := IsExtSupported('MLSD') or IsExtSupported('MLST'); {do not localize}
   ExtractFeatFacts('LANG', FLangsSupported); {do not localize}
 
+  //see if compression is supported.
+  //we parse this way because IxExtensionSupported can only work
+  //with one word.
+  FIsCompressionSupported := False;
+  for i := 0 to FCapabilities.Count-1 do begin
+    LBuf := Trim(FCapabilities[i]);
+    if LBuf = 'MODE Z' then begin {do not localize}
+      FIsCompressionSupported := True;
+      Break;
+    end;
+  end;
+
   // send the CLNT command before sending the OPTS UTF8 command.
   // some servers need this in order to work around a bug in
   // Microsoft Internet Explorer's UTF-8 handling
@@ -2294,17 +2306,6 @@ begin
       end;
     end;
     IOHandler.DefStringEncoding := TIdTextEncoding.UTF8;
-  end;
-  //see if compression is supported.
-  //we parse this way because IxExtensionSupported can only work
-  //with one word.
-  FIsCompressionSupported := False;
-  for i := 0 to FCapabilities.Count-1 do begin
-    LBuf := Trim(FCapabilities[i]);
-    if LBuf = 'MODE Z' then begin {do not localize}
-      FIsCompressionSupported := True;
-      Break;
-    end;
   end;
 end;
 
