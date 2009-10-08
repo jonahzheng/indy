@@ -1081,9 +1081,9 @@ uses
   System.IO,
   System.Threading,
     {$ENDIF}
-  {$ENDIF}  
+  {$ENDIF}
   IdComponent, IdResourceStringsCore, IdIOHandlerStack, IdResourceStringsProtocols,
-  IdSSL, IdGlobalProtocols, IdHash, IdHashCRC, IdHashSHA1, IdHashMessageDigest,
+  IdSSL, IdGlobalProtocols, IdHash, IdHashCRC, IdHashIntf, IdHashSHA1, IdHashMessageDigest,
   IdStack, IdSimpleServer, IdOTPCalculator, SysUtils;
 
 const
@@ -3762,7 +3762,13 @@ function TIdFTP.GetSupportsVerification: Boolean;
 begin
   Result := Connected;
   if Result then begin
-    Result := IsExtSupported('XSHA1') or IsExtSupported('XMD5') or IsExtSupported('XCRC');
+    Result := TIdHashSHA512.IsAvailable and IsExtSupported('XSHA512');
+    if not Result then begin
+      Result := TIdHashSHA256.IsAvailable and IsExtSupported('XSHA256');
+    end;
+    if not Result  then begin
+      Result := IsExtSupported('XSHA1') or IsExtSupported('XMD5') or IsExtSupported('XCRC');
+    end;
   end;
 end;
 
@@ -3816,7 +3822,42 @@ begin
   if (LByteCount > AByteCount) and (AByteCount > 0) then begin
     LByteCount := AByteCount;
   end;
+  if TIdHashSHA512.IsAvailable and IsExtSupported('XSHA512') then begin
+    //XSHA256 <sp> pathname [<sp> startposition <sp> endposition]
+    LCmd := 'XSHA512 "'+ARemoteFile+'"';
+    if AByteCount > 0 then begin
+      LCmd := LCmd + ' ' + IntToStr(LStartPoint) + ' ' + IntToStr(LByteCount);
+    end
+    else
+      if AStartPoint > 0 then begin
+        LCmd := LCmd + ' ' + IntToStr(LStartPoint);
+      end else begin
+        //just in case the server doesn't support file names in quotes.
+        if IndyPos(' ', ARemoteFile)=0 then begin
+          LCmd := 'XSHA512 '+ ARemoteFile;
+        end;
+      end;
 
+    LHashClass := TIdHashSHA512;
+  end else
+  if TIdHashSHA256.IsAvailable and IsExtSupported('XSHA256') then begin
+    //XSHA256 <sp> pathname [<sp> startposition <sp> endposition]
+    LCmd := 'XSHA256 "'+ARemoteFile+'"';
+    if AByteCount > 0 then begin
+      LCmd := LCmd + ' ' + IntToStr(LStartPoint) + ' ' + IntToStr(LByteCount);
+    end
+    else
+      if AStartPoint > 0 then begin
+        LCmd := LCmd + ' ' + IntToStr(LStartPoint);
+      end else begin
+        //just in case the server doesn't support file names in quotes.
+        if IndyPos(' ', ARemoteFile)=0 then begin
+          LCmd := 'XSHA256 '+ ARemoteFile;
+        end;
+      end;
+
+    LHashClass := TIdHashSHA256;
+  end else
   if IsExtSupported('XSHA1') then begin
     //XMD5 "filename" startpos endpos
     //I think there's two syntaxes to this:
@@ -3832,9 +3873,12 @@ begin
     end else
     begin
       //BlackMoon FTP Server uses this one.
-      LCmd := 'XSHA1 "' + ARemoteFile + '"' + ' ' + IntToStr(LStartPoint);
-      if AByteCount > 0 then begin
+      if LStartPoint > 0 then begin
         LCmd := LCmd + ' ' + IntToStr(LByteCount);
+      end else begin
+        //IMPORTANT!!!  Some servers do not support a startpos parameter so do
+        //not attempt to use it if we want to checksum the entire file.
+        LCmd := 'XSHA1 "' + ARemoteFile + '"'
       end;
     end;
     LHashClass := TIdHashSHA1;
