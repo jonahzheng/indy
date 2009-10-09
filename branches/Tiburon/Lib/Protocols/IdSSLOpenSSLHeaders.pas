@@ -11531,9 +11531,16 @@ them in case we use them later.}
   {$ENDIF}
 
 
-function LoadFunction(const FceName: string; const ACritical : Boolean = True): Pointer;
+{ IMPORTANT!!!
+
+WindowsCE only has a Unicode (WideChar) version of GetProcAddress.  We could use
+a version of GetProcAddress in the FreePascal dynlibs unit but that does a
+conversion from ASCII to Unicode which might not be necessary since most calls
+pass a constant anyway.
+}
+function LoadFunction(const FceName: {$IFDEF UNDER_CE}TIdUnicodeString{$ELSE}string{$ENDIF}; const ACritical : Boolean = True): Pointer;
 begin
-  Result := GetProcAddress(hIdSSL, PChar(FceName));
+  Result := {$IFDEF WIN32_OR_WIN64_OR_WINCE}Windows.{$ENDIF}GetProcAddress(hIdSSL, {$IFDEF UNDER_CE}PWideChar{$ELSE}PChar{$ENDIF}(FceName));
   if ACritical then
   begin
     if Result = nil then begin
@@ -11542,9 +11549,9 @@ begin
   end;
 end;
 
-function LoadFunctionCLib(const FceName: string; const ACritical : Boolean = True): Pointer;
+function LoadFunctionCLib(const FceName: {$IFDEF UNDER_CE}TIdUnicodeString{$ELSE}string{$ENDIF}; const ACritical : Boolean = True): Pointer;
 begin
-  Result := GetProcAddress(hIdCrypto, PChar(FceName));
+  Result := {$IFDEF WIN32_OR_WIN64_OR_WINCE}Windows.{$ENDIF}GetProcAddress(hIdCrypto, {$IFDEF UNDER_CE}PWideChar{$ELSE}PChar{$ENDIF}(FceName));
   if ACritical then
   begin
     if Result = nil then begin
@@ -11562,11 +11569,11 @@ The OpenSSL developers changed that interface to a new "des_*" API.  They have s
  "_ossl_old_des_*" for backwards compatability with the old functions
  which are defined in des_old.h. 
 }
-function LoadOldCLib(const AOldName, ANewName : String; const ACritical : Boolean = True): Pointer;
+function LoadOldCLib(const AOldName, ANewName : {$IFDEF UNDER_CE}TIdUnicodeString{$ELSE}String{$ENDIF}; const ACritical : Boolean = True): Pointer;
 begin
-  Result := GetProcAddress(hIdCrypto, PChar(AOldName));
+  Result := {$IFDEF WIN32_OR_WIN64_OR_WINCE}Windows.{$ENDIF}GetProcAddress(hIdCrypto, {$IFDEF UNDER_CE}PWideChar{$ELSE}PChar{$ENDIF}(AOldName));
   if Result = nil then begin
-     Result := GetProcAddress(hIdCrypto, PChar(ANewName));
+     Result := {$IFDEF WIN32_OR_WIN64_OR_WINCE}Windows.{$ENDIF}GetProcAddress(hIdCrypto, {$IFDEF UNDER_CE}PWideChar{$ELSE}PChar{$ENDIF}(ANewName));
      if ACritical then begin
         if Result = nil then begin
             FFailedFunctionLoadList.Add(AOldName);
@@ -11891,12 +11898,12 @@ begin
   IdSslEvpCleanup;
   if hIdSSL > 0 then
   begin
-    FreeLibrary(hIdSSL);
+    {$IFDEF WIN32_OR_WIN64_OR_WINCE}Windows.{$ENDIF}FreeLibrary(hIdSSL);
     hIdSSL := 0;
   end;
   if hIdCrypto > 0 then
   begin
-    FreeLibrary(hIdCrypto);
+    {$IFDEF WIN32_OR_WIN64_OR_WINCE}Windows.{$ENDIF}FreeLibrary(hIdCrypto);
     hIdCrypto := 0;
   end;
 end;
