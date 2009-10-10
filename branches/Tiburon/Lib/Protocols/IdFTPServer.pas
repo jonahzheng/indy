@@ -619,7 +619,9 @@ type
     mlsdUnixGroup,
     mlsdFileCreationTime,
     mlsdFileLastAccessTime,
-    mlsdWin32Attributes);
+    mlsdWin32Attributes,
+    mlsdWin32DriveType,
+    mlstWin32DriveLabel);
 
   TIdMLSDAttrs = set of TIdMLSDAttr;
 
@@ -2363,6 +2365,10 @@ begin
   if mlsdWin32Attributes in FMLSDFacts then begin
     LContext.MLSOpts := LContext.MLSOpts + [WinAttribs];
   end;
+  if mlsdWin32DriveType in FMLSDFacts then begin
+     LContext.MLSOpts := LContext.MLSOpts + [WinDriveType];
+  end;
+
   //MS-DOS mode on for MS-DOS
   if FDirFormat = ftpdfDOS then begin
     LContext.FMSDOSMode := True;
@@ -5764,6 +5770,25 @@ begin
       Result := Result + ';';
     end;
   end;
+  if  mlsdWin32DriveType in FMLSDFacts then begin
+    Result := Result + 'Win32.dt';
+    if WinDriveType in AFacts then begin
+      Result := Result + '*;';  {Do not localize}
+    end else begin
+      Result := Result + ';';  {Do not localize}
+    end;
+  end;
+  if  mlstWin32DriveLabel in FMLSDFacts then begin
+    Result := Result + 'Win32.dl';
+    if WinDriveLabel in AFacts then begin
+      Result := Result + '*;';  {Do not localize}
+    end else begin
+      Result := Result + ';';  {Do not localize}
+    end;
+  end;
+  if Length(Result)>0 then begin
+    IdDelete(Result,Length(Result),1);
+  end;
 end;
 
 procedure TIdFTPServer.CommandCLNT(ASender: TIdCommand);
@@ -6497,8 +6522,11 @@ end;
 
 procedure TIdFTPServer.CommandOptsMLST(ASender: TIdCommand);
 const
-  LVALIDOPTS : array [0..10] of string =
-  ('type', 'size', 'modify', 'UNIX.mode', 'UNIX.owner', 'UNIX.group', 'unique', 'perm', 'create','windows.lastaccesstime','win32.ea'); {Do not localize}
+  LVALIDOPTS : array [0..12] of string =
+  ('type', 'size', 'modify',
+    'UNIX.mode', 'UNIX.owner', 'UNIX.group',
+    'unique', 'perm', 'create',
+    'windows.lastaccesstime','win32.ea','win32.dt','win32.dl'); {Do not localize}
 var
   s: string;
   LContext : TIdFTPServerContext;
@@ -6547,6 +6575,12 @@ var
             begin
               Result := Result + [WinAttribs];
             end;
+        11 : if mlsdWin32DriveType in ASvr.MLSDFacts then begin
+               Result := Result + [WinDriveType];
+             end;
+        12 : if  mlstWin32DriveLabel in ASvr.MLSDFacts then begin
+               Result := Result + [WinDriveLabel];
+             end;
       end;
     end;
   end;
@@ -6596,7 +6630,13 @@ var
     end;
     if IdFTPListOutput.WinAttribs in AFacts then
     begin
-      Result := Result + 'win32.ea'; {Do not translate}
+      Result := Result + 'win32.ea;'; {Do not translate}
+    end;
+    if IdFTPListOutput.WinDriveType in AFacts then begin
+      Result := Result + 'Win32.dt';  {Do not localize}
+    end;
+    if IdFTPListOutput.WinDriveLabel in AFacts then begin
+      Result := Result + 'Win32.dl';  {Do not localize}
     end;
   end;
 
