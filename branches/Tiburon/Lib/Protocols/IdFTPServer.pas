@@ -2368,7 +2368,9 @@ begin
   if mlsdWin32DriveType in FMLSDFacts then begin
      LContext.MLSOpts := LContext.MLSOpts + [WinDriveType];
   end;
-
+  if mlstWin32DriveLabel in FMLSDFacts then begin
+    LContext.MLSOpts := LContext.MLSOpts + [WinDriveLabel];
+  end;
   //MS-DOS mode on for MS-DOS
   if FDirFormat = ftpdfDOS then begin
     LContext.FMSDOSMode := True;
@@ -6633,10 +6635,10 @@ var
       Result := Result + 'win32.ea;'; {Do not translate}
     end;
     if IdFTPListOutput.WinDriveType in AFacts then begin
-      Result := Result + 'Win32.dt';  {Do not localize}
+      Result := Result + 'Win32.dt;';  {Do not localize}
     end;
     if IdFTPListOutput.WinDriveLabel in AFacts then begin
-      Result := Result + 'Win32.dl';  {Do not localize}
+      Result := Result + 'Win32.dl;';  {Do not localize}
     end;
   end;
 
