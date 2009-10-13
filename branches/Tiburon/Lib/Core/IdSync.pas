@@ -162,8 +162,14 @@ end;
 
 constructor TIdSync.Create;
 begin
+  {$IFDEF DOTNET}
+  inherited Create;
+  CreateNotifyThread;
+  FThread := AThread;
+  {$ELSE}
   CreateNotifyThread;
   Create(GNotifyThread);
+  {$ENDIF}
 end;
 
 procedure TIdSync.Synchronize;
@@ -287,7 +293,7 @@ begin
 end;
 
 procedure TIdNotify.WaitFor;
-Var
+var
   LNotifyIndex: Integer;
 begin
   LNotifyIndex := 0;
