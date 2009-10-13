@@ -411,11 +411,15 @@ type
   function ContentTypeToEncoding(const AContentType: string): TIdTextEncoding;
   function CharsetToEncoding(const ACharset: string): TIdTextEncoding;
 
-  function ReadStringAsContentType(AStream: TStream; const AContentType: String): String;
-  function ReadStringAsCharset(AStream: TStream; const ACharset: String): String;
+  function ReadStringAsContentType(AStream: TStream; const AContentType: String
+    {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}): String;
+  function ReadStringAsCharset(AStream: TStream; const ACharset: String
+    {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}): String;
 
-  procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings; const AContentType: string);
-  procedure ReadStringsAsCharset(AStream: TStream; AStrings: TStrings; const ACharset: string);
+  procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings; const AContentType: string
+    {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF});
+  procedure ReadStringsAsCharset(AStream: TStream; AStrings: TStrings; const ACharset: string
+    {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF});
 
   {
   These are for handling binary values that are in Network Byte order.  They call
@@ -3876,7 +3880,9 @@ begin
   end;
 end;
 
-function ReadStringAsContentType(AStream: TStream; const AContentType: String): String;
+function ReadStringAsContentType(AStream: TStream; const AContentType: String
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+): String;
 var
   LEncoding: TIdTextEncoding;
 begin
@@ -3885,7 +3891,7 @@ begin
   {$IFNDEF DOTNET}
   try
   {$ENDIF}
-    Result := ReadStringFromStream(AStream, -1, LEncoding);
+    Result := ReadStringFromStream(AStream, -1, LEncoding{$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
   {$IFNDEF DOTNET}
   finally
     LEncoding.Free;
@@ -3893,7 +3899,9 @@ begin
   {$ENDIF}
 end;
 
-procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings; const AContentType: string);
+procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings; const AContentType: string
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+);
 var
   LEncoding: TIdTextEncoding;
 begin
@@ -3904,7 +3912,7 @@ begin
     {$IFDEF HAS_TEncoding}
     AStrings.LoadFromStream(AStream, LEncoding);
     {$ELSE}
-    AStrings.Text := ReadStringFromStream(AStream, -1, LEncoding);
+    AStrings.Text := ReadStringFromStream(AStream, -1, LEncoding{$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
     {$ENDIF}
   {$IFNDEF DOTNET}
   finally
@@ -3913,7 +3921,9 @@ begin
   {$ENDIF}
 end;
 
-function ReadStringAsCharset(AStream: TStream; const ACharset: String): String;
+function ReadStringAsCharset(AStream: TStream; const ACharset: String
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+): String;
 //TODO:  Figure out what should happen with Unicode content type.
 var
   LEncoding: TIdTextEncoding;
@@ -3923,7 +3933,7 @@ begin
   {$IFNDEF DOTNET}
   try
   {$ENDIF}
-    Result := ReadStringFromStream(AStream, -1, LEncoding);
+    Result := ReadStringFromStream(AStream, -1, LEncoding{$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
   {$IFNDEF DOTNET}
   finally
     LEncoding.Free;
@@ -3931,7 +3941,9 @@ begin
   {$ENDIF}
 end;
 
-procedure ReadStringsAsCharset(AStream: TStream; AStrings: TStrings; const ACharset: String);
+procedure ReadStringsAsCharset(AStream: TStream; AStrings: TStrings; const ACharset: String
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+);
 var
   LEncoding: TIdTextEncoding;
 begin
@@ -3942,7 +3954,7 @@ begin
     {$IFDEF HAS_TEncoding}
     AStrings.LoadFromStream(AStream, LEncoding);
     {$ELSE}
-    AStrings.Text := ReadStringFromStream(AStream, -1, LEncoding);
+    AStrings.Text := ReadStringFromStream(AStream, -1, LEncoding{$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
     {$ENDIF}
   {$IFNDEF DOTNET}
   finally
