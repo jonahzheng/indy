@@ -442,7 +442,9 @@ type
   function ExtractHeaderSubItem(const AHeaderLine,ASubItem: String): String;
   function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String): String;
   function FileSizeByName(const AFilename: TIdFileName): Int64;
-
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  function IsVolume(const APathName : TIdFileName) : Boolean;
+  {$ENDIF}
   //MLIST FTP DateTime conversion functions
   function FTPMLSToGMTDateTime(const ATimeStamp : String):TDateTime;
   function FTPMLSToLocalDateTime(const ATimeStamp : String):TDateTime;
@@ -1349,6 +1351,10 @@ end;
 function CopyFileTo(const Source, Destination: TIdFileName): Boolean;
 {$IFDEF API_COPYFILETO}
   {$IFDEF USE_INLINE}inline;{$ENDIF}
+  {$IFDEF WIN32_OR_WIN64}
+var
+  LOldErrorMode : Integer;
+  {$ENDIF}
 {$ELSE}
 var
   SourceF, DestF : File;
@@ -1364,7 +1370,12 @@ begin
   Result := CopyFile(PWideChar(Source), PWideChar(Destination), False);
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64}
-  Result := CopyFile(PChar(Source), PChar(Destination), False);
+  LOldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
+  try
+    Result := CopyFile(PChar(Source), PChar(Destination), False);
+  finally
+     SetErrorMode(LOldErrorMode);
+  end;
   {$ENDIF}
   {$IFNDEF API_COPYFILETO}
   //mostly from  http://delphi.about.com/od/fileio/a/untypedfiles.htm
@@ -1531,6 +1542,15 @@ begin
   end;
 end;
 
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
+function IsVolume(const APathName : TIdFileName) : Boolean;
+  {$IFDEF USE_INLINE}inline;{$ENDIF}
+begin
+  Result := TextEndsWith(APathName,':') or TextEndsWith(APathName,':\');
+end;
+{$ENDIF}
+
+
 // OS-independant version
 function FileSizeByName(const AFilename: TIdFileName): Int64;
 //Leave in for HTTP Server
@@ -1543,6 +1563,9 @@ var
 var
   LHandle : THandle;
   LRec : TWin32FindData;
+     {$IFDEF WIN32_OR_WIN64}
+    LOldErrorMode : Integer;
+      {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 begin
@@ -1554,11 +1577,42 @@ begin
   end;
   {$ELSE}
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  LHandle := Windows.FindFirstFile(PIdFileNameChar(AFileName), LRec);
-  if LHandle <> INVALID_HANDLE_VALUE then begin
-    Windows.FindClose(LHandle);
-    Result := (Int64(LRec.nFileSizeHigh) shl 32) + LRec.nFileSizeLow;
-  end;
+
+     //check to see if something like "a:\" is specified and fail in that case.
+     //FindFirstFile would probably succede even though a drive is not a proper
+     //file.
+    if IsVolume(AFileName) then begin
+      Result := -1;
+    end else begin
+{
+IMPORTANT!!!
+
+For servers in Windows, you probably want the API call to fail rather than get a
+"Cancel   Try Again   Continue " dialog-box box if a drive is not ready or
+there's some other critical I/O error.
+}
+      {$IFDEF WIN32_OR_WIN64}
+      LOldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
+      try
+      {$ENDIF}
+        LHandle := Windows.FindFirstFile(PIdFileNameChar(AFileName), LRec);
+        if LHandle <> INVALID_HANDLE_VALUE then begin
+          Windows.FindClose(LHandle);
+          if (LRec.dwFileAttributes and Windows.FILE_ATTRIBUTE_DIRECTORY = 0) then begin
+            Result := (Int64(LRec.nFileSizeHigh) shl 32) + LRec.nFileSizeLow;
+          end else begin
+            Result := -1;
+          end;
+        end else begin
+          Result := -1;
+        end;
+      {$IFDEF WIN32_OR_WIN64}
+      finally
+        SetErrorMode(LOldErrorMode);
+      end;
+      {$ENDIF}
+    end;
+
     {$ELSE}
   if FileExists(AFilename) then begin
     with TIdReadFileExclusiveStream.Create(AFilename) do try
@@ -1575,6 +1629,9 @@ var
   LRec : TWin32FindData;
   LHandle : THandle;
   LTime : {$IFDEF WINCE}TSystemTime{$ELSE}Integer{$ENDIF};
+   {$IFDEF WIN32_OR_WIN64}
+   LOldErrorMode : Integer;
+   {$ENDIF}
 {$ENDIF}
 {$IFDEF UNIX}
 var
@@ -1590,10 +1647,21 @@ var
 begin
   Result := -1;
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  LHandle := Windows.FindFirstFile(PIdFileNameChar(AFileName), LRec);
-  if LHandle <> INVALID_HANDLE_VALUE then begin
-    Windows.FindClose(LHandle);
-    if (LRec.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY) = 0 then begin
+  if IsVolume(AFileName) then begin
+    Result := -1;
+  end else begin
+    {$IFDEF WIN32_OR_WIN64}
+    LOldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
+    try
+    {$ENDIF}
+       LHandle := Windows.FindFirstFile(PIdFileNameChar(AFileName), LRec);
+    {$IFDEF WIN32_OR_WIN64}
+    finally
+      SetErrorMode(LOldErrorMode);
+    end;
+    {$ENDIF}
+    if LHandle <> INVALID_HANDLE_VALUE then begin
+      Windows.FindClose(LHandle);
       {$IFDEF WINCE}
       FileTimeToSystemTime(@LRec, @LTime);
       Result := SystemTimeToDateTime(LTime);

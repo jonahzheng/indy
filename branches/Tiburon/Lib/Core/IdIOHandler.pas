@@ -747,6 +747,9 @@ uses
   System.IO,
     {$ENDIF}
   {$ENDIF}
+  {$IFDEF WIN32_OR_WIN64 }
+  Windows,
+  {$ENDIF}
   IdStack, IdStackConsts, IdResourceStrings, SysUtils;
 
 var
@@ -2297,7 +2300,14 @@ function TIdIOHandler.WriteFile(const AFile: String; AEnableTransferFile: Boolea
 var
 //TODO: There is a way in linux to dump a file to a socket as well. use it.
   LStream: TStream;
+  {$IFDEF WIN32_OR_WIN64}
+  LOldErrorMode : Integer;
+  {$ENDIF}
 begin
+  {$IFDEF WIN32_OR_WIN64 }
+  LOldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
+  try
+  {$ENDIF}
   if not FileExists(AFile) then begin
     raise EIdFileNotFound.CreateFmt(RSFileNotFound, [AFile]);
   end;
@@ -2308,6 +2318,11 @@ begin
   finally
     FreeAndNil(LStream);
   end;
+  {$IFDEF WIN32_OR_WIN64}
+  finally
+    SetErrorMode(LOldErrorMode)
+  end;
+  {$ENDIF}
 end;
 
 function TIdIOHandler.WriteBufferingActive: Boolean;

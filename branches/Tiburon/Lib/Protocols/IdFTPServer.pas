@@ -3969,11 +3969,9 @@ begin
       Exit;
     end;
   end;
-  if not FOPTSCommands.HandleCommand(ASender.Context, LCmd) then
-  begin
+  if not FOPTSCommands.HandleCommand(ASender.Context, LCmd) then begin
     ASender.Reply.SetReply(501, RSFTPOptNotRecog);
-  end else
-  begin
+  end else begin
     //we don't want an extra 200 reply.
     ASender.PerformReply := False;
   end;
