@@ -674,7 +674,7 @@ type
   TIdUnicodeString = String;
   TIdUnicodeChar = Char;
   TIdBytes = TBytes;
-  TIdWideChars = TCharArray;
+  TIdWideChars = {$IFDEF DOTNET}array of Char{$ELSE}TCharArray{$ENDIF};
   {$ELSE}
   TIdUnicodeString = {$IFDEF DOTNET}System.String{$ELSE}WideString{$ENDIF};
   TIdUnicodeChar = WideChar;
@@ -1214,7 +1214,8 @@ procedure WriteStringToStream(AStream: TStream; const AStr: string; const ALengt
 function ReadCharFromStream(AStream: TStream; var VChar: Char; AByteEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
   ): Integer;
-function ReadTIdBytesFromStream(const AStream: TStream; var ABytes: TIdBytes; const Count: TIdStreamSize): TIdStreamSize;
+function ReadTIdBytesFromStream(const AStream: TStream; var ABytes: TIdBytes;
+  const Count: TIdStreamSize; const AIndex: Integer = 0): TIdStreamSize;
 procedure WriteTIdBytesToStream(const AStream: TStream; const ABytes: TIdBytes;
   const ASize: Integer = -1; const AIndex: Integer = 0);
 
@@ -5396,10 +5397,11 @@ begin
   );
 end;
 
-function ReadTIdBytesFromStream(const AStream: TStream; var ABytes: TIdBytes; const Count: TIdStreamSize): TIdStreamSize;
+function ReadTIdBytesFromStream(const AStream: TStream; var ABytes: TIdBytes;
+  const Count: TIdStreamSize; const AIndex: Integer = 0): TIdStreamSize;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  Result := TIdStreamHelper.ReadBytes(AStream, ABytes, Count);
+  Result := TIdStreamHelper.ReadBytes(AStream, ABytes, Count, AIndex);
 end;
 
 function ReadCharFromStream(AStream: TStream; var VChar: Char;
