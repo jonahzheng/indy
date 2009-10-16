@@ -264,7 +264,7 @@ begin
     ClientPortMax := BoundPortMax;
     // Turn on Reuse if specified
     if (FReuseSocket = rsTrue) or ((FReuseSocket = rsOSDependent) and (GOSType = otUnix)) then begin
-      GStack.SetSocketOption(FBinding.Handle, Id_SOL_SOCKET, Id_SO_REUSEADDR, Id_SO_True);
+      FBinding.SetSockOpt(Id_SOL_SOCKET, Id_SO_REUSEADDR, Id_SO_True);
     end;
     Bind;
     // Turn off Nagle if specified
@@ -453,7 +453,7 @@ end;
 procedure TIdIOHandlerSocket.SetNagleOpt(AEnabled: Boolean);
 begin
   if BindingAllocated then begin
-    GStack.SetSocketOption(FBinding.Handle, Id_SOCKETOPTIONLEVEL_TCP, Id_TCP_NODELAY, Integer(not AEnabled));
+    FBinding.SetSockOpt(Id_SOCKETOPTIONLEVEL_TCP, Id_TCP_NODELAY, Integer(not AEnabled));
   end;
 end;
 
