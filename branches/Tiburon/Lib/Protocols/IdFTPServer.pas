@@ -1260,7 +1260,7 @@ uses
   System.Threading,
     {$ENDIF}
   {$ENDIF}
-  IdHash, IdHashCRC, IdHashMessageDigest, IdHashSHA1, IdIOHandlerSocket,
+  IdHash, IdHashCRC, IdHashMessageDigest, IdHashSHA1, IdHashIntf, IdIOHandlerSocket,
   IdResourceStringsProtocols, IdGlobalProtocols, IdSimpleServer, IdSSL,
   IdIOHandlerStack, IdSocketHandle, IdStrings, IdTCPClient, IdEMailAddress,
   IdStack, IdFTPListTypes;
@@ -2123,6 +2123,18 @@ begin
   LCmd.OnCommand := CommandCheckSum;
   LCmd.ExceptionReply.NumericCode := 550;
   LCmd.Description.Text := 'Syntax: XSHA1 "[filename]" [start] [finish]'; {do not localize}
+
+  LCmd := CommandHandlers.Add;
+  LCmd.Command := 'XSHA256';   {Do not translate}
+  LCmd.OnCommand := CommandCheckSum;
+  LCmd.ExceptionReply.NumericCode := 550;
+  LCmd.Description.Text := 'Syntax: XSHA256 "[filename]" [start] [finish]'; {do not localize}
+
+  LCmd := CommandHandlers.Add;
+  LCmd.Command := 'XSHA512';   {Do not translate}
+  LCmd.OnCommand := CommandCheckSum;
+  LCmd.ExceptionReply.NumericCode := 550;
+  LCmd.Description.Text := 'Syntax: XSHA512 "[filename]" [start] [finish]'; {do not localize}
 
 //commands from
 //      draft-peterson-streamlined-ftp-command-extensions-01.txt
@@ -3937,6 +3949,12 @@ begin
     ASender.Reply.Text.Add('XCRC "filename" SP EP');//filename;start;end');  {Do not Localize}
     ASender.Reply.Text.Add('XMD5 "filename" SP EP');//filename;start;end');  {Do not Localize}
     ASender.Reply.Text.Add('XSHA1 "filename" SP EP');//filename;start;end');  {Do not Localize}
+    if TIdHashSHA256.IsAvailable then begin
+      ASender.Reply.Text.Add('XSHA256 "filename" SP EP'); //file;start/end
+    end;
+    if TIdHashSHA512.IsAvailable then begin
+      ASender.Reply.Text.Add('XSHA512 "filename" SP EP'); //file;start/end
+    end;
   end;
   //I'm doing things this way with complience level to match the current
   //version of NcFTPD
@@ -6038,7 +6056,7 @@ end;
 
 procedure TIdFTPServer.CommandCheckSum(ASender: TIdCommand);
 const
-  HashTypes: array[0..2] of TIdHashClass = (TIdHashCRC32, TIdHashMessageDigest5, TIdHashSHA1);
+  HashTypes: array[0..4] of TIdHashClass = (TIdHashCRC32, TIdHashMessageDigest5, TIdHashSHA1, TIdHashSHA256, TIdHashSHA512);
 var
   LCalcStream : TStream;
   LFileName, LCheckSum, LBuf : String;
@@ -6097,7 +6115,7 @@ begin
         end;
         try
           LCalcStream.Position := 0;
-          LHashIdx := PosInStrArray(ASender.CommandHandler.Command, ['XCRC', 'XMD5', 'XSHA1'], False); {do not localize}
+          LHashIdx := PosInStrArray(ASender.CommandHandler.Command, ['XCRC', 'XMD5', 'XSHA1','XSHA256','XSHA512'], False); {do not localize}
           LCheckSum := CalculateCheckSum(HashTypes[LHashIdx], LCalcStream, LBeginPos, LEndPos);
           ASender.Reply.SetReply(250, LCheckSum);
         finally
