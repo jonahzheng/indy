@@ -867,13 +867,13 @@ type
     procedure SetUserSecurity(const Value: TIdFTPSecurityOptions);
     procedure CreateDataChannel(APASV: Boolean = False);
     function  IsAuthenticated(ASender: TIdCommand): Boolean;
-    procedure KillDataChannel;
-    procedure TerminateAndFreeDataChannel;
     procedure ReInitialize; override;
 
   public
     constructor Create(AConnection: TIdTCPConnection; AYarn: TIdYarn; AList: TThreadList = nil); override;
     destructor Destroy; override;
+    procedure KillDataChannel;
+
     property DataChannel : TIdDataChannel read FDataChannel;
     property Server : TIdFTPServer read FServer write FServer;
 
@@ -1349,22 +1349,16 @@ begin
   FUserSecurity.Assign( Value);
 end;
 
-procedure TIdFTPServerContext.TerminateAndFreeDataChannel;
-Begin
-  KillDataChannel;
-  FreeAndNil(FDataChannel);
-End;//
-
 destructor TIdFTPServerContext.Destroy;
 begin
-  TerminateAndFreeDataChannel;
+  KillDataChannel;
   FreeAndNil(FUserSecurity);
   inherited Destroy;
 end;
 
 procedure TIdFTPServerContext.CreateDataChannel(APASV: Boolean = False);
 begin
-  TerminateAndFreeDataChannel; //let the old one terminate
+  KillDataChannel; //let the old one terminate
   FDataChannel := TIdDataChannel.Create(APASV, Self, UserSecurity.RequirePASVFromSameIP, Server);
 end;
 
@@ -4680,7 +4674,7 @@ begin
       end else
       begin
         FreeAndNil(LStream);
-        LContext.TerminateAndFreeDataChannel;
+        LContext.KillDataChannel;
         ASender.Reply.SetReply(426, RSFTPDataConnClosedAbnormally);
       end;
     end;
@@ -6491,7 +6485,7 @@ end;
 procedure TIdFTPServer.DoTerminateContext(AContext: TIdContext);
 begin
   try
-    TIdFTPServerContext(AContext).TerminateAndFreeDataChannel;
+    TIdFTPServerContext(AContext).KillDataChannel;
   finally
     inherited DoTerminateContext(AContext);
   end;
