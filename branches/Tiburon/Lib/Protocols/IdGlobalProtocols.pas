@@ -473,7 +473,8 @@ type
   function IsLeadChar(ACh : Char): Boolean;
   {$ENDIF}
   function IsTopDomain(const AStr: string): Boolean;
-  function IsValidIP(const S: String): Boolean;
+  function IsValidIP(const S: String): Boolean; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IsValidIPv4() or the TIdIPAddress class'{$ENDIF};{$ENDIF}
+  function IsValidIPv4(const S: String): Boolean;
   function MakeTempFilename(const APath: TIdFileName = ''): TIdFileName;
   procedure MoveChars(const ASource: ShortString; ASourceStart: integer; var ADest: ShortString; ADestStart, ALen: integer);
   function OrdFourByteToLongWord(AByte1, AByte2, AByte3, AByte4 : Byte): LongWord;
@@ -2882,6 +2883,12 @@ begin
 end;
 
 function IsValidIP(const S: String): Boolean;
+{$IFDEF USE_INLINE}inline;{$ENDIF}
+begin
+  Result := IsValidIPv4(S);
+end;
+
+function IsValidIPv4(const S: String): Boolean;
 var
   j, i: Integer;
   LTmp: String;
@@ -2893,6 +2900,9 @@ begin
     if (j < 0) or (j >= 256) then begin
       Exit;
     end;
+  end;
+  if LTmp <> '' then begin
+    Exit;
   end;
   Result := True;
 end;
