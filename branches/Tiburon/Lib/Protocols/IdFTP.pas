@@ -2313,6 +2313,7 @@ procedure TIdFTP.Login;
 var
   i : Integer;
   LResp : Word;
+  LCmd : String;
 
   function FtpHost: String;
   begin
@@ -2377,15 +2378,28 @@ begin
   case ProxySettings.ProxyType of
   fpcmNone:
     begin
-      if SendCmd('USER ' + FUserName, [230, 232, 331]) = 331 then begin {do not localize}
-        SendCmd('PASS ' + GetLoginPassword, [230, 332]);  {do not localize}
-        if IsAccountNeeded then begin
-          if CheckAccount then begin
-            SendCmd('ACCT ' + FAccount, [202, 230, 500]);  {do not localize}
-          end else begin
-            RaiseExceptionForLastCmdResult
+      LCmd := MakeXAUTCmd( Self.Greeting.Text.Text , FUserName, GetLoginPassword);
+      if LCmd <> '' then begin
+        if SendCmd(LCmd, [230, 232, 331]) = 331 then begin {do not localize}
+          if IsAccountNeeded then begin
+            if CheckAccount then begin
+              SendCmd('ACCT ' + FAccount, [202, 230, 500]);  {do not localize}
+            end else begin
+              RaiseExceptionForLastCmdResult
+            end;
           end;
-   	end;
+        end;
+      end else begin
+        if SendCmd('USER ' + FUserName, [230, 232, 331]) = 331 then begin {do not localize}
+          SendCmd('PASS ' + GetLoginPassword, [230, 332]);  {do not localize}
+          if IsAccountNeeded then begin
+            if CheckAccount then begin
+              SendCmd('ACCT ' + FAccount, [202, 230, 500]);  {do not localize}
+            end else begin
+              RaiseExceptionForLastCmdResult
+            end;
+         end;
+        end;
       end;
     end;
   fpcmUserSite:
