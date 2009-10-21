@@ -1268,11 +1268,12 @@ uses
 const
   //THese commands need some special treatment in the Indy 10 FTP Server help system
   //as they will not always work
-  HELP_SPEC_CMDS : array [0..22] of string =
+  HELP_SPEC_CMDS : array [0..24] of string =
     ('SIZE','MDTM',                                                 {do not localize}
      'AUTH','PBSZ','PROT','CCC','MIC','CONF','ENC', 'SSCN','CPSV',  {do not localize}
-     'MFMT','MFF','MD5','MMD5','XCRC','XMD5','XSHA1',               {do not localize}
-     'COMB','AVBL','DSIZ','RMDA','HOST');                                                       {do not localize}
+     'MFMT','MFF',
+     'MD5','MMD5','XCRC','XMD5','XSHA1','XSHA256','XSHA512',               {do not localize}
+     'COMB','AVBL','DSIZ','RMDA','HOST');                          {do not localize}
 
   //These commands must always be present even if not implemented
   //alt help topics and superscripts should be used sometimes.
@@ -1489,27 +1490,39 @@ var
           begin
             Result := True;
           end;
-        18 : //  'COMB');
+        18 : //'XSHA256'
+          if (Assigned(FOnCRCFile) or Assigned(FTPFileSystem))
+            and TIdHashSHA256.IsAvailable then
+          begin
+            Result := True;
+          end;
+        19 : //'XSHA512'
+          if (Assigned(FOnCRCFile) or Assigned(FTPFileSystem)) and
+            TIdHashSHA512.IsAvailable then
+          begin
+            Result := True;
+          end;
+        20 : //  'COMB');
           if Assigned(FOnCRCFile) or Assigned(FTPFileSystem) then
           begin
             Result := True;
           end;
-        19 : //  AVBL
+        21 : //  AVBL
           if Assigned(FOnAvailDiskSpace) then
           begin
             Result := True;
           end;
-        20 : //  DSIZ
+        22 : //  DSIZ
           if Assigned(FOnCompleteDirSize) then
           begin
             Result := True;
           end;
-        21 : // RMDA
+        23 : // RMDA
           if Assigned(FOnRemoveDirectoryAll) then
           begin
             Result := True;
           end;
-        22 : // HOST
+        24 : // HOST
           if Assigned( FOnHostCheck ) then begin
             Result := True;
           end;
