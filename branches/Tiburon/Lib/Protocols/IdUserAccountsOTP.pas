@@ -119,11 +119,9 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure UserDisconnected(const AUser : String); override;
-        //Challenge user is a nice backdoor for some things we will do in a descendent class
-    function  ChallengeUser(var VIsSafe : Boolean; const AUserName : String) : String; override;
-    procedure SaveUserAccounts(const AIniFile : String);
-    procedure LoadUserAccounts(const AIniFile : String);
+    function SendsChallange : Boolean; override;
     property Accounts : TIdOTPUserAccounts  read FAccounts;
+
   published
     property DefaultPassword : String read FDefaultPassword write SetDefaultPassword;
     property MaxCount : LongWord read FMaxCount write SetMaxCount default DEF_MAXCount;
@@ -433,6 +431,11 @@ begin
   end;
   FSeed := LowerCase(AValue);
   FCurrentCount := TIdOTPUserManager(TIdOTPUserAccounts(Collection).GetOwner).MaxCount;
+end;
+
+function TIdOTPUserAccount.SendsChallange : Boolean;
+begin
+   Result := True;
 end;
 
 end.
