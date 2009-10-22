@@ -1081,9 +1081,9 @@ uses
   System.IO,
   System.Threading,
     {$ENDIF}
-  {$ENDIF}
+  {$ENDIF}  
   IdComponent, IdResourceStringsCore, IdIOHandlerStack, IdResourceStringsProtocols,
-  IdSSL, IdGlobalProtocols, IdHash, IdHashCRC, IdHashIntf, IdHashSHA1, IdHashMessageDigest,
+  IdSSL, IdGlobalProtocols, IdHashIntf, IdHash, IdHashCRC, IdHashSHA1, IdHashMessageDigest,
   IdStack, IdSimpleServer, IdOTPCalculator, SysUtils;
 
 const
@@ -2001,7 +2001,7 @@ begin
   VPort := TIdPort(IndyStrToInt(Fetch(s, ',')) and $FF) shl 8;   {do not localize}
   //use trim as one server sends something like this:
   //"227 Passive mode OK (195,92,195,164,4,99 )"
-  VPort := VPort + TIdPort(IndyStrToInt(Fetch(s, ',')) and $FF); {Do not translate}
+  VPort := VPort or TIdPort(IndyStrToInt(Fetch(s, ',')) and $FF); {Do not translate}
 end;
 
 procedure TIdFTP.SendPassive(var VIP: string; var VPort: TIdPort);
@@ -2193,7 +2193,6 @@ end;
 procedure TIdFTP.TransferMode(ATransferMode: TIdFTPTransferMode);
 var
   s: String;
-
 begin
   if FCurrentTransferMode <> ATransferMode then
   begin
@@ -3000,7 +2999,7 @@ end;
 procedure TIdFTP.CombineFiles(const ATargetFile: String; AFileParts: TStrings);
 var
   i : Integer;
-  LCmd : String;
+  LCmd: String;
 begin
   if IsExtSupported('COMB') and (AFileParts.Count > 0) then begin {do not localize}
     LCmd := 'COMB "' + ATargetFile + '"'; {do not localize}
@@ -3515,7 +3514,7 @@ returning "MDTM YYYYMMDDHHMMSS" only will use the new method where the date a
 and time is GMT (UTC).
 ===
 }
-procedure TIdFTP.SetModTimeGMT(const AFileName: String; const AGMTTime: TDateTime);
+procedure TIdFTP.SetModTimeGMT(const AFileName : String; const AGMTTime: TDateTime);
 begin
   //use MFMT instead of MDTM because that always takes the time as Universal
   //time (the most accurate).
@@ -3780,7 +3779,7 @@ begin
     if not Result then begin
       Result := TIdHashSHA256.IsAvailable and IsExtSupported('XSHA256');
     end;
-    if not Result  then begin
+    if not Result then begin
       Result := IsExtSupported('XSHA1') or IsExtSupported('XMD5') or IsExtSupported('XCRC');
     end;
   end;
@@ -3838,41 +3837,37 @@ begin
   end;
   if TIdHashSHA512.IsAvailable and IsExtSupported('XSHA512') then begin
     //XSHA256 <sp> pathname [<sp> startposition <sp> endposition]
-    LCmd := 'XSHA512 "'+ARemoteFile+'"';
+    LCmd := 'XSHA512 "' + ARemoteFile + '"';
     if AByteCount > 0 then begin
       LCmd := LCmd + ' ' + IntToStr(LStartPoint) + ' ' + IntToStr(LByteCount);
     end
-    else
-      if AStartPoint > 0 then begin
-        LCmd := LCmd + ' ' + IntToStr(LStartPoint);
-      end else begin
-        //just in case the server doesn't support file names in quotes.
-        if IndyPos(' ', ARemoteFile)=0 then begin
-          LCmd := 'XSHA512 '+ ARemoteFile;
-        end;
+    else if AStartPoint > 0 then begin
+      LCmd := LCmd + ' ' + IntToStr(LStartPoint);
+    end else begin
+      //just in case the server doesn't support file names in quotes.
+      if IndyPos(' ', ARemoteFile) = 0 then begin
+        LCmd := 'XSHA512 ' + ARemoteFile;
       end;
-
+    end;
     LHashClass := TIdHashSHA512;
-  end else
-  if TIdHashSHA256.IsAvailable and IsExtSupported('XSHA256') then begin
+  end
+  else if TIdHashSHA256.IsAvailable and IsExtSupported('XSHA256') then begin
     //XSHA256 <sp> pathname [<sp> startposition <sp> endposition]
     LCmd := 'XSHA256 "'+ARemoteFile+'"';
     if AByteCount > 0 then begin
       LCmd := LCmd + ' ' + IntToStr(LStartPoint) + ' ' + IntToStr(LByteCount);
     end
-    else
-      if AStartPoint > 0 then begin
-        LCmd := LCmd + ' ' + IntToStr(LStartPoint);
-      end else begin
-        //just in case the server doesn't support file names in quotes.
-        if IndyPos(' ', ARemoteFile)=0 then begin
-          LCmd := 'XSHA256 '+ ARemoteFile;
-        end;
+    else if AStartPoint > 0 then begin
+      LCmd := LCmd + ' ' + IntToStr(LStartPoint);
+    end else begin
+      //just in case the server doesn't support file names in quotes.
+      if IndyPos(' ', ARemoteFile) = 0 then begin
+        LCmd := 'XSHA256 ' + ARemoteFile;
       end;
-
+    end;
     LHashClass := TIdHashSHA256;
-  end else
-  if IsExtSupported('XSHA1') then begin
+  end
+  else if IsExtSupported('XSHA1') then begin
     //XMD5 "filename" startpos endpos
     //I think there's two syntaxes to this:
     //
@@ -3940,7 +3935,7 @@ begin
     Free;
   end;
 
-  if SendCMD(LCMD) = 250 then begin
+  if SendCmd(LCmd) = 250 then begin
     LRemoteCRC := Trim(LastCmdResult.Text.Text);
     IdDelete(LRemoteCRC, 1, IndyPos(' ', LRemoteCRC)); // delete the response
   end;
