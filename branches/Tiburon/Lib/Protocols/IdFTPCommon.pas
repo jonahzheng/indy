@@ -642,10 +642,12 @@ will not exploit any known flaw in the server.
 I did verify that this works with "X2 WS_FTP Server 6.1.1".
 }
 function IsWSFTPServer(var VKey : Cardinal; const AGreeting : String) : Boolean;
-procedure xaut_encrypt(var Dest : TIdBytes; const ASrc : TIdBytes; const AKey : Cardinal);
-procedure xaut_unpack(var Dest : String; const ASrc : TIdBytes);
+procedure xaut_encrypt(var VDest : TIdBytes; const ASrc : TIdBytes; const AKey : Cardinal);
+procedure xaut_unpack(var VDest : String; const ASrc : TIdBytes);
+procedure xaut_pack(var VDst : TIdBytes; const ASrc : String);
 function MakeXAUTCmd(const AGreeting, AUsername, APassword : String; const Ad : Cardinal = 2) : String;
-
+function ExtractAutInfoFromXAUT(const AXAutStr : String; const AKey : Cardinal) : String;
+function MakeXAUTKey : Cardinal;
 
 const
   XAUT_2_KEY = $49327576;
@@ -671,7 +673,8 @@ begin
   end;
 end;
 
-procedure xaut_encrypt(var Dest : TIdBytes; const ASrc : TIdBytes; const AKey : Cardinal);
+procedure xaut_encrypt(var VDest : TIdBytes; const ASrc : TIdBytes; const AKey : Cardinal);
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 var LBuf : TIdBytes;
   i, l : Integer;
 begin
@@ -682,14 +685,14 @@ begin
   LBuf[2] := (AKey shr 16) and $FF;
   LBuf[3] := (AKey shr 24) and $FF;
   l := Length(ASrc);
-  SetLength(Dest,l);
+  SetLength(VDest,l);
   for i := 0 to l - 1 do begin
-    Dest[i] := ASrc[i] xor LBuf[i mod 4];
+    VDest[i] := ASrc[i] xor LBuf[i mod 4];
   end;
-
 end;
 
-procedure xaut_unpack(var Dest : String; const ASrc : TIdBytes);
+procedure xaut_unpack(var VDest : String; const ASrc : TIdBytes);
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 var
   i, l : Integer;
   LBuf : TIdBytes;
@@ -702,10 +705,28 @@ begin
    //dst[i*2+1] = (src[i] & 0x0F) + 0x31;
      LBuf[(i*2)+1] := ((ASrc[i] and $0F) + $31);
    end;
-   Dest := BytesToString(LBuf);
+   VDest := BytesToString(LBuf);
+end;
+
+procedure xaut_pack(var VDst : TIdBytes; const ASrc : String);
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+var
+  i, l : Integer;
+  LSrc : TIdBytes;
+begin
+  LSrc := ToBytes(ASrc);
+  Assert(Length(LSrc) = Length(ASrc),'both LSRC and ASRC must be identical.');
+  l := Length(LSrc) div 2;
+  SetLength(VDst,l);
+  for i := 0 to l do  begin
+    VDst[i] := (((LSrc[ (i * 2)] - $35) shl 4)  +
+       (LSrc[ (i * 2)+1] - $31));
+  end;
+
 end;
 
 function MakeXAUTCmd(const AGreeting, AUsername, APassword : String; const Ad : Cardinal = 2) : String;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 var LKey : Cardinal;
   LDst : TIdBytes;
 begin
@@ -720,6 +741,34 @@ begin
     xaut_unpack(Result,LDst);
     Result := 'XAUT '+IntToStr(AD)+' '+ Result;
   end;
+end;
+
+function ExtractAutInfoFromXAUT(const AXAutStr : String; const AKey : Cardinal) : String;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+var
+  LBuf : TIdBytes;
+  LNum : Cardinal;  //first param
+begin
+  Result := AXAutStr;
+
+  LNum := StrToIntDef(Fetch(Result),0);
+  xaut_pack(LBuf,Result);
+  xaut_encrypt(LBuf,LBuf, AKey );
+  if LNum = 2 then begin
+    xaut_encrypt(LBuf,LBuf,XAUT_2_KEY);
+  end;
+  Result := BytesToString(LBuf);
+end;
+
+function MakeXAUTKey : Cardinal;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Randomize;
+  repeat
+    Result := (Random($FF) shl 8) + (Random($FF) shl 16) + (Random($FF) shl 24) +
+      Random($FF);
+
+  until (Result <> XAUT_2_KEY ) and (Result <> 0)
 end;
 
 {Misc Parsing}
