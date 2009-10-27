@@ -555,6 +555,7 @@ const
 implementation
 
 uses
+  IdIPAddress,
   {$IFDEF UNIX}
     {$IFDEF KYLIX}
   Libc,
@@ -1570,7 +1571,6 @@ var
   {$ENDIF}
 {$ENDIF}
 begin
-  Result := 0;
   {$IFDEF DOTNET}
   LFile := System.IO.FileInfo.Create(AFileName);
   if LFile.Exists then begin
@@ -1615,6 +1615,7 @@ there's some other critical I/O error.
     end;
 
     {$ELSE}
+  Resi;t := -1;
   if FileExists(AFilename) then begin
     with TIdReadFileExclusiveStream.Create(AFilename) do try
       Result := Size;
@@ -2910,8 +2911,12 @@ end;
 //everything that does not start with '.' is treated as hostname
 function IsHostname(const S: String): Boolean;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
+var
+  LIPStr : String;
+  LIP :  TIdIPv6Address;
 begin
-  Result := (not TextStartsWith(S, '.')) and (not IsValidIP(S));    {Do not Localize}
+  Result := (not TextStartsWith(S, '.')) and
+    (not IsValidIPv4(S)) and (MakeCanonicalIPv6Address(S)='');    {Do not Localize}
 end;
 
 function IsTopDomain(const AStr: string): Boolean;
