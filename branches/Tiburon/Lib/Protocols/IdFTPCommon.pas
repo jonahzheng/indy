@@ -198,20 +198,15 @@ type
   http://www.ford-hutchinson.com/~fh-1-pfh/ftps-ext.html#bad
 }
 const
-   TLS_AUTH_NAMES : Array [0..3] of string =
-     ('TLS',    {implies clear data port in some implementations}  {Do not translate}
-      'SSL',    {implies private data port in some implementations}  {Do not translate}
-      'TLS-C',  {implies clear data port in some implementations} {Do not translate}
-      'TLS-P'); {implies private data port in some implementations} {Do not translate}
-
-
-
-
+  TLS_AUTH_NAMES : Array [0..3] of string =
+    ('TLS',    {implies clear data port in some implementations}  {Do not translate}
+     'SSL',    {implies private data port in some implementations}  {Do not translate}
+     'TLS-C',  {implies clear data port in some implementations} {Do not translate}
+     'TLS-P'); {implies private data port in some implementations} {Do not translate}
 
 {
 We hard-code these path specifiers because they are used for specific servers
 irregardless of what the client's Operating system is.  It's based on the server.
-
 }
 
 const
@@ -288,7 +283,8 @@ const
   VMS_BLOCK_SIZE = 512;
 
   //1/1/1970 - EPL time stamps are based on this value
-const EPLF_BASE_DATE = 25569;
+const
+  EPLF_BASE_DATE = 25569;
 
 const
   //Settings specified by
@@ -310,6 +306,7 @@ const
   DEF_ZLIB_MEM_LEVEL = 8; // Z_DEFLATED
   DEF_ZLIB_STRATAGY = 0; //Z_DEFAULT_STRATEGY - default
   DEF_ZLIB_METHOD = 8; // Z_DEFLATED
+
 type
   TIdVSEPQDisposition = (
        IdPQAppendable,
@@ -333,6 +330,7 @@ const
      '<Power Queues>',   {do not localize} // treat as dir
      '<VSAM Catalog>',   {do not localize} // treat as dir
      'Entry Seq VSAM');  {do not localize} // treat as file
+
   {From: http://groups.google.com/groups?q=MVS+JES+FTP+DIR+Output&hl=en&lr=&ie=UTF-8&oe=utf-8&selm=4qf4b8%246i7%40dsk92.itg.ti.com&rnum=1}
   MVS_JES_Status : array [0..3] of string =
     ('INPUT',   {do not localize}  //job received but not run yet
@@ -395,12 +393,14 @@ I think it is done with a PALTER DISP=[disposition code] command but I'm not sur
 
 }
 
-const UnitreeStoreTypes : array [0..1] of string =
-  ('AR', 'DK'); {do not localize}
+const
+  UnitreeStoreTypes : array [0..1] of string =
+    ('AR', 'DK'); {do not localize}
 
 const
   UNIX_LINKTO_SYM = ' -> '; {do not localize} //indicates where a symbolic link points to
   CDATE_PART_SEP = '/-';  {Do not localize}
+
 {***
 Path conversions
 ***}
@@ -1087,16 +1087,23 @@ begin
   Result := (LTmp = CUR_DIR) or (LTmp = PARENT_DIR);
 end;
 
+// RLebeau 10/26/09: RemoveDuplicatePathSyms() cannot be inlined if it uses
+// the const variables declared outside of it, as they are private to this unit
+// and not accessible during inlining!
+
+{
 const
   TrailingPathCorrectionOrg : array [0..3] of string =
     ('//','\\','/\','\/');
   TrailingPathCorrectionNew : array [0..3] of string =
     ('/','\','/','/');
+}
 
 function RemoveDuplicatePathSyms(APath : String): String;
   {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := StringsReplace(APath, TrailingPathCorrectionOrg, TrailingPathCorrectionNew);
+  //Result := StringsReplace(APath, TrailingPathCorrectionOrg, TrailingPathCorrectionNew);
+  Result := StringsReplace(APath, ['//','\\','/\','\/'], ['/','\','/','/']); {do not localize}
 end;
 
 {Path conversion}
