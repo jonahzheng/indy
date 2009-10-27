@@ -157,8 +157,7 @@ var
 begin
   randomize;
   MaxChar := Length(CharMap) - 1;
-  for i := 1 to NumChar do
-  begin
+  for i := 1 to NumChar do begin
     // Add one because CharMap is 1-based
     Result := Result + CharMap[Random(maxChar) + 1];
   end;
@@ -174,10 +173,8 @@ var
   i : Integer;
 begin
   Result := (ASeed <> '') and (Length(ASeed) < 17);
-  if Result then
-  begin
-    for i := 1 to Length(ASeed) do
-    begin
+  if Result then begin
+    for i := 1 to Length(ASeed) do begin
       if not CharIsInSet(ASeed, i, CharMap) then begin
         Result := False;
         Break;
@@ -197,10 +194,8 @@ var
   i : Integer;
 begin
   Result := '';
-  for i := 1 to Length(AString) do
-  begin
-    if not (AString[i] in LWS) then
-    begin
+  for i := 1 to Length(AString) do begin
+    if not (AString[i] in LWS) then begin
       Result := Result + LowerCase(AString[i]);
     end;
   end;
@@ -218,8 +213,7 @@ begin
     Exit;
   end;
   VIsSafe := not LUser.Authenticating;
-  if VIsSafe then
-  begin
+  if VIsSafe then begin
   //Note that we want to block any attempts to access the server after the challanage
   //is given.  This is required to prevent a race condition that a hacker can
   //exploit.
@@ -388,8 +382,7 @@ begin
   if (not Result) and (LHexOTP <> '') then begin
     Result := (LRecPass = LHexOTP);
   end;
-  if Result then
-  begin
+  if Result then begin
     FNoReenter.Acquire;
     try
       if CurrentCount = 0 then begin
