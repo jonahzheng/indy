@@ -2911,9 +2911,6 @@ end;
 //everything that does not start with '.' is treated as hostname
 function IsHostname(const S: String): Boolean;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
-var
-  LIPStr : String;
-  LIP :  TIdIPv6Address;
 begin
   Result := (not TextStartsWith(S, '.')) and
     (not IsValidIPv4(S)) and (MakeCanonicalIPv6Address(S)='');    {Do not Localize}
