@@ -165,7 +165,7 @@ begin
   {$IFDEF DOTNET}
   inherited Create;
   CreateNotifyThread;
-  FThread := AThread;
+  FThread := GNotifyThread;
   {$ELSE}
   CreateNotifyThread;
   Create(GNotifyThread);
