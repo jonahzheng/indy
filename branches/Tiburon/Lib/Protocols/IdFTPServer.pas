@@ -682,6 +682,8 @@ type
   //
   TOnFTPUserLoginEvent = procedure(ASender: TIdFTPServerContext; const AUsername, APassword: string;
     var AAuthenticated: Boolean) of object;
+  TOnFTPUserAccountEvent = procedure(ASender : TIdFTPServerContext; const AUsername, APassword,AAcount: string; var AAuthenticated: Boolean) of object;
+
   TOnAfterUserLoginEvent = procedure(ASender: TIdFTPServerContext) of object;
 
   TOnDirectoryEvent = procedure(ASender: TIdFTPServerContext; var VDirectory: TIdFTPFileName) of object;
@@ -695,7 +697,6 @@ type
     ADirectoryListing: TIdFTPListOutput; const ACmd : String; const ASwitches : String) of object;
   TOnCustomListDirectoryEvent = procedure(ASender: TIdFTPServerContext; const APath: TIdFTPFileName;
     ADirectoryListing: TStrings; const ACmd : String; const ASwitches : String) of object;
-
   TOnFileEvent = procedure(ASender: TIdFTPServerContext; const APathName: TIdFTPFileName) of object;
   TOnCheckFileEvent = procedure(ASender: TIdFTPServerContext; const APathName: TIdFTPFileName; var VExist : Boolean) of object;
   TOnRenameFileEvent = procedure(ASender: TIdFTPServerContext; const ARenameFromFile, ARenameToFile: TIdFTPFileName) of object;
@@ -935,6 +936,7 @@ type
     FSystemType: string;
     FDefaultDataPort : TIdPort;
     FUserAccounts: TIdCustomUserManager;
+    FOnUserAccount : TOnFTPUserAccountEvent;
     FOnAfterUserLogin: TOnAfterUserLoginEvent;
     FOnUserLogin: TOnFTPUserLoginEvent;
     FOnChangeDirectory: TOnDirectoryEvent;
@@ -983,6 +985,7 @@ type
     FOnMLST : TIdOnMLST;
     FOnSiteUTIME : TOnSiteUTIME;
     FOnHostCheck : TOnHostCheck;
+    procedure SetOnUserAccount(AValue : TOnFTPUserAccountEvent);
     procedure AuthenticateUser(ASender: TIdCommand);
     function SupportTaDirSwitches(AContext : TIdFTPServerContext) : Boolean;
     function IgnoreLastPathDelim(const APath : String) : String;
@@ -1019,6 +1022,7 @@ type
     procedure CommandQUIT(ASender:TIdCommand);
     procedure CommandUSER(ASender: TIdCommand);
     procedure CommandPASS(ASender: TIdCommand);
+    procedure CommandACCT(ASender: TIdCommand);
     procedure CommandXAUT(ASender : TIdCommand);
     procedure CommandCWD(ASender: TIdCommand);
     procedure CommandCDUP(ASender: TIdCommand);
@@ -1207,6 +1211,7 @@ type
     property OnGetFileSize: TOnGetFileSizeEvent read FOnGetFileSize write FOnGetFileSize;
     property OnGetFileDate: TOnGetFileDateEvent read FOnGetFileDate write FOnGetFileDate;
     property OnUserLogin: TOnFTPUserLoginEvent read FOnUserLogin write FOnUserLogin;
+    property OnUserAccount : TOnFTPUserAccountEvent read FOnUserAccount write SetOnUserAccount;
     property OnListDirectory: TOnListDirectoryEvent read FOnListDirectory write FOnListDirectory;
     property OnDataPortBeforeBind : TOnDataPortBind read FOnDataPortBeforeBind write FOnDataPortBeforeBind;
     property OnDataPortAfterBind : TOnDataPortBind read FOnDataPortAfterBind write FOnDataPortAfterBind;
@@ -1328,6 +1333,8 @@ const
   //%s = host
   //%n = xauth key
     XAUTHBANNER = '%s X2 WS_FTP Server Compatible(%d)';
+    ACCT_HELP_DISABLED =  'ACCT        (specify account); unimplemented.'; {do not localize}
+    ACCT_HELP_ENABLED   = 'Syntax: ACCT <SP> <account-information> <CRLF>';
 
 function CalculateCheckSum(AHashClass: TIdHashClass; AStrm: TStream; ABeginPos, AEndPos: TIdStreamSize): String;
   {$IFDEF USE_INLINE} inline; {$ENDIF}
@@ -1342,7 +1349,8 @@ end;
 
 procedure XAutGreeting(AContext: TIdContext; AGreeting : TIdReply; const AHostName : String);
   {$IFDEF USE_INLINE} inline; {$ENDIF}
-var s : String;
+var
+  s : String;
 begin
 //for XAUT to work with WS-FTP Pro, you need a banner mentioning "WS_FTP Server"
 //and that banner can only be one line in length.
@@ -1690,10 +1698,8 @@ begin
             XAutGreeting(LContext,ASender.Reply, LTmp);
           end;
           ASender.Reply.SetReply(220,ASender.Reply.Text.Text);
-         // ASender.Reply.NumericCode := 220;
         end;
         ASender.SendReply;
-  //      ASender.PerformReply := Reply;
       end else begin
         ASender.Reply.SetReply(530,RSFTPHostNotFound);
       end;
@@ -1701,7 +1707,6 @@ begin
   end else begin
      CmdSyntaxError(ASender);
   end;
-
 end;
 
 procedure TIdFTPServer.InitializeCommandHandlers;
@@ -1726,9 +1731,16 @@ begin
   //ACCT <SP> <account-information> <CRLF>
   LCmd := CommandHandlers.Add;
   LCmd.Command := 'ACCT';    {Do not Localize}
-  LCMd.NormalReply.SetReply(502, IndyFormat(RSFTPCmdNotImplemented, ['ACCT'])); {do not localize}
-  LCmd.HelpSuperScript := '*'; //not supported
-  LCmd.Description.Text := 'ACCT        (specify account); unimplemented.'; {do not localize}
+ // LCMd.NormalReply.SetReply(502, IndyFormat(RSFTPCmdNotImplemented, ['ACCT'])); {do not localize}
+  LCmd.OnCommand := CommandACCT;
+  if Assigned(Self.FOnUserAccount) then begin
+    LCmd.HelpSuperScript := ''; //not supported
+    LCmd.Description.Text := ACCT_HELP_ENABLED;
+  end else begin
+    LCmd.HelpSuperScript := '*'; //not supported
+    LCmd.Description.Text := ACCT_HELP_DISABLED;
+  end;
+//  'ACCT        (specify account); unimplemented.'; {do not localize}
 
   {
   LCmd.NormalReply.SetReply(502, Format(RSFTPCmdNotImplemented, ['ACCT']));    {Do not Localize}
@@ -2167,6 +2179,7 @@ begin
   LCmd.OnCommand := CommandCheckSum;
   LCmd.ExceptionReply.NumericCode := 550;
   LCmd.Description.Text := 'Syntax: XMD5 "[filename]" [start] [finish]'; {do not localize}
+
  //Seen in RaidenFTPD documentation
   //XCRC "[filename]" [start] [finish]
   LCmd := CommandHandlers.Add;
@@ -2219,6 +2232,7 @@ begin
   LCmd.ExceptionReply.NumericCode := 550;
   LCmd.NormalReply.SetReply(200, RSFTPClntNoted);  {Do not Localize}
   LCmd.Description.Text := 'Syntax: CLNT<space><clientname>'; {do not localize}
+
   //Informal - an old proposed solution to IPv6 support in FTP.
   //Mentioned at:  http://cr.yp.to/ftp/retr.html
   //and supported by PureFTPD.
@@ -2243,36 +2257,42 @@ begin
   LCmd.NormalReply.SetReply(502, IndyFormat(RSFTPCmdNotImplemented, ['MLFL']));    {Do not Localize}
   LCmd.HelpSuperScript := '*';
   LCmd.Description.Text := 'MLFL        (mail file); unimplemented.'; {do not localize}
+
   //MAIL [<SP> <ident>] <CRLF>
   LCmd := CommandHandlers.Add;
   LCmd.Command := 'MAIL';    {Do not Localize}
   LCmd.NormalReply.SetReply(502, IndyFormat(RSFTPCmdNotImplemented, ['MAIL']));    {Do not Localize}
   LCmd.HelpSuperScript := '*';
   LCmd.Description.Text := 'MAIL        (mail to user); unimplemented.'; {do not localize}
+
   //         MSND [<SP> <ident>] <CRLF>
   LCmd := CommandHandlers.Add;
   LCmd.Command := 'MSND';    {Do not Localize}
   LCmd.NormalReply.SetReply(502, IndyFormat(RSFTPCmdNotImplemented, ['MSND']));    {Do not Localize}
   LCmd.HelpSuperScript := '*';
   LCmd.Description.Text := 'MSND        (mail send to terminal); unimplemented.'; {do not localize}
+
   //         MSOM [<SP> <ident>] <CRLF>
   LCmd := CommandHandlers.Add;
   LCmd.Command := 'MSOM';    {Do not Localize}
   LCmd.NormalReply.SetReply(502, IndyFormat(RSFTPCmdNotImplemented, ['MSOM']));    {Do not Localize}
   LCmd.HelpSuperScript := '*';
   LCmd.Description.Text := 'MSOM        (mail send to terminal or mailbox); unimplemented.'; {do not localize}
+
   //         MSAM [<SP> <ident>] <CRLF>
   LCmd := CommandHandlers.Add;
   LCmd.Command := 'MSAM';    {Do not Localize}
   LCmd.NormalReply.SetReply(502, IndyFormat(RSFTPCmdNotImplemented, ['MSAM']));    {Do not Localize}
   LCmd.HelpSuperScript := '*';
   LCmd.Description.Text := 'MSAM        (mail send to terminal and mailbox); unimplemented.'; {do not localize}
+
   //         MRSQ [<SP> <scheme>] <CRLF>
   LCmd := CommandHandlers.Add;
   LCmd.Command := 'MRSQ';    {Do not Localize}
   LCmd.NormalReply.SetReply(502, IndyFormat(RSFTPCmdNotImplemented, ['MRSQ']));    {Do not Localize}
   LCmd.HelpSuperScript := '*';
   LCmd.Description.Text := 'MRSQ        (mail recipient scheme question); unimplemented.'; {do not localize}
+
   //         MRCP <SP> <ident> <CRLF>
   LCmd := CommandHandlers.Add;
   LCmd.Command := 'MRCP';    {Do not Localize}
@@ -2288,12 +2308,12 @@ begin
 
 //We use a separate command handler collection for some things which are
 //valid durring the data connection.
-
   //ABOR <CRLF>
   LCmd := FDataChannelCommands.Add;
   LCmd.Command := 'ABOR';    {Do not Localize}
   LCmd.OnCommand := CommandABOR;
   LCmd.ExceptionReply.NumericCode := 550;
+
   //STAT [<SP> <pathname>] <CRLF>
   LCmd := FDataChannelCommands.Add;
   LCmd.Command := 'STAT';    {Do not Localize}
@@ -2302,19 +2322,20 @@ begin
 
 //This is for SITE commands to make it easy for the user to add their own site commands
 //as they wish
-
   //These are Unix site commands
   LCmd := FSITECommands.Add;
   LCmd.Command := 'HELP'; {Do not localize}
   LCmd.ExceptionReply.NumericCode := 501;
   LCmd.OnCommand := CommandSiteHELP;
   LCmd.Description.Text := 'Syntax: SITE HELP [ <sp> <string> ]'; {do not localize}
+
   //SITE ATTRIB<SP>Attribs<SP>FileName<CRLF>
   LCmd := FSITECommands.Add;
   LCmd.Command := 'ATTRIB';    {Do not Localize}
   LCmd.OnCommand := CommandSiteATTRIB;
   LCmd.ExceptionReply.NumericCode := 501;
   LCmd.Description.Text := 'Syntax: SITE ATTRIB<SP>Attribs<SP>Filename'; {do not localize}
+
   //SITE UMASK<SP>[mask]
   LCmd := FSITECommands.Add;
   LCmd.Command := 'UMASK';    {Do not Localize}
@@ -2327,6 +2348,7 @@ begin
   LCmd.OnCommand := CommandSiteCHMOD;
   LCmd.ExceptionReply.NumericCode := 501;
   LCmd.Description.Text := 'Syntax: SITE CHMOD<SP>Permission numbers<SP>Filename'; {do not localize}
+
   //additional Unix server commands that aren't supported but should be supported, IMAO
   //SITE CHOWN<SP>Owner[:Group]<SP>Filename<CRLF>
   LCmd := FSITECommands.Add;
@@ -2334,12 +2356,14 @@ begin
   LCmd.OnCommand := CommandSiteCHOWN;
   LCmd.ExceptionReply.NumericCode := 501;
   LCmd.Description.Text := 'Syntax: SITE CHOWN<SP>Owner[:Group]<SP>Filename<CRLF>'; {do not localize}
+
   //SITE CHGRP<SP>Group<SP>Filename<CRLF>
   LCmd := FSITECommands.Add;
   LCmd.Command := 'CHGRP';   {Do not Localize}
   LCmd.OnCommand := CommandSiteCHGRP;
   LCmd.ExceptionReply.NumericCode := 501;
   LCmd.Description.Text := 'Syntax: SITE CHGRP<SP>Group<SP>Filename<CRLF>'; {do not localize}
+
   //Microsoft IIS SITE commands
   //SITE DIRSTYLE
   LCmd := FSITECommands.Add;
@@ -2347,12 +2371,14 @@ begin
   LCmd.ExceptionReply.NumericCode := 501;
   LCmd.OnCommand := CommandSiteDIRSTYLE;
   LCmd.Description.Text := 'Syntax: SITE DIRSTYLE (toggle directory format)'; {do not localize}
+
   //SITE ZONE
   LCmd := FSITECommands.Add;
   LCmd.Command := 'ZONE'; {Do not localize}
   LCmd.ExceptionReply.NumericCode := 530;
   LCmd.OnCommand := CommandSiteZONE;
   LCmd.Description.Text := 'Syntax: SITE ZONE (returns the server offset from GMT)'; {do not localize}
+
   //SITE UTIME
   LCmd := FSITECommands.Add;
   LCmd.Command := 'UTIME'; {Do not localize}
@@ -2363,11 +2389,13 @@ begin
   LCmd.Description.Text := 
   'Syntax:  SITE UTIME <file> <access-time> <modification-time> <creation time>'+CR+LF+ {do not localize}
   '         Each timestamp must be in the format YYYYMMDDhhmmss';          {do not localize}
+
   //OPTS MLST
   LCmd := FOPTSCommands.Add;
   LCmd.Command := 'MLST';  {Do not localize}
   LCmd.ExceptionReply.NumericCode := 501;
   LCmd.OnCommand := CommandOptsMLST;
+
   //OPTS MODE Z
   LCmd := FOPTSCommands.Add;
   LCmd.Command := 'MODE Z'; {Do not localize}
@@ -2380,6 +2408,7 @@ begin
   LCmd.ExceptionReply.NumericCode := 501;
   LCmd.NormalReply.NumericCode := 200;
   LCmd.OnCommand := CommandOptsUTF8;
+
   // OPTS UTF8 <ON|OFF>
   LCmd := FOPTSCommands.Add;
   LCmd.Command := 'UTF8'; {Do not localize}
@@ -2392,7 +2421,6 @@ begin
   LCmd.Command := 'XAUT';    {Do not Localize}
   LCmd.OnCommand := CommandXAUT;
   LCmd.Description.Text := 'Syntax: XAUT <sp> 2 <sp> <encrypted username and password>'; {do not localize}
-
 end;
 
 procedure TIdFTPServer.ContextCreated(AContext: TIdContext);
@@ -2540,13 +2568,13 @@ begin
     FUserAccounts := AValue;
     if Assigned(FUserAccounts) then begin
       FUserAccounts.FreeNotification(Self);
+      FOnUserAccount := nil;
       //XAUT can not work with an account manager that sends
       //a challange because that command is a USER/PASS rolled into
       //one command.
       if FUserAccounts.SendsChallange then begin
         FSupportXAUTH := False;
       end;
-
     end;
   end;
 end;
@@ -2725,12 +2753,19 @@ begin
           FOnUserLogin(LContext, LContext.FUsername, LContext.Password, LValidated);
           LContext.FAuthenticated := LValidated;
           if LValidated then begin
-            ASender.Reply.SetReply(230, RSFTPUserLogged);
-            if Assigned(OnLoginSuccessBanner) then begin
-              OnLoginSuccessBanner(LContext, ASender.Reply);
-              ASender.Reply.SetReply(230, ASender.Reply.Text.Text);
+            if (LContext.AccountNeeded = True) and Assigned(FOnUserAccount) then begin
+              LContext.FAuthenticated := False;
+              ASender.Reply.SetReply(332,'Need account for login.');
+              Exit;
+            end else begin
+              LContext.FAuthenticated := LValidated;
+              ASender.Reply.SetReply(230, RSFTPUserLogged);
+              if Assigned(OnLoginSuccessBanner) then begin
+                OnLoginSuccessBanner(LContext, ASender.Reply);
+                ASender.Reply.SetReply(230, ASender.Reply.Text.Text);
+              end;
+              LContext.FPasswordAttempts := 0;
             end;
-            LContext.FPasswordAttempts := 0;
           end else begin
             LContext.FPassword := '';    {Do not Localize}
             Inc(LContext.FPasswordAttempts);
@@ -2771,7 +2806,6 @@ begin
       Exit;
     end;
     LContext.FAuthenticated := False;
-
     LContext.FPassword := ASender.UnparsedParams;
     AuthenticateUser(ASender);
 end;
@@ -2801,12 +2835,10 @@ begin
     if TextEndsWith(s,'^vta4r2') then begin
         LContext.Password  := Copy(s,1,Length(s)-7);
     end;
-
   end else begin
     LContext.Username := s;
     LContext.Password := '';
   end;
-
   LContext.Authenticated := False;
   if (FAnonymousAccounts.IndexOf(LowerCase(ASender.UnparsedParams)) >= 0) and AllowAnonymousLogin then  begin
     LContext.UserType := utAnonymousUser;
@@ -2814,6 +2846,41 @@ begin
     LContext.UserType := utNormalUser;
   end;
   AuthenticateUser(ASender);
+end;
+
+procedure TIdFTPServer.CommandACCT(ASender: TIdCommand);
+var
+  LContext : TIdFTPServerContext;
+  LValidated : Boolean;
+begin
+  LValidated := False;
+  if Assigned(FOnUserAccount) then begin
+    LContext := ASender.Context as TIdFTPServerContext;
+    LContext.Account := ASender.UnparsedParams;
+    FOnUserAccount(LContext,LContext.Username, LContext.Password, LContext.Account, LValidated);
+    LContext.Authenticated := LValidated;
+    if LValidated then begin
+       LContext.AccountNeeded := False;
+       ASender.Reply.SetReply(230, RSFTPUserLogged);
+       if Assigned(OnLoginSuccessBanner) then begin
+         OnLoginSuccessBanner(LContext, ASender.Reply);
+         ASender.Reply.SetReply(230, ASender.Reply.Text.Text);
+         LContext.PasswordAttempts := 0;
+       end;
+    end else begin
+       LContext.FPassword := '';    {Do not Localize}
+       Inc(LContext.FPasswordAttempts);
+       if (LContext.UserSecurity.PasswordAttempts > 0) and
+         (LContext.FPasswordAttempts >= LContext.UserSecurity.PasswordAttempts) then begin
+              //Max login attempts exceeded, close the connection
+         DisconUser(ASender);
+         Exit;
+       end;
+       ASender.Reply.SetReply(530, RSFTPUserNotLoggedIn);
+    end;
+  end else begin
+    ASender.Reply.SetReply(502, IndyFormat(RSFTPCmdNotImplemented, ['ACCT'])); {do not localize}
+  end;
 end;
 
 procedure TIdFTPServer.CommandCWD(ASender: TIdCommand);
@@ -4308,6 +4375,29 @@ end;
 procedure TIdFTPServer.SetFTPSecurityOptions(const AValue: TIdFTPSecurityOptions);
 begin
   FFTPSecurityOptions.Assign(AValue);
+end;
+
+procedure TIdFTPServer.SetOnUserAccount(AValue: TOnFTPUserAccountEvent);
+var
+  LCmd : TIdCommandHandler;
+  i : Integer;
+begin
+  if  (FUserAccounts = nil) then begin
+    FOnUserAccount := AValue;
+    for i := 0 to CommandHandlers.Count - 1 do begin
+      LCmd :=  CommandHandlers.Items[i];
+      if LCmd.Command = 'ACCT' then begin
+        if Assigned(AValue) then begin
+          LCmd.HelpSuperScript := '';
+          LCmd.Description.Text := ACCT_HELP_ENABLED;
+        end else begin
+          FOnUserAccount := AValue;
+          LCmd.HelpSuperScript := '*';
+          LCmd.Description.Text := ACCT_HELP_DISABLED;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TIdFTPServer.CommandAUTH(ASender: TIdCommand);
