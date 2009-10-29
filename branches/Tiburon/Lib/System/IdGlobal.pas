@@ -4621,18 +4621,25 @@ end;
 // for details.  The bug is fixed in 2009 Update 1.  For RTM, call FormatBuf()
 // directly to work around the problem...
 function IndyFormat(const AFormat: string; const Args: array of const): string;
-{$IFDEF HAS_TFormatSettings}
+{$IFNDEF DOTNET}
+  {$IFDEF HAS_TFormatSettings}
 var
   EnglishFmt: TFormatSettings;
-  {$IFDEF BROKEN_FmtStr}
+    {$IFDEF BROKEN_FmtStr}
   Len, BufLen: Integer;
   Buffer: array[0..4095] of Char;
+    {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 begin
-  {$IFDEF HAS_TFormatSettings}
+  {$IFDEF DOTNET}
+  // RLebeau 10/29/09: temporary workaround until we figure out how to use
+  // SysUtils.FormatBuf() correctly under .NET in D2009 RTM...
+  Result := SysUtils.Format(AFormat, Args);
+  {$ELSE}
+    {$IFDEF HAS_TFormatSettings}
   EnglishFmt := GetEnglishSetting;
-    {$IFDEF BROKEN_FmtStr}
+      {$IFDEF BROKEN_FmtStr}
   BufLen := Length(Buffer);
   if Length(AFormat) < (Length(Buffer) - (Length(Buffer) div 4)) then
   begin
@@ -4658,10 +4665,10 @@ begin
   begin
     SetString(Result, Buffer, Len);
   end;
-    {$ELSE}
+      {$ELSE}
   Result := SysUtils.Format(AFormat, Args, EnglishFmt);
-    {$ENDIF}
-  {$ELSE}
+      {$ENDIF}
+    {$ELSE}
   //Is there a way to get delphi5 to use locale in format? something like:
   //  SetThreadLocale(TheNewLocaleId);
   //  GetFormatSettings;
@@ -4669,6 +4676,7 @@ begin
   //  format()
   //  set locale back to prior
   Result := SysUtils.Format(AFormat, Args);
+    {$ENDIF}
   {$ENDIF}
 end;
 
