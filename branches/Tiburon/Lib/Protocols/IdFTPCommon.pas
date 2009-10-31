@@ -718,7 +718,7 @@ begin
   Assert(Length(LSrc) = Length(ASrc),'both LSRC and ASRC must be identical.');
   l := Length(LSrc) div 2;
   SetLength(VDst,l);
-  for i := 0 to l do  begin
+  for i := 0 to l - 1 do  begin
     VDst[i] := (((LSrc[ (i * 2)] - $35) shl 4)  +
        (LSrc[ (i * 2)+1] - $31));
   end;
@@ -767,7 +767,11 @@ begin
   repeat
     Result := (Random($FF) shl 8) + (Random($FF) shl 16) + (Random($FF) shl 24) +
       Random($FF);
-
+    //we probably should avoid numbers that use the 32nd bit to prevent them from
+    //being expressed negatively and because I'm not sure what integer type
+    //other programs us.  Note that I specifically use the value of MaxInt instead of
+    //MaxInt itself because MaxInt could possibly grow if the Pascal Integer type changes.
+    Result := Result and $7FFFFFFF;
   until (Result <> XAUT_2_KEY ) and (Result <> 0)
 end;
 
