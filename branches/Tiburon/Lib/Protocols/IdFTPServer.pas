@@ -1763,6 +1763,7 @@ begin
   LCmd := CommandHandlers.Add;
   LCmd.Command := 'SMNT';    {Do not Localize}
   LCmd.NormalReply.SetReply(502, RSFTPFileActionCompleted);//250 for success
+  LCmd.HelpSuperScript := '*';
   LCmd.Description.Text := 'SMNT        (structure mount); unimplemented.'; {do not localize}
 
   //QUIT <CRLF>
