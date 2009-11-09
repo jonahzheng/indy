@@ -618,6 +618,9 @@ my $default_depflags = " -DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_CAPIENG -DOPENSSL_NO
 // ##### Compaq Non-Stop Kernel (Tandem)
 // "tandem-c89","c89:-Ww -D__TANDEM -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED=1 -D_TANDEM_SOURCE -DB_ENDIAN::(unknown):::THIRTY_TWO_BIT:::",
 
+{enable if you want FIPS support and are using an openssl library with FIPS support compiled in.}
+{/$DEFINE OPENSSL_FIPS}
+
 {$IFDEF WIN32}
   {$DEFINE OPENSSL_SYSNAME_WIN32}
   {$DEFINE OPENSSL_SYS_WIN32}
@@ -8498,6 +8501,16 @@ var
   IdSslCryptoCleanupAllExData : procedure cdecl = nil;
   IdSslCompGetCompressionMethods : function: PSTACK_OF_SSL_COMP cdecl = nil;
   IdSslSkPopFree : procedure(st: PSTACK; func: Tsk_pop_free_func) cdecl = nil;
+{$IFDEF OPENSSL_FIPS}
+{Note that I'm doing things this way so that we can have wrapper functions that hide
+any IFDEF's and cases where the FIPS functions aren't in the .DLL}
+  _IdSslFIPSModeSet : function(onoff : TIdC_INT) : TIdC_INT cdecl = nil;
+  _IdSslFIPSMode : function () : TIdC_INT cdecl = nil;
+{$ENDIF}
+
+function IdSslFIPSModeSet(onoff : TIdC_INT) : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
+function IdSslFIPSMode() : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
+
 
 function IdSslUCTTimeDecode(UCTtime : PASN1_UTCTIME; var year, month, day, hour, min, sec: Word;
   var tz_hour, tz_min: Integer): Integer;
@@ -8585,6 +8598,7 @@ function IdSslMASN1StringLength(x : PASN1_STRING): TIdC_INT;
 procedure IdSslMASN1StringLengthSet(x : PASN1_STRING; n : TIdC_INT);
 function IdSslMASN1StringType(x : PASN1_STRING) : TIdC_INT;
 function IdSslMASN1StringData(x : PASN1_STRING) : PAnsiChar;
+
 //
 function ErrMsg(AErr : TIdC_ULONG) : AnsiString;
 function GetCryptLibHandle : Integer;
@@ -8629,6 +8643,26 @@ uses
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   , Windows
   {$ENDIF};
+
+function IdSslFIPSModeSet(onoff : TIdC_INT) : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
+begin
+  Result := 0;
+  {$IFDEF OPENSSL_FIPS}
+  if Assigned(_IdSslFIPSModeSet) then begin
+    Result := _IdSslFIPSModeSet(onoff);
+  end;
+  {$ENDIF}
+end;
+
+function IdSslFIPSMode() : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
+begin
+  Result := 0;
+    {$IFDEF OPENSSL_FIPS}
+  if Assigned(_IdSslFIPSMode) then begin
+    Result := _IdSslFIPSMode;
+  end;
+  {$ENDIF}
+end;
 
 function GetErrorMessage(const AErr : TIdC_ULONG) : AnsiString;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
@@ -10225,11 +10259,11 @@ them in case we use them later.}
   {CH fn_EVP_add_alg_module = 'EVP_add_alg_module'; {Do not localize}
   {CH fn_ERR_load_EVP_strings = 'ERR_load_EVP_strings'; }  {Do not localize}
   {$IFDEF OPENSSL_FIPS}
-  {CH fn_FIPS_mode_set = 'FIPS_mode_set'; } {Do not localize}
-  {CH fn_FIPS_mode = 'FIPS_mode'; } {Do not localize}
-  {CH fn_FIPS_rand_check = 'FIPS_rand_check'; } {Do not localize}
-  {CH fn_FIPS_selftest_failed = 'FIPS_selftest_failed'; } {Do not localize}
-  {CH fn_FIPS_selftest_check = 'FIPS_selftest_check'; } {Do not localize}
+  fn_FIPS_mode_set = 'FIPS_mode_set'; {Do not localize}
+  fn_FIPS_mode = 'FIPS_mode'; {Do not localize}
+   {CH fn_FIPS_rand_check = 'FIPS_rand_check'; } {Do not localize}
+   {CH fn_FIPS_selftest_failed = 'FIPS_selftest_failed'; } {Do not localize}
+  fn_FIPS_selftest_check = 'FIPS_selftest_check';  {Do not localize}
   {CH fn_FIPS_corrupt_sha1 = 'FIPS_corrupt_sha1'; } {Do not localize}
   {CH fn_FIPS_selftest_sha1 = 'FIPS_selftest_sha1'; } {Do not localize}
   {CH fb_FIPS_corrupt_aes = 'FIPS_corrupt_aes'; } {Do not localize}
@@ -11878,6 +11912,11 @@ begin
   @IdSslEvpCleanup := LoadFunctionCLib(fn_EVP_cleanup);
   @IdSslSkNewNull := LoadFunctionCLib(fn_sk_new_null);
   @IdSslSkPush := LoadFunctionCLib(fn_sk_push);
+  {$IFDEF OPENSSL_FIPS}
+  @_IdSslFIPSModeSet := LoadFunctionCLib(fn_FIPS_mode_set,False);
+  @_IdSslFIPSMode := LoadFunctionCLib(fn_FIPS_mode,False);
+
+  {$ENDIF}
   Result := (FFailedFunctionLoadList.Count = 0);
 end;
 
