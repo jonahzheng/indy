@@ -473,8 +473,7 @@ type
   function IsLeadChar(ACh : Char): Boolean;
   {$ENDIF}
   function IsTopDomain(const AStr: string): Boolean;
-  function IsValidIP(const S: String): Boolean; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IsValidIPv4() or the TIdIPAddress class'{$ENDIF};{$ENDIF}
-  function IsValidIPv4(const S: String): Boolean;
+  function IsValidIP(const S: String): Boolean;
   function MakeTempFilename(const APath: TIdFileName = ''): TIdFileName;
   procedure MoveChars(const ASource: ShortString; ASourceStart: integer; var ADest: ShortString; ADestStart, ALen: integer);
   function OrdFourByteToLongWord(AByte1, AByte2, AByte3, AByte4 : Byte): LongWord;
@@ -2885,35 +2884,22 @@ end;
 
 function IsValidIP(const S: String): Boolean;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
-begin
-  Result := IsValidIPv4(S);
-end;
-
-function IsValidIPv4(const S: String): Boolean;
 var
-  j, i: Integer;
-  LTmp: String;
+  LErr: Boolean;
 begin
-  Result := False;
-  LTmp := Trim(S);
-  for i := 1 to 4 do begin
-    j := IndyStrToInt(Fetch(LTmp, '.'), -1);    {Do not Localize}
-    if (j < 0) or (j >= 256) then begin
-      Exit;
-    end;
+  LErr := False; // keep the compiler happy
+  IPv4ToDWord(S, LErr);
+  if LErr then begin
+    LErr := (MakeCanonicalIPv6Address(S) = '');
   end;
-  if LTmp <> '' then begin
-    Exit;
-  end;
-  Result := True;
+  Result := not LErr;
 end;
 
 //everything that does not start with '.' is treated as hostname
 function IsHostname(const S: String): Boolean;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := (not TextStartsWith(S, '.')) and
-    (not IsValidIPv4(S)) and (MakeCanonicalIPv6Address(S)='');    {Do not Localize}
+  Result := (not TextStartsWith(S, '.')) and (not IsValidIP(S)) ;    {Do not Localize}
 end;
 
 function IsTopDomain(const AStr: string): Boolean;
