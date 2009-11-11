@@ -1341,16 +1341,16 @@ begin
   end ;
 end;
 
-{$UNDEF API_COPYFILETO}
+{$UNDEF NATIVEFILEAPI}
 {$IFDEF DOTNET}
-  {$DEFINE API_COPYFILETO}
+  {$DEFINE NATIVEFILEAPI}
 {$ENDIF}
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  {$DEFINE API_COPYFILETO}
+  {$DEFINE NATIVEFILEAPI}
 {$ENDIF}
 
 function CopyFileTo(const Source, Destination: TIdFileName): Boolean;
-{$IFDEF API_COPYFILETO}
+{$IFDEF NATIVEFILEAPI}
   {$IFDEF USE_INLINE}inline;{$ENDIF}
   {$IFDEF WIN32_OR_WIN64}
 var
@@ -1367,18 +1367,19 @@ begin
   System.IO.File.Copy(Source, Destination, True);
   Result := True; // or you'll get an exception
   {$ENDIF}
-  {$IFDEF WINCE}
-  Result := CopyFile(PWideChar(Source), PWideChar(Destination), False);
-  {$ENDIF}
-  {$IFDEF WIN32_OR_WIN64}
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+    {$IFDEF WIN32_OR_WIN64}
   LOldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
   try
-    Result := CopyFile(PChar(Source), PChar(Destination), False);
+    {$ENDIF}
+  Result := CopyFile(PIdFileNameChar(Source), PIdFileNameChar(Destination), False);
+    {$IFDEF WIN32_OR_WIN64}
   finally
-     SetErrorMode(LOldErrorMode);
+    SetErrorMode(LOldErrorMode);
   end;
+    {$ENDIF}
   {$ENDIF}
-  {$IFNDEF API_COPYFILETO}
+  {$IFNDEF NATIVEFILEAPI}
   //mostly from  http://delphi.about.com/od/fileio/a/untypedfiles.htm
 
   //note that I do use the I+ and I- directive.
@@ -1547,10 +1548,9 @@ end;
 function IsVolume(const APathName : TIdFileName) : Boolean;
   {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  Result := TextEndsWith(APathName,':') or TextEndsWith(APathName,':\');
+  Result := TextEndsWith(APathName, ':') or TextEndsWith(APathName, ':\');
 end;
 {$ENDIF}
-
 
 // OS-independant version
 function FileSizeByName(const AFilename: TIdFileName): Int64;
@@ -1564,63 +1564,56 @@ var
 var
   LHandle : THandle;
   LRec : TWin32FindData;
-     {$IFDEF WIN32_OR_WIN64}
-    LOldErrorMode : Integer;
-      {$ENDIF}
+    {$IFDEF WIN32_OR_WIN64}
+  LOldErrorMode : Integer;
+    {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 begin
+  Result := -1;
   {$IFDEF DOTNET}
   LFile := System.IO.FileInfo.Create(AFileName);
   if LFile.Exists then begin
     Result := LFile.Length;
   end;
-  {$ELSE}
-    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  {$ENDIF}
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  //check to see if something like "a:\" is specified and fail in that case.
+  //FindFirstFile would probably succede even though a drive is not a proper
+  //file.
+  if not IsVolume(AFileName) then begin
+    {
+    IMPORTANT!!!
 
-     //check to see if something like "a:\" is specified and fail in that case.
-     //FindFirstFile would probably succede even though a drive is not a proper
-     //file.
-    if IsVolume(AFileName) then begin
-      Result := -1;
-    end else begin
-{
-IMPORTANT!!!
-
-For servers in Windows, you probably want the API call to fail rather than get a
-"Cancel   Try Again   Continue " dialog-box box if a drive is not ready or
-there's some other critical I/O error.
-}
-      {$IFDEF WIN32_OR_WIN64}
-      LOldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
-      try
-      {$ENDIF}
-        LHandle := Windows.FindFirstFile(PIdFileNameChar(AFileName), LRec);
-        if LHandle <> INVALID_HANDLE_VALUE then begin
-          Windows.FindClose(LHandle);
-          if (LRec.dwFileAttributes and Windows.FILE_ATTRIBUTE_DIRECTORY = 0) then begin
-            Result := (Int64(LRec.nFileSizeHigh) shl 32) + LRec.nFileSizeLow;
-          end else begin
-            Result := -1;
-          end;
-        end else begin
-          Result := -1;
+    For servers in Windows, you probably want the API call to fail rather than
+    get a "Cancel   Try Again   Continue " dialog-box box if a drive is not
+    ready or there's some other critical I/O error.
+    }
+    {$IFDEF WIN32_OR_WIN64}
+    LOldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
+    try
+    {$ENDIF}
+      LHandle := Windows.FindFirstFile(PIdFileNameChar(AFileName), LRec);
+      if LHandle <> INVALID_HANDLE_VALUE then begin
+        Windows.FindClose(LHandle);
+        if (LRec.dwFileAttributes and Windows.FILE_ATTRIBUTE_DIRECTORY) = 0 then begin
+          Result := (Int64(LRec.nFileSizeHigh) shl 32) + LRec.nFileSizeLow;
         end;
-      {$IFDEF WIN32_OR_WIN64}
-      finally
-        SetErrorMode(LOldErrorMode);
       end;
-      {$ENDIF}
+    {$IFDEF WIN32_OR_WIN64}
+    finally
+     SetErrorMode(LOldErrorMode);
     end;
-
-    {$ELSE}
+    {$ENDIF}
+  end;
+  {$ENDIF}
+  {$IFNDEF NATIVEFILEAPI}
   Resi;t := -1;
   if FileExists(AFilename) then begin
     with TIdReadFileExclusiveStream.Create(AFilename) do try
       Result := Size;
     finally Free; end;
   end;
-    {$ENDIF}
   {$ENDIF}
 end;
 
@@ -1630,9 +1623,9 @@ var
   LRec : TWin32FindData;
   LHandle : THandle;
   LTime : {$IFDEF WINCE}TSystemTime{$ELSE}Integer{$ENDIF};
-   {$IFDEF WIN32_OR_WIN64}
-   LOldErrorMode : Integer;
-   {$ENDIF}
+  {$IFDEF WIN32_OR_WIN64}
+  LOldErrorMode : Integer;
+ {$ENDIF}
 {$ENDIF}
 {$IFDEF UNIX}
 var
@@ -1648,14 +1641,12 @@ var
 begin
   Result := -1;
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  if IsVolume(AFileName) then begin
-    Result := -1;
-  end else begin
+  if not IsVolume(AFileName) then begin
     {$IFDEF WIN32_OR_WIN64}
     LOldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
     try
     {$ENDIF}
-       LHandle := Windows.FindFirstFile(PIdFileNameChar(AFileName), LRec);
+      LHandle := Windows.FindFirstFile(PIdFileNameChar(AFileName), LRec);
     {$IFDEF WIN32_OR_WIN64}
     finally
       SetErrorMode(LOldErrorMode);
@@ -1685,7 +1676,6 @@ begin
     gmtime_r({$IFDEF KYLIX}@{$ENDIF}LTime, LU);
     Result := EncodeDate(LU.tm_year + 1900, LU.tm_mon + 1, LU.tm_mday) +
               EncodeTime(LU.tm_hour, LU.tm_min, LU.tm_sec, 0);
-
     {$ELSE}
     Result := UnixToDateTime(LTime);
     {$ENDIF}
