@@ -3291,20 +3291,31 @@ begin
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     // S.G. 27/11/2002: Changed to use high-performance counters as per suggested
     // S.G. 27/11/2002: by David B. Ferguson (david.mcs@ns.sympatico.ca)
-    {$IFDEF WINCE}
-  if Windows.QueryPerformanceFrequency(@freq) then begin
-    if Windows.QueryPerformanceCounter(@nTime) then begin
+
+    // RLebeau 11/12/2009: removed the high-performance counters again.  They
+    // are not reliable on multi-core systems, and are now starting to cause
+    // problems with TIdIOHandler.ReadLn() timeouts under Windows XP SP3, both
+    // 32-bit and 64-bit.  Refer to these discussions:
+    //
+    // http://www.virtualdub.org/blog/pivot/entry.php?id=106
+    // http://blogs.msdn.com/oldnewthing/archive/2008/09/08/8931563.aspx
+    
+    {$IFDEF USE_HI_PERF_COUNTER_FOR_TICKS}
+      {$IFDEF WINCE}
+  if Windows.QueryPerformanceCounter(@nTime) then begin
+    if Windows.QueryPerformanceFrequency(@freq) then begin
       Result := Trunc((nTime.QuadPart / Freq.QuadPart) * 1000) and High(LongWord);
       Exit;
     end;
   end;
-    {$ELSE}
-  if Windows.QueryPerformanceFrequency(freq) then begin
-    if Windows.QueryPerformanceCounter(nTime) then begin
+      {$ELSE}
+  if Windows.QueryPerformanceCounter(nTime) then begin
+    if Windows.QueryPerformanceFrequency(freq) then begin
       Result := Trunc((nTime / Freq) * 1000) and High(LongWord);
       Exit;
     end;
   end;
+      {$ENDIF}
     {$ENDIF}
   Result := Windows.GetTickCount;
   {$ENDIF}
@@ -3490,7 +3501,7 @@ end;
 function IsAlpha(const AChar: Char): Boolean;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  // TODO: under Tiburon and later, use TCharacter.IsLetter() instead
+  // TODO: under D2009+, use TCharacter.IsLetter() instead
 
   // Do not use IsCharAlpha or IsCharAlphaNumeric - they are Win32 routines
   Result := ((AChar >= 'a') and (AChar <= 'z')) or ((AChar >= 'A') and (AChar <= 'Z')); {Do not Localize}
@@ -3620,7 +3631,7 @@ end;
 function IsNumeric(const AChar: Char): Boolean;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  // TODO: under Tiburon and later, use TCharacter.IsDigit() instead
+  // TODO: under D2009+, use TCharacter.IsDigit() instead
 
   // Do not use IsCharAlpha or IsCharAlphaNumeric - they are Win32 routines
   Result := (AChar >= '0') and (AChar <= '9'); {Do not Localize}

@@ -564,6 +564,18 @@
   {$DEFINE WIN32_OR_WIN64_OR_WINCE}
 {$ENDIF}
 
+// High-performance counters are not reliable on multi-core systems, and have
+// been known to cause problems with TIdIOHandler.ReadLn() timeouts in Windows
+// XP SP3, both 32-bit and 64-bit.  Refer to these discussions for more info:
+//
+// http://www.virtualdub.org/blog/pivot/entry.php?id=106
+// http://blogs.msdn.com/oldnewthing/archive/2008/09/08/8931563.aspx
+//
+// Do not enable thus unless you know it will work correctly on your systems!
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  {.$DEFINE USE_HI_PERF_COUNTER_FOR_TICKS}
+{$ENDIF}
+
 {
 BSD 4.4 introduced a minor API change.  sa_family was changed from a 16bit
 word to an 8 bit byte and an 8 bit byte field named sa_len was added.
