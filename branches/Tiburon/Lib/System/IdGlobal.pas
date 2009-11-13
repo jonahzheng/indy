@@ -3262,9 +3262,12 @@ function Ticks: LongWord;
 var
   tv: timeval;
 {$ENDIF}
+
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  {$IFDEF USE_HI_PERF_COUNTER_FOR_TICKS}
 var
   nTime, freq: {$IFDEF WINCE}LARGE_INTEGER{$ELSE}Int64{$ENDIF};
+  {$ENDIF}
 {$ENDIF}
 begin
   {$IFDEF UNIX}
