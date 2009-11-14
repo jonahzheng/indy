@@ -619,7 +619,7 @@ my $default_depflags = " -DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_CAPIENG -DOPENSSL_NO
 // "tandem-c89","c89:-Ww -D__TANDEM -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED=1 -D_TANDEM_SOURCE -DB_ENDIAN::(unknown):::THIRTY_TWO_BIT:::",
 
 {enable if you want FIPS support and are using an openssl library with FIPS support compiled in.}
-{/$DEFINE OPENSSL_FIPS}
+{$DEFINE OPENSSL_FIPS}
 
 {$IFDEF WIN32}
   {$DEFINE OPENSSL_SYSNAME_WIN32}
@@ -8638,6 +8638,7 @@ implementation
 uses
   Classes,
   IdGlobal,  //needed for Sys symbol
+  IdGlobalProtocols,
   IdResourceStringsProtocols,
   IdStack
   {$IFDEF FPC}
@@ -8646,6 +8647,16 @@ uses
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   , Windows
   {$ENDIF};
+
+function OpenSSLGetFIPSMode : Boolean;
+begin
+  Result := IdSslFIPSMode <> 0;
+end;
+
+procedure OpenSSLSetFIPSMode(const AMode : Boolean);
+begin
+  //leave this empty as we may not be using something that supports FIPS
+end;
 
 function IdSslFIPSModeSet(onoff : TIdC_INT) : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
 begin
@@ -12584,7 +12595,8 @@ end;
 
 initialization
   FFailedFunctionLoadList := TStringList.Create;
-
+  IdGlobalProtocols.SetFIPSMode := OpenSSLSetFIPSMode;
+  IdGlobalProtocols.GetFIPSMode := OpenSSLGetFIPSMode;
 finalization
   FreeAndNil(FFailedFunctionLoadList);
 

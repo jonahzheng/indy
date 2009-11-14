@@ -528,7 +528,13 @@ type
   procedure ParseMetaHTTPEquiv(AStream: TStream; AStr : TStrings);
 
 
+type
+  TGetFIPSMode = function : Boolean;
+  TSetFIPSMode = procedure (const AMode : Boolean);
+
 var
+  GetFIPSMode : TGetFIPSMode;
+  SetFIPSMode : TSetFIPSMode;
   {$IFDEF UNIX}
   // For linux the user needs to set these variables to be accurate where used (mail, etc)
   GTimeZoneBias: TDateTime = 0;
@@ -582,6 +588,18 @@ uses
   IdResourceStringsCore,
   IdResourceStringsProtocols,
   IdStack;
+
+//fips mode default procs
+function DefGetFIPSMode : Boolean;
+begin
+  Result := False;
+end;
+
+procedure DefSetFIPSMode(const AMode : Boolean);
+begin
+  //leave this empty as we may not be using something that supports FIPS
+end;
+//
 
 function UnquotedStr(const AStr : String): String;
 begin
@@ -4047,5 +4065,6 @@ initialization
   IndyFalseBoolStrs[Low(IndyFalseBoolStrs)] := 'FALSE';    {Do not Localize}
   SetLength(IndyTrueBoolStrs, 1);
   IndyTrueBoolStrs[Low(IndyTrueBoolStrs)] := 'TRUE';    {Do not Localize}
-
+  GetFIPSMode := DefGetFIPSMode;
+  SetFIPSMode := DefSetFIPSMode;
 end.
