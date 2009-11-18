@@ -194,8 +194,8 @@ var
   LStartPos, LLength, LEncodingStartPos, LEncodingEndPos, LLastStartPos: Integer;
   LLastWordWasEncoded: Boolean;
 
-  function ExtractEncoding(const AHeader: String; const AStartPos: Integer;
-    var VEndPos: Integer; var VCharSet, VEncoding, VData: String): Boolean;
+  function ExtractEncoding(const AHeader: string; const AStartPos: Integer;
+    var VStartPos, VEndPos: Integer; var VCharSet, VEncoding, VData: String): Boolean;
   var
     LCharSet, LEncoding, LData, LDataEnd: Integer;
   begin
@@ -229,6 +229,7 @@ var
     end;
     Inc(LDataEnd);
 
+    VStartPos := LCharSet-2;
     VEndPos := LDataEnd;
     VCharSet := Copy(AHeader, LCharSet, LEncoding-LCharSet-1);
     VEncoding := Copy(AHeader, LEncoding, LData-LEncoding-1);
@@ -279,7 +280,16 @@ var
             a3[2] := Byte((a4[2] shl 4) or (a4[3] shr 2));
             a3[3] := Byte((a4[3] shl 6) or (a4[4] shr 0));
 
-            VDecoded := VDecoded + Chr(a3[1]) + Chr(a3[2]) + Chr(a3[3]);
+            if AData[(I*4)+4] = '=' then begin
+              if AData[(I*4)+3] = '=' then begin
+                VDecoded := VDecoded + Chr(a3[1]);
+              end else begin
+                VDecoded := VDecoded + Chr(a3[1]) + Chr(a3[2]);
+              end;
+              Break;
+            end else begin
+              VDecoded := VDecoded + Chr(a3[1]) + Chr(a3[2]) + Chr(a3[3]);
+            end;
           end;
         end;
         Result := True;
@@ -305,17 +315,17 @@ begin
     // valid encoded words can not contain spaces
     // if the user types something *almost* like an encoded word,
     // and its sent as-is, we need to find this!!
-    LEncodingStartPos := FindFirstNotOf(LWS, Result, LLength, LStartPos);
-    if LEncodingStartPos = 0 then begin
+    LStartPos := FindFirstNotOf(LWS, Result, LLength, LStartPos);
+    if LStartPos = 0 then begin
       Break;
     end;
-    LEncodingEndPos := FindFirstOf(LWS, Result, LLength, LEncodingStartPos);
+    LEncodingEndPos := FindFirstOf(LWS, Result, LLength, LStartPos);
     if LEncodingEndPos <> 0 then begin
       Dec(LEncodingEndPos);
     end else begin
       LEncodingEndPos := LLength;
     end;
-    if ExtractEncoding(Result, LEncodingStartPos, LEncodingEndPos, HeaderCharSet, HeaderEncoding, HeaderData) then
+    if ExtractEncoding(Result, LStartPos, LEncodingStartPos, LEncodingEndPos, HeaderCharSet, HeaderEncoding, HeaderData) then
     begin
       LDecoded := False;
       if ExtractEncodedData(HeaderEncoding, HeaderData, S) then begin
@@ -344,22 +354,13 @@ begin
       LLastStartPos := LStartPos;
     end else
     begin
-      LStartPos := FindFirstOf(LWS, Result, LLength, LEncodingStartPos);
+      LStartPos := FindFirstOf(LWS, Result, LLength, LStartPos);
       if LStartPos = 0 then begin
         Break;
       end;
       LLastWordWasEncoded := False;
     end;
   end;
-
-  //There might be #0's in header when this is b64 encoded, e.g with:
-  //decodeheader('"Fernando Corti=?ISO-8859-1?B?8Q==?=a" <fernando@nowhere.com>');
-  repeat
-    LStartPos := Pos(#0, Result);
-    if LStartPos > 0 then begin
-      Delete(Result, LStartPos, 1);
-    end;
-  until LStartPos = 0;
 end;
 
 procedure DecodeAddress(EMailAddr : TIdEmailAddressItem);
