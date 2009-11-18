@@ -906,6 +906,7 @@ begin
 
                 if TextIsSame(LContentType, ContentTypeFormUrlencoded) then
                 begin
+                  // TODO: need to decode percent-encoded octets before the CharSet can then be applied...
                   LRequestInfo.FormParams := ReadStringAsCharSet(LRequestInfo.PostStream, LRequestInfo.CharSet);
                   FreeAndNil(LRequestInfo.FPostStream); // don't need the PostStream anymore
                 end;
@@ -998,7 +999,7 @@ begin
       until LCloseConnection;
     except
       on E: EIdSocketError do begin
-        if E.LastError <> Id_WSAECONNRESET then begin
+        if not ((E.LastError = Id_WSAESHUTDOWN) or (E.LastError = Id_WSAECONNABORTED) or (E.LastError = Id_WSAECONNRESET)) then begin
           raise;
         end;
       end;
@@ -1210,6 +1211,7 @@ var
 begin
   // Convert special characters
   // ampersand '&' separates values    {Do not Localize}
+  // TODO: need to decode UTF-8 octets...
   Params.BeginUpdate;
   try
     Params.Clear;
