@@ -512,8 +512,8 @@ begin
 
   LContext.FSocksVersion := AContext.Connection.IOHandler.ReadByte;
 
-  if not ((LContext.SocksVersion = 4) and AllowSocks4) or
-    ((LContext.SocksVersion = 5) and AllowSocks5) then
+  if not (((LContext.SocksVersion = 4) and AllowSocks4) or
+    ((LContext.SocksVersion = 5) and AllowSocks5)) then
   begin
     EIdSocksSvrWrongSocksVer.Toss(RSSocksSvrWrongSocksVersion);
   end;
