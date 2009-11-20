@@ -8443,7 +8443,7 @@ var
       md: PByte; var len: TIdC_UINT): TIdC_INT cdecl = nil;
   {$IFNDEF OPENSSL_NO_SHA512}
   IdSslEvpSHA512 : function : PEVP_MD cdecl = nil;
-  IdSslEvpSHA386 : function : PEVP_MD cdecl = nil;
+  IdSslEvpSHA384 : function : PEVP_MD cdecl = nil;
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_SHA256}
   IdSslEvpSHA256 : function : PEVP_MD cdecl = nil;
@@ -8454,6 +8454,12 @@ var
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_MD5}
   IdSslEvpMd5 : function: PEVP_MD cdecl = nil;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD4}
+  IdSslEvpMd4 : function: PEVP_MD cdecl = nil;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD2}
+  IdSslEvpMd2 : function: PEVP_MD cdecl = nil;
   {$ENDIF}
   IdSslEvpPKEYType : function(_type : TIdC_INT): TIdC_INT cdecl = nil;
   IdSslX509StoreCtxGetExData : function(ctx: PX509_STORE_CTX; idx: TIdC_INT): Pointer cdecl = nil;
@@ -10044,10 +10050,10 @@ them in case we use them later.}
   {$ENDIF}
   {CH fn_EVP_md_null = 'EVP_md_null'; }  {Do not localize}
   {$IFNDEF OPENSSL_NO_MD2}
-  {CH fn_EVP_md2 = 'EVP_md2'; }  {Do not localize}
+   fn_EVP_md2 = 'EVP_md2';   {Do not localize}
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_MD4}
-  {CH fn_EVP_md4 = 'EVP_md4'; }  {Do not localize}
+  fn_EVP_md4 = 'EVP_md4';   {Do not localize}
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_MD5}
   fn_EVP_md5 = 'EVP_md5';  {Do not localize}
@@ -11874,7 +11880,7 @@ begin
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_SHA512}
   @IdSslEvpSHA512 := LoadFunctionCLib(fn_EVP_sha512,False);
-  @IdSslEvpSHA386 := LoadFunctionCLib(fn_EVP_sha384,False);
+  @IdSslEvpSHA384 := LoadFunctionCLib(fn_EVP_sha384,False);
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_SHA256}
   @IdSslEvpSHA256 := LoadFunctionCLib(fn_EVP_sha256,False);
@@ -11885,6 +11891,12 @@ begin
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_MD5}
   @IdSslEvpMd5 := LoadFunctionCLib(fn_EVP_md5);
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD4}
+  @IdSslEvpMd4 := LoadFunctionCLib(fn_EVP_md4);
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD2}
+  @IdSslEvpMd2 := LoadFunctionCLib(fn_EVP_md2);
   {$ENDIF}
   @IdSslEvpMDCtxInit := LoadFunctionCLib(fn_EVP_MD_CTX_init);
   @IdSslEvpDigestInitEx := LoadFunctionCLib(fn_EVP_DigestInit_ex);
