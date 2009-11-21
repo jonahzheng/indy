@@ -493,8 +493,8 @@ type
     function GetSHA224AsString : String;
     function GetSHA256 : TEVP_MD;
     function GetSHA256AsString : String;
-    function GetSHA386 : TEVP_MD;
-    function GetSHA386AsString : String;
+    function GetSHA384 : TEVP_MD;
+    function GetSHA384AsString : String;
     function GetSHA512 : TEVP_MD;
     function GetSHA512AsString : String;
   public
@@ -517,8 +517,8 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     property SHA224AsString : String read GetSHA224AsString;
     property SHA256 : TEVP_MD read GetSHA256;
     property SHA256AsString : String read GetSHA256AsString;
-    property SHA386 : TEVP_MD read GetSHA386;
-    property SHA386AsString : String read GetSHA386AsString;
+    property SHA384 : TEVP_MD read GetSHA384;
+    property SHA384AsString : String read GetSHA384AsString;
     property SHA512 : TEVP_MD read GetSHA512;
     property SHA512AsString : String read GetSHA512AsString;
   end;
@@ -2239,19 +2239,19 @@ begin
   end;
 end;
 
-function TIdX509Fingerprints.GetSHA386 : TEVP_MD;
+function TIdX509Fingerprints.GetSHA384 : TEVP_MD;
 begin
-  if Assigned(IdSslEvpSHA386) then begin
-    IdSslX509Digest(FX509, IdSslEvpSHA386, PByte(@Result.MD), Result.Length);
+  if Assigned(IdSslEvpSHA384) then begin
+    IdSslX509Digest(FX509, IdSslEvpSHA384, PByte(@Result.MD), Result.Length);
   end else begin
     FillChar(Result, SizeOf(Result), 0);
   end;
 end;
 
-function TIdX509Fingerprints.GetSHA386AsString : String;
+function TIdX509Fingerprints.GetSHA384AsString : String;
 begin
-  if Assigned(IdSslEvpSHA386) then begin
-    Result := MDAsString(SHA386);
+  if Assigned(IdSslEvpSHA384) then begin
+    Result := MDAsString(SHA384);
   end else begin
     Result := '';
   end;

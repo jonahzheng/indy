@@ -228,14 +228,14 @@ begin
   {$IFDEF DOTNET}
    Result := System.Security.Cryptography.SHA384Managed.Create;
   {$ELSE}
-  Result := IdSslEvpSHA386;
+  Result := IdSslEvpSHA384;
   {$ENDIF}
 end;
 
 {$IFNDEF DOTNET}
 class function TIdHashSHA386.IsAvailable: Boolean;
 begin
-  Result := Assigned(IdSslEvpSHA386) and inherited IsAvailable;
+  Result := Assigned(IdSslEvpSHA384) and inherited IsAvailable;
 end;
 {$ENDIF}
 
