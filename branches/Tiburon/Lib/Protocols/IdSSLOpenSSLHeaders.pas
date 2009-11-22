@@ -8662,6 +8662,11 @@ end;
 procedure OpenSSLSetFIPSMode(const AMode : Boolean);
 begin
   //leave this empty as we may not be using something that supports FIPS
+  if AMode then begin
+    IdSslFIPSModeSet(1);
+  end else begin
+    IdSslFIPSModeSet(0);
+  end;
 end;
 
 function IdSslFIPSModeSet(onoff : TIdC_INT) : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
