@@ -2382,8 +2382,8 @@ begin
   case ProxySettings.ProxyType of
   fpcmNone:
     begin
-      LCmd := MakeXAUTCmd( Self.Greeting.Text.Text , FUserName, GetLoginPassword);
-      if LCmd <> '' then begin
+      LCmd := MakeXAUTCmd( Greeting.Text.Text , FUserName, GetLoginPassword);
+      if (LCmd <> '') and (not IdGlobalProtocols.GetFIPSMode ) then begin
         if SendCmd(LCmd, [230, 232, 331]) = 331 then begin {do not localize}
           if IsAccountNeeded then begin
             if CheckAccount then begin
@@ -3785,7 +3785,9 @@ begin
       Result := TIdHashSHA256.IsAvailable and IsExtSupported('XSHA256');
     end;
     if not Result then begin
-      Result := IsExtSupported('XSHA1') or IsExtSupported('XMD5') or IsExtSupported('XCRC');
+      Result := IsExtSupported('XSHA1') or
+        (IsExtSupported('XMD5') and (not GetFIPSMode)) or
+        IsExtSupported('XCRC');
     end;
   end;
 end;
@@ -3897,7 +3899,7 @@ begin
     end;
     LHashClass := TIdHashSHA1;
   end
-  else if IsExtSupported('XMD5') then begin
+  else if IsExtSupported('XMD5') and (not GetFIPSMode) then begin
     //XMD5 "filename" startpos endpos
     //I think there's two syntaxes to this:
     //

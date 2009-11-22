@@ -161,6 +161,8 @@ resourcestring
   // General
   RSIOHandlerPropInvalid = 'IOHandler value is not valid';
 
+  //FIPS
+  RSFIPSAlgorithmNotAllowed = 'Algorithm %s not permitted in FIPS mode';
   //FSP
   RSFSPNotFound = 'File Not Found';
   RSFSPPacketTooSmall = 'Packet too small';

@@ -2185,6 +2185,7 @@ end;
 
 function TIdX509Fingerprints.GetMD5: TEVP_MD;
 begin
+  IdGlobalProtocols.CheckMD5Permitted;
    IdSslX509Digest(FX509, IdSslEvpMd5, PByte(@Result.MD), Result.Length);
 end;
 

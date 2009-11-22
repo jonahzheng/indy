@@ -395,7 +395,7 @@ type
 
   //
   EIdExtensionAlreadyExists = class(EIdException);
-
+  EIdFIPSAlgorithmNotAllowed = class(EIdException);
 // Procs - KEEP THESE ALPHABETICAL!!!!!
 
 //  procedure BuildMIMETypeMap(dest: TIdStringList);
@@ -420,7 +420,9 @@ type
     {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF});
   procedure ReadStringsAsCharset(AStream: TStream; AStrings: TStrings; const ACharset: string
     {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF});
-
+  procedure CheckMD2Permitted;
+  procedure CheckMD4Permitted;
+  procedure CheckMD5Permitted;
   {
   These are for handling binary values that are in Network Byte order.  They call
   ntohs, ntols, htons, and htons which are required by SNTP and FSP
@@ -441,6 +443,7 @@ type
   function ExtractHeaderItem(const AHeaderLine: String): String;
   function ExtractHeaderSubItem(const AHeaderLine,ASubItem: String): String;
   function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String): String;
+  procedure FIPSAlgorithmNotAllowed(const AAlgorithm : String);
   function FileSizeByName(const AFilename: TIdFileName): Int64;
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   function IsVolume(const APathName : TIdFileName) : Boolean;
@@ -599,6 +602,34 @@ procedure DefSetFIPSMode(const AMode : Boolean);
 begin
   //leave this empty as we may not be using something that supports FIPS
 end;
+
+procedure CheckMD2Permitted; {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  if GetFIPSMode then begin
+    FIPSAlgorithmNotAllowed('MD2');
+  end;
+end;
+
+procedure CheckMD4Permitted; {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  if GetFIPSMode then begin
+    FIPSAlgorithmNotAllowed('MD4');
+  end;
+end;
+
+procedure CheckMD5Permitted; {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  if GetFIPSMode then begin
+    FIPSAlgorithmNotAllowed('MD5');
+  end;
+end;
+
+procedure FIPSAlgorithmNotAllowed(const AAlgorithm : String); {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  raise EIdFIPSAlgorithmNotAllowed.Create(Format(RSFIPSAlgorithmNotAllowed,[AAlgorithm]));
+end;
+
+
 //
 
 function UnquotedStr(const AStr : String): String;
