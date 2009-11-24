@@ -1512,7 +1512,17 @@ var
           if Assigned(FOnSetModifiedTime) or Assigned(FTPFileSystem) then begin
             Result := True;
           end;
-        13,14,15,16, 17 : //'MD5','MMD5','XCRC','XMD5', 'XSHA1',
+        13,14, 15,16 : //'MD5','MMD5','XCRC','XMD5',
+        begin
+          Result := False;
+          if not GetFIPSMode then begin
+            if Assigned(FOnCRCFile) or Assigned(FTPFileSystem) then begin
+              Result := True;
+            end;
+          end;
+        end;
+
+        17 : // 'XSHA1',
           if Assigned(FOnCRCFile) or Assigned(FTPFileSystem) then begin
             Result := True;
           end;
@@ -1527,7 +1537,7 @@ var
             Result := True;
           end;
         20 : //  'COMB');
-          if Assigned(FOnCRCFile) or Assigned(FTPFileSystem) then begin
+          if Assigned(OnCombineFiles) or Assigned(FTPFileSystem) then begin
             Result := True;
           end;
         21 : //  AVBL
@@ -1547,7 +1557,7 @@ var
             Result := True;
           end;
         25 : // XAUT
-         if Self.FSupportXAUTH then begin
+         if (not GetFIPSMode) and Self.FSupportXAUTH then begin
            Result := True;
          end;
     end;
@@ -1689,13 +1699,17 @@ begin
       FOnHostCheck(LContext,LTmp,LValid);
       if LValid then begin
         LContext.Host := LTmp;
-        OnGreeting(LContext,ASender.Reply);
+        if Assigned(OnGreeting) then begin
+          OnGreeting(LContext,ASender.Reply);
+        end;
         if ASender.Reply.NumericCode = 421 then begin
           ASender.Disconnect := True;
         end else begin
+          if not GetFIPSMode then begin
           //setting the reply code number directly causes the text to be cleared
-          if FSupportXAUTH and (ASender.Reply.NumericCode = 220) then begin
-            XAutGreeting(LContext,ASender.Reply, LTmp);
+            if FSupportXAUTH and (ASender.Reply.NumericCode = 220) then begin
+              XAutGreeting(LContext,ASender.Reply, LTmp);
+            end;
           end;
           ASender.Reply.SetReply(220,ASender.Reply.Text.Text);
         end;
@@ -2199,6 +2213,7 @@ begin
   LCmd.Command := 'XSHA512';   {Do not translate}
   LCmd.OnCommand := CommandCheckSum;
   LCmd.ExceptionReply.NumericCode := 550;
+  LCmd.HelpVisible := True;
   LCmd.Description.Text := 'Syntax: XSHA512 "[filename]" [start] [finish]'; {do not localize}
 
 //commands from
@@ -4010,9 +4025,12 @@ begin
   ASender.Reply.Text.Add('UTF8'); {Do not localize}
   //XCRC
   if Assigned(FOnCRCFile) or Assigned(FTPFileSystem) then begin
-    ASender.Reply.Text.Add('XCRC "filename" SP EP');//filename;start;end');  {Do not Localize}
-    ASender.Reply.Text.Add('XMD5 "filename" SP EP');//filename;start;end');  {Do not Localize}
+    if not GetFIPSMode then begin
+      ASender.Reply.Text.Add('XCRC "filename" SP EP');//filename;start;end');  {Do not Localize}
+      ASender.Reply.Text.Add('XMD5 "filename" SP EP');//filename;start;end');  {Do not Localize}
+    end;
     ASender.Reply.Text.Add('XSHA1 "filename" SP EP');//filename;start;end');  {Do not Localize}
+
     if TIdHashSHA256.IsAvailable then begin
       ASender.Reply.Text.Add('XSHA256 "filename" SP EP'); //file;start/end
     end;
@@ -4657,7 +4675,7 @@ begin
       LGreeting.Assign(Greeting);
       OnGreeting(TIdFTPServerContext(AContext), LGreeting);
       ReplyTexts.UpdateText(LGreeting);
-      if FSupportXAUTH and (LGreeting.NumericCode = 220) then begin
+      if (not GetFIPSMode) and FSupportXAUTH and (LGreeting.NumericCode = 220) then begin
         (AContext as TIdFTPServerContext).FXAUTKey := IdFTPCommon.MakeXAUTKey;
         XAutGreeting(AContext,LGreeting, GStack.HostName);
       end;
@@ -4672,7 +4690,7 @@ begin
       FreeAndNil(LGreeting);
     end;
   end else begin
-    if FSupportXAUTH and (Greeting.NumericCode = 220)  then begin
+    if (not GetFIPSMode) and FSupportXAUTH and (Greeting.NumericCode = 220)  then begin
       LGreeting := TIdReplyRFC.Create(nil);
       try
         LGreeting.Assign(Greeting);
@@ -5014,6 +5032,10 @@ var
   LContext : TIdFTPServerContext;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
+  if GetFIPSMode then begin
+    CmdSyntaxError(ASender);
+    Exit;
+  end;
   LError := False;
   LChecksum := '';
   LRes := '';
@@ -5053,6 +5075,10 @@ var
   LContext : TIdFTPServerContext;
 begin
   LContext := TIdFTPServerContext(ASender.Context);
+  if GetFIPSMode then begin
+    CmdSyntaxError(ASender);
+    Exit;
+  end;
   LChecksum := '';
   if LContext.IsAuthenticated(ASender) then begin
     if Assigned(FOnCRCFile) or Assigned(FTPFileSystem) then begin
@@ -5633,8 +5659,7 @@ var
   i : Integer;
 begin
   Result := '';
-  if Cmds.Count =0 then
-  begin
+  if Cmds.Count =0 then begin
     Exit;
   end;
   LRows := Cmds.Count div 6;
@@ -5646,10 +5671,8 @@ begin
     end;
     Result := Result + CR;
   end else begin
-    for i := 0 to (LRows -1) do
-    begin
-      if (i < LMod-1) and (LMod<>0) then
-      begin
+    for i := 0 to (LRows -1) do begin
+      if (i <= LMod-1) and (LMod<>0) then begin
         Result := Result + IndyFormat('    %-10s%-10s%-10s%-10s%-10s%-10s%-10s',   {Do not translate}
           [ Cmds[i],Cmds[i+LRows],Cmds[(LRows*2)+i],
           Cmds[(LRows*3)+i],Cmds[(LRows*4)+i],Cmds[(LRows*5)+i],
@@ -6027,6 +6050,11 @@ var
   LContext : TIdFTPServerContext;
   LHashIdx: Integer;
 begin
+  if GetFIPSMode and
+    (PosInStrArray(ASender.CommandHandler.Command, ['XCRC', 'XMD5'])>-1) then begin
+    CmdSyntaxError(ASender);
+    Exit;
+  end;
   if Assigned(FOnCRCFile) or Assigned(FTPFileSystem) then begin
     LContext := TIdFTPServerContext(ASender.Context);
     if LContext.IsAuthenticated(ASender) then begin
