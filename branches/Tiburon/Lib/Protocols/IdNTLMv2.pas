@@ -1082,6 +1082,7 @@ var LChall, LTmp : TIdBytes;
   LPassHash : TIdBytes;
 
 begin
+  CheckMD5Permitted;
   //LM feild value for Type3 message
   SetLength(LMFeild,24);
   FillBytes( LMFeild,24, 0);
