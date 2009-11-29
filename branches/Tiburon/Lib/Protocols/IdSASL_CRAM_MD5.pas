@@ -78,6 +78,7 @@ implementation
 
 uses
   IdGlobal,
+  IdGlobalProtocols,
   IdHMACMD5,
   SysUtils;
 
