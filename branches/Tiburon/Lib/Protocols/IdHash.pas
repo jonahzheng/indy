@@ -399,7 +399,7 @@ begin
   Result := ACtx.Hash;
   {$ELSE}
   SetLength(Result,OPENSSL_EVP_MAX_MD_SIZE);
-  LRet := IdSslEvpDigestFinalEx(@ACtx,@Result[0],LLen);
+  LRet := IdSslEvpDigestFinalEx(@ACtx,PAnsiChar(@Result[0]),LLen);
   if LRet <> 1 then begin
     EIdDigestFinalEx.RaiseException('EVP_DigestFinal_ex error');
   end;

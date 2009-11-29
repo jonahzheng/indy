@@ -431,6 +431,7 @@ type
   end;
 
   TIdHTTPProtocol = class(TObject)
+  protected
     FHTTP: TIdCustomHTTP;
     FResponseCode: Integer;
     FRequest: TIdHTTPRequest;
