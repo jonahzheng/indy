@@ -3316,10 +3316,10 @@ begin
   until False;
 end;
 
-function DiscardUntilCloseTag(const AStr, ATagWord : String; var VPos : Integer; const ALen : Integer) : String;  {$IFDEF USE_INLINE}inline; {$ENDIF}
+procedure DiscardUntilCloseTag(const AStr, ATagWord : String; var VPos : Integer;
+  const ALen : Integer; const AIsScript : Boolean = False);  {$IFDEF USE_INLINE}inline; {$ENDIF}
 var LWord, LTmp : String;
 begin
-  Result := '';
   repeat
     if VPos > ALen then begin
       exit;
@@ -3334,15 +3334,19 @@ begin
       LTmp := LTmp + '/';
       LWord := ParseWord(AStr,VPos,ALen);
       if TextIsSame(LWord,ATagWord) then begin
-        DiscardUntil(AStr,'>',VPos,ALen);
+       DiscardUntil(AStr,'>',VPos,ALen);
         break;
       end else begin
-        DiscardUntil(AStr,'>',VPos,ALen);
+        if not AIsScript then begin
+          DiscardUntil(AStr,'>',VPos,ALen);
+        end;
         Inc(VPos);
       end;
     end else begin
+      if Not AIsScript then begin
         DiscardUntil(AStr,'>',VPos,ALen);
-        Inc(VPos);
+      end;
+      Inc(VPos);
     end;
   until False;
 end;
@@ -3424,7 +3428,7 @@ begin
               2 :
               begin
                 DiscardUntilEndOfTag(LRawData,LPos,LLen);
-                DiscardUntilCloseTag(LRawData,'SCRIPT',LPos,LLen);
+                DiscardUntilCloseTag(LRawData,'SCRIPT',LPos,LLen,True);
               end;
               //'LINK'
               3 :
@@ -3481,8 +3485,7 @@ var
     Result := '';
     Delete(VHeaderLine, 1, 1);
     I := 1;
-    while I <= Length(VHeaderLine) do
-    begin
+    while I <= Length(VHeaderLine) do begin
       if VHeaderLine[I] = '\' then begin
         if I < Length(VHeaderLine) then begin
           Delete(VHeaderLine, I, 1);
@@ -3511,8 +3514,7 @@ begin
     if TextStartsWith(AHeaderLine, '"') then {do not localize}
     begin
       LValue := FetchQuotedString(AHeaderLine);
-    end else
-    begin
+    end else  begin
       I := FindFirstOf(' ' + token_specials, AHeaderLine);
       if I <> 0 then
       begin
@@ -3521,8 +3523,7 @@ begin
           Inc(I);
         end;
         Delete(AHeaderLine, 1, I-1);
-      end else
-      begin
+      end else begin
         LValue := AHeaderLine;
         AHeaderLine := '';
       end;
