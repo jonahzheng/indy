@@ -152,6 +152,10 @@ type
   EIdDigestUpdate = class(EIdDigestError);
   {$ENDIF}
 
+{$IFNDEF DOTNET}
+function IsHashingIntfAvail : Boolean; {$IFDEF USE_INLINE} inline; {$ENDIF}
+{$ENDIF}
+
 implementation
 
 uses
@@ -159,6 +163,13 @@ uses
   IdCTypes,
 {$ENDIF}
   IdGlobalProtocols, SysUtils;
+
+function IsHashingIntfAvail : Boolean;
+begin
+  Result := Assigned(IdSslEvpDigestInitEx) and
+             Assigned(IdSslEvpDigestUpdate) and
+             Assigned(IdSslEvpDigestFinalEx);
+end;
 
 { TIdHash }
 
@@ -478,9 +489,7 @@ end;
 
 class function TIdHashIntF.IsIntfAvailable: Boolean;
 begin
-   Result := Assigned(IdSslEvpDigestInitEx) and
-             Assigned(IdSslEvpDigestUpdate) and
-             Assigned(IdSslEvpDigestFinalEx);
+   Result := IsHashingIntfAvail;
 end;
 {$ENDIF}
 

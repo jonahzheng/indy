@@ -8694,7 +8694,7 @@ function GetErrorMessage(const AErr : TIdC_ULONG) : AnsiString;
 var
   LErrMsg: array [0..160] of AnsiChar;
 begin
-  IdSSLERR_error_string(AErr, @LErrMsg);
+  IdSSLERR_error_string(AErr, PAnsiChar(@LErrMsg));
   result := StrPas(PAnsiChar(@LErrMsg));
 end;
 
@@ -8926,7 +8926,7 @@ them in case we use them later.}
   {CH fn_CRYPTO_get_locked_mem_functions = 'CRYPTO_get_locked_mem_functions'; }  {Do not localize}
   {CH fn_CRYPTO_malloc_locked = 'CRYPTO_malloc_locked'; }  {Do not localize}
   {CH fn_CRYPTO_free_locked = 'CRYPTO_free_locked'; }  {Do not localize}
-      fn_CRYPTO_malloc = 'CRYPTO_malloc';  {Do not localize}
+  fn_CRYPTO_malloc = 'CRYPTO_malloc';  {Do not localize}
   fn_CRYPTO_free = 'CRYPTO_free';  {Do not localize}
   {CH fn_CRYPTO_realloc = 'CRYPTO_realloc'; }  {Do not localize}
   {CH fn_CRYPTO_remalloc = 'CRYPTO_remalloc'; }  {Do not localize}
@@ -11914,10 +11914,10 @@ begin
   @IdSslEvpPKeyAssign := LoadFunctionCLib(fn_EVP_PKEY_assign);
   @IdSslEvpGetDigestByName := LoadFunctionCLib(fn_EVP_get_digestbyname);
   //OBJ
-   @IdSslOBJObj2Nid := LoadFunctionCLib(fn_OBJ_obj2nid);
-   @IdSslOBJNid2Obj := LoadFunctionCLib(fn_OBJ_nid2obj);
-   @IdSslOBJNid2ln := LoadFunctionCLib(fn_OBJ_nid2ln);
-   @IdSslOBJNid2sn := LoadFunctionCLib(fn_OBJ_nid2sn);
+  @IdSslOBJObj2Nid := LoadFunctionCLib(fn_OBJ_obj2nid);
+  @IdSslOBJNid2Obj := LoadFunctionCLib(fn_OBJ_nid2obj);
+  @IdSslOBJNid2ln := LoadFunctionCLib(fn_OBJ_nid2ln);
+  @IdSslOBJNid2sn := LoadFunctionCLib(fn_OBJ_nid2sn);
   //ASN1
   @IdSslAsn1IntegerSet := LoadFunctionCLib(fn_ASN1_INTEGER_set);
   @IdSslAsn1IntegerGet := LoadFunctionCLib(fn_ASN1_INTEGER_get);

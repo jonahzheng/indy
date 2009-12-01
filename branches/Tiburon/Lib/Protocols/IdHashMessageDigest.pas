@@ -73,11 +73,11 @@ type
     procedure Reset; override;
 
     function GetHashInst : TIdHashInst; override;
-
     function NativeGetHashBytes(AStream: TStream; ASize: TIdStreamSize): TIdBytes; override;
     function HashToHex(const AHash: TIdBytes): String; override;
   public
     constructor Create; override;
+    class function IsIntfAvailable: Boolean; override;
   end;
 
   TIdHashMessageDigest4 = class(TIdHashMessageDigest)
@@ -93,6 +93,7 @@ type
 
   public
     constructor Create; override;
+    class function IsIntfAvailable: Boolean; override;
   end;
 
   TIdHashMessageDigest5 = class(TIdHashMessageDigest4)
@@ -160,8 +161,7 @@ var
   LCheckSumScore: Byte;
 begin
   // Move the next 16 bytes into the second 16 bytes of X.
-  for i := 0 to 15 do
-  begin
+  for i := 0 to 15 do begin
     x := FCBuffer[i];
     FX[i + 16] := x;
     FX[i + 32] := x xor FX[i];
@@ -169,8 +169,7 @@ begin
 
   { Do 18 rounds. }
   T := 0;
-  for i := 0 to NumRounds - 1 do
-  begin
+  for i := 0 to NumRounds - 1 do begin
     for j := 0 to 47 do
     begin
       T := FX[j] xor MD2_PI_SUBST[T];
@@ -180,8 +179,7 @@ begin
   end;
 
   LCheckSumScore := FChecksum[15];
-  for i := 0 to 15 do
-  begin
+  for i := 0 to 15 do begin
     x := FCBuffer[i] xor LCheckSumScore;
     LCheckSumScore := FChecksum[i] xor MD2_PI_SUBST[x];
     FChecksum[i] := LCheckSumScore;
@@ -194,8 +192,7 @@ var
   I: Integer;
 begin
   inherited Reset;
-  for I := 0 to 15 do
-  begin
+  for I := 0 to 15 do begin
     FCheckSum[I] := 0;
     FX[I] := 0;
     FX[I+16] := 0;
@@ -214,8 +211,7 @@ begin
   Reset;
 
   // Code the entire file in complete 16-byte chunks.
-  while ASize >= 16 do
-  begin
+  while ASize >= 16 do begin
     LSize := ReadTIdBytesFromStream(AStream, FCBuffer, 16);
     // TODO: handle stream read error
     MDCoder;
@@ -259,6 +255,15 @@ end;
 function TIdHashMessageDigest2.HashToHex(const AHash: TIdBytes): String;
 begin
   Result := LongWordHashToHex(AHash, 4);
+end;
+
+class function TIdHashMessageDigest2.IsIntfAvailable: Boolean;
+begin
+  {$IFDEF DOTNET}
+  Result := False
+  {$ELSE}
+  Result := Assigned(IdSslEvpMD2) and IsHashingIntfAvail;
+  {$ENDIF}
 end;
 
 { TIdHashMessageDigest4 }
@@ -422,6 +427,15 @@ begin
   Result := LongWordHashToHex(AHash, 4);
 end;
 
+class function TIdHashMessageDigest4.IsIntfAvailable: Boolean;
+begin
+  {$IFDEF DOTNET}
+  Result := False;
+  {$ELSE}
+  Result := Assigned(IdSslEvpMD4) and IsHashingIntfAvail;
+  {$ENDIF}
+end;
+
 { TIdHashMessageDigest5 }
 
 const
@@ -456,7 +470,11 @@ end;
 
 class function TIdHashMessageDigest5.IsIntfAvailable: Boolean;
 begin
+  {$IFDEF DOTNET}
   Result := True;
+  {$ELSE}
+  Result := Assigned(IdSslEvpMD5) and IsHashingIntfAvail;
+  {$ENDIF}
 end;
 
 procedure TIdHashMessageDigest5.MDCoder;
