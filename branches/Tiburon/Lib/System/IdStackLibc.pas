@@ -69,6 +69,13 @@ uses
   IdGlobal,
   IdStackBSDBase;
 
+{$UNDEF LIBCPASS_STRUCT}
+{$IFDEF KYLIX}
+  {$DEFINE LIBCPASS_STRUCT}
+{$ENDIF}
+{$IFDEF DELPHI_CROSS}
+  {$DEFINE LIBCPASS_STRUCT}
+{$ENDIF}
 type
 
   TIdSocketListLibc = class (TIdSocketList)
@@ -289,11 +296,7 @@ begin
           end;
           sin_port := htons(APort);
         end;
-        {$IFDEF DELPHI_CROSS}
-        CheckForSocketError(libc.bind(ASocket, PSockAddr(@LAddr)^, SizeOf(sockaddr)));
-        {$ELSE}
-        CheckForSocketError(libc.bind(ASocket, Psockaddr(@LAddr), SizeOf(sockaddr)));
-        {$ENDIF}
+        CheckForSocketError(Libc.bind(ASocket, {$IFDEF LIBCPASS_STRUCT}PSockAddr(@LAddr)^ {$ELSE} Psockaddr(@LAddr) {$ENDIF},SizeOf(sockaddr)));
       end;
     Id_IPv6: begin
         with LAddr do
@@ -304,11 +307,7 @@ begin
           end;
           sin6_port := htons(APort);
         end;
-        {$IFDEF DELPHI_CROSS}
-        CheckForSocketError(Libc.bind(ASocket, Psockaddr(@LAddr)^, SizeOf(sockaddr_in6)));
-        {$ELSE}
-        CheckForSocketError(Libc.bind(ASocket, Psockaddr(@LAddr), SizeOf(sockaddr_in6)));
-        {$ENDIF}
+        CheckForSocketError(Libc.bind(ASocket, {$IFDEF LIBCPASS_STRUCT}Psockaddr(@LAddr)^ {$ELSE}Psockaddr(@LAddr){$ENDIF}, SizeOf(sockaddr_in6)));
       end;
     else begin
       IPVersionUnsupported;
@@ -330,33 +329,27 @@ begin
   FillChar(LAddr, SizeOf(LAddr), 0);
   case AIPVersion of
     Id_IPv4: begin
-      with Psockaddr(@LAddr)^ do begin
+      with Psockaddr(@LAddr)^ do
+      begin
         sin_family := Id_PF_INET4;
         TranslateStringToTInAddr(AIP, sin_addr, Id_IPv4);
         sin_port := htons(APort);
       end;
       CheckForSocketError(Libc.connect(
         ASocket,
-        {$IFDEF DELPHI_CROSS} 
-          Psockaddr(@LAddr)^,
-        {$ELSE}
-          {$IFDEF KYLIX}Psockaddr(@LAddr)^{$ELSE}Psockaddr(@LAddr){$ENDIF},
-        {$ENDIF}
+        {$IFDEF LIBCPASS_STRUCT}PSockAddr(@LAddr)^{$ELSE}Psockaddr(@LAddr){$ENDIF},
         SizeOf(sockaddr)));
     end;
     Id_IPv6: begin
-      with LAddr do begin
+      with LAddr do
+      begin
         sin6_family := Id_PF_INET6;
         TranslateStringToTInAddr(AIP, sin6_addr, Id_IPv6);
         sin6_port := htons(APort);
       end;
       CheckForSocketError(Libc.connect(
         ASocket,
-        {$IFDEF DELPHI_CROSS} 
-          Psockaddr(@LAddr)^,
-        {$ELSE}
-        {$IFDEF KYLIX}Psockaddr(@LAddr)^{$ELSE}Psockaddr(@LAddr){$ENDIF},
-        {$ENDIF}
+        {$IFDEF LIBCPASS_STRUCT}Psockaddr(@LAddr)^{$ELSE}Psockaddr(@LAddr){$ENDIF},
         SizeOf(sockaddr_in6)));
     end;
     else begin
@@ -373,7 +366,7 @@ var
   LHost: PHostEnt;
 // ipv6
   LHints: TAddressInfo;
-  {$IFDEF KYLIXCOMPAT}
+  {$IFDEF LIBCPASS_STRUCT}
   LAddrInfo: PAddressInfo;
   {$ELSE}
   LAddrInfo: PAddrInfo;
@@ -413,7 +406,7 @@ begin
       {$ENDIF}
       LRetVal := getaddrinfo(
         PAnsiChar({$IFDEF STRING_IS_UNICODE}LAStr{$ELSE}AHostName{$ENDIF}),
-        nil, @LHints, {$IFDEF KYLIXCOMPAT}LAddrInfo{$ELSE}@LAddrInfo{$ENDIF});
+        nil, @LHints, {$IFDEF LIBCPASS_STRUCT}LAddrInfo{$ELSE}@LAddrInfo{$ENDIF});
       if LRetVal <> 0 then begin
         if LRetVal = EAI_SYSTEM then begin
           IndyRaiseLastError;
@@ -426,7 +419,7 @@ begin
       finally
         freeaddrinfo(LAddrInfo);
       end;
-    end;
+      end
     else
       Result := ''; // avoid warning
       IPVersionUnsupported;
@@ -608,7 +601,7 @@ begin
         end;
         LBytesOut := Libc.sendto(
           ASocket, ABuffer, ABufferLength, AFlags or Id_MSG_NOSIGNAL,
-          {$IFDEF KYLIX}Psockaddr(@LAddr)^{$ELSE}Psockaddr(@LAddr){$ENDIF},
+          {$IFDEF LIBCPASS_STRUCT}Psockaddr(@LAddr)^{$ELSE}Psockaddr(@LAddr){$ENDIF},
           LiSize);
        end;
     else begin
@@ -666,7 +659,7 @@ begin
   LAStr := AnsiString(AServiceName); // explicit convert to Ansi
   {$ENDIF}
   Lps := Libc.getservbyname(
-    PAnsiChar({$IFDEF STRING_IS_UNICODE}LAStr{$ELSE}AServiceName{$ENDIF},
+    PAnsiChar({$IFDEF STRING_IS_UNICODE}LAStr{$ELSE}AServiceName{$ENDIF}),
     nil);
   if Lps <> nil then begin
     Result := ntohs(Lps^.s_port);
@@ -795,7 +788,7 @@ end;
 function TIdStackLibc.HostByAddress(const AAddress: string;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string;
 var
-  {$IFDEF KYLIXCOMPAT}
+  {$IFDEF LIBCPASS_STRUCT}
   LHints: TAddressInfo;
   LAddrInfo: PAddressInfo;
   {$ELSE}
@@ -804,7 +797,7 @@ var
   {$ENDIF}
   LRetVal: integer;
   {$IFDEF STRING_IS_UNICODE}
-  LAStr: AniString;
+  LAStr: AnsiString;
   {$ENDIF}
 begin
   case AIPVersion of
@@ -820,11 +813,7 @@ begin
       {$ENDIF}
       LRetVal := getaddrinfo(
         PAnsiChar({$IFDEF STRING_IS_UNICODE}LAStr{$ELSE}AAddress{$ENDIF}),
-        {$IFDEF DELPHI_CROSS}
-        nil, LHints, LAddrInfo{$ENDIF});
-        {$ELSE}
-        nil, @LHints, {$IFDEF KYLIX}LAddrInfo{$ELSE}@LAddrInfo{$ENDIF});
-        {$ENDIF}
+        nil, @LHints, {$IFDEF LIBCPASS_STRUCT}LAddrInfo{$ELSE}@LAddrInfo{$ENDIF});
       if LRetVal <> 0 then begin
         if LRetVal = EAI_SYSTEM then begin
           IndyRaiseLastError;
@@ -837,8 +826,6 @@ begin
       finally
         freeaddrinfo(LAddrInfo);
       end;
-    else begin
-      IPVersionUnsupported;
     end;
 (* JMB: I left this in here just in case someone
         complains, but the other code works on all
@@ -860,7 +847,10 @@ variables for it:
       end;
     end;
 *)
-
+    else begin
+      IPVersionUnsupported;
+    end;
+  end;
 end;
 
 function TIdStackLibc.WSShutdown(ASocket: TIdStackSocketHandle; AHow: Integer): Integer;
@@ -886,7 +876,8 @@ begin
   CheckForSocketError(Libc.getpeername(ASocket, Psockaddr(@LAddr)^, i));
   case LAddr.sin6_family of
     Id_PF_INET4: begin
-      with Psockaddr(@LAddr)^ do begin
+      with Psockaddr(@LAddr)^ do
+      begin
         VIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
         VPort := ntohs(sin_port);
       end;
@@ -916,14 +907,16 @@ begin
   CheckForSocketError(Libc.getsockname(ASocket, Psockaddr(@LAddr)^, i));
   case LAddr.sin6_family of
     Id_PF_INET4: begin
-      with Psockaddr(@LAddr)^ do begin
+      with Psockaddr(@LAddr)^ do
+      begin
         VIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
         VPort := ntohs(sin_port);
       end;
       VIPVersion := Id_IPV4;
     end;
     Id_PF_INET6: begin
-      with LAddr do begin
+      with LAddr do
+      begin
         VIP := TranslateTInAddrToString(sin6_addr, Id_IPv6);
         VPort := ntohs(sin6_port);
       end;
@@ -1128,10 +1121,10 @@ begin
   //we override this function for the herr constants that
   //are returned by the DNS functions
   case AErr of
-    HOST_NOT_FOUND: Result := RSStackHOST_NOT_FOUND;
-    TRY_AGAIN: Result := RSStackTRY_AGAIN;
-    NO_RECOVERY: Result := RSStackNO_RECOVERY;
-    NO_DATA: Result := RSStackNO_DATA;
+    Libc.HOST_NOT_FOUND: Result := RSStackHOST_NOT_FOUND;
+    Libc.TRY_AGAIN: Result := RSStackTRY_AGAIN;
+    Libc.NO_RECOVERY: Result := RSStackNO_RECOVERY;
+    Libc.NO_DATA: Result := RSStackNO_DATA;
   else
     Result := inherited WSTranslateSocketErrorMsg(AErr);
   end;
