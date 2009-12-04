@@ -537,7 +537,9 @@ uses
     {$IFDEF KYLIX}
     Libc,
     {$ELSE}
+      {$IFDEF FPC}
       DynLibs, // better add DynLibs only for fpc
+      {$ENDIF}
       {$IFDEF KYLIXCOMPAT}
       Libc,
       {$ENDIF}
@@ -581,7 +583,9 @@ const
   {$IFDEF KYLIX}
   NilHandle = 0;
   {$ENDIF}
-
+  {$IFDEF DELPHI}
+  NilHandle = 0;
+  {$ENDIF}
   LF = #10;
   CR = #13;
   EOL = CR + LF;
@@ -685,11 +689,11 @@ type
   {$IFNDEF DOTNET}
     {$IFNDEF FPC}
       //needed so that in FreePascal, we can use pointers of different sizes
-      {$IFDEF WIN32}
+      {$IFDEF CPU32}
    PtrInt  = LongInt;
    PtrUInt = LongWord;
       {$ENDIF}
-      {$IFDEF WIN64}
+      {$IFDEF CPU64}
    PtrInt  = Int64;
    PtrUInt = Int64;
       {$ENDIF}
@@ -2475,7 +2479,7 @@ begin
     {$ELSE}
       {$IFDEF KYLIXCOMPAT}
     // Workaround that is required under Linux (changed RTLD_GLOBAL with RTLD_LAZY Note: also work with LoadLibrary())
-    Result := HMODULE(dlopen(PChar(ALibName+LIBEXT+ALibVersions[i]), RTLD_LAZY));
+    Result := HMODULE(dlopen(PAnsiChar(ALibName+LIBEXT+ALibVersions[i]), RTLD_LAZY));
       {$ELSE}
     Result := LoadLibrary(ALibName+LIBEXT+ALibVersions[i]);
       {$ENDIF}
@@ -2502,7 +2506,11 @@ function InterlockedExchangeTHandle(var VTarget: THandle; const AValue: PtrUInt)
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   {$IFDEF THANDLE_32}
+    {$IFDEF DELPHI_CROSS}
+  Todo('See about InterlockedExchange for this.');
+    {$ELSE}
   Result := InterlockedExchange(LongInt(VTarget), AValue);
+    {$ENDIF}
   {$ENDIF}
   {$IFDEF THANDLE_64}
   Result := InterlockedExchange64(Int64(VTarget), AValue);
@@ -2523,13 +2531,15 @@ begin
   Result := Pointer(InterlockedCompareExchange(PtrInt(VTarget), PtrInt(AValue), PtrInt(Compare)));
     {$ENDIF}
   {$ELSE}
-    {$IFDEF VCL_2009_OR_ABOVE}
+    {$IFNDEF VCL_2011_CROSS_COMPILE}
+      {$IFDEF VCL_2009_OR_ABOVE}
   Result := InterlockedCompareExchangePointer(VTarget, AValue, Compare);
-    {$ELSE}
-      {$IFDEF VCL_2005_OR_ABOVE}
-  Result := Pointer(InterlockedCompareExchange(Longint(VTarget), Longint(AValue), Longint(Compare)));
       {$ELSE}
+        {$IFDEF VCL_2005_OR_ABOVE}
+  Result := Pointer(InterlockedCompareExchange(Longint(VTarget), Longint(AValue), Longint(Compare)));
+        {$ELSE}
   Result := InterlockedCompareExchange(VTarget, AValue, Compare);
+        {$ENDIF}
       {$ENDIF}
     {$ENDIF}
   {$ENDIF}
@@ -4907,13 +4917,18 @@ end;
 function IndyFileAge(const AFileName: string): TDateTime;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  {$IFDEF VCL_2006_OR_ABOVE}
+  {$IFDEF DELPHI_CROSS}
+  Result := FileDateToDateTime(SysUtils.FileAge(AFileName));
+  {$ELSE} 
+    {$IFDEF VCL_2006_OR_ABOVE}
   //single-parameter fileage is deprecated in d2006 and above
   if not FileAge(AFileName, Result) then begin
     Result := 0;
   end;
-  {$ELSE}
+
+    {$ELSE}
   Result := FileDateToDateTime(SysUtils.FileAge(AFileName));
+    {$ENDIF}
   {$ENDIF}
 end;
 
