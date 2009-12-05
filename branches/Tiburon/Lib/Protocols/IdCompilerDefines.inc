@@ -498,6 +498,13 @@
 //IF's are evaluated before IFDEF's
 //and Kylix 1 does not have CompilerVersion defined at all.
 {$IFNDEF FPC}
+   {$IFDEF POSIX}
+     {$IF RTLVersion = 21.0}
+       {$DEFINE UNIX}
+       {$DEFINE VCL_2011_CROSS_COMPILE}
+       {$DEFINE KYLIXCOMPAT}
+     {$IFEND}
+  {$ENDIF}
   {$IFDEF LINUX}
     {$IFDEF CONDITIONALEXPRESSIONS}
       {$IF RTLVersion = 14.0}
@@ -516,6 +523,9 @@
         {$DEFINE KYLIX_1_OR_ABOVE}
         {$DEFINE KYLIX_2_OR_ABOVE}
         {$DEFINE KYLIX_3_OR_ABOVE}
+      {$IFEND}
+      {$IF RTLVersion = 21.0}
+        {$DEFINE VCL_2011_CROSS_COMPILE}
       {$IFEND}
     {$ENDIF}
     {$DEFINE VCL_4_OR_ABOVE}
@@ -537,8 +547,10 @@
   {$ENDIF}
 {$ENDIF}
 
-{$IFDEF KYLIXCOMPAT}
+{$IFNDEF VCL_2011_CROSS_COMPILE}
+  {$IFDEF KYLIXCOMPAT}
   {$linklib c}
+  {$ENDIF}
 {$ENDIF}
 
 // .NET and Delphi 2009+ support UNICODE strings natively!
@@ -591,6 +603,108 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$DEFINE REQUIRES_PROPER_ALIGNMENT}
 {$ENDIF}
 
+//
+//iconv defines section.
+{$DEFINE USE_ICONV_UNIT}
+{$DEFINE USE_ICONV_ENC}
+{$IFDEF UNIX}
+  {$DEFINE USE_ICONV}
+  {$IFDEF USE_BASEUNIX}
+    {$IFDEF FPC}
+      {$UNDEF USE_ICONV_UNIT}
+    {$ELSE}
+      {$UNDEF USE_ICONV_ENC}
+    {$ENDIF}
+  {$ENDIF}
+  {$IFDEF KYLIXCOMPAT}
+    //important!!  Iconv functions are defined in the libc.pas Kylix compatible unit.
+    {$UNDEF USE_ICONV_ENC}
+    {$UNDEF USE_ICONV_UNIT}
+  {$ENDIF}
+{$ENDIF}
+{$IFDEF NETWARELIBC}
+  {$DEFINE USE_ICONV}
+  //important!!! iconv functions are defined in the libc.pas Novell Netware header.
+  //Do not define USE_ICONVUNIT
+  {$UNDEF USE_ICONV_UNIT}
+  {$UNDEF USE_ICONV_ENC}
+{$ENDIF}
+{$IFNDEF USE_ICONV}
+  {$UNDEF USE_ICONV_UNIT}
+  {$UNDEF USE_ICONV_ENC}
+{$ENDIF}
+{$UNDEF USE_SAFELOADLIBRARY}
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  {$UNDEF USE_ICONV_ENC}
+  {$DEFINE USE_SAFELOADLIBRARY}
+{$ENDIF}
+
+{$UNDEF DELPHI_CROSS}
+{$UNDEF USE_INVALIDATE_MOD_CACHE}
+{$UNDEF USE_SAFELOADLIBRARY}
+//This must come after the iconv defines because this compiler targets a Unix-like
+//operating system.  One key difference is that it does have a TEncoding class.
+//If this comes before the ICONV defines, it creates problems.
+//This also must go before the THanld size calculations.
+{$IFDEF VCL_2011_CROSS_COMPILE}
+  {$DEFINE DELPHI_CROSS}
+  {$IFDEF MACOSX}
+    {$DEFINE BSD}
+    {$DEFINE DARWIN}
+    {$DEFINE USE_SAFELOADLIBRARY}
+    {$DEFINE USE_INVALIDATE_MOD_CACHE}
+  {$ENDIF}
+  {$DEFINE USE_INLINE}
+  {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
+  {$UNDEF USE_ICONV}
+  //important!!! iconv functions are defined in the libc.pas Novell Netware header.
+  //Do not define USE_ICONVUNIT
+  {$UNDEF USE_ICONV_UNIT}
+  {$UNDEF USE_ICONV_ENC}  
+  {$DEFINE INT_THREAD_PRIORITY}
+  {$DEFINE VCL_4_OR_ABOVE}
+  {$DEFINE VCL_5_OR_ABOVE}
+  {$DEFINE VCL_6_OR_ABOVE}
+  {$DEFINE VCL_7_OR_ABOVE}
+  {$DEFINE VCL_8_OR_ABOVE}
+  {$DEFINE VCL_2005_OR_ABOVE}
+  {$DEFINE VCL_2006_OR_ABOVE}
+  {$DEFINE VCL_2007_OR_ABOVE}
+  {$DEFINE VCL_2009_OR_ABOVE}
+  {$DEFINE VCL_2010_OR_ABOVE}
+  {$DEFINE VCL_2011_OR_ABOVE}
+  {$DEFINE VCL_2011}
+  {$IFDEF CBUILDER}
+    {$DEFINE DELPHI_2011}
+  {$ELSE}
+    {$DEFINE DELPHI_2011}
+  {$ENDIF}
+  {$DEFINE HAS_OPTIONAL_PARAMS}
+  {$DEFINE HAS_SAMETEXT}
+  {$DEFINE HAS_NAMED_THREADS}
+  {$DEFINE HAS_TThread_NameThreadForDebugging}
+  {/$IFNDEF FREE_ON_FINAL}
+    {/$DEFINE REGISTER_EXPECTED_MEMORY_LEAK}
+  {/$ENDIF}
+  {$DEFINE HAS_TFormatSettings}
+  {$DEFINE HAS_TSelectionEditor}
+  {$DEFINE CPUI386}
+  {$DEFINE ENDIAN_LITTLE}
+  {$DEFINE CPU32}
+  {$IFNDEF CIL}
+    {$DEFINE WIDGET_VCL_LIKE} // LCL included.
+    {$DEFINE WIDGET_VCL_LIKE_OR_KYLIX}
+    {$DEFINE WIDGET_VCL}
+    {$DEFINE VCL_60_PLUS}
+    {$DEFINE HAS_TEncoding}
+    {$DEFINE HAS_TCharacter}
+  {$ENDIF}
+  {$DEFINE HAS_CLASSPROPERTIES}
+  {$DEFINE HAS_DEPRECATED}
+  {$DEFINE HAS_DEPRECATED_MSG}
+  {$DEFINE HAS_REMOVEFREENOTIFICATION}
+{$ENDIF}
+
 // Do NOT remove these IFDEF's.  They are here because InterlockedExchange
 // only handles 32bit values.  Some Operating Systems may have 64bit  
 // THandles.  This is not always tied to the platform architecture.
@@ -626,6 +740,7 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
 {$IFDEF MACOS}
    {$DEFINE THANDLE_CPUBITS}
 {$ENDIF}
+
 {$IFDEF MORPHOS}
   {$DEFINE THANDLE_CPUBITS}
 {$ENDIF}
@@ -654,6 +769,7 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$DEFINE THANDLE_CPUBITS}
 {$ENDIF}
 
+
 // end platform specific stuff for THandle size
 
 {$IFDEF THANDLE_CPUBITS}
@@ -662,39 +778,6 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$ELSE}
     {$DEFINE THANDLE_32}
   {$ENDIF}
-{$ENDIF}
-//
-//iconv defines section.
-{$DEFINE USE_ICONV_UNIT}
-{$DEFINE USE_ICONV_ENC}
-{$IFDEF UNIX}
-  {$DEFINE USE_ICONV}
-  {$IFDEF USE_BASEUNIX}
-    {$IFDEF FPC}
-      {$UNDEF USE_ICONV_UNIT}
-    {$ELSE}
-      {$UNDEF USE_ICONV_ENC}
-    {$ENDIF}
-  {$ENDIF}
-  {$IFDEF KYLIXCOMPAT}
-    //important!!  Iconv functions are defined in the libc.pas Kylix compatible unit.
-    {$UNDEF USE_ICONV_ENC}
-    {$UNDEF USE_ICONV_UNIT}
-  {$ENDIF}
-{$ENDIF}
-{$IFDEF NETWARELIBC}
-  {$DEFINE USE_ICONV}
-  //important!!! iconv functions are defined in the libc.pas Novell Netware header.
-  //Do not define USE_ICONVUNIT
-  {$UNDEF USE_ICONV_UNIT}
-  {$UNDEF USE_ICONV_ENC}
-{$ENDIF}
-{$IFNDEF USE_ICONV}
-  {$UNDEF USE_ICONV_UNIT}
-  {$UNDEF USE_ICONV_ENC}
-{$ENDIF}
-{$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  {$UNDEF USE_ICONV_ENC}
 {$ENDIF}
 
 {$IFDEF DOTNET}
@@ -724,7 +807,11 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$IFDEF DOTNET}
     {$UNDEF REGISTER_EXPECTED_MEMORY_LEAK}
   {$ENDIF}
+  {$IFDEF DELPHI_CROSS}
+    {$UNDEF REGISTER_EXPECTED_MEMORY_LEAK}  
+  {$ENDIF}
 {$ENDIF}
+
 
 {$IFDEF DEBUG}
   {$UNDEF USE_INLINE}
