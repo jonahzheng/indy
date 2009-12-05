@@ -633,11 +633,15 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$UNDEF USE_ICONV_UNIT}
   {$UNDEF USE_ICONV_ENC}
 {$ENDIF}
+{$UNDEF USE_SAFELOADLIBRARY}
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   {$UNDEF USE_ICONV_ENC}
+  {$DEFINE USE_SAFELOADLIBRARY}
 {$ENDIF}
 
 {$UNDEF DELPHI_CROSS}
+{$UNDEF USE_INVALIDATE_MOD_CACHE}
+{$UNDEF USE_SAFELOADLIBRARY}
 //This must come after the iconv defines because this compiler targets a Unix-like
 //operating system.  One key difference is that it does have a TEncoding class.
 //If this comes before the ICONV defines, it creates problems.
@@ -646,6 +650,9 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$DEFINE DELPHI_CROSS}
   {$IFDEF MACOSX}
     {$DEFINE BSD}
+    {$DEFINE DARWIN}
+    {$DEFINE USE_SAFELOADLIBRARY}
+    {$DEFINE USE_INVALIDATE_MOD_CACHE}
   {$ENDIF}
   {$DEFINE USE_INLINE}
   {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
@@ -780,8 +787,6 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$DEFINE DOTNET_OR_ICONV}
 {$ENDIF}
 
-
-
 {$UNDEF STREAM_SIZE_64}
 {$IFDEF FPC}
   {$DEFINE STREAM_SIZE_64}
@@ -802,7 +807,7 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$IFDEF DOTNET}
     {$UNDEF REGISTER_EXPECTED_MEMORY_LEAK}
   {$ENDIF}
-  {$IFDEF VCL_2011_CROSS_COMPILE}
+  {$IFDEF DELPHI_CROSS}
     {$UNDEF REGISTER_EXPECTED_MEMORY_LEAK}  
   {$ENDIF}
 {$ENDIF}

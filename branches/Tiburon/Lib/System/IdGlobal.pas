@@ -2467,6 +2467,15 @@ end;
 {$ENDIF}
 
 {$IFDEF UNIX}
+function HackLoadFileName(const ALibName, ALibVer : String) : string;  {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+ {$IFDEF DARWIN}
+  Result := ALibName+ALibVer+LIBEXT;
+ {$ELSE}
+  Result := ALibName+LIBEXT+ALibVer;
+ {$ENDIF}
+end;
+
 function HackLoad(const ALibName : String; const ALibVersions : array of String) : HMODULE;
 var
   i : Integer;
@@ -2474,15 +2483,18 @@ begin
   Result := NilHandle;
   for i := Low(ALibVersions) to High(ALibVersions) do
   begin
-    {$IFDEF DARWIN}
-    Result := LoadLibrary(ALibName+ALibVersions[i]+LIBEXT);
+    {$IFDEF USE_SAFELOADLIBRARY}
+    Result := SafeLoadLibrary(HackLoadFileName(ALibName,ALibVersions[i]));
     {$ELSE}
       {$IFDEF KYLIXCOMPAT}
     // Workaround that is required under Linux (changed RTLD_GLOBAL with RTLD_LAZY Note: also work with LoadLibrary())
-    Result := HMODULE(dlopen(PAnsiChar(ALibName+LIBEXT+ALibVersions[i]), RTLD_LAZY));
+    Result := HMODULE(dlopen(PAnsiChar(HackLoadFileName(ALibName,ALibVersions[i])), RTLD_LAZY));
       {$ELSE}
-    Result := LoadLibrary(ALibName+LIBEXT+ALibVersions[i]);
+    Result := LoadLibrary(HackLoadFileName(ALibName,ALibVersions[i]));
       {$ENDIF}
+    {$ENDIF}
+    {$IFDEF USE_INVALIDATE_MOD_CACHE}
+    InvalidateModuleCache;
     {$ENDIF}
     if Result <> NilHandle then begin
       break;
@@ -4772,7 +4784,7 @@ var
   tmez: TTimeZoneInformation;
 {$ENDIF}
 begin
-  {$IFDEF LINUX}
+  {$IFDEF UNIX}
   Result := GOffsetFromUTC;
   {$ENDIF}
   {$IFDEF DOTNET}
