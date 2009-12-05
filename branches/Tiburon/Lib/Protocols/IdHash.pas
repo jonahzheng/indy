@@ -61,7 +61,9 @@ uses
   System.Security.Cryptography,
   IdException,
   {$ELSE}
+    {$IFDEF USE_OPENSSL}
   IdSSLOpenSSLHeaders,
+    {$ENDIF}
   {$ENDIF}
   Classes,
   IdGlobal;
@@ -120,8 +122,13 @@ type
   TIdHashInst = System.Security.Cryptography.HashAlgorithm;
   TIdHashIntCtx =  TIdHashInst;
   {$ELSE}
+    {$IFDEF USE_OPENSSL}
   TIdHashInst = PEVP_MD;
   TIdHashIntCtx = EVP_MD_CTX;
+    {$ELSE}
+  TIdHashInst = Pointer;
+  TIdHashIntCtx = Pointer;
+    {$ENDIF}
   {$ENDIF}
   TIdHashIntF = class(TIdHash)
   protected
@@ -146,10 +153,12 @@ type
   EIdSecurityAPIException = class(EIdException);
   EIdSHA224NotSupported = class(EIdSecurityAPIException);
   {$ELSE}
+    {$IFDEF USE_OPENSSL}
   EIdDigestError = class(EIdOpenSSLAPICryptoError);
   EIdDigestFinalEx = class(EIdDigestError);
   EIdDigestInitEx = class(EIdDigestError);
   EIdDigestUpdate = class(EIdDigestError);
+    {$ENDIF}
   {$ENDIF}
 
 {$IFNDEF DOTNET}
@@ -167,11 +176,15 @@ uses
 
 function IsHashingIntfAvail : Boolean;
 begin
+{$IFDEF USE_OPENSSL}
+
   Result := Assigned(IdSslEvpDigestInitEx) and
              Assigned(IdSslEvpDigestUpdate) and
              Assigned(IdSslEvpDigestFinalEx);
+  {$ELSE}
+  Result := False;
+{$ENDIF}
 end;
-
 { TIdHash }
 
 constructor TIdHash.Create;
@@ -395,11 +408,14 @@ end;
 { TIdHashIntf }
 
 function TIdHashIntf.FinalHash(ACtx: TIdHashIntCtx): TIdBytes;
-var
 {$IFDEF DOTNET}
+var
   LDummy : TIdBytes;
 {$ELSE}
+  {$IFDEF USE_OPENSSL}
+var  
   LLen, LRet : TIdC_UInt;
+  {$ENDIF}
 {$ENDIF}
 begin
   {$IFDEF DOTNET}
@@ -410,6 +426,7 @@ begin
    ACtx.TransformFinalBlock(LDummy,0,0);
   Result := ACtx.Hash;
   {$ELSE}
+    {$IFDEF USE_OPENSSL}
   SetLength(Result,OPENSSL_EVP_MAX_MD_SIZE);
   LRet := IdSslEvpDigestFinalEx(@ACtx,PAnsiChar(@Result[0]),LLen);
   if LRet <> 1 then begin
@@ -417,6 +434,7 @@ begin
   end;
   SetLength(Result,LLen);
   IdSslEvpMDCtxCleanup(@ACtx);
+    {$ENDIF}
   {$ENDIF}
 end;
 
@@ -453,20 +471,26 @@ end;
 
 function TIdHashIntf.InitHash: TIdHashIntCtx;
  {$IFNDEF DOTNET}
+   {$IFDEF USE_OPENSSL}
 var
   LHash : TIdHashInst;
   LRet : TIdC_Int;
-  {$ENDIF}
+    {$ENDIF}
+ {$ENDIF}
 begin
   {$IFDEF DOTNET}
    Result := GetHashInst;
   {$ELSE}
+    {$IFDEF USE_OPENSSL}
   LHash := GetHashInst;
   IdSslEvpMDCtxInit(@Result);
   LRet := IdSslEvpDigestInitEx(@Result, LHash, nil);
   if LRet <> 1 then begin
     EIdDigestInitEx.RaiseException('EVP_DigestInit_ex error');
   end;
+    {$ELSE}
+  Result := nil;
+    {$ENDIF}
   {$ENDIF}
 end;
 
@@ -496,16 +520,20 @@ end;
 
 procedure TIdHashIntf.UpdateHash(ACtx: TIdHashIntCtx; const AIn: TIdBytes);
 {$IFNDEF DOTNET}
+  {$IFDEF USE_OPENSSL}
 var LRet : TIdC_Int;
+  {$ENDIF}
 {$ENDIF}
 begin
    {$IFDEF DOTNET}
    ACtx.TransformBlock(AIn,0,Length(AIn),AIn,0);
    {$ELSE}
+     {$IFDEF USE_OPENSSL}
   LRet := IdSslEvpDigestUpdate(@ACtx,@Ain[0],Length(AIn));
   if LRet <> 1 then begin
     EIdDigestInitEx.RaiseException('EVP_DigestUpdate error');
   end;
+     {$ENDIF}
   {$ENDIF}
 end;
 

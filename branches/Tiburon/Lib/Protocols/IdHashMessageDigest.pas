@@ -111,7 +111,9 @@ uses
   System.Security.Cryptography,
   {$ELSE}
   IdStreamVCL,
+    {$IFDEF USE_OPENSSL}
   IdSSLOpenSSLHeaders,
+    {$ENDIF}
   {$ENDIF}
   IdGlobalProtocols;
 
@@ -249,7 +251,11 @@ begin
   {$IFDEF DOTNET}
   Result := nil;
   {$ELSE}
+    {$IFDEF USE_OPENSSL}
   Result := IdSslEvpMD2;
+    {$ELSE}
+  Result := nil;
+    {$ENDIF}
   {$ENDIF}
 end;
 
@@ -263,7 +269,11 @@ begin
   {$IFDEF DOTNET}
   Result := False
   {$ELSE}
+    {$IFDEF USE_OPENSSL}
   Result := Assigned(IdSslEvpMD2) and IsHashingIntfAvail;
+    {$ELSE}
+  Result := False;
+    {$ENDIF}
   {$ENDIF}
 end;
 
@@ -419,7 +429,11 @@ begin
   {$IFDEF DOTNET}
   Result := nil;
   {$ELSE}
+    {$IFDEF USE_OPENSSL}
   Result := IdSslEvpMD4;
+    {$ELSE}
+  Result := nil;
+    {$ENDIF}
   {$ENDIF}
 end;
 
@@ -433,7 +447,11 @@ begin
   {$IFDEF DOTNET}
   Result := False;
   {$ELSE}
+    {$IFDEF USE_OPENSSL}
   Result := Assigned(IdSslEvpMD4) and IsHashingIntfAvail;
+    {$ELSE}
+  Result := False;
+    {$ENDIF}
   {$ENDIF}
 end;
 
@@ -465,7 +483,11 @@ begin
   {$IFDEF DOTNET}
   Result := System.Security.Cryptography.MD5CryptoServiceProvider.Create;
   {$ELSE}
+    {$IFDEF USE_OPENSSL}
   Result := IdSslEvpMD5;
+    {$ELSE}
+  Result := nil;
+    {$ENDIF}
   {$ENDIF}
 end;
 
@@ -474,7 +496,11 @@ begin
   {$IFDEF DOTNET}
   Result := True;
   {$ELSE}
+    {$IFDEF USE_OPENSSL}
   Result := Assigned(IdSslEvpMD5) and IsHashingIntfAvail;
+    {$ELSE}
+  Result := False;
+    {$ENDIF}
   {$ENDIF}
 end;
 

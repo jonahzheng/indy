@@ -127,8 +127,10 @@ uses
   {$IFDEF DOTNET}
   System.Security.Cryptography
   {$ELSE}
-  IdStreamVCL,
-  IdSSLOpenSSLHeaders 
+  IdStreamVCL
+    {$IFDEF USE_OPENSSL}
+  ,IdSSLOpenSSLHeaders 
+     {$ENDIF}
   {$ENDIF}
   ;
 
@@ -167,12 +169,20 @@ end;
 
 class function TIdHashSHA1.IsIntfAvailable: Boolean;
 begin
+  {$IFDEF USE_OPENSSL}
   Result := Assigned(IdSslEvpSHA1) and inherited IsIntFAvailable;
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
 end;
 
 function TIdHashSHA1.GetHashInst : TIdHashInst; 
 begin
+  {$IFDEF USE_OPENSSL}
   Result :=  IdSslEvpSHA1;
+  {$ELSE}
+  Result := nil;
+  {$ENDIF}
 end;
 
 {$Q-,R-} // Operations performed modulo $100000000
@@ -469,12 +479,20 @@ end;
 
 function TIdHashSHA224.GetHashInst : TIdHashInst; 
 begin
+  {$IFDEF USE_OPENSSL}
   Result := IdSslEvpSHA224;
+  {$ELSE}
+  Result := nil;
+  {$ENDIF}
 end;
 
 class function TIdHashSHA224.IsAvailable: Boolean;
 begin
+  {$IFDEF USE_OPENSSL}
   Result := Assigned(IdSslEvpSHA224) and inherited IsAvailable;
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
 end;
 
 {$ENDIF}
@@ -483,17 +501,25 @@ end;
 
 function TIdHashSHA256.GetHashInst: TIdHashInst;
 begin
-   {$IFDEF DOTNET}
-   Result := System.Security.Cryptography.SHA256Managed.Create;
-   {$ELSE}
+  {$IFDEF DOTNET}
+  Result := System.Security.Cryptography.SHA256Managed.Create;
+  {$ELSE}
+    {$IFDEF USE_OPENSSL}
   Result := IdSslEvpSHA256;
+    {$ELSE}
+  Result := nil;
+    {$ENDIF}
   {$ENDIF}
 end;
 
 {$IFNDEF DOTNET}
 class function TIdHashSHA256.IsAvailable: Boolean;
 begin
+  {$IFDEF USE_OPENSSL}
   Result := Assigned(IdSslEvpSHA256) and inherited IsAvailable;
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
 end;
 {$ENDIF}
 
@@ -504,14 +530,22 @@ begin
    {$IFDEF DOTNET}
    Result := System.Security.Cryptography.SHA384Managed.Create;
    {$ELSE}
+     {$IFDEF USE_OPENSSL}
   Result := IdSslEvpSHA384;
+     {$ELSE}
+  Result := nil;
+     {$ENDIF}
   {$ENDIF}
 end;
 
 {$IFNDEF DOTNET}
 class function TIdHashSHA384.IsAvailable: Boolean;
 begin
+  {$IFDEF USE_OPENSSL}
   Result := Assigned(IdSslEvpSHA384) and inherited IsAvailable;
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
 end;
 {$ENDIF}
 
@@ -522,14 +556,22 @@ begin
    {$IFDEF DOTNET}
    Result := System.Security.Cryptography.SHA512Managed.Create;
    {$ELSE}
+    {$IFDEF USE_OPENSSL}
   Result := IdSslEvpSHA512;
+    {$ELSE}
+  Result := nil;
+    {$ENDIF}
   {$ENDIF}
 end;
 
 {$IFNDEF DOTNET}
 class function TIdHashSHA512.IsAvailable: Boolean;
 begin
+  {$IFDEF USE_OPENSSL}
   Result := Assigned(IdSslEvpSHA512) and inherited IsAvailable;
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
 end;
 {$ENDIF}
 end.
