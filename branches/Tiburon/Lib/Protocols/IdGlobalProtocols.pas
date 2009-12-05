@@ -565,13 +565,10 @@ implementation
 uses
   IdIPAddress,
   {$IFDEF UNIX}
-    {$IFDEF KYLIX}
+    {$IFDEF KYLIXCOMPAT}
   Libc,
     {$ENDIF}
     {$IFDEF FPC}
-      {$IFDEF KYLIXCOMPAT}
-      libc,
-      {$ENDIF}
       {$IFDEF USE_BASEUNIX}
       BaseUnix,
       Unix,
@@ -1512,15 +1509,16 @@ begin
   Result := GetUniqueFilename(lPath, 'Indy', lExt);
 end;
 
+
 function GetUniqueFileName(const APath, APrefix, AExt : String) : String;
-{$IFNDEF UNIX}
+{$IFNDEF FPC}
 var
   LNamePart : LongWord;
   LFQE : String;
   LFName: String;
 {$ENDIF}
 begin
-  {$IFDEF UNIX}
+  {$IFDEF FPC}
   //Do not use Tempnam in Unix-like Operating systems.  That function is dangerous
   //and you will be warned about it when compiling.  FreePascal has GetTempFileName.  Use
   //that instead.
@@ -1657,7 +1655,7 @@ begin
   end;
   {$ENDIF}
   {$IFNDEF NATIVEFILEAPI}
-  Resi;t := -1;
+  Result := -1;
   if FileExists(AFilename) then begin
     with TIdReadFileExclusiveStream.Create(AFilename) do try
       Result := Size;
@@ -1719,10 +1717,11 @@ begin
   end;
   {$ENDIF}
   {$IFDEF UNIX}
-  if {$IFDEF KYLIXCOMPAT}stat{$ELSE}fpstat{$ENDIF}(PChar(AFileName), LRec) = 0 then begin
+  //Note that we can use stat here because we are only looking at the date.
+  if {$IFDEF KYLIXCOMPAT}stat{$ELSE}fpstat{$ENDIF}(PAnsiChar(AnsiString(AFileName)), LRec) = 0 then begin
     LTime := LRec.st_mtime;
     {$IFDEF KYLIXCOMPAT}
-    gmtime_r({$IFDEF KYLIX}@{$ENDIF}LTime, LU);
+    gmtime_r({$IFDEF KYLIXCOMPAT}@{$ENDIF}LTime, LU);
     Result := EncodeDate(LU.tm_year + 1900, LU.tm_mon + 1, LU.tm_mday) +
               EncodeTime(LU.tm_hour, LU.tm_min, LU.tm_sec, 0);
     {$ELSE}
@@ -3741,7 +3740,7 @@ begin
     {$IFDEF KYLIXCOMPAT}
   if GetHostname(@LHost[1], 255) <> -1 then begin
     i := IndyPos(#0, LHost);
-    SetString(Result, @LHost[1], i-1);
+    SetString(Result, PAnsiChar(@LHost[1]), i-1);
   end;
     {$ELSE}
   Result := Unix.GetHostName;
