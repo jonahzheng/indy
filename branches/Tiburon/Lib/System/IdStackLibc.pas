@@ -432,7 +432,7 @@ var
 begin
   SetLength(LStr, 250);
   Libc.gethostname(PAnsiChar(LStr), 250);
-  Result := PAnsiChar(LStr);
+  Result := String(LStr);
 end;
 
 procedure TIdStackLibc.Listen(ASocket: TIdStackSocketHandle; ABackLog: Integer);
@@ -684,15 +684,14 @@ var
   Lp: PPAnsiCharArray;
 begin
   Result := TStringList.Create;
-  Lp := nil;
   try
     Lps := Libc.getservbyport(htons(APortNumber), nil);
     if Lps <> nil then begin
-      Result.Add(Lps^.s_name);
+      Result.Add(String(Lps^.s_name));
       Li := 0;
       Lp := Pointer(Lps^.s_aliases);
       while Lp[Li] <> nil do begin
-        Result.Add(Lp[Li]);
+        Result.Add(String(Lp[Li]));
         Inc(Li);
       end;
     end;
@@ -764,7 +763,7 @@ var
 begin
   // this won't get IPv6 addresses as I didn't find a way
   // to enumerate IPv6 addresses on a linux machine
-  LHostName := HostName;
+  LHostName := AnsiString(HostName);
   LAHost := Libc.gethostbyname(PAnsiChar(LHostName));
   if LAHost = nil then begin
     RaiseLastSocketError;
@@ -822,7 +821,7 @@ begin
         end;
       end;
       try
-        Result := LAddrInfo^.ai_canonname;
+        Result := String(LAddrInfo^.ai_canonname);
       finally
         freeaddrinfo(LAddrInfo);
       end;

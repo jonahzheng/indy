@@ -322,6 +322,7 @@ uses
   {$IFDEF DOTNET}
   IdStackDotNet,
   {$ENDIF}
+  IdResourceStrings,
   SysUtils;
 
 { TIdStackBSDBase }
