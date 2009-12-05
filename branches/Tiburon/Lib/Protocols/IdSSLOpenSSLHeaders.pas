@@ -43,6 +43,7 @@
   Rev 1.0    11/13/2002 08:01:32 AM  JPMugaas
 }
 unit IdSSLOpenSSLHeaders;
+
 {
   Author: Gregor Ibic (gregor.ibic@intelicom.si)
   Copyright: (c) Gregor Ibic, Intelicom d.o.o and Indy Working Group.
@@ -189,7 +190,9 @@ CFLAG= /MD /Ox /W3 /Gs0 /GF /Gy /nologo
 interface
 
 {$i IdCompilerDefines.inc}
-
+{$IFNDEF USE_OPENSSL}
+      {$message error Should not compile if USE_OPENSSL is not defined!!!}
+{$ENDIF}
 {$WRITEABLECONST OFF}
 
 {$IFNDEF FPC}
