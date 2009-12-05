@@ -452,9 +452,7 @@
   //what we do and what platforms we support in FPC.
   //I'll let Marco think about that one.
   {$IFDEF UNIX}
-    {$DEFINE USE_BASEUNIX}
-    {$DEFINE USE_OPENSSL}
-    {$DEFINE USE_ZLIB_UNIT}
+         {$DEFINE USE_BASEUNIX}
     {$IFDEF LINUX}
       //In Linux for I386, you can choose between a Kylix-libc API or
       //the standard RTL Unix API.  Just pass -dKYLIXCOMPAT to the FPC compiler.
@@ -596,9 +594,16 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
    {$DEFINE SOCK_HAS_SINLEN}
 {$ENDIF}
 {$IFDEF DARWIN}
-   {$DEFINE SOCK_HAS_SINLEN}
+  {$IFNDEF KYLIXCOMPAT}
+    {$DEFINE SOCK_HAS_SINLEN}
+  {$ENDIF}
 {$ENDIF}
 
+{$IFDEF UNIX}
+    {$DEFINE USE_OPENSSL}
+    {$DEFINE USE_ZLIB_UNIT}
+{$ENDIF}
+    
 {$IFDEF FPC_REQUIRES_PROPER_ALIGNMENT}
   {$DEFINE REQUIRES_PROPER_ALIGNMENT}
 {$ENDIF}
