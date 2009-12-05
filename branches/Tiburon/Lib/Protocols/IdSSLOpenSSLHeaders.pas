@@ -8517,6 +8517,19 @@ any IFDEF's and cases where the FIPS functions aren't in the .DLL}
   _IdSslFIPSMode : function () : TIdC_INT cdecl = nil;
 {$ENDIF}
 
+{$IFNDEF OPENSSL_NO_HMAC}
+//void HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len,
+//		  const EVP_MD *md, ENGINE *impl);
+  IdSslHMACInitEx : procedure(ctx : PHMAC_CTX; key : Pointer; len : TIdC_INT;
+    md : PEVP_MD; impl : PENGINE) cdecl = nil;
+//void HMAC_Update(HMAC_CTX *ctx, const unsigned char *data, size_t len);
+  IdSslHMACUpdate : procedure(ctx : PHMAC_CTX; data : PAnsiChar; len : size_t) cdecl = nil;
+//void HMAC_Final(HMAC_CTX *ctx, unsigned char *md, unsigned int *len);
+  IdSslHMACFinal : procedure(ctx : PHMAC_CTX; md : PAnsiChar; len : PIdC_UINT) cdecl = nil;
+//void HMAC_CTX_cleanup(HMAC_CTX *ctx);
+  IdSslHMACCTXCleanup : procedure (ctx : PHMAC_CTX) cdecl = nil;
+{$ENDIF}
+
 function IdSslFIPSModeSet(onoff : TIdC_INT) : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
 function IdSslFIPSMode() : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
 
@@ -8607,6 +8620,7 @@ function IdSslMASN1StringLength(x : PASN1_STRING): TIdC_INT;
 procedure IdSslMASN1StringLengthSet(x : PASN1_STRING; n : TIdC_INT);
 function IdSslMASN1StringType(x : PASN1_STRING) : TIdC_INT;
 function IdSslMASN1StringData(x : PASN1_STRING) : PAnsiChar;
+
 
 //
 function ErrMsg(AErr : TIdC_ULONG) : AnsiString;
@@ -9120,12 +9134,12 @@ them in case we use them later.}
   {CH fn_RIPEMD160_Transform = 'RIPEMD160_Transform'; }  {Do not localize}
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_HMAC}
-  {CH fn_HMAC_CTX_init = 'HMAC_CTX_init'; } {Do not localize}
-  {CH fn_HMAC_CTX_cleanup = 'HMAC_CTX_cleanup'; } {Do not localize}
+  fn_HMAC_CTX_init = 'HMAC_CTX_init';  {Do not localize}
+  fn_HMAC_CTX_cleanup = 'HMAC_CTX_cleanup';  {Do not localize}
   {CH fn_HMAC_Init = 'HMAC_Init'; } {Do not localize}
-  {CH fn_HMAC_Init_ex = 'HMAC_Init_ex'; } {Do not localize}
-  {CH fn_HMAC_Update = 'HMAC_Update'; } {Do not localize}
-  {CH fn_HMAC_Final = 'HMAC_Final'; } {Do not localize}
+  fn_HMAC_Init_ex = 'HMAC_Init_ex';  {Do not localize}
+  fn_HMAC_Update = 'HMAC_Update';  {Do not localize}
+  fn_HMAC_Final = 'HMAC_Final';  {Do not localize}
   {CH fn_HMAC = 'HMAC'; } {Do not localize}
   {CH fn_HMAC_CTX_set_flags = 'HMAC_CTX_set_flags'; } {Do not localize}
   {$ENDIF}
@@ -11913,6 +11927,13 @@ begin
   @IdSslEvpPKeyFree := LoadFunctionCLib(fn_EVP_PKEY_free);
   @IdSslEvpPKeyAssign := LoadFunctionCLib(fn_EVP_PKEY_assign);
   @IdSslEvpGetDigestByName := LoadFunctionCLib(fn_EVP_get_digestbyname);
+  //HMAC
+{$IFNDEF OPENSSL_NO_HMAC}
+  @IdSslHMACInitEx := LoadFunctionCLib(fn_HMAC_Init_ex);
+  @IdSslHMACUpdate := LoadFunctionCLib(fn_HMAC_Update);
+  @IdSslHMACFinal := LoadFunctionCLib(fn_HMAC_Final);
+  @IdSslHMACCTXCleanup := LoadFunctionCLib(fn_HMAC_CTX_cleanup);
+{$ENDIF}
   //OBJ
   @IdSslOBJObj2Nid := LoadFunctionCLib(fn_OBJ_obj2nid);
   @IdSslOBJNid2Obj := LoadFunctionCLib(fn_OBJ_nid2obj);
@@ -11951,14 +11972,261 @@ begin
   Result := (FFailedFunctionLoadList.Count = 0);
 end;
 
+procedure InitializeFuncPointers; {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  @IdSslCtxSetCipherList := nil;
+  @IdSslCtxNew := nil;
+  @IdSslCtxFree := nil;
+  @IdSslSetFd := nil;
+  @IdSslCtxUsePrivateKeyFile := nil;
+  @IdSslCtxUsePrivateKey := nil;
+  @IdSslCtxUseCertificate := nil;
+  @IdSslCtxUseCertificateFile := nil;
+  @IdSslLoadErrorStrings := nil;
+  @IdSslStateStringLong := nil;
+  @IdSslAlertDescStringLong := nil;
+  @IdSslAlertTypeStringLong := nil;
+
+  @IdSslGetPeerCertificate := nil;
+  @IdSslCtxSetVerify := nil;
+  @IdSslCtxSetVerifyDepth := nil;
+  @IdSslCtxGetVerifyDepth := nil;
+  @IdSslCtxSetDefaultPasswdCb := nil;
+  @IdSslCtxSetDefaultPasswdCbUserdata := nil;
+  @IdSslCtxCheckPrivateKeyFile := nil;
+  @IdSslNew := nil;
+  @IdSslFree := nil;
+  @IdSslAccept := nil;
+  @IdSslConnect := nil;
+  @IdSslRead := nil;
+  @IdSslPeek := nil;
+  @IdSslPending := nil;
+  @IdSslWrite := nil;
+  @IdSslCtrl := nil;
+  @IdSslCallbackCtrl := nil;
+  @IdSslCtxCtrl := nil;
+  @IdSslCtxCallbackCtrl := nil;
+  @IdSslGetError := nil;
+  @IdSslMethodV2 := nil;
+  @IdSslMethodServerV2 := nil;
+  @IdSslMethodClientV2 := nil;
+  @IdSslMethodV3 := nil;
+  @IdSslMethodServerV3 := nil;
+  @IdSslMethodClientV3 := nil;
+  @IdSslMethodV23 := nil;
+  @IdSslMethodServerV23 := nil;
+  @IdSslMethodClientV23 := nil;
+  @IdSslMethodTLSV1 := nil;
+  @IdSslMethodServerTLSV1 := nil;
+  @IdSslMethodClientTLSV1 := nil;
+  @IdSslMethodDTLSv1 := nil;
+  @IdSslMethodServerDTLSv1 := nil;
+  @IdSslMethodClientDTLSv1 := nil;
+  @IdSslShutdown := nil;
+  @IdSslSetConnectState := nil;
+  @IdSslSetAcceptState := nil;
+  @IdSslSetShutdown := nil;
+  @IdSslCtxLoadVerifyLocations := nil;
+  @IdSslGetSession := nil;
+  @IdSslAddSslAlgorithms := nil;
+  @IdSslSessionGetId := nil;
+  // CRYPTO LIB
+  @IdSslSSLeay_version := nil;
+  @IdSsleay := nil;
+  @IdSslX509NameOneline := nil;
+  @IdSslX509NameHash := nil;
+  @IdSslX509SetIssuerName := nil;
+  @IdSslX509GetIssuerName := nil;
+  @IdSslX509SetSubjectName := nil;
+  @IdSslX509GetSubjectName := nil;
+  @IdSslX509Digest := nil;
+  @IdSslX509StoreCtxGetExData := nil;
+  @IdSslX509StoreCtxGetError := nil;
+  @IdSslX509StoreCtxSetError := nil;
+  @IdSslX509StoreCtxGetErrorDepth := nil;
+  @IdSslX509StoreCtxGetCurrentCert := nil;
+  @IdSslX509Sign := nil;
+  @IdSslX509ReqSign := nil;
+  @IdSslX509ReqAddExtensions := nil;
+  @IdSslX509V3ExtConfNid := nil;
+  @IdSslX509ExtensionCreateByNid := nil;
+  @IdSslX509V3SetCtx := nil;
+  @IdSslX509ExtensionFree := nil;
+  @IdSslX509AddExt := nil;
+    {$IFNDEF OPENSSL_NO_BIO}
+  //X509_print
+  @IdSslX509Print := nil;
+  {$ENDIF}
+  {$IFDEF SYS_WIN}
+  @IdSslRandScreen := nil;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_DES}
+  // 3DES
+  @iddes_set_odd_parity := nil;
+  @iddes_set_key := nil;
+  @iddes_ecb_encrypt := nil;
+  @Id_ossl_old_des_set_odd_parity := nil;
+  @Id_ossl_old_des_set_key := nil;
+  @Id_ossl_old_des_ecb_encrypt := nil;
+  {$ENDIF}
+  // More SSL functions
+  @IdSSL_set_ex_data := nil;
+  @IdSSL_get_ex_data := nil;
+  @IdSSLLoadClientCAFile := nil;
+  @IdSSLCtxSetClientCAList := nil;
+  @IdSSLCtxSetDefaultVerifyPaths := nil;
+  @IdSSLCtxSetSessionIdContext := nil;
+  @IdSSLCipherDescription := nil;
+  @IdSSLGetCurrentCipher := nil;
+  @IdSSLCipherGetName := nil;
+  @IdSSLCipherGetVersion := nil;
+  @IdSSLCipherGetBits  := nil;
+  // Thread safe
+  @IdSslCryptoNumLocks := nil;
+  @IdSslSetLockingCallback := nil;
+  {$IFNDEF WIN32_OR_WIN64}
+  @IdSslSetIdCallback := nil;
+  {$ENDIF}
+  @IdSSLERR_get_err := nil;
+  @IdSSLERR_peek_err := nil;
+  @IdSSLERR_clear_error := nil;
+  @IdSSLERR_error_string := nil;
+  @IdSSLERR_error_string_n := nil;
+  @IdSSLERR_lib_error_string := nil;
+  @IdSSLERR_func_error_string := nil;
+  @IdSSLERR_reason_error_string := nil;
+  @IdSSLERR_load_ERR_strings := nil;
+  @IdSSLERR_load_crypto_strings := nil;
+  @IdSSLERR_free_strings := nil;
+  @IdSslErrRemoveState := nil;
+  @IdSslCryptoCleanupAllExData := nil;
+  @IdSslCompGetCompressionMethods := nil;
+  @IdSslSkPopFree := nil;
+  //RSA
+  @IdSslRsaFree := nil;
+  @IdSslRsaGenerateKey := nil;
+  @IdSslRsaCheckKey := nil;
+  //BIO
+  @IdSslBioNew := nil;
+  @IdSslBioFree := nil;
+  @IdSslBioSMem := nil;
+  @IdSslBioSFile := nil;
+  @IdSslBioCtrl := nil;
+  @IdSslBioNewFile := nil;
+  @IdSslBioPutS := nil;
+  @IdSslBioRead := nil;
+  @IdSslBioWrite := nil;
+  //i2d
+  @IdSslI2dX509Bio := nil;
+  @IdSslI2dPrivateKeyBio := nil;
+  @IdSslI2dX509 := nil;
+  @IdSslD2iX509Bio := nil;
+  @IdSslD2iX509 := nil;
+  @IdSslI2dX509ReqBio := nil;
+  //X509
+  @IdSslX509New := nil;
+  @IdSslX509Free := nil;
+  @IdSslX509ReqNew := nil;
+  @IdSslX509ReqFree := nil;
+  @IdSslX509ToX509Req := nil;
+  @IdSslX509NameAddEntryByTxt := nil;
+  @IdSslX509SetVersion := nil;
+  @IdSslX509GetSerialNumber := nil;
+  @IdSslX509GmTimeAdj := nil;
+  @IdSslX509SetNotBefore := nil;
+  @IdSslX509SetNotAfter := nil;
+  @IdSslX509SetPubKey := nil;
+  @IdSslX509ReqSetPubKey := nil;
+  //PEM
+  @IdSslPemWriteBioPKCS8PrivateKey := nil;
+  @IdSslPemAsn1WriteBio := nil;
+  @IdSslPemAsn1ReadBio := nil;
+  @IdSslPemReadBioPrivateKey := nil;
+  @IdSslPemWriteBioX509Req := nil;
+  //EVP
+  {$IFNDEF OPENSSL_NO_DES}
+  @IdSslEvpDesEde3Cbc := nil;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA512}
+  @IdSslEvpSHA512 := nil;
+  @IdSslEvpSHA384 := nil;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA256}
+  @IdSslEvpSHA256 := nil;
+  @IdSslEvpSHA224 := nil;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_SHA}
+  @IdSslEvpSHA1 := nil;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD5}
+  @IdSslEvpMd5 := nil;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD4}
+  @IdSslEvpMd4 := nil;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_MD2}
+  @IdSslEvpMd2 := nil;
+  {$ENDIF}
+  @IdSslEvpMDCtxInit := nil;
+  @IdSslEvpDigestInitEx := nil;
+  @IdSslEvpDigestUpdate := nil;
+  @IdSslEvpDigestFinalEx := nil;
+  @IdSslEvpMDCtxCleanup := nil;
+  @IdSslEvpPKEYType := nil;
+  @IdSslEvpPKeyNew := nil;
+  @IdSslEvpPKeyFree := nil;
+  @IdSslEvpPKeyAssign := nil;
+  @IdSslEvpGetDigestByName := nil;
+  //HMAC
+{$IFNDEF OPENSSL_NO_HMAC}
+  @IdSslHMACInitEx := nil;
+  @IdSslHMACUpdate := nil;
+  @IdSslHMACFinal := nil;
+  @IdSslHMACCTXCleanup := nil;
+{$ENDIF}
+  //OBJ
+  @IdSslOBJObj2Nid := nil;
+  @IdSslOBJNid2Obj := nil;
+  @IdSslOBJNid2ln := nil;
+  @IdSslOBJNid2sn := nil;
+  //ASN1
+  @IdSslAsn1IntegerSet := nil;
+  @IdSslAsn1IntegerGet := nil;
+  @IdSslAsn1StringTypeNew := nil;
+  @IdSslAsn1StringFree := nil;
+  @IdSslCryptoSetMemFunctions := nil;
+  @IdSslCryptoMalloc := nil;
+  @IdSslCryptoFree := nil;
+  @IdSslCryptoMemLeaks := nil;
+  @IdSslCryptoMemCtrl := nil;
+  @IdSslCryptoSetMemDebugFunctions := nil;
+  //@IdSslCryptoDbgMalloc := nil;
+  //@IdSslCryptoDbgRealloc := nil;
+  //@IdSslCryptoDbgFree := nil;
+  //@IdSslCryptoDbgSetOptions := nil;
+  //@IdSslCryptoDbgGetOptions := nil;
+  @IdSSLPKCS12Create := nil;
+  @IdSSLI2dPKCS12Bio := nil;
+  @IdSSLPKCS12Free := nil;
+  //@IdSslAddAllAlgorithms := nil;
+  @IdSslAddAllCiphers := nil;
+  @IdSslAddAllDigests := nil;
+  @IdSslEvpCleanup := nil;
+  @IdSslSkNewNull := nil;
+  @IdSslSkPush := nil;
+  {$IFDEF OPENSSL_FIPS}
+  @_IdSslFIPSModeSet := nil;
+  @_IdSslFIPSMode := nil;
+  {$ENDIF}
+end;
+
 procedure Unload;
 var
   LStack: Pointer;
 begin
   //this is a workaround for a known leak in the openssl library
   //present in 0.9.8a
-  if IdSsleay = $0090801f then  //0x0090801fL
-  begin
+  if IdSsleay = $0090801f then begin //0x0090801fL
     LStack := IdSslCompGetCompressionMethods;
     IdSslSkPopFree(LStack, @IdSslCryptoFree);
   end;
@@ -11966,17 +12234,26 @@ begin
   IdSSLERR_free_strings;
   IdSslErrRemoveState(0);
   IdSslEvpCleanup;
-  if hIdSSL > 0 then
-  begin
+  if hIdSSL > 0 then begin
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}Windows.{$ENDIF}FreeLibrary(hIdSSL);
     hIdSSL := 0;
   end;
-  if hIdCrypto > 0 then
-  begin
+  if hIdCrypto > 0 then begin
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}Windows.{$ENDIF}FreeLibrary(hIdCrypto);
     hIdCrypto := 0;
   end;
+  {$IFDEF USE_INVALIDATE_MOD_CACHE}
+  InvalidateModuleCache;
+  {$ENDIF}  
+  {
+  IMPORTANT!!
+
+  We probably should reinitialize the functions to nil after the library is
+  unloaded as some code will test for their presence with Assigned.
+  }
+  InitializeFuncPointers;
 end;
+
 
 function WhichFailedToLoad: string;
 begin

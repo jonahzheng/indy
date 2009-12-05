@@ -489,8 +489,7 @@ begin
   FError := AError;
   if AError = 0 then begin
     inherited Create(ATitle);
-  end else
-  begin
+  end else begin
     FErrorMessage := SysUtils.SysErrorMessage(AError);
     inherited Create(ATitle + ': ' + FErrorMessage);    {Do not Localize}
   end;
@@ -891,8 +890,7 @@ end;
 function Load : Boolean;
 begin
   Result := True;
-  if not Loaded then
-  begin
+  if not Loaded then begin
     //In Windows, you should use SafeLoadLibrary instead of the LoadLibrary API
     //call because LoadLibrary messes with the FPU control word.
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}
@@ -902,6 +900,9 @@ begin
     hZLib := HackLoad(libzlib, libvers);
       {$ELSE}
     hZLib := LoadLibrary(libzlib);
+        {$IFDEF USE_INVALIDATE_MOD_CACHE}
+    InvalidateModuleCache;
+        {$ENDIF}
       {$ENDIF}
     {$ENDIF}
     Result := Loaded;
@@ -910,9 +911,11 @@ end;
 
 procedure Unload;
 begin
-  if Loaded then
-  begin
+  if Loaded then begin
     FreeLibrary(hZLib);
+    {$IFDEF DELPHI_CROSS}
+    InvalidateModuleCache;
+    {$ENDIF}
     hZLib := 0;
     InitializeStubs;
   end;
