@@ -85,7 +85,7 @@ uses
   IdGlobalProtocols,
   IdHash,
   IdHashMessageDigest,
-  IdHashSHA1,
+  IdHashSHA,
   IdResourceStringsProtocols,
   SysUtils;
 

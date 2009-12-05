@@ -160,6 +160,7 @@ implementation
 
 uses
 {$IFNDEF DOTNET}
+  IdStreamVCL,
   IdCTypes,
 {$ENDIF}
   IdGlobalProtocols, SysUtils;

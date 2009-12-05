@@ -1271,7 +1271,7 @@ uses
   System.Threading,
     {$ENDIF}
   {$ENDIF}
-  IdHash, IdHashCRC, IdHashMessageDigest, IdHashSHA1, IdHashIntf, IdIOHandlerSocket,
+  IdHash, IdHashCRC, IdHashMessageDigest, IdHashSHA, IdIOHandlerSocket,
   IdResourceStringsProtocols, IdGlobalProtocols, IdSimpleServer, IdSSL,
   IdIOHandlerStack, IdSocketHandle, IdStrings, IdTCPClient, IdEMailAddress,
   IdStack, IdFTPListTypes;

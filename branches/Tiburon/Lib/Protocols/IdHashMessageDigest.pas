@@ -110,6 +110,7 @@ uses
   {$IFDEF DOTNET}
   System.Security.Cryptography,
   {$ELSE}
+  IdStreamVCL,
   IdSSLOpenSSLHeaders,
   {$ENDIF}
   IdGlobalProtocols;
