@@ -709,7 +709,9 @@ begin
         LListenerThread.OnBeforeRun := DoBeforeListenerRun;
         //Todo: Implement proper priority handling for Linux
         //http://www.midnightbeach.com/jon/pubs/2002/BorCon.London/Sidebar.3.html
+        {$IFNDEF MACOSX}
         LListenerThread.Priority := tpListener;
+        {$ENDIF}
         LListenerThreads.Add(LListenerThread);
       except
         Bindings[I].CloseSocket;
