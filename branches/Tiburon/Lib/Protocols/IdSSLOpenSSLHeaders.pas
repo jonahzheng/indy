@@ -196,7 +196,10 @@ interface
   {$IFDEF WIN32}
     {$ALIGN OFF}
   {$ELSE}
-    {$message error alignment!}
+    {$IFNDEF DELPHI_CROSS}
+      {$message error alignment!}
+    {$ENDIF}
+
   {$ENDIF}
 {$ELSE}
   {$packrecords C}
@@ -11667,7 +11670,7 @@ end;
 
 function Load: Boolean;
 begin
-  Result := True;
+
   Assert(FFailedFunctionLoadList<>nil);
   FFailedFunctionLoadList.Clear;
   {$IFDEF KYLIXCOMPAT}
@@ -11679,6 +11682,7 @@ begin
     hIdSSL := HackLoad(SSL_DLL_name, SSLDLLVers);
   end;
   {$ELSE}
+    Result := True;
     {$IFDEF FPC}
       {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   //On Windows, you should use SafeLoadLibrary because
