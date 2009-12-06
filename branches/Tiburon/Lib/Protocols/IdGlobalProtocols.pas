@@ -1388,15 +1388,21 @@ begin
 end;
 
 {$UNDEF NATIVEFILEAPI}
+{$UNDEF NATIVECOPYAPI}
 {$IFDEF DOTNET}
   {$DEFINE NATIVEFILEAPI}
+  {$DEFINE NATIVECOPYAPI}
 {$ENDIF}
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  {$DEFINE NATIVEFILEAPI}
+  {$DEFINE NATIVECOPYAPI}
+{$ENDIF}
+{$IFDEF UNIX}
   {$DEFINE NATIVEFILEAPI}
 {$ENDIF}
 
 function CopyFileTo(const Source, Destination: TIdFileName): Boolean;
-{$IFDEF NATIVEFILEAPI}
+{$IFDEF NATIVECOPYAPI}
   {$IFDEF USE_INLINE}inline;{$ENDIF}
   {$IFDEF WIN32_OR_WIN64}
 var
@@ -1425,7 +1431,7 @@ begin
   end;
     {$ENDIF}
   {$ENDIF}
-  {$IFNDEF NATIVEFILEAPI}
+  {$IFNDEF NATIVECOPYAPI}
   //mostly from  http://delphi.about.com/od/fileio/a/untypedfiles.htm
 
   //note that I do use the I+ and I- directive.
@@ -1615,16 +1621,30 @@ var
   LOldErrorMode : Integer;
     {$ENDIF}
   {$ENDIF}
+  {$IFDEF UNIX}
+var
+    {$IFDEF DELPHI_CROSS}
+  LRec : TStatBuf64;
+    {$ELSE}
+      {$IFDEF KYLIXCOMPAT}
+  LRec : TStatBuf;
+      {$ELSE}
+  LRec : TStat;
+  LU : time_t;
+      {$ENDIF}
+    {$ENDIF}
+  {$ENDIF}
 {$ENDIF}
 begin
-  Result := -1;
   {$IFDEF DOTNET}
+    Result := -1;
   LFile := System.IO.FileInfo.Create(AFileName);
   if LFile.Exists then begin
     Result := LFile.Length;
   end;
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+    Result := -1;
   //check to see if something like "a:\" is specified and fail in that case.
   //FindFirstFile would probably succede even though a drive is not a proper
   //file.
@@ -1653,6 +1673,20 @@ begin
     end;
     {$ENDIF}
   end;
+  {$ENDIF}
+  {$IFDEF UNIX}
+  Result := -1;
+      {$IFDEF DELPHI_CROSS}
+  //This is messy with IFDEF's but I want to be able to handle 63 bit file sizes.
+   if stat64(PAnsiChar(AnsiString(AFileName)), LRec) = 0 then begin
+      Result := LRec.st_size;
+   end;
+      {$ELSE}
+    //Note that we can use stat here because we are only looking at the date.
+  if {$IFDEF KYLIXCOMPAT}stat{$ELSE}fpstat{$ENDIF}(PAnsiChar(AnsiString(AFileName)), LRec) = 0 then begin
+      Result := LRec.st_Size;
+  end;
+    {$ENDIF}
   {$ENDIF}
   {$IFNDEF NATIVEFILEAPI}
   Result := -1;
