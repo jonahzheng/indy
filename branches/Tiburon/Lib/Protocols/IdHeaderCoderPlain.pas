@@ -16,6 +16,7 @@ type
   end;
 
 implementation
+uses SysUtils;
 
 class function TIdHeaderCoderPlain.Decode(const ACharSet, AData: String): String;
 begin

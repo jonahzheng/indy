@@ -267,7 +267,7 @@ function IsDomainMatch(const AHost, ADomain: String): Boolean;
 implementation
 
 uses
-  IdAssignedNumbers;
+  IdAssignedNumbers, SysUtils;
   
 function EffectiveHostName(const AHost: String): String;
 begin

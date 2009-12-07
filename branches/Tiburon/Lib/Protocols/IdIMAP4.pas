@@ -1120,6 +1120,9 @@ uses
   //facilitate inlining on
   {$IFDEF KYLIXCOMPAT}
   Libc,
+    {$IFDEF MACOSX}
+  PosixUnistd,
+    {$ENDIF}
   {$ENDIF}
   //facilitate inlining only.
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}

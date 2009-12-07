@@ -16,6 +16,7 @@ type
   end;
 
 implementation
+uses SysUtils, IdException;
 
 class function TIdHeaderCoderBig5.Decode(const ACharSet, AData: String): String;
 begin

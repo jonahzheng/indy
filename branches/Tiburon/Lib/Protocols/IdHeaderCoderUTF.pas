@@ -16,6 +16,7 @@ type
   end;
 
 implementation
+uses SysUtils;
 
 class function TIdHeaderCoderUTF.Decode(const ACharSet, AData: String): String;
 var
