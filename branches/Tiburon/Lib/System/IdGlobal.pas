@@ -5017,7 +5017,13 @@ function ToBytes(const AValue: string; const ALength: Integer; const AIndex: Int
   ): TIdBytes; overload;
 var
   LLength: Integer;
+  {$IFDEF STRING_IS_ANSI}
+   LBytes: TIdBytes;
+  {$ENDIF}
 begin
+  {$IFDEF STRING_IS_ANSI}
+  LBytes := nil; // keep the compiler happy
+  {$ENDIF}
   LLength := IndyLength(AValue, ALength, AIndex);
   if LLength > 0 then
   begin
@@ -5026,10 +5032,11 @@ begin
     Result := ADestEncoding.GetBytes(Copy(AValue, AIndex, LLength));
     {$ELSE}
     EnsureEncoding(ASrcEncoding, encOSDefault);
-    Result := TIdTextEncoding.Convert(
-      ASrcEncoding,
-      ADestEncoding,
-      RawToBytes(AValue[AIndex], LLength));
+    LBytes := RawToBytes(AValue[AIndex], LLength);
+    if ASrcEncoding <> ADestEncoding then begin
+      LBytes := TIdTextEncoding.Convert(ASrcEncoding, ADestEncoding, LBytes);
+    end;
+    Result := LBytes;
     {$ENDIF}
   end else begin
     SetLength(Result, 0);
@@ -5039,9 +5046,11 @@ end;
 function ToBytes(const AValue: Char; ADestEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF}
   ): TIdBytes; overload;
-{$IFDEF STRING_IS_UNICODE}
 var
+{$IFDEF STRING_IS_UNICODE}
   LChars: {$IFDEF DOTNET}array[0..0] of Char{$ELSE}TIdWideChars{$ENDIF};
+{$ELSE}
+  LBytes: TIdBytes;
 {$ENDIF}
 begin
   EnsureEncoding(ADestEncoding);
@@ -5053,10 +5062,11 @@ begin
   Result := ADestEncoding.GetBytes(LChars);
   {$ELSE}
   EnsureEncoding(ASrcEncoding, encOSDefault);
-  Result := TIdTextEncoding.Convert(
-    ASrcEncoding,
-    ADestEncoding,
-    RawToBytes(AValue, 1));
+  LBytes := RawToBytes(AValue, 1);
+  if ASrcEncoding <> ADestEncoding then begin
+    LBytes := TIdTextEncoding.Convert(ASrcEncoding, ADestEncoding, LBytes);
+  end;
+  Result := LBytes;
   {$ENDIF}
 end;
 
@@ -5400,10 +5410,10 @@ begin
     Result := AByteEncoding.GetString(AValue, AStartIndex, LLength);
     {$ELSE}
     EnsureEncoding(ADestEncoding);
-    LBytes := TIdTextEncoding.Convert(
-      AByteEncoding,
-      ADestEncoding,
-      AValue, AStartIndex, LLength);
+    LBytes := Copy(AValue, AStartIndex, LLength);
+    if AByteEncoding <> ADestEncoding then begin
+      LBytes := TIdTextEncoding.Convert(AByteEncoding, ADestEncoding, LBytes);
+    end;
     SetString(Result, PAnsiChar(LBytes), Length(LBytes));
     {$ENDIF}
   end else begin
