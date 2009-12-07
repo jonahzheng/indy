@@ -2517,33 +2517,35 @@ end;
 function InterlockedExchangeTHandle(var VTarget: THandle; const AValue: PtrUInt): THandle;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  {$IFDEF THANDLE_32}
-    {$IFDEF DELPHI_CROSS}
-  Todo('See about InterlockedExchange for this.');
-    {$ELSE}
+  {$IFDEF HAS_TInterlocked}
+  Result := TInterlocked.Exchange<THandle>(VTarget, AValue);
+  {$ELSE}
+    {$IFDEF THANDLE_32}
   Result := InterlockedExchange(LongInt(VTarget), AValue);
     {$ENDIF}
-  {$ENDIF}
-  {$IFDEF THANDLE_64}
+    {$IFDEF THANDLE_64}
   Result := InterlockedExchange64(Int64(VTarget), AValue);
+    {$ENDIF}
   {$ENDIF}
 end;
 
 function InterlockedCompareExchangePtr(var VTarget: Pointer; const AValue, Compare: Pointer): Pointer;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  {$IFDEF FPC}
-  //FreePascal 2.2.0 has an overload for InterlockedCompareExchange that takes
-  // pointers.
-  //TODO: Figure out what to do about FreePascal 2.0.x but that might not be
-  //as important as older versions since you download and install FPC for free.
-    {$IFDEF CPU64}
-  Result := Pointer(InterlockedCompareExchange64(PtrInt(VTarget), PtrInt(AValue), PtrInt(Compare)));
-    {$ELSE}
-  Result := Pointer(InterlockedCompareExchange(PtrInt(VTarget), PtrInt(AValue), PtrInt(Compare)));
-    {$ENDIF}
+  {$IFDEF HAS_TInterlocked}
+  Result := TInterlocked.CompareExchange(VTarget, AValue, Compare);
   {$ELSE}
-    {$IFNDEF VCL_2011_CROSS_COMPILE}
+    {$IFDEF FPC}
+    //FreePascal 2.2.0 has an overload for InterlockedCompareExchange that takes
+    // pointers.
+    //TODO: Figure out what to do about FreePascal 2.0.x but that might not be
+    //as important as older versions since you download and install FPC for free.
+      {$IFDEF CPU64}
+  Result := Pointer(InterlockedCompareExchange64(PtrInt(VTarget), PtrInt(AValue), PtrInt(Compare)));
+      {$ELSE}
+  Result := Pointer(InterlockedCompareExchange(PtrInt(VTarget), PtrInt(AValue), PtrInt(Compare)));
+      {$ENDIF}
+    {$ELSE}
       {$IFDEF VCL_2009_OR_ABOVE}
   Result := InterlockedCompareExchangePointer(VTarget, AValue, Compare);
       {$ELSE}
