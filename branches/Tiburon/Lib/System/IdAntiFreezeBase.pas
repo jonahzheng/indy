@@ -107,6 +107,9 @@ uses
       {$ENDIF}
     {$ENDIF}
   {$ENDIF}
+  {$IFDEF KYLIXCOMPAT}
+  Libc,
+  {$ENDIF}
   IdGlobal,
   IdResourceStrings,
   IdException;
