@@ -1117,6 +1117,10 @@ varies between servers.  A typical line that gets parsed into this is:
 implementation
 
 uses
+  //facilitate inlining on
+  {$IFDEF KYLIXCOMPAT}
+  Libc,
+  {$ENDIF}
   //facilitate inlining only.
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     {$IFDEF USE_INLINE}
@@ -1128,7 +1132,9 @@ uses
       {$ENDIF}
     {$ENDIF}
   {$ENDIF}
-
+  {$IFNDEF DOTNET}
+  IdStreamVCL,
+  {$ENDIF}
   {$IFDEF DOTNET}
     {$IFDEF USE_INLINE}
   System.IO,

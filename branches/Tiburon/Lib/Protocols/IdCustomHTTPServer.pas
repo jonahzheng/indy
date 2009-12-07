@@ -474,6 +474,9 @@ type
 implementation
 
 uses
+  {$IFDEF KYLIXCOMPAT}
+  Libc,
+  {$ENDIF}
   {$IFDEF DOTNET}
     {$IFDEF USE_INLINE}
   System.IO,

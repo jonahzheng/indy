@@ -461,6 +461,8 @@ uses
     {$IFDEF USE_INLINE}
   System.IO,
     {$ENDIF}
+  {$ELSE}
+  IdStreamVCL,
   {$ENDIF}
   //TODO: Remove these references and make it completely pluggable. Check other spots in Indy as well
   IdMessageCoderBinHex4, IdMessageCoderQuotedPrintable, IdMessageCoderMIME,

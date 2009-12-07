@@ -654,6 +654,7 @@ const
 //end XAUT Stuff
 
 implementation
+uses IdException;
 
 {WS_FTP Pro XAUT Support}
 
@@ -661,7 +662,7 @@ function IsWSFTPServer(var VKey : Cardinal; const AGreeting : String) : Boolean;
   {$IFDEF USE_INLINE} inline; {$ENDIF}
 var LBuf : String;
 begin
-  Result := IndyPos('WS_FTP Server',AGreeting) > 0;
+  Result := IndyPos('WS_FTP Server',AGreeting) > 0;  {Do not localize}
   if Result then begin
     LBuf := AGreeting;
     Fetch(LBuf,'(');

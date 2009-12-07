@@ -444,6 +444,7 @@ type
 implementation
 
 uses
+  IdException,
   IdGlobalProtocols, IdResourceStringsProtocols, IdSSL,
   IdStack, IdBaseComponent, SysUtils;
 

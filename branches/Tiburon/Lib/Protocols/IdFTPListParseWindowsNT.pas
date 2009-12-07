@@ -111,6 +111,7 @@ const
 implementation
 
 uses
+  IdException,
   IdGlobal, IdFTPCommon, IdGlobalProtocols,
   SysUtils;
 

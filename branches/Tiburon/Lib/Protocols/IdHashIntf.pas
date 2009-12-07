@@ -10,6 +10,7 @@ uses
   System.Security.Cryptography,
   IdException
   {$ELSE}
+  IdStreamVCL,
   IdSSLOpenSSLHeaders
   {$ENDIF}
   ;

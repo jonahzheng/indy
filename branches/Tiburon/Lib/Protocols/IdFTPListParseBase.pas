@@ -217,6 +217,7 @@ const
 implementation
 
 uses
+  IdException,
   IdFTPCommon, IdFTPListTypes, IdGlobal, IdGlobalProtocols,
   IdHeaderCoderUTF,  //here so we can decode UTF... filenames
   IdResourceStringsProtocols, IdStrings, SysUtils;

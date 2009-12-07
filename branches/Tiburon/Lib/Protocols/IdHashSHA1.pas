@@ -67,7 +67,10 @@ type
   end;
 
 implementation
-
+  {$IFNDEF DOTNET}
+uses
+  IdStreamVCL;
+  {$ENDIF}
 { TIdHashSHA1 }
 
 function SwapLongWord(const AValue: LongWord): LongWord;

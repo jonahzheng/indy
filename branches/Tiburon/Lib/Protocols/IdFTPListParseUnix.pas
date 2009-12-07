@@ -190,6 +190,7 @@ const
 implementation
 
 uses
+  IdException,
   IdGlobal, IdFTPCommon, IdGlobalProtocols,
   IdHeaderCoderUTF,  //here so we can decode UTF... filenames
   SysUtils;

@@ -1266,6 +1266,7 @@ type
 implementation
 
 uses
+  IdException,
   {$IFDEF DOTNET}
     {$IFDEF USE_INLINE}
   System.Threading,
