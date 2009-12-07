@@ -748,20 +748,29 @@ var
       Exit;
     end;
 
-    // if the client has already sent some or all of the request
-    // body then don't bother checking for a v1.1 'Expect' header
-    if not AContext.Connection.IOHandler.InputBufferIsEmpty then begin
-      Exit;
-    end;
-    
-    // the request body has not been read yet, get the HTTP version
-    // and check for a v1.1 'Expect' header...
+    // get the HTTP version and check for v1.1 'Host' and 'Expect' headers...
     S := LRequestInfo.Version;
     Fetch(S, '/');  {Do not localize}
     LMajor := IndyStrToInt(Fetch(S, '.'), -1);  {Do not Localize}
     LMinor := IndyStrToInt(S, -1);
 
     if (LMajor < 1) or ((LMajor = 1) and (LMinor < 1)) then begin
+      Exit;
+    end;
+
+    // MUST report a 400 (Bad Request) error if an HTTP/1.1
+    // request does not include a 'Host' header
+    S := LRequestInfo.RawHeaders.Values['Host'];
+    if Length(S) = 0 then begin
+      LResponseInfo.ResponseNo := 400;
+      LResponseInfo.CloseConnection := True;
+      LResponseInfo.WriteHeader;
+      Exit;
+    end;
+    
+    // if the client has already sent some or all of the request
+    // body then don't bother checking for a v1.1 'Expect' header
+    if not AContext.Connection.IOHandler.InputBufferIsEmpty then begin
       Exit;
     end;
 
@@ -774,8 +783,6 @@ var
     Result := DoHeaderExpectations(AContext, S);
     if not Result then begin
       LResponseInfo.ResponseNo := 417;
-      LResponseInfo.ResponseText := '';
-      LResponseInfo.ContentText := '';
       LResponseInfo.CloseConnection := True;
       LResponseInfo.WriteHeader;
       Exit;
@@ -1373,7 +1380,7 @@ begin
     410: ResponseText := RSHTTPGone;
     411: ResponseText := RSHTTPLengthRequired;
     412: ResponseText := RSHTTPPreconditionFailed;
-    413: ResponseText := RSHTTPRequestEntityToLong;
+    413: ResponseText := RSHTTPRequestEntityTooLong;
     414: ResponseText := RSHTTPRequestURITooLong;
     415: ResponseText := RSHTTPUnsupportedMediaType;
     417: ResponseText := RSHTTPExpectationFailed;
