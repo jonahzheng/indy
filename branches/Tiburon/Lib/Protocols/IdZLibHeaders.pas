@@ -35,9 +35,7 @@ The only things that still are cdecl are the callback functions.
 }
     {$DEFINE STATICLOAD_ZLIB}
   {$ELSE}
-    {$IFDEF LINUX}
-      // ???
-    {$ELSE}
+    {$IFNDEF UNIX}
       {$message error alignment!}
     {$ENDIF}
   {$ENDIF}
@@ -387,7 +385,7 @@ uses
   {$IFNDEF STATICLOAD_ZLIB}
   , IdZLibConst
   {$ENDIF}
-  {$IFDEF KYLIX}
+  {$IFDEF KYLIXCOMPAT}
   , libc
   , IdGlobal
   {$ENDIF}
@@ -722,6 +720,7 @@ end;
   
 function stub_zlibVersion : PAnsiChar; cdecl;
 begin
+  Result := '';
   zlibVersion := FixupStub(hZLib, 'zlibVersion'); {Do not Localize}
   if Assigned(zlibVersion) then
   begin
