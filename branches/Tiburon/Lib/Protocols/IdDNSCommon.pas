@@ -610,7 +610,6 @@ function IsBig5(ch1, ch2: Char) : Boolean;
 implementation
 
 uses
-  IdException,
   IdGlobalProtocols,
   IdStack, SysUtils;
 

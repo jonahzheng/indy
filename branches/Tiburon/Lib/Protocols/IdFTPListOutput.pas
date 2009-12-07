@@ -274,6 +274,7 @@ implementation
 
 uses
   //facilitate inlining only.
+  IdException,
   {$IFDEF DOTNET}
     {$IFDEF USE_INLINE}
   System.IO,

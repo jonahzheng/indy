@@ -505,7 +505,7 @@ type
 implementation
 
 uses
-  IdContainers, IdException, IdResourceStrings, IdStrings, SysUtils;
+  IdContainers, IdResourceStrings, IdStrings, SysUtils;
 
 { TFTPListItem }
 
