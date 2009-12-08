@@ -487,7 +487,7 @@ begin
 end;
 
 class function TIdFTPLPMList.ParseLine(const AItem: TIdFTPListItem;
-  const APath: String =''): Boolean;
+  const APath: String = ''): Boolean;
 var
   LFacts : TStrings;
   LBuffer : String;
@@ -499,7 +499,7 @@ begin
   LI := AItem as TIdMLSTFTPListItem;
   LFacts := TStringList.Create;
   try
-    LI.FileName := TIdHeaderCoderUTF.Decode('UTF-8', ParseFacts(AItem.Data, LFacts));
+    LI.FileName := TIdTextEncoding.UTF8.GetString(ToBytes(ParseFacts(AItem.Data, LFacts), Indy8BitEncoding));
     LI.LocalFileName := AItem.FileName;
 
     LBuffer := LFacts.Values['type']; {do not localize}
