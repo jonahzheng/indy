@@ -2518,7 +2518,7 @@ function InterlockedExchangeTHandle(var VTarget: THandle; const AValue: PtrUInt)
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   {$IFDEF HAS_TInterlocked}
-  Result := TInterlocked.Exchange<THandle>(VTarget, AValue);
+  ToDo('Result := TInterlocked.Exchange<THandle>(VTarget, AValue);');
   {$ELSE}
     {$IFDEF THANDLE_32}
   Result := InterlockedExchange(LongInt(VTarget), AValue);
@@ -2533,7 +2533,7 @@ function InterlockedCompareExchangePtr(var VTarget: Pointer; const AValue, Compa
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   {$IFDEF HAS_TInterlocked}
-  Result := TInterlocked.CompareExchange(VTarget, AValue, Compare);
+  ToDo('Result := TInterlocked.CompareExchange(VTarget, AValue, Compare);');
   {$ELSE}
     {$IFDEF FPC}
     //FreePascal 2.2.0 has an overload for InterlockedCompareExchange that takes

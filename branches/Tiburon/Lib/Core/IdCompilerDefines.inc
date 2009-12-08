@@ -659,6 +659,7 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
     {$DEFINE USE_SAFELOADLIBRARY}
     {$DEFINE USE_INVALIDATE_MOD_CACHE}
   {$ENDIF}
+
   {$DEFINE USE_INLINE}
   {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
   {$UNDEF USE_ICONV}
@@ -708,6 +709,7 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$DEFINE HAS_DEPRECATED}
   {$DEFINE HAS_DEPRECATED_MSG}
   {$DEFINE HAS_REMOVEFREENOTIFICATION}
+  {$DEFINE HAS_TInterlocked}
 {$ENDIF}
 
 // Do NOT remove these IFDEF's.  They are here because InterlockedExchange
