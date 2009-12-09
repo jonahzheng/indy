@@ -563,6 +563,11 @@ const
 implementation
 
 uses
+  {$IFDEF DELPHI_CROSS}
+    {$IFDEF MACOSX}
+  CoreServices,
+    {$ENDIF}
+  {$ENDIF}
   IdIPAddress,
   {$IFDEF UNIX}
     {$IFDEF KYLIXCOMPAT}

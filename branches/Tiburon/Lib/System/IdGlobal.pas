@@ -1396,6 +1396,7 @@ function TwoByteToWord(AByte1, AByte2: Byte): Word;
 
 var
   {$IFDEF UNIX}
+
   // For linux the user needs to set this variable to be accurate where used (mail, etc)
   GOffsetFromUTC: TDateTime = 0;
   {$ENDIF}
@@ -1414,6 +1415,11 @@ const
 implementation
 
 uses
+  {$IFDEF DELPHI_CROSS}
+    {$IFDEF MACOSX}
+  CoreServices,
+    {$ENDIF}
+  {$ENDIF}
   {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
     {$IFDEF USE_FASTMM4}FastMM4,{$ENDIF}
   {$ENDIF}
@@ -3283,8 +3289,12 @@ function Ticks: LongWord;
   {$IFDEF USE_INLINE}inline;{$ENDIF}
 {$ENDIF}
 {$IFDEF UNIX}
+  {$IFDEF MACOSX}
+    {$IFDEF USE_INLINE} inline;{$ENDIF}
+  {$ELSE}
 var
   tv: timeval;
+  {$ENDIF}
 {$ENDIF}
 
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
@@ -3295,13 +3305,16 @@ var
 {$ENDIF}
 begin
   {$IFDEF UNIX}
-    {$IFDEF USE_BASEUNIX}
+    {$IFDEF MACOSX}
+  Result := AbsoluteToNanoseconds(UpTime) div 1000000;
+    {$ELSE}
+      {$IFDEF USE_BASEUNIX}
   fpgettimeofday(@tv,nil);
-    {$ENDIF}
-    {$IFDEF KYLIXCOMPAT}
+      {$ENDIF}
+      {$IFDEF KYLIXCOMPAT}
   gettimeofday(tv, nil);
-    {$ENDIF}
-    {$RANGECHECKS OFF}
+      {$ENDIF}
+      {$RANGECHECKS OFF}
   Result := Int64(tv.tv_sec) * 1000 + tv.tv_usec div 1000;
     {
     I've implemented this correctly for now. I'll argue for using
@@ -3314,6 +3327,7 @@ begin
     IdEcho has code to circumvent the wrap, but its not very good
     to have code for that at all spots where it might be relevant.
     }
+    {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     // S.G. 27/11/2002: Changed to use high-performance counters as per suggested
@@ -4780,14 +4794,32 @@ end;
 function OffsetFromUTC: TDateTime;
 {$IFNDEF WIN32_OR_WIN64_OR_WINCE}
   {$IFDEF USE_INLINE}inline;{$ENDIF}
+  {$IFDEF UNIX}
+    {$IFDEF USE_INLINE}inline;{$ENDIF}
+var
+  T: TTime_T;
+  TV: TTimeVal;
+  UT: TUnixTime;
+  {$ELSE}
 {$ELSE}
 var
   iBias: Integer;
   tmez: TTimeZoneInformation;
+  {$ENDIF}
 {$ENDIF}
 begin
   {$IFDEF UNIX}
+  {from http://edn.embarcadero.com/article/27890 }
   Result := GOffsetFromUTC;
+  if Result <> 0 then begin
+    gettimeofday(TV, nil);
+    T := TV.tv_sec;
+    localtime_r(@T, UT);
+    // __tm_gmtoff is the bias in seconds from the UTC to the current time.
+    // so I multiply by -1 to compensate for this.
+    Result := -1*(UT.__tm_gmtoff / 60 / 60 / 24);
+  end;
+
   {$ENDIF}
   {$IFDEF DOTNET}
   Result := System.Timezone.CurrentTimezone.GetUTCOffset(DateTime.FromOADate(Now)).TotalDays;
