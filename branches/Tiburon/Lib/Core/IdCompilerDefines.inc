@@ -40,11 +40,16 @@
 {$UNDEF STRING_IS_UNICODE}
 {$UNDEF STRING_IS_ANSI}
 
-// Make sure the following are $DEFINE'd only for suitable environments
+// Make sure the following is $DEFINE'd only for suitable environments
 // as specified further below.  This works in conjunction with the
 // STRING_IS_ANSI and STRING_IS_UNICODE defines above.
 {$UNDEF UNICODE_BUT_STRING_IS_ANSI}
+
+// Make sure the following are $DEFINE'd only for suitable environments
+// as specified further below.
 {$UNDEF HAS_TEncoding}
+{$UNDEF HAS_TCharacter}
+{$UNDEF HAS_TInterlocked}
 
 // Make sure that this is defined only for environments where we are using
 // the iconv library to charactor conversions.
@@ -65,7 +70,7 @@
   {$DEFINE WIDGET_VCL_LIKE_OR_KYLIX}
 {$ENDIF}
 
-// C++ Builder 4
+// C++Builder 4
 {$IFDEF VER125}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_40}
@@ -80,7 +85,7 @@
   {$DEFINE WIDGET_VCL_LIKE_OR_KYLIX}
 {$ENDIF}
 
-// Delphi 5 & CBuilder 5
+// Delphi & C++Builder 5
 {$IFDEF VER130}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_5_OR_ABOVE}
@@ -102,7 +107,7 @@
   {$DEFINE HAS_REMOVEFREENOTIFICATION}
 {$ENDIF}
 
-//Delphi 6
+//Delphi & C++Builder 6
 {$IFDEF VER140}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_5_OR_ABOVE}
@@ -208,7 +213,8 @@
 // Highlander prior to the release of RAD Studio 2007.  Use VER185 to
 // identify Highlanger specifically.
 
-//Delphi 2006, Delphi 2007 (Highlander)
+//Delphi & C++Builder 2006
+//Delphi & C++Builder 2007 (Highlander)
 {$IFDEF VER180}
   {$DEFINE USE_INLINE}
   {$DEFINE VCL_4_OR_ABOVE}
@@ -245,7 +251,7 @@
   {$DEFINE HAS_REMOVEFREENOTIFICATION}
 {$ENDIF}
 
-//Delphi 2007 (Highlander)
+//Delphi & C++Builder 2007 (Highlander)
 {$IFDEF VER185}
   {$DEFINE USE_INLINE}
   {$DEFINE VCL_4_OR_ABOVE}
@@ -323,7 +329,7 @@
   {$DEFINE HAS_REMOVEFREENOTIFICATION}
 {$ENDIF}
 
-//Delphi 2009 (Tiburon)
+//Delphi & C++Builder 2009 (Tiburon)
 {$IFDEF VER200}
   {$DEFINE USE_INLINE}
   {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
@@ -368,7 +374,7 @@
   {$DEFINE HAS_REMOVEFREENOTIFICATION}
 {$ENDIF}
 
-//Delphi 2010 (Weaver)
+//Delphi & C++Builder 2010 (Weaver)
 {$IFDEF VER210}
   {$DEFINE USE_INLINE}
   {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
@@ -384,7 +390,7 @@
   {$DEFINE VCL_2010_OR_ABOVE}
   {$DEFINE VCL_2010}
   {$IFDEF CBUILDER}
-    {$DEFINE DELPHI_2010}
+    {$DEFINE CBUILDER_2010}
   {$ELSE}
     {$DEFINE DELPHI_2010}
   {$ENDIF}
@@ -407,6 +413,54 @@
     {$DEFINE VCL_60_PLUS}
     {$DEFINE HAS_TEncoding}
     {$DEFINE HAS_TCharacter}
+  {$ENDIF}
+  {$DEFINE HAS_CLASSPROPERTIES}
+  {$DEFINE HAS_DEPRECATED}
+  {$DEFINE HAS_DEPRECATED_MSG}
+  {$DEFINE HAS_REMOVEFREENOTIFICATION}
+{$ENDIF}
+
+//Delphi & C++Builder 2011 (Fulcrum)
+{$IFDEF VER220}
+  {$DEFINE USE_INLINE}
+  {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
+  {$DEFINE VCL_4_OR_ABOVE}
+  {$DEFINE VCL_5_OR_ABOVE}
+  {$DEFINE VCL_6_OR_ABOVE}
+  {$DEFINE VCL_7_OR_ABOVE}
+  {$DEFINE VCL_8_OR_ABOVE}
+  {$DEFINE VCL_2005_OR_ABOVE}
+  {$DEFINE VCL_2006_OR_ABOVE}
+  {$DEFINE VCL_2007_OR_ABOVE}
+  {$DEFINE VCL_2009_OR_ABOVE}
+  {$DEFINE VCL_2010_OR_ABOVE}
+  {$DEFINE VCL_2011_OR_ABOVE}
+  {$DEFINE VCL_2011}
+  {$IFDEF CBUILDER}
+    {$DEFINE CBUILDER_2011}
+  {$ELSE}
+    {$DEFINE DELPHI_2011}
+  {$ENDIF}
+  {$DEFINE HAS_OPTIONAL_PARAMS}
+  {$DEFINE HAS_SAMETEXT}
+  {$DEFINE HAS_NAMED_THREADS}
+  {$DEFINE HAS_TThread_NameThreadForDebugging}
+  {$IFNDEF FREE_ON_FINAL}
+    {$DEFINE REGISTER_EXPECTED_MEMORY_LEAK}
+  {$ENDIF}
+  {$DEFINE HAS_TFormatSettings}
+  {$DEFINE HAS_TSelectionEditor}
+  {$DEFINE CPUI386}
+  {$DEFINE ENDIAN_LITTLE}
+  {$DEFINE CPU32}
+  {$IFNDEF CIL}
+    {$DEFINE WIDGET_VCL_LIKE} // LCL included.
+    {$DEFINE WIDGET_VCL_LIKE_OR_KYLIX}
+    {$DEFINE WIDGET_VCL}
+    {$DEFINE VCL_60_PLUS}
+    {$DEFINE HAS_TEncoding}
+    {$DEFINE HAS_TCharacter}
+    {$DEFINE HAS_TInterlocked}
   {$ENDIF}
   {$DEFINE HAS_CLASSPROPERTIES}
   {$DEFINE HAS_DEPRECATED}
@@ -497,9 +551,9 @@
 //and Kylix 1 does not have CompilerVersion defined at all.
 {$IFNDEF FPC}
    {$IFDEF POSIX}
-     {$IF RTLVersion = 21.0}
+     {$IF RTLVersion >= 22.0}
        {$DEFINE UNIX}
-       {$DEFINE VCL_2011_CROSS_COMPILE}
+       {$DEFINE VCL_CROSS_COMPILE}
        {$DEFINE KYLIXCOMPAT}
      {$IFEND}
   {$ENDIF}
@@ -522,8 +576,8 @@
         {$DEFINE KYLIX_2_OR_ABOVE}
         {$DEFINE KYLIX_3_OR_ABOVE}
       {$IFEND}
-      {$IF RTLVersion = 21.0}
-        {$DEFINE VCL_2011_CROSS_COMPILE}
+      {$IF RTLVersion >= 22.0}
+        {$DEFINE VCL_CROSS_COMPILE}
       {$IFEND}
     {$ENDIF}
     {$DEFINE VCL_4_OR_ABOVE}
@@ -545,7 +599,7 @@
   {$ENDIF}
 {$ENDIF}
 
-{$IFNDEF VCL_2011_CROSS_COMPILE}
+{$IFNDEF VCL_CROSS_COMPILE}
   {$IFDEF KYLIXCOMPAT}
   {$linklib c}
   {$ENDIF}
@@ -644,71 +698,25 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$DEFINE USE_SAFELOADLIBRARY}
 {$ENDIF}
 
-{$UNDEF DELPHI_CROSS}
 {$UNDEF USE_INVALIDATE_MOD_CACHE}
 {$UNDEF USE_SAFELOADLIBRARY}
 //This must come after the iconv defines because this compiler targets a Unix-like
 //operating system.  One key difference is that it does have a TEncoding class.
 //If this comes before the ICONV defines, it creates problems.
-//This also must go before the THanld size calculations.
-{$IFDEF VCL_2011_CROSS_COMPILE}
-  {$DEFINE DELPHI_CROSS}
+//This also must go before the THandle size calculations.
+{$IFDEF VCL_CROSS_COMPILE}
   {$IFDEF MACOSX}
     {$DEFINE BSD}
     {$DEFINE DARWIN}
     {$DEFINE USE_SAFELOADLIBRARY}
     {$DEFINE USE_INVALIDATE_MOD_CACHE}
   {$ENDIF}
-
-  {$DEFINE USE_INLINE}
-  {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
   {$UNDEF USE_ICONV}
   //important!!! iconv functions are defined in the libc.pas Novell Netware header.
   //Do not define USE_ICONVUNIT
   {$UNDEF USE_ICONV_UNIT}
   {$UNDEF USE_ICONV_ENC}  
   {$DEFINE INT_THREAD_PRIORITY}
-  {$DEFINE VCL_4_OR_ABOVE}
-  {$DEFINE VCL_5_OR_ABOVE}
-  {$DEFINE VCL_6_OR_ABOVE}
-  {$DEFINE VCL_7_OR_ABOVE}
-  {$DEFINE VCL_8_OR_ABOVE}
-  {$DEFINE VCL_2005_OR_ABOVE}
-  {$DEFINE VCL_2006_OR_ABOVE}
-  {$DEFINE VCL_2007_OR_ABOVE}
-  {$DEFINE VCL_2009_OR_ABOVE}
-  {$DEFINE VCL_2010_OR_ABOVE}
-  {$DEFINE VCL_2011_OR_ABOVE}
-  {$DEFINE VCL_2011}
-  {$IFDEF CBUILDER}
-    {$DEFINE DELPHI_2011}
-  {$ELSE}
-    {$DEFINE DELPHI_2011}
-  {$ENDIF}
-  {$DEFINE HAS_OPTIONAL_PARAMS}
-  {$DEFINE HAS_SAMETEXT}
-  {$DEFINE HAS_NAMED_THREADS}
-  {$DEFINE HAS_TThread_NameThreadForDebugging}
-  {/$IFNDEF FREE_ON_FINAL}
-    {/$DEFINE REGISTER_EXPECTED_MEMORY_LEAK}
-  {/$ENDIF}
-  {$DEFINE HAS_TFormatSettings}
-  {$DEFINE HAS_TSelectionEditor}
-  {$DEFINE CPUI386}
-  {$DEFINE ENDIAN_LITTLE}
-  {$DEFINE CPU32}
-  {$IFNDEF CIL}
-    {$DEFINE WIDGET_VCL_LIKE} // LCL included.
-    {$DEFINE WIDGET_VCL_LIKE_OR_KYLIX}
-    {$DEFINE WIDGET_VCL}
-    {$DEFINE VCL_60_PLUS}
-    {$DEFINE HAS_TEncoding}
-    {$DEFINE HAS_TCharacter}
-  {$ENDIF}
-  {$DEFINE HAS_CLASSPROPERTIES}
-  {$DEFINE HAS_DEPRECATED}
-  {$DEFINE HAS_DEPRECATED_MSG}
-  {$DEFINE HAS_REMOVEFREENOTIFICATION}
   {$DEFINE HAS_TInterlocked}
 {$ENDIF}
 
@@ -814,7 +822,7 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$IFDEF DOTNET}
     {$UNDEF REGISTER_EXPECTED_MEMORY_LEAK}
   {$ENDIF}
-  {$IFDEF DELPHI_CROSS}
+  {$IFDEF VCL_CROSS_COMPILE}
     {$UNDEF REGISTER_EXPECTED_MEMORY_LEAK}  
   {$ENDIF}
 {$ENDIF}
