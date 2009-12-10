@@ -3306,6 +3306,7 @@ var
 begin
   {$IFDEF UNIX}
     {$IFDEF MACOSX}
+  //This seems to be available on the Delphi cross-compiler for OS/X
   Result := AbsoluteToNanoseconds(UpTime) div 1000000;
     {$ELSE}
       {$IFDEF USE_BASEUNIX}
@@ -4810,15 +4811,13 @@ var
 begin
   {$IFDEF UNIX}
   {from http://edn.embarcadero.com/article/27890 }
-  Result := GOffsetFromUTC;
-  if Result <> 0 then begin
-    gettimeofday(TV, nil);
-    T := TV.tv_sec;
-    localtime_r(@T, UT);
+
+  gettimeofday(TV, nil);
+  T := TV.tv_sec;
+  localtime_r(@T, UT);
     // __tm_gmtoff is the bias in seconds from the UTC to the current time.
     // so I multiply by -1 to compensate for this.
-    Result := -1*(UT.__tm_gmtoff / 60 / 60 / 24);
-  end;
+  Result := -1*(UT.__tm_gmtoff / 60 / 60 / 24);
   {$ENDIF}
   {$IFDEF DOTNET}
   Result := System.Timezone.CurrentTimezone.GetUTCOffset(DateTime.FromOADate(Now)).TotalDays;

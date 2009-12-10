@@ -540,7 +540,6 @@ var
   SetFIPSMode : TSetFIPSMode;
   {$IFDEF UNIX}
   // For linux the user needs to set these variables to be accurate where used (mail, etc)
-  GTimeZoneBias: TDateTime = 0;
   GIdDefaultCharSet : TIdCharSet = idcs_ISO_8859_1; // idcsISO_8859_1;
   {$ENDIF}
 
@@ -1785,10 +1784,21 @@ end;
 
 function TimeZoneBias: TDateTime;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
+  {$IFDEF UNIX}
+var
+  T: TTime_T;
+  TV: TTimeVal;
+  UT: TUnixTime;
+  {$ENDIF}
 begin
   {$IFDEF UNIX}
-  //TODO: Fix TimeZoneBias for Linux to be automatic
-  Result := GTimeZoneBias;
+ {from http://edn.embarcadero.com/article/27890 }
+  gettimeofday(TV, nil);
+  T := TV.tv_sec;
+  localtime_r(@T, UT);
+    // __tm_gmtoff is the bias in seconds from the UTC to the current time.
+    // so I multiply by -1 to compensate for this.
+  Result := (UT.__tm_gmtoff / 60 / 60 / 24);
   {$ELSE}
   Result := -OffsetFromUTC;
   {$ENDIF}
