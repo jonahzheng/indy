@@ -4792,19 +4792,19 @@ begin
 end;
 
 function OffsetFromUTC: TDateTime;
-{$IFNDEF WIN32_OR_WIN64_OR_WINCE}
+{$IFDEF DOTNET}
   {$IFDEF USE_INLINE}inline;{$ENDIF}
+{$ELSE}
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+var
+  iBias: Integer;
+  tmez: TTimeZoneInformation;
+  {$ENDIF}
   {$IFDEF UNIX}
-    {$IFDEF USE_INLINE}inline;{$ENDIF}
 var
   T: TTime_T;
   TV: TTimeVal;
   UT: TUnixTime;
-  {$ELSE}
-{$ELSE}
-var
-  iBias: Integer;
-  tmez: TTimeZoneInformation;
   {$ENDIF}
 {$ENDIF}
 begin
@@ -4819,7 +4819,6 @@ begin
     // so I multiply by -1 to compensate for this.
     Result := -1*(UT.__tm_gmtoff / 60 / 60 / 24);
   end;
-
   {$ENDIF}
   {$IFDEF DOTNET}
   Result := System.Timezone.CurrentTimezone.GetUTCOffset(DateTime.FromOADate(Now)).TotalDays;
