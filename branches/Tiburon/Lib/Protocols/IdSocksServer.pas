@@ -471,7 +471,7 @@ begin
     3:
       begin
         AContext.Connection.IOHandler.ReadBytes(LData, AContext.Connection.IOHandler.ReadByte+2);
-        VHost := BytesToString(LData, Length(LData)-2);
+        VHost := BytesToString(LData, 0, Length(LData)-2);
         VPort := GStack.NetworkToHost(BytesToWord(LData, Length(LData)-2));
         if AContext.Connection.Socket <> nil then begin
           AContext.FIPVersion := AContext.Connection.Socket.IPVersion;
