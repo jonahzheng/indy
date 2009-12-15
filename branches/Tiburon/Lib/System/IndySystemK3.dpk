@@ -34,7 +34,7 @@ contains
   IdStack in 'IdStack.pas',
   IdStackBSDBase in 'IdStackBSDBase.pas',
   IdStackConsts in 'IdStackConsts.pas',
-  IdStackLinux in 'IdStackLinux.pas',
+  IdStackLibc in 'IdStackLibc.pas',
   IdStream in 'IdStream.pas',
   IdStreamVCL in 'IdStreamVCL.pas',
   IdStruct in 'IdStruct.pas';
