@@ -123,6 +123,6 @@ build=n
 BACKEND=IdStackUnix
 ifeq ($(FULL_TARGET),i386-linux)
 ifeq ($(findstring -dKYLIXCOMPAT,$(OPT)),-dKYLIXCOMPAT)
-BACKEND=IdStackLinux
+BACKEND=IdStackLibc
 endif
 endif
