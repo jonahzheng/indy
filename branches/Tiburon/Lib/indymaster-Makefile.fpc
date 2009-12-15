@@ -111,6 +111,7 @@ implicitunits=IdASN1Util \
   IdFTPListParseDistinctTCPIP \
   IdFTPListParseEPLF \
   IdFTPListParseHellSoft \
+  IdFTPListParseIEFTPGateway \
   IdFTPListParseKA9Q \
   IdFTPListParseMPEiX \
   IdFTPListParseMVS \
@@ -122,6 +123,7 @@ implicitunits=IdASN1Util \
   IdFTPListParseNovellNetwarePSU \
   IdFTPListParseOS2 \
   IdFTPListParsePCNFSD \
+  IdFTPListParsePCTCP \
   IdFTPListParseStercomOS390Exp \
   IdFTPListParseStercomUnixEnt \
   IdFTPListParseStratusVOS \
@@ -161,9 +163,8 @@ implicitunits=IdASN1Util \
   IdHashAdler32 \
   IdHashCRC \
   IdHashElf \
-  IdHashIntf \
   IdHashMessageDigest \
-  IdHashSHA1 \
+  IdHashSHA \
   IdHeaderCoder2022JP \
   IdHeaderCoderBase \
   IdHeaderCoderIndy \
@@ -416,6 +417,6 @@ build=n
 BACKEND=IdStackUnix
 ifeq ($(FULL_TARGET),i386-linux)
 ifeq ($(findstring -dKYLIXCOMPAT,$(OPT)),-dKYLIXCOMPAT)
-BACKEND=IdStackLinux
+BACKEND=IdStackLibc
 endif
 endif
