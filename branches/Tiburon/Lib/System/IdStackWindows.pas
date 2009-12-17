@@ -783,10 +783,10 @@ var
   {$ENDIF}
   {$IFDEF UNICODE}
   Hints: TAddrInfoW;
-  LAddrInfo: pAddrInfoW;
+  LAddrList, LAddrInfo: pAddrInfoW;
   {$ELSE}
   Hints: TAddrInfo;
-  LAddrInfo: pAddrInfo;
+  LAddrList, LAddrInfo: pAddrInfo;
   {$ENDIF}
   RetVal: Integer;
   LHostName: String;
@@ -831,7 +831,7 @@ begin
   ZeroMemory(@Hints, SIZE_TADDRINFO);
   Hints.ai_family := Id_PF_INET4; // TODO: support IPv6 addresses
   Hints.ai_socktype := SOCK_STREAM;
-  LAddrInfo := nil;
+  LAddrList := nil;
 
   {$IFDEF UNICODE_BUT_STRING_IS_ANSI}
   LTemp := WideString(LHostName); // explicit convert to Unicode
@@ -839,13 +839,14 @@ begin
 
   RetVal := getaddrinfo(
     {$IFDEF UNICODE_BUT_STRING_IS_ANSI}PWideChar(LTemp){$ELSE}PChar(LHostName){$ENDIF},
-    nil, @Hints, @LAddrInfo);
+    nil, @Hints, @LAddrList);
   if RetVal <> 0 then begin
     RaiseSocketError(gaiErrorToWsaError(RetVal));
   end;
   try
     AAddresses.BeginUpdate;
     try
+      LAddrInfo := LAddrList;
       repeat
         AAddresses.Add(TranslateTInAddrToString(LAddrInfo^.ai_addr^.sin_addr, Id_IPv4));
         LAddrInfo := LAddrInfo^.ai_next;
@@ -854,7 +855,7 @@ begin
       AAddresses.EndUpdate;
     end;
   finally
-    freeaddrinfo(LAddrInfo);
+    freeaddrinfo(LAddrList);
   end;
 end;
 
