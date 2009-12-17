@@ -418,19 +418,20 @@ begin
 end;
 
 function BuildUnicode(const S: String): TIdBytes;
-{$IFDEF STRING_IS_ANSI}
+{$IFDEF STRING_IS_UNICODE}
+  {$IFDEF USE_INLINE}inline;{$ENDIF}
+{$ELSE}
 var
   i: integer;
 {$ENDIF}
 begin
-  Result := nil;
-  if S = '' then begin
-    Exit;
-  end;
-  SetLength(Result, Length(S) * SizeOf(WideChar));
   {$IFDEF STRING_IS_UNICODE}
-  Move(S[1], Result[0], Length(Result));
+  Result := TIdTextEncoding.Unicode.GetBytes(S);
   {$ELSE}
+  // RLebeau: TODO - should this use TIdTextEncoding.Unicode.GetBytes()
+  // as well?  This logic will not produce a valid Unicode string if
+  // non-ASCII characters are present!
+  SetLength(Result, Length(S) * SizeOf(WideChar));
   for i := 0 to Length(S)-1 do begin
     Result[i*2] := Byte(S[i+1]);
     Result[(i*2)+1] := Byte(#0);
@@ -449,7 +450,7 @@ begin
   with TIdHashMessageDigest4.Create do
   try
     {$IFDEF STRING_IS_UNICODE}
-    nt_hpw128 := HashString(APassword);
+    nt_hpw128 := HashString(APassword, TIdTextEncoding.Unicode);
     {$ELSE}
     nt_hpw128 := HashBytes(BuildUnicode(APassword));
     {$ENDIF}
