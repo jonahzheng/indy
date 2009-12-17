@@ -538,10 +538,24 @@ begin
   CheckForSocketError(IdWinsock2.Listen(ASocket, ABacklog));
 end;
 
+// RLebeau 12/16/09: MS Hotfix #971383 supposedly fixes a bug in Windows
+// Server 2003 when client and server are running on the same machine.
+// The bug can cause recv() to return 0 bytes prematurely even though data
+// is actually pending.  Uncomment the below define if you do not want to
+// rely on the Hotfix always being installed.  The workaround described by
+// MS is to simply call recv() again to make sure data is really not pending.
+//
+{.$DEFINE IGNORE_KB971383_FIX}
+
 function TIdStackWindows.WSRecv(ASocket: TIdStackSocketHandle; var ABuffer;
   const ABufferLength, AFlags: Integer) : Integer;
 begin
   Result := recv(ASocket, ABuffer, ABufferLength, AFlags);
+  {$IFDEF IGNORE_KB971383_FIX}
+  if Result = 0 then begin
+    Result := recv(ASocket, ABuffer, ABufferLength, AFlags);
+  end;
+  {$ENDIF}
 end;
 
 function TIdStackWindows.RecvFrom(const ASocket: TIdStackSocketHandle;
