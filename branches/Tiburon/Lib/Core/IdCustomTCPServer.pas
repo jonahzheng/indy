@@ -711,6 +711,8 @@ begin
         //http://www.midnightbeach.com/jon/pubs/2002/BorCon.London/Sidebar.3.html
         {$IFNDEF MACOSX}
         LListenerThread.Priority := tpListener;
+        {$ELSE}
+          {$MESSAGE WARN 'TThread.Priority needs to be implemented by Embarcadero'}
         {$ENDIF}
         LListenerThreads.Add(LListenerThread);
       except
