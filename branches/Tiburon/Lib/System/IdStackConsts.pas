@@ -97,9 +97,13 @@ uses
   {$IFDEF MACOS}
   {$ENDIF}
   {$IFDEF UNIX}
+    {$IFDEF USE_VCL_POSIX}
+    IdFakePosixSockets;
+    {$ENDIF}
     {$IFDEF KYLIXCOMPAT}
     libc;
-    {$ELSE}
+    {$ENDIF}
+    {$IFDEF USE_BASEUNIX}
     Sockets, BaseUnix, Unix; // FPC "native" Unix units.
      //Marco may want to change the socket interface unit
      //so we don't use the libc header.
@@ -409,6 +413,52 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
   Id_INVALID_SOCKET        = nil;
   Id_SOCKET_ERROR          = -1;
   Id_SOCKETOPTIONLEVEL_TCP = SocketOptionLevel.TCP; // BGO: rename to Id_SOL_TCP
+  {$ENDIF}
+
+  {$IFDEF USE_VCL_POSIX}
+  // Shutdown Options
+  Id_SD_Recv = SHUT_RD;
+  Id_SD_Send = SHUT_WR;
+  Id_SD_Both = SHUT_RDWR;
+  //
+  Id_WSAEINTR           = EINTR;
+  Id_WSAEBADF           = EBADF;
+  Id_WSAEACCES          = EACCES;
+  Id_WSAEFAULT          = EFAULT;
+  Id_WSAEINVAL          = EINVAL;
+  Id_WSAEMFILE          = EMFILE;
+  Id_WSAEWOULDBLOCK     = EWOULDBLOCK;
+  Id_WSAEINPROGRESS     = EINPROGRESS;
+  Id_WSAEALREADY        = EALREADY;
+  Id_WSAENOTSOCK        = ENOTSOCK;
+  Id_WSAEDESTADDRREQ    = EDESTADDRREQ;
+  Id_WSAEMSGSIZE        = EMSGSIZE;
+  Id_WSAEPROTOTYPE      = EPROTOTYPE;
+  Id_WSAENOPROTOOPT     = ENOPROTOOPT;
+  Id_WSAEPROTONOSUPPORT = EPROTONOSUPPORT;
+  Id_WSAESOCKTNOSUPPORT = ESOCKTNOSUPPORT;
+  Id_WSAEOPNOTSUPP      = EOPNOTSUPP;
+  Id_WSAEPFNOSUPPORT    = EPFNOSUPPORT;
+  Id_WSAEAFNOSUPPORT    = EAFNOSUPPORT;
+  Id_WSAEADDRINUSE      = EADDRINUSE;
+  Id_WSAEADDRNOTAVAIL   = EADDRNOTAVAIL;
+  Id_WSAENETDOWN        = ENETDOWN;
+  Id_WSAENETUNREACH     = ENETUNREACH;
+  Id_WSAENETRESET       = ENETRESET;
+  Id_WSAECONNABORTED    = ECONNABORTED;
+  Id_WSAECONNRESET      = ECONNRESET;
+  Id_WSAENOBUFS         = ENOBUFS;
+  Id_WSAEISCONN         = EISCONN;
+  Id_WSAENOTCONN        = ENOTCONN;
+  Id_WSAESHUTDOWN       = ESHUTDOWN;
+  Id_WSAETOOMANYREFS    = ETOOMANYREFS;
+  Id_WSAETIMEDOUT       = ETIMEDOUT;
+  Id_WSAECONNREFUSED    = ECONNREFUSED;
+  Id_WSAELOOP           = ELOOP;
+  Id_WSAENAMETOOLONG    = ENAMETOOLONG;
+  Id_WSAEHOSTDOWN       = EHOSTDOWN;
+  Id_WSAEHOSTUNREACH    = EHOSTUNREACH;
+  Id_WSAENOTEMPTY       = ENOTEMPTY;
   {$ENDIF}
 
   {$IFDEF KYLIXCOMPAT}

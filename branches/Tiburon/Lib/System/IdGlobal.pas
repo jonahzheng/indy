@@ -534,14 +534,15 @@ uses
   Classes,
   syncobjs,
   {$IFDEF UNIX}
-    {$IFDEF KYLIX}
+
+    {$IFDEF KYLIXCOMPAT}
     Libc,
     {$ELSE}
       {$IFDEF FPC}
       DynLibs, // better add DynLibs only for fpc
       {$ENDIF}
-      {$IFDEF KYLIXCOMPAT}
-      Libc,
+      {$IFDEF USE_VCL_POSIX}
+      PosixGlue, PosixSysTypes, PosixPthread, PosixTodo,
       {$ENDIF}
       {$IFDEF USE_BASEUNIX}
       BaseUnix, Unix, Sockets, UnixType,
@@ -642,6 +643,16 @@ type
   TIdThreadId = TThreadId;
   TIdThreadHandle = TIdThreadId;
   TIdThreadPriority = TThreadPriority;
+    {$ENDIF}
+    {$IFDEF USE_VCL_POSIX}
+  TIdPID = pid_t;
+  TIdThreadId = NativeUInt;
+  TIdThreadHandle = NativeUInt;
+      {$IFDEF INT_THREAD_PRIORITY}
+  TIdThreadPriority = -20..19;
+      {$ELSE}
+  TIdThreadPriority = TThreadPriority;
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
@@ -1415,7 +1426,10 @@ const
 implementation
 
 uses
-  {$IFDEF DELPHI_CROSS}
+  {$IFDEF USE_VCL_POSIX}
+  PosixTime, PosixSysTime,
+  {$ENDIF}
+  {$IFDEF VCL_CROSS_COMPILE}
     {$IFDEF MACOSX}
   CoreServices,
     {$ENDIF}
@@ -2524,7 +2538,7 @@ function InterlockedExchangeTHandle(var VTarget: THandle; const AValue: PtrUInt)
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   {$IFDEF HAS_TInterlocked}
-  ToDo('Result := TInterlocked.Exchange<THandle>(VTarget, AValue);');
+  Result := TInterlocked.Exchange(LongInt(VTarget), AValue);
   {$ELSE}
     {$IFDEF THANDLE_32}
   Result := InterlockedExchange(LongInt(VTarget), AValue);
@@ -2539,7 +2553,7 @@ function InterlockedCompareExchangePtr(var VTarget: Pointer; const AValue, Compa
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   {$IFDEF HAS_TInterlocked}
-  ToDo('Result := TInterlocked.CompareExchange(VTarget, AValue, Compare);');
+  Result := TInterlocked.CompareExchange(VTarget, AValue, Compare);
   {$ELSE}
     {$IFDEF FPC}
     //FreePascal 2.2.0 has an overload for InterlockedCompareExchange that takes
@@ -3198,9 +3212,13 @@ begin
   {$IFDEF KYLIXCOMPAT}
   Result := getpid;
   {$ENDIF}
+  {$IFDEF USE_VCL_POSIX}
+   Result := getpid;
+  {$ENDIF}
   {$IFDEF USE_BASEUNIX}
   Result := fpgetpid;
   {$ENDIF}
+
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Result := GetCurrentProcessID;
   {$ENDIF}
@@ -4814,10 +4832,16 @@ begin
 
   gettimeofday(TV, nil);
   T := TV.tv_sec;
+    {$IFDEF USE_VCL_POSIX}
+  localtime_r(T, UT);
+  Result := -1*(UT.tm_gmtoff / 60 / 60 / 24);
+    {$ELSE}
   localtime_r(@T, UT);
+  Result := -1*(UT.__tm_gmtoff / 60 / 60 / 24);
+    {$ENDIF}
     // __tm_gmtoff is the bias in seconds from the UTC to the current time.
     // so I multiply by -1 to compensate for this.
-  Result := -1*(UT.__tm_gmtoff / 60 / 60 / 24);
+
   {$ENDIF}
   {$IFDEF DOTNET}
   Result := System.Timezone.CurrentTimezone.GetUTCOffset(DateTime.FromOADate(Now)).TotalDays;
@@ -4961,9 +4985,9 @@ end;
 function IndyFileAge(const AFileName: string): TDateTime;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  {$IFDEF DELPHI_CROSS}
+  {$IFDEF VCL_CROSS_COMPILE}
   Result := FileDateToDateTime(SysUtils.FileAge(AFileName));
-  {$ELSE} 
+  {$ELSE}
     {$IFDEF VCL_2006_OR_ABOVE}
   //single-parameter fileage is deprecated in d2006 and above
   if not FileAge(AFileName, Result) then begin

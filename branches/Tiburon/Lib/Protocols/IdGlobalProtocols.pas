@@ -579,11 +579,18 @@ uses
       DateUtils,
       {$ENDIF}
     {$ENDIF}
+    {$IFDEF USE_VCL_POSIX}
+    DateUtils,
+    PosixSysStat, PosixSysTime, PosixTime,
+    {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   Messages,
   Registry,
   {$ENDIF}
+    {$IFDEF USE_VCL_POSIX}
+
+    {$ENDIF}
   {$IFDEF DOTNET}
   System.IO,
   System.Text,
@@ -1627,8 +1634,8 @@ var
   {$ENDIF}
   {$IFDEF UNIX}
 var
-    {$IFDEF DELPHI_CROSS}
-  LRec : TStatBuf64;
+    {$IFDEF USE_VCL_POSIX}
+  LRec : TStatStruct;
     {$ELSE}
       {$IFDEF KYLIXCOMPAT}
   LRec : TStatBuf;
@@ -1680,9 +1687,9 @@ begin
   {$ENDIF}
   {$IFDEF UNIX}
   Result := -1;
-      {$IFDEF DELPHI_CROSS}
+      {$IFDEF USE_VCL_POSIX}
   //This is messy with IFDEF's but I want to be able to handle 63 bit file sizes.
-   if stat64(PAnsiChar(AnsiString(AFileName)), LRec) = 0 then begin
+   if stat(PAnsiChar(AnsiString(AFileName)), LRec) = 0 then begin
       Result := LRec.st_size;
    end;
       {$ELSE}
@@ -1715,10 +1722,15 @@ var
 {$IFDEF UNIX}
 var
   LTime : Integer;
+  {$IFDEF USE_VCL_POSIX}
+  LRec : TStatStruct;
+  LU : TUnixTime;
+  {$ENDIF}
   {$IFDEF KYLIXCOMPAT}
   LRec : TStatBuf;
   LU : TUnixTime;
-  {$ELSE}
+  {$ENDIF}
+  {$IFDEF USE_BASEUNIX}
   LRec : TStat;
   LU : time_t;
   {$ENDIF}
@@ -1756,14 +1768,26 @@ begin
   {$ENDIF}
   {$IFDEF UNIX}
   //Note that we can use stat here because we are only looking at the date.
-  if {$IFDEF KYLIXCOMPAT}stat{$ELSE}fpstat{$ENDIF}(PAnsiChar(AnsiString(AFileName)), LRec) = 0 then begin
+    {$IFDEF USE_BASEUNIX}
+  if fpstat(PAnsiChar(AnsiString(AFileName)), LRec) = 0 then begin
+    {$ENDIF}
+    {$IFDEF KYLIXCOMPAT}
+  if stat(PAnsiChar(AnsiString(AFileName)), LRec) = 0 then begin
+    {$ENDIF}
+    {$IFDEF USE_VCL_POSIX}
+  if stat(PAnsiChar(AnsiString(AFileName)), LRec) = 0 then begin
+    {$ENDIF}
     LTime := LRec.st_mtime;
     {$IFDEF KYLIXCOMPAT}
-    gmtime_r({$IFDEF KYLIXCOMPAT}@{$ENDIF}LTime, LU);
+    gmtime_r(@LTime, LU);
     Result := EncodeDate(LU.tm_year + 1900, LU.tm_mon + 1, LU.tm_mday) +
               EncodeTime(LU.tm_hour, LU.tm_min, LU.tm_sec, 0);
-    {$ELSE}
+    {$ENDIF}
+    {$IFDEF USE_BASEUNIX}
     Result := UnixToDateTime(LTime);
+    {$ENDIF}
+    {$IFDEF USE_VCL_POSIX}
+    Result := DateUtils.UnixToDateTime(LTime);
     {$ENDIF}
   end;
   {$ENDIF}
@@ -1795,10 +1819,17 @@ begin
  {from http://edn.embarcadero.com/article/27890 }
   gettimeofday(TV, nil);
   T := TV.tv_sec;
+    {$IFDEF USE_VCL_POSIX}
+  localtime_r(T, UT);
+    // __tm_gmtoff is the bias in seconds from the UTC to the current time.
+    // so I multiply by -1 to compensate for this.
+  Result := (UT.tm_gmtoff / 60 / 60 / 24);
+    {$ELSE}
   localtime_r(@T, UT);
     // __tm_gmtoff is the bias in seconds from the UTC to the current time.
     // so I multiply by -1 to compensate for this.
   Result := (UT.__tm_gmtoff / 60 / 60 / 24);
+    {$ENDIF}
   {$ELSE}
   Result := -OffsetFromUTC;
   {$ENDIF}
@@ -3709,8 +3740,13 @@ var
   LFTime : TFileTime;
 {$ENDIF}
 {$IFDEF UNIX}
+  {$IFDEF USE_VCL_POSIX}
+var
+  TheTms : tm;
+  {$ELSE}
 var
   TheTms: tms;
+  {$ENDIF}
 {$ENDIF}
 begin
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
@@ -3724,7 +3760,15 @@ begin
   {$ENDIF}
   {$IFDEF UNIX}
   //Is the following correct?
-  Result := {$IFDEF USE_BASEUNIX}fptimes{$ELSE}Libc.Times{$ENDIF}(TheTms);
+    {$IFDEF USE_BASEUNIX}
+  Result := fptimes(TheTms);
+    {$ENDIF}
+    {$IFDEF KYLIXCOMPAT}
+  Result := Times(TheTms);
+    {$ENDIF}
+    {$IFDEF USE_VCL_POSIX}
+  {$MESSAGE WARN 'GetClockValue must be implemented for VCL_POSIX'}
+    {$ENDIF}
   {$ENDIF}
   {$IFDEF DOTNET}
   Result := System.DateTime.Now.Ticks;
@@ -3791,8 +3835,12 @@ begin
     i := IndyPos(#0, LHost);
     SetString(Result, PAnsiChar(@LHost[1]), i-1);
   end;
-    {$ELSE}
-  Result := Unix.GetHostName;
+    {$ENDIF}
+    {$IFDEF USE_BASE_UNIX}
+  Result := GetHostName;
+    {$ENDIF}
+    {$IFDEF USE_VCL_POSIX}
+  {$MESSAGE WARN 'IndyComputerName must be implemented in for VCL_POSIX'}
     {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}

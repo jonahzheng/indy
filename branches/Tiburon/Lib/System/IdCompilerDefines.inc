@@ -506,7 +506,7 @@
   //what we do and what platforms we support in FPC.
   //I'll let Marco think about that one.
   {$IFDEF UNIX}
-         {$DEFINE USE_BASEUNIX}
+     {$DEFINE USE_BASEUNIX}
     {$IFDEF LINUX}
       //In Linux for I386, you can choose between a Kylix-libc API or
       //the standard RTL Unix API.  Just pass -dKYLIXCOMPAT to the FPC compiler.
@@ -554,10 +554,13 @@
      {$IF RTLVersion >= 22.0}
        {$DEFINE UNIX}
        {$DEFINE VCL_CROSS_COMPILE}
-       {$DEFINE KYLIXCOMPAT}
+       {$DEFINE USE_VCL_POSIX}
+       {$UNDEF USE_BASEUNIX}
+        {$UNDEF KYLIXCOMPAT}
      {$IFEND}
   {$ENDIF}
   {$IFDEF LINUX}
+    {$DEFINE KYLIXCOMPAT}
     {$IFDEF CONDITIONALEXPRESSIONS}
       {$IF RTLVersion = 14.0}
         {$DEFINE KYLIX_1}
@@ -578,6 +581,8 @@
       {$IFEND}
       {$IF RTLVersion >= 22.0}
         {$DEFINE VCL_CROSS_COMPILE}
+        {$DEFINE USE_VCL_POSIX}
+        {$UNDEF KYLIXCOMPAT}
       {$IFEND}
     {$ENDIF}
     {$DEFINE VCL_4_OR_ABOVE}
@@ -587,7 +592,7 @@
     {$DEFINE HAS_OPTIONALPARAMS}
     {$DEFINE HAS_SAMETEXT}
     {$DEFINE UNIX}
-    {$DEFINE KYLIXCOMPAT}
+
     {$DEFINE WIDGET_KYLIX}
     {$DEFINE WIDGET_VCL_LIKE_OR_KYLIX}
     {$DEFINE INT_THREAD_PRIORITY}

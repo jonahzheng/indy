@@ -66,11 +66,13 @@
    Rev 1.0    11/13/2002 08:59:24 AM  JPMugaas
 }
 unit IdStackUnix;
-
 interface
 
 {$i IdCompilerDefines.inc}
 
+{$IFNDEF FPC}
+  {$Message Fatal 'IdStackUnix is only for FreePascal.'}
+{$ENDIF}
 uses
   Classes,
   sockets,

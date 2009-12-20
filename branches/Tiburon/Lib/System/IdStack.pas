@@ -353,15 +353,19 @@ implementation
 uses
   //done this way so we can have a separate stack for FPC under Unix systems
   {$IFDEF UNIX}
+    {$IFDEF USE_VCL_POSIX}
+  IdStackVCLPosix,
+    {$ENDIF}
     {$IFDEF KYLIXCOMPAT}
   IdStackLibc,
-    {$ELSE}
+    {$ENDIF}
+    {$IFDEF USE_BASEUNIX}
   IdStackUnix,
     {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     {$IFDEF USE_INLINE}
- //   Windows,
+   Windows,
     {$ENDIF}
   IdStackWindows,
   {$ENDIF}
@@ -877,6 +881,9 @@ initialization
   //done this way so we can have a separate stack just for FPC under Unix systems
   GStackClass :=
     {$IFDEF UNIX}
+      {$IFDEF USE_VCL_POSIX}
+      TIdStackVCLPosix;
+      {$ENDIF}
       {$IFDEF KYLIXCOMPAT}
       TIdStackLibc;
       {$ENDIF}

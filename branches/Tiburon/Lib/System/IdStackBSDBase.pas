@@ -312,8 +312,12 @@ uses
   {$IFDEF UNIX}
     {$IFDEF KYLIXCOMPAT}
   IdStackLibc,
-    {$ELSE}
+    {$ENDIF}
+    {$IFDEF USE_BASEUNIX}
   IdStackUnix,
+    {$ENDIF}
+    {$IFDEF USE_VCL_POSIX}
+  IdStackVCLPosix,
     {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
