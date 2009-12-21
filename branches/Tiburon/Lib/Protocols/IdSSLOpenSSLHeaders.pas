@@ -199,10 +199,9 @@ interface
   {$IFDEF WIN32}
     {$ALIGN OFF}
   {$ELSE}
-    {$IFNDEF DELPHI_CROSS}
+    {$IFNDEF VCL_CROSS_COMPILE}
       {$message error alignment!}
     {$ENDIF}
-
   {$ENDIF}
 {$ELSE}
   {$packrecords C}
