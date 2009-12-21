@@ -55,6 +55,9 @@
 // the iconv library to charactor conversions.
 {.$UNDEF USE_ICONV}
 
+//Define for Delphi cross-compiler targetting Posix
+{$UNDEF USE_VCL_POSIX}
+
 // Delphi 4
 {$IFDEF VER120}
   {$DEFINE VCL_4_OR_ABOVE}
@@ -550,7 +553,7 @@
 //IF's are evaluated before IFDEF's
 //and Kylix 1 does not have CompilerVersion defined at all.
 {$IFNDEF FPC}
-   {$IFDEF POSIX}
+  {$IFDEF POSIX}
      {$IF RTLVersion >= 22.0}
        {$DEFINE UNIX}
        {$DEFINE VCL_CROSS_COMPILE}
@@ -560,6 +563,7 @@
      {$IFEND}
   {$ENDIF}
   {$IFDEF LINUX}
+       {$DEFINE UNIX}
     {$DEFINE KYLIXCOMPAT}
     {$IFDEF CONDITIONALEXPRESSIONS}
       {$IF RTLVersion = 14.0}
@@ -582,7 +586,6 @@
       {$IF RTLVersion >= 22.0}
         {$DEFINE VCL_CROSS_COMPILE}
         {$DEFINE USE_VCL_POSIX}
-        {$UNDEF KYLIXCOMPAT}
       {$IFEND}
     {$ENDIF}
     {$DEFINE VCL_4_OR_ABOVE}
@@ -591,7 +594,7 @@
     {$DEFINE VCL_60}
     {$DEFINE HAS_OPTIONALPARAMS}
     {$DEFINE HAS_SAMETEXT}
-    {$DEFINE UNIX}
+
 
     {$DEFINE WIDGET_KYLIX}
     {$DEFINE WIDGET_VCL_LIKE_OR_KYLIX}
@@ -821,6 +824,36 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
       {$DEFINE REGISTER_EXPECTED_MEMORY_LEAK}
     {$ENDIF}
   {$ENDIF}
+{$ENDIF}
+
+{
+We must determine what the SocketType parameter is for the Socket function.
+In DotNET, it's SocketType.  In Kylix and the libc.pas Kylix-compatibility
+library, it's a __socket_type.  In BaseUnix, it's a C-type Integer.  In Windows,
+it's a LongInt.
+
+}
+{$UNDEF SOCKETTYPE_IS_SOCKETTYPE}
+{$UNDEF SOCKETTYPE_IS_CINT}
+{$UNDEF SOCKETTYPE_IS___SOCKETTYPE}
+{$UNDEF SOCKETTYPE_IS_LONGINT}
+{$UNDEF SOCKETTYPE_IS_NUMERIC}
+{$IFDEF DOTNET}
+   {$DEFINE SOCKETTYPE_IS_SOCKETTYPE}
+{$ENDIF}
+{$IFDEF USE_BASEUNIX}
+   {$DEFINE SOCKETTYPE_IS_CINT}
+   {$DEFINE SOCKETTYPE_IS_NUMERIC}
+{$ENDIF}
+{$IFDEF KYLIXCOMPAT}
+   {$DEFINE SOCKETTYPE_IS___SOCKETTYPE}
+{$ENDIF}
+{$IFDEF USE_VCL_POSIX}
+   {$DEFINE SOCKETTYPE_IS___SOCKETTYPE}
+{$ENDIF}
+{$IFDEF WIN32_OR_WIN64_OR_WINCE}
+   {$DEFINE SOCKETTYPE_IS_LONGINT}
+   {$DEFINE SOCKETTYPE_IS_NUMERIC}
 {$ENDIF}
 
 {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
