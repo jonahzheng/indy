@@ -1078,14 +1078,8 @@ uses
     {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-    {$IFDEF USE_INLINE}
-  Windows,
-    {$ELSE}
   //facilitate inlining only.
-      {$IFDEF VCL_2009_OR_ABOVE}
   Windows,
-      {$ENDIF}
-    {$ENDIF}
   {$ENDIF}
   {$IFDEF DOTNET}
     {$IFDEF USE_INLINE}
