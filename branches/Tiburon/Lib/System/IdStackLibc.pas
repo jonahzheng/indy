@@ -163,8 +163,8 @@ type
     procedure WSSendTo(ASocket: TIdStackSocketHandle; const ABuffer;
       const ABufferLength, AFlags: Integer;
       const AIP: string; const APort: TIdPort; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
-    function WSSocket(AFamily, AStruct, AProtocol: Integer;
-     const AOverlapped: Boolean = False): TIdStackSocketHandle; override;
+    function WSSocket(AFamily : Integer; AStruct : TIdSocketType; AProtocol: Integer;
+      const AOverlapped: Boolean = False): TIdStackSocketHandle; override;
     procedure Disconnect(ASocket: TIdStackSocketHandle); override;
     procedure SetSocketOption(ASocket: TIdStackSocketHandle; ALevel:TIdSocketOptionLevel;
       AOptName: TIdSocketOption; AOptVal: Integer); overload;override;
@@ -642,8 +642,8 @@ begin
   end;
 end;
 
-function TIdStackLibc.WSSocket(AFamily, AStruct, AProtocol: Integer;
-     const AOverlapped: Boolean = False): TIdStackSocketHandle; 
+function TIdStackLibc.WSSocket(AFamily : Integer; AStruct : TIdSocketType; AProtocol: Integer;
+      const AOverlapped: Boolean = False): TIdStackSocketHandle; override;
 begin
   Result := Libc.socket(AFamily, AStruct, AProtocol);
 end;

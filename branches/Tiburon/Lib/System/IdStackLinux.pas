@@ -156,8 +156,8 @@ type
     procedure WSSendTo(ASocket: TIdStackSocketHandle; const ABuffer;
       const ABufferLength, AFlags: Integer;
       const AIP: string; const APort: TIdPort; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
-    function WSSocket(AFamily, AStruct, AProtocol: Integer;
-     const AOverlapped: Boolean = False): TIdStackSocketHandle; override;
+    function WSSocket(AFamily : Integer; AStruct : TIdSocketType; AProtocol: Integer;
+      const AOverlapped: Boolean = False): TIdStackSocketHandle; override;
     procedure Disconnect(ASocket: TIdStackSocketHandle); override;
     procedure SetSocketOption(ASocket: TIdStackSocketHandle; ALevel:TIdSocketOptionLevel;
       AOptName: TIdSocketOption; AOptVal: Integer); overload;override;
@@ -635,8 +635,8 @@ begin
   end;
 end;
 
-function TIdStackLinux.WSSocket(AFamily, AStruct, AProtocol: Integer;
-     const AOverlapped: Boolean = False): TIdStackSocketHandle; 
+function TIdStackLinux.WSSocket(AFamily : Integer; AStruct : TIdSocketType; AProtocol: Integer;
+      const AOverlapped: Boolean = False): TIdStackSocketHandle;
 begin
   Result := Libc.socket(AFamily, AStruct, AProtocol);
 end;
@@ -954,7 +954,7 @@ function TIdStackLinux.CheckIPVersionSupport(const AIPVersion: TIdIPVersion): Bo
 var
   LTmpSocket: TIdStackSocketHandle;
 begin
-  LTmpSocket := WSSocket(IdIPFamily[AIPVersion], Integer(Id_SOCK_STREAM), Id_IPPROTO_IP );
+  LTmpSocket := WSSocket(IdIPFamily[AIPVersion], Id_SOCK_STREAM, Id_IPPROTO_IP );
   Result := LTmpSocket <> Id_INVALID_SOCKET;
   if Result then begin
     WSCloseSocket(LTmpSocket);

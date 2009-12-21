@@ -88,6 +88,9 @@ uses
   {$IFDEF OS2}
   pmwsock;
   {$ENDIF}
+  {$IFDEF SOCKETTYPE_IS_CINT}
+  IdCTypes,
+  {$ENDIF}
   {$IFDEF NETWARE_CLIB}
   winsock; //not sure if this is correct
   {$ENDIF}
@@ -116,7 +119,8 @@ type
                    // (Socket() returns a C int according to opengroup)
   {$ENDIF}
 
-  TIdStackSocketHandle = {$IFDEF DOTNET}Socket{$ELSE}TSocket{$ENDIF};
+  TIdStackSocketHandle =
+  {$IFDEF DOTNET}Socket{$ELSE}TSocket{$ENDIF};
 
 var
   Id_SO_True: Integer = 1;
@@ -233,29 +237,46 @@ const
 
 type
   // Socket Type
-  TIdSocketType = {$IFDEF DOTNET}SocketType{$ELSE}TSocket{$ENDIF};
+  {$IFDEF SOCKETTYPE_IS_CINT}
+  TIdSocketType = TIdC_INT;
+  {$ENDIF}
+  {$IFDEF SOCKETTYPE_IS___SOCKETTYPE}
+  TIdSocketType = __socket_type;
+  {$ENDIF}
+  {$IFDEF SOCKETTYPE_IS_LONGINT}
+  TIdSocketType = LongInt;
+  {$ENDIF}
+  {$IFDEF SOCKETTYPE_IS_SOCKETTYPE}
+  TIdSocketType = SocketType;
+  {$ENDIF}
 
 const
-  {$IFNDEF DOTNET}
-    {$IFDEF KYLIXCOMPAT}
-  Id_SOCK_STREAM     = TIdSocketType(SOCK_STREAM);      //1               /* stream socket */
-  Id_SOCK_DGRAM      = TIdSocketType(SOCK_DGRAM);       //2               /* datagram socket */
-  Id_SOCK_RAW        = TIdSocketType(SOCK_RAW);         //3               /* raw-protocol interface */
-  Id_SOCK_RDM        = TIdSocketType(SOCK_RDM);         //4               /* reliably-delivered message */
-  Id_SOCK_SEQPACKET  = SOCK_SEQPACKET;   //5               /* sequenced packet stream */
-    {$ELSE}
-  Id_SOCK_STREAM     = SOCK_STREAM;      //1               /* stream socket */
-  Id_SOCK_DGRAM      = SOCK_DGRAM;       //2               /* datagram socket */
-  Id_SOCK_RAW        = SOCK_RAW;         //3               /* raw-protocol interface */
-  Id_SOCK_RDM        = SOCK_RDM;         //4               /* reliably-delivered message */
-  Id_SOCK_SEQPACKET  = SOCK_SEQPACKET;   //5               /* sequenced packet stream */
-    {$ENDIF}
- {$ELSE}
+//  {$IFNDEF DOTNET}
+//    {$IFDEF KYLIXCOMPAT}
+//  Id_SOCK_STREAM     = TIdSocketType(SOCK_STREAM);      //1               /* stream socket */
+//  Id_SOCK_DGRAM      = TIdSocketType(SOCK_DGRAM);       //2               /* datagram socket */
+//  Id_SOCK_RAW        = TIdSocketType(SOCK_RAW);         //3               /* raw-protocol interface */
+//  Id_SOCK_RDM        = TIdSocketType(SOCK_RDM);         //4               /* reliably-delivered message */
+//  Id_SOCK_SEQPACKET  = SOCK_SEQPACKET;   //5               /* sequenced packet stream */
+//    {$ELSE}
+//  Id_SOCK_STREAM     = SOCK_STREAM;      //1               /* stream socket */
+//  Id_SOCK_DGRAM      = SOCK_DGRAM;       //2               /* datagram socket */
+//  Id_SOCK_RAW        = SOCK_RAW;         //3               /* raw-protocol interface */
+//  Id_SOCK_RDM        = SOCK_RDM;         //4               /* reliably-delivered message */
+//  Id_SOCK_SEQPACKET  = SOCK_SEQPACKET;   //5               /* sequenced packet stream */
+//    {$ENDIF}
+  {$IFDEF SOCKETTYPE_IS_SOCKETTYPE}
   Id_SOCK_STREAM     = SocketType.Stream;         // /* stream socket */
   Id_SOCK_DGRAM      = SocketType.Dgram;          // /* datagram socket */
   Id_SOCK_RAW        = SocketType.Raw;            // /* raw-protocol interface */
   Id_SOCK_RDM        = SocketType.Rdm;            // /* reliably-delivered message */
   Id_SOCK_SEQPACKET  = SocketType.Seqpacket;      // /* sequenced packet stream */
+  {$ELSE}
+  Id_SOCK_STREAM     = TIdSocketType(SOCK_STREAM);      //1               /* stream socket */
+  Id_SOCK_DGRAM      = TIdSocketType(SOCK_DGRAM);       //2               /* datagram socket */
+  Id_SOCK_RAW        = TIdSocketType(SOCK_RAW);         //3               /* raw-protocol interface */
+  Id_SOCK_RDM        = TIdSocketType(SOCK_RDM);         //4               /* reliably-delivered message */
+  Id_SOCK_SEQPACKET  = SOCK_SEQPACKET;   //5               /* sequenced packet stream */
   {$ENDIF}
 
 type
