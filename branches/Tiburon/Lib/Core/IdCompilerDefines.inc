@@ -553,7 +553,7 @@
 //IF's are evaluated before IFDEF's
 //and Kylix 1 does not have CompilerVersion defined at all.
 {$IFNDEF FPC}
-  {$IFDEF POSIX}
+   {$IFDEF POSIX}
      {$IF RTLVersion >= 22.0}
        {$DEFINE UNIX}
        {$DEFINE VCL_CROSS_COMPILE}
@@ -563,7 +563,6 @@
      {$IFEND}
   {$ENDIF}
   {$IFDEF LINUX}
-       {$DEFINE UNIX}
     {$DEFINE KYLIXCOMPAT}
     {$IFDEF CONDITIONALEXPRESSIONS}
       {$IF RTLVersion = 14.0}
@@ -594,7 +593,7 @@
     {$DEFINE VCL_60}
     {$DEFINE HAS_OPTIONALPARAMS}
     {$DEFINE HAS_SAMETEXT}
-
+    {$DEFINE UNIX}
 
     {$DEFINE WIDGET_KYLIX}
     {$DEFINE WIDGET_VCL_LIKE_OR_KYLIX}
