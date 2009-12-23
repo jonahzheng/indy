@@ -190,6 +190,7 @@ uses
     Windows,
     {$ENDIF}
   {$ENDIF}
+  IdFIPS,
   IdGlobalProtocols,
   IdHash,
   IdHMACMD5,

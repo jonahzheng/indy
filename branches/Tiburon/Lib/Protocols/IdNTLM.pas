@@ -286,6 +286,7 @@ uses
   {$IFDEF DOTNET}
   System.Text,
   {$ENDIF}
+  IdFIPS,
   IdGlobalProtocols,
   IdHash,
   IdHashMessageDigest,

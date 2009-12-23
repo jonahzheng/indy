@@ -8658,10 +8658,16 @@ type
   end;
   EIdOSSLUnderlyingCryptoError = class(EIdOpenSSLAPICryptoError);
 
+  EIdDigestError = class(EIdOpenSSLAPICryptoError);
+  EIdDigestFinalEx = class(EIdDigestError);
+  EIdDigestInitEx = class(EIdDigestError);
+  EIdDigestUpdate = class(EIdDigestError);
+
 implementation
 
 uses
   Classes,
+  IdFIPS,
   IdGlobal,  //needed for Sys symbol
   IdGlobalProtocols,
   IdResourceStringsProtocols,
@@ -8673,21 +8679,164 @@ uses
   , Windows
   {$ENDIF};
 
+//**************** FIPS Support backend *******************
+function OpenSSLIsHashingIntfAvail : Boolean;
+begin
+  Result := Assigned(IdSslEvpDigestInitEx) and
+             Assigned(IdSslEvpDigestUpdate) and
+             Assigned(IdSslEvpDigestFinalEx);
+end;
+
 function OpenSSLGetFIPSMode : Boolean;
 begin
   Result := IdSslFIPSMode <> 0;
 end;
 
-procedure OpenSSLSetFIPSMode(const AMode : Boolean);
+function OpenSSLSetFIPSMode(const AMode : Boolean) : Boolean;
 begin
   //leave this empty as we may not be using something that supports FIPS
   if AMode then begin
-    IdSslFIPSModeSet(1);
+    Result := IdSslFIPSModeSet(1) = 1;
   end else begin
-    IdSslFIPSModeSet(0);
+    Result := IdSslFIPSModeSet(0) = 1;
   end;
 end;
 
+function OpenSSLGetDigestCtx( AInst : PEVP_MD) : TIdHashIntCtx;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+var LRet : Integer;
+begin
+  Result := AllocMem(SizeOf(EVP_MD_CTX));
+  IdSslEvpMDCtxInit(Result);
+
+  LRet := IdSslEvpDigestInitEx(Result, AInst, nil);
+  if LRet <> 1 then begin
+    EIdDigestInitEx.RaiseException('EVP_DigestInit_ex error');
+  end;
+end;
+
+function OpenSSLIsMD2HashIntfAvail: Boolean;
+begin
+  Result := Assigned(IdSslEvpMD2);
+end;
+
+function OpenSSLGetMD2HashInst : TIdHashIntCtx;
+var LRet : PEVP_MD;
+begin
+  LRet := IdSslEvpMD2;
+  Result := OpenSSLGetDigestCtx(LRet);
+end;
+
+function OpenSSLIsMD4HashIntfAvail: Boolean;
+begin
+  Result := Assigned(IdSslEvpMD4);
+end;
+
+function OpenSSLGetMD4HashInst : TIdHashIntCtx;
+var LRet : PEVP_MD;
+begin
+  LRet := IdSslEvpMD4;
+  Result := OpenSSLGetDigestCtx(LRet);
+end;
+
+function OpenSSLIsMD5HashIntfAvail: Boolean;
+begin
+  Result := Assigned(IdSslEvpMD5);
+end;
+
+function OpenSSLGetMD5HashInst : TIdHashIntCtx;
+var LRet : PEVP_MD;
+begin
+  LRet := IdSslEvpMD5;
+  Result := OpenSSLGetDigestCtx(LRet);
+end;
+
+function OpenSSLIsSHA1HashIntfAvail: Boolean;
+begin
+  Result := Assigned(IdSslEvpSHA1);
+end;
+
+function OpenSSLGetSHA1HashInst : TIdHashIntCtx;
+var LRet : PEVP_MD;
+begin
+  LRet := IdSslEvpSHA1;
+  Result := OpenSSLGetDigestCtx(LRet);
+end;
+
+function OpenSSLIsSHA224HashIntfAvail: Boolean;
+begin
+  Result := Assigned(IdSslEvpSHA224);
+end;
+
+function OpenSSLGetSHA224HashInst : TIdHashIntCtx;
+var LRet : PEVP_MD;
+begin
+  LRet := IdSslEvpSHA224;
+  Result := OpenSSLGetDigestCtx(LRet);
+end;
+
+function OpenSSLIsSHA256HashIntfAvail: Boolean;
+begin
+  Result := Assigned(IdSslEvpSHA256);
+end;
+
+function OpenSSLGetSHA256HashInst : TIdHashIntCtx;
+var LRet : PEVP_MD;
+begin
+  LRet := IdSslEvpSHA256;
+  Result := OpenSSLGetDigestCtx(LRet);
+end;
+
+function OpenSSLIsSHA384HashIntfAvail: Boolean;
+begin
+  Result := Assigned(IdSslEvpSHA384);
+end;
+
+function OpenSSLGetSHA384HashInst : TIdHashIntCtx;
+var LRet : PEVP_MD;
+begin
+  LRet := IdSslEvpSHA384;
+  Result := OpenSSLGetDigestCtx(LRet);
+end;
+
+function OpenSSLIsSHA512HashIntfAvail: Boolean;
+begin
+  Result := Assigned(IdSslEvpSHA512);
+end;
+
+function OpenSSLGetSHA512HashInst : TIdHashIntCtx;
+var LRet : PEVP_MD;
+begin
+  LRet := IdSslEvpSHA256;
+  Result := OpenSSLGetDigestCtx(LRet);
+end;
+
+procedure OpenSSLUpdateHashInst(ACtx: TIdHashIntCtx; const AIn: TIdBytes);
+var
+  LRet : TIdC_Int;
+begin
+  LRet := IdSslEvpDigestUpdate(ACtx,@Ain[0],Length(AIn));
+  if LRet <> 1 then begin
+    EIdDigestInitEx.RaiseException('EVP_DigestUpdate error');
+  end;
+end;
+
+function OpenSSLFinalHashInst(ACtx: TIdHashIntCtx): TIdBytes;
+var
+  LLen : TIdC_UInt;
+   LRet : TIdC_Int;
+begin
+  SetLength(Result,OPENSSL_EVP_MAX_MD_SIZE);
+  LRet := IdSslEvpDigestFinalEx(ACtx,PAnsiChar(@Result[0]),LLen);
+  if LRet <> 1 then begin
+    EIdDigestFinalEx.RaiseException('EVP_DigestFinal_ex error');
+  end;
+  SetLength(Result,LLen);
+  IdSslEvpMDCtxCleanup(ACtx);
+  FreeMem(ACtx,SizeOf(EVP_MD_CTX));
+end;
+
+//****************************************************
 function IdSslFIPSModeSet(onoff : TIdC_INT) : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
 begin
   Result := 0;
@@ -12895,8 +13044,28 @@ end;
 
 initialization
   FFailedFunctionLoadList := TStringList.Create;
-  IdGlobalProtocols.SetFIPSMode := OpenSSLSetFIPSMode;
-  IdGlobalProtocols.GetFIPSMode := OpenSSLGetFIPSMode;
+  SetFIPSMode := OpenSSLSetFIPSMode;
+  GetFIPSMode := OpenSSLGetFIPSMode;
+  IsHashingIntfAvail := OpenSSLIsHashingIntfAvail;
+
+  IsMD2HashIntfAvail := OpenSSLIsMD2HashIntfAvail;
+  GetMD2HashInst := OpenSSLGetMD2HashInst;
+  IsMD4HashIntfAvail := OpenSSLIsMD4HashIntfAvail;
+  GetMD4HashInst := OpenSSLGetMD4HashInst;
+  IsMD5HashIntfAvail := OpenSSLIsMD5HashIntfAvail;
+  GetMD5HashInst := OpenSSLGetMD5HashInst;
+  IsSHA1HashIntfAvail := OpenSSLIsSHA1HashIntfAvail;
+  GetSHA1HashInst := OpenSSLGetSHA1HashInst;
+  IsSHA224HashIntfAvail := OpenSSLIsSHA256HashIntfAvail;
+  GetSHA224HashInst := OpenSSLGetSHA256HashInst;
+  IsSHA256HashIntfAvail := OpenSSLIsSHA256HashIntfAvail;
+  GetSHA256HashInst := OpenSSLGetSHA256HashInst;
+  IsSHA384HashIntfAvail := OpenSSLIsSHA384HashIntfAvail;
+  GetSHA384HashInst := OpenSSLGetSHA384HashInst;
+  IsSHA512HashIntfAvail := OpenSSLIsSHA512HashIntfAvail;
+  GetSHA512HashInst := OpenSSLGetSHA512HashInst;
+  UpdateHashInst := OpenSSLUpdateHashInst;
+  FinalHashInst := OpenSSLFinalHashInst;
 finalization
   FreeAndNil(FFailedFunctionLoadList);
 
