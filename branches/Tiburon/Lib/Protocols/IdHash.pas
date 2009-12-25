@@ -376,7 +376,7 @@ begin
    ACtx.TransformFinalBlock(LDummy,0,0);
   Result := ACtx.Hash;
   {$ELSE}
-   IdFIPS.FinalHashInst(ACtx);
+  Result := IdFIPS.FinalHashInst(ACtx);
   {$ENDIF}
 end;
 
