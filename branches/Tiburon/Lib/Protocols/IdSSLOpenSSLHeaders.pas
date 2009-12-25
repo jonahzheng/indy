@@ -8807,7 +8807,7 @@ end;
 function OpenSSLGetSHA512HashInst : TIdHashIntCtx;
 var LRet : PEVP_MD;
 begin
-  LRet := IdSslEvpSHA256;
+  LRet := IdSslEvpSHA512;
   Result := OpenSSLGetDigestCtx(LRet);
 end;
 
@@ -13056,8 +13056,8 @@ initialization
   GetMD5HashInst := OpenSSLGetMD5HashInst;
   IsSHA1HashIntfAvail := OpenSSLIsSHA1HashIntfAvail;
   GetSHA1HashInst := OpenSSLGetSHA1HashInst;
-  IsSHA224HashIntfAvail := OpenSSLIsSHA256HashIntfAvail;
-  GetSHA224HashInst := OpenSSLGetSHA256HashInst;
+  IsSHA224HashIntfAvail := OpenSSLIsSHA224HashIntfAvail;
+  GetSHA224HashInst := OpenSSLGetSHA224HashInst;
   IsSHA256HashIntfAvail := OpenSSLIsSHA256HashIntfAvail;
   GetSHA256HashInst := OpenSSLGetSHA256HashInst;
   IsSHA384HashIntfAvail := OpenSSLIsSHA384HashIntfAvail;

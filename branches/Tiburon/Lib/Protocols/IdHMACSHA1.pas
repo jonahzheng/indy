@@ -27,10 +27,28 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  IdHash, IdHashSHA1, IdHMAC;
+  IdHash, IdHashSHA, IdHMAC;
 
 type
   TIdHMACSHA1 = class(TIdHMAC)
+  protected
+    procedure InitHash; override;
+  end;
+  {$IFNDEF DOTNET}
+  TIdHMACSHA224 = class(TIdHMAC)
+  protected
+    procedure InitHash; override;
+  end;
+  {$ENDIF}
+  TIdHMACSHA256 = class(TIdHMAC)
+  protected
+    procedure InitHash; override;
+  end;
+  TIdHMACSHA384 = class(TIdHMAC)
+  protected
+    procedure InitHash; override;
+  end;
+  TIdHMACSHA512 = class(TIdHMAC)
   protected
     procedure InitHash; override;
   end;
@@ -45,6 +63,48 @@ begin
   FBlockSize := 64;
   FHashName := 'SHA1';
   FHash := TIdHashSHA1.Create;
+end;
+
+{ TIdHMACSHA224 }
+
+  {$IFNDEF DOTNET}
+procedure TIdHMACSHA224.InitHash;
+begin
+  FHashSize := 28;
+  FBlockSize := 64;
+  FHashName := 'SHA224';
+  FHash := TIdHashSHA224.Create;
+end;
+{$ENDIF}
+
+{ TIdHMACSHA256 }
+
+procedure TIdHMACSHA256.InitHash;
+begin
+  FHashSize := 32;
+  FBlockSize := 64;
+  FHashName := 'SHA256';
+  FHash := TIdHashSHA256.Create;
+end;
+
+{ TIdHMACSHA384 }
+
+procedure TIdHMACSHA384.InitHash;
+begin
+  FHashSize := 48;
+  FBlockSize := 128;
+  FHashName := 'SHA384';
+  FHash := TIdHashSHA384.Create;
+end;
+
+{ TIdHMACSHA512 }
+
+procedure TIdHMACSHA512.InitHash;
+begin
+  FHashSize := 64;
+  FBlockSize := 128;
+  FHashName := 'SHA512';
+  FHash := TIdHashSHA512.Create;
 end;
 
 end.
