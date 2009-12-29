@@ -45,7 +45,7 @@ Level        |	Sent by Client               |	Accepted by Server
   end;
 
 implementation
-uses IdNTLMv2, IdGlobal;
+uses IdFIPS, IdNTLMv2, IdGlobal;
 //uses IdNTLM;
 
 { TIdSASLNTLM }
