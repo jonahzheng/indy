@@ -1087,7 +1087,9 @@ uses
   System.Threading,
     {$ENDIF}
   {$ENDIF}  
-  IdComponent, IdResourceStringsCore, IdIOHandlerStack, IdResourceStringsProtocols,
+  IdComponent,
+  IdFIPS,
+  IdResourceStringsCore, IdIOHandlerStack, IdResourceStringsProtocols,
   IdSSL, IdGlobalProtocols, IdHash, IdHashCRC, IdHashSHA, IdHashMessageDigest,
   IdStack, IdSimpleServer, IdOTPCalculator, SysUtils;
 
@@ -2276,10 +2278,11 @@ begin
   // some servers need this in order to work around a bug in
   // Microsoft Internet Explorer's UTF-8 handling
   LClnt := FClientInfo.ClntOutput;
-  if LClnt <> '' then begin
-    if IsExtSupported('CLNT') then begin {do not localize}
-      SendCmd('CLNT '+ LClnt);  {do not localize}
-    end;
+  if LClnt = '' then begin
+    LClnt := gsIdProductName + gsIdVersion;
+  end;
+  if IsExtSupported('CLNT') then begin {do not localize}
+    SendCmd('CLNT '+ LClnt);  {do not localize}
   end;
 
   if IsExtSupported('UTF8') then begin {do not localize}
@@ -2364,7 +2367,7 @@ begin
   fpcmNone:
     begin
       LCmd := MakeXAUTCmd( Greeting.Text.Text , FUserName, GetLoginPassword);
-      if (LCmd <> '') and (not IdGlobalProtocols.GetFIPSMode ) then begin
+      if (LCmd <> '') and (not GetFIPSMode ) then begin
         if SendCmd(LCmd, [230, 232, 331]) = 331 then begin {do not localize}
           if IsAccountNeeded then begin
             if CheckAccount then begin
