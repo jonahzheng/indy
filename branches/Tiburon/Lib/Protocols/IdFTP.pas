@@ -1273,9 +1273,14 @@ begin
         if SendCmd('SITE ZONE') = 210 then begin {do not localize}
           if LastCmdResult.Text.Count > 0 then begin
             LBuf := LastCmdResult.Text[0];
-            //remove UTC from reply string "UTC-300"
-            IdDelete(LBuf, 1, 3);
-            FTZInfo.GMTOffset := MDTMOffset(LBuf);
+            // some servers (Serv-U, etc) use a 'UTC' offset string, ie
+            // "UTC-300", specifying the number of minutes from UTC.  Other
+            // servers (Apache) use a GMT offset string instead, ie "-0300".
+            if TextStartsWith(LBuf, 'UTC-') then begin {do not localize}
+              FTZInfo.GMTOffset := MDTMOffset(Copy(LBuf, 4, MaxInt));
+            end else begin
+              FTZInfo.GMTOffset := GmtOffsetStrToDateTime(LBuf);
+            end;
             FTZInfo.FGMTOffsetAvailable := True;
           end;
         end;
@@ -1817,9 +1822,8 @@ procedure TIdFTP.DisconnectNotifyPeer;
 begin
   if IOHandler.Connected then begin
     IOHandler.WriteLn('QUIT');      {do not localize}
-  end;
-  if IOHandler.Connected then begin
-    if IOHandler.Readable(10) then begin
+    IOHandler.CheckForDataOnSource(100);
+    if not IOHandler.InputBufferIsEmpty then begin
       GetInternalResponse;
     end;
   end;
@@ -3455,34 +3459,44 @@ and time is GMT (UTC).
 ===
 }
 procedure TIdFTP.SetModTime(const AFileName: String; const ALocalTime: TDateTime);
+var
+  LCmd: String;
+  LSuccessReply: SmallInt;
 begin
   //use MFMT instead of MDTM because that always takes the time as Universal
   //time (the most accurate).
   if IsExtSupported('MFMT') then begin {do not localize}
-    SendCmd('MFMT ' + FTPLocalDateTimeToMLS(ALocalTime) + ' ' + AFileName, 213); {do not localize}
+    LCmd := 'MFMT ' + FTPLocalDateTimeToMLS(ALocalTime) + ' ' + AFileName; {do not localize}
+    LSuccessReply := 213;
   end
   
   //Syntax 1 - MDTM [Time in GMT format] Filename
   else if IndexOfFeatLine('MDTM YYYYMMDDHHMMSS[+-TZ];filename') > 0 then begin {do not localize}
     //we use the new method
-    SendCmd('MDTM ' + FTPLocalDateTimeToMLS(ALocalTime, False) + ' ' + AFileName, 253); {do not localize}
+    LCmd := 'MDTM ' + FTPLocalDateTimeToMLS(ALocalTime, False) + ' ' + AFileName; {do not localize}
+    LSuccessReply := 253;
   end
   
   //Syntax 2 -  MDTM yyyymmddhhmmss[+-minutes from Universal Time] Filename
   //use old method for old versions of Serv-U and BPFTP Server
   else if (IndexOfFeatLine('MDTM YYYYMMDDHHMMSS[+-TZ] filename') > 0) or IsOldServU or IsBPFTP then begin {do not localize}
-    SendCmd('MDTM '+ FTPDateTimeToMDTMD(ALocalTime, False, True) + ' ' + AFileName, 253); {do not localize}
+    LCmd := 'MDTM '+ FTPDateTimeToMDTMD(ALocalTime, False, True) + ' ' + AFileName; {do not localize}
+    LSuccessReply := 253;
   end
 
   //syntax 3 - MDTM [local timestamp] Filename
   else if FTZInfo.FGMTOffsetAvailable then begin
     //send it relative to the server's time-zone
-    SendCmd('MDTM '+ FTPDateTimeToMDTMD(ALocalTime - OffSetFromUTC + FTZInfo.FGMTOffset, False, False) + ' ' + AFileName, 253); {do not localize}
+    LCmd := 'MDTM '+ FTPDateTimeToMDTMD(ALocalTime - OffSetFromUTC + FTZInfo.FGMTOffset, False, False) + ' ' + AFileName; {do not localize}
+    LSuccessReply := 253; 
   end
   
   else begin
-    SendCmd('MDTM '+ FTPDateTimeToMDTMD(ALocalTime, False, False) + ' ' + AFileName, 253); {do not localize}
+    LCmd := 'MDTM '+ FTPDateTimeToMDTMD(ALocalTime, False, False) + ' ' + AFileName; {do not localize}
+    LSuccessReply := 253;
   end;
+
+  SendCmd(LCmd, LSuccessReply);
 end;
 
 {
@@ -3499,34 +3513,44 @@ and time is GMT (UTC).
 ===
 }
 procedure TIdFTP.SetModTimeGMT(const AFileName : String; const AGMTTime: TDateTime);
+var
+  LCmd: String;
+  LSuccessReply: SmallInt;
 begin
   //use MFMT instead of MDTM because that always takes the time as Universal
   //time (the most accurate).
   if IsExtSupported('MFMT') then begin {do not localize}
-    SendCmd('MFMT ' + FTPGMTDateTimeToMLS(AGMTTime) + ' ' + AFileName, 213); {do not localize}
+    LCmd := 'MFMT ' + FTPGMTDateTimeToMLS(AGMTTime) + ' ' + AFileName; {do not localize}
+    LSuccessReply := 213;
   end
 
   //Syntax 1 - MDTM [Time in GMT format] Filename
   else if (IndexOfFeatLine('MDTM YYYYMMDDHHMMSS[+-TZ];filename') > 0) then begin {do not localize}
     //we use the new method
-    SendCmd('MDTM ' + FTPGMTDateTimeToMLS(AGMTTime, False) + ' ' + AFileName, 253); {do not localize}
+    LCmd := 'MDTM ' + FTPGMTDateTimeToMLS(AGMTTime, False) + ' ' + AFileName; {do not localize}
+    LSuccessReply := 253;
   end
   
   //Syntax 2 -  MDTM yyyymmddhhmmss[+-minutes from Universal Time] Filename
   //use old method for old versions of Serv-U and BPFTP Server
   else if (IndexOfFeatLine('MDTM YYYYMMDDHHMMSS[+-TZ] filename') > 0) or IsOldServU or IsBPFTP then begin {do not localize}
-    SendCmd('MDTM '+ FTPDateTimeToMDTMD(AGMTTime + OffSetFromUTC, False, True) + ' ' + AFileName, 253); {do not localize}
+    LCmd := 'MDTM '+ FTPDateTimeToMDTMD(AGMTTime + OffSetFromUTC, False, True) + ' ' + AFileName; {do not localize}
+    LSuccessReply := 253;
   end
   
   //syntax 3 - MDTM [local timestamp] Filename
   else if FTZInfo.FGMTOffsetAvailable then begin
     //send it relative to the server's time-zone
-    SendCmd('MDTM '+ FTPDateTimeToMDTMD(AGMTTime + FTZInfo.FGMTOffset, False, False) + ' ' + AFileName, 253); {do not localize}
+    LCmd := 'MDTM '+ FTPDateTimeToMDTMD(AGMTTime + FTZInfo.FGMTOffset, False, False) + ' ' + AFileName; {do not localize}
+    LSuccessReply := 253;
   end
 
   else begin
-    SendCmd('MDTM '+ FTPDateTimeToMDTMD(AGMTTime + OffSetFromUTC, False, False) + ' ' + AFileName, 253); {do not localize}
+    LCmd := 'MDTM '+ FTPDateTimeToMDTMD(AGMTTime + OffSetFromUTC, False, False) + ' ' + AFileName; {do not localize}
+    LSuccessReply := 253;
   end;
+
+  SendCmd(LCmd, LSuccessReply);
 end;
 
 {Improvement from Tobias Giesen http://www.superflexible.com
