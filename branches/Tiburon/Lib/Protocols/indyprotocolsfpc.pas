@@ -49,6 +49,7 @@ uses
   IdEchoUDP,
   IdEchoUDPServer,
   IdExplicitTLSClientServerBase,
+  IdFIPS,
   IdFSP,
   IdFTP,
   IdFTPBaseFileSystem,
