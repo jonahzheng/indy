@@ -2281,11 +2281,11 @@ begin
   // send the CLNT command before sending the OPTS UTF8 command.
   // some servers need this in order to work around a bug in
   // Microsoft Internet Explorer's UTF-8 handling
-  LClnt := FClientInfo.ClntOutput;
-  if LClnt = '' then begin
-    LClnt := gsIdProductName + gsIdVersion;
-  end;
   if IsExtSupported('CLNT') then begin {do not localize}
+    LClnt := FClientInfo.ClntOutput;
+    if LClnt = '' then begin
+      LClnt := gsIdProductName + gsIdVersion;
+    end;
     SendCmd('CLNT '+ LClnt);  {do not localize}
   end;
 
