@@ -632,32 +632,26 @@ end;
 
 function TIdFormDataField.GetFieldStream: TStream;
 begin
-  if (FFieldObject is TStream) then begin
-    Result := TStream(FFieldObject);
-  end else begin
-    Result := nil;
+  if not (FFieldObject is TStream) then begin
     raise EIdInvalidObjectType.Create(RSMFDIvalidObjectType);
   end;
+  Result := TStream(FFieldObject);
 end;
 
 function TIdFormDataField.GetFieldStrings: TStrings;
 begin
-  if (FFieldObject is TStrings) then begin
-    Result := TStrings(FFieldObject);
-  end else begin
-    Result := nil;
+  if not (FFieldObject is TStrings) then begin
     raise EIdInvalidObjectType.Create(RSMFDIvalidObjectType);
   end;
+  Result := TStrings(FFieldObject);
 end;
 
 function TIdFormDataField.GetFieldValue: string;
 begin
-  if (FFieldObject is TStrings) then begin
-    Result := TStrings(FFieldObject).Text;
-  end else begin
-    Result := '';
+  if not (FFieldObject is TStrings) then begin
     raise EIdInvalidObjectType.Create(RSMFDIvalidObjectType);
   end;
+  Result := TStrings(FFieldObject).Text;
 end;
 
 procedure TIdFormDataField.SetCharset(const Value: string);
