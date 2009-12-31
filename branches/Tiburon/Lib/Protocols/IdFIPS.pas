@@ -22,45 +22,67 @@ uses IdException, IdGlobal;
 type
 {$IFDEF DOTNET}
   TIdHashIntCtx = IntPtr;
+  TIdHMACIntCtx = IntPtr;
 {$ELSE}
   TIdHashIntCtx = Pointer;
+  TIdHMACIntCtx = Pointer;
 {$ENDIF}
 
   EIdFIPSAlgorithmNotAllowed = class(EIdException);
-    TGetFIPSMode = function: Boolean;
-    TSetFIPSMode = function(const AMode: Boolean): Boolean;
-    TIsHashingIntfAvail = function: Boolean;
-    TGetHashInst = function: TIdHashIntCtx;
-    TUpdateHashInst = procedure(ACtx: TIdHashIntCtx; const AIn: TIdBytes);
-    TFinalHashInst = function(ACtx: TIdHashIntCtx): TIdBytes;
+  TGetFIPSMode = function: Boolean;
+  TSetFIPSMode = function(const AMode: Boolean): Boolean;
+  TIsHashingIntfAvail = function: Boolean;
+  TGetHashInst = function: TIdHashIntCtx;
+  TUpdateHashInst = procedure(ACtx: TIdHashIntCtx; const AIn: TIdBytes);
+  TFinalHashInst = function(ACtx: TIdHashIntCtx): TIdBytes;
+  TIsHMACAvail = function : Boolean;
+  TIsHMACIntfAvail = function : Boolean;
+  TGetHMACInst = function (const AKey : TIdBytes) : TIdHMACIntCtx;
+  TUpdateHMACInst = procedure(ACtx : TIdHMACIntCtx; const AIn: TIdBytes);
+  TFinalHMACInst = function(ACtx: TIdHMACIntCtx): TIdBytes;
 
-  var
-    GetFIPSMode: TGetFIPSMode;
-    SetFIPSMode: TSetFIPSMode;
-    IsHashingIntfAvail: TIsHashingIntfAvail;
-    GetMD2HashInst: TGetHashInst;
-    IsMD2HashIntfAvail: TIsHashingIntfAvail;
-    GetMD4HashInst: TGetHashInst;
-    IsMD4HashIntfAvail: TIsHashingIntfAvail;
-    GetMD5HashInst: TGetHashInst;
-    IsMD5HashIntfAvail: TIsHashingIntfAvail;
-    GetSHA1HashInst: TGetHashInst;
-    IsSHA1HashIntfAvail: TIsHashingIntfAvail;
-    GetSHA224HashInst: TGetHashInst;
-    IsSHA224HashIntfAvail: TIsHashingIntfAvail;
-    GetSHA256HashInst: TGetHashInst;
-    IsSHA256HashIntfAvail: TIsHashingIntfAvail;
-    GetSHA384HashInst: TGetHashInst;
-    IsSHA384HashIntfAvail: TIsHashingIntfAvail;
-    GetSHA512HashInst: TGetHashInst;
-    IsSHA512HashIntfAvail: TIsHashingIntfAvail;
-    UpdateHashInst: TUpdateHashInst;
-    FinalHashInst: TFinalHashInst;
+var
+  GetFIPSMode: TGetFIPSMode;
+  SetFIPSMode: TSetFIPSMode;
+  IsHashingIntfAvail: TIsHashingIntfAvail;
+  GetMD2HashInst: TGetHashInst;
+  IsMD2HashIntfAvail: TIsHashingIntfAvail;
+  GetMD4HashInst: TGetHashInst;
+  IsMD4HashIntfAvail: TIsHashingIntfAvail;
+  GetMD5HashInst: TGetHashInst;
+  IsMD5HashIntfAvail: TIsHashingIntfAvail;
+  GetSHA1HashInst: TGetHashInst;
+  IsSHA1HashIntfAvail: TIsHashingIntfAvail;
+  GetSHA224HashInst: TGetHashInst;
+  IsSHA224HashIntfAvail: TIsHashingIntfAvail;
+  GetSHA256HashInst: TGetHashInst;
+  IsSHA256HashIntfAvail: TIsHashingIntfAvail;
+  GetSHA384HashInst: TGetHashInst;
+  IsSHA384HashIntfAvail: TIsHashingIntfAvail;
+  GetSHA512HashInst: TGetHashInst;
+  IsSHA512HashIntfAvail: TIsHashingIntfAvail;
+  UpdateHashInst: TUpdateHashInst;
+  FinalHashInst: TFinalHashInst;
+  IsHMACAvail : TIsHMACAvail;
+  IsHMACMD5Avail : TIsHMACIntfAvail;
+  GetHMACMD5HashInst: TGetHMACInst;
+  IsHMACSHA1Avail  : TIsHMACIntfAvail;
+  GetHMACSHA1HashInst: TGetHMACInst;
+  IsHMACSHA224Avail : TIsHMACIntfAvail;
+  GetHMACSHA224HashInst: TGetHMACInst;
+  IsHMACSHA256Avail : TIsHMACIntfAvail;
+  GetHMACSHA256HashInst: TGetHMACInst;
+  IsHMACSHA384Avail : TIsHMACIntfAvail;
+  GetHMACSHA384HashInst: TGetHMACInst;
+  IsHMACSHA512Avail : TIsHMACIntfAvail;
+  GetHMACSHA512HashInst: TGetHMACInst;
+  UpdateHMACInst : TUpdateHMACInst;
+  FinalHMACInst : TFinalHMACInst;
 
-    procedure CheckMD2Permitted;
-    procedure CheckMD4Permitted;
-    procedure CheckMD5Permitted;
-    procedure FIPSAlgorithmNotAllowed(const AAlgorithm: String);
+  procedure CheckMD2Permitted;
+  procedure CheckMD4Permitted;
+  procedure CheckMD5Permitted;
+  procedure FIPSAlgorithmNotAllowed(const AAlgorithm: String);
 
 implementation
 
@@ -133,6 +155,30 @@ begin
   SetLength(Result, 0);
 end;
 
+function DefIsHMACAvail : Boolean;
+begin
+  Result := False;
+end;
+
+function DefIsHMACIntfAvail: Boolean;
+begin
+  Result := False;
+end;
+
+function DefGetHMACInst(const AKey : TIdBytes) : TIdHMACIntCtx;
+begin
+  Result := nil;
+end;
+
+procedure DefUpdateHMACInst(ACtx : TIdHMACIntCtx; const AIn: TIdBytes);
+begin
+end;
+
+function DefFinalHMACInst(ACtx: TIdHMACIntCtx): TIdBytes;
+begin
+  SetLength(Result, 0);
+end;
+
 initialization
 
   GetFIPSMode := DefGetFIPSMode;
@@ -159,5 +205,21 @@ initialization
   GetSHA512HashInst := DefGetHashInst;
   UpdateHashInst := DefUpdateHashInst;
   FinalHashInst := DefFinalHashInst;
+  IsHMACAvail := DefIsHMACAvail;
+  IsHMACMD5Avail := DefIsHMACIntfAvail;
+  GetHMACMD5HashInst := DefGetHMACInst;
+  IsHMACSHA1Avail  := DefIsHMACIntfAvail;
+  GetHMACSHA1HashInst := DefGetHMACInst;
+  IsHMACSHA224Avail  := DefIsHMACIntfAvail;
+  GetHMACSHA224HashInst := DefGetHMACInst;
+  IsHMACSHA256Avail  :=  DefIsHMACIntfAvail;
+  GetHMACSHA256HashInst := DefGetHMACInst;
+  IsHMACSHA384Avail  := DefIsHMACIntfAvail;
+  GetHMACSHA384HashInst := DefGetHMACInst;
+  IsHMACSHA512Avail  := DefIsHMACIntfAvail;
+  GetHMACSHA512HashInst := DefGetHMACInst;
+
+  UpdateHMACInst := DefUpdateHMACInst;
+  FinalHMACInst := DefFinalHMACInst;
 
 end.

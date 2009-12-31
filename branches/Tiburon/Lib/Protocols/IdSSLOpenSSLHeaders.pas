@@ -8523,6 +8523,8 @@ any IFDEF's and cases where the FIPS functions aren't in the .DLL}
 {$ENDIF}
 
 {$IFNDEF OPENSSL_NO_HMAC}
+//void HMAC_CTX_init(HMAC_CTX *ctx);
+  IdSslHMACCTXInit : procedure(ctx : PHMAC_CTX) cdecl = nil;
 //void HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len,
 //		  const EVP_MD *md, ENGINE *impl);
   IdSslHMACInitEx : procedure(ctx : PHMAC_CTX; key : Pointer; len : TIdC_INT;
@@ -8753,62 +8755,107 @@ end;
 
 function OpenSSLIsSHA1HashIntfAvail: Boolean;
 begin
+  {$IFDEF OPENSSL_NO_SHA}
+  Result := False;
+  {$ELSE}
   Result := Assigned(IdSslEvpSHA1);
+  {$ENDIF}
 end;
 
 function OpenSSLGetSHA1HashInst : TIdHashIntCtx;
+  {$IFDEF OPENSSL_NO_SHA}
+begin
+  Result := nil;
+  {$ELSE}
 var LRet : PEVP_MD;
 begin
   LRet := IdSslEvpSHA1;
   Result := OpenSSLGetDigestCtx(LRet);
+  {$ENDIF}
 end;
 
 function OpenSSLIsSHA224HashIntfAvail: Boolean;
 begin
+  {$IFDEF OPENSSL_NO_SHA256}
+  Result := False;
+  {$ELSE}
   Result := Assigned(IdSslEvpSHA224);
+  {$ENDIF}
 end;
 
 function OpenSSLGetSHA224HashInst : TIdHashIntCtx;
+  {$IFDEF OPENSSL_NO_SHA256}
+begin
+  Result := nil;
+  {$ELSE}
 var LRet : PEVP_MD;
 begin
   LRet := IdSslEvpSHA224;
   Result := OpenSSLGetDigestCtx(LRet);
+  {$ENDIF}
 end;
 
 function OpenSSLIsSHA256HashIntfAvail: Boolean;
 begin
+  {$IFDEF OPENSSL_NO_SHA256}
+  Result := False;
+  {$ELSE}
   Result := Assigned(IdSslEvpSHA256);
+  {$ENDIF}
 end;
 
 function OpenSSLGetSHA256HashInst : TIdHashIntCtx;
+  {$IFDEF OPENSSL_NO_SHA256}
+begin
+  Result := nil;
+  {$ELSE}
 var LRet : PEVP_MD;
 begin
   LRet := IdSslEvpSHA256;
   Result := OpenSSLGetDigestCtx(LRet);
+  {$ENDIF}
 end;
 
 function OpenSSLIsSHA384HashIntfAvail: Boolean;
 begin
+  {$IFDEF OPENSSL_NO_SHA512}
+  Result := False;
+  {$ELSE}
   Result := Assigned(IdSslEvpSHA384);
+  {$ENDIF}
 end;
 
 function OpenSSLGetSHA384HashInst : TIdHashIntCtx;
+{$IFDEF OPENSSL_NO_SHA512}
+begin
+  Result := nil;
+{$ELSE}
 var LRet : PEVP_MD;
 begin
   LRet := IdSslEvpSHA384;
   Result := OpenSSLGetDigestCtx(LRet);
+{$ENDIF}
 end;
 
 function OpenSSLIsSHA512HashIntfAvail: Boolean;
 begin
+  {$IFDEF OPENSSL_NO_SHA512}
+  Result := nil;
+  {$ELSE}
   Result := Assigned(IdSslEvpSHA512);
+  {$ENDIF}
 end;
 
 function OpenSSLGetSHA512HashInst : TIdHashIntCtx;
+{$IFDEF OPENSSL_NO_SHA512}
+begin
+  Result := nil;
+{$ELSE}
 var LRet : PEVP_MD;
 begin
   LRet := IdSslEvpSHA512;
   Result := OpenSSLGetDigestCtx(LRet);
+{$ENDIF}
 end;
 
 procedure OpenSSLUpdateHashInst(ACtx: TIdHashIntCtx; const AIn: TIdBytes);
@@ -8834,6 +8881,157 @@ begin
   SetLength(Result,LLen);
   IdSslEvpMDCtxCleanup(ACtx);
   FreeMem(ACtx,SizeOf(EVP_MD_CTX));
+end;
+
+function OpenSSLIsHMACAvail : Boolean;
+begin
+  {$IFDEF OPENSSL_NO_HMAC}
+  Result := False;
+  {$ELSE}
+  Result := Assigned(IdSslHMACCTXInit) and
+            Assigned(IdSslHMACInitEx) and
+            Assigned(IdSslHMACUpdate) and
+            Assigned(IdSslHMACFinal) and
+            Assigned(IdSslHMACCTXCleanup);
+  {$ENDIF}
+end;
+
+function OpenSSLIsHMACMD5Avail: Boolean;
+begin
+ {$IFDEF OPENSSL_NO_MD5}
+ Result := False;
+ {$ELSE}
+    Result := Assigned(IdSslEvpMD5);
+ {$ENDIF}
+end;
+
+function OpenSSLGetHMACMD5Inst(const AKey : TIdBytes) : TIdHMACIntCtx;
+begin
+ {$IFDEF OPENSSL_NO_MD5}
+ Result := nil;
+ {$ELSE}
+ Result := AllocMem(SizeOf(HMAC_CTX));
+ IdSslHMACCTXInit(Result);
+ IdSslHMACInitEx(Result,@AKey[0],Length(AKey),IdSslEvpMD5, nil);
+ {$ENDIF}
+end;
+
+function OpenSSLIsHMACSHA1Avail: Boolean;
+begin
+  {$IFDEF OPENSSL_NO_SHA}
+  Result := False;
+   {$ELSE}
+   Result := Assigned(IdSslEvpSHA1);
+   {$ENDIF}
+end;
+
+function OpenSSLGetHMACSHA1Inst(const AKey : TIdBytes) : TIdHMACIntCtx;
+begin
+ {$IFDEF OPENSSL_NO_SHA}
+ Result := nil;
+ {$ELSE}
+ Result := AllocMem(SizeOf(HMAC_CTX));
+ IdSslHMACCTXInit(Result);
+ IdSslHMACInitEx(Result,@AKey[0],Length(AKey),IdSslEvpSHA1, nil);
+ {$ENDIF}
+end;
+
+function OpenSSLIsHMACSHA224Avail: Boolean;
+
+begin
+ {$IFDEF OPENSSL_NO_SHA256}
+ Result := False;
+ {$ELSE}
+   Result := Assigned(IdSslEvpSHA224);
+ {$ENDIF}
+end;
+
+function OpenSSLGetHMACSHA224Inst(const AKey : TIdBytes) : TIdHMACIntCtx;
+begin
+ {$IFDEF OPENSSL_NO_SHA256}
+ Result := nil;
+ {$ELSE}
+ Result := AllocMem(SizeOf(HMAC_CTX));
+ IdSslHMACCTXInit(Result);
+ IdSslHMACInitEx(Result,@AKey[0],Length(AKey),IdSslEvpSHA224, nil);
+ {$ENDIF}
+end;
+
+function OpenSSLIsHMACSHA256Avail: Boolean;
+begin
+ {$IFDEF OPENSSL_NO_SHA256}
+ Result := False;
+ {$ELSE}
+   Result := Assigned(IdSslEvpSHA256);
+ {$ENDIF}
+end;
+
+function OpenSSLGetHMACSHA256Inst(const AKey : TIdBytes) : TIdHMACIntCtx;
+begin
+ {$IFDEF OPENSSL_NO_SHA256}
+ Result := nil;
+ {$ELSE}
+ Result := AllocMem(SizeOf(HMAC_CTX));
+ IdSslHMACCTXInit(Result);
+ IdSslHMACInitEx(Result,@AKey[0],Length(AKey),IdSslEvpSHA256, nil);
+ {$ENDIF}
+end;
+
+function OpenSSLIsHMACSHA384Avail: Boolean;
+begin
+  {$IFDEF OPENSSL_NO_SHA512}
+  Result := False;
+  {$ELSE}
+   Result := Assigned(IdSslEvpSHA384);
+   {$ENDIF}
+end;
+
+function OpenSSLGetHMACSHA384Inst(const AKey : TIdBytes) : TIdHMACIntCtx;
+begin
+ {$IFDEF OPENSSL_NO_SHA512}
+ Result := nil;
+ {$ELSE}
+ Result := AllocMem(SizeOf(HMAC_CTX));
+ IdSslHMACCTXInit(Result);
+ IdSslHMACInitEx(Result,@AKey[0],Length(AKey),IdSslEvpSHA384, nil);
+ {$ENDIF}
+end;
+
+function OpenSSLIsHMACSHA512Avail: Boolean;
+begin
+  {$IFDEF OPENSSL_NO_SHA512}
+  Result := False;
+  {$ELSE}
+   Result := Assigned(IdSslEvpSHA512);
+  {$ENDIF}
+end;
+
+function OpenSSLGetHMACSHA512Inst(const AKey : TIdBytes) : TIdHMACIntCtx;
+begin
+ {$IFDEF OPENSSL_NO_SHA512}
+ Result := nil;
+ {$ELSE}
+ Result := AllocMem(SizeOf(HMAC_CTX));
+ IdSslHMACCTXInit(Result);
+ IdSslHMACInitEx(Result,@AKey[0],Length(AKey),IdSslEvpSHA512, nil);
+ {$ENDIF}
+end;
+
+procedure OpenSSLUpdateHMACInst(ACtx : TIdHMACIntCtx; const AIn: TIdBytes);
+begin
+  IdSslHMACUpdate(ACtx, @AIn[0],Length(AIn));
+end;
+
+function OpenSSLFinalHMACInst(ACtx: TIdHMACIntCtx): TIdBytes;
+var
+  LLen : TIdC_UInt;
+begin
+  LLen := OPENSSL_EVP_MAX_MD_SIZE;
+  SetLength(Result,LLen);
+  IdSslHMACFinal(ACtx,PAnsiChar(@Result[0]),@LLen);
+  SetLength(Result,LLen);
+  IdSslHMACCTXCleanup(ACtx);
+  FreeMem(ACtx,SizeOf(HMAC_CTX));
 end;
 
 //****************************************************
@@ -12084,6 +12282,7 @@ begin
   @IdSslEvpGetDigestByName := LoadFunctionCLib(fn_EVP_get_digestbyname);
   //HMAC
 {$IFNDEF OPENSSL_NO_HMAC}
+  @IdSslHMACCTXInit := LoadFunctionCLib(fn_HMAC_CTX_init);
   @IdSslHMACInitEx := LoadFunctionCLib(fn_HMAC_Init_ex);
   @IdSslHMACUpdate := LoadFunctionCLib(fn_HMAC_Update);
   @IdSslHMACFinal := LoadFunctionCLib(fn_HMAC_Final);
@@ -12334,6 +12533,7 @@ begin
   @IdSslEvpGetDigestByName := nil;
   //HMAC
 {$IFNDEF OPENSSL_NO_HMAC}
+  @IdSslHMACCTXInit := nil;
   @IdSslHMACInitEx := nil;
   @IdSslHMACUpdate := nil;
   @IdSslHMACFinal := nil;
@@ -13066,6 +13266,21 @@ initialization
   GetSHA512HashInst := OpenSSLGetSHA512HashInst;
   UpdateHashInst := OpenSSLUpdateHashInst;
   FinalHashInst := OpenSSLFinalHashInst;
+  IsHMACAvail := OpenSSLIsHMACAvail;
+  IsHMACMD5Avail := OpenSSLIsHMACMD5Avail;
+  GetHMACMD5HashInst := OpenSSLGetHMACMD5Inst;
+  IsHMACSHA1Avail  := OpenSSLIsHMACSHA1Avail;
+  GetHMACSHA1HashInst:= OpenSSLGetHMACSHA1Inst;
+  IsHMACSHA224Avail := OpenSSLIsHMACSHA224Avail;
+  GetHMACSHA224HashInst:= OpenSSLGetHMACSHA224Inst;
+  IsHMACSHA256Avail := OpenSSLIsHMACSHA256Avail;
+  GetHMACSHA256HashInst:= OpenSSLGetHMACSHA256Inst;
+  IsHMACSHA384Avail := OpenSSLIsHMACSHA384Avail;
+  GetHMACSHA384HashInst:= OpenSSLGetHMACSHA384Inst;
+  IsHMACSHA512Avail := OpenSSLIsHMACSHA512Avail;
+  GetHMACSHA512HashInst:= OpenSSLGetHMACSHA512Inst;
+  UpdateHMACInst := OpenSSLUpdateHMACInst;
+  FinalHMACInst := OpenSSLFinalHMACInst;
 finalization
   FreeAndNil(FFailedFunctionLoadList);
 
