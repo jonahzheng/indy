@@ -146,12 +146,14 @@ begin
   // inherited removes from ActiveYarns list and destroys yarn
   inherited ReleaseYarn(AYarn);
 
-  with FThreadPool.LockList do try
-    if (Count < PoolSize) and (LThread <> nil) and (not LThread.Terminated) then begin
-      Add(LThread);
-      LThread := nil;
-    end;
-  finally FThreadPool.UnlockList; end;
+  if LThread <> nil then begin
+    with FThreadPool.LockList do try
+      if (Count < PoolSize) and (not LThread.Terminated) then begin
+        Add(LThread);
+        LThread := nil;
+      end;
+    finally FThreadPool.UnlockList; end;
+  end;
 
   // Was not redeposited to pool, need to destroy it
   if LThread <> nil then begin
