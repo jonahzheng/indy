@@ -90,24 +90,21 @@ uses IdResourceStringsProtocols, SysUtils;
 
 procedure CheckMD2Permitted; {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  if GetFIPSMode then
-  begin
+  if GetFIPSMode then begin
     FIPSAlgorithmNotAllowed('MD2');
   end;
 end;
 
 procedure CheckMD4Permitted; {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  if GetFIPSMode then
-  begin
+  if GetFIPSMode then begin
     FIPSAlgorithmNotAllowed('MD4');
   end;
 end;
 
 procedure CheckMD5Permitted; {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  if GetFIPSMode then
-  begin
+  if GetFIPSMode then begin
     FIPSAlgorithmNotAllowed('MD5');
   end;
 end;
