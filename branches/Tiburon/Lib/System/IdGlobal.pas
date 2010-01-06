@@ -1176,6 +1176,9 @@ function BytesToString(const AValue: TIdBytes; const AStartIndex: Integer;
   const ALength: Integer = -1; AByteEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
   ): string; overload;
+function BytesToStringRaw(const AValue: TIdBytes): string; overload;
+function BytesToStringRaw(const AValue: TIdBytes; const AStartIndex: Integer;
+  const ALength: Integer = -1): string; overload;
 function BytesToChar(const AValue: TIdBytes; const AIndex: Integer = 0;
   AByteEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
@@ -1579,13 +1582,14 @@ var
 
 { TIdTextEncoding }
 
-class function TIdTextEncoding.Convert(ASource, ADestination: TIdTextEncoding; const ABytes: TIdBytes): TIdBytes;
+class function TIdTextEncoding.Convert(ASource, ADestination: TIdTextEncoding;
+  const ABytes: TIdBytes): TIdBytes;
 begin
   Result := ADestination.GetBytes(ASource.GetChars(ABytes));
 end;
 
-class function TIdTextEncoding.Convert(ASource, ADestination: TIdTextEncoding; const ABytes: TIdBytes;
-  AStartIndex, ACount: Integer): TIdBytes;
+class function TIdTextEncoding.Convert(ASource, ADestination: TIdTextEncoding;
+  const ABytes: TIdBytes; AStartIndex, ACount: Integer): TIdBytes;
 begin
   Result := ADestination.GetBytes(ASource.GetChars(ABytes, AStartIndex, ACount));
 end;
@@ -5074,7 +5078,7 @@ function ToBytes(const AValue: string; const ALength: Integer; const AIndex: Int
 var
   LLength: Integer;
   {$IFDEF STRING_IS_ANSI}
-   LBytes: TIdBytes;
+  LBytes: TIdBytes;
   {$ENDIF}
 begin
   {$IFDEF STRING_IS_ANSI}
@@ -5471,6 +5475,29 @@ begin
       LBytes := TIdTextEncoding.Convert(AByteEncoding, ADestEncoding, LBytes);
     end;
     SetString(Result, PAnsiChar(LBytes), Length(LBytes));
+    {$ENDIF}
+  end else begin
+    Result := '';
+  end;
+end;
+
+function BytesToStringRaw(const AValue: TIdBytes): string; overload;
+{$IFDEF USE_INLINE}inline;{$ENDIF}
+begin
+  Result := BytesToStringRaw(AValue, 0, -1);
+end;
+
+function BytesToStringRaw(const AValue: TIdBytes; const AStartIndex: Integer;
+  const ALength: Integer = -1): string;
+var
+  LLength: Integer;
+begin
+  LLength := IndyLength(AValue, ALength, AStartIndex);
+  if LLength > 0 then begin
+    {$IFDEF STRING_IS_UNICODE}
+    Result := Indy8BitEncoding.GetString(AValue, AStartIndex, LLength);
+    {$ELSE}
+    SetString(Result, PAnsiChar(@AValue[AStartIndex]), LLength);
     {$ENDIF}
   end else begin
     Result := '';
