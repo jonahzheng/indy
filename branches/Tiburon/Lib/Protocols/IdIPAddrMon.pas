@@ -137,13 +137,14 @@ type
     procedure CheckAdapters(Sender: TObject);
     procedure ForceCheck;
 
-  published
-    property Thread: TIdIPAddrMonThread read FThread;
-    property Active: Boolean read FActive write SetActive;
-    property Busy: Boolean read FBusy write FBusy;
-    property Interval: Cardinal read FInterval write SetInterval default IdIPAddrMonInterval;
-    property AdapterCount: Integer read FAdapterCount write FAdapterCount;
+    property AdapterCount: Integer read FAdapterCount;
+    property Busy: Boolean read FBusy;
     property IPAddresses: TStrings read FIPAddresses;
+    property Thread: TIdIPAddrMonThread read FThread;
+
+  published
+    property Active: Boolean read FActive write SetActive;
+    property Interval: Cardinal read FInterval write SetInterval default IdIPAddrMonInterval;
     property OnStatusChanged: TIdIPAddrMonEvent read FOnStatusChanged write FOnStatusChanged;
   end;
 
@@ -177,7 +178,7 @@ end;
 destructor TIdIPAddrMon.Destroy;
 begin
   Active := False;
-  Busy := False;
+  FBusy := False;
 
   FIPAddresses.Free;
   FPreviousIPAddresses.Free;
@@ -189,13 +190,12 @@ end;
 
 procedure TIdIPAddrMon.CheckAdapters(Sender: TObject);
 begin
-
   // previous check could still be running...
-  if Busy then begin
+  if FBusy then begin
     Exit;
   end;
 
-  Busy := True;
+  FBusy := True;
   try
     try
       GetAdapterAddresses;
@@ -211,7 +211,7 @@ begin
       // eat any exception
     end;
   finally
-    Busy := False;
+    FBusy := False;
   end;
 end;
 
@@ -291,17 +291,14 @@ procedure TIdIPAddrMon.SetActive(Value: Boolean);
 begin
   if Value <> FActive then
   begin
-    FActive := Value;
-
-    if FActive then
+    if Value then
     begin
       // get initial addresses at start-up and allow display in IDE
       GetAdapterAddresses;
     end;
-
     if not IsDesignTime then
     begin
-      if FActive then
+      if Value then
       begin
         FThread := TIdIPAddrMonThread.Create(True);
         with FThread do
@@ -319,6 +316,7 @@ begin
         end;
       end;
     end;
+    FActive := Value;
   end;
 end;
 
@@ -373,7 +371,7 @@ begin
   FPreviousIPAddresses.Text := FIPAddresses.Text;
   FIPAddresses.Clear;
   GStack.AddLocalAddressesToList(FIPAddresses);
-  AdapterCount := FIPAddresses.Count;
+  FAdapterCount := FIPAddresses.Count;
 end;
 
 end.
