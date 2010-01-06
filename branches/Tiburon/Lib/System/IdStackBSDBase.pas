@@ -161,7 +161,6 @@ This unit must NOT be linked into DotNet applications.
 
 uses
   Classes,
-  {$IFDEF USE_INLINE}IdResourceStrings,{$ENDIF}
   IdException, IdStack, IdStackConsts, IdGlobal;
 
 type
