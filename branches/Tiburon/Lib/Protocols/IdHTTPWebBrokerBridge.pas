@@ -340,7 +340,7 @@ begin
           TIdStreamHelper.ReadBytes(FContentStream, LBytes);
           {$IFDEF DOTNET}
           // RLebeau: how to handle this correctly in .NET?
-          Result := AnsiString(BytesToString(LBytes, Indy8BitEncoding));
+          Result := AnsiString(BytesToStringRaw(LBytes));
           {$ELSE}
           SetString(Result, PAnsiChar(LBytes), Length(LBytes));
             {$IFDEF VCL_2009_OR_ABOVE}
@@ -393,7 +393,7 @@ begin
   TIdStreamHelper.ReadBytes(FContentStream, LBytes, Count);
   {$IFDEF DOTNET}
   // RLebeau: how to handle this correctly in .NET?
-  Result := AnsiString(BytesToString(LBytes, Indy8BitEncoding));
+  Result := AnsiString(BytesToStringRaw(LBytes));
   {$ELSE}
   SetString(Result, PAnsiChar(LBytes), Length(LBytes));
     {$IFDEF VCL_2009_OR_ABOVE}
@@ -477,13 +477,13 @@ begin
     {$IFNDEF DOTNET}
   try
     {$ENDIF}
-    LBytes := TIdTextEncoding.Convert(
-      TIdTextEncoding.Unicode,
-      LEncoding,
-      TIdTextEncoding.Unicode.GetBytes(FResponseInfo.ContentText));
+    LBytes := TIdTextEncoding.Unicode.GetBytes(FResponseInfo.ContentText);
+    if LEncoding <> TIdTextEncoding.Unicode then begin
+      LBytes := TIdTextEncoding.Convert(TIdTextEncoding.Unicode, LEncoding, LBytes);
+    end;
     {$IFDEF DOTNET}
     // RLebeau: how to handle this correctly in .NET?
-    Result := AnsiString(BytesToString(LBytes, Indy8BitEncoding));
+    Result := AnsiString(BytesToStringRaw(LBytes));
     {$ELSE}
     SetString(Result, PAnsiChar(LBytes), Length(LBytes));
       {$IFDEF VCL_2009_OR_ABOVE}
