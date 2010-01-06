@@ -161,6 +161,7 @@ This unit must NOT be linked into DotNet applications.
 
 uses
   Classes,
+  {$IFDEF USE_INLINE}IdResourceStrings,{$ENDIF}
   IdException, IdStack, IdStackConsts, IdGlobal;
 
 type
@@ -249,8 +250,7 @@ type
     function Send(ASocket: TIdStackSocketHandle; const ABuffer: TIdBytes;
       const AOffset: Integer = 0; const ASize: Integer = -1): Integer; override;
     function ReceiveFrom(ASocket: TIdStackSocketHandle; var VBuffer: TIdBytes;
-      var VIP: string; var VPort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION
-      ): Integer; override;
+      var VIP: string; var VPort: TIdPort; var VIPVersion: TIdIPVersion): Integer; override;
     function SendTo(ASocket: TIdStackSocketHandle; const ABuffer: TIdBytes;
       const AOffset: Integer; const ASize: Integer; const AIP: string;
       const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer; override;
@@ -263,7 +263,7 @@ type
     function WSGetServByPort(const APortNumber: TIdPort): TStrings; virtual; abstract;
     function RecvFrom(const ASocket: TIdStackSocketHandle; var ABuffer;
       const ALength, AFlags: Integer; var VIP: string; var VPort: TIdPort;
-      AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer; virtual; abstract;
+      var VIPVersion: TIdIPVersion): Integer; virtual; abstract;
     procedure WSSendTo(ASocket: TIdStackSocketHandle; const ABuffer;
       const ABufferLength, AFlags: Integer; const AIP: string; const APort: TIdPort;
       AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); virtual; abstract;
@@ -421,10 +421,10 @@ end;
 
 function TIdStackBSDBase.ReceiveFrom(ASocket: TIdStackSocketHandle;
   var VBuffer: TIdBytes; var VIP: string; var VPort: TIdPort;
-  const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer;
+  var VIPVersion: TIdIPVersion): Integer;
 begin
    Result := CheckForSocketError(RecvFrom(ASocket, VBuffer[0], Length(VBuffer),
-     0, VIP, VPort, AIPVersion));
+     0, VIP, VPort, VIPVersion));
 end;
 
 function TIdStackBSDBase.SendTo(ASocket: TIdStackSocketHandle;

@@ -571,7 +571,7 @@ begin
 end;
 
 function TIdStackDotNet.ReceiveFrom(ASocket: TIdStackSocketHandle; var VBuffer: TIdBytes;
-  var VIP: string; var VPort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer;
+  var VIP: string; var VPort: TIdPort; VIPVersion: TIdIPVersion): Integer;
 var
   LEndPoint : EndPoint;
 begin
@@ -587,6 +587,10 @@ begin
     end;
     VIP := IPEndPoint(LEndPoint).Address.ToString;
     VPort := IPEndPoint(LEndPoint).Port;
+    case IPEndPoint(LEndPoint).AddressFamily of
+      InterNetwork:    VIPVersion := Id_IPv4;
+      InterNetworkV6:  VIPVersion := Id_IPv6;
+    end;
   finally
     LEndPoint.Free;
   end;

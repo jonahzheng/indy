@@ -170,10 +170,12 @@ type
   protected
     FSourceIP: String;
     FSourcePort : TIdPort;
+    FSourceIF: LongWord;
+    FSourceIPVersion: TIdIPVersion;
     FDestIP: String;
     FDestPort : TIdPort;
-    FSourceIF: LongWord;
     FDestIF: LongWord;
+    FDestIPVersion: TIdIPVersion;
     FTTL: Byte;
   public
     property TTL : Byte read FTTL write FTTL;
@@ -181,10 +183,12 @@ type
     property SourceIP : String read FSourceIP write FSourceIP;
     property SourcePort : TIdPort read FSourcePort write FSourcePort;
     property SourceIF : LongWord read FSourceIF write FSourceIF;
-    //you, the receiver - this is provided for multihorned machines
+    property SourceIPVersion : TIdIPVersion read FSourceIPVersion write FSourceIPVersion;
+    //you, the receiver - this is provided for multihomed machines
     property DestIP : String read FDestIP write FDestIP;
     property DestPort : TIdPort read FDestPort write FDestPort;
     property DestIF : LongWord read FDestIF write FDestIF;
+    property DestIPVersion : TIdIPVersion read FDestIPVersion write FDestIPVersion;
   end;
   TIdSocketListClass = class of TIdSocketList;
 
@@ -287,8 +291,7 @@ type
       const AOffset: Integer = 0; const ASize: Integer = -1): Integer; virtual; abstract;
 
     function ReceiveFrom(ASocket: TIdStackSocketHandle; var VBuffer: TIdBytes;
-      var VIP: string; var VPort: TIdPort;
-      const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer; virtual; abstract;
+      var VIP: string; var VPort: TIdPort; var VIPVersion: TIdIPVersion): Integer; virtual; abstract;
     function SendTo(ASocket: TIdStackSocketHandle; const ABuffer: TIdBytes;
       const AOffset: Integer; const AIP: string; const APort: TIdPort;
       const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer; overload;
@@ -297,8 +300,7 @@ type
       const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION)
       : Integer; overload; virtual; abstract;
     function ReceiveMsg(ASocket: TIdStackSocketHandle; var VBuffer: TIdBytes;
-      APkt: TIdPacketInfo; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION)
-      : LongWord; virtual; abstract;
+      APkt: TIdPacketInfo): LongWord; virtual; abstract;
     function SupportsIPv6: Boolean; virtual; abstract;
 
     //multicast stuff Kudzu permitted me to add here.
@@ -365,7 +367,7 @@ uses
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     {$IFDEF USE_INLINE}
-   Windows,
+  Windows,
     {$ENDIF}
   IdStackWindows,
   {$ENDIF}
