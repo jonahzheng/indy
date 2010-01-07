@@ -478,11 +478,27 @@ end;
 
 { TIdIRC }
 
+// RLebeau 1/7/2010: SysUtils.TrimLeft() removes all characters < #32, but
+// CTC requires character #1, so don't remove that character when parsing
+// IRC parameters in FetchIRCParam()...
+//
+function IRCTrimLeft(const S: string): string;
+var
+  I, L: Integer;
+begin
+  L := Length(S);
+  I := 1;
+  while (I <= L) and (S[I] <= ' ') and (S[I] <> #1) do begin
+    Inc(I);
+  end;
+  Result := Copy(S, I, Maxint);
+end;
+
 function FetchIRCParam(var S: String): String;
 var
   LTmp: String;
 begin
-  LTmp := TrimLeft(S);
+  LTmp := IRCTrimLeft(S);
   if TextStartsWith(LTmp, ':') then
   begin
     Result := Copy(LTmp, 2, MaxInt);
@@ -490,7 +506,7 @@ begin
   end else
   begin
     Result := Fetch(LTmp, #32);
-    S := TrimLeft(LTmp);
+    S := IRCTrimLeft(LTmp);
   end;
 end;
 
