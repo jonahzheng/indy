@@ -98,6 +98,7 @@ type
     procedure SetAllParams(const AName, AValue: string);
     {Gets a value from a string}
     function GetValueFromLine(var VLine : Integer) : String;
+    procedure SkipValueAtLine(var VLine : Integer);
   public
     procedure AddStrings(Strings: TStrings); override;
     procedure AssignTo(Dest: TPersistent); override;
@@ -246,7 +247,9 @@ begin
       begin
         if TextIsSame(AName, GetName(idx)) then begin
           ADest.Add(GetValueFromLine(idx));
-        end;
+        end else begin
+          SkipValueAtLine(idx);
+	end;
       end;
     finally
       ADest.EndUpdate;
@@ -326,7 +329,8 @@ var
 begin
   if (VLine >= 0) and (VLine < Count) then begin
     LLine := Get(VLine);
-
+    Inc(VLine);
+    
     {We trim right to remove space to accomodate header errors such as
 
     Message-ID:<asdf@fdfs
@@ -336,23 +340,36 @@ begin
 
     Result := TrimLeft(Copy(LLine, P + Length(LSep), MaxInt));
     if FUnfoldLines then begin
-      repeat
-        Inc(VLine);
-        if VLine = Count then begin
-          Break;
-        end;
+      while VLine < Count do begin
         LLine := Get(VLine);
         // s[1] is safe since header lines cannot be empty as that causes then end of the header block
         if not CharIsInSet(LLine, 1, LWS) then begin
           Break;
         end;
         Result := Trim(Result) + ' ' + Trim(LLine); {Do not Localize}
-      until False;
+        Inc(VLine);
+      end;
     end;
     // User may be fetching a folded line directly.
     Result := Trim(Result);
   end else begin
     Result := ''; {Do not Localize}
+  end;
+end;
+
+procedure TIdHeaderList.SkipValueAtLine(var VLine: Integer);
+begin
+  if (VLine >= 0) and (VLine < Count) then begin
+    Inc(VLine);
+    if FUnfoldLines then begin
+      while VLine < Count do begin
+        // s[1] is safe since header lines cannot be empty as that causes then end of the header block
+        if not CharIsInSet(Get(VLine), 1, LWS) then begin
+          Break;
+        end;
+        Inc(VLine);
+      end;
+    end;
   end;
 end;
 
