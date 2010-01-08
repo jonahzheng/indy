@@ -144,7 +144,7 @@ type
     FFieldObject: TObject;
     FCanFreeFieldObject: Boolean;
 
-    function GetFieldSize: LongInt;
+    function GetFieldSize: Int64;
     function GetFieldStream: TStream;
     function GetFieldStrings: TStrings;
     function GetFieldValue: string;
@@ -169,7 +169,7 @@ type
     property FieldObject: TObject read FFieldObject write SetFieldObject;
     property FileName: string read FFileName write SetFileName;
     property FieldValue: string read GetFieldValue write SetFieldValue;
-    property FieldSize: LongInt read GetFieldSize;
+    property FieldSize: Int64 read GetFieldSize;
   end;
 
   TIdFormDataFields = class(TCollection)
@@ -592,7 +592,7 @@ begin
   Result := Result + CRLF;
 end;
 
-function TIdFormDataField.GetFieldSize: LongInt;
+function TIdFormDataField.GetFieldSize: Int64;
 var
   LEncoding: TIdTextEncoding;
   LSize: TIdStreamSize;
