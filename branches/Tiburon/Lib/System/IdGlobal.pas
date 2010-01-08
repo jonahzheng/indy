@@ -3783,7 +3783,7 @@ begin
 {$ELSE}
   // S.G. 11/8/2003: Added overflow checking disabling and change multiplys by SHLs.
   // Locally disable overflow checking so we can safely use SHL and SHR
-  {$IFOPT Q+} // detect previous setting
+  {$IFOPT Q+} // detect overflow checking
   {$DEFINE _QPlusWasEnabled}
   {$Q-}
   {$ENDIF}
@@ -3829,7 +3829,7 @@ begin
   // Restore overflow checking
   {$IFDEF _QPlusWasEnabled} // detect previous setting
   {$UNDEF _QPlusWasEnabled}
-  {$Q-}
+  {$Q+}
   {$ENDIF}
 {$ENDIF}
 end;
