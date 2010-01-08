@@ -1404,29 +1404,31 @@ end;
 
 procedure TIdIRC.CommandPRIVMSG(ASender: TIdCommand);
 var
-  LTmp, LParam: String;
+  LTmp, LTarget, LData: String;
 begin
   LTmp := ASender.UnparsedParams;
-  LParam := FetchIRCParam(LTmp);
-  if (LParam <> '') and (LParam[1] = #1) then begin
-    ParseCTCPQuery(ASender.Context, LTmp, LParam);
+  LTarget := FetchIRCParam(LTmp);
+  LData := FetchIRCParam(LTmp);
+  if (LData <> '') and (LData[1] = #1) then begin
+    ParseCTCPQuery(ASender.Context, LData, LTarget);
   end
   else if Assigned(FOnPrivMessage) then begin
-    OnPrivateMessage(ASender.Context, FSenderNick, FSenderHost, LParam, FetchIRCParam(LTmp));
+    OnPrivateMessage(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
   end;
 end;
 
 procedure TIdIRC.CommandNOTICE(ASender: TIdCommand);
 var
-  LTmp, LParam: String;
+  LTmp, LTarget, LData: String;
 begin
   LTmp := ASender.UnparsedParams;
-  LParam := FetchIRCParam(LTmp);
-  if (LParam <> '') and (LParam[1] = #1) then begin
-    ParseCTCPReply(ASender.Context, LTmp, LParam);
+  LTarget := FetchIRCParam(LTmp);
+  LData := FetchIRCParam(LTmp);
+  if (LData <> '') and (LData[1] = #1) then begin
+    ParseCTCPReply(ASender.Context, LData, LTarget);
   end
   else if Assigned(FOnNotice) then begin
-    OnNotice(ASender.Context, FSenderNick, FSenderHost, LParam, FetchIRCParam(LTmp));
+    OnNotice(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
   end;
 end;
 
