@@ -507,7 +507,7 @@ begin
     S := '';
   end else
   begin
-    Result := Fetch(LTmp, #32);
+    Result := Fetch(LTmp, ' ');
     S := IRCTrimLeft(LTmp);
   end;
 end;
@@ -1445,7 +1445,7 @@ begin
   AData := IRCUnquote(AData);
   // ":nickname!user@host"
   if TextStartsWith(AData, ':') then begin
-    LTmp := Fetch(AData, #32);
+    LTmp := Fetch(AData, ' ');
     Delete(LTmp, 1, 1); // remove ':'
     FSenderNick := Fetch(LTmp, '!');
     FSenderHost := LTmp;
@@ -1462,7 +1462,7 @@ procedure TIdIRC.DoReplyUnknownCommand(AContext: TIdContext; ALine: string);
 var
   ACmdCode: Integer;
 begin
-  ACmdCode := IndyStrToInt(Fetch(ALine, #32), -1);
+  ACmdCode := IndyStrToInt(Fetch(ALine, ' '), -1);
   //
   case ACmdCode of
     6,
@@ -1512,7 +1512,7 @@ begin
       end;
       for I := 0 to CTCPList.Count do begin
         LData := CTCPList[I];
-        LCTCP := Fetch(LData, #32);
+        LCTCP := Fetch(LData, ' ');
         case PosInStrArray(LCTCP, IdIRCCTCP) of
           0: { ACTION }
             begin
@@ -1631,7 +1631,7 @@ begin
       end;
       for I := 0 to CTCPList.Count do begin
         LData := CTCPList[I];
-        LCTCP := Fetch(LData, #32);
+        LCTCP := Fetch(LData, ' ');
         case PosInStrArray(LCTCP, IdIRCCTCP) of
           0: { ACTION }
             begin
@@ -2415,7 +2415,7 @@ begin
   if AParameters <> '' then begin
     LTmp := LTmp + ' ' + AParameters;
   end;
-  Say(ATarget, CTCPQuote(XDelim+LTmp+XDelim));  {do not localize}
+  Say(ATarget, XDelim+CTCPQuote(LTmp)+XDelim);  {do not localize}
 end;
 
 procedure TIdIRC.CTCPReply(const ATarget, ACTCP, AReply: String);
@@ -2426,7 +2426,7 @@ begin
   if AReply <> '' then begin
     LTmp := LTmp + ' ' + AReply;
   end;
-  Notice(ATarget, CTCPQuote(XDelim+LTmp+XDelim)); {do not localize}
+  Notice(ATarget, XDelim+CTCPQuote(LTmp)+XDelim); {do not localize}
 end;
 
 procedure TIdIRC.Join(const AChannel: String; const AKey: String = '');
