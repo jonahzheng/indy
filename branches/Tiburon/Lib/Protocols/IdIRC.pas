@@ -106,13 +106,13 @@ type
   TIdIRCChanModeEvent = procedure(ASender: TIdContext; const ANickname, AHost, AChannel, AMode, AParams: String) of object;
   TIdIRCUserModeEvent = procedure(ASender: TIdContext; const ANickname, AHost, AMode: String) of object;
   { -CTCP- }
-  TIdIRCCTCPQueryEvent = procedure(ASender: TIdContext; const ANickname, AHost, ATarget, AChannel, ACommand, AParams: String) of object;
-  TIdIRCCTCPReplyEvent = procedure(ASender: TIdContext; const ANickname, AHost, ATarget, AChannel, ACommand, AParams: String) of object;
+  TIdIRCCTCPQueryEvent = procedure(ASender: TIdContext; const ANickname, AHost, ATarget, ACommand, AParams: String) of object;
+  TIdIRCCTCPReplyEvent = procedure(ASender: TIdContext; const ANickname, AHost, ATarget, ACommand, AParams: String) of object;
   { -DCC- }
   TIdIRCDCCChatEvent = procedure(ASender: TIdContext; const ANickname, AHost: String; APort: Integer) of object;
-  TIdIRCDCCSendEvent = procedure(ASender: TIdContext; const ANickname, AHost, AFilename: String; APort, AFileSize: Integer) of object;
-  TIdIRCDCCResumeEvent = procedure(ASender: TIdContext; const ANickname, AHost, AFilename: String; APort, AFilePos: Integer) of object;
-  TIdIRCDCCAcceptEvent = procedure(ASender: TIdContext; const ANickname, AHost, AFilename: String; APort, AFilePos: Integer) of object;
+  TIdIRCDCCSendEvent = procedure(ASender: TIdContext; const ANickname, AHost, AFilename: String; APort: TIdPort; AFileSize: Int64) of object;
+  TIdIRCDCCResumeEvent = procedure(ASender: TIdContext; const ANickname, AHost, AFilename: String; APort: TIdPort;  AFilePos: Int64) of object;
+  TIdIRCDCCAcceptEvent = procedure(ASender: TIdContext; const ANickname, AHost, AFilename: String; APort: TIdPort; AFilePos: Int64) of object;
   { -Errors- }
   TIdIRCServerErrorEvent = procedure(ASender: TIdContext; AErrorCode: Integer; const AErrorMessage: String) of object;
   TIdIRCNickErrorEvent = procedure(ASender: TIdContext; AError: Integer) of object;
@@ -233,8 +233,6 @@ type
     procedure SetIdIRCUserMode(AValue: TIdIRCUserModes);
     procedure SetIdIRCReplies(AValue: TIdIRCReplies);
     function GetUserMode: String;
-    procedure ParseCTCPQuery(AContext: TIdContext; const CTCPQuery, AChannel: String);
-    procedure ParseCTCPReply(AContext: TIdContext; const CTCPReply, AChannel: String);
     procedure ParseDCC(AContext: TIdContext; const ADCC: String);
     //Command handlers
     procedure DoBeforeCmd(ASender: TIdCommandHandlers; var AData: string; AContext: TIdContext);
@@ -448,8 +446,12 @@ uses
   IdStack, IdBaseComponent, SysUtils;
 
 const
-  IdIRCCTCP: array[0..9] of String = ('ACTION', 'SOUND', 'PING', 'FINGER', {do not localize}
-    'USERINFO', 'VERSION', 'CLIENTINFO', 'TIME', 'ERROR', 'DCC');  {do not localize}
+  IdIRCCTCP: array[0..10] of String = ('ACTION', 'SOUND', 'PING', 'FINGER', {do not localize}
+    'USERINFO', 'VERSION', 'CLIENTINFO', 'TIME', 'ERROR', 'DCC', 'SED');  {do not localize}
+
+  MQuote = #16;
+  XDelim = #1;
+  XQuote = #92;
 
 { TIdIRCReplies }
 
@@ -488,7 +490,7 @@ var
 begin
   L := Length(S);
   I := 1;
-  while (I <= L) and (S[I] <= ' ') and (S[I] <> #1) do begin
+  while (I <= L) and (S[I] <= ' ') and (S[I] <> XDelim) do begin
     Inc(I);
   end;
   Result := Copy(S, I, Maxint);
@@ -508,6 +510,89 @@ begin
     Result := Fetch(LTmp, #32);
     S := IRCTrimLeft(LTmp);
   end;
+end;
+
+function IRCQuote(const S: String): String;
+begin
+  Result := StringsReplace(S, [#0, LF, CR, MQuote], [MQuote+'0', MQuote+'n', MQuote+'r', MQuote+MQuote]);
+end;
+
+function IRCUnquote(const S: String): String;
+var
+  I, L: Integer;
+begin
+  Result := S;
+  L := Length(Result);
+  I := 1;
+  repeat
+    I := PosIdx(MQuote, Result, I);
+    if I = 0 then begin
+      Break;
+    end;
+    IdDelete(Result, I, 1);
+    Dec(L);
+    if I > L then begin
+      Break;
+    end;
+    case Result[I] of
+      '0': Result[I] := #0;
+      'n': Result[I] := LF;
+      'r': Result[I] := CR;
+    end;
+    Inc(I);
+  until False;
+end;
+
+function CTCPQuote(const S: String): String;
+begin
+  Result := StringsReplace(S, [XDelim, XQuote], [XQuote+'a', XQuote+XQuote]);
+end;
+
+function CTCPUnquote(const S: String): String;
+var
+  I, L: Integer;
+begin
+  Result := S;
+  L := Length(Result);
+  I := 1;
+  repeat
+    I := PosIdx(XQuote, Result, I);
+    if I = 0 then begin
+      Break;
+    end;
+    IdDelete(Result, I, 1);
+    Dec(L);
+    if I > L then begin
+      Break;
+    end;
+    if Result[I] = 'a' then begin
+      Result[I] := XDelim;
+    end;
+    Inc(I);
+  until False;
+end;
+
+procedure ExtractCTCPs(var AText: String; CTCPs: TStrings);
+var
+  LTmp: String;
+  I, J, K: Integer;
+begin
+  I := 1;
+  repeat
+    J := PosIdx(XDelim, AText, I);
+    if J = 0 then begin
+      Break;
+    end;
+    K := PosIdx(XDelim, AText, J+1);
+    if K = 0 then begin
+      Break;
+    end;
+    LTmp := Copy(AText, J+1, K-J-1);
+    LTmp := CTCPUnquote(LTmp);
+    CTCPs.Add(LTmp);
+    IdDelete(AText, J, (K-J)+1);
+    I := J;
+  until False;
 end;
 
 type
@@ -621,7 +706,7 @@ begin
     if Assigned(FOnRaw) then begin
       FOnRaw(nil, False, ALine);
     end;
-    IOHandler.WriteLn(ALine + EOL);
+    IOHandler.WriteLn(IRCQuote(ALine));
   end;
 end;
 
@@ -1357,6 +1442,7 @@ procedure TIdIRC.DoBeforeCmd(ASender: TIdCommandHandlers; var AData: string; ACo
 var
   LTmp: String;
 begin
+  AData := IRCUnquote(AData);
   // ":nickname!user@host"
   if TextStartsWith(AData, ':') then begin
     LTmp := Fetch(AData, #32);
@@ -1404,31 +1490,180 @@ end;
 
 procedure TIdIRC.CommandPRIVMSG(ASender: TIdCommand);
 var
-  LTmp, LTarget, LData: String;
+  LTmp, LTarget, LData, LCTCP: String;
+  I: Integer;
+  CTCPList: TStringList;
 begin
   LTmp := ASender.UnparsedParams;
   LTarget := FetchIRCParam(LTmp);
   LData := FetchIRCParam(LTmp);
-  if (LData <> '') and (LData[1] = #1) then begin
-    ParseCTCPQuery(ASender.Context, LData, LTarget);
-  end
-  else if Assigned(FOnPrivMessage) then begin
-    OnPrivateMessage(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
+
+  CTCPList := TStringList.Create;
+  try
+    ExtractCTCPs(LData, CTCPList);
+    if CTCPList.Count = 0 then begin
+      if Assigned(FOnPrivMessage) then begin
+        OnPrivateMessage(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
+      end;
+    end else
+    begin
+      if (LData <> '') and Assigned(FOnPrivMessage) then begin
+        OnPrivateMessage(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
+      end;
+      for I := 0 to CTCPList.Count do begin
+        LData := CTCPList[I];
+        LCTCP := Fetch(LData, #32);
+        case PosInStrArray(LCTCP, IdIRCCTCP) of
+          0: { ACTION }
+            begin
+              {
+              if Assigned(FOnAction) then begin
+                FOnAction(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
+              end;
+              }
+              if Assigned(FOnCTCPQry) then begin
+                FOnCTCPQry(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
+              end;
+              CTCPReply(FSenderNick, 'ERRMSG', LCTCP +' ' + LData + ' :unknown query'); {do not localize}
+            end;
+          1: { SOUND }
+            begin
+              {
+              if Assigned(FOnSound) then begin
+                FOnSound(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
+              end;
+              }
+              if Assigned(FOnCTCPQry) then begin
+                FOnCTCPQry(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
+              end;
+              CTCPReply(FSenderNick, 'ERRMSG', LCTCP +' ' + LData + ' :unknown query'); {do not localize}
+            end;
+          2: { PING }
+            begin
+              {
+              LTmp := '';
+              if Assigned(FOnPing) then begin
+                FOnPing(ASender.Context, LTmp);
+              end;
+              if LTmp = '' then begin
+                LTmp := DateTimeToStr(Now);
+              end;
+              CTCPReply(FSenderNick, LCTCP, ':' + LTmp);
+              }
+              if Assigned(FOnCTCPQry) then begin
+                FOnCTCPQry(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
+              end;
+              CTCPReply(FSenderNick, LCTCP, ':' + DateTimeToStr(Now)); {do not localize}
+            end;
+          3: { FINGER }
+            begin
+              CTCPReply(FSenderNick, LCTCP, ':' + Replies.Finger); {do not localize}
+            end;
+          4: { USERINFO }
+            begin
+              CTCPReply(FSenderNick, LCTCP, ':' + Replies.UserInfo); {do not localize}
+            end;
+          5: { VERSION }
+            begin
+              CTCPReply(FSenderNick, LCTCP, ':' + Replies.Version); {do not localize}
+            end;
+          6: { CLIENTINFO }
+            begin
+              // TODO: add OnClientInfoQuery event to handle per-command queries
+              CTCPReply(FSenderNick, LCTCP, ':' + Replies.ClientInfo); {do not localize}
+            end;
+          7: { TIME }
+            begin
+              CTCPReply(FSenderNick, LCTCP, IndyFormat(RSIRCTimeIsNow, [DateTimeToStr(Now)]));
+            end;
+          8: { ERROR }
+            begin
+              CTCPReply(FSenderNick, LCTCP, LData + ' :No Error'); {do not localize}
+            end;
+          9: { DCC }
+            begin
+              ParseDCC(ASender.Context, LData);
+            end;
+          10: { SED }
+            begin
+              //ParseSED(AContext, LData);
+              if Assigned(FOnCTCPQry) then begin
+                FOnCTCPQry(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
+              end;
+              CTCPReply(FSenderNick, LCTCP, LData + ' :unknown query'); {do not localize}
+            end;
+          else
+            begin
+              if Assigned(FOnCTCPQry) then begin
+                FOnCTCPQry(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
+              end;
+              CTCPReply(FSenderNick, LCTCP, LData + ' :unknown query'); {do not localize}
+            end;
+        end;
+      end;
+    end;
+  finally
+    CTCPList.Free;
   end;
 end;
 
 procedure TIdIRC.CommandNOTICE(ASender: TIdCommand);
 var
-  LTmp, LTarget, LData: String;
+  LTmp, LTarget, LData, LCTCP: String;
+  I: Integer;
+  CTCPList: TStringList;
 begin
   LTmp := ASender.UnparsedParams;
   LTarget := FetchIRCParam(LTmp);
   LData := FetchIRCParam(LTmp);
-  if (LData <> '') and (LData[1] = #1) then begin
-    ParseCTCPReply(ASender.Context, LData, LTarget);
-  end
-  else if Assigned(FOnNotice) then begin
-    OnNotice(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
+
+  CTCPList := TStringList.Create;
+  try
+    ExtractCTCPs(LData, CTCPList);
+    if CTCPList.Count = 0 then begin
+      if Assigned(FOnNotice) then begin
+        OnNotice(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
+      end;
+    end else
+    begin
+      if (LData <> '') and Assigned(FOnNotice) then begin
+        OnNotice(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
+      end;
+      for I := 0 to CTCPList.Count do begin
+        LData := CTCPList[I];
+        LCTCP := Fetch(LData, #32);
+        case PosInStrArray(LCTCP, IdIRCCTCP) of
+          0: { ACTION }
+            begin
+              {
+              if Assigned(FOnAction) then begin
+                FOnAction(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
+              end;
+              }
+              if Assigned(FOnCTCPRep) then begin
+                FOnCTCPRep(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
+              end;
+            end;
+          9: { DCC }
+            begin
+              ParseDCC(ASender.Context, LData);
+            end;
+          10: { SED }
+            begin
+              //ParseSED(AContext, LData);
+              if Assigned(FOnCTCPRep) then begin
+                FOnCTCPRep(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
+              end;
+            end;
+        else
+          if Assigned(FOnCTCPRep) then begin
+            FOnCTCPRep(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
+          end;
+        end;
+      end;
+    end;
+  finally
+    CTCPList.Free;
   end;
 end;
 
@@ -2072,141 +2307,42 @@ begin
   end;
 end;
 
-procedure TIdIRC.ParseCTCPQuery(AContext: TIdContext; const CTCPQuery, AChannel: String);
-var
-  CTCP: String;
-  LTmp: String;
-  LTmp1: String;
-begin
-  CTCP := CTCPQuery;
-  LTmp := FetchIRCParam(CTCP);
-  LTmp1 := CTCP;
-
-  case PosInStrArray(LTmp1, IdIRCCTCP) of
-    0: { ACTION }
-      begin
-        //if Assigned(FOnAction) then begin
-        //  FOnAction(FSenderNick, AChannel, LTmp1);
-        //end;
-      end;
-    1: { SOUND }
-      begin
-        if Assigned(FOnCTCPQry) then begin
-          FOnCTCPQry(AContext, FSenderNick, AChannel, LTmp, LTmp1, LTmp, LTmp);
-        end;
-      end;
-    2: { PING }
-      begin
-        if Assigned(FOnCTCPQry) then begin
-          FOnCTCPQry(AContext, FSenderNick, AChannel, LTmp, LTmp1, LTmp, LTmp);
-        end;
-        OnCTCPReply(AContext, FSenderNick, LTmp, LTmp1, LTmp, LTmp, LTmp);
-      end;
-    3: { FINGER }
-      begin
-        if Assigned(FOnCTCPQry) then begin
-          FOnCTCPQry(AContext, FSenderNick, AChannel, LTmp, LTmp1, LTmp, LTmp);
-        end;
-        OnCTCPReply(AContext, FSenderNick, LTmp, Replies.Finger, LTmp, LTmp, LTmp);
-      end;
-    4: { USERINFO }
-      begin
-        if Assigned(FOnCTCPQry) then begin
-          FOnCTCPQry(AContext, FSenderNick, AChannel, LTmp, LTmp1, LTmp, LTmp);
-        end;
-        OnCTCPReply(AContext, FSenderNick, LTmp, Replies.UserInfo, LTmp, LTmp, LTmp);
-      end;
-    5: { VERSION }
-      begin
-        if Assigned(FOnCTCPQry) then begin
-          FOnCTCPQry(AContext, FSenderNick, AChannel, LTmp, LTmp1, LTmp, LTmp);
-        end;
-        OnCTCPReply(AContext, FSenderNick, LTmp, Replies.Version, LTmp, LTmp, LTmp);
-      end;
-    6: { CLIENTINFO }
-      begin
-        if Assigned(FOnCTCPQry) then begin
-          FOnCTCPQry(AContext, FSenderNick, AChannel, LTmp, LTmp1, LTmp, LTmp);
-        end;
-        OnCTCPReply(AContext, FSenderNick, LTmp, Replies.ClientInfo, LTmp, LTmp, LTmp);
-      end;
-    7: { TIME }
-      begin
-        if Assigned(FOnCTCPQry) then begin
-          FOnCTCPQry(AContext, FSenderNick, AChannel, LTmp, LTmp1, LTmp, LTmp);
-        end;
-        OnCTCPReply(AContext, FSenderNick, LTmp, IndyFormat(RSIRCTimeIsNow, [DateTimeToStr(Now)]), LTmp, LTmp, LTmp);
-      end;
-    8: { ERROR }
-      begin
-        if Assigned(FOnCTCPQry) then begin
-          FOnCTCPQry(AContext, FSenderNick, AChannel, LTmp, LTmp1, LTmp, LTmp);
-        end;
-      end;
-    9: { DCC }
-      begin
-        ParseDCC(AContext, LTmp1);
-      end;
-    else
-      if Assigned(FOnCTCPQry) then begin
-        FOnCTCPQry(AContext, FSenderNick, AChannel, LTmp, LTmp1, LTmp, LTmp);
-      end;
-  end;
-end;
-
-procedure TIdIRC.ParseCTCPReply(AContext: TIdContext; const CTCPReply, AChannel: String);
-var
-  CTCP: String;
-  LTmp: String;
-  LTmp1: String;
-begin
-  CTCP := CTCPReply;
-  LTmp := FetchIRCParam(CTCP);
-  LTmp1 := CTCP;
-
-  if PosInStrArray(LTmp1, IdIRCCTCP) = 9 then begin { DCC }
-    { FIXME: To be completed. }
-  end
-  else if Assigned(FOnCTCPRep) then begin
-    FOnCTCPRep(AContext, FSenderNick, AChannel, LTmp, LTmp1, LTmp, LTmp);
-  end;
-end;
-
 procedure TIdIRC.ParseDCC(AContext: TIdContext; const ADCC: String);
 const
   IdIRCDCC: array[0..3] of String = ('SEND', 'CHAT', 'RESUME', 'ACCEPT');  {do not localize}
 var
-  LTmp: String;
-  LTmp1, LTmp2, LTmp3: String;
+  LTmp, LType, LArg, LAddr, LPort, LSize: String;
 begin
   LTmp := ADCC;
-  LTmp1 := FetchIRCParam(LTmp);
-  LTmp2 := FetchIRCParam(LTmp);
-  LTmp3 := FetchIRCParam(LTmp);
+  LType := FetchIRCParam(LTmp);
+  LArg := FetchIRCParam(LTmp);
+  LAddr := FetchIRCParam(LTmp);
+  LPort := FetchIRCParam(LTmp);
+  LSize := FetchIRCParam(LTmp);
   //
-  case PosInStrArray(LTmp1, IdIRCDCC) of
+  case PosInStrArray(LType, IdIRCDCC) of
     0: {SEND}
       begin
         if Assigned(FOnDCCSend) then begin
-          FOnDCCSend(AContext, FSenderNick, LTmp2, LTmp3, IndyStrToInt(LTmp1), IndyStrToInt(LTmp));
+          FOnDCCSend(AContext, FSenderNick, LAddr, ExtractFileName(LArg), IndyStrToInt(LPort), IndyStrToInt64(LSize));
         end;
       end;
     1: {CHAT}
       begin
         if Assigned(FOnDCCChat) then begin
-          FOnDCCChat(AContext, FSenderNick, LTmp2, IndyStrToInt(LTmp3));
+          FOnDCCChat(AContext, FSenderNick, LAddr, IndyStrToInt(LPort));
         end;
       end;
     2: {RESUME}
       begin
         if Assigned(FOnDCCResume) then begin
-          FOnDCCResume(AContext, FSenderNick, LTmp2, LTmp1, IndyStrToInt(LTmp1), IndyStrToInt(LTmp3));
+          FOnDCCResume(AContext, FSenderNick, LAddr, LArg, IndyStrToInt(LPort), IndyStrToInt64(LSize));
         end;
       end;
     3: {ACCEPT}
       begin
         if Assigned(FOnDCCAccept) then begin
-          FOnDCCAccept(AContext, FSenderNick, LTmp2, LTmp1, IndyStrToInt(LTmp3), IndyStrToInt(LTmp));
+          FOnDCCAccept(AContext, FSenderNick, LAddr, LArg, IndyStrToInt(LPort), IndyStrToInt64(LSize));
         end;
       end;
   end;
@@ -2272,13 +2408,25 @@ begin
 end;
 
 procedure TIdIRC.CTCPQuery(const ATarget, ACommand, AParameters: String);
+var
+  LTmp: String;
 begin
-  Say(ATarget, IndyFormat(#1'%s %s'#1, [UpperCase(ACommand), AParameters]));  {do not localize}
+  LTmp := UpperCase(ACommand);
+  if AParameters <> '' then begin
+    LTmp := LTmp + ' ' + AParameters;
+  end;
+  Say(ATarget, CTCPQuote(XDelim+LTmp+XDelim));  {do not localize}
 end;
 
 procedure TIdIRC.CTCPReply(const ATarget, ACTCP, AReply: String);
+var
+  LTmp: String;
 begin
-  Notice(ATarget, IndyFormat(#1'%s %s'#1, [ACTCP, AReply]));  {do not localize}
+  LTmp := ACTCP;
+  if AReply <> '' then begin
+    LTmp := LTmp + ' ' + AReply;
+  end;
+  Notice(ATarget, CTCPQuote(XDelim+LTmp+XDelim)); {do not localize}
 end;
 
 procedure TIdIRC.Join(const AChannel: String; const AKey: String = '');
