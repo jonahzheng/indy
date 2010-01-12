@@ -453,6 +453,7 @@ type
      write FOnCommandOther;
     property OnCommandError: TIdHTTPCommandError read FOnCommandError write FOnCommandError;
     property OnQuerySSLPort: TIdHTTPQuerySSLPortEvent read FOnQuerySSLPort write FOnQuerySSLPort;
+    property OnParseAuthentication: TIdHTTPParseAuthenticationEvent read FOnParseAuthentication write FOnParseAuthentication;
   end;
 
   TIdHTTPDefaultSessionList = Class(TIdHTTPCustomSessionList)
