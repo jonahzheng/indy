@@ -730,10 +730,11 @@ var
         while IndyPos(';', S) > 0 do begin    {Do not Localize}
           LRequestInfo.Cookies.AddSrcCookie(Fetch(S, ';'));    {Do not Localize}
           S := Trim(S);
-    end;
-        if S <> '' then
+        end;
+        if S <> '' then begin
           LRequestInfo.Cookies.AddSrcCookie(S);
-  end;
+        end;
+      end;
     finally FreeAndNil(LRawCookies); end;
   end;
 
@@ -819,11 +820,9 @@ var
 
 var
   i: integer;
-  s, LInputLine, LCmd, LContentType: String;
+  s, LInputLine, LRawHTTPCommand, LCmd, LContentType, LAuthType: String;
   LURI: TIdURI;
-  LRawHTTPCommand: string;
-  LContinueProcessing: Boolean;
-  LCloseConnection: Boolean;
+  LContinueProcessing, LCloseConnection: Boolean;
 begin
   LContinueProcessing := True;
   Result := False;
