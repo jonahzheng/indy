@@ -570,7 +570,7 @@ uses
     {$ENDIF}
     {$IFDEF USE_VCL_POSIX}
     DateUtils,
-    PosixSysStat, PosixSysTime, PosixTime,
+    PosixSysStat, PosixSysTime, PosixTime, PosixUnistd,
     {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
@@ -1589,7 +1589,7 @@ var
   {$IFDEF UNIX}
 var
     {$IFDEF USE_VCL_POSIX}
-  LRec : TStatStruct;
+  LRec : TStatBuf;
     {$ELSE}
       {$IFDEF KYLIXCOMPAT}
   LRec : TStatBuf;
@@ -1677,8 +1677,8 @@ var
 var
   LTime : Integer;
   {$IFDEF USE_VCL_POSIX}
-  LRec : TStatStruct;
-  LU : TUnixTime;
+  LRec : TStatBuf;
+  LU : tm;
   {$ENDIF}
   {$IFDEF KYLIXCOMPAT}
   LRec : TStatBuf;
@@ -1764,9 +1764,13 @@ function TimeZoneBias: TDateTime;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
   {$IFDEF UNIX}
 var
-  T: TTime_T;
-  TV: TTimeVal;
+  T: Time_T;
+  TV: TimeVal;
+      {$IFDEF USE_VCL_POSIX}
+  UT: tm;
+      {$ELSE}
   UT: TUnixTime;
+      {$ENDIF}
   {$ENDIF}
 begin
   {$IFDEF UNIX}
@@ -3774,7 +3778,7 @@ function IndyComputerName: string;
 {$ENDIF}
 {$IFDEF UNIX}
 var
-  LHost: array[1..255] of Char;
+  LHost: array[1..255] of AnsiChar;
   i: LongWord;
 {$ENDIF}
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
@@ -3794,7 +3798,10 @@ begin
   Result := GetHostName;
     {$ENDIF}
     {$IFDEF USE_VCL_POSIX}
-  {$MESSAGE WARN 'IndyComputerName must be implemented in for VCL_POSIX'}
+  if PosixUnistd.gethostname(@LHost[1], 255) <> -1 then begin
+    i := IndyPos(#0, LHost);
+    SetString(Result, PAnsiChar(@LHost[1]), i-1);
+  end;
     {$ENDIF}
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
