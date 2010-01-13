@@ -251,8 +251,7 @@ begin
         VIPVersion := Id_IPV4;
       end;
       Id_PF_INET6: begin
-        with LAddr do
-        begin
+        with LAddr do begin
           VIP := TranslateTInAddrToString(sin6_addr, Id_IPv6);
           VPort := ntohs(sin6_port);
         end;
@@ -281,8 +280,7 @@ begin
   FillChar(LAddr, SizeOf(LAddr), 0);
   case AIPVersion of
     Id_IPv4: begin
-        with Psockaddr(@LAddr)^ do
-        begin
+        with Psockaddr(@LAddr)^ do begin
           sin_family := Id_PF_INET4;
           if AIP <> '' then begin
             TranslateStringToTInAddr(AIP, sin_addr, Id_IPv4);
@@ -325,8 +323,7 @@ begin
   FillChar(LAddr, SizeOf(LAddr), 0);
   case AIPVersion of
     Id_IPv4: begin
-      with Psockaddr(@LAddr)^ do
-      begin
+      with Psockaddr(@LAddr)^ do begin
         sin_family := Id_PF_INET4;
         TranslateStringToTInAddr(AIP, sin_addr, Id_IPv4);
         LAddr.sin_port := htons(APort);
@@ -334,8 +331,7 @@ begin
       LSize := SizeOf(sockaddr);
     end;
     Id_IPv6: begin
-      with LAddr do
-      begin
+      with LAddr do begin
         sin6_family := Id_PF_INET6;
         TranslateStringToTInAddr(AIP, sin6_addr, Id_IPv6);
         sin6_port := htons(APort);
@@ -455,16 +451,14 @@ begin
   begin
     case LAddr.sin6_family of
       Id_PF_INET4: begin
-        with Psockaddr(@LAddr)^ do
-        begin
+        with Psockaddr(@LAddr)^ do begin
           VIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
           VPort := Ntohs(sin_port);
         end;
         VIPVersion := Id_IPV4;
       end;
       Id_PF_INET6: begin
-        with LAddr do
-        begin
+        with LAddr do begin
           VIP := TranslateTInAddrToString(sin6_addr, Id_IPv6);
           VPort := ntohs(sin6_port);
         end;
@@ -595,8 +589,7 @@ begin
    FillChar(LAddr, SizeOf(LAddr), 0);
   case AIPVersion of
     Id_IPv4: begin
-      with Psockaddr(@LAddr)^ do
-      begin
+      with Psockaddr(@LAddr)^ do begin
         sin_family := Id_PF_INET4;
         TranslateStringToTInAddr(AIP, sin_addr, Id_IPv4);
         LAddr.sin_port := htons(APort);
@@ -604,8 +597,7 @@ begin
       LiSize := SizeOf(sockaddr);
     end;
     Id_IPv6: begin
-      with LAddr do
-      begin
+      with LAddr do begin
         sin6_family := Id_PF_INET6;
         TranslateStringToTInAddr(AIP, sin6_addr, Id_IPv6);
         sin6_port := htons(APort);
@@ -890,16 +882,14 @@ begin
   CheckForSocketError(Libc.getpeername(ASocket, Psockaddr(@LAddr)^, LiSize));
   case LAddr.sin6_family of
     Id_PF_INET4: begin
-      with Psockaddr(@LAddr6)^ do
-      begin
+      with Psockaddr(@LAddr6)^ do begin
         VIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
         VPort := ntohs(sin_port);
       end;
       VIPVersion := Id_IPV4;
     end;
     Id_PF_INET6: begin
-      with LAddr do
-      begin
+      with LAddr do begin
         VIP := TranslateTInAddrToString(sin6_addr, Id_IPv6);
         VPort := Ntohs(sin6_port);
       end;
@@ -921,16 +911,14 @@ begin
   CheckForSocketError(Libc.getsockname(ASocket, Psockaddr(@LAddr)^, LiSize));
   case LAddr.sin6_family of
     Id_PF_INET4: begin
-      with Psockaddr(@LAddr6)^ do
-      begin
+      with Psockaddr(@LAddr6)^ do begin
         VIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
         VPort := ntohs(sin_port);
       end;
       VIPVersion := Id_IPV4;
     end;
     Id_PF_INET6: begin
-      with LAddr do
-      begin
+      with LAddr do begin
         VIP := TranslateTInAddrToString(sin6_addr, Id_IPv6);
         VPort := ntohs(sin6_port);
       end;

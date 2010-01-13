@@ -1430,6 +1430,8 @@ implementation
 
 uses
   {$IFDEF USE_VCL_POSIX}
+  PosixSysSelect,
+  PosixSysSocket,
   PosixTime, PosixSysTime,
   {$ENDIF}
   {$IFDEF VCL_CROSS_COMPILE}
@@ -4270,11 +4272,17 @@ begin
 end;
 
 procedure IndySleep(ATime: LongWord);
-{$IFNDEF UNIX}
+{$IFDEF USE_VCL_POSIX}
   {$IFDEF USE_INLINE}inline;{$ENDIF}
+var
+  LTime: TimeVal;
 {$ELSE}
+  {$IFNDEF UNIX}
+    {$IFDEF USE_INLINE}inline;{$ENDIF}
+  {$ELSE}
 var
   LTime: TTimeVal;
+  {$ENDIF}
 {$ENDIF}
 begin
   {$IFDEF UNIX}
@@ -4285,6 +4293,9 @@ begin
     // since no readsocketlist exists to get the fdset
   LTime.tv_sec := ATime div 1000;
   LTime.tv_usec := (ATime mod 1000) * 1000;
+    {$IFDEF USE_VCL_POSIX}
+  select( 0, nil, nil, nil, @LTime);
+    {$ENDIF}
     {$IFDEF KYLIXCOMPAT}
   Libc.Select(0, nil, nil, nil, @LTime);
     {$ENDIF}
@@ -4824,22 +4835,45 @@ var
   tmez: TTimeZoneInformation;
   {$ENDIF}
   {$IFDEF UNIX}
+    {$IFDEF USE_VCL_POSIX}
 var
-  T: TTime_T;
+  T : Time_t;
+  TV : TimeVal;
+  UT : tm;
+    {$ENDIF}
+    {$IFDEF USE_BASEUNIX}
+ var
+   timeval: TTimeVal;
+   timezone: PTimeZone;
+    {$ENDIF}
+    {$IFDEF KYLIXCOMPAT}
+var
+  T: Time_T;
   TV: TTimeVal;
   UT: TUnixTime;
+    {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 begin
   {$IFDEF UNIX}
+
+    {$IFDEF USE_VCL_POSIX}
   {from http://edn.embarcadero.com/article/27890 }
 
   gettimeofday(TV, nil);
   T := TV.tv_sec;
-    {$IFDEF USE_VCL_POSIX}
   localtime_r(T, UT);
   Result := -1*(UT.tm_gmtoff / 60 / 60 / 24);
-    {$ELSE}
+    {$ENDIF}
+    {$IFDEF USE_BASEUNIX}
+  fpGetTimeOfDay (@TimeVal, TimeZone);
+  Result := -1 * (timezone^.tz_minuteswest /60 / 60 / 24)
+    {$ENDIF}
+    {$IFDEF KYLIXCOMPAT}
+  {from http://edn.embarcadero.com/article/27890 }
+
+  gettimeofday(TV, nil);
+  T := TV.tv_sec;
   localtime_r(@T, UT);
   Result := -1*(UT.__tm_gmtoff / 60 / 60 / 24);
     {$ENDIF}

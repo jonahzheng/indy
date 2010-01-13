@@ -137,6 +137,9 @@ resourcestring
     {$IFDEF KYLIXCOMPAT}
   RSReverseResolveError = 'Error resolving Address %s: %s (%d)'; { address, errorstring, errornumber }
     {$ENDIF}
+    {$IFDEF USE_VCL_POSIX}
+  RSReverseResolveError = 'Error resolving Address %s: %s (%d)'; { address, errorstring, errornumber }
+    {$ENDIF}
   {$ENDIF}
  {$IFDEF DOTNET_1_1}
  RSNotSupportedInMicrosoftNET11 = 'Not Supported in Microsoft.NET 1.1';

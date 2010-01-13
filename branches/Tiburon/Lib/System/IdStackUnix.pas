@@ -171,9 +171,9 @@ type
     function NetworkToHost(AValue: Int64): Int64; override;
     function RecvFrom(const ASocket: TIdStackSocketHandle; var VBuffer;
       const ALength, AFlags: Integer; var VIP: string; var VPort: TIdPort;
-      AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer; override;
-    function ReceiveMsg(ASocket: TIdStackSocketHandle; var VBuffer: TIdBytes;
-      APkt :  TIdPacketInfo; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): LongWord; override;
+      var VIPVersion: TIdIPVersion): Integer; override;
+    function ReceiveMsg(ASocket: TIdStackSocketHandle;
+      var VBuffer: TIdBytes; APkt: TIdPacketInfo): LongWord; override;
     procedure WSSendTo(ASocket: TIdStackSocketHandle; const ABuffer;
       const ABufferLength, AFlags: Integer; const AIP: string; const APort: TIdPort;
       AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
@@ -452,51 +452,51 @@ begin
   Result := fpRecv(ASocket, @ABuffer, ABufferLength, AFlags or Id_MSG_NOSIGNAL);
 end;
 
-function TIdStackUnix.RecvFrom(const ASocket: TIdStackSocketHandle;
-  var VBuffer; const ALength, AFlags: Integer; var VIP: string;
-  var VPort: TIdPort; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION ): Integer;
+function TIdStackUnix.RecvFrom(const ASocket: TIdStackSocketHandle; var VBuffer;
+      const ALength, AFlags: Integer; var VIP: string; var VPort: TIdPort;
+      var VIPVersion: TIdIPVersion): Integer;
 var
   LiSize: tsocklen;
   LAddr: sockaddr_in6;
 begin
-  case AIPVersion of
-    Id_IPv4 :
+  LiSize := SizeOf(sockaddr_in6);
+  Result := fpRecvFrom(ASocket, @VBuffer, ALength, AFlags or Id_MSG_NOSIGNAL, Psockaddr(@LAddr), @LiSize);
+  if Result >= 0 then
+  begin
+    case LAddr.sin6_family of
+    Id_PF_INET4 :
       begin
-        LiSize := SizeOf(sockaddr);
-        Result := fpRecvFrom(ASocket, @VBuffer, ALength, AFlags or Id_MSG_NOSIGNAL, Psockaddr(@LAddr), @LiSize);
         with Psockaddr(@LAddr)^ do
         begin
           VIP := NetAddrToStr(sin_addr);
           VPort := ntohs(sin_port);
         end;
       end;
-    Id_IPv6:
+    Id_PF_INET6:
       begin
-        LiSize := SizeOf(sockaddr_in6);
-        Result := fpRecvFrom(ASocket, @VBuffer, ALength, AFlags or Id_MSG_NOSIGNAL, PSockAddr(@LAddr), @LiSize);
         with LAddr do
         begin
           VIP := NetAddrToStr6(sin6_addr);
           VPort := ntohs(sin6_port);
         end;
+        VIPVersion := Id_IPV6;
       end;
-    else begin
-      Result := 0;
-      IPVersionUnsupported;
     end;
   end;
 end;
 
 function TIdStackUnix.ReceiveMsg(ASocket: TIdStackSocketHandle;
-  var VBuffer: TIdBytes; APkt :  TIdPacketInfo;
-  const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): LongWord;
+      var VBuffer: TIdBytes; APkt: TIdPacketInfo): LongWord;
 var
   LIP : String;
   LPort : TIdPort;
+  LIPVersion : TIdIPVersion;
 begin
-  LongWord(Result) := RecvFrom(ASocket, VBuffer[0], Length(VBuffer), 0, LIP, LPort);
+  Result := RecvFrom(ASocket, VBuffer, Length(VBuffer), 0, LIP, LPort, LIPVersion);
   APkt.SourceIP := LIP;
   APkt.SourcePort := LPort;
+  APkt.SourceIPVersion := LIPVersion;
+
   SetLength(VBuffer, Result);
 end;
 {The stuff below is commented out until I figure out what to do}

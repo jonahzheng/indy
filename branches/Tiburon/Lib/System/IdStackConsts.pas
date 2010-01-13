@@ -101,7 +101,7 @@ uses
   {$ENDIF}
   {$IFDEF UNIX}
     {$IFDEF USE_VCL_POSIX}
-    IdFakePosixSockets;
+      PosixErrno, PosixNetinetIn, PosixSysSocket;
     {$ENDIF}
     {$IFDEF KYLIXCOMPAT}
     libc;
@@ -120,7 +120,68 @@ type
   {$ENDIF}
 
   TIdStackSocketHandle =
-  {$IFDEF DOTNET}Socket{$ELSE}TSocket{$ENDIF};
+  {$IFDEF DOTNET}
+     Socket
+  {$ELSE}
+    {$IFDEF USE_VCL_POSIX}
+    Integer
+    {$ELSE}
+    TSocket
+    {$ENDIF}
+  {$ENDIF};
+
+  {$IFDEF USE_VCL_POSIX}
+const
+
+        IPV6_OPTIONS		= 1; { buf/ip6_opts; set/get IP6 options }
+        IPV6_RECVOPTS		= 5; { bool; receive all IP6 opts w/dgram }
+        IPV6_RECVRETOPTS	= 6; { bool; receive IP6 opts for response }
+        IPV6_RECVDSTADDR	= 7; { bool; receive IP6 dst addr w/dgram }
+        IPV6_RETOPTS		= 8; { ip6_opts; set/get IP6 options }
+        IPV6_SOCKOPT_RESERVED1	= 3; { reserved for future use }
+        IPV6_UNICAST_HOPS	= 4; { int; IP6 hops }
+        IPV6_MULTICAST_IF	= 9; { __uint8_t; set/get IP6 multicast i/f  }
+        IPV6_MULTICAST_HOPS	=10; { __uint8_t; set/get IP6 multicast hops }
+        IPV6_MULTICAST_LOOP	=11; { __uint8_t; set/get IP6 mcast loopback }
+        IPV6_JOIN_GROUP		=12; { ip6_mreq; join a group membership }
+        IPV6_LEAVE_GROUP	=13; { ip6_mreq; leave a group membership }
+        IPV6_PORTRANGE		=14; { int; range to choose for unspec port }
+        ICMP6_FILTER		=18; { icmp6_filter; icmp6 filter }
+        IPV6_PKTINFO		=19; { bool; send/recv if, src/dst addr }
+        IPV6_HOPLIMIT		=20; { bool; hop limit }
+        IPV6_NEXTHOP		=21; { bool; next hop addr }
+        IPV6_HOPOPTS		=22; { bool; hop-by-hop option }
+        IPV6_DSTOPTS		=23; { bool; destination option }
+        IPV6_RTHDR		=24; { bool; routing header }
+        IPV6_PKTOPTIONS		=25; { buf/cmsghdr; set/get IPv6 options }
+        IPV6_CHECKSUM		=26; { int; checksum offset for raw socket }
+        IPV6_V6ONLY		=27; { bool; only bind INET6 at wildcard bind }
+        IPV6_BINDV6ONLY		=IPV6_V6ONLY;
+        IPV6_IPSEC_POLICY	=28; { struct; get/set security policy }
+      	IP_OPTIONS		=  1;    { buf/ip_opts; set/get IP options }
+      	IP_HDRINCL		=  2;    { int; header is included with data }
+      	IP_TOS			=  3;    { int; IP type of service and preced. }
+      	IP_TTL			=  4;    { int; IP time to live }
+      	IP_RECVOPTS		=  5;    { bool; receive all IP opts w/dgram }
+      	IP_RECVRETOPTS		=  6;    { bool; receive IP opts for response }
+      	IP_RECVDSTADDR		=  7;    { bool; receive IP dst addr w/dgram }
+      	IP_RETOPTS		=  8;    { ip_opts; set/get IP options }
+      	IP_MULTICAST_IF		=  9;    { u_char; set/get IP multicast i/f  }
+      	IP_MULTICAST_TTL	= 10;    { u_char; set/get IP multicast ttl }
+      	IP_MULTICAST_LOOP	= 11;    { u_char; set/get IP multicast loopback }
+      	IP_ADD_MEMBERSHIP	= 12;    { ip_mreq; add an IP group membership }
+      	IP_DROP_MEMBERSHIP	= 13;    { ip_mreq; drop an IP group membership }
+
+const
+  INVALID_SOCKET = -1;
+  SOCKET_ERROR = -1;
+
+const
+  IPPROTO_PUP		= 12;		{ pup }
+  IPPROTO_ICMPV6	  	= 58; 		{ ICMP6 }
+  IPPROTO_MAX		=256;
+
+  {$ENDIF}
 
 var
   Id_SO_True: Integer = 1;
@@ -167,7 +228,9 @@ const
     {$ELSE}
       IPV6_ADD_MEMBERSHIP  = IPV6_JOIN_GROUP;
       IPV6_DROP_MEMBERSHIP = IPV6_LEAVE_GROUP;
+      {$IFNDEF USE_VCL_POSIX}
       IPV6_CHECKSUM        = 26;
+      {$ENDIF}
     {$ENDIF}
   Id_IPV6_ADD_MEMBERSHIP  = IPV6_ADD_MEMBERSHIP;
   Id_IPV6_DROP_MEMBERSHIP = IPV6_DROP_MEMBERSHIP;
@@ -221,8 +284,13 @@ const
   // Protocol Family
 
   {$IFNDEF DOTNET}
+    {$IFDEF USE_VCL_POSIX}
+  Id_PF_INET4 = AF_INET;
+  Id_PF_INET6 = AF_INET6;
+    {$ELSE}
   Id_PF_INET4 = PF_INET;
   Id_PF_INET6 = PF_INET6;
+     {$ENDIF}
   {$ELSE}
   Id_PF_INET4 = ProtocolFamily.InterNetwork;
   Id_PF_INET6 = ProtocolFamily.InterNetworkV6;
@@ -275,7 +343,9 @@ const
   Id_SOCK_STREAM     = TIdSocketType(SOCK_STREAM);      //1               /* stream socket */
   Id_SOCK_DGRAM      = TIdSocketType(SOCK_DGRAM);       //2               /* datagram socket */
   Id_SOCK_RAW        = TIdSocketType(SOCK_RAW);         //3               /* raw-protocol interface */
+     {$IFNDEF USE_VCL_POSIX}
   Id_SOCK_RDM        = TIdSocketType(SOCK_RDM);         //4               /* reliably-delivered message */
+     {$ENDIF}
   Id_SOCK_SEQPACKET  = SOCK_SEQPACKET;   //5               /* sequenced packet stream */
   {$ENDIF}
 
@@ -284,7 +354,9 @@ type
   TIdSocketProtocol     = {$IFDEF DOTNET}ProtocolType{$ELSE}Integer{$ENDIF};
   TIdSocketOption       = {$IFDEF DOTNET}SocketOptionName{$ELSE}Integer{$ENDIF};
   TIdSocketOptionLevel  = {$IFDEF DOTNET}SocketOptionLevel{$ELSE}Integer{$ENDIF};
-  
+
+
+
 const
   {$IFNDEF DOTNET}
     {$IFDEF OS2}
@@ -295,8 +367,11 @@ const
     {$ENDIF}
   Id_IPPROTO_ICMP   = IPPROTO_ICMP;
   Id_IPPROTO_ICMPV6 = IPPROTO_ICMPV6;
+    {$IFNDEF USE_VCL_POSIX}
   Id_IPPROTO_IDP    = IPPROTO_IDP;
+
   Id_IPPROTO_IGMP   = IPPROTO_IGMP;
+  {$ENDIF}
   Id_IPPROTO_IP     = IPPROTO_IP;
   Id_IPPROTO_IPv6   = IPPROTO_IPV6;
   Id_IPPROTO_ND     = 77; //IPPROTO_ND; is not defined in some headers in FPC
@@ -308,9 +383,7 @@ const
   {$ELSE}
   Id_IPPROTO_GGP         = ProtocolType.Ggp;    //Gateway To Gateway Protocol.
   Id_IPPROTO_ICMP        = ProtocolType.Icmp; //Internet Control Message Protocol.
-  {$IFDEF DOTNET_2_OR_ABOVE}
   Id_IPPROTO_ICMPv6      = ProtocolType.IcmpV6; //ICMP for IPv6
-  {$ENDIF}
   Id_IPPROTO_IDP         = ProtocolType.Idp;   //IDP Protocol.
   Id_IPPROTO_IGMP        = ProtocolType.Igmp; //Internet Group Management Protocol.
   Id_IPPROTO_IP          = ProtocolType.IP;     //Internet Protocol.
@@ -327,6 +400,8 @@ const
   Id_IPPROTO_UNSPECIFIED = ProtocolType.Unspecified; //unspecified protocol.
 //  Id_IPPROTO_MAX = ProtocolType.; ?????????????????????
   {$ENDIF}
+
+
 
   // Socket Option level
   {$IFNDEF DOTNET}
@@ -419,6 +494,16 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
   {$ENDIF}
 
   {$IFNDEF DOTNET}
+    {$IFDEF USE_VCL_POSIX}
+  {$EXTERNALSYM INADDR_ANY}
+  INADDR_ANY       = $00000000;
+  {$EXTERNALSYM INADDR_LOOPBACK}
+  INADDR_LOOPBACK  = $7F000001;
+  {$EXTERNALSYM INADDR_BROADCAST}
+  INADDR_BROADCAST = $FFFFFFFF;
+  {$EXTERNALSYM INADDR_NONE}
+  INADDR_NONE      = $FFFFFFFF;
+    {$ENDIF}
   Id_INADDR_ANY  = INADDR_ANY;
   Id_INADDR_NONE = INADDR_NONE;
   {$ENDIF}
