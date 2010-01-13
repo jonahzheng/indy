@@ -1510,7 +1510,7 @@ begin
       if (LData <> '') and Assigned(FOnPrivMessage) then begin
         OnPrivateMessage(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
       end;
-      for I := 0 to CTCPList.Count do begin
+      for I := 0 to CTCPList.Count - 1 do begin
         LData := CTCPList[I];
         LCTCP := Fetch(LData, ' ');
         case PosInStrArray(LCTCP, IdIRCCTCP) of
@@ -1629,7 +1629,7 @@ begin
       if (LData <> '') and Assigned(FOnNotice) then begin
         OnNotice(ASender.Context, FSenderNick, FSenderHost, LTarget, LData);
       end;
-      for I := 0 to CTCPList.Count do begin
+      for I := 0 to CTCPList.Count - 1 do begin
         LData := CTCPList[I];
         LCTCP := Fetch(LData, ' ');
         case PosInStrArray(LCTCP, IdIRCCTCP) of
