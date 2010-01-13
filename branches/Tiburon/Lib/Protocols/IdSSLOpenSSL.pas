@@ -1645,7 +1645,7 @@ begin
   inherited Create;
   //an exception here probably means that you are using the wrong version
   //of the openssl libraries. refer to comments at the top of this file.
-  if not IdSSLOpenSSL10.LoadOpenSSLLibrary then begin
+  if not IdSSLOpenSSL.LoadOpenSSLLibrary then begin
     raise EIdOSSLCouldNotLoadSSLLibrary.Create(RSOSSLCouldNotLoadSSLLibrary);
   end;
   fVerifyMode := [];
