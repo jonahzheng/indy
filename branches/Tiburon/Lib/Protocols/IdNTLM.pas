@@ -321,11 +321,9 @@ end;
 {$ELSE}
 function NTLMFunctionsLoaded : Boolean;
 begin
-  Result := Assigned(iddes_set_odd_parity) and
-    Assigned(IdDES_set_key) and
-    Assigned(iddes_set_odd_parity) and
-    Assigned(IdDES_ecb_encrypt) and
-    Assigned(iddes_ecb_encrypt);
+  Result := Assigned(DES_set_odd_parity) and
+    Assigned(DES_set_key) and
+    Assigned(DES_ecb_encrypt);
 end;
 {$ENDIF}
 
@@ -348,8 +346,8 @@ begin
   key[6] := ((key_56[5] SHL 2) and $FF) or (key_56[6] SHR 6);
   key[7] :=  (key_56[6] SHL 1) and $FF;
 
-  iddes_set_odd_parity(@key);
-  iddes_set_key(@key, ks);
+  DES_set_odd_parity(@key);
+  DES_set_key(@key, ks);
 end;
 
 {/*
@@ -364,13 +362,13 @@ Var
 begin
   setup_des_key(keys^, ks);
   Move(ANonce[0], nonce, 8);
-  iddes_ecb_encrypt(@nonce, Pconst_DES_cblock(results), ks, OPENSSL_DES_ENCRYPT);
+  des_ecb_encrypt(@nonce, Pconst_DES_cblock(results), ks, DES_ENCRYPT);
 
   setup_des_key(PDES_cblock(PtrUInt(keys) + 7)^, ks);
-  iddes_ecb_encrypt(@nonce, Pconst_DES_cblock(PtrUInt(results) + 8), ks, OPENSSL_DES_ENCRYPT);
+  des_ecb_encrypt(@nonce, Pconst_DES_cblock(PtrUInt(results) + 8), ks, DES_ENCRYPT);
 
   setup_des_key(PDES_cblock(PtrUInt(keys) + 14)^, ks);
-  iddes_ecb_encrypt(@nonce, Pconst_DES_cblock(PtrUInt(results) + 16), ks, OPENSSL_DES_ENCRYPT);
+  des_ecb_encrypt(@nonce, Pconst_DES_cblock(PtrUInt(results) + 16), ks, DES_ENCRYPT);
 end;
 
 Const
@@ -405,10 +403,10 @@ begin
   //* create LanManager hashed password */
 
   setup_des_key(pdes_cblock(@lm_pw[1])^, ks);
-  iddes_ecb_encrypt(@magic, Pconst_DES_cblock(@lm_hpw[1]), ks, OPENSSL_DES_ENCRYPT);
+  des_ecb_encrypt(@magic, Pconst_DES_cblock(@lm_hpw[1]), ks, DES_ENCRYPT);
 
   setup_des_key(pdes_cblock(PtrUInt(@lm_pw[1]) + 7)^, ks);
-  iddes_ecb_encrypt(@magic, Pconst_DES_cblock(PtrUInt(@lm_hpw[1]) + 8), ks, OPENSSL_DES_ENCRYPT);
+  des_ecb_encrypt(@magic, Pconst_DES_cblock(PtrUInt(@lm_hpw[1]) + 8), ks, DES_ENCRYPT);
 
   FillChar(lm_hpw[17], 5, 0);
 
