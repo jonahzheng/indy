@@ -3698,10 +3698,7 @@ var
   LFTime : TFileTime;
 {$ENDIF}
 {$IFDEF UNIX}
-  {$IFDEF USE_VCL_POSIX}
-var
-  TheTms : tm;
-  {$ELSE}
+  {$IFNDEF USE_VCL_POSIX}
 var
   TheTms: tms;
   {$ENDIF}
@@ -3725,7 +3722,7 @@ begin
   Result := Times(TheTms);
     {$ENDIF}
     {$IFDEF USE_VCL_POSIX}
-  {$MESSAGE WARN 'GetClockValue must be implemented for VCL_POSIX'}
+  Result := time(nil);
     {$ENDIF}
   {$ENDIF}
   {$IFDEF DOTNET}

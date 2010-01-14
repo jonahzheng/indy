@@ -174,6 +174,9 @@ implementation
 
 uses
   SysUtils,
+   {$IFDEF USE_VCL_POSIX}
+  PosixTime,
+   {$ENDIF}
   {$IFDEF DOTNET}
   Classes,
   System.Runtime.InteropServices,
@@ -268,8 +271,10 @@ function NowAsFileTime : FILETIME;
 {$ENDIF}
 
 {$IFDEF UNIX}
+  {$IFNDEF USE_VCL_POSIX}
 var
   TheTms: tms;
+  {$ENDIF}
 {$ENDIF}
 begin
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
@@ -280,8 +285,16 @@ begin
     {$ENDIF}
   {$ENDIF}
   {$IFDEF UNIX}
+    {$IFDEF USE_VCL_BASEUNIX}
+  Result := UnixTimeToFileTime( fptimes (TheTms));
+    {$ENDIF}
   //Is the following correct?
-  UnixTimeToFileTime({$IFDEF USE_BASEUNIX}fptimes{$ELSE}Libc.Times{$ENDIF}(TheTms));
+    {$IFDEF KYLIXCOMPAT}
+  Result := UnixTimeToFileTime(Times(TheTms));
+     {$ENDIF}
+      {$IFDEF USE_VCL_POSIX}
+  Result := UnixTimeToFileTime(PosixTime.time(nil));
+      {$ENDIF}
   {$ENDIF}
   {$IFDEF DOTNET}
    Result := Int64ToFileTime(DateTime.Now.ToFileTimeUtc);
