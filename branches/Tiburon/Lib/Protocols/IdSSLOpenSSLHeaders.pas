@@ -8498,9 +8498,9 @@ var
   CRYPTO_set_locking_callback : procedure(func: TIdSslLockingCallback) cdecl = nil;
   CRYPTO_set_id_callback : procedure(func: TIdSslIdCallback) cdecl = nil;
   // 3DES functions
-  des_set_odd_parity: procedure(key: Pdes_cblock) cdecl = nil;
-  des_set_key: function(key: Pconst_DES_cblock; schedule: DES_key_schedule): TIdC_INT cdecl = nil;
-  des_ecb_encrypt: procedure(input, output: Pconst_DES_cblock; ks: DES_key_schedule; enc: TIdC_INT) cdecl = nil;
+  DES_set_odd_parity: procedure(key: Pdes_cblock) cdecl = nil;
+  DES_set_key: function(key: Pconst_DES_cblock; schedule: DES_key_schedule): TIdC_INT cdecl = nil;
+  DES_ecb_encrypt: procedure(input, output: Pconst_DES_cblock; ks: DES_key_schedule; enc: TIdC_INT) cdecl = nil;
   //old DES functions
   Id_ossl_old_des_set_odd_parity : procedure (key : p_ossl_old_des_cblock) cdecl = nil;
   Id_ossl_old_des_set_key : function (key : P_ossl_old_des_cblock; schedule : _ossl_old_des_key_schedule) : TIdC_INT cdecl = nil;
@@ -9564,7 +9564,7 @@ them in case we use them later.}
   {CH fn_des_xcbc_encrypt = 'DES_xcbc_encrypt'; }  {Do not localize}
   {CH fn_des_cfb_encrypt = 'DES_cfb_encrypt'; }  {Do not localize}
   fn_des_ecb_encrypt = 'DES_ecb_encrypt';  {Do not localize}
-  fnold_des_ecb_encrypt = 'des_ecb_encrypt'; {Do not localize}
+  fnold_des_ecb_encrypt = 'DES_ecb_encrypt'; {Do not localize}
   {CH fn_des_encrypt = 'DES_encrypt'; }  {Do not localize}
   {CH fn_des_encrypt2 = 'DES_encrypt2'; }  {Do not localize}
   {CH fn_des_encrypt3 = 'DES_encrypt3'; }  {Do not localize}
@@ -9589,10 +9589,10 @@ them in case we use them later.}
   {CH fn_des_read_2passwords = 'DES_read_2passwords'; }  {Do not localize}
   {CH fn_des_read_pw_string = 'DES_read_pw_string'; }  {Do not localize}
   fn_des_set_odd_parity = 'DES_set_odd_parity';  {Do not localize}
-  fnold_des_set_odd_parity = 'des_set_odd_parity';  {Do not localize}
+  fnold_des_set_odd_parity = 'DES_set_odd_parity';  {Do not localize}
   {CH fn_des_is_weak_key = 'DES_is_weak_key'; }  {Do not localize}
   fn_des_set_key = 'DES_set_key';  {Do not localize}
-  fnold_des_set_key = 'des_set_key'; {Do not localize}
+  fnold_des_set_key = '_ossl_old_des_set_key'; {Do not localize}
   {CH fn_des_key_sched = 'DES_key_sched'; }  {Do not localize}
   {CH fn_des_string_to_key = 'DES_string_to_key'; }  {Do not localize}
   {CH fn_des_string_to_2keys = 'DES_string_to_2keys'; }  {Do not localize}
@@ -12199,9 +12199,9 @@ begin
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_DES}
   // 3DES
-  @des_set_odd_parity := LoadFunctionCLib(fn_des_set_odd_parity);
-  @des_set_key := LoadFunctionCLib(fn_des_set_key);
-  @des_ecb_encrypt := LoadFunctionCLib(fn_des_ecb_encrypt);
+  @DES_set_odd_parity := LoadFunctionCLib(fn_DES_set_odd_parity);
+  @DES_set_key := LoadFunctionCLib(fn_DES_set_key);
+  @DES_ecb_encrypt := LoadFunctionCLib(fn_DES_ecb_encrypt);
   @Id_ossl_old_des_set_odd_parity := LoadOldCLib(fnold_des_set_odd_parity,fn__ossl_old_des_set_odd_parity);
   @Id_ossl_old_des_set_key := LoadOldCLib(fnold_des_set_key,fn__ossl_old_des_set_key);
   @Id_ossl_old_des_ecb_encrypt := LoadOldCLib(fnold_des_ecb_encrypt,fn__ossl_old_des_ecb_encrypt);
@@ -12450,9 +12450,9 @@ begin
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_DES}
   // 3DES
-  @des_set_odd_parity := nil;
-  @des_set_key := nil;
-  @des_ecb_encrypt := nil;
+  @DES_set_odd_parity := nil;
+  @DES_set_key := nil;
+  @DES_ecb_encrypt := nil;
   @Id_ossl_old_des_set_odd_parity := nil;
   @Id_ossl_old_des_set_key := nil;
   @Id_ossl_old_des_ecb_encrypt := nil;
