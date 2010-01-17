@@ -60,6 +60,7 @@
 
 // Delphi 4
 {$IFDEF VER120}
+  {$DEFINE DCC}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_40}
   {$DEFINE DELPHI_4}
@@ -75,6 +76,7 @@
 
 // C++Builder 4
 {$IFDEF VER125}
+  {$DEFINE DCC}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_40}
   {$DEFINE CBUILDER_4}
@@ -90,6 +92,7 @@
 
 // Delphi & C++Builder 5
 {$IFDEF VER130}
+  {$DEFINE DCC}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_5_OR_ABOVE}
   {$DEFINE VCL_5}
@@ -112,6 +115,7 @@
 
 //Delphi & C++Builder 6
 {$IFDEF VER140}
+  {$DEFINE DCC}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_5_OR_ABOVE}
   {$IFDEF CBUILDER}
@@ -138,6 +142,7 @@
 
 //Delphi 7
 {$IFDEF VER150}
+  {$DEFINE DCC}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_5_OR_ABOVE}
   {$DEFINE VCL_6_OR_ABOVE}
@@ -162,6 +167,7 @@
 
 //Delphi 8
 {$IFDEF VER160}
+  {$DEFINE DCC}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_5_OR_ABOVE}
   {$DEFINE VCL_6_OR_ABOVE}
@@ -184,6 +190,7 @@
 
 //Delphi 2005
 {$IFDEF VER170}
+  {$DEFINE DCC}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_5_OR_ABOVE}
   {$DEFINE VCL_6_OR_ABOVE}
@@ -219,6 +226,7 @@
 //Delphi & C++Builder 2006
 //Delphi & C++Builder 2007 (Highlander)
 {$IFDEF VER180}
+  {$DEFINE DCC}
   {$DEFINE USE_INLINE}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_5_OR_ABOVE}
@@ -256,6 +264,7 @@
 
 //Delphi & C++Builder 2007 (Highlander)
 {$IFDEF VER185}
+  {$DEFINE DCC}
   {$DEFINE USE_INLINE}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_5_OR_ABOVE}
@@ -302,6 +311,7 @@
 // BDS 2007 NET personality uses VER190 instead of 185.
 //Delphi .NET 2007
 {$IFDEF VER190}
+  {$DEFINE DCC}
   {$DEFINE USE_INLINE}
   {$DEFINE VCL_4_OR_ABOVE}
   {$DEFINE VCL_5_OR_ABOVE}
@@ -334,6 +344,7 @@
 
 //Delphi & C++Builder 2009 (Tiburon)
 {$IFDEF VER200}
+  {$DEFINE DCC}
   {$DEFINE USE_INLINE}
   {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
   {$DEFINE VCL_4_OR_ABOVE}
@@ -379,6 +390,7 @@
 
 //Delphi & C++Builder 2010 (Weaver)
 {$IFDEF VER210}
+  {$DEFINE DCC}
   {$DEFINE USE_INLINE}
   {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
   {$DEFINE VCL_4_OR_ABOVE}
@@ -425,6 +437,9 @@
 
 //Delphi & C++Builder 2011 (Fulcrum)
 {$IFDEF VER220}
+//REMOVE DCC DEFINE after the next Fulcrum beta.
+//It will be defined there.
+  {$DEFINE DCC}
   {$DEFINE USE_INLINE}
   {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
   {$DEFINE VCL_4_OR_ABOVE}
@@ -728,6 +743,21 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$DEFINE HAS_TInterlocked}
 {$ENDIF}
 
+//IMPORTANT!!!!
+//
+//Do not remove this!!!  This is to work around a conflict.  In DCC, MACOS
+//will mean OS X.  In FreePascal, the DEFINE MACOS means MacIntosh System OS Classic.
+{$IFDEF DCC}
+  {$IFDEF MACOS}
+    {$DEFINE DARWIN}
+  {$ENDIF}
+{$ENDIF}
+{$IFDEF FPC}
+  {$IFDEF MACOS}
+    {$DEFINE MACOS_CLASSIC}
+  {$ENDIF}
+{$ENDIF}
+
 // Do NOT remove these IFDEF's.  They are here because InterlockedExchange
 // only handles 32bit values.  Some Operating Systems may have 64bit  
 // THandles.  This is not always tied to the platform architecture.
@@ -760,7 +790,7 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
 {$IFDEF LINUX}
   {$DEFINE THANDLE_32}
 {$ENDIF}
-{$IFDEF MACOS}
+{$IFDEF MACOS_CLASSIC}
    {$DEFINE THANDLE_CPUBITS}
 {$ENDIF}
 
