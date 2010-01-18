@@ -743,6 +743,21 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
   {$DEFINE HAS_TInterlocked}
 {$ENDIF}
 
+//IMPORTANT!!!!
+//
+//Do not remove this!!!  This is to work around a conflict.  In DCC, MACOS
+//will mean OS X.  In FreePascal, the DEFINE MACOS means MacIntosh System OS Classic.
+{$IFDEF DCC}
+  {$IFDEF MACOS}
+    {$DEFINE DARWIN}
+  {$ENDIF}
+{$ENDIF}
+{$IFDEF FPC}
+  {$IFDEF MACOS}
+    {$DEFINE MACOS_CLASSIC}
+  {$ENDIF}
+{$ENDIF}
+
 // Do NOT remove these IFDEF's.  They are here because InterlockedExchange
 // only handles 32bit values.  Some Operating Systems may have 64bit  
 // THandles.  This is not always tied to the platform architecture.
@@ -775,7 +790,7 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
 {$IFDEF LINUX}
   {$DEFINE THANDLE_32}
 {$ENDIF}
-{$IFDEF MACOS}
+{$IFDEF MACOS_CLASSIC}
    {$DEFINE THANDLE_CPUBITS}
 {$ENDIF}
 
