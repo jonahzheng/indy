@@ -786,6 +786,9 @@ uses
   SysUtils, 
   IdCTypes;
 
+//temp for compile tests
+{.$DEFINE SSLEAY_MACROS}
+
 const
   CONF_MFLAGS_IGNORE_ERRORS = $1;
   CONF_MFLAGS_IGNORE_RETURN_CODES = $2;
@@ -1213,6 +1216,38 @@ const
   BIO_CTRL_SET_CALLBACK = 14;
   BIO_CTRL_SET_CLOSE = 9;
   BIO_CTRL_SET_FILENAME = 30;
+  //* dgram BIO stuff */
+  BIO_CTRL_DGRAM_CONNECT = 31;  //* BIO dgram special */
+  BIO_CTRL_DGRAM_SET_CONNECTED = 32;  //* allow for an externally
+					                            //* connected socket to be
+					                           //* passed in */
+  BIO_CTRL_DGRAM_SET_RECV_TIMEOUT = 33; //* setsockopt, essentially */
+  BIO_CTRL_DGRAM_GET_RECV_TIMEOUT = 34; //* getsockopt, essentially */
+  BIO_CTRL_DGRAM_SET_SEND_TIMEOUT = 35; //* setsockopt, essentially */
+  BIO_CTRL_DGRAM_GET_SEND_TIMEOUT = 36; //* getsockopt, essentially */
+
+  BIO_CTRL_DGRAM_GET_RECV_TIMER_EXP = 37; //* flag whether the last */
+  BIO_CTRL_DGRAM_GET_SEND_TIMER_EXP = 38; //* I/O operation tiemd out */
+
+
+//* #ifdef IP_MTU_DISCOVER */
+  BIO_CTRL_DGRAM_MTU_DISCOVER = 39; //* set DF bit on egress packets */
+//* #endif */
+
+  BIO_CTRL_DGRAM_QUERY_MTU    = 40; //* as kernel for current MTU */
+  BIO_CTRL_DGRAM_GET_MTU      = 41; //* get cached value for MTU */
+  BIO_CTRL_DGRAM_SET_MTU      = 42; //* set cached value for
+					                          // * MTU. want to use this
+				                            // * if asking the kernel
+					                         // * fails */
+
+  BIO_CTRL_DGRAM_MTU_EXCEEDED  = 43; //* check whether the MTU
+					     // * was exceed in the
+					     // * previous write
+					     // * operation */
+
+  BIO_CTRL_DGRAM_SET_PEER      = 44; //* Destination for the data */
+
   BIO_CTRL_WPENDING = 13;
   BIO_C_DESTROY_BIO_PAIR = 139;
   BIO_C_DO_STATE_MACHINE = 101;
@@ -1350,6 +1385,7 @@ const
   BIO_TYPE_LINEBUFFER = 20 or $0200;
   BIO_TYPE_DGRAM = 21 or $0400 or $0100;
   BIO_TYPE_COMP = 23 or $0200;
+
   {$IFDEF SIXTY_FOUR_BIT_LONG}
   BN_BITS = 128;
   BN_BYTES = 8;
@@ -4364,21 +4400,23 @@ const
   TLS_CT_NUMBER = 4;
   TLS_CT_RSA_FIXED_DH = 3;
   TLS_CT_RSA_SIGN = 1;
+
   TLS_MD_CLIENT_FINISH_CONST = 'client finished';  {Do not localize}
   TLS_MD_CLIENT_FINISH_CONST_SIZE = 15;
-  TLS_MD_CLIENT_WRITE_KEY_CONST = 'client write key';  {Do not localize}
-  TLS_MD_CLIENT_WRITE_KEY_CONST_SIZE = 16;
-  TLS_MD_IV_BLOCK_CONST = 'IV block';  {Do not localize}
-  TLS_MD_IV_BLOCK_CONST_SIZE = 8;
+  TLS_MD_SERVER_FINISH_CONST = 'server finished';  {Do not localize}
+  TLS_MD_SERVER_FINISH_CONST_SIZE = 15;
   TLS_MD_KEY_EXPANSION_CONST = 'key expansion';  {Do not localize}
   TLS_MD_KEY_EXPANSION_CONST_SIZE = 13;
+  TLS_MD_CLIENT_WRITE_KEY_CONST = 'client write key';  {Do not localize}
+  TLS_MD_CLIENT_WRITE_KEY_CONST_SIZE = 16;
+  TLS_MD_SERVER_WRITE_KEY_CONST = 'server write key';  {Do not localize}
+  TLS_MD_SERVER_WRITE_KEY_CONST_SIZE = 16;
+  TLS_MD_IV_BLOCK_CONST = 'IV block';  {Do not localize}
+  TLS_MD_IV_BLOCK_CONST_SIZE = 8;
   TLS_MD_MASTER_SECRET_CONST = 'master secret';  {Do not localize}
   TLS_MD_MASTER_SECRET_CONST_SIZE = 13;
   TLS_MD_MAX_CONST_SIZE = 20;
-  TLS_MD_SERVER_FINISH_CONST = 'server finished';  {Do not localize}
-  TLS_MD_SERVER_FINISH_CONST_SIZE = 15;
-  TLS_MD_SERVER_WRITE_KEY_CONST = 'server write key';  {Do not localize}
-  TLS_MD_SERVER_WRITE_KEY_CONST_SIZE = 16;
+
   TMP_MAX = 26;
   V_ASN1_APPLICATION = $40;
   V_ASN1_APP_CHOOSE = -2;
@@ -8315,6 +8353,7 @@ var
   BIO_s_mem : function: PBIO_METHOD cdecl = nil;
   BIO_s_file : function: PBIO_METHOD cdecl = nil;
   BIO_ctrl : function(bp: PBIO; cmd: TIdC_INT; larg: TIdC_LONG; parg: Pointer): TIdC_LONG cdecl = nil;
+  BIO_ptr_ctrl : function(bp : PBIO; cmd : TIdC_INT; larg : TIdC_LONG) : PAnsiChar cdecl = nil;
   BIO_int_ctrl : function(bp : PBIO; cmd : TIdC_INT; larg : TIdC_LONG; iArg : TIdC_INT) : TIdC_LONG cdecl = nil;
   BIO_callback_ctrl : function(b : PBIO; cmd : TIdC_INT; fp : SSL_callback_ctrl_fp ) : TIdC_INT cdecl = nil;
   BIO_new_file : function(const filename: PAnsiChar; const mode: PAnsiChar): PBIO cdecl = nil;
@@ -8322,18 +8361,49 @@ var
   BIO_puts : function(b: PBIO; const txt: PAnsiChar): TIdC_INT cdecl = nil;
   BIO_read : function(b: PBIO; data: Pointer; len: TIdC_INT): TIdC_INT cdecl = nil;
   BIO_write : function(b: PBIO; const buf: Pointer; len: TIdC_INT): TIdC_INT cdecl = nil;
-  PEM_write_bio_X509_REQ : function(bp: PBIO; x: PX509_REQ): TIdC_INT cdecl = nil;
-  {$IFNDEF OPENSSL_NO_BIO}
+  {$IFNDEF SSLEAY_MACROS}
+  _PEM_read_bio_X509 : function(bp: PBIO; var x: PX509; cb: ppem_password_cb; u: Pointer): PX509 cdecl = nil;
+  _PEM_read_bio_X509_REQ : function(bp :PBIO; var x : PX509_REQ; cb :ppem_password_cb; u: PAnsiChar) : PX509_REQ cdecl = nil;
+  _PEM_read_bio_X509_CRL : function(bp : PBIO; var x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL cdecl = nil;
+  _PEM_read_bio_RSAPrivateKey : function(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA cdecl = nil;
+  _PEM_read_bio_RSAPublicKey : function(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA cdecl = nil;
+  _PEM_read_bio_DSAPrivateKey : function(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA cdecl = nil;
+  _PEM_read_bio_PrivateKey : function(bp : PBIO; var x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY cdecl = nil;
+  _PEM_read_bio_PKCS7 : function(bp : PBIO; var x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7 cdecl = nil;
+  _PEM_read_bio_DHparams : function(bp : PBIO; var x : PDH; cb : ppem_password_cb; u : Pointer) : PDH cdecl = nil;
+  _PEM_read_bio_DSAparams : function(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA cdecl = nil;
+  _PEM_read_bio_NETSCAPE_CERT_SEQUENCE : function(bp : PBIO; var x : PNETSCAPE_CERT_SEQUENCE;
+    cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE cdecl = nil;
+  _PEM_write_bio_X509 : function(b: PBIO; x: PX509): TIdC_INT cdecl = nil;
+  _PEM_write_bio_X509_REQ : function(bp: PBIO; x: PX509_REQ): TIdC_INT cdecl = nil;
+  _PEM_write_bio_X509_CRL : function(bp : PBIO; x : PX509_CRL) : TIdC_INT cdecl = nil;
+  _PEM_write_bio_RSAPublicKey : function(bp : PBIO; x : PRSA) : TIdC_INT cdecl = nil;
+  _PEM_write_bio_RSAPrivateKey : function(bp : PBIO; x : PRSA; const enc : PEVP_CIPHER;
+     kstr : PAnsiChar; klen : TIdC_INT; cb : ppem_password_cb; u : POinter) : TIdC_INT cdecl = nil;
+  _PEM_write_bio_DSAPrivateKey : function(bp : PBIO; x : PDSA; const enc : PEVP_CIPHER;
+    kstr :PAnsiChar; klen : TIdC_INT; cb : Ppem_password_cb; u : Pointer) : TIdC_INT cdecl = nil;
+  _PEM_write_bio_PrivateKey : function(bp : PBIO; x : PEVP_PKEY; const enc : PEVP_CIPHER;
+    kstr :PAnsiChar; klen : TIdC_INT; cb : Ppem_password_cb; u : Pointer) : TIdC_INT cdecl = nil;
+  _PEM_write_bio_PKCS7 : function(bp : PBIO; x : PPKCS7) : TIdC_INT cdecl = nil;
+  _PEM_write_bio_DHparams : function(bp : PBIO; x : PDH): TIdC_INT cdecl = nil;
+  _PEM_write_bio_DSAparams : function(bp : PBIO; x : PDSA) : TIdC_INT cdecl = nil;
+  _PEM_write_bio_NETSCAPE_CERT_SEQUENCE : function(bp : PBIO; x : PDSA) : TIdC_INT cdecl = nil;
+
+    {$IFNDEF OPENSSL_NO_BIO}
   PEM_write_bio_PKCS8PrivateKey : function(bp: PBIO; key: PEVP_PKEY; enc: PEVP_CIPHER;
-    kstr: PAnsiChar; klen: TIdC_INT; cb: ppem_password_cb; u: Pointer): TIdC_INT cdecl = nil;
+      kstr: PAnsiChar; klen: TIdC_INT; cb: ppem_password_cb; u: Pointer): TIdC_INT cdecl = nil;
+
+    {$ENDIF}
+
+  {$ELSE}
+    {$IFNDEF OPENSSL_NO_BIO}
   PEM_ASN1_write_bio : function(i2d: D2I_OF_void; const name: PAnsiChar;
     bp: PBIO; x: PAnsiChar; const enc: PEVP_CIPHER; kstr: PAnsiChar; klen: TIdC_INT;
     cb: ppem_password_cb; u: Pointer):TIdC_INT cdecl = nil;
   PEM_ASN1_read_bio : function(d2i: D2I_OF_void; const name: PAnsiChar; bp: PBIO;
       var x: Pointer; cb: ppem_password_cb; u:PAnsiChar): Pointer cdecl = nil;
+    {$ENDIF}
   {$ENDIF}
-  PEM_read_bio_PrivateKey : function(bio: PBIO; var x: PEVP_PKEY; cb: ppem_password_cb; u: Pointer): PEVP_PKEY cdecl = nil;
-//int	EVP_DigestInit_ex(EVP_MD_CTX *ctx, const EVP_MD *type, ENGINE *impl);
   EVP_DigestInit_ex : function (ctx : PEVP_MD_CTX; const AType : PEVP_MD; impl : PENGINE) : TIdC_Int cdecl = nil;
 //int	EVP_DigestUpdate(EVP_MD_CTX *ctx,const void *d,
 //			 size_t cnt);
@@ -8360,11 +8430,40 @@ var
   ASN1_STRING_free : procedure(a: PASN1_STRING) cdecl = nil;
   i2d_X509 : function(x: PX509; var buf: PByte): TIdC_INT cdecl = nil;
   d2i_X509 : function(pr : PX509; _in : PPByte; len : TIdC_INT): PX509 cdecl = nil;
+  i2d_X509_REQ : function(x: PX509_REQ; var buf: PByte): TIdC_INT cdecl = nil;
+  d2i_X509_REQ : function(pr : PX509_REQ; _in : PPByte; len : TIdC_INT): PX509_REQ cdecl = nil;
+  i2d_X509_CRL : function(x: PX509_CRL; var buf: PByte): TIdC_INT cdecl = nil;
+  d2i_X509_CRL : function(pr : PX509_CRL; _in : PPByte; len : TIdC_INT): PX509_REQ cdecl = nil;
+  i2d_RSAPrivateKey : function(x: PRSA; var buf: PByte): TIdC_INT cdecl = nil;
+  d2i_RSAPrivateKey : function(pr : PRSA; _in : PPByte; len : TIdC_INT): PRSA cdecl = nil;
+//  d2i_RSAPublicKey
+  i2d_RSAPublicKey : function(x: PRSA; var buf: PByte): TIdC_INT cdecl = nil;
+  d2i_RSAPublicKey : function(pr : PRSA; _in : PPByte; len : TIdC_INT): PRSA cdecl = nil;
+//d2i_DSAPrivateKey
+  i2d_DSAPrivateKey : function(x: PDSA; var buf: PByte): TIdC_INT cdecl = nil;
+  d2i_DSAPrivateKey : function(pr : PDSA; _in : PPByte; len : TIdC_INT): PDSA cdecl = nil;
+
+  i2d_PrivateKey : function(x: PEVP_PKEY; var buf: PByte): TIdC_INT cdecl = nil;
+  d2i_PrivateKey : function(pr : PEVP_PKEY; _in : PPByte; len : TIdC_INT): PEVP_PKEY cdecl = nil;
+
+  i2d_PKCS7 : function(x: PPKCS7; var buf: PByte): TIdC_INT cdecl = nil;
+  d2i_PKCS7 : function(pr : PPKCS7; _in : PPByte; len : TIdC_INT): PPKCS7 cdecl = nil;
+
+  i2d_DHparams : function(x: PDH; var buf: PByte): TIdC_INT cdecl = nil;
+  d2i_DHparams : function(pr : PDH; _in : PPByte; len : TIdC_INT): PDH cdecl = nil;
+
+  i2d_DSAparams : function(x: PDSA; var buf: PByte): TIdC_INT cdecl = nil;
+  d2i_DSAparams : function(pr : PDSA; _in : PPByte; len : TIdC_INT): PDSA cdecl = nil;
+//NETSCAPE_CERT_SEQUENCE
+  i2d_NETSCAPE_CERT_SEQUENCE : function(x: PNETSCAPE_CERT_SEQUENCE; var buf: PByte): TIdC_INT cdecl = nil;
+  d2i_NETSCAPE_CERT_SEQUENCE : function(pr : PNETSCAPE_CERT_SEQUENCE; _in : PPByte; len : TIdC_INT): PNETSCAPE_CERT_SEQUENCE cdecl = nil;
+
   {$IFNDEF OPENSSL_NO_BIO}
   d2i_X509_bio : function(bp: PBIO; x: PPx509): PX509 cdecl = nil;
   i2d_X509_REQ_bio : function(x: PX509_REQ; bp: PBIO): TIdC_INT cdecl = nil;
   i2d_X509_bio : function(bp: PBIO; x509: PX509): TIdC_INT cdecl = nil;
   i2d_PrivateKey_bio : function(b: PBIO; pkey: PEVP_PKEY): TIdC_INT cdecl = nil;
+
   {$ENDIF}
   X509_new : function: PPX509 cdecl = nil;
   X509_free : procedure(x: PX509) cdecl = nil;
@@ -8563,7 +8662,7 @@ function FIPS_mode_set(onoff : TIdC_INT) : TIdC_INT;  {$IFDEF INLINE}inline;{$EN
 function FIPS_mode() : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
 
 
-function IdSslUCTTimeDecode(UCTtime : PASN1_UTCTIME; var year, month, day, hour, min, sec: Word;
+function UTC_Time_Decode(UCTtime : PASN1_UTCTIME; var year, month, day, hour, min, sec: Word;
   var tz_hour, tz_min: Integer): Integer;
 function SSL_set_app_data(s: PSSL; arg: Pointer): TIdC_INT;
 function SSL_get_app_data(s: PSSL): Pointer;
@@ -8571,27 +8670,29 @@ function Load: Boolean;
 procedure Unload;
 function WhichFailedToLoad: String;
 procedure InitializeRandom;
-function X509_STORE_CTX_get_app_data(ctx: PX509_STORE_CTX): Pointer;
+function M_ASN1_STRING_length(x : PASN1_STRING): TIdC_INT;
+procedure M_ASN1_STRING_length_set(x : PASN1_STRING; n : TIdC_INT);
+function M_ASN1_STRING_type(x : PASN1_STRING) : TIdC_INT;
+function M_ASN1_STRING_data(x : PASN1_STRING) : PAnsiChar;
+function X509_STORE_CTX_get_app_data(ctx: PX509_STORE_CTX):Pointer;
 function X509_get_version(x : PX509): TIdC_LONG;
 function X509_get_signature_type(x : PX509) : TIdC_INT;
-function X509_get_notBefore(x509: PX509): PASN1_TIME;
-function X509_get_notAfter(x509: PX509): PASN1_TIME;
-//function X509_get_notBefore(x509: PX509):PASN1_UTCTIME;
-//function X509_get_notAfter(x509: PX509):PASN1_UTCTIME;
+function X509_REQ_get_subject_name(x:PX509_REQ):PX509_NAME;
+function X509_get_notBefore(x509: PX509):PASN1_TIME;
+function X509_get_notAfter(x509: PX509):PASN1_TIME;
+function X509_REQ_get_version(x : PX509_REQ): TIdC_LONG;
 function X509_CRL_get_version(x : PX509_CRL) : TIdC_LONG;
 function X509_CRL_get_lastUpdate(x : PX509_CRL) : PASN1_TIME;
 function X509_CRL_get_nextUpdate(x : PX509_CRL) : PASN1_TIME;
 function X509_CRL_get_issuer(x : PX509_CRL) : PX509_NAME;
 function X509_CRL_get_REVOKED(x : PX509_CRL) : PSTACK_OF_X509_REVOKED;
 procedure SSL_CTX_set_info_callback(ctx: PSSL_CTX; cb: PSSL_CTX_info_callback);
-//SSL_CTX_ctrl macros
-function SSL_CTX_set_options(ctx: PSSL_CTX; op: TIdC_LONG): TIdC_LONG;
+function SSL_CTX_set_options(ctx: PSSL_CTX; op: TIdC_LONG):TIdC_LONG;
+function SSL_CTX_get_options(ctx: PSSL_CTX) : TIdC_LONG;
+function SSL_set_options(ssl: PSSL; op : TIdC_LONG): TIdC_LONG;
+function SSL_get_options(ssl : PSSL): TIdC_LONG;
 function SSL_CTX_set_mode(ctx : PSSL_CTX; op : TIdC_LONG) : TIdC_LONG;
 function SSL_CTX_get_mode(ctx : PSSL_CTX) : TIdC_LONG;
-
-function SSL_set_options(ssl: PSSL; op : TIdC_LONG): TIdC_LONG;
-
-
 function SSL_set_mtu(ssl : PSSL; mtu : TIdC_LONG) : TIdC_LONG;
 function SSL_CTX_sess_number(ctx : PSSL_CTX) : TIdC_LONG;
 function SSL_CTX_sess_connect(ctx : PSSL_CTX) : TIdC_LONG;
@@ -8626,31 +8727,156 @@ function SSL_get_tlsext_status_ids(ssl : PSSL; arg : Pointer) : TIdC_LONG;
 function SSL_set_tlsext_status_ids(ssl : PSSL; arg : Pointer) : TIdC_LONG;
 function SSL_get_tlsext_status_ocsp_resp(ssl : PSSL; arg : Pointer) : TIdC_LONG;
 function SSL_set_tlsext_status_ocsp_resp(ssl : PSSL; arg : Pointer; arglen : TIdC_LONG) : TIdC_LONG;
-//end  SSL_CTX_ctrl macros
 function SSL_CTX_set_tlsext_servername_callback(ctx : PSSL_CTX; cb :SSL_callback_ctrl_fp):TIdC_LONG;
 {$ENDIF}
-//function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPAnsiChar; length: PIdC_INT) : TIdC_UINT;
-function SSL_CTX_get_version(ctx: PSSL_CTX): TIdC_INT;
-function BIO_set_close(b: PBio; c: TIdC_LONG): TIdC_LONG;
+
+
+function SSL_CTX_get_version(ctx: PSSL_CTX):TIdC_INT;
+function BIO_set_conn_hostname(b : PBIO; name : PAnsiChar) : TIdC_LONG;
+function BIO_set_conn_port(b : PBIO; port : PAnsiChar) : TIdC_LONG;
+function BIO_set_conn_ip(b : PBIO; ip : PAnsiChar) : TIdC_LONG;
+function BIO_set_conn_int_port(b : PBIO; port : PAnsiChar) : TIdC_LONG;
+function BIO_get_conn_hostname(b : PBIO) : PAnsiChar;
+function BIO_get_conn_port(b : PBIO) : PAnsiChar;
+function BIO_get_conn_ip(b : PBIO) : PAnsiChar;
+function BIO_get_conn_int_port(b : PBIO) : TIdC_LONG;
+function BIO_set_nbio(b : PBIO; n : TIdC_LONG) : TIdC_LONG;
+function BIO_set_accept_port(b : PBIO; name : PAnsiChar) : TIdC_LONG;
+function BIO_get_accept_port(b : PBIO) : PAnsiChar;
+function BIO_set_nbio_accept(b : PBIO; n : TIdC_LONG) : TIdC_LONG;
+function BIO_set_accept_bios(b : PBIO; bio : PAnsiChar) : TIdC_LONG;
+function BIO_set_bind_mode(b : PBIO; mode : TIdC_LONG) : TIdC_LONG;
+function BIO_get_bind_mode(b : PBIO; mode : TIdC_LONG) : TIdC_LONG;
+function BIO_do_handshake(b : PBIO) : TIdC_LONG;
+function BIO_do_connect(b : PBIO) : TIdC_LONG;
+function BIO_do_accept(b : PBIO) : TIdC_LONG;
+function BIO_set_url(b : PBIO; url : PAnsiChar) : TIdC_LONG;
+function BIO_set_proxies(b : PBIO; p : PAnsiChar) : TIdC_LONG;
+function BIO_set_filter_bio(b : PBIO; s : PAnsiChar) : TIdC_LONG;
+
+function BIO_set_proxy_header(b : PBIO; sk : PAnsiChar) : TIdC_LONG;
+function BIO_set_no_connect_return(b : PBIO; bool : TIdC_LONG) : TIdC_LONG;
+function BIO_get_proxy_header(b : PBIO; skp : PAnsiChar) : TIdC_LONG;
+function BIO_get_proxies(b : PBIO; pxy_p : PAnsiChar) : TIdC_LONG;
+function BIO_get_url(b : PBIO; url : PAnsiChar) : TIdC_LONG;
+function BIO_get_no_connect_return(b : PBIO) : TIdC_LONG;
+function BIO_set_fd(b : PBIO; fd,c : TIdC_LONG) : TIdC_LONG;
+function BIO_get_fd(b : PBIO; c : PAnsiChar) : TIdC_LONG;
+function BIO_set_fp(b : PBIO; fp : PAnsiChar; c : TIdC_LONG) : TIdC_LONG;
+function BIO_get_fp(b : PBIO; fpp : PAnsiChar) : TIdC_LONG;
+function BIO_seek(b : PBIO; ofs : TIdC_LONG) : TIdC_INT;
+function BIO_tell(b : PBIO) : TIdC_INT;
+{$IFDEF CONST_STRICT}
+///* If you are wondering why this isn't defined, its because CONST_STRICT is
+// * purely a compile-time kludge to allow const to be checked.
+// */
+//int BIO_read_filename(BIO *b,const char *name);
+{$ELSE}
+function BIO_read_filename(b : PBIO; name : PAnsiChar) : TIdC_LONG;
+{$ENDIF}
+
+function BIO_write_filename(b : PBIO; name : PAnsiChar) : TIdC_LONG;
+function BIO_append_filename(b : PBIO; name : PAnsiChar) : TIdC_LONG;
+function BIO_rw_filename(b : PBIO; name : PAnsiChar) : TIdC_LONG;
+function BIO_set_ssl(b : PBIO; ssl : PAnsiChar; c : TIdC_LONG) : TIdC_LONG;
+function BIO_get_ssl(b : PBIO; sslp : PAnsiChar) : TIdC_LONG;
+function BIO_set_ssl_mode(b : PBIO; client : TIdC_LONG) : TIdC_LONG;
+function BIO_set_ssl_renegotiate_bytes(b : PBIO; num : TIdC_LONG) : TIdC_LONG;
+function BIO_get_num_renegotiates(b : PBIO) : TIdC_LONG;
+function BIO_set_ssl_renegotiate_timeout(b : PBIO; seconds : TIdC_LONG) : TIdC_LONG;
+function BIO_get_mem_data(b : PBIO; pp : Pointer) : TIdC_INT;
+function BIO_set_mem_buf(b : PBIO; bm : PAnsiChar; c : TIdC_INT) : TIdC_INT;
 function BIO_get_mem_ptr(b: PBIO; pp: Pointer) : TIdC_INT;
+procedure BIO_set_mem_eof_return(b : PBIO; const v : TIdC_INT);
+//* For the BIO_f_buffer() type */
+function BIO_get_buffer_num_lines(b : PBIO) : TIdC_INT;
+procedure BIO_set_buffer_size(b : PBIO; const size : TIdC_INT);
+//* Don't use the next one unless you know what you are doing :-) */
+function BIO_dup_state(b : PBIO; ret : PAnsiChar) : TIdC_LONG;
+
+function BIO_reset(b : PBIO) : TIdC_INT;
+function BIO_eof(b : PBIO) : TIdC_INT;
+function BIO_set_close(b: PBIO; c: TIdC_LONG): TIdC_INT;
+function BIO_get_close(b : PBIO) : TIdC_INT;
 function BIO_pending(b : PBIO) : TIdC_INT;
-function PEM_write_bio_X509(b: PBIO; x: PAnsiChar): TIdC_INT;
-function PEM_read_bio_X509(bp: PBIO; x: Pointer; cb: ppem_password_cb; u: PAnsiChar): PX509;
-function OPENSSL_malloc(aSize: TIdC_INT): Pointer;
+function BIO_wpending(b : PBIO) : TIdC_INT;
+function BIO_flush(b : PBIO) : TIdC_INT;
+function BIO_buffer_get_num_lines(b : PBIO) : TIdC_INT;
+function BIO_get_info_callback(b : PBIO; var cbp : Pbio_info_cb) : TIdC_INT;
+function BIO_set_info_callback(b : PBIO; cb : Pbio_info_cb) : TIdC_INT;
+function BIO_set_read_buffer_size(b : PBIO; size : TIdC_LONG) : TIdC_LONG;
+
+function BIO_set_write_buffer_size(b : PBIO; size : TIdC_LONG) : TIdC_LONG;
+
+function BIO_make_bio_pair(b1, b2 : PBIO ): TIdC_INT;
+
+function BIO_destroy_bio_pair(b : PBIO) : TIdC_INT;
+
+function BIO_shutdown_wr(b : PBIO) : TIdC_INT;
+
+function BIO_get_write_guarantee(b : PBIO) : TIdC_INT;
+function BIO_get_read_request(b : PBIO) : TIdC_INT;
+
+function _BIO_ctrl_dgram_connect(b : PBIO; peer : PAnsiChar) : TIdC_INT;
+
+function BIO_ctrl_set_connected(b : PBIO; state : TIdC_INT; peer : PAnsiChar) : TIdC_INT;
+
+function BIO_dgram_recv_timedout(b : PBIO) : TIdC_INT;
+
+function BIO_dgram_send_timedout(b : PBIO) : TIdC_INT;
+
+function BIO_dgram_set_peer(b : PBIO; peer : PAnsiChar) : TIdC_INT;
+
+function PEM_read_bio_X509(bp: PBIO; var x: PX509; cb: ppem_password_cb; u: Pointer): PX509;
+
+function PEM_read_bio_X509_REQ(bp :PBIO; var x : PX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
+function PEM_read_bio_X509_CRL(bp : PBIO; var x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
+function PEM_read_bio_RSAPrivateKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+function PEM_read_bio_RSAPublicKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+function PEM_read_bio_DSAPrivateKey(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+function PEM_read_bio_PrivateKey(bp : PBIO; var x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
+function PEM_read_bio_PKCS7(bp : PBIO; var x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
+function PEM_read_bio_DHparams(bp : PBIO; var x : PDH; cb : ppem_password_cb; u : Pointer) : PDH;
+function PEM_read_bio_DSAparams(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+
+function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; var x : PNETSCAPE_CERT_SEQUENCE;
+  cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE;
+
+function PEM_write_bio_X509(bp: PBIO; x: PX509): TIdC_INT;
+function PEM_write_bio_X509_REQ(bp: PBIO; x: PX509_REQ): TIdC_INT;
+function PEM_write_bio_X509_CRL(bp : PBIO; x : PX509_CRL) : TIdC_INT;
+function  PEM_write_bio_RSAPrivateKey(bp : PBIO; x : PRSA; const enc : PEVP_CIPHER;
+  kstr : PAnsiChar; klen : TIdC_INT; cb : ppem_password_cb; u : POinter) : TIdC_INT;
+function PEM_write_bio_RSAPublicKey(bp : PBIO; x : PRSA) : TIdC_INT;
+function PEM_write_bio_DSAPrivateKey( bp : PBIO; x : PDSA; const enc : PEVP_CIPHER;
+  kstr :PAnsiChar; klen : TIdC_INT; cb : Ppem_password_cb; u : Pointer) : TIdC_INT;
+function PEM_write_bio_PrivateKey(bp : PBIO; x : PEVP_PKEY; const enc : PEVP_CIPHER;
+  kstr :PAnsiChar; klen : TIdC_INT; cb : Ppem_password_cb; u : Pointer) : TIdC_INT;
+function PEM_write_bio_PKCS7(bp : PBIO; x : PPKCS7) : TIdC_INT;
+function PEM_write_bio_DHparams(bp : PBIO; x : PDH): TIdC_INT;
+function PEM_write_bio_DSAparams(bp : PBIO; x : PDSA) : TIdC_INT;
+function PEM_write_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PDSA) : TIdC_INT;
+
+function OPENSSL_malloc(aSize:TIdC_INT):Pointer;
 procedure CRYPTO_SetMemCheck(const aEnabled: Boolean);
+
 {$IFNDEF OPENSSL_NO_RSA}
 function EVP_PKEY_assign_RSA(pkey: PEVP_PKEY; rsa: PAnsiChar): TIdC_INT;
 {$ENDIF}
-function X509_REQ_get_subject_name(x: PX509_REQ): PX509_NAME;
-//function X509_REQ_get_subject_name(x:PX509_REQ):PASN1_BIT_STRING;
-function X509_REQ_get_version(x : PX509_REQ): TIdC_LONG;
+
+{$IFNDEF OPENSSL_NO_DSA}
+function EVP_PKEY_assign_DSA(pkey : PEVP_PKEY; dsa : PAnsiChar) : TIdC_INT;
+{$ENDIF}
+
+{$IFNDEF OPENSSL_NO_DH}
+function EVP_PKEY_assign_DH(pkey : PEVP_PKEY; dh : PAnsiChar) : TIdC_INT;
+{$ENDIF}
+
+{$IFNDEF OPENSSL_NO_EC}
+function EVP_PKEY_assign_EC_KEY(pkey : PEVP_PKEY; eckey : PAnsiChar) : TIdC_INT;
+{$ENDIF}
+
 procedure X509V3_set_ctx_nodb(ctx: X509V3_CTX);
-function M_ASN1_STRING_length(x : PASN1_STRING): TIdC_INT;
-procedure M_ASN1_STRING_length_set(x : PASN1_STRING; n : TIdC_INT);
-function M_ASN1_STRING_type(x : PASN1_STRING) : TIdC_INT;
-function M_ASN1_STRING_data(x : PASN1_STRING) : PAnsiChar;
-
-
 //
 function ErrMsg(AErr : TIdC_ULONG) : AnsiString;
 function GetCryptLibHandle : Integer;
@@ -9382,7 +9608,7 @@ them in case we use them later.}
   fn_BIO_write = 'BIO_write';  {Do not localize}
   fn_BIO_puts = 'BIO_puts';  {Do not localize}
   fn_BIO_ctrl = 'BIO_ctrl';  {Do not localize}
-  {CH fn_BIO_ptr_ctrl = 'BIO_ptr_ctrl'; }  {Do not localize}
+  fn_BIO_ptr_ctrl = 'BIO_ptr_ctrl';   {Do not localize}
   fn_BIO_int_ctrl = 'BIO_int_ctrl';  {Do not localize}
   {CH fn_BIO_push = 'BIO_push'; }  {Do not localize}
   {CH fn_BIO_pop = 'BIO_pop'; }  {Do not localize}
@@ -9744,10 +9970,10 @@ them in case we use them later.}
   {CH fn_RSA_memory_lock = 'RSA_memory_lock'; }  {Do not localize}
   {CH fn_RSA_PKCS1_SSLeay = 'RSA_PKCS1_SSLeay'; }  {Do not localize}
   {CH fn_ERR_load_RSA_strings = 'ERR_load_RSA_strings'; }  {Do not localize}
-  {CH fn_d2i_RSAPublicKey = 'd2i_RSAPublicKey'; }  {Do not localize}
-  {CH fn_i2d_RSAPublicKey = 'i2d_RSAPublicKey'; }  {Do not localize}
-  {CH fn_d2i_RSAPrivateKey = 'd2i_RSAPrivateKey'; }  {Do not localize}
-  {CH fn_i2d_RSAPrivateKey = 'i2d_RSAPrivateKey'; }  {Do not localize}
+  fn_d2i_RSAPublicKey = 'd2i_RSAPublicKey';   {Do not localize}
+  fn_i2d_RSAPublicKey = 'i2d_RSAPublicKey';   {Do not localize}
+  fn_d2i_RSAPrivateKey = 'd2i_RSAPrivateKey';   {Do not localize}
+  fn_i2d_RSAPrivateKey = 'i2d_RSAPrivateKey';   {Do not localize}
     {$IFNDEF OPENSSL_NO_FP_API}
   {CH fn_RSA_print_fp = 'RSA_print_fp'; }  {Do not localize}
     {$ENDIF}
@@ -11113,15 +11339,15 @@ them in case we use them later.}
   fn_d2i_X509_bio = 'd2i_X509_bio';  {Do not localize}
   fn_i2d_X509_bio = 'i2d_X509_bio';  {Do not localize}
   fn_i2d_PrivateKey_bio = 'i2d_PrivateKey_bio'; {Do not localize}
-  {CH fn_d2i_X509_CRL_bio = 'd2i_X509_CRL_bio'; }  {Do not localize}
-  {CH fn_i2d_X509_CRL_bio = 'i2d_X509_CRL_bio'; }  {Do not localize}
-  {CH fn_d2i_X509_REQ_bio = 'd2i_X509_REQ_bio'; }  {Do not localize}
+  fn_d2i_X509_CRL_bio = 'd2i_X509_CRL_bio';   {Do not localize}
+  fn_i2d_X509_CRL_bio = 'i2d_X509_CRL_bio';   {Do not localize}
+  fn_d2i_X509_REQ_bio = 'd2i_X509_REQ_bio';   {Do not localize}
   fn_i2d_X509_REQ_bio = 'i2d_X509_REQ_bio';  {Do not localize}
     {$IFNDEF OPENSSL_NO_RSA}
-  {CH fn_d2i_RSAPrivateKey_bio = 'd2i_RSAPrivateKey_bio'; }  {Do not localize}
-  {CH fn_i2d_RSAPrivateKey_bio = 'i2d_RSAPrivateKey_bio'; }  {Do not localize}
-  {CH fn_d2i_RSAPublicKey_bio = 'd2i_RSAPublicKey_bio'; }  {Do not localize}
-  {CH fn_i2d_RSAPublicKey_bio = 'i2d_RSAPublicKey_bio'; }  {Do not localize}
+  fn_d2i_RSAPrivateKey_bio = 'd2i_RSAPrivateKey_bio';  {Do not localize}
+  fn_i2d_RSAPrivateKey_bio = 'i2d_RSAPrivateKey_bio';  {Do not localize}
+  fn_d2i_RSAPublicKey_bio = 'd2i_RSAPublicKey_bio';   {Do not localize}
+  fn_i2d_RSAPublicKey_bio = 'i2d_RSAPublicKey_bio';   {Do not localize}
     {$ENDIF}
     {$IFNDEF OPENSSL_NO_DSA}
   {CH fn_d2i_DSA_PUBKEY_bio = 'd2i_DSA_PUBKEY_bio'; } {Do not localize}
@@ -11190,8 +11416,8 @@ them in case we use them later.}
   {CH fn_d2i_X509_REQ_INFO = 'd2i_X509_REQ_INFO'; }  {Do not localize}
   fn_X509_REQ_new = 'X509_REQ_new';  {Do not localize}
   fn_X509_REQ_free = 'X509_REQ_free';  {Do not localize}
-  {CH fn_i2d_X509_REQ = 'i2d_X509_REQ'; }  {Do not localize}
-  {CH fn_d2i_X509_REQ = 'd2i_X509_REQ'; }  {Do not localize}
+  fn_i2d_X509_REQ = 'i2d_X509_REQ';   {Do not localize}
+  fn_d2i_X509_REQ = 'd2i_X509_REQ';   {Do not localize}
   {CH fn_X509_ATTRIBUTE_new = 'X509_ATTRIBUTE_new'; }  {Do not localize}
   {CH fn_X509_ATTRIBUTE_free = 'X509_ATTRIBUTE_free'; }  {Do not localize}
   {CH fn_i2d_X509_ATTRIBUTE = 'i2d_X509_ATTRIBUTE'; }  {Do not localize}
@@ -11228,8 +11454,8 @@ them in case we use them later.}
   {CH fn_d2i_X509_CRL_INFO = 'd2i_X509_CRL_INFO'; }  {Do not localize}
   {CH fn_X509_CRL_new = 'X509_CRL_new'; }  {Do not localize}
   {CH fn_X509_CRL_free = 'X509_CRL_free'; }  {Do not localize}
-  {CH fn_i2d_X509_CRL = 'i2d_X509_CRL'; }  {Do not localize}
-  {CH fn_d2i_X509_CRL = 'd2i_X509_CRL'; }  {Do not localize}
+  fn_i2d_X509_CRL = 'i2d_X509_CRL';   {Do not localize}
+  fn_d2i_X509_CRL = 'd2i_X509_CRL';   {Do not localize}
   {CH fn_X509_PKEY_new = 'X509_PKEY_new'; }  {Do not localize}
   {CH fn_X509_PKEY_free = 'X509_PKEY_free'; }  {Do not localize}
   {CH fn_i2d_X509_PKEY = 'i2d_X509_PKEY'; }  {Do not localize}
@@ -11393,33 +11619,35 @@ them in case we use them later.}
   {CH fn_PEM_proc_type = 'PEM_proc_type'; }  {Do not localize}
   {CH fn_PEM_dek_info = 'PEM_dek_info'; }  {Do not localize}
   {$IFNDEF OPENSSL_NO_BIO}
-  {CH fn_PEM_read_bio_X509 = 'PEM_read_bio_X509'; }  {Do not localize}
-  {CH fn_PEM_write_bio_X509 = 'PEM_write_bio_X509'; }  {Do not localize}
-  {CH fn_PEM_read_bio_X509_REQ = 'PEM_read_bio_X509_REQ'; }  {Do not localize}
+    {$IFNDEF SSLEAY_MACROS}
+  fn_PEM_read_bio_X509 = 'PEM_read_bio_X509';   {Do not localize}
+  fn_PEM_write_bio_X509 = 'PEM_write_bio_X509';   {Do not localize}
+  fn_PEM_read_bio_X509_REQ = 'PEM_read_bio_X509_REQ';   {Do not localize}
   fn_PEM_write_bio_X509_REQ = 'PEM_write_bio_X509_REQ';  {Do not localize}
-  {CH fn_PEM_read_bio_X509_CRL = 'PEM_read_bio_X509_CRL'; }  {Do not localize}
-  {CH fn_PEM_write_bio_X509_CRL = 'PEM_write_bio_X509_CRL'; }  {Do not localize}
-  {CH fn_PEM_read_bio_PKCS7 = 'PEM_read_bio_PKCS7'; }  {Do not localize}
-  {CH fn_PEM_write_bio_PKCS7 = 'PEM_write_bio_PKCS7'; }  {Do not localize}
-  {CH fn_PEM_read_bio_NETSCAPE_CERT_SEQUENCE = 'PEM_read_bio_NETSCAPE_CERT_SEQUENCE'; }  {Do not localize}
-  {CH fn_PEM_write_bio_NETSCAPE_CERT_SEQUENCE = 'PEM_write_bio_NETSCAPE_CERT_SEQUENCE'; }  {Do not localize}
-  {CH fn_PEM_read_bio_PKCS8 = 'PEM_read_bio_PKCS8'; }  {Do not localize}
-  {CH fn_PEM_write_bio_PKCS8 = 'PEM_write_bio_PKCS8'; }  {Do not localize}
-  {CH fn_PEM_read_bio_PKCS8_PRIV_KEY_INFO = 'PEM_read_bio_PKCS8_PRIV_KEY_INFO'; }  {Do not localize}
-  {CH fn_PEM_write_bio_PKCS8_PRIV_KEY_INFO = 'PEM_write_bio_PKCS8_PRIV_KEY_INFO'; }  {Do not localize}
-  {CH fn_PEM_read_bio_RSAPrivateKey = 'PEM_read_bio_RSAPrivateKey'; }  {Do not localize}
-  {CH fn_PEM_write_bio_RSAPrivateKey = 'PEM_write_bio_RSAPrivateKey'; }  {Do not localize}
-  {CH fn_PEM_read_bio_RSAPublicKey = 'PEM_read_bio_RSAPublicKey'; }  {Do not localize}
-  {CH fn_PEM_write_bio_RSAPublicKey = 'PEM_write_bio_RSAPublicKey'; }  {Do not localize}
-  {CH fn_PEM_read_bio_DSAPrivateKey = 'PEM_read_bio_DSAPrivateKey'; }  {Do not localize}
-  {CH fn_PEM_write_bio_DSAPrivateKey = 'PEM_write_bio_DSAPrivateKey'; }  {Do not localize}
-  {CH fn_PEM_read_bio_DSAparams = 'PEM_read_bio_DSAparams'; }  {Do not localize}
-  {CH fn_PEM_write_bio_DSAparams = 'PEM_write_bio_DSAparams'; }  {Do not localize}
-  {CH fn_PEM_read_bio_DHparams = 'PEM_read_bio_DHparams'; }  {Do not localize}
-  {CH fn_PEM_write_bio_DHparams = 'PEM_write_bio_DHparams'; }  {Do not localize}
+  fn_PEM_read_bio_X509_CRL = 'PEM_read_bio_X509_CRL';   {Do not localize}
+  fn_PEM_write_bio_X509_CRL = 'PEM_write_bio_X509_CRL';   {Do not localize}
+  fn_PEM_read_bio_PKCS7 = 'PEM_read_bio_PKCS7';   {Do not localize}
+  fn_PEM_write_bio_PKCS7 = 'PEM_write_bio_PKCS7';   {Do not localize}
+  fn_PEM_read_bio_NETSCAPE_CERT_SEQUENCE = 'PEM_read_bio_NETSCAPE_CERT_SEQUENCE';   {Do not localize}
+  fn_PEM_write_bio_NETSCAPE_CERT_SEQUENCE = 'PEM_write_bio_NETSCAPE_CERT_SEQUENCE';   {Do not localize}
+  fn_PEM_read_bio_PKCS8 = 'PEM_read_bio_PKCS8';   {Do not localize}
+  fn_PEM_write_bio_PKCS8 = 'PEM_write_bio_PKCS8';   {Do not localize}
+  fn_PEM_read_bio_PKCS8_PRIV_KEY_INFO = 'PEM_read_bio_PKCS8_PRIV_KEY_INFO';   {Do not localize}
+  fn_PEM_write_bio_PKCS8_PRIV_KEY_INFO = 'PEM_write_bio_PKCS8_PRIV_KEY_INFO';   {Do not localize}
+  fn_PEM_read_bio_RSAPrivateKey = 'PEM_read_bio_RSAPrivateKey';   {Do not localize}
+  fn_PEM_write_bio_RSAPrivateKey = 'PEM_write_bio_RSAPrivateKey';   {Do not localize}
+  fn_PEM_read_bio_RSAPublicKey = 'PEM_read_bio_RSAPublicKey';   {Do not localize}
+  fn_PEM_write_bio_RSAPublicKey = 'PEM_write_bio_RSAPublicKey';   {Do not localize}
+  fn_PEM_read_bio_DSAPrivateKey = 'PEM_read_bio_DSAPrivateKey';   {Do not localize}
+  fn_PEM_write_bio_DSAPrivateKey = 'PEM_write_bio_DSAPrivateKey';   {Do not localize}
+  fn_PEM_read_bio_DSAparams = 'PEM_read_bio_DSAparams';  {Do not localize}
+  fn_PEM_write_bio_DSAparams = 'PEM_write_bio_DSAparams';   {Do not localize}
+  fn_PEM_read_bio_DHparams = 'PEM_read_bio_DHparams';   {Do not localize}
+  fn_PEM_write_bio_DHparams = 'PEM_write_bio_DHparams';   {Do not localize}
   fn_PEM_read_bio_PrivateKey = 'PEM_read_bio_PrivateKey';  {Do not localize}
-  {CH fn_PEM_write_bio_PrivateKey = 'PEM_write_bio_PrivateKey'; }  {Do not localize}
+  fn_PEM_write_bio_PrivateKey = 'PEM_write_bio_PrivateKey';   {Do not localize}
   fn_PEM_write_bio_PKCS8PrivateKey = 'PEM_write_bio_PKCS8PrivateKey';  {Do not localize}
+    {$ENDIF}
   {$ENDIF}
   {CH fn_PEM_read_X509 = 'PEM_read_X509'; }  {Do not localize}
   {CH fn_PEM_write_X509 = 'PEM_write_X509'; }  {Do not localize}
@@ -12250,6 +12478,7 @@ begin
   @BIO_s_file := LoadFunctionCLib(fn_BIO_s_file);
   @BIO_ctrl := LoadFunctionCLib(fn_BIO_ctrl);
   @BIO_int_ctrl := LoadFunctionCLib( fn_BIO_int_ctrl);
+  @BIO_ptr_ctrl := LoadFunctionCLib( fn_BIO_ptr_ctrl );
   @BIO_new_file := LoadFunctionCLib(fn_BIO_new_file);
   @BIO_puts := LoadFunctionCLib(fn_BIO_puts);
   @BIO_read := LoadFunctionCLib(fn_BIO_read);
@@ -12261,6 +12490,13 @@ begin
   @d2i_X509_bio := LoadFunctionCLib(fn_d2i_X509_bio);
   @d2i_X509 := LoadFunctionClib(fn_d2i_X509);
   @i2d_X509_REQ_bio := LoadFunctionClib(fn_i2d_X509_REQ_bio);
+  @i2d_X509_REQ := LoadFunctionClib(fn_i2d_X509_REQ);
+  @d2i_X509_REQ := LoadFunctionClib(fn_d2i_X509_REQ );
+  @i2d_X509_CRL := LoadFunctionClib(fn_i2d_X509_CRL );
+  @d2i_X509_CRL := LoadFunctionClib(fn_d2i_X509_CRL );
+  @i2d_RSAPublicKey := LoadFunctionCLib(fn_i2d_RSAPublicKey);
+  @d2i_RSAPublicKey := LoadFunctionClib(fn_d2i_RSAPublicKey);
+
   //X509
   @X509_new := LoadFunctionCLib(fn_X509_new);
   @X509_free := LoadFunctionCLib(fn_X509_free);
@@ -12276,11 +12512,34 @@ begin
   @X509_set_pubkey := LoadFunctionCLib(fn_X509_set_pubkey);
   @X509_REQ_set_pubkey := LoadFunctionCLib(fn_X509_REQ_set_pubkey);
   //PEM
-  @PEM_write_bio_PKCS8PrivateKey := LoadFunctionCLib(fn_PEM_write_bio_PKCS8PrivateKey);
-  @PEM_ASN1_write_bio := LoadFunctionCLib(fn_PEM_ASN1_write_bio);
-  @PEM_ASN1_read_bio := LoadFunctionCLib(fn_PEM_ASN1_read_bio);
-  @PEM_read_bio_PrivateKey := LoadFunctionCLib(fn_PEM_read_bio_PrivateKey);
-  @PEM_write_bio_X509_REQ := LoadFunctionCLib(fn_PEM_write_bio_X509_REQ);
+  {$IFNDEF SSLEAY_MACROS}
+  @_PEM_read_bio_X509 := LoadFunctionCLib(fn_PEM_read_bio_X509, False);
+  @_PEM_read_bio_X509_REQ := LoadFunctionClib(fn_PEM_read_bio_X509_REQ, False);
+  @_PEM_read_bio_X509_CRL := LoadFunctionClib(fn_PEM_read_bio_X509_CRL, False);
+  @_PEM_read_bio_RSAPrivateKey := LoadFunctionCLib(fn_PEM_read_bio_RSAPrivateKey, False);
+  @_PEM_read_bio_RSAPublicKey := LoadFunctionCLib(fn_PEM_read_bio_RSAPublicKey, False);
+  @_PEM_read_bio_DSAPrivateKey :=  LoadFunctionCLib(fn_PEM_read_bio_DSAPrivateKey, False);
+  @_PEM_read_bio_PrivateKey := LoadFunctionClib (fn_PEM_read_bio_PrivateKey,False);
+  @_PEM_read_bio_PKCS7 := LoadFunctionClib (fn_PEM_read_bio_PKCS7, False);
+  @_PEM_read_bio_DHparams := LoadFunctionCLib(fn_PEM_read_bio_DHparams, False);
+  @_PEM_read_bio_DSAparams := LoadFunctionClib(fn_PEM_read_bio_DSAparams, False);
+  @_PEM_read_bio_NETSCAPE_CERT_SEQUENCE := LoadFunctionClib(fn_PEM_read_bio_NETSCAPE_CERT_SEQUENCE,False);
+  @_PEM_write_bio_X509 := LoadFunctionCLib(fn_PEM_write_bio_X509,False);
+  @_PEM_write_bio_X509_REQ := LoadFunctionCLib(fn_PEM_write_bio_X509_REQ,False);
+  @_PEM_write_bio_X509_CRL := LoadFunctionCLib( fn_PEM_write_bio_X509_CRL,False);
+  @_PEM_write_bio_RSAPublicKey := LoadFunctionCLib( fn_PEM_write_bio_RSAPublicKey,False);
+  @_PEM_write_bio_DSAPrivateKey := LoadFunctionCLib( fn_PEM_write_bio_DSAPrivateKey,False);
+  @_PEM_write_bio_PrivateKey := LoadFunctionClib( fn_PEM_write_bio_PrivateKey,False);
+  @_PEM_write_bio_PKCS7 := LoadFunctionCLib( fn_PEM_write_bio_PKCS7,False);
+  @_PEM_write_bio_DHparams := LoadFunctionCLib(fn_PEM_write_bio_DHparams,False);
+  @_PEM_write_bio_DSAparams := LoadFunctionClib(fn_PEM_write_bio_DSAparams,False);
+  @_PEM_write_bio_NETSCAPE_CERT_SEQUENCE := LoadFunctionClib(fn_PEM_write_bio_NETSCAPE_CERT_SEQUENCE,False);
+  {$ELSE}
+  @PEM_ASN1_write_bio := LoadFunctionCLib(fn_PEM_ASN1_write_bio,False);
+  @PEM_ASN1_read_bio := LoadFunctionCLib(fn_PEM_ASN1_read_bio,False);
+  {$ENDIF}
+  @PEM_write_bio_PKCS8PrivateKey := LoadFunctionCLib(fn_PEM_write_bio_PKCS8PrivateKey,False);
+
   //EVP
   {$IFNDEF OPENSSL_NO_DES}
   @EVP_des_ede3_cbc := LoadFunctionCLib(fn_EVP_des_ede3_cbc);
@@ -12500,6 +12759,7 @@ begin
   @BIO_s_mem := nil;
   @BIO_s_file := nil;
   @BIO_ctrl := nil;
+  @BIO_ptr_ctrl := nil;
   @BIO_int_ctrl := nil;
   @BIO_new_file := nil;
   @BIO_puts := nil;
@@ -12512,6 +12772,8 @@ begin
   @d2i_X509_bio := nil;
   @d2i_X509 := nil;
   @i2d_X509_REQ_bio := nil;
+  @i2d_X509_REQ := nil;
+  @d2i_X509_REQ := nil;
   //X509
   @X509_new := nil;
   @X509_free := nil;
@@ -12527,11 +12789,36 @@ begin
   @X509_set_pubkey := nil;
   @X509_REQ_set_pubkey := nil;
   //PEM
+  {$IFNDEF SSLEAY_MACROS}
+  @_PEM_read_bio_X509 := nil;
+  @_PEM_read_bio_X509_REQ := nil;
+  @_PEM_read_bio_X509_CRL := nil;
+  @_PEM_read_bio_RSAPrivateKey := nil;
+  @_PEM_read_bio_RSAPublicKey := nil;
+  @_PEM_read_bio_DSAPrivateKey := nil;
+  @_PEM_read_bio_PrivateKey := nil;
+  @_PEM_read_bio_PKCS7 := nil;
+  @_PEM_read_bio_DHparams := nil;
+  @_PEM_read_bio_DSAparams := nil;
+  @_PEM_read_bio_NETSCAPE_CERT_SEQUENCE := nil;
+  @_PEM_write_bio_X509 := nil;
+  @_PEM_write_bio_X509_REQ := nil;
+  @_PEM_write_bio_X509_CRL := nil;
+  @_PEM_write_bio_RSAPublicKey := nil;
+  @_PEM_write_bio_RSAPrivateKey := nil;
+  @_PEM_write_bio_DSAPrivateKey := nil;
+  @_PEM_write_bio_PrivateKey := nil;
+  @_PEM_write_bio_PKCS7 := nil;
+  @_PEM_write_bio_DHparams := nil;
+  @_PEM_write_bio_DSAparams := nil;
+  @_PEM_write_bio_NETSCAPE_CERT_SEQUENCE := nil;
+
   @PEM_write_bio_PKCS8PrivateKey := nil;
+
+  {$ELSE}
   @PEM_ASN1_write_bio := nil;
   @PEM_ASN1_read_bio := nil;
-  @PEM_read_bio_PrivateKey := nil;
-  @PEM_write_bio_X509_REQ := nil;
+  {$ENDIF}
   //EVP
   {$IFNDEF OPENSSL_NO_DES}
   @EVP_des_ede3_cbc := nil;
@@ -12660,7 +12947,7 @@ end;
 
 // Converts the following string representation into corresponding parts
 // YYMMDDHHMMSS(+|-)HH( )MM
-function IdSslUCTTimeDecode(UCTtime : PASN1_UTCTIME; var year, month, day, hour, min, sec: Word;
+function UTC_Time_Decode(UCTtime : PASN1_UTCTIME; var year, month, day, hour, min, sec: Word;
   var tz_hour, tz_min: Integer): Integer;
 var
   i, tz_dir: Integer;
@@ -13114,21 +13401,299 @@ begin
 end;
 
 {$ENDIF}
-//
-{function IdSslSessionGetIdCtx(s: PSSL_SESSION; id: PPAnsiChar; length: PIdC_INT) : TIdC_UINT;
-{$IFDEF USE_INLINE inline; {$ENDIF
-begin
-  Assert(s<>nil);
-  id^ := @s.sid_ctx;
-  Result := s.sid_ctx_length;
-  Length^ := Result;
-end;             }
+
 
 function SSL_CTX_get_version(ctx: PSSL_CTX):TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Assert(ctx<>nil);
   Result := ctx^.method^.version;
+end;
+
+//* BIO_s_connect() and BIO_s_socks4a_connect() */
+
+function BIO_set_conn_hostname(b : PBIO; name : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_CONNECT,0,name);
+end;
+
+function BIO_set_conn_port(b : PBIO; port : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_CONNECT,1,port);
+end;
+
+function BIO_set_conn_ip(b : PBIO; ip : PAnsiChar) : TIdC_LONG;
+begin
+  Result :=  BIO_ctrl(b,BIO_C_SET_CONNECT,2,ip);
+end;
+
+function BIO_set_conn_int_port(b : PBIO; port : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_CONNECT,3,port);
+end;
+
+function BIO_get_conn_hostname(b : PBIO) : PAnsiChar;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ptr_ctrl(b,BIO_C_GET_CONNECT,0);
+end;
+
+function BIO_get_conn_port(b : PBIO) : PAnsiChar;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ptr_ctrl(b,BIO_C_GET_CONNECT,1);
+end;
+
+function BIO_get_conn_ip(b : PBIO) : PAnsiChar;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ptr_ctrl(b,BIO_C_GET_CONNECT,2);
+end;
+
+function BIO_get_conn_int_port(b : PBIO) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_int_ctrl(b,BIO_C_GET_CONNECT,3,0);
+end;
+
+function BIO_set_nbio(b : PBIO; n : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_NBIO,n,nil);
+end;
+
+//* BIO_s_accept_socket() */
+function BIO_set_accept_port(b : PBIO; name : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_ACCEPT,0,name);
+end;
+
+function BIO_get_accept_port(b : PBIO) : PAnsiChar;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := BIO_ptr_ctrl(b,BIO_C_GET_ACCEPT,0);
+end;
+
+//* #define BIO_set_nbio(b,n)	BIO_ctrl(b,BIO_C_SET_NBIO,(n),NULL) */
+function BIO_set_nbio_accept(b : PBIO; n : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  if n <> 0 then begin
+    Result := BIO_ctrl(b,BIO_C_SET_ACCEPT,1,PAnsiChar('a'));
+  end else begin
+    Result := BIO_ctrl(b,BIO_C_SET_ACCEPT,1,nil);
+  end;
+end;
+
+function BIO_set_accept_bios(b : PBIO; bio : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_ACCEPT,2,bio);
+end;
+
+function BIO_set_bind_mode(b : PBIO; mode : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_BIND_MODE,mode,nil);
+end;
+
+function BIO_get_bind_mode(b : PBIO; mode : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_GET_BIND_MODE,0,nil);
+end;
+
+function BIO_do_handshake(b : PBIO) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := BIO_ctrl(b,BIO_C_DO_STATE_MACHINE,0,nil);
+end;
+
+function BIO_do_connect(b : PBIO) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_do_handshake(b);
+end;
+
+function BIO_do_accept(b : PBIO) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_do_handshake(b)
+end;
+
+//* BIO_s_proxy_client() */
+function BIO_set_url(b : PBIO; url : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := BIO_ctrl(b,BIO_C_SET_PROXY_PARAM,0,url);
+end;
+
+function BIO_set_proxies(b : PBIO; p : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_PROXY_PARAM,1,p);
+end;
+
+//* BIO_set_nbio(b,n) */
+function BIO_set_filter_bio(b : PBIO; s : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_PROXY_PARAM,2,s);
+end;
+
+//* BIO *BIO_get_filter_bio(BIO *bio); */
+//function BIO_set_proxy_cb(b : PBIO,cb) : TIdC_LONG;
+//begin
+//BIO_callback_ctrl(b,BIO_C_SET_PROXY_PARAM,3,(void *(*cb)()))
+//end;
+
+function BIO_set_proxy_header(b : PBIO; sk : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_PROXY_PARAM,4,sk);
+end;
+
+function BIO_set_no_connect_return(b : PBIO; bool : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_int_ctrl(b,BIO_C_SET_PROXY_PARAM,5,bool);
+end;
+
+function BIO_get_proxy_header(b : PBIO; skp : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+   Result := BIO_ctrl(b,BIO_C_GET_PROXY_PARAM,0,skp);
+end;
+
+function BIO_get_proxies(b : PBIO; pxy_p : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+   Result := BIO_ctrl(b,BIO_C_GET_PROXY_PARAM,1,pxy_p);
+end;
+
+function BIO_get_url(b : PBIO; url : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := BIO_ctrl(b,BIO_C_GET_PROXY_PARAM,2,url);
+end;
+
+function BIO_get_no_connect_return(b : PBIO) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_GET_PROXY_PARAM,5,nil);
+end;
+
+function BIO_set_fd(b : PBIO; fd,c : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_int_ctrl(b,BIO_C_SET_FD,c,fd);
+end;
+
+function BIO_get_fd(b : PBIO; c : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_GET_FD,0,c);
+end;
+
+function BIO_set_fp(b : PBIO; fp : PAnsiChar; c : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_FILE_PTR,c,fp);
+end;
+
+function BIO_get_fp(b : PBIO; fpp : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_GET_FILE_PTR,0,fpp);
+end;
+
+function BIO_seek(b : PBIO; ofs : TIdC_LONG) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_FILE_SEEK,ofs,nil);
+end;
+
+function BIO_tell(b : PBIO) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_FILE_TELL,0,nil);
+end;
+
+//* name is cast to lose const, but might be better to route through a function
+//  so we can do it safely */
+{$IFDEF CONST_STRICT}
+///* If you are wondering why this isn't defined, its because CONST_STRICT is
+// * purely a compile-time kludge to allow const to be checked.
+// */
+//int BIO_read_filename(BIO *b,const char *name);
+{$ELSE}
+function BIO_read_filename(b : PBIO; name : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_FILENAME, BIO_CLOSE or BIO_FP_READ,name);
+end;
+{$ENDIF}
+
+function BIO_write_filename(b : PBIO; name : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_FILENAME, BIO_CLOSE or BIO_FP_WRITE,name);
+end;
+
+function BIO_append_filename(b : PBIO; name : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_FILENAME, BIO_CLOSE or BIO_FP_APPEND,name);
+end;
+
+function BIO_rw_filename(b : PBIO; name : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_FILENAME, BIO_CLOSE or BIO_FP_READ or BIO_FP_WRITE,name);
+end;
+
+///* WARNING WARNING, this ups the reference count on the read bio of the
+// * SSL structure.  This is because the ssl read BIO is now pointed to by
+// * the next_bio field in the bio.  So when you free the BIO, make sure
+// * you are doing a BIO_free_all() to catch the underlying BIO. */
+function BIO_set_ssl(b : PBIO; ssl : PAnsiChar; c : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result :=  BIO_ctrl(b,BIO_C_SET_SSL,c,ssl);
+end;
+
+function BIO_get_ssl(b : PBIO; sslp : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_GET_SSL,0,sslp);
+end;
+
+function BIO_set_ssl_mode(b : PBIO; client : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SSL_MODE,client,nil);
+end;
+
+function BIO_set_ssl_renegotiate_bytes(b : PBIO; num : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_SET_SSL_RENEGOTIATE_BYTES,num,nil);
+end;
+
+function BIO_get_num_renegotiates(b : PBIO) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_GET_SSL_NUM_RENEGOTIATES,0,nil);
+end;
+
+function BIO_set_ssl_renegotiate_timeout(b : PBIO; seconds : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+ Result := BIO_ctrl(b,BIO_C_SET_SSL_RENEGOTIATE_TIMEOUT,seconds,nil);
 end;
 
 function BIO_get_mem_data(b : PBIO; pp : Pointer) : TIdC_INT;
@@ -13154,8 +13719,6 @@ procedure BIO_set_mem_eof_return(b : PBIO; const v : TIdC_INT);
 begin
   BIO_ctrl(b,BIO_C_SET_BUF_MEM_EOF_RETURN,v,nil);
 end;
-
-
 
 //* For the BIO_f_buffer() type */
 function BIO_get_buffer_num_lines(b : PBIO) : TIdC_INT;
@@ -13253,20 +13816,393 @@ begin
   Result := BIO_int_ctrl(b,BIO_C_SET_BUFF_SIZE,size,1);
 end;
 
-function PEM_read_bio_X509(bp: PBIO; x: Pointer; cb: ppem_password_cb; u: PAnsiChar): PX509;
+//#define BIO_make_bio_pair(b1,b2)   (int)BIO_ctrl(b1,BIO_C_MAKE_BIO_PAIR,0,b2)
+function BIO_make_bio_pair(b1, b2 : PBIO ): TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := PEM_ASN1_read_bio(@d2i_X509, PEM_STRING_X509, bp, x, nil, nil);
+  Result := BIO_ctrl(b1,BIO_C_MAKE_BIO_PAIR,0,b2);
 end;
 
-function PEM_write_bio_X509(b: PBIO; x: PAnsiChar): TIdC_INT;
+//#define BIO_destroy_bio_pair(b)    (int)BIO_ctrl(b,BIO_C_DESTROY_BIO_PAIR,0,NULL)
+function BIO_destroy_bio_pair(b : PBIO) : TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Assert(b<>nil);
+   Result := BIO_ctrl(b,BIO_C_DESTROY_BIO_PAIR,0,nil);
+end;
+
+//#define BIO_shutdown_wr(b) (int)BIO_ctrl(b, BIO_C_SHUTDOWN_WR, 0, NULL)
+function BIO_shutdown_wr(b : PBIO) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b, BIO_C_SHUTDOWN_WR, 0, nil);
+end;
+
+///* macros with inappropriate type -- but ...pending macros use int too: */
+//#define BIO_get_write_guarantee(b) (int)BIO_ctrl(b,BIO_C_GET_WRITE_GUARANTEE,0,NULL)
+function BIO_get_write_guarantee(b : PBIO) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_C_GET_WRITE_GUARANTEE,0,nil);
+end;
+
+//#define BIO_get_read_request(b)    (int)BIO_ctrl(b,BIO_C_GET_READ_REQUEST,0,NULL)
+function BIO_get_read_request(b : PBIO) : TIdC_INT;
+begin
+  Result := BIO_ctrl(b,BIO_C_GET_READ_REQUEST,0,nil);
+end;
+
+//* ctrl macros for dgram */
+function _BIO_ctrl_dgram_connect(b : PBIO; peer : PAnsiChar) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b,BIO_CTRL_DGRAM_CONNECT,0,peer);
+end;
+
+function BIO_ctrl_set_connected(b : PBIO; state : TIdC_INT; peer : PAnsiChar) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b, BIO_CTRL_DGRAM_SET_CONNECTED, state, peer);
+end;
+
+function BIO_dgram_recv_timedout(b : PBIO) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b, BIO_CTRL_DGRAM_GET_RECV_TIMER_EXP, 0, nil);
+end;
+
+function BIO_dgram_send_timedout(b : PBIO) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b, BIO_CTRL_DGRAM_GET_SEND_TIMER_EXP, 0, nil);
+end;
+
+function BIO_dgram_set_peer(b : PBIO; peer : PAnsiChar) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b, BIO_CTRL_DGRAM_SET_PEER, 0, peer);
+end;
+
+{$IFDEF SSLEAY_MACROS}
+//You should do the PEM_read_bio and PEM_write_bio functions like this
+//because OpenSSL has a define for either using Macros or the native
+//functions.
+
+
+function PEM_read_bio_X509(bp: PBIO; var x: PX509; cb: ppem_password_cb; u: Pointer): PX509;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := PEM_ASN1_read_bio(@d2i_X509, PEM_STRING_X509, bp, Pointer(x), nil, nil);
+end;
+
+function PEM_read_bio_X509_REQ(bp :PBIO; var x : PX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+//PEM_ASN1_read_bio( (char *(*)())d2i_X509_REQ,PEM_STRING_X509_REQ,bp,(char **)x,cb,u)
+begin
+  Result := PEM_ASN1_read_bio(@d2i_X509_REQ,PEM_STRING_X509_REQ,bp, Pointer(x), cb, u);
+end;
+
+//#define	PEM_read_bio_X509_CRL(bp,x,cb,u) (X509_CRL *)PEM_ASN1_read_bio( \
+//	(char *(*)())d2i_X509_CRL,PEM_STRING_X509_CRL,bp,(char **)x,cb,u)
+function PEM_read_bio_X509_CRL(bp : PBIO; var x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := PEM_ASN1_read_bio(@d2i_X509_CRL, PEM_STRING_X509_CRL, bp, Pointer(x), cb, u);
+end;
+
+//#define	PEM_read_bio_RSAPrivateKey(bp,x,cb,u) (RSA *)PEM_ASN1_read_bio( \
+//	(char *(*)())d2i_RSAPrivateKey,PEM_STRING_RSA,bp,(char **)x,cb,u)
+function PEM_read_bio_RSAPrivateKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := PEM_ASN1_read_bio(@d2i_RSAPrivateKey, PEM_STRING_RSA, bp, Pointer(x), cb, u);
+end;
+
+//#define	PEM_read_bio_RSAPublicKey(bp,x,cb,u) (RSA *)PEM_ASN1_read_bio( \
+//	(char *(*)())d2i_RSAPublicKey,PEM_STRING_RSA_PUBLIC,bp,(char **)x,cb,u)
+function PEM_read_bio_RSAPublicKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+begin
+  Result := PEM_ASN1_read_bio(@d2i_RSAPublicKey,PEM_STRING_RSA_PUBLIC, bp, Pointer(x),cb, u);
+end;
+
+//#define	PEM_read_bio_DSAPrivateKey(bp,x,cb,u) (DSA *)PEM_ASN1_read_bio( \
+//	(char *(*)())d2i_DSAPrivateKey,PEM_STRING_DSA,bp,(char **)x,cb,u)
+function PEM_read_bio_DSAPrivateKey(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+begin
+  Result := PEM_ASN1_read_bio( @d2i_DSAPrivateKey,PEM_STRING_DSA,bp,Pointer(x),cb,u);
+end;
+
+//#define	PEM_read_bio_PrivateKey(bp,x,cb,u) (EVP_PKEY *)PEM_ASN1_read_bio( \
+//	(char *(*)())d2i_PrivateKey,PEM_STRING_EVP_PKEY,bp,(char **)x,cb,u)
+function PEM_read_bio_PrivateKey(bp : PBIO; var x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
+begin
+  Result := PEM_ASN1_read_bio( @d2i_PrivateKey, PEM_STRING_EVP_PKEY, bp, Pointer(x),cb, u);
+end;
+
+//#define	PEM_read_bio_PKCS7(bp,x,cb,u) (PKCS7 *)PEM_ASN1_read_bio( \
+//	(char *(*)())d2i_PKCS7,PEM_STRING_PKCS7,bp,(char **)x,cb,u)
+function PEM_read_bio_PKCS7(bp : PBIO; var x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
+begin
+  Result := PEM_ASN1_read_bio( @d2i_PKCS7, PEM_STRING_PKCS7,bp,Pointer(x),cb, u);
+end;
+
+//#define	PEM_read_bio_DHparams(bp,x,cb,u) (DH *)PEM_ASN1_read_bio( \
+//	(char *(*)())d2i_DHparams,PEM_STRING_DHPARAMS,bp,(char **)x,cb,u)
+function PEM_read_bio_DHparams(bp : PBIO; var x : PDH; cb : ppem_password_cb; u : Pointer) : PDH;
+begin
+  Result := PEM_ASN1_read_bio(@d2i_DHparams,PEM_STRING_DHPARAMS,bp,Pointer(x),cb,u);
+end;
+
+//#define	PEM_read_bio_DSAparams(bp,x,cb,u) (DSA *)PEM_ASN1_read_bio( \
+//	(char *(*)())d2i_DSAparams,PEM_STRING_DSAPARAMS,bp,(char **)x,cb,u)
+
+function PEM_read_bio_DSAparams(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+begin
+  Result := PEM_ASN1_read_bio( @d2i_DSAparams,PEM_STRING_DSAPARAMS,bp,Pointer(x),cb,u);
+end;
+
+//#define PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp,x,cb,u) \
+//		(NETSCAPE_CERT_SEQUENCE *)PEM_ASN1_read_bio( \
+//        (char *(*)())d2i_NETSCAPE_CERT_SEQUENCE,PEM_STRING_X509,bp,\
+//							(char **)x,cb,u)
+function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; var x : PNETSCAPE_CERT_SEQUENCE;
+  cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE;
+begin
+  Result := PEM_ASN1_read_bio( @d2i_NETSCAPE_CERT_SEQUENCE,PEM_STRING_X509,bp,Pointer(x),cb, u);
+end;
+
+function PEM_write_bio_X509(bp: PBIO; x: PX509): TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Assert(bp<>nil);
   Assert(x<>nil);
-  Result := PEM_ASN1_write_bio(@i2d_X509, PEM_STRING_X509, b, x, nil, nil, 0, nil, nil);
+  Result := PEM_ASN1_write_bio(@i2d_X509, PEM_STRING_X509, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
   Assert(Result<>0);
 end;
+
+function PEM_write_bio_X509_REQ(bp: PBIO; x: PX509_REQ): TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Assert(bp<>nil);
+  Assert(x<>nil);
+  Result := PEM_ASN1_write_bio(@i2d_X509_REQ, PEM_STRING_X509_REQ, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Assert(Result<>0);
+end;
+
+function PEM_write_bio_X509_CRL(bp : PBIO; x : PX509_CRL) : TIdC_INT;
+begin
+  Assert(bp<>nil);
+  Assert(x<>nil);
+  Result := PEM_ASN1_write_bio(@i2d_X509_CRL, PEM_STRING_X509_CRL, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Assert(Result<>0);
+end;
+
+function  PEM_write_bio_RSAPrivateKey(bp : PBIO; x : PRSA; const enc : PEVP_CIPHER;
+  kstr : PAnsiChar; klen : TIdC_INT; cb : ppem_password_cb; u : POinter) : TIdC_INT;
+begin
+  Assert(bp<>nil);
+  Assert(x<>nil);
+  Result := PEM_ASN1_write_bio(@i2d_RSAPrivateKey, PEM_STRING_RSA, bp, PAnsiChar(x), enc,kstr,klen,cb,u);
+  Assert(Result<>0);
+end;
+
+function PEM_write_bio_RSAPublicKey(bp : PBIO; x : PRSA) : TIdC_INT;
+begin
+  Assert(bp<>nil);
+  Assert(x<>nil);
+  Result := PEM_ASN1_write_bio(@i2d_RSAPublicKey, PEM_STRING_RSA_PUBLIC, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Assert(Result<>0);
+end;
+
+function PEM_write_bio_DSAPrivateKey( bp : PBIO; x : PDSA; const enc : PEVP_CIPHER;
+  kstr :PAnsiChar; klen : TIdC_INT; cb : Ppem_password_cb; u : Pointer) : TIdC_INT;
+begin
+  Assert(bp<>nil);
+  Assert(x<>nil);
+  Result := PEM_ASN1_write_bio(@i2d_DSAPrivateKey, PEM_STRING_DSA, bp, PAnsiChar(x), enc,kstr,klen,cb,u);
+  Assert(Result<>0);
+end;
+
+function PEM_write_bio_PrivateKey(bp : PBIO; x : PEVP_PKEY; const enc : PEVP_CIPHER;
+  kstr :PAnsiChar; klen : TIdC_INT; cb : Ppem_password_cb; u : Pointer) : TIdC_INT;
+begin
+  Assert(bp<>nil);
+  Assert(x<>nil);
+  if x^._type = EVP_PKEY_DSA then begin
+    Result := PEM_ASN1_write_bio(@i2d_PrivateKey,PEM_STRING_DSA,bp, Pointer(x),enc,kstr,klen,cb,u);
+  end else begin
+    Result := PEM_ASN1_write_bio(@i2d_PrivateKey,PEM_STRING_RSA,bp, Pointer(x),enc,kstr,klen,cb,u);
+  end;
+  Assert(Result<>0);
+end;
+
+function PEM_write_bio_PKCS7(bp : PBIO; x : PPKCS7) : TIdC_INT;
+begin
+  Assert(bp<>nil);
+  Assert(x<>nil);
+  Result := PEM_ASN1_write_bio(@i2d_PKCS7, PEM_STRING_PKCS7, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Assert(Result<>0);
+end;
+
+function PEM_write_bio_DHparams(bp : PBIO; x : PDH): TIdC_INT;
+begin
+  Assert(bp<>nil);
+  Assert(x<>nil);
+  Result := PEM_ASN1_write_bio(@i2d_DHparams, PEM_STRING_DHPARAMS, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Assert(Result<>0);
+end;
+
+function PEM_write_bio_DSAparams(bp : PBIO; x : PDSA) : TIdC_INT;
+begin
+  Assert(bp<>nil);
+  Assert(x<>nil);
+  Result := PEM_ASN1_write_bio(@i2d_DSAparams, PEM_STRING_DSAPARAMS, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Assert(Result<>0);
+end;
+
+function PEM_write_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PDSA) : TIdC_INT;
+begin
+  Assert(bp<>nil);
+  Assert(x<>nil);
+  Result := PEM_ASN1_write_bio(@i2d_NETSCAPE_CERT_SEQUENCE, PEM_STRING_X509, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Assert(Result<>0);
+end;
+
+{$ELSE}
+
+function PEM_read_bio_X509(bp: PBIO; var x: PX509; cb: ppem_password_cb; u: Pointer): PX509;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_read_bio_X509(bp, x, cb, u);
+end;
+
+function PEM_read_bio_X509_REQ(bp :PBIO; var x : PX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_read_bio_X509_REQ(bp, x, cb, u);
+end;
+
+function PEM_read_bio_X509_CRL(bp : PBIO; var x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_read_bio_X509_CRL(bp, x, cb, u);
+end;
+
+function PEM_read_bio_RSAPrivateKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_read_bio_RSAPrivateKey(bp, x, cb, u);
+end;
+
+function PEM_read_bio_RSAPublicKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+{$IFDEF USE_INLINE} inline; {$ENDIF}begin
+  Result := _PEM_read_bio_RSAPublicKey(bp, x, cb, u);
+end;
+
+function PEM_read_bio_DSAPrivateKey(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_read_bio_DSAPrivateKey(bp, x, cb, u);
+end;
+
+function PEM_read_bio_PrivateKey(bp : PBIO; var x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_read_bio_PrivateKey(bp, x, cb, u);
+end;
+function PEM_read_bio_PKCS7(bp : PBIO; var x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_read_bio_PKCS7(bp, x, cb, u);
+end;
+
+function PEM_read_bio_DHparams(bp : PBIO; var x : PDH; cb : ppem_password_cb; u : Pointer) : PDH;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_read_bio_DHparams(bp, x, cb, u);
+end;
+
+function PEM_read_bio_DSAparams(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_read_bio_DSAparams(bp, x, cb, u);
+end;
+
+function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; var x : PNETSCAPE_CERT_SEQUENCE;
+  cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp, x, cb, u);
+end;
+
+function PEM_write_bio_X509(bp: PBIO; x: PX509): TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_write_bio_X509(bp, x);
+end;
+
+function PEM_write_bio_X509_REQ(bp: PBIO; x: PX509_REQ): TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_write_bio_X509_REQ(bp, x);
+end;
+
+function PEM_write_bio_X509_CRL(bp : PBIO; x : PX509_CRL) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_write_bio_X509_CRL(bp, x);
+end;
+
+function PEM_write_bio_RSAPublicKey(bp : PBIO; x : PRSA) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_write_bio_RSAPublicKey(bp,x);
+end;
+
+function  PEM_write_bio_RSAPrivateKey(bp : PBIO; x : PRSA; const enc : PEVP_CIPHER;
+  kstr : PAnsiChar; klen : TIdC_INT; cb : ppem_password_cb; u : POinter) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_write_bio_RSAPrivateKey(bp,x,enc,kstr,klen,cb, u);
+end;
+
+function PEM_write_bio_DSAPrivateKey( bp : PBIO; x : PDSA; const enc : PEVP_CIPHER;
+  kstr :PAnsiChar; klen : TIdC_INT; cb : Ppem_password_cb; u : Pointer) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_write_bio_DSAPrivateKey( bp, x, enc, kstr, klen, cb, u);
+end;
+
+function PEM_write_bio_PrivateKey(bp : PBIO; x : PEVP_PKEY; const enc : PEVP_CIPHER;
+  kstr :PAnsiChar; klen : TIdC_INT; cb : Ppem_password_cb; u : Pointer) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_write_bio_PrivateKey(bp,x, enc, kstr, klen, cb, u);
+end;
+
+function PEM_write_bio_PKCS7(bp : PBIO; x : PPKCS7) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_write_bio_PKCS7(bp, x);
+end;
+
+function PEM_write_bio_DHparams(bp : PBIO; x : PDH): TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_write_bio_DHparams(bp, x);
+end;
+
+function PEM_write_bio_DSAparams(bp : PBIO; x : PDSA) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_write_bio_DSAparams(bp, x);
+end;
+
+function PEM_write_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PDSA) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := _PEM_write_bio_NETSCAPE_CERT_SEQUENCE(bp, x);
+end;
+{$ENDIF}
+
 
 function OPENSSL_malloc(aSize:TIdC_INT):Pointer;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
@@ -13298,6 +14234,7 @@ end;
 
 {$IFNDEF OPENSSL_NO_DSA}
 function EVP_PKEY_assign_DSA(pkey : PEVP_PKEY; dsa : PAnsiChar) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := EVP_PKEY_assign(pkey,EVP_PKEY_DSA,	dsa);
 end;
@@ -13312,6 +14249,7 @@ end;
 
 {$IFNDEF OPENSSL_NO_EC}
 function EVP_PKEY_assign_EC_KEY(pkey : PEVP_PKEY; eckey : PAnsiChar) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := EVP_PKEY_assign(pkey,EVP_PKEY_EC,eckey);
 end;
