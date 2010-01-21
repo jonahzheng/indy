@@ -8336,11 +8336,11 @@ var
       f : Tset_mem_debug_functions_f;
       so : Tset_mem_debug_functions_so;
       go : Tset_mem_debug_functions_go) cdecl = nil;
-  IdSslCryptoDbgMalloc : procedure(addr: Pointer; num: TIdC_INT; const _file: PAnsiChar; line, before: TIdC_INT) cdecl = nil;
-  IdSslCryptoDbgRealloc : procedure(arrd1, addr2: Pointer; num: TIdC_INT; const _file: PAnsiChar; line, before: TIdC_INT) cdecl = nil;
-  IdSslCryptoDbgFree : procedure(addr: Pointer; before: TIdC_INT) cdecl = nil;
-  IdSslCryptoDbgSetOptions : procedure(bits: TIdC_LONG) cdecl = nil;
-  IdSslCryptoDbgGetOptions : function: TIdC_LONG cdecl = nil;
+  CRYPTO_dbg_malloc : procedure(addr: Pointer; num: TIdC_INT; const _file: PAnsiChar; line, before: TIdC_INT) cdecl = nil;
+  CRYPTO_dbg_realloc : procedure(arrd1, addr2: Pointer; num: TIdC_INT; const _file: PAnsiChar; line, before: TIdC_INT) cdecl = nil;
+  CRYPTO_dbg_free : procedure(addr: Pointer; before: TIdC_INT) cdecl = nil;
+  CRYPTO_dbg_set_options : procedure(bits: TIdC_LONG) cdecl = nil;
+  CRYPTO_dbg_get_options : function: TIdC_LONG cdecl = nil;
   sk_new_null : function: PSTACK cdecl = nil;
   sk_push : function(st: PSTACK; data: PAnsiChar): TIdC_INT cdecl = nil;
   RSA_free : procedure(rsa: PRSA) cdecl = nil;
@@ -12598,11 +12598,11 @@ begin
   @CRYPTO_mem_leaks := LoadFunctionCLib(fn_CRYPTO_mem_leaks);
   @CRYPTO_mem_ctrl := LoadFunctionCLib(fn_CRYPTO_mem_ctrl);
   @CRYPTO_set_mem_debug_functions := LoadFunctionCLib(fn_CRYPTO_set_mem_debug_functions);
-  //@IdSslCryptoDbgMalloc := LoadFunctionCLib(fn_CRYPTO_dbg_malloc);
-  //@IdSslCryptoDbgRealloc := LoadFunctionCLib(fn_CRYPTO_dbg_realloc);
-  //@IdSslCryptoDbgFree := LoadFunctionCLib(fn_CRYPTO_dbg_free);
-  //@IdSslCryptoDbgSetOptions := LoadFunctionCLib(fn_CRYPTO_dbg_set_options);
-  //@IdSslCryptoDbgGetOptions := LoadFunctionCLib(fn_CRYPTO_dbg_get_options);
+  //@CRYPTO_dbg_malloc := LoadFunctionCLib(fn_CRYPTO_dbg_malloc);
+  //@CRYPTO_dbg_realloc := LoadFunctionCLib(fn_CRYPTO_dbg_realloc);
+  //@CRYPTO_dbg_free := LoadFunctionCLib(fn_CRYPTO_dbg_free);
+  //@CRYPTO_dbg_set_options := LoadFunctionCLib(fn_CRYPTO_dbg_set_options);
+  //@CRYPTO_dbg_get_options := LoadFunctionCLib(fn_CRYPTO_dbg_get_options);
   @PKCS12_create := LoadFunctionCLib(fn_PKCS12_create);
   @i2d_PKCS12_bio := LoadFunctionCLib(fn_i2d_PKCS12_bio);
   @PKCS12_free := LoadFunctionCLib(fn_PKCS12_free);
@@ -12877,11 +12877,11 @@ begin
   @CRYPTO_mem_leaks := nil;
   @CRYPTO_mem_ctrl := nil;
   @CRYPTO_set_mem_debug_functions := nil;
-  //@IdSslCryptoDbgMalloc := nil;
-  //@IdSslCryptoDbgRealloc := nil;
-  //@IdSslCryptoDbgFree := nil;
-  //@IdSslCryptoDbgSetOptions := nil;
-  //@IdSslCryptoDbgGetOptions := nil;
+  //@CRYPTO_dbg_malloc := nil;
+  //@CRYPTO_dbg_realloc := nil;
+  //@CRYPTO_dbg_free := nil;
+  //@CRYPTO_dbg_set_options := nil;
+  //@CRYPTO_dbg_get_options := nil;
   @PKCS12_create := nil;
   @i2d_PKCS12_bio := nil;
   @PKCS12_free := nil;
@@ -13399,9 +13399,7 @@ function SSL_CTX_set_tlsext_servername_callback(ctx : PSSL_CTX; cb :SSL_callback
 begin
   Result := SSL_CTX_callback_ctrl(ctx, SSL_CTRL_SET_TLSEXT_SERVERNAME_CB, cb);
 end;
-
 {$ENDIF}
-
 
 function SSL_CTX_get_version(ctx: PSSL_CTX):TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
