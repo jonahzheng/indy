@@ -267,6 +267,7 @@ type
     const AsslSocket: PSSL;
     const AWhere, Aret: TIdC_INT; const AType, AMsg : String ) of object;
   TPasswordEvent  = procedure(var Password: AnsiString) of object;
+  TPasswordEventEx = procedure( ASender : TObject; var VPassword: AnsiString; const AIsWrite : Boolean) of object;
   TVerifyPeerEvent  = function(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean of object;
   TIOHandlerNotify = procedure(ASender: TIdSSLIOHandlerSocketOpenSSL) of object;
 
@@ -383,6 +384,7 @@ type
     fOnStatusInfo: TCallbackEvent;
     FOnStatusInfoEx : TCallbackExEvent;
     fOnGetPassword: TPasswordEvent;
+    fOnGetPasswordEx : TPasswordEventEx;
     fOnVerifyPeer: TVerifyPeerEvent;
     fSSLLayerClosed: Boolean;
     fOnBeforeConnect: TIOHandlerNotify;
@@ -395,6 +397,8 @@ type
     procedure DoStatusInfoEx(const AsslSocket: PSSL;
     const AWhere, Aret: TIdC_INT; const AWhereStr, ARetStr : String );
     procedure DoGetPassword(var Password: AnsiString); virtual;
+    procedure DoGetPasswordEx(var VPassword: AnsiString; const AIsWrite : Boolean); virtual;
+
     function DoVerifyPeer(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean; virtual;
     function RecvEnc(var VBuffer: TIdBytes): Integer; override;
     function SendEnc(const ABuffer: TIdBytes; const AOffset, ALength: Integer): Integer; override;
@@ -430,6 +434,7 @@ type
     fOnStatusInfo: TCallbackEvent;
     FOnStatusInfoEx : TCallbackExEvent;
     fOnGetPassword: TPasswordEvent;
+    fOnGetPasswordEx : TPasswordEventEx;
     fOnVerifyPeer: TVerifyPeerEvent;
     //
     //procedure CreateSSLContext(axMode: TIdSSLMode);
@@ -439,6 +444,8 @@ type
     procedure DoStatusInfoEx(const AsslSocket: PSSL;
       const AWhere, Aret: TIdC_INT; const AWhereStr, ARetStr : String );
     procedure DoGetPassword(var Password: AnsiString); virtual;
+//TPasswordEventEx
+    procedure DoGetPasswordEx(var VPassword: AnsiString; const AIsWrite : Boolean); virtual;
     function DoVerifyPeer(Certificate: TIdX509; AOk: Boolean; ADepth: Integer): Boolean; virtual;
     procedure InitComponent; override;
   public
@@ -633,23 +640,37 @@ function PasswordCallback(buf: PAnsiChar; size: TIdC_INT; rwflag: TIdC_INT; user
 var
   Password: AnsiString;
   IdSSLContext: TIdSSLContext;
+  LErr : Integer;
 begin
-  LockPassCB.Enter;
+  //Preserve last eror just in case OpenSSL is using it and we do something that
+  //clobers it.  CYA.
+  LErr := GStack.WSGetLastError;
   try
-    Password := '';    {Do not Localize}
-    IdSSLContext := TIdSSLContext(userdata);
-    if (IdSSLContext.Parent is TIdSSLIOHandlerSocketOpenSSL) then begin
-      TIdSSLIOHandlerSocketOpenSSL(IdSSLContext.Parent).DoGetPassword(Password);
+    LockPassCB.Enter;
+    try
+      Password := '';    {Do not Localize}
+      IdSSLContext := TIdSSLContext(userdata);
+      if (IdSSLContext.Parent is TIdSSLIOHandlerSocketOpenSSL) then begin
+        TIdSSLIOHandlerSocketOpenSSL(IdSSLContext.Parent).DoGetPasswordEx(Password,rwflag > 0);
+        if Password = '' then begin
+          TIdSSLIOHandlerSocketOpenSSL(IdSSLContext.Parent).DoGetPassword(Password);
+        end;
+      end;
+      if (IdSSLContext.Parent is TIdServerIOHandlerSSLOpenSSL) then begin
+        TIdServerIOHandlerSSLOpenSSL(IdSSLContext.Parent).DoGetPasswordEx(Password,rwflag > 0);
+        if Password = '' then begin
+          TIdServerIOHandlerSSLOpenSSL(IdSSLContext.Parent).DoGetPassword(Password);
+        end;
+      end;
+      FillChar(buf^, size, 0);
+      StrPLCopy(buf, Password, size);
+      Result := Length(Password);
+      buf[size-1] := #0; // RLebeau: truncate the password if needed
+    finally
+      LockPassCB.Leave;
     end;
-    if (IdSSLContext.Parent is TIdServerIOHandlerSSLOpenSSL) then begin
-      TIdServerIOHandlerSSLOpenSSL(IdSSLContext.Parent).DoGetPassword(Password);
-    end;
-    FillChar(buf^, size, 0);
-    StrPLCopy(buf, Password, size);
-    Result := Length(Password);
-    buf[size-1] := #0; // RLebeau: truncate the password if needed
   finally
-    LockPassCB.Leave;
+     GStack.WSSetLastError(LErr);
   end;
 end;
 
@@ -922,7 +943,7 @@ procedure IdSslCryptoMallocInit;
 var
  r: Integer;
 begin
- r := IdSslCryptoSetMemFunctions(@IdMalloc, @IdRealloc, @IdFree);
+ r := CRYPTO_set_mem_functions(@IdMalloc, @IdRealloc, @IdFree);
  Assert(r <> 0);
 end;
 {$ENDIF}
@@ -1023,7 +1044,7 @@ var
   tz_m  : Integer;
 begin
   Result := 0;
-  if IdSslUCTTimeDecode(UCTTime, year, month, day, hour, min, sec, tz_h, tz_m) > 0 then begin
+  if UTC_Time_Decode(UCTTime, year, month, day, hour, min, sec, tz_h, tz_m) > 0 then begin
     Result := EncodeDate(year, month, day) + EncodeTime(hour, min, sec, 0);
     AddMins(Result, tz_m);
     AddHrs(Result, tz_h);
@@ -1035,16 +1056,13 @@ function TranslateInternalVerifyToSSL(Mode: TIdSSLVerifyModeSet): Integer;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := SSL_VERIFY_NONE;
-  if sslvrfPeer in Mode then 
-  begin
+  if sslvrfPeer in Mode then begin
     Result := Result or SSL_VERIFY_PEER;
   end;
-  if sslvrfFailIfNoPeerCert in Mode then
-  begin
+  if sslvrfFailIfNoPeerCert in Mode then begin
     Result:= Result or SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
   end;
-  if sslvrfClientOnce in Mode then
-  begin 
+  if sslvrfClientOnce in Mode then begin
     Result:= Result or SSL_VERIFY_CLIENT_ONCE;
   end;
 end;
@@ -1311,6 +1329,14 @@ begin
   end;
 end;
 
+procedure TIdServerIOHandlerSSLOpenSSL.DoGetPasswordEx(
+  var VPassword: AnsiString; const AIsWrite: Boolean);
+begin
+  if Assigned(fOnGetPasswordEx) then begin
+    fOnGetPasswordEx(Self,VPassword,AIsWrite);
+  end;
+end;
+
 function TIdServerIOHandlerSSLOpenSSL.DoVerifyPeer(Certificate: TIdX509;
   AOk: Boolean; ADepth: Integer): Boolean;
 begin
@@ -1551,6 +1577,14 @@ procedure TIdSSLIOHandlerSocketOpenSSL.DoGetPassword(var Password: AnsiString);
 begin
   if Assigned(fOnGetPassword) then begin
     fOnGetPassword(Password);
+  end;
+end;
+
+procedure TIdSSLIOHandlerSocketOpenSSL.DoGetPasswordEx(var VPassword: AnsiString;
+  const AIsWrite: Boolean);
+begin
+  if Assigned(fOnGetPasswordEx) then begin
+    fOnGetPasswordEx(Self,VPassword,AIsWrite);
   end;
 end;
 
