@@ -230,6 +230,7 @@ type
     FOnSvrVersion: TIdIRCSvrVersionEvent;
     FOnRaw: TIdIRCRawEvent;
     //
+    function GetUsedNickname: String;
     procedure SetNickname(const AValue: String);
     procedure SetUsername(const AValue: String);
     procedure SetIdIRCUserMode(AValue: TIdIRCUserModes);
@@ -378,6 +379,7 @@ type
   published
     property Nickname: String read FNickname write SetNickname;
     property AltNickname: String read FAltNickname write FAltNickname;
+    property UsedNickname: String read GetUsedNickname; // returns Nickname or AltNickname
     property Username: String read FUsername write SetUsername;
     property RealName: String read FRealName write FRealName;
     property Password: String read FPassword write FPassword;
@@ -1489,7 +1491,7 @@ begin
           OnServerError(AContext, ACmdCode, ALine);
         end;
       end;
-    431..433,
+    431..432,
     436:
       begin
         if Assigned(FOnNickError) then begin
@@ -1953,7 +1955,7 @@ begin
     begin
       FUserAway := (LCmd = 306);
       if Assigned(FOnAway) then begin
-        OnAway(ASender.Context, FNickname, '', ASender.Params[0], FUserAway);
+        OnAway(ASender.Context, GetUsedNickname, '', ASender.Params[0], FUserAway);
       end;
     end;
   end;
@@ -2379,6 +2381,14 @@ begin
         end;
       end;
   end;
+end;
+
+function TIdIRC.GetUsedNickname: String;
+begin
+  if FAltNickUsed then
+    Result := FAltNickname
+  else
+    Result := FNickname;
 end;
 
 procedure TIdIRC.SetNickname(const AValue: String);
