@@ -149,6 +149,8 @@ type
   protected
     FNickname: String;
     FAltNickname: String;
+    FAltNickUsed: Boolean;
+    //
     FUsername: String;
     FRealName: String;
     FPassword: String;
@@ -299,6 +301,7 @@ type
     procedure CommandVERSION(ASender: TIdCommand);
     procedure CommandCHANMODE(ASender: TIdCommand);
     procedure CommandOPER(ASender: TIdCommand);
+    procedure CommandNICKINUSE(ASender: TIdCommand);
     //
     procedure AssignIRCClientCommands;
     function GetCmdHandlerClass: TIdCommandHandlerClass; override;
@@ -681,6 +684,7 @@ begin
   inherited Connect;
   //
   try
+    FAltNickUsed := False;
     if FPassword <> '' then begin
       Raw(IndyFormat('PASS %s', [FPassword]));  {do not localize}
     end;
@@ -1256,8 +1260,16 @@ begin
     Command := '395'; {do not localize}
     OnCommand := CommandUSERS;
   end;
+  //ERR_NICKNAMEINUSE
+  with CommandHandlers.Add do
+  begin
+    // 433  ERR_NICKNAMEINUSE  RFC1459  <nick> :<reason>
+    // Returned by the NICK command when the given nickname is already in use
+    Command := '433'; {do not localize}
+    OnCommand := CommandNICKINUSE;
+  end;
   {TODO:
-  396  RPL_HOSTHIDDEN  Undernet   Reply to a user when user mode +x (host masking) was set successfully  
+  396  RPL_HOSTHIDDEN  Undernet   Reply to a user when user mode +x (host masking) was set successfully
   400  ERR_UNKNOWNERROR   <command> [<?>] :<info>  Sent when an error occured executing a command, but it is not specifically known why the command could not be executed.
   401  ERR_NOSUCHNICK  RFC1459  <nick> :<reason>  Used to indicate the nickname parameter supplied to a command is currently unused
   402  ERR_NOSUCHSERVER  RFC1459  <server> :<reason>  Used to indicate the server name given currently doesn't exist
@@ -1285,7 +1297,6 @@ begin
   430  ERR_EVENTNICKCHANGE  AustHex   Returned by NICK when the user is not allowed to change their nickname due to a channel event (channel mode +E)
   431  ERR_NONICKNAMEGIVEN  RFC1459  :<reason>  Returned when a nickname parameter expected for a command isn't found
   432  ERR_ERRONEUSNICKNAME  RFC1459  <nick> :<reason>  Returned after receiving a NICK message which contains a nickname which is considered invalid, such as it's reserved ('anonymous') or contains characters considered invalid for nicknames. This numeric is misspelt, but remains with this name for historical reasons :)
-  433  ERR_NICKNAMEINUSE  RFC1459  <nick> :<reason>  Returned by the NICK command when the given nickname is already in use
   436  ERR_NICKCOLLISION  RFC1459  <nick> :<reason>  Returned by a server to a client when it detects a nickname collision
   439  ERR_TARGETTOOFAST  ircu   Also known as many other things, RPL_INVTOOFAST, RPL_MSGTOOFAST etc  
   440  ERR_SERVICESDOWN  Bahamut, Unreal
@@ -1482,7 +1493,7 @@ begin
     436:
       begin
         if Assigned(FOnNickError) then begin
-          OnNicknameError(AContext, IndyStrToInt(FetchIRCParam(ALine)));
+          OnNicknameError(AContext, ACmdCode);
         end;
       end;
   end;
@@ -2253,7 +2264,7 @@ end;
 
 procedure TIdIRC.CommandSERVLISTEND(ASender: TIdCommand);
 begin
-  // <mask> <type> :<info> 
+  // <mask> <type> :<info>
 end;
 
 procedure TIdIRC.CommandTIME(ASender: TIdCommand);
@@ -2304,6 +2315,28 @@ procedure TIdIRC.CommandOPER(ASender: TIdCommand);
 begin
   if Assigned(FOnOp) then begin
     OnOp(ASender.Context, FSenderNick, FSenderHost, ASender.Params[0]);
+  end;
+end;
+
+procedure TIdIRC.CommandNICKINUSE(ASender: TIdCommand);
+begin
+  if ASender.CommandHandler.Command = '433' then {do not localize}
+  begin
+    if (Connected) and (FAltNickname <> '') then
+    begin
+      if not FAltNickUsed then begin
+        // try only once using AltNickname (FAltNickUsed is cleared in .Connect)
+        SetNickname(FAltNickname);
+        FAltNickUsed := True;
+      end
+      else
+      begin
+        // already tried to use AltNickName...
+        if Assigned(FOnNickError) then begin
+          OnNicknameError(ASender.Context, IndyStrToInt(ASender.CommandHandler.Command));
+        end;
+      end;
+    end;
   end;
 end;
 
