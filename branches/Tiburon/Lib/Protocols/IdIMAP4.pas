@@ -2984,8 +2984,8 @@ begin
   {CC2: This is one of the few cases where the server can return only "OK completed"
   meaning that the user has no envelopes.}
   CheckConnectionState(csSelected);
-  SendCmd(NewCmdCounter, (IMAP4Commands[cmdFetch] + ' 1:* (' +        {Do not Localize}
-    IMAP4FetchDataItem[fdEnvelope] + ')'), []);                 {Do not Localize}
+  SendCmd(NewCmdCounter, (IMAP4Commands[cmdFetch] + ' 1:* (' +         {Do not Localize}
+    IMAP4FetchDataItem[fdEnvelope] + ')'), [IMAP4Commands[cmdFetch]]); {Do not Localize}
   if LastCmdResult.Code = IMAP_OK then begin
     for Ln := 0 to LastCmdResult.Text.Count-1 do begin
       if ParseLastCmdResult(LastCmdResult.Text[Ln], IMAP4Commands[cmdFetch], [IMAP4FetchDataItem[fdEnvelope]]) then begin
@@ -3015,7 +3015,7 @@ begin
   meaning that the user has no envelopes.}
   CheckConnectionState(csSelected);
   SendCmd(NewCmdCounter, ( IMAP4Commands[cmdUID] + ' ' + IMAP4Commands[cmdFetch] + ' 1:* (' +  {Do not Localize}
-    IMAP4FetchDataItem[fdEnvelope] + ')'), []);                          {Do not Localize}
+    IMAP4FetchDataItem[fdEnvelope] + ')'), [IMAP4Commands[cmdFetch]]);                         {Do not Localize}
   if LastCmdResult.Code = IMAP_OK then begin
     for Ln := 0 to LastCmdResult.Text.Count-1 do begin
       if ParseLastCmdResult(LastCmdResult.Text[Ln], IMAP4Commands[cmdFetch], [IMAP4FetchDataItem[fdEnvelope]]) then begin
