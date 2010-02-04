@@ -18,7 +18,7 @@ package Indy90Net;
 {$IMAGEBASE $400000}
 {$DESCRIPTION 'Indy 10 Master'}
 {$RUNONLY}
-{$IMPLICITBUILD OFF}
+{$IMPLICITBUILD ON}
 
 requires
   Borland.Delphi,
@@ -87,6 +87,7 @@ contains
   IdException in 'System\IdException.pas',
   IdExceptionCore in 'Core\IdExceptionCore.pas',
   IdExplicitTLSClientServerBase in 'Protocols\IdExplicitTLSClientServerBase.pas',
+  IdFIPS in 'Protocols\IdFIPS.pas',
   IdFSP in 'Protocols\IdFSP.pas',
   IdFTP in 'Protocols\IdFTP.pas',
   IdFTPBaseFileSystem in 'Protocols\IdFTPBaseFileSystem.pas',

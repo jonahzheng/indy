@@ -1,19 +1,13 @@
 package IndyProtocols130;
 
 {$R *.res}
-{$ALIGN 8}
-{$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO ON}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
-{$IOCHECKS ON}
 {$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
 {$OPTIMIZATION ON}
-{$OVERFLOWCHECKS ON}
-{$RANGECHECKS ON}
 {$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
 {$STACKFRAMES OFF}
@@ -24,7 +18,7 @@ package IndyProtocols130;
 {$IMAGEBASE $400000}
 {$DESCRIPTION 'Indy 10 Protocols'}
 {$RUNONLY}
-{$IMPLICITBUILD OFF}
+{$IMPLICITBUILD ON}
 
 requires
   rtl,
@@ -98,6 +92,7 @@ contains
   IdFTPListParseDistinctTCPIP in 'IdFTPListParseDistinctTCPIP.pas',
   IdFTPListParseEPLF in 'IdFTPListParseEPLF.pas',
   IdFTPListParseHellSoft in 'IdFTPListParseHellSoft.pas',
+  IdFTPListParseIEFTPGateway in 'IdFTPListParseIEFTPGateway.pas',
   IdFTPListParseKA9Q in 'IdFTPListParseKA9Q.pas',
   IdFTPListParseMPEiX in 'IdFTPListParseMPEiX.pas',
   IdFTPListParseMVS in 'IdFTPListParseMVS.pas',
@@ -109,6 +104,7 @@ contains
   IdFTPListParseNovellNetwarePSU in 'IdFTPListParseNovellNetwarePSU.pas',
   IdFTPListParseOS2 in 'IdFTPListParseOS2.pas',
   IdFTPListParsePCNFSD in 'IdFTPListParsePCNFSD.pas',
+  IdFTPListParsePCTCP in 'IdFTPListParsePCTCP.pas',
   IdFTPListParseStercomOS390Exp in 'IdFTPListParseStercomOS390Exp.pas',
   IdFTPListParseStercomUnixEnt in 'IdFTPListParseStercomUnixEnt.pas',
   IdFTPListParseStratusVOS in 'IdFTPListParseStratusVOS.pas',
@@ -146,7 +142,7 @@ contains
   IdHashCRC in 'IdHashCRC.pas',
   IdHashElf in 'IdHashElf.pas',
   IdHashMessageDigest in 'IdHashMessageDigest.pas',
-  IdHashSHA1 in 'IdHashSHA1.pas',
+  IdHashSHA in 'IdHashSHA.pas',
   IdHeaderCoder2022JP in 'IdHeaderCoder2022JP.pas',
   IdHeaderCoderBase in 'IdHeaderCoderBase.pas',
   IdHeaderCoderIndy in 'IdHeaderCoderIndy.pas',
