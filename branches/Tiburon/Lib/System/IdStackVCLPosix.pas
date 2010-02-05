@@ -6,6 +6,9 @@ Currently, this backend does not provide any functionality.  We will get back
 to this when Embarcadero provides headers for the BSD Socket API.
 }
 interface
+
+{$I IdCompilerDefines.inc}
+
 uses
   Classes,
     PosixSysSelect,
@@ -141,49 +144,22 @@ uses
   PosixNetDB,
   PosixNetinetIn,
   PosixSysTypes,
+  PosixSysUio,
   PosixUnistd,
   SysUtils;
 
-  //Psockaddr(@LAddr)^
-
-function IPv6_accept(socket: Integer; out address: sockaddr_in6;
-  out address_len: socklen_t): Integer; cdecl;
-  external libc name _PU + 'accept';
-
-function IPv6_bind(socket: Integer; const address: sockaddr_in6;
-  address_len: socklen_t): Integer; cdecl;
-  external libc name _PU + 'bind';
-
-function IPv6_connect(socket: Integer; const address: sockaddr_in6;
-  address_len: socklen_t): Integer; cdecl;
-  external libc name _PU + 'connect';
-
-function IPv6_getpeername(socket: Integer; var address: sockaddr_in6;
-  var address_len: socklen_t): Integer; cdecl;
-  external libc name _PU + 'getpeername';
-
-function IPv6_getsockname(socket: Integer; var address: sockaddr_in6;
-  var address_len: socklen_t): Integer; cdecl;
-  external libc name _PU + 'getsockname';
-
-function IPv6_recvfrom(socket: Integer; var buffer; length: Size_t;
-  flags: Integer; var address: sockaddr_in6;
-  var address_len: socklen_t):  ssize_t; cdecl;
-  external libc name _PU + 'recvfrom';
-
-function IPv6_sendto(socket: Integer; const message; length: size_t;
-  flags: Integer; const dest_addr: sockaddr_in6; dest_len: socklen_t): ssize_t; cdecl;
-  external libc name _PU + 'sendto';
-
 
 const
-  {$IFDEF MACOSX}
+  {$IFDEF DARWIN}
   //fancy little trick since OS X does not have MSG_NOSIGNAL
   Id_MSG_NOSIGNAL = 0;
   {$ELSE}
   Id_MSG_NOSIGNAL = MSG_NOSIGNAL;
   {$ENDIF}
   Id_WSAEPIPE = EPIPE;
+
+type
+  pin6_pktinfo = ^in6_pktinfo;
 { TIdSocketListVCLPosix }
 
 procedure TIdSocketListVCLPosix.Add(AHandle: TIdStackSocketHandle);
@@ -407,9 +383,9 @@ begin
   if Result <> -1 then begin
     case LAddr.sin6_family of
       Id_PF_INET4: begin
-        with PSockAddrIn(LAddrPtr)^ do begin
+        with PSockAddr_In(LAddrPtr)^ do begin
           VIP := TranslateTInAddrToString( sin_addr, Id_IPv4);
-          VPort := Ntohs(PSockAddrIn(LAddrPtr)^.sin_port);
+          VPort := Ntohs(PSockAddr_In(LAddrPtr)^.sin_port);
         end;
         VIPVersion := Id_IPV4;
       end;
@@ -434,13 +410,13 @@ begin
 end;
 
 procedure TIdStackVCLPosix.AddLocalAddressesToList(AAddresses: TStrings);
-type
-  TaPInAddr = array[0..250] of PInAddr;
-  PaPInAddr = ^TaPInAddr;
+//type
+//  TaPInAddr = array[0..250] of PInAddr;
+//  PaPInAddr = ^TaPInAddr;
 var
   LRetVal: Integer;
   LHostName: AnsiString;
-  Hints: TAddrInfo;
+  Hints: AddrInfo;
   LAddrInfo: pAddrInfo;
 
 begin
@@ -464,8 +440,8 @@ begin
     try
       repeat
         case LAddrInfo^.ai_addr^.sa_family  of
-        Id_PF_INET4 : AAddresses.Add(TranslateTInAddrToString( PSockAddrIn(LAddrInfo^.ai_addr)^.sin_addr, Id_IPv4));
-        Id_PF_INET6 : AAddresses.Add(TranslateTInAddrToString( PSockAddrIn6(LAddrInfo^.ai_addr)^.sin6_addr, Id_IPv6));
+        Id_PF_INET4 : AAddresses.Add(TranslateTInAddrToString( PSockAddr_In(LAddrInfo^.ai_addr)^.sin_addr, Id_IPv4));
+        Id_PF_INET6 : AAddresses.Add(TranslateTInAddrToString( PSockAddr_In6(LAddrInfo^.ai_addr)^.sin6_addr, Id_IPv6));
         end;
         LAddrInfo := LAddrInfo^.ai_next;
       until LAddrInfo = nil;
@@ -485,7 +461,7 @@ begin
   FillChar(LAddr, SizeOf(LAddr), 0);
   case AIPVersion of
     Id_IPv4: begin
-        with PSockAddrIn(@LAddr)^ do begin
+        with PSockAddr_In(@LAddr)^ do begin
           sin_family := Id_PF_INET4;
           if AIP <> '' then begin
             TranslateStringToTInAddr(AIP, sin_addr, Id_IPv4);
@@ -531,7 +507,7 @@ begin
   FillChar(LAddr, SizeOf(LAddr), 0);
   case AIPVersion of
     Id_IPv4: begin
-      with PSockAddrIn(@LAddr)^ do begin
+      with PSockAddr_In(@LAddr)^ do begin
         sin_family := Id_PF_INET4;
         TranslateStringToTInAddr(AIP, sin_addr, Id_IPv4);
         sin_port := htons(APort);
@@ -589,7 +565,7 @@ begin
   CheckForSocketError(PosixSysSocket.getpeername(ASocket, PSockAddr(@LAddr)^, i));
   case LAddr.sin6_family of
     Id_PF_INET4: begin
-      with PsockaddrIn(@LAddr)^ do begin
+      with Psockaddr_In(@LAddr)^ do begin
         VIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
         VPort := ntohs(sin_port);
       end;
@@ -620,7 +596,7 @@ begin
   CheckForSocketError(getsockname(ASocket, psockaddr(@LAddr)^, LiSize));
   case PSockAddr(@LAddr)^.sa_family of
     Id_PF_INET4: begin
-      with psockaddrIn(@LAddr)^ do begin
+      with psockaddr_In(@LAddr)^ do begin
         VIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
         VPort := ntohs(sin_port);
       end;
@@ -734,9 +710,9 @@ begin
   end;
   try
     if AIPVersion = Id_IPv4 then begin
-      Result := TranslateTInAddrToString( PSockAddrIn( LAddrInfo^.ai_addr)^.sin_addr, AIPVersion);
+      Result := TranslateTInAddrToString( PSockAddr_In( LAddrInfo^.ai_addr)^.sin_addr, AIPVersion);
     end else begin
-      Result := TranslateTInAddrToString( PSockAddrIn6( LAddrInfo^.ai_addr)^.sin6_addr, AIPVersion);
+      Result := TranslateTInAddrToString( PSockAddr_In6( LAddrInfo^.ai_addr)^.sin6_addr, AIPVersion);
     end;
   finally
     freeaddrinfo(LAddrInfo^);
@@ -819,43 +795,39 @@ end;
 function TIdStackVCLPosix.ReceiveMsg(ASocket: TIdStackSocketHandle;
   var VBuffer: TIdBytes; APkt: TIdPacketInfo): LongWord;
 //termporarily disabled until I can finish this.
-  begin
-  {var
-  LIP : String;
-  LPort : TIdPort;
-  LSize: Cardinal;
+var
+  LSize: socklen_t;
   LAddr: SockAddr_In6;
   LMsg : msghdr;
-  LMsgBuf : BUF;
+  LIOV : iovec;
   LControl : TIdBytes;
-  LCurCmsg : CMSGHDR;   //for iterating through the control buffer
+  LCurCmsg : Pcmsghdr;   //for iterating through the control buffer
   LByte : PByte;
-  LDummy, LDummy2 : Cardinal;
 
 begin
    //we call the macro twice because we specified two possible structures.
    //Id_IPV6_HOPLIMIT and Id_IPV6_PKTINFO
    LSize := CMSG_LEN(CMSG_LEN(Length(VBuffer)));
    SetLength( LControl,LSize);
-    LMsgBuf.len := Length(VBuffer); // Length(VMsgData);
-    LMsgBuf.buf := @VBuffer[0]; // @VMsgData[0];
+    LIOV.iov_len := Length(VBuffer); // Length(VMsgData);
+    LIOV.iov_base := @VBuffer[0]; // @VMsgData[0];
 
     FillChar(LMsg,SizeOf(LMsg),0);
 
-    LMsg.lpBuffers := @LMsgBuf;
-    LMsg.dwBufferCount := 1;
+    LMsg.msg_iov := @LIOV;//lpBuffers := @LMsgBuf;
+    LMsg.msg_iovlen := 1;
 
-    LMsg.Control.Len := LSize;
-    LMsg.Control.buf := @LControl[0];
+    LMsg.msg_controllen := LSize;
+    LMsg.msg_control := @LControl[0];
 
-    LMsg.name := PSOCKADDR(@LAddr);
-    LMsg.namelen := SizeOf(LAddr);
-
-    CheckForSocketError(RecvMsg(ASocket, @LMsg, Result, @LDummy, LPwsaoverlapped_COMPLETION_ROUTINE(@LDummy2)));
+    LMsg.msg_name := PSOCKADDR(@LAddr);
+    LMsg.msg_namelen := SizeOf(LAddr);
+    //function recvmsg(socket: Integer; var message: msghdr; flags: Integer): ssize_t; cdecl;
+    CheckForSocketError(RecvMsg(ASocket, LMsg, Result ));
 
     case LAddr.sin6_family of
       Id_PF_INET4: begin
-        with Psockaddr(@LAddr)^ do
+        with PSockAddr_In(@LAddr)^ do
         begin
           APkt.SourceIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
           APkt.SourcePort := ntohs(sin_port);
@@ -879,28 +851,28 @@ begin
     LCurCmsg := nil;
     repeat
       LCurCmsg := CMSG_NXTHDR(@LMsg,LCurCmsg);
-      if LCurCmsg=nil then
-      begin
+      if LCurCmsg=nil then begin
         break;
       end;
       case LCurCmsg^.cmsg_type of
-        IP_PKTINFO :     //done this way because IPV6_PKTINF and  IP_PKTINFO
+        IPV6_PKTINFO :     //done this way because IPV6_PKTINF and  IP_PKTINFO
         //are both 19
         begin
           case LAddr.sin6_family of
             Id_PF_INET4: begin
-              with Pin_pktinfo(CMSG_DATA(LCurCmsg))^ do
-              begin
+              {$IFNDEF DARWIN}
+              //This is not supported in OS X.
+              with Pin_pktinfo(CMSG_DATA(LCurCmsg))^ do begin
                 APkt.DestIP := TranslateTInAddrToString(ipi_addr, Id_IPv4);
                 APkt.DestIF := ipi_ifindex;
               end;
               APkt.DestIPVersion := Id_IPv4;
+              {$ENDIF}
             end;
             Id_PF_INET6: begin
-              with Pin6_pktinfo(CMSG_DATA(LCurCmsg))^ do
-              begin
+              with pin6_pktinfo(CMSG_DATA(LCurCmsg))^ do begin
                 APkt.DestIP := TranslateTInAddrToString(ipi6_addr, Id_IPv6);
-                APkt.DestIF := ipi6_ifindex;
+                APkt.DestIF :=  ipi6_ifindex;
               end;
               APkt.DestIPVersion := Id_IPv6;
             end;
@@ -912,7 +884,7 @@ begin
           APkt.TTL := LByte^;
         end;
       end;
-    until False; }
+    until False;
 end;
 
 function TIdStackVCLPosix.RecvFrom(const ASocket: TIdStackSocketHandle;
@@ -928,7 +900,7 @@ begin
   begin
     case PSockAddr(@LAddr)^.sa_family of
       Id_PF_INET4: begin
-        with PSockAddrIn(@LAddr)^ do begin
+        with PSockAddr_In(@LAddr)^ do begin
           VIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
           VPort := Ntohs(sin_port);
         end;
@@ -1102,7 +1074,7 @@ begin
    FillChar(LAddr, SizeOf(LAddr), 0);
   case AIPVersion of
     Id_IPv4: begin
-      with PsockaddrIn(@LAddr)^ do begin
+      with Psockaddr_In(@LAddr)^ do begin
         sin_family := Id_PF_INET4;
         TranslateStringToTInAddr(AIP, sin_addr, Id_IPv4);
         sin_port := htons(APort);

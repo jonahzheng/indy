@@ -728,12 +728,13 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
 //If this comes before the ICONV defines, it creates problems.
 //This also must go before the THandle size calculations.
 {$IFDEF VCL_CROSS_COMPILE}
-  {$IFDEF MACOSX}
+  {$IFDEF MACOS}
     {$DEFINE BSD}
     {$DEFINE DARWIN}
     {$DEFINE USE_SAFELOADLIBRARY}
     {$DEFINE USE_INVALIDATE_MOD_CACHE}
   {$ENDIF}
+
   {$UNDEF USE_ICONV}
   //important!!! iconv functions are defined in the libc.pas Novell Netware header.
   //Do not define USE_ICONVUNIT

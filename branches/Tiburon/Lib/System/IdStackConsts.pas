@@ -97,11 +97,11 @@ uses
   {$IFDEF NETWARE_LIBC}
   winsock;  //not sure if this is correct
   {$ENDIF}
-  {$IFDEF MACOS}
+  {$IFDEF MACOS_CLASIC}
   {$ENDIF}
   {$IFDEF UNIX}
     {$IFDEF USE_VCL_POSIX}
-      PosixErrno, PosixNetinetIn, PosixSysSocket;
+      PosixErrno,PosixNetDB, PosixNetinetIn, PosixSysSocket;
     {$ENDIF}
     {$IFDEF KYLIXCOMPAT}
     libc;
@@ -129,59 +129,6 @@ type
     TSocket
     {$ENDIF}
   {$ENDIF};
-
-  {$IFDEF USE_VCL_POSIX}
-const
-
-        IPV6_OPTIONS		= 1; { buf/ip6_opts; set/get IP6 options }
-        IPV6_RECVOPTS		= 5; { bool; receive all IP6 opts w/dgram }
-        IPV6_RECVRETOPTS	= 6; { bool; receive IP6 opts for response }
-        IPV6_RECVDSTADDR	= 7; { bool; receive IP6 dst addr w/dgram }
-        IPV6_RETOPTS		= 8; { ip6_opts; set/get IP6 options }
-        IPV6_SOCKOPT_RESERVED1	= 3; { reserved for future use }
-        IPV6_UNICAST_HOPS	= 4; { int; IP6 hops }
-        IPV6_MULTICAST_IF	= 9; { __uint8_t; set/get IP6 multicast i/f  }
-        IPV6_MULTICAST_HOPS	=10; { __uint8_t; set/get IP6 multicast hops }
-        IPV6_MULTICAST_LOOP	=11; { __uint8_t; set/get IP6 mcast loopback }
-        IPV6_JOIN_GROUP		=12; { ip6_mreq; join a group membership }
-        IPV6_LEAVE_GROUP	=13; { ip6_mreq; leave a group membership }
-        IPV6_PORTRANGE		=14; { int; range to choose for unspec port }
-        ICMP6_FILTER		=18; { icmp6_filter; icmp6 filter }
-        IPV6_PKTINFO		=19; { bool; send/recv if, src/dst addr }
-        IPV6_HOPLIMIT		=20; { bool; hop limit }
-        IPV6_NEXTHOP		=21; { bool; next hop addr }
-        IPV6_HOPOPTS		=22; { bool; hop-by-hop option }
-        IPV6_DSTOPTS		=23; { bool; destination option }
-        IPV6_RTHDR		=24; { bool; routing header }
-        IPV6_PKTOPTIONS		=25; { buf/cmsghdr; set/get IPv6 options }
-        IPV6_CHECKSUM		=26; { int; checksum offset for raw socket }
-        IPV6_V6ONLY		=27; { bool; only bind INET6 at wildcard bind }
-        IPV6_BINDV6ONLY		=IPV6_V6ONLY;
-        IPV6_IPSEC_POLICY	=28; { struct; get/set security policy }
-      	IP_OPTIONS		=  1;    { buf/ip_opts; set/get IP options }
-      	IP_HDRINCL		=  2;    { int; header is included with data }
-      	IP_TOS			=  3;    { int; IP type of service and preced. }
-      	IP_TTL			=  4;    { int; IP time to live }
-      	IP_RECVOPTS		=  5;    { bool; receive all IP opts w/dgram }
-      	IP_RECVRETOPTS		=  6;    { bool; receive IP opts for response }
-      	IP_RECVDSTADDR		=  7;    { bool; receive IP dst addr w/dgram }
-      	IP_RETOPTS		=  8;    { ip_opts; set/get IP options }
-      	IP_MULTICAST_IF		=  9;    { u_char; set/get IP multicast i/f  }
-      	IP_MULTICAST_TTL	= 10;    { u_char; set/get IP multicast ttl }
-      	IP_MULTICAST_LOOP	= 11;    { u_char; set/get IP multicast loopback }
-      	IP_ADD_MEMBERSHIP	= 12;    { ip_mreq; add an IP group membership }
-      	IP_DROP_MEMBERSHIP	= 13;    { ip_mreq; drop an IP group membership }
-
-const
-  INVALID_SOCKET = -1;
-  SOCKET_ERROR = -1;
-
-const
-  IPPROTO_PUP		= 12;		{ pup }
-  IPPROTO_ICMPV6	  	= 58; 		{ ICMP6 }
-  IPPROTO_MAX		=256;
-
-  {$ENDIF}
 
 var
   Id_SO_True: Integer = 1;
@@ -482,6 +429,7 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
   {$IFNDEF DOTNET}
   Id_SO_RCVTIMEO         = SO_RCVTIMEO;
   Id_SO_SNDTIMEO         = SO_SNDTIMEO;
+
   {$ELSE}
   Id_SO_RCVTIMEO         = SocketOptionName.ReceiveTimeout;
   Id_SO_SNDTIMEO         = SocketOptionName.SendTimeout;
@@ -489,27 +437,27 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
 
   {$IFNDEF DOTNET}
   Id_SO_IP_TTL              = IP_TTL;
+
   {$ELSE}
   Id_SO_IP_TTL              = SocketOptionName.IpTimeToLive; //  Set the IP header time-to-live field.
   {$ENDIF}
 
   {$IFNDEF DOTNET}
-    {$IFDEF USE_VCL_POSIX}
-  {$EXTERNALSYM INADDR_ANY}
-  INADDR_ANY       = $00000000;
-  {$EXTERNALSYM INADDR_LOOPBACK}
-  INADDR_LOOPBACK  = $7F000001;
-  {$EXTERNALSYM INADDR_BROADCAST}
-  INADDR_BROADCAST = $FFFFFFFF;
-  {$EXTERNALSYM INADDR_NONE}
-  INADDR_NONE      = $FFFFFFFF;
+  {for some reason, the compiler doesn't accept  INADDR_ANY below saying a constant is expected. }
+   {$IFDEF USE_VCL_POSIX}
+  Id_INADDR_ANY  = 0;// INADDR_ANY;
+   {$ELSE}
+  Id_INADDR_ANY  =  INADDR_ANY;
     {$ENDIF}
-  Id_INADDR_ANY  = INADDR_ANY;
   Id_INADDR_NONE = INADDR_NONE;
   {$ENDIF}
 
   // TCP Options
   {$IFNDEF DOTNET}
+    {$IFDEF USE_VCL_POSIX}
+  INVALID_SOCKET = 0;
+  SOCKET_ERROR          = socklen_t(-1);
+    {$ENDIF}
   Id_TCP_NODELAY           = TCP_NODELAY;
   Id_INVALID_SOCKET        = INVALID_SOCKET;
   Id_SOCKET_ERROR          = SOCKET_ERROR;
@@ -526,6 +474,13 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
   Id_SD_Recv = SHUT_RD;
   Id_SD_Send = SHUT_WR;
   Id_SD_Both = SHUT_RDWR;
+  //
+  //Temp defines.  They should be in Delphi's PosixErrno.pas
+  ESOCKTNOSUPPORT	= 44;		//* Socket type not supported */
+  EPFNOSUPPORT = 46;		//* Protocol family not supported */
+  ESHUTDOWN = 58;		//* Can't send after socket shutdown */
+  ETOOMANYREFS = 59;		//* Too many references: can't splice */
+  EHOSTDOWN = 64;		//* Host is down */
   //
   Id_WSAEINTR           = EINTR;
   Id_WSAEBADF           = EBADF;
