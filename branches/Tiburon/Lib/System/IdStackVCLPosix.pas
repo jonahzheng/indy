@@ -148,18 +148,53 @@ uses
   PosixUnistd,
   SysUtils;
 
+  {$UNDEF HAS_MSG_NOSIGNAL}
+  {$IFDEF LINUX}  //this LINUX ifdef is deliberate
+    {$DEFINE HAS_MSG_NOSIGNAL}
+  {$ENDIF}
+
 
 const
-  {$IFDEF DARWIN}
+  {$IFDEF HAS_MSG_NOSIGNAL}
   //fancy little trick since OS X does not have MSG_NOSIGNAL
-  Id_MSG_NOSIGNAL = 0;
-  {$ELSE}
   Id_MSG_NOSIGNAL = MSG_NOSIGNAL;
+  {$ELSE}
+    Id_MSG_NOSIGNAL = 0;
   {$ENDIF}
   Id_WSAEPIPE = EPIPE;
 
 type
   pin6_pktinfo = ^in6_pktinfo;
+
+//helper functions for some structs
+
+{Note:  These hide an API difference in structures.
+
+BSD 4.4 introduced a minor API change.  sa_family was changed from a 16bit
+word to an 8 bit byteee and an 8 bit byte feild named sa_len was added.
+
+}
+procedure InitSockAddr_In(var VSock : SockAddr_In);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  FillChar(VSock, SizeOf(SockAddr_In), 0);
+  VSock.sin_family := PF_INET;
+  {$IFDEF SOCK_HAS_SINLEN}
+  VSock.sin_len := SizeOf(Sockaddr);
+  {$ENDIF}
+end;
+
+procedure InitSockAddr_in6(var VSock : SockAddr_in6);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  FillChar(VSock, SizeOf(SockAddr_in6), 0);
+  {$IFDEF SOCK_HAS_SINLEN}
+  VSock.sin6_len := SizeOf(SockAddr_in6);
+  {$ENDIF}
+  VSock.sin6_family := PF_INET6;
+end;
+//
+
 { TIdSocketListVCLPosix }
 
 procedure TIdSocketListVCLPosix.Add(AHandle: TIdStackSocketHandle);
@@ -370,30 +405,47 @@ end;
 
 { TIdStackVCLPosix }
 
+{
+IMPORTANT!!!
+
+Throughout much of this code, you will see stuff such as:
+
+var
+  LAddrStore: sockaddr_storage;
+  LAddrIPv4 : SockAddr_In absolute LAddrStore;
+  LAddrIPv6 : sockaddr_in6 absolute LAddrStore;
+  LAddr : sockaddr absolute LAddrStore;
+
+This is just a fancy way to do typecasting with various types of address type.
+Many functions take a sockaddr parameter but that parameter is typecast for various
+address types.  The structures mentioned above are designed just for such
+typecasting.  The reason we use sockaddr_storage instead of sockaddr is that
+we need something that is guaranteed to be able to contain various address types
+and sockaddr would be too short for some of them and we can't know what
+someone else will add to Indy as time goes by.
+}
+
 function TIdStackVCLPosix.Accept(ASocket: TIdStackSocketHandle; var VIP: string;
   var VPort: TIdPort; var VIPVersion: TIdIPVersion): TIdStackSocketHandle;
 var
   LN: socklen_t;
-  LAddr: sockaddr_in6;
-  LAddrPtr : Psockaddr;
+  LAddrStore: sockaddr_storage;
+  LAddrIPv4 : SockAddr_In absolute LAddrStore;
+  LAddrIPv6 : sockaddr_in6 absolute LAddrStore;
+  LAddr : sockaddr absolute LAddrStore;
+
 begin
-  LN := SizeOf(LAddr);
-  LAddrPtr := psockaddr(@LAddr);
-  Result := PosixSysSocket.accept(ASocket, LAddrPtr^, LN);
+  Result := PosixSysSocket.accept(ASocket, LAddr, LN);
   if Result <> -1 then begin
-    case LAddr.sin6_family of
+    case LAddr.sa_family of
       Id_PF_INET4: begin
-        with PSockAddr_In(LAddrPtr)^ do begin
-          VIP := TranslateTInAddrToString( sin_addr, Id_IPv4);
-          VPort := Ntohs(PSockAddr_In(LAddrPtr)^.sin_port);
-        end;
+        VIP := TranslateTInAddrToString( LAddrIPv4.sin_addr, Id_IPv4);
+        VPort := Ntohs(LAddrIPv4.sin_port);
         VIPVersion := Id_IPV4;
       end;
       Id_PF_INET6: begin
-        with LAddr do begin
-          VIP := TranslateTInAddrToString(sin6_addr, Id_IPv6);
-          VPort := ntohs(sin6_port);
-        end;
+        VIP := TranslateTInAddrToString(LAddrIPv6.sin6_addr, Id_IPv6);
+        VPort := ntohs(LAddrIPv6.sin6_port);
         VIPVersion := Id_IPV6;
       end
       else begin
@@ -456,29 +508,27 @@ end;
 procedure TIdStackVCLPosix.Bind(ASocket: TIdStackSocketHandle;
   const AIP: string; const APort: TIdPort; const AIPVersion: TIdIPVersion);
 var
-  LAddr: sockaddr_in6;
+  LAddrStore: sockaddr_storage;
+  LAddrIPv4 : SockAddr_In absolute LAddrStore;
+  LAddrIPv6 : sockaddr_in6 absolute LAddrStore;
+  LAddr : sockaddr absolute LAddrStore;
 begin
-  FillChar(LAddr, SizeOf(LAddr), 0);
   case AIPVersion of
     Id_IPv4: begin
-        with PSockAddr_In(@LAddr)^ do begin
-          sin_family := Id_PF_INET4;
-          if AIP <> '' then begin
-            TranslateStringToTInAddr(AIP, sin_addr, Id_IPv4);
-          end;
-          sin_port := htons(APort);
+        InitSockAddr_In(LAddrIPv4);
+        if AIP <> '' then begin
+          TranslateStringToTInAddr(AIP, LAddrIPv4.sin_addr, Id_IPv4);
         end;
-        CheckForSocketError(PosixSysSocket.bind(ASocket, Psockaddr(@LAddr)^,SizeOf(sockaddr)));
+        LAddrIPv4.sin_port := htons(APort);
+        CheckForSocketError(PosixSysSocket.bind(ASocket, LAddr,SizeOf(LAddrIPv4)));
       end;
     Id_IPv6: begin
-        with LAddr do begin
-          sin6_family := Id_PF_INET6;
-          if AIP <> '' then begin
-            TranslateStringToTInAddr(AIP, sin6_addr, Id_IPv6);
-          end;
-          sin6_port := htons(APort);
+        InitSockAddr_in6(LAddrIPv6);
+        if AIP <> '' then begin
+          TranslateStringToTInAddr(AIP, LAddrIPv6.sin6_addr, Id_IPv6);
         end;
-        CheckForSocketError(PosixSysSocket.bind(ASocket,Psockaddr(@LAddr)^, SizeOf(sockaddr_in6)));
+        LAddrIPv6.sin6_port := htons(APort);
+        CheckForSocketError(PosixSysSocket.bind(ASocket,LAddr, SizeOf(LAddrIPv6)));
       end;
     else begin
       IPVersionUnsupported;
@@ -502,28 +552,25 @@ end;
 procedure TIdStackVCLPosix.Connect(const ASocket: TIdStackSocketHandle;
   const AIP: string; const APort: TIdPort; const AIPVersion: TIdIPVersion);
 var
-  LAddr: sockAddr_in6;
+  LAddrStore: sockaddr_storage;
+  LAddrIPv4 : SockAddr_In absolute LAddrStore;
+  LAddrIPv6 : sockaddr_in6 absolute LAddrStore;
+  LAddr : sockaddr absolute LAddrStore;
 begin
-  FillChar(LAddr, SizeOf(LAddr), 0);
   case AIPVersion of
     Id_IPv4: begin
-      with PSockAddr_In(@LAddr)^ do begin
-        sin_family := Id_PF_INET4;
-        TranslateStringToTInAddr(AIP, sin_addr, Id_IPv4);
-        sin_port := htons(APort);
-      end;
+      InitSockAddr_In(LAddrIPv4);
+      TranslateStringToTInAddr(AIP, LAddrIPv4.sin_addr, Id_IPv4);
+      LAddrIPv4.sin_port := htons(APort);
       CheckForSocketError(PosixSysSocket.connect(
-        ASocket,Psockaddr(@LAddr)^,
-        SizeOf(sockaddr)));
+        ASocket,LAddr,SizeOf(LAddrIPv4)));
     end;
     Id_IPv6: begin
-      with LAddr do begin
-        sin6_family := Id_PF_INET6;
-        TranslateStringToTInAddr(AIP, sin6_addr, Id_IPv6);
-        sin6_port := htons(APort);
-      end;
+      InitSockAddr_in6(LAddrIPv6);
+      TranslateStringToTInAddr(AIP, LAddrIPv6.sin6_addr, Id_IPv6);
+      LAddrIPv6.sin6_port := htons(APort);
       CheckForSocketError(
-        PosixSysSocket.connect( ASocket, Psockaddr(@LAddr)^, SizeOf(sockaddr_in6)));
+        PosixSysSocket.connect( ASocket, LAddr, SizeOf(LAddrIPv6) ));
     end;
     else begin
       IPVersionUnsupported;
@@ -559,23 +606,22 @@ procedure TIdStackVCLPosix.GetPeerName(ASocket: TIdStackSocketHandle;
   var VIP: string; var VPort: TIdPort; var VIPVersion: TIdIPVersion);
 var
   i: socklen_t;
-  LAddr: sockaddr_in6;
+  LAddrStore: sockaddr_storage;
+  LAddrIPv4 : SockAddr_In absolute LAddrStore;
+  LAddrIPv6 : sockaddr_in6 absolute LAddrStore;
+  LAddr : sockaddr absolute LAddrStore;
 begin
-  i := SizeOf(LAddr);
-  CheckForSocketError(PosixSysSocket.getpeername(ASocket, PSockAddr(@LAddr)^, i));
-  case LAddr.sin6_family of
+  i := SizeOf(LAddrStore);
+  CheckForSocketError(PosixSysSocket.getpeername(ASocket, LAddr, i));
+  case LAddr.sa_family of
     Id_PF_INET4: begin
-      with Psockaddr_In(@LAddr)^ do begin
-        VIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
-        VPort := ntohs(sin_port);
-      end;
+      VIP := TranslateTInAddrToString(LAddrIPv4.sin_addr, Id_IPv4);
+      VPort := ntohs(LAddrIPv4.sin_port);
       VIPVersion := Id_IPV4;
     end;
     Id_PF_INET6: begin
-      with LAddr do begin
-        VIP := TranslateTInAddrToString(sin6_addr, Id_IPv6);
-        VPort := Ntohs(sin6_port);
-      end;
+      VIP := TranslateTInAddrToString(LAddrIPv6.sin6_addr, Id_IPv6);
+      VPort := Ntohs(LAddrIPv6.sin6_port);
       VIPVersion := Id_IPV6;
     end;
     else begin
@@ -589,24 +635,22 @@ procedure TIdStackVCLPosix.GetSocketName(ASocket: TIdStackSocketHandle;
   var VIP: string; var VPort: TIdPort; var VIPVersion: TIdIPVersion);
 var
   LiSize: socklen_t;
-  LAddr: sockaddr_in6;
-
+  LAddrStore: sockaddr_storage;
+  LAddrIPv4 : SockAddr_In absolute LAddrStore;
+  LAddrIPv6 : sockaddr_in6 absolute LAddrStore;
+  LAddr : sockaddr absolute LAddrStore;
 begin
-  LiSize := SizeOf(LAddr);
+  LiSize := SizeOf(LAddrStore);
   CheckForSocketError(getsockname(ASocket, psockaddr(@LAddr)^, LiSize));
-  case PSockAddr(@LAddr)^.sa_family of
+  case LAddr.sa_family of
     Id_PF_INET4: begin
-      with psockaddr_In(@LAddr)^ do begin
-        VIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
-        VPort := ntohs(sin_port);
-      end;
+      VIP := TranslateTInAddrToString(LAddrIPv4.sin_addr, Id_IPv4);
+      VPort := ntohs(LAddrIPv4.sin_port);
       VIPVersion := Id_IPV4;
     end;
     Id_PF_INET6: begin
-      with LAddr do begin
-        VIP := TranslateTInAddrToString(sin6_addr, Id_IPv6);
-        VPort := ntohs(sin6_port);
-      end;
+      VIP := TranslateTInAddrToString(LAddrIPv6.sin6_addr, Id_IPv6);
+      VPort := ntohs(LAddrIPv6.sin6_port);
       VIPVersion := Id_IPV6;
     end;
     else begin
@@ -794,10 +838,12 @@ end;
 
 function TIdStackVCLPosix.ReceiveMsg(ASocket: TIdStackSocketHandle;
   var VBuffer: TIdBytes; APkt: TIdPacketInfo): LongWord;
-//termporarily disabled until I can finish this.
 var
   LSize: socklen_t;
-  LAddr: SockAddr_In6;
+  LAddrStore: sockaddr_storage;
+  LAddrIPv4 : SockAddr_In absolute LAddrStore;
+  LAddrIPv6 : sockaddr_in6 absolute LAddrStore;
+  LAddr : sockaddr absolute LAddrStore;
   LMsg : msghdr;
   LIOV : iovec;
   LControl : TIdBytes;
@@ -820,26 +866,20 @@ begin
     LMsg.msg_controllen := LSize;
     LMsg.msg_control := @LControl[0];
 
-    LMsg.msg_name := PSOCKADDR(@LAddr);
-    LMsg.msg_namelen := SizeOf(LAddr);
-    //function recvmsg(socket: Integer; var message: msghdr; flags: Integer): ssize_t; cdecl;
+    LMsg.msg_name := @LAddr;
+    LMsg.msg_namelen := SizeOf(LAddrStore);
+
     CheckForSocketError(RecvMsg(ASocket, LMsg, Result ));
 
-    case LAddr.sin6_family of
+    case LAddr.sa_family of
       Id_PF_INET4: begin
-        with PSockAddr_In(@LAddr)^ do
-        begin
-          APkt.SourceIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
-          APkt.SourcePort := ntohs(sin_port);
-        end;
+        APkt.SourceIP := TranslateTInAddrToString(LAddrIPv4.sin_addr, Id_IPv4);
+        APkt.SourcePort := ntohs(LAddrIPv4.sin_port);
         APkt.SourceIPVersion := Id_IPv4;
       end;
       Id_PF_INET6: begin
-        with LAddr do
-        begin
-          APkt.SourceIP := TranslateTInAddrToString(sin6_addr, Id_IPv6);
-          APkt.SourcePort := ntohs(sin6_port);
-        end;
+        APkt.SourceIP := TranslateTInAddrToString(LAddrIPv6.sin6_addr, Id_IPv6);
+        APkt.SourcePort := ntohs(LAddrIPv6.sin6_port);
         APkt.SourceIPVersion := Id_IPv6;
       end;
       else begin
@@ -892,25 +932,25 @@ function TIdStackVCLPosix.RecvFrom(const ASocket: TIdStackSocketHandle;
   var VPort: TIdPort; var VIPVersion: TIdIPVersion): Integer;
 var
   LiSize: socklen_t;
-  LAddr: sockaddr_in6;          // or Id_MSG_NOSIGNAL
+  LAddrStore: sockaddr_storage;
+  LAddrIPv4 : SockAddr_In absolute LAddrStore;
+  LAddrIPv6 : sockaddr_in6 absolute LAddrStore;
+  LAddr : sockaddr absolute LAddrStore;
+
 begin
-  LiSize := SizeOf(sockaddr_in6);
-  Result := PosixSysSocket.recvfrom(ASocket,VBuffer, ALength, AFlags, psockaddr(@LAddr)^, LiSize);
+  LiSize := SizeOf(sockaddr_storage);
+  Result := PosixSysSocket.recvfrom(ASocket,VBuffer, ALength, AFlags or Id_MSG_NOSIGNAL, psockaddr(@LAddr)^, LiSize);
   if Result >= 0 then
   begin
-    case PSockAddr(@LAddr)^.sa_family of
+    case LAddr.sa_family of
       Id_PF_INET4: begin
-        with PSockAddr_In(@LAddr)^ do begin
-          VIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
-          VPort := Ntohs(sin_port);
-        end;
+        VIP := TranslateTInAddrToString(LAddrIPv4.sin_addr, Id_IPv4);
+        VPort := Ntohs(LAddrIPv4.sin_port);
         VIPVersion := Id_IPV4;
       end;
       Id_PF_INET6: begin
-        with LAddr do begin
-          VIP := TranslateTInAddrToString(sin6_addr, Id_IPv6);
-          VPort := ntohs(sin6_port);
-        end;
+        VIP := TranslateTInAddrToString(LAddrIPv6.sin6_addr, Id_IPv6);
+        VPort := ntohs(LAddrIPv6.sin6_port);
         VIPVersion := Id_IPV6;
       end;
       else begin
@@ -1068,37 +1108,31 @@ procedure TIdStackVCLPosix.WSSendTo(ASocket: TIdStackSocketHandle;
   const ABuffer; const ABufferLength, AFlags: Integer; const AIP: string;
   const APort: TIdPort; AIPVersion: TIdIPVersion);
 var
-  LAddr: sockaddr_in6;
+  LAddrStore: sockaddr_storage;
+  LAddrIPv4 : SockAddr_In absolute LAddrStore;
+  LAddrIPv6 : sockaddr_in6 absolute LAddrStore;
+  LAddr : sockaddr absolute LAddrStore;
   LiSize: socklen_t;
 begin
-   FillChar(LAddr, SizeOf(LAddr), 0);
   case AIPVersion of
     Id_IPv4: begin
-      with Psockaddr_In(@LAddr)^ do begin
-        sin_family := Id_PF_INET4;
-        TranslateStringToTInAddr(AIP, sin_addr, Id_IPv4);
-        sin_port := htons(APort);
-      end;
-      LiSize := SizeOf(sockaddr);
+      InitSockAddr_In(LAddrIPv4);
+      TranslateStringToTInAddr(AIP, LAddrIPv4.sin_addr, Id_IPv4);
+      LAddrIPv4.sin_port := htons(APort);
+      LiSize := SizeOf(LAddrIPv4);
     end;
     Id_IPv6: begin
-      with LAddr do begin
-        sin6_family := Id_PF_INET6;
-        TranslateStringToTInAddr(AIP, sin6_addr, Id_IPv6);
-        sin6_port := htons(APort);
-      end;
-      LiSize := SizeOf(sockaddr_in6);
+      InitSockAddr_in6(LAddrIPv6);
+      TranslateStringToTInAddr(AIP, LAddrIPv6.sin6_addr, Id_IPv6);
+      LAddrIPv6.sin6_port := htons(APort);
+      LiSize := SizeOf(LAddrIPv6);
     end;
  else
-      LiSize := 0; // avoid warning
-      IPVersionUnsupported;
+   LiSize := 0; // avoid warning
+   IPVersionUnsupported;
  end;
-//function sendto(socket: Integer; const message; length: size_t;
-//  flags: Integer; const dest_addr: sockaddr; dest_len: socklen_t): ssize_t; cdecl;
-//  external libc name _PU + 'sendto';
   LiSize := PosixSysSocket.sendto(
-    ASocket, ABuffer, ABufferLength, AFlags or Id_MSG_NOSIGNAL,
-    Psockaddr(@LAddr)^,LiSize);
+    ASocket, ABuffer, ABufferLength, AFlags or Id_MSG_NOSIGNAL, LAddr,LiSize);
   if LiSize = Id_SOCKET_ERROR then begin
     // TODO: move this into RaiseLastSocketError directly
     if WSGetLastError() = Id_WSAEMSGSIZE then begin
@@ -1128,6 +1162,9 @@ function TIdStackVCLPosix.WSSocket(AFamily : Integer; AStruct : TIdSocketType; A
       const AOverlapped: Boolean = False): TIdStackSocketHandle;
 begin
   Result := PosixSysSocket.socket(AFamily, AStruct, AProtocol);
+  if Result <> INVALID_SOCKET then begin
+    Self.SetSocketOption(Result,SOL_SOCKET,SO_NOSIGPIPE,1);
+  end;
 end;
 
 function TIdStackVCLPosix.WSTranslateSocketErrorMsg(
