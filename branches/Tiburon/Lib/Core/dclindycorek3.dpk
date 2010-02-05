@@ -18,7 +18,7 @@ package dclIndyCoreK3;
 {$IMAGEBASE $400000}
 {$DESCRIPTION 'Indy 10 Core Design Time'}
 {$DESIGNONLY}
-{$IMPLICITBUILD OFF}
+{$IMPLICITBUILD ON}
 
 requires
   designide,
@@ -29,6 +29,7 @@ contains
   IdAboutVCL in 'IdAboutVCL.pas',
   IdAntiFreeze in 'IdAntiFreeze.pas',
   IdCoreDsnRegister in 'IdCoreDsnRegister.pas',
+  IdCoreSelectionEditors in 'IdCoreSelectionEditors.pas',
   IdDsnCoreResourceStrings in 'IdDsnCoreResourceStrings.pas',
   IdDsnPropEdBindingVCL in 'IdDsnPropEdBindingVCL.pas',
   IdRegisterCore in 'IdRegisterCore.pas';
