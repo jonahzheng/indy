@@ -898,7 +898,7 @@ begin
         IPV6_PKTINFO :     //done this way because IPV6_PKTINF and  IP_PKTINFO
         //are both 19
         begin
-          case LAddr.sin6_family of
+          case LAddr.sa_family of
             Id_PF_INET4: begin
               {$IFNDEF DARWIN}
               //This is not supported in OS X.

@@ -608,7 +608,7 @@ end;
 
 function TIdStack.CheckForSocketError(const AResult: Integer): Integer;
 begin
-  if AResult = Id_SOCKET_ERROR then begin
+  if AResult = Integer(Id_SOCKET_ERROR) then begin
     RaiseLastSocketError;
   end;
   Result := AResult;
@@ -621,7 +621,7 @@ var
   LLastError: Integer;
 begin
   Result := AResult;
-  if AResult = Id_SOCKET_ERROR then begin
+  if AResult = Integer(Id_SOCKET_ERROR) then begin
     LLastError := WSGetLastError;
     for i := Low(AIgnore) to High(AIgnore) do begin
       if LLastError = AIgnore[i] then begin
