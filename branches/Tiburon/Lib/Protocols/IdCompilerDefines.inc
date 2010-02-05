@@ -467,6 +467,7 @@
     {$DEFINE REGISTER_EXPECTED_MEMORY_LEAK}
   {$ENDIF}
   {$DEFINE HAS_TFormatSettings}
+  {$DEFINE HAS_TFormatSettings_Object}
   {$DEFINE HAS_TSelectionEditor}
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
