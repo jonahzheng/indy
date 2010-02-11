@@ -575,22 +575,23 @@
        {$DEFINE VCL_CROSS_COMPILE}
        {$DEFINE USE_VCL_POSIX}
        {$UNDEF USE_BASEUNIX}
-        {$UNDEF KYLIXCOMPAT}
+       {$UNDEF KYLIXCOMPAT}
      {$IFEND}
   {$ENDIF}
   {$IFDEF LINUX}
        {$DEFINE UNIX}
-    {$DEFINE KYLIXCOMPAT}
     {$IFDEF CONDITIONALEXPRESSIONS}
       {$IF RTLVersion = 14.0}
         {$DEFINE KYLIX_1}
         {$DEFINE KYLIX_1_OR_ABOVE}
+         {$DEFINE KYLIXCOMPAT}
       {$IFEND}
       {$IF RTLVersion = 14.2}
         {$DEFINE KYLIX_2}
         {$DEFINE USE_ZLIB_UNIT}
         {$DEFINE KYLIX_1_OR_ABOVE}
         {$DEFINE KYLIX_2_OR_ABOVE}
+         {$DEFINE KYLIXCOMPAT}
       {$IFEND}
       {$IF RTLVersion = 14.5}
         {$DEFINE KYLIX_3}
@@ -602,6 +603,7 @@
       {$IF RTLVersion >= 22.0}
         {$DEFINE VCL_CROSS_COMPILE}
         {$DEFINE USE_VCL_POSIX}
+        {$UNDEF KYLIXCOMPAT}
       {$IFEND}
     {$ENDIF}
     {$DEFINE VCL_4_OR_ABOVE}
@@ -662,19 +664,6 @@
 // Do not enable thus unless you know it will work correctly on your systems!
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   {.$DEFINE USE_HI_PERF_COUNTER_FOR_TICKS}
-{$ENDIF}
-
-{
-BSD 4.4 introduced a minor API change.  sa_family was changed from a 16bit
-word to an 8 bit byte and an 8 bit byte field named sa_len was added.
-}
-{$IFDEF FREEBSD}
-   {$DEFINE SOCK_HAS_SINLEN}
-{$ENDIF}
-{$IFDEF DARWIN}
-  {$IFNDEF KYLIXCOMPAT}
-    {$DEFINE SOCK_HAS_SINLEN}
-  {$ENDIF}
 {$ENDIF}
 
 {$IFDEF UNIX}
@@ -759,6 +748,20 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
     {$DEFINE MACOS_CLASSIC}
   {$ENDIF}
 {$ENDIF}
+
+
+{
+BSD 4.4 introduced a minor API change.  sa_family was changed from a 16bit
+word to an 8 bit byte and an 8 bit byte field named sa_len was added.
+}
+//Place this only after DARWIN has been defined for Delphi MACOS
+{$IFDEF FREEBSD}
+   {$DEFINE SOCK_HAS_SINLEN}
+{$ENDIF}
+{$IFDEF DARWIN}
+  {$DEFINE SOCK_HAS_SINLEN}
+{$ENDIF}
+
 
 // Do NOT remove these IFDEF's.  They are here because InterlockedExchange
 // only handles 32bit values.  Some Operating Systems may have 64bit  
