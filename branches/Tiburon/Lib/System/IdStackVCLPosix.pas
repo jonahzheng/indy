@@ -70,7 +70,6 @@ type
     destructor Destroy; override;
     procedure SetBlocking(ASocket: TIdStackSocketHandle; const ABlocking: Boolean); override;
     function WouldBlock(const AResult: Integer): Boolean; override;
-    function WSTranslateSocketErrorMsg(const AErr: Integer): string; override;
     function Accept(ASocket: TIdStackSocketHandle; var VIP: string; var VPort: TIdPort;
       var VIPVersion: TIdIPVersion): TIdStackSocketHandle; override;
     procedure Bind(ASocket: TIdStackSocketHandle; const AIP: string;
@@ -134,6 +133,8 @@ type
     procedure AddLocalAddressesToList(AAddresses: TStrings); override;
   end;
 
+      {/$DEFINE DEBUGSTACK}   //enable for debugging
+
 implementation
 uses
   IdResourceStrings,
@@ -143,6 +144,7 @@ uses
   PosixErrno,
   PosixNetDB,
   PosixNetinetIn,
+  PosixStrOpts,
   PosixSysTypes,
   PosixSysUio,
   PosixUnistd,
@@ -153,6 +155,48 @@ uses
     {$DEFINE HAS_MSG_NOSIGNAL}
   {$ENDIF}
 
+{******* This section is temporary until emb provides a proper translation
+//This is what they E-Mailed me. }
+
+{$IFDEF LINUX}
+function __cmsg_nxthdr(mhdr: Pmsghdr; cmsg: Pcmsghdr): Pcmsghdr; cdecl;
+  external libc name _PU + 'cmsg_nxthdr'; platform;
+{$ENDIF}
+
+function CMSG_NXTHDR(mhdr: Pmsghdr; cmsg: Pcmsghdr): Pcmsghdr;
+{$IFDEF LINUX}
+begin
+  Result := __cmsg_nxthdr(mhdr, cmsg);
+end;
+{$ENDIF LINUX}
+{$IFDEF MACOS}
+begin
+  if cmsg = nil then
+    Result := CMSG_FIRSTHDR(mhdr)
+  else
+  begin
+    if (Cardinal(cmsg) + CMSG_ALIGN(cmsg.cmsg_len) +
+CMSG_ALIGN(SizeOf(cmsghdr))) >
+      (Cardinal(mhdr.msg_control) + mhdr.msg_controllen) then
+      Result := nil
+    else
+      Result := Pcmsghdr(Cardinal(cmsg) + CMSG_ALIGN(cmsg.cmsg_len));
+  end;
+  (* MAC:
+	((char * )(cmsg) == (char * )0L ? CMSG_FIRSTHDR(mhdr) :		\
+	 ((((unsigned char * )(cmsg) +					\
+	    __DARWIN_ALIGN32((__uint32_t)(cmsg)->cmsg_len) +		\
+	    __DARWIN_ALIGN32(sizeof(struct cmsghdr))) >			\
+	    ((unsigned char * )(mhdr)->msg_control +			\
+	     (mhdr)->msg_controllen)) ?					\
+	  (struct cmsghdr * )0L /* NULL */ :				\
+	  (struct cmsghdr * )((unsigned char * )(cmsg) +			\
+	 		    __DARWIN_ALIGN32((__uint32_t)(cmsg)->cmsg_len))))
+    *)
+end;
+{$ENDIF MACOS}
+
+{************ end temp section}
 
 const
   {$IFDEF HAS_MSG_NOSIGNAL}
@@ -180,7 +224,7 @@ begin
   FillChar(VSock, SizeOf(SockAddr_In), 0);
   VSock.sin_family := PF_INET;
   {$IFDEF SOCK_HAS_SINLEN}
-  VSock.sin_len := SizeOf(Sockaddr);
+  VSock.sin_len := SizeOf(SockAddr_In);
   {$ENDIF}
 end;
 
@@ -462,38 +506,41 @@ begin
 end;
 
 procedure TIdStackVCLPosix.AddLocalAddressesToList(AAddresses: TStrings);
-//type
-//  TaPInAddr = array[0..250] of PInAddr;
-//  PaPInAddr = ^TaPInAddr;
 var
   LRetVal: Integer;
   LHostName: AnsiString;
   Hints: AddrInfo;
-  LAddrInfo: pAddrInfo;
+  LAddrList, LAddrInfo: pAddrInfo;
 
 begin
-  Hints.ai_family := Id_PF_INET4;
+  //IMPORTANT!!!
+  //
+  //The Hints structure must be zeroed out or you might get an AV.
+  //I've seen this in Mac OS X
+  FillChar(Hints, SizeOf(Hints), 0);
+  Hints.ai_family := PF_UNSPEC; // TODO: support IPv6 addresses
   Hints.ai_socktype := SOCK_STREAM;
-  Hints.ai_protocol := 0;
-  Hints.ai_addrlen := 0;
-  Hints.ai_canonname := nil;
-  Hints.ai_next := nil;
-  Hints.ai_addr := nil;
-
   LAddrInfo := nil;
 
   LHostName := HostName;
-  LRetVal := getaddrinfo( PAnsiChar(LHostName), nil, Hints, LAddrInfo);
+  LRetVal := getaddrinfo( PAnsiChar(LHostName), nil, Hints, LAddrList);
   if LRetVal <> 0 then begin
     EIdReverseResolveError.CreateFmt(RSReverseResolveError, [LHostName, gai_strerror(LRetVal), LRetVal]);
   end;
   try
     AAddresses.BeginUpdate;
     try
+      LAddrInfo := LAddrList;
       repeat
         case LAddrInfo^.ai_addr^.sa_family  of
-        Id_PF_INET4 : AAddresses.Add(TranslateTInAddrToString( PSockAddr_In(LAddrInfo^.ai_addr)^.sin_addr, Id_IPv4));
-        Id_PF_INET6 : AAddresses.Add(TranslateTInAddrToString( PSockAddr_In6(LAddrInfo^.ai_addr)^.sin6_addr, Id_IPv6));
+        Id_PF_INET4 :
+          begin
+            AAddresses.Add(TranslateTInAddrToString( PSockAddr_In(LAddrInfo^.ai_addr)^.sin_addr, Id_IPv4));
+          end;
+        Id_PF_INET6 :
+          begin
+            AAddresses.Add(TranslateTInAddrToString( PSockAddr_In6(LAddrInfo^.ai_addr)^.sin6_addr, Id_IPv6));
+          end;
         end;
         LAddrInfo := LAddrInfo^.ai_next;
       until LAddrInfo = nil;
@@ -501,7 +548,7 @@ begin
       AAddresses.EndUpdate;
     end;
   finally
-    freeaddrinfo(LAddrInfo^);
+    freeaddrinfo(LAddrList^);
   end;
 end;
 
@@ -674,83 +721,90 @@ end;
 function TIdStackVCLPosix.HostByAddress(const AAddress: string;
   const AIPVersion: TIdIPVersion): string;
 var
-  LHints: AddrInfo; //The T is no omission - that's what I found in the header
-  LAddrInfo: PAddrInfo;
-  LRetVal: integer;
-  LAStr: AnsiString;
-
+  LiSize: socklen_t;
+  LAddrStore: sockaddr_storage;
+  LAddrIPv4 : SockAddr_In absolute LAddrStore;
+  LAddrIPv6 : sockaddr_in6 absolute LAddrStore;
+  LAddr : sockaddr absolute LAddrStore;
+  LHostName : AnsiString;
+  LRet : Integer;
 begin
   case AIPVersion of
-    Id_IPv6, Id_IPv4: begin
-      FillChar(LHints, SizeOf(LHints), 0);
-      LHints.ai_family := IdIPFamily[AIPVersion];
-      LHints.ai_socktype := Integer(SOCK_STREAM);
-      LHints.ai_flags := AI_CANONNAME or AI_NUMERICHOST;
-      LAddrInfo := nil;
-
-      LAStr := AnsiString(AAddress); // explicit convert to Ansi
-      LRetVal := getaddrinfo(
-        PAnsiChar(LAStr),
-        nil, LHints,LAddrInfo);
-      if LRetVal <> 0 then begin
-        if LRetVal = EAI_SYSTEM then begin
-          IndyRaiseLastError;
-        end else begin
-          raise EIdReverseResolveError.CreateFmt(RSReverseResolveError, [AAddress, gai_strerror(LRetVal), LRetVal]);
-        end;
-      end;
-      try
-        Result := String(LAddrInfo^.ai_canonname);
-      finally
-        freeaddrinfo(LAddrInfo^);
-      end;
+    Id_IPv4 :
+    begin
+      InitSockAddr_In(LAddrIPv4);
+      TranslateStringToTInAddr(AAddress,LAddrIPv4.sin_addr,Id_IPv4);
+      LiSize := SizeOf(SockAddr_In);
+      {$IFDEF DEBUGSTACK}
+      WriteLn('sockaddr_in');
+      WriteLn('  sin_len '+IntToStr(LAddrIPv4.sin_len));
+      WriteLn('  sin_family '+ IntToStr(LAddrIPv4.sin_family));
+      WriteLn('  sin_port '+IntToStr(LAddrIPv4.sin_port));
+      Write  ('  sin_addr');
+      Write  (IntToStr(LAddrIPv4.sin_addr.s_addr and $FF000000 shr 24)+'.');
+      Write  (IntToStr(LAddrIPv4.sin_addr.s_addr and $00FF0000 shr 16)+'.');
+      Write  (IntToStr(LAddrIPv4.sin_addr.s_addr and $0000FF00 shr 8)+'.');
+      WriteLn(IntToStr(LAddrIPv4.sin_addr.s_addr and $000000FF));
+      {$ENDIF}
     end;
-(* JMB: I left this in here just in case someone
-        complains, but the other code works on all
-        linux systems for all addresses and is thread-safe
-
-variables for it:
-  Host: PHostEnt;
-  LAddr: u_long;
-
-    Id_IPv4: begin
-      // GetHostByAddr is thread-safe in Linux.
-      // It might not be safe in Solaris or BSD Unix
-      LAddr := inet_addr(PAnsiChar(AAddress));
-      Host := GetHostByAddr(@LAddr,SizeOf(LAddr),AF_INET);
-      if (Host <> nil) then begin
-        Result := Host^.h_name;
-      end else begin
-        RaiseSocketError(h_errno);
-      end;
-    end;
-*)
-    else begin
-      IPVersionUnsupported;
+    Id_IPv6 :
+    begin
+      InitSockAddr_In6(LAddrIPv6);
+      TranslateStringToTInAddr(AAddress,LAddrIPv6.sin6_addr,Id_IPv6);
+      LiSize := SizeOf(SockAddr_In6);
+    end
+  else
+    IPVersionUnsupported;
+  end;
+  SetLength(LHostname,NI_MAXHOST);
+  FillChar(LHostName[1],NI_MAXHOST,0);
+        {$IFDEF DEBUGSTACK}
+  WriteLn('getnameinfo LiSize = '+IntToStr(LiSize));
+  WriteLn(' NI_MAXHOST = '+IntToStr(NI_MAXHOST));
+  {$ENDIF}
+  LRet := getnameinfo(LAddr,LiSize, PAnsiChar(@LHostName[1]),NI_MAXHOST,nil,0,NI_NAMEREQD );
+        {$IFDEF DEBUGSTACK}
+  WriteLn('getnameinfo ret = '+IntToStr(LRet));
+  WriteLn('  LHostname: '+LHostName);
+     {$ENDIF}
+  if LRet <> 0 then begin
+    if LRet = EAI_SYSTEM then begin
+      RaiseLastOSError;
+    end else begin
+      EIdReverseResolveError.CreateFmt(RSReverseResolveError, [AAddress, gai_strerror(LRet), LRet]);
     end;
   end;
+  Result := String(LHostName);
 end;
 
 function TIdStackVCLPosix.HostByName(const AHostName: string;
   const AIPVersion: TIdIPVersion): string;
 var
   LAddrInfo: pAddrInfo;
-  Hints: AddrInfo;
-  LTemp: AnsiString;
-  RetVal: Integer;
+  LHints: AddrInfo;
+  LHost: AnsiString;
+  LRetVal: Integer;
 begin
   if not (AIPVersion in [Id_IPv4, Id_IPv6]) then begin
     IPVersionUnsupported;
   end;
-//  ZeroMemory(@Hints, SIZE_TADDRINFO);
-  Hints.ai_family := IdIPFamily[AIPVersion];
-  Hints.ai_socktype := SOCK_STREAM;
+  //IMPORTANT!!!
+  //
+  //The Hints structure must be zeroed out or you might get an AV.
+  //I've seen this in Mac OS X
+  FillChar(LHints, SizeOf(LHints), 0);
+  LHints.ai_family := IdIPFamily[AIPVersion];
+  LHints.ai_socktype := SOCK_STREAM;
   LAddrInfo := nil;
-  LTemp := AnsiString(AHostName);
+  LHost := AnsiString(AHostName);
 
-  RetVal := getaddrinfo( PAnsiChar(LTemp), nil, Hints, LAddrInfo);
-  if RetVal <> 0 then begin
-    RaiseSocketError(RetVal);
+  LRetVal := getaddrinfo( PAnsiChar(LHost), nil, LHints, LAddrInfo);
+  if LRetVal <> 0 then begin
+    if LRetVal = EAI_SYSTEM then begin
+      RaiseLastOSError;
+    end else begin
+      EIdReverseResolveError.CreateFmt(RSReverseResolveError, [LHost, gai_strerror(LRetVal), LRetVal]);
+    end;
   end;
   try
     if AIPVersion = Id_IPv4 then begin
@@ -793,7 +847,7 @@ var
   LArg : PtrUInt;
 begin
   LArg := arg;
-//  Result := ioctl(s, cmd, Pointer(LArg));
+  Result := ioctl(s, cmd, Pointer(LArg));
 end;
 
 procedure TIdStackVCLPosix.Listen(ASocket: TIdStackSocketHandle;
@@ -1002,8 +1056,12 @@ procedure TIdStackVCLPosix.WriteChecksum(s: TIdStackSocketHandle;
   var VBuffer: TIdBytes; const AOffset: Integer; const AIP: String;
   const APort: TIdPort; const AIPVersion: TIdIPVersion);
 begin
-
-
+  case AIPVersion of
+    Id_IPv4 : CopyTIdWord(HostToLittleEndian(CalcCheckSum(VBuffer)), VBuffer, AOffset);
+    Id_IPv6 : WriteChecksumIPv6(s, VBuffer, AOffset, AIP, APort);
+  else
+    IPVersionUnsupported;
+  end;
 end;
 
 procedure TIdStackVCLPosix.WriteChecksumIPv6(s: TIdStackSocketHandle;
@@ -1165,12 +1223,6 @@ begin
   if Result <> INVALID_SOCKET then begin
     Self.SetSocketOption(Result,SOL_SOCKET,SO_NOSIGPIPE,1);
   end;
-end;
-
-function TIdStackVCLPosix.WSTranslateSocketErrorMsg(
-  const AErr: Integer): string;
-begin
-
 end;
 
 end.
