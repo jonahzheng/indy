@@ -72,7 +72,7 @@ begin
   inherited Receive(ABuffer);
   if RecvBitsPerSec > 0 then begin
     LInterval := (Int64(Length(ABuffer)) * 8 * 1000) div RecvBitsPerSec;
-    while Interval > MaxInt do begin
+    while LInterval > MaxInt do begin
       TIdAntiFreezeBase.Sleep(MaxInt);
       Dec(LInterval, MaxInt);
     end;
