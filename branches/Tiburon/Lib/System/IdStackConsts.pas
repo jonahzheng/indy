@@ -101,6 +101,14 @@ uses
   {$ENDIF}
   {$IFDEF UNIX}
     {$IFDEF USE_VCL_POSIX}
+	{
+	IMPORTANT!!!
+	
+	The new Posix units have platform specific stuff.  Since this code and 
+	the definitions are not intented to be compiled in non-Unix-like operating
+	systems, platform warnings are not going to be too helpful.
+	}
+     {$WARN SYMBOL_PLATFORM OFF}
       PosixErrno,PosixNetDB, PosixNetinetIn, PosixSysSocket;
     {$ENDIF}
     {$IFDEF KYLIXCOMPAT}
@@ -866,4 +874,7 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
                        
 implementation
 
+{$IFDEF USE_VCL_POSIX}
+  {$WARN SYMBOL_PLATFORM ON}
+{$ENDIF}
 end.

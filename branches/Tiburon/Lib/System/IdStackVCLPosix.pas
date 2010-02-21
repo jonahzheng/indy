@@ -9,12 +9,21 @@ interface
 
 {$I IdCompilerDefines.inc}
 
+{IMPORTANT!!!
+
+Platform warnings in this unit should be disabled because Indy we have no
+intention of porting this unit to Windows or any non-Unix-like operating system.
+
+Any differences between Unix-like operating systems have to dealt with in other
+ways.
+}
+
+{$WARN SYMBOL_PLATFORM OFF}
 uses
   Classes,
     PosixSysSelect,
   PosixSysSocket,
   PosixSysTime,
-//  IdFakePosixSockets,
   IdStack,
   IdStackConsts,
   IdGlobal,
@@ -133,7 +142,6 @@ type
     procedure AddLocalAddressesToList(AAddresses: TStrings); override;
   end;
 
-      {/$DEFINE DEBUGSTACK}   //enable for debugging
 
 implementation
 uses
@@ -155,49 +163,6 @@ uses
     {$DEFINE HAS_MSG_NOSIGNAL}
   {$ENDIF}
 
-{******* This section is temporary until emb provides a proper translation
-//This is what they E-Mailed me. }
-
-{$IFDEF LINUX}
-function __cmsg_nxthdr(mhdr: Pmsghdr; cmsg: Pcmsghdr): Pcmsghdr; cdecl;
-  external libc name _PU + 'cmsg_nxthdr'; platform;
-{$ENDIF}
-
-function CMSG_NXTHDR(mhdr: Pmsghdr; cmsg: Pcmsghdr): Pcmsghdr;
-{$IFDEF LINUX}
-begin
-  Result := __cmsg_nxthdr(mhdr, cmsg);
-end;
-{$ENDIF LINUX}
-{$IFDEF MACOS}
-begin
-  if cmsg = nil then
-    Result := CMSG_FIRSTHDR(mhdr)
-  else
-  begin
-    if (Cardinal(cmsg) + CMSG_ALIGN(cmsg.cmsg_len) +
-CMSG_ALIGN(SizeOf(cmsghdr))) >
-      (Cardinal(mhdr.msg_control) + mhdr.msg_controllen) then
-      Result := nil
-    else
-      Result := Pcmsghdr(Cardinal(cmsg) + CMSG_ALIGN(cmsg.cmsg_len));
-  end;
-  (* MAC:
-	((char * )(cmsg) == (char * )0L ? CMSG_FIRSTHDR(mhdr) :		\
-	 ((((unsigned char * )(cmsg) +					\
-	    __DARWIN_ALIGN32((__uint32_t)(cmsg)->cmsg_len) +		\
-	    __DARWIN_ALIGN32(sizeof(struct cmsghdr))) >			\
-	    ((unsigned char * )(mhdr)->msg_control +			\
-	     (mhdr)->msg_controllen)) ?					\
-	  (struct cmsghdr * )0L /* NULL */ :				\
-	  (struct cmsghdr * )((unsigned char * )(cmsg) +			\
-	 		    __DARWIN_ALIGN32((__uint32_t)(cmsg)->cmsg_len))))
-    *)
-end;
-{$ENDIF MACOS}
-
-{************ end temp section}
-
 const
   {$IFDEF HAS_MSG_NOSIGNAL}
   //fancy little trick since OS X does not have MSG_NOSIGNAL
@@ -207,8 +172,7 @@ const
   {$ENDIF}
   Id_WSAEPIPE = EPIPE;
 
-type
-  pin6_pktinfo = ^in6_pktinfo;
+
 
 //helper functions for some structs
 
@@ -520,9 +484,8 @@ begin
   FillChar(Hints, SizeOf(Hints), 0);
   Hints.ai_family := PF_UNSPEC; // TODO: support IPv6 addresses
   Hints.ai_socktype := SOCK_STREAM;
-  LAddrInfo := nil;
 
-  LHostName := HostName;
+  LHostName := AnsiString(HostName);
   LRetVal := getaddrinfo( PAnsiChar(LHostName), nil, Hints, LAddrList);
   if LRetVal <> 0 then begin
     EIdReverseResolveError.CreateFmt(RSReverseResolveError, [LHostName, gai_strerror(LRetVal), LRetVal]);
@@ -729,23 +692,13 @@ var
   LHostName : AnsiString;
   LRet : Integer;
 begin
+  LiSize := 0;
   case AIPVersion of
     Id_IPv4 :
     begin
       InitSockAddr_In(LAddrIPv4);
       TranslateStringToTInAddr(AAddress,LAddrIPv4.sin_addr,Id_IPv4);
       LiSize := SizeOf(SockAddr_In);
-      {$IFDEF DEBUGSTACK}
-      WriteLn('sockaddr_in');
-      WriteLn('  sin_len '+IntToStr(LAddrIPv4.sin_len));
-      WriteLn('  sin_family '+ IntToStr(LAddrIPv4.sin_family));
-      WriteLn('  sin_port '+IntToStr(LAddrIPv4.sin_port));
-      Write  ('  sin_addr');
-      Write  (IntToStr(LAddrIPv4.sin_addr.s_addr and $FF000000 shr 24)+'.');
-      Write  (IntToStr(LAddrIPv4.sin_addr.s_addr and $00FF0000 shr 16)+'.');
-      Write  (IntToStr(LAddrIPv4.sin_addr.s_addr and $0000FF00 shr 8)+'.');
-      WriteLn(IntToStr(LAddrIPv4.sin_addr.s_addr and $000000FF));
-      {$ENDIF}
     end;
     Id_IPv6 :
     begin
@@ -758,15 +711,7 @@ begin
   end;
   SetLength(LHostname,NI_MAXHOST);
   FillChar(LHostName[1],NI_MAXHOST,0);
-        {$IFDEF DEBUGSTACK}
-  WriteLn('getnameinfo LiSize = '+IntToStr(LiSize));
-  WriteLn(' NI_MAXHOST = '+IntToStr(NI_MAXHOST));
-  {$ENDIF}
   LRet := getnameinfo(LAddr,LiSize, PAnsiChar(@LHostName[1]),NI_MAXHOST,nil,0,NI_NAMEREQD );
-        {$IFDEF DEBUGSTACK}
-  WriteLn('getnameinfo ret = '+IntToStr(LRet));
-  WriteLn('  LHostname: '+LHostName);
-     {$ENDIF}
   if LRet <> 0 then begin
     if LRet = EAI_SYSTEM then begin
       RaiseLastOSError;
@@ -887,7 +832,7 @@ var
 begin
   SetLength(LStr, 250);
   gethostname(PAnsiChar(LStr), 250);
-  Result := PAnsiChar(LStr);
+  Result := String(PAnsiChar(LStr));
 end;
 
 function TIdStackVCLPosix.ReceiveMsg(ASocket: TIdStackSocketHandle;
@@ -922,7 +867,7 @@ begin
 
     LMsg.msg_name := @LAddr;
     LMsg.msg_namelen := SizeOf(LAddrStore);
-
+    Result := 0;
     CheckForSocketError(RecvMsg(ASocket, LMsg, Result ));
 
     case LAddr.sa_family of
@@ -1119,7 +1064,7 @@ var
   Lp: PPAnsiCharArray;
 begin
   Result := TStringList.Create;
-  Lp := nil;
+
   try
     Lps := PosixNetDB.getservbyport(htons(APortNumber), nil);
     if Lps <> nil then begin
@@ -1199,7 +1144,7 @@ begin
       RaiseLastSocketError;
     end;
   end
-  else if LiSize <> ABufferLength then begin
+  else if Integer(LiSize) <> ABufferLength then begin
     raise EIdNotAllBytesSent.Create(RSNotAllBytesSent);
   end;
 
@@ -1225,4 +1170,5 @@ begin
   end;
 end;
 
+{$WARN SYMBOL_PLATFORM ON}
 end.
