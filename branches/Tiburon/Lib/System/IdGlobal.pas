@@ -5023,9 +5023,6 @@ end;
 function IndyFileAge(const AFileName: string): TDateTime;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  {$IFDEF VCL_CROSS_COMPILE}
-  Result := FileDateToDateTime(SysUtils.FileAge(AFileName));
-  {$ELSE}
     {$IFDEF VCL_2006_OR_ABOVE}
   //single-parameter fileage is deprecated in d2006 and above
   if not FileAge(AFileName, Result) then begin
@@ -5035,7 +5032,6 @@ begin
     {$ELSE}
   Result := FileDateToDateTime(SysUtils.FileAge(AFileName));
     {$ENDIF}
-  {$ENDIF}
 end;
 
 function IndyDirectoryExists(const ADirectory: string): Boolean;
