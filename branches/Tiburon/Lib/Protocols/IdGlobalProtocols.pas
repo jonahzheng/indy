@@ -1681,7 +1681,7 @@ var
   LTime : Integer;
   {$IFDEF USE_VCL_POSIX}
   LRec : _Stat;
-  LU : tm;
+
   {$ENDIF}
   {$IFDEF KYLIXCOMPAT}
   LRec : TStatBuf;

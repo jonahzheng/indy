@@ -1663,7 +1663,7 @@ begin
       Exit;
     end;
     if Result = SSL_ERROR_SYSCALL then begin
-      Result := inherited CheckForError(Id_SOCKET_ERROR);
+      Result := inherited CheckForError(Integer(Id_SOCKET_ERROR));
       Exit;
     end;
     EIdOpenSSLAPISSLError.RaiseException(fSSLSocket.fSSL, Result, '');

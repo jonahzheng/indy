@@ -12292,10 +12292,10 @@ begin
   if hIdSSL = 0 then begin
     hIdSSL := HackLoad(SSL_DLL_name, SSLDLLVers);
   end;
-  {$ELSE}
+  {$ENDIF}
     Result := True;
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     {$IFDEF FPC}
-      {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   //On Windows, you should use SafeLoadLibrary because
   //the LoadLibrary API call messes with the FPU control word.
   if hIdCrypto = 0 then begin
@@ -12311,19 +12311,7 @@ begin
   end else begin
     Exit;
   end;
-      {$ENDIF}
-      {$IFDEF USE_BASEUNIX}
-  if hIdCrypto = 0 then begin
-   hIdCrypto := HMODULE(HackLoad(SSLCLIB_DLL_name, SSLDLLVers));
-  end;
-  if hIdSSL = 0 then begin
-    hIdSSL := HMODULE(HackLoad(SSL_DLL_name, SSLDLLVers));
-  end;
-      {$ENDIF}
-    {$ENDIF}
-  {$ENDIF}
-  {$IFNDEF FPC}
-    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+    {$ELSE}
   if hIdCrypto = 0 then begin
     hIdCrypto := SafeLoadLibrary(SSLCLIB_DLL_name);
   end;
@@ -12336,8 +12324,26 @@ begin
     end;    
   end else begin
     Exit;
-  end;
+  end;	
     {$ENDIF}
+  {$ENDIF}
+  {$IFDEF USE_BASEUNIX}
+  if hIdCrypto = 0 then begin
+   hIdCrypto := HMODULE(HackLoad(SSLCLIB_DLL_name, SSLDLLVers));
+  end;
+  if hIdSSL = 0 then begin
+    hIdSSL := HMODULE(HackLoad(SSL_DLL_name, SSLDLLVers));
+  end;
+  {$ENDIF}
+  {$IFDEF USE_VCL_POSIX}
+  if hIdCrypto = 0 then begin
+    hIdCrypto := HMODULE(HackLoad(SSLCLIB_DLL_name, SSLDLLVers));
+  end;
+  if hIdSSL = 0 then begin
+    hIdSSL := HMODULE(HackLoad(SSL_DLL_name, SSLDLLVers));
+  end else begin
+    Exit;
+  end;
   {$ENDIF}
   @SSL_CTX_set_cipher_list := LoadFunction(fn_SSL_CTX_set_cipher_list);
   @SSL_CTX_new := LoadFunction(fn_SSL_CTX_new);
