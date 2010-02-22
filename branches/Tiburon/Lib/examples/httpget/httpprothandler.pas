@@ -18,7 +18,7 @@ uses
   {$endif}
   IdAuthenticationDigest, //MD5-Digest authentication
   {$ifdef useopenssl}
-    IdSSLOpenSSL,  //ssl
+    IdSSLOpenSSL10,  //ssl
     IdAuthenticationNTLM, //NTLM - uses OpenSSL libraries
   {$endif}
   prothandler,
