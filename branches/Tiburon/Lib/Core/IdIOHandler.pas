@@ -752,6 +752,11 @@ uses
   {$IFDEF WIN32_OR_WIN64}
   Windows,
   {$ENDIF}
+  {$IFDEF USE_VCL_POSIX}
+	  {$IFDEF DARWIN}
+    CoreServices,
+	  {$ENDIF}
+  {$ENDIF}
   IdStack, IdStackConsts, IdResourceStrings, SysUtils;
 
 var
