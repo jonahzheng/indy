@@ -481,6 +481,10 @@ uses
   {$IFDEF KYLIXCOMPAT}
   Libc,
   {$ENDIF}
+  {$IFDEF USE_VCL_POSIX}
+  PosixSysSelect,
+  PosixSysTime,
+  {$ENDIF}
   {$IFDEF DOTNET}
     {$IFDEF USE_INLINE}
   System.IO,

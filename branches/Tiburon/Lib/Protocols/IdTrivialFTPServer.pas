@@ -101,6 +101,15 @@ uses
   Windows,
     {$ENDIF}
   {$ENDIF}
+  {$IFDEF USE_VCL_POSIX}
+  PosixSysSelect,
+  PosixSysTime,
+  {$ENDIF}
+  {$IFDEF DOTNET}
+  IdStreamNET,
+  {$ELSE}
+  IdStreamVCL,
+  {$ENDIF}
   IdExceptionCore,
   IdGlobalProtocols,
   IdResourceStringsProtocols,

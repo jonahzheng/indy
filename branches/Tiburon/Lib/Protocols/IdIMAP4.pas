@@ -1143,6 +1143,11 @@ uses
   System.IO,
     {$ENDIF}
   {$ENDIF} 
+  {$IFDEF DOTNET}
+  IdStreamNET,
+  {$ELSE}
+  IdStreamVCL,
+  {$ENDIF}
   IdCoder,
   IdEMailAddress,
   IdResourceStrings,

@@ -569,6 +569,9 @@ uses
       {$ENDIF}
     {$ENDIF}
     {$IFDEF USE_VCL_POSIX}
+	  {$IFDEF DARWIN}
+    CoreServices,
+	  {$ENDIF}
     DateUtils,
     PosixSysStat, PosixSysTime, PosixTime, PosixUnistd,
     {$ENDIF}
@@ -1589,7 +1592,7 @@ var
   {$IFDEF UNIX}
 var
     {$IFDEF USE_VCL_POSIX}
-  LRec : TStatBuf;
+  LRec : _Stat;
     {$ELSE}
       {$IFDEF KYLIXCOMPAT}
   LRec : TStatBuf;
@@ -1677,7 +1680,7 @@ var
 var
   LTime : Integer;
   {$IFDEF USE_VCL_POSIX}
-  LRec : TStatBuf;
+  LRec : _Stat;
   LU : tm;
   {$ENDIF}
   {$IFDEF KYLIXCOMPAT}
@@ -3796,7 +3799,7 @@ begin
     {$ENDIF}
     {$IFDEF USE_VCL_POSIX}
   if PosixUnistd.gethostname(@LHost[1], 255) <> -1 then begin
-    i := IndyPos(#0, LHost);
+    i := IndyPos(#0, String(LHost));
     SetString(Result, PAnsiChar(@LHost[1]), i-1);
   end;
     {$ENDIF}

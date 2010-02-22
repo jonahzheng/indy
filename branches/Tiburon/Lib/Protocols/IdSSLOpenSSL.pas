@@ -424,6 +424,7 @@ type
     property OnStatusInfo: TCallbackEvent read fOnStatusInfo write fOnStatusInfo;
     property OnStatusInfoEx: TCallbackExEvent read fOnStatusInfoEx write fOnStatusInfoEx;
     property OnGetPassword: TPasswordEvent read fOnGetPassword write fOnGetPassword;
+    property OnGetPasswordEx : TPasswordEventEx read fOnGetPasswordEx write fOnGetPasswordEx;
     property OnVerifyPeer: TVerifyPeerEvent read fOnVerifyPeer write fOnVerifyPeer;
   end;
 
@@ -467,6 +468,7 @@ type
     property OnStatusInfo: TCallbackEvent read fOnStatusInfo write fOnStatusInfo;
     property OnStatusInfoEx: TCallbackExEvent read fOnStatusInfoEx write fOnStatusInfoEx;
     property OnGetPassword: TPasswordEvent read fOnGetPassword write fOnGetPassword;
+    property OnGetPasswordEx : TPasswordEventEx read fOnGetPasswordEx write fOnGetPasswordEx;
     property OnVerifyPeer: TVerifyPeerEvent read fOnVerifyPeer write fOnVerifyPeer;
   end;
 
@@ -618,6 +620,11 @@ procedure UnLoadOpenSSLLibrary;
 implementation
 
 uses
+  {$IFDEF USE_VCL_POSIX}
+  PosixGlue,
+  PosixSysTime,
+  PosixTime,
+  {$ENDIF}
   IdFIPS,
   IdResourceStringsCore,
   IdResourceStringsProtocols,

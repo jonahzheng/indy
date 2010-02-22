@@ -140,6 +140,10 @@ uses
   System.IO,
     {$ENDIF}
   {$ENDIF}
+  {$IFDEF USE_VCL_POSIX}
+  PosixSysSelect,
+  PosixSysTime,
+  {$ENDIF}
   IdGlobal, IdStack, SysUtils;
 
 { TIdIPWatch }

@@ -137,6 +137,11 @@ type
 implementation
 
 uses
+  {$IFDEF DOTNET}
+  IdStreamNET,
+  {$ELSE}
+  IdStreamVCL,
+  {$ENDIF}
   IdGlobalProtocols, SysUtils;
 
 { TIdHash }

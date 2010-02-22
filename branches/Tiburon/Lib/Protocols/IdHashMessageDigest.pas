@@ -109,6 +109,7 @@ implementation
 uses
   {$IFDEF DOTNET}
   System.Security.Cryptography,
+  IdStreamNET,
   {$ELSE}
   IdStreamVCL,
   {$ENDIF}

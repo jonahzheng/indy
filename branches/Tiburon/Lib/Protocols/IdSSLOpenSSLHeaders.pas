@@ -771,6 +771,7 @@ my $default_depflags = " -DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_CAPIENG -DOPENSSL_NO
 {$ENDIF}
 uses
   IdException,
+  IdGlobal,
   {$IFDEF KYLIX}
    libc,
   {$ENDIF}
@@ -8918,7 +8919,6 @@ implementation
 uses
   Classes,
   IdFIPS,
-  IdGlobal,  //needed for Sys symbol
   IdGlobalProtocols,
   IdResourceStringsProtocols,
   IdStack
@@ -14092,7 +14092,8 @@ begin
 end;
 
 function PEM_read_bio_RSAPublicKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
-{$IFDEF USE_INLINE} inline; {$ENDIF}begin
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
   Result := _PEM_read_bio_RSAPublicKey(bp, x, cb, u);
 end;
 
@@ -14106,7 +14107,8 @@ function PEM_read_bio_PrivateKey(bp : PBIO; var x : PEVP_PKEY; cb : ppem_passwor
 begin
   Result := _PEM_read_bio_PrivateKey(bp, x, cb, u);
 end;
-function PEM_read_bio_PKCS7(bp : PBIO; var x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
+
+function PEM_read_bio_PKCS7(bp : PBIO; var x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_PKCS7(bp, x, cb, u);

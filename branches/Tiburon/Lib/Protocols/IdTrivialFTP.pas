@@ -87,6 +87,11 @@ type
 implementation
 
 uses
+  {$IFDEF DOTNET}
+  IdStreamNET,
+  {$ELSE}
+  IdStreamVCL,
+  {$ENDIF}
   IdComponent,
   IdExceptionCore,
   IdGlobalProtocols,

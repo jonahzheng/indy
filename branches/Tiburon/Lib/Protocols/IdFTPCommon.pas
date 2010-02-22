@@ -654,7 +654,12 @@ const
 //end XAUT Stuff
 
 implementation
-uses IdException;
+uses 
+  {$IFDEF USE_VCL_POSIX}
+  PosixSysTime,
+  PosixTime,
+  {$ENDIF}
+  IdException;
 
 {WS_FTP Pro XAUT Support}
 
