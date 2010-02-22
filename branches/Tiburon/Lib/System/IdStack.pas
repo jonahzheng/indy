@@ -161,7 +161,11 @@ type
   {$IFDEF UNIX}
   EIdResolveError = class(EIdSocketError);
   EIdReverseResolveError = class(EIdSocketError);
+  EIdMaliciousPtrRecord = class(EIdReverseResolveError);
+  {$ELSE}
+  EIdMaliciousPtrRecord = class(EIdSocketError);
   {$ENDIF}
+
   EIdNotASocket = class(EIdSocketError);
 
   TIdServeFile = function(ASocket: TIdStackSocketHandle; const AFileName: string): Int64;

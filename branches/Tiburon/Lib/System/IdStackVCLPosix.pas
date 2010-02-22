@@ -691,6 +691,8 @@ var
   LAddr : sockaddr absolute LAddrStore;
   LHostName : AnsiString;
   LRet : Integer;
+  LHints : addrinfo;
+  LAddrInfo: pAddrInfo;
 begin
   LiSize := 0;
   case AIPVersion of
@@ -718,8 +720,32 @@ begin
     end else begin
       EIdReverseResolveError.CreateFmt(RSReverseResolveError, [AAddress, gai_strerror(LRet), LRet]);
     end;
+  end else begin
+{
+IMPORTANT!!!
+
+getnameinfo can return either results from a numeric to text conversion or
+results from a DNS reverse lookup.  Someone could make a malicous PTR record
+such as 
+
+   1.0.0.127.in-addr.arpa. IN PTR  10.1.1.1
+   
+and trick a caller into beleiving the socket address is 10.1.1.1 instead of
+127.0.0.1.  If there is a numeric host in LAddr, than this is the case and
+we disregard the result and raise an exception.
+}
+    FillChar(LHints,SizeOf(LHints),0);
+	LHints.ai_socktype := SOCK_DGRAM; //*dummy*/
+	LHints.ai_flags := AI_NUMERICHOST;
+	if (getaddrinfo(PAnsiChar(LHostName), '0', LHints, LAddrInfo)=0) then begin
+	  freeaddrinfo(LAddrInfo^);
+	  Result := '';
+	  raise EIdMaliciousPtrRecord.Create(RSMaliciousPtrRecord);
+	end else begin
+	  Result := String(LHostName);
+	end;
   end;
-  Result := String(LHostName);
+
 end;
 
 function TIdStackVCLPosix.HostByName(const AHostName: string;
@@ -748,7 +774,7 @@ begin
     if LRetVal = EAI_SYSTEM then begin
       RaiseLastOSError;
     end else begin
-      EIdReverseResolveError.CreateFmt(RSReverseResolveError, [LHost, gai_strerror(LRetVal), LRetVal]);
+      EIdResolveError.CreateFmt(RSReverseResolveError, [LHost, gai_strerror(LRetVal), LRetVal]);
     end;
   end;
   try
