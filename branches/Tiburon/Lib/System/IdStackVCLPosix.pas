@@ -1,10 +1,5 @@
 unit IdStackVCLPosix;
-{
-IMPORTANT!!!
 
-Currently, this backend does not provide any functionality.  We will get back
-to this when Embarcadero provides headers for the BSD Socket API.
-}
 interface
 
 {$I IdCompilerDefines.inc}
