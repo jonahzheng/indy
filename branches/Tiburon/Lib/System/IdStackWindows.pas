@@ -1344,7 +1344,8 @@ var
 begin
   Result := False;
   LLen := 0;
-  if IdWinsock2.WSAEnumProtocols(nil, nil, LLen) > 0 then
+  // Note: WSAEnumProtocols returns -1 when it is just called to get the needed Buffer Size!
+  if (IdWinsock2.WSAEnumProtocols(nil, nil, LLen) = SOCKET_ERROR) and (LLen > 0) then
   begin
     GetMem(LPInfo, LLen);
     try
