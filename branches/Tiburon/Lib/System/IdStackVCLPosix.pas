@@ -1197,4 +1197,6 @@ begin
 end;
 
 {$WARN SYMBOL_PLATFORM ON}
+initialization
+  GSocketListClass := TIdSocketListVCLPosix;
 end.
