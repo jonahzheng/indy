@@ -2483,11 +2483,32 @@ begin
   Result := LEncoding;
 end;
     {$ELSE}
+	  {$IFDEF USE_VCL_POSIX}
+function Indy8BitEncoding(const AOwnedByIndy: Boolean = True): TIdTextEncoding;
+var
+  LEncoding: TIdTextEncoding;
+begin
+  if not AOwnedByIndy then begin
+    LEncoding := TIdTextEncoding.GetEncoding(28591);
+  end else
+  begin
+    if GId8BitEncoding = nil then begin
+      LEncoding := TIdTextEncoding.GetEncoding(28591);
+      if InterlockedCompareExchangePtr(Pointer(GId8BitEncoding), LEncoding, nil) <> nil then begin
+        LEncoding.Free;
+      end;
+    end;
+    LEncoding := GId8BitEncoding;
+  end;
+  Result := LEncoding;
+end;
+	  {$ELSE}
 function Indy8BitEncoding(const AOwnedByIndy: Boolean = True): TIdTextEncoding;
 begin
   Result := nil;
   ToDo('Indy8BitEncoding() function is not implemented for this platform yet'); {do not localize}
 end;
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
 {$ENDIF}
