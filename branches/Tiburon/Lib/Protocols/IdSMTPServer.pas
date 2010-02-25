@@ -804,7 +804,7 @@ begin
                 Exit;
               end;
             end else begin
-              LBodyType := idSMTP7Bit;
+              LBodyType := idSMTP8BitMime;
             end;
             // let the user perform custom validations
             if Assigned(FOnMailFrom) then begin
@@ -1020,10 +1020,10 @@ begin
       // RLebeau: TODO - do not even create the stream if the OnMsgReceive
       // event is not assigned, or at least create a stream that discards
       // any data received...
-      if LContext.FBodyType = idSMTP8BitMime then begin
-        LEncoding := Indy8BitEncoding;
-      end else begin
+      if LContext.FBodyType = idSMTP7Bit then begin
         LEncoding := TIdTextEncoding.ASCII;
+      end else begin
+        LEncoding := Indy8BitEncoding;
       end;
       SetEnhReply(ASender.Reply, 354, '', RSSMTPSvrStartData, LContext.EHLO);
       ASender.SendReply;
@@ -1295,7 +1295,7 @@ begin
   FPassword := '';
   FLoggedIn := False;
   FMsgSize := 0;
-  FBodyType := idSMTP7Bit;
+  FBodyType := idSMTP8BitMime;
   FFinalStage := False;
   FreeAndNil(FBDataStream);
   CheckPipeLine;
