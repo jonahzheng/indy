@@ -230,8 +230,7 @@ type
     function IOControl(const s: TIdStackSocketHandle; const cmd: LongWord;
       var arg: LongWord): Integer; override;
     function ReceiveFrom(ASocket: TIdStackSocketHandle; var VBuffer: TIdBytes;
-      var VIP: string; var VPort: TIdPort;
-      const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer; override;
+      var VIP: string; var VPort: TIdPort; var VIPVersion: TIdIPVersion): Integer; override;
     function ReceiveMsg(ASocket: TIdStackSocketHandle; var VBuffer: TIdBytes;
       APkt: TIdPacketInfo; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): LongWord; override;
     function SendTo(ASocket: TIdStackSocketHandle; const ABuffer: TIdBytes;
@@ -571,7 +570,7 @@ begin
 end;
 
 function TIdStackDotNet.ReceiveFrom(ASocket: TIdStackSocketHandle; var VBuffer: TIdBytes;
-  var VIP: string; var VPort: TIdPort; VIPVersion: TIdIPVersion): Integer;
+  var VIP: string; var VPort: TIdPort; var VIPVersion: TIdIPVersion): Integer;
 var
   LEndPoint : EndPoint;
 begin
