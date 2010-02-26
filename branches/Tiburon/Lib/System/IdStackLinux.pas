@@ -487,87 +487,90 @@ function TIdStackLinux.ReceiveMsg(ASocket: TIdStackSocketHandle;
   LDummy, LDummy2 : Cardinal;
       
 begin
-   //we call the macro twice because we specified two possible structures.
-   //Id_IPV6_HOPLIMIT and Id_IPV6_PKTINFO
-   LSize := CMSG_LEN(CMSG_LEN(Length(VBuffer)));
-   SetLength( LControl,LSize);
-    LMsgBuf.len := Length(VBuffer); // Length(VMsgData);
-    LMsgBuf.buf := @VBuffer[0]; // @VMsgData[0];
+  //we call the macro twice because we specified two possible structures.
+  //Id_IPV6_HOPLIMIT and Id_IPV6_PKTINFO
+  LSize := CMSG_LEN(CMSG_LEN(Length(VBuffer)));
+  SetLength( LControl,LSize);
 
-    FillChar(LMsg,SizeOf(LMsg),0);
+  LMsgBuf.len := Length(VBuffer); // Length(VMsgData);
+  LMsgBuf.buf := @VBuffer[0]; // @VMsgData[0];
 
-    LMsg.lpBuffers := @LMsgBuf;
-    LMsg.dwBufferCount := 1;
+  FillChar(LMsg,SizeOf(LMsg),0);
 
-    LMsg.Control.Len := LSize;
-    LMsg.Control.buf := @LControl[0];
+  LMsg.lpBuffers := @LMsgBuf;
+  LMsg.dwBufferCount := 1;
 
-    LMsg.name := PSOCKADDR(@LAddr);
-    LMsg.namelen := SizeOf(LAddr);
+  LMsg.Control.Len := LSize;
+  LMsg.Control.buf := @LControl[0];
 
-    CheckForSocketError(RecvMsg(ASocket, @LMsg, Result, @LDummy, LPwsaoverlapped_COMPLETION_ROUTINE(@LDummy2)));
+  LMsg.name := PSOCKADDR(@LAddr);
+  LMsg.namelen := SizeOf(LAddr);
 
-    case LAddr.sin6_family of
-      Id_PF_INET4: begin
-        with Psockaddr(@LAddr)^ do
-        begin
-          APkt.SourceIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
-          APkt.SourcePort := ntohs(sin_port);
-        end;
-        APkt.SourceIPVersion := Id_IPv4;
-      end;
-      Id_PF_INET6: begin
-        with LAddr do
-        begin
-          APkt.SourceIP := TranslateTInAddrToString(sin6_addr, Id_IPv6);
-          APkt.SourcePort := ntohs(sin6_port);
-        end;
-        APkt.SourceIPVersion := Id_IPv6;
-      end;
-      else begin
-        Result := 0; // avoid warning
-        IPVersionUnsupported;
-      end;
-    end;
+  CheckForSocketError(RecvMsg(ASocket, @LMsg, Result, @LDummy, LPwsaoverlapped_COMPLETION_ROUTINE(@LDummy2)));
+  APkt.Reset;
 
-    LCurCmsg := nil;
-    repeat
-      LCurCmsg := CMSG_NXTHDR(@LMsg,LCurCmsg);
-      if LCurCmsg=nil then
+  case LAddr.sin6_family of
+    Id_PF_INET4: begin
+      with Psockaddr(@LAddr)^ do
       begin
-        break;
+        APkt.SourceIP := TranslateTInAddrToString(sin_addr, Id_IPv4);
+        APkt.SourcePort := ntohs(sin_port);
       end;
-      case LCurCmsg^.cmsg_type of
-        IP_PKTINFO :     //done this way because IPV6_PKTINF and  IP_PKTINFO
-        //are both 19
-        begin
-          case LAddr.sin6_family of
-            Id_PF_INET4: begin
-              with Pin_pktinfo(WSA_CMSG_DATA(LCurCmsg))^ do
-              begin
-                APkt.DestIP := GWindowsStack.TranslateTInAddrToString(ipi_addr, Id_IPv4);
-                APkt.DestIF := ipi_ifindex;
-              end;
-              APkt.DestIPVersion := Id_IPv4;
+      APkt.SourceIPVersion := Id_IPv4;
+    end;
+    Id_PF_INET6: begin
+      with LAddr do
+      begin
+        APkt.SourceIP := TranslateTInAddrToString(sin6_addr, Id_IPv6);
+        APkt.SourcePort := ntohs(sin6_port);
+      end;
+      APkt.SourceIPVersion := Id_IPv6;
+    end;
+    else begin
+      Result := 0; // avoid warning
+      IPVersionUnsupported;
+    end;
+  end;
+
+  LCurCmsg := nil;
+  repeat
+    LCurCmsg := CMSG_NXTHDR(@LMsg,LCurCmsg);
+    if LCurCmsg=nil then
+    begin
+      break;
+    end;
+    case LCurCmsg^.cmsg_type of
+      IP_PKTINFO :     //done this way because IPV6_PKTINF and  IP_PKTINFO
+      //are both 19
+      begin
+        case LAddr.sin6_family of
+          Id_PF_INET4: begin
+            with Pin_pktinfo(WSA_CMSG_DATA(LCurCmsg))^ do
+            begin
+              APkt.DestIP := GWindowsStack.TranslateTInAddrToString(ipi_addr, Id_IPv4);
+              APkt.DestIF := ipi_ifindex;
             end;
-            Id_PF_INET6: begin
-              with Pin6_pktinfo(WSA_CMSG_DATA(LCurCmsg))^ do
-              begin
-                APkt.DestIP := GWindowsStack.TranslateTInAddrToString(ipi6_addr, Id_IPv6);
-                APkt.DestIF := ipi6_ifindex;
-              end;
-              APkt.DestIPVersion := Id_IPv6;
+            APkt.DestIPVersion := Id_IPv4;
+          end;
+          Id_PF_INET6: begin
+            with Pin6_pktinfo(WSA_CMSG_DATA(LCurCmsg))^ do
+            begin
+              APkt.DestIP := GWindowsStack.TranslateTInAddrToString(ipi6_addr, Id_IPv6);
+              APkt.DestIF := ipi6_ifindex;
             end;
+            APkt.DestIPVersion := Id_IPv6;
           end;
         end;
-        Id_IPV6_HOPLIMIT :
-        begin
-          LByte :=  PByte(WSA_CMSG_DATA(LCurCmsg));
-          APkt.TTL := LByte^;
-        end;
       end;
-    until False; }
+      Id_IPV6_HOPLIMIT :
+      begin
+        LByte :=  PByte(WSA_CMSG_DATA(LCurCmsg));
+        APkt.TTL := LByte^;
+      end;
+    end;
+  until False; }
 begin
+  APkt.Reset;
   Result := 0; // avoid warning
 end;
 
