@@ -182,6 +182,8 @@ type
     FDestIPVersion: TIdIPVersion;
     FTTL: Byte;
   public
+    procedure Reset;
+
     property TTL : Byte read FTTL write FTTL;
     //The computer that sent it to you
     property SourceIP : String read FSourceIP write FSourceIP;
@@ -194,6 +196,7 @@ type
     property DestIF : LongWord read FDestIF write FDestIF;
     property DestIPVersion : TIdIPVersion read FDestIPVersion write FDestIPVersion;
   end;
+
   TIdSocketListClass = class of TIdSocketList;
 
   // Descend from only TObject. This objects is created a lot and should be fast
@@ -395,6 +398,19 @@ const
 procedure SetStackClass(AStackClass: TIdStackClass);
 begin
   GStackClass := AStackClass;
+end;
+
+procedure TIdPacketInfo.Reset;
+begin
+  FSourceIP := '';
+  FSourcePort := 0;
+  FSourceIF := 0;
+  FSourceIPVersion := ID_DEFAULT_IP_VERSION;
+  FDestIP := '';
+  FDestPort:= 0;
+  FDestIF := 0;
+  FDestIPVersion := ID_DEFAULT_IP_VERSION;
+  FTTL := 0;
 end;
 
 { TIdSocketList }
