@@ -1520,7 +1520,9 @@ begin
 
     LMsg.name :=  PSOCKADDR(@LAddr);
     LMsg.namelen := SizeOf(LAddr);
+
     CheckForSocketError(WSARecvMsg(ASocket, @LMsg, Result, nil, nil));
+    APkt.Reset;
 
     case LAddr.sin6_family of
       Id_PF_INET4: begin
@@ -1581,9 +1583,11 @@ begin
   begin
   {$ENDIF}
     Result := RecvFrom(ASocket, VBuffer, Length(VBuffer), 0, LIP, LPort, LIPVersion);
+    APkt.Reset;
     APkt.SourceIP := LIP;
     APkt.SourcePort := LPort;
     APkt.SourceIPVersion := LIPVersion;
+    APkt.DestIPVersion := LIPVersion;
   {$IFNDEF WINCE}
   end;
   {$ENDIF}
