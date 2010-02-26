@@ -10844,8 +10844,9 @@ them in case we use them later.}
     {$DEFINE EVP_seed_cfb128}
   {CH fn_EVP_seed_ofb = 'EVP_seed_ofb'; } {Do not localize}
   {$ENDIF}
-  { fn_OPENSSL_add_all_algorithms_noconf = 'OPENSSL_add_all_algorithms_noconf'; } {Do not localize}
+  fn_OPENSSL_add_all_algorithms_noconf = 'OPENSSL_add_all_algorithms_noconf';  {Do not localize}
   { fn_OPENSSL_add_all_algorithms_conf = 'OPENSSL_add_all_algorithms_conf'; }{Do not localize}
+  fn_OpenSSL_add_all_algorithms = 'OpenSSL_add_all_algorithms';
   fn_OpenSSL_add_all_ciphers = 'OpenSSL_add_all_ciphers'; {Do not localize}
   fn_OpenSSL_add_all_digests = 'OpenSSL_add_all_digests'; {Do not localize}
   {CH fn_EVP_add_cipher = 'EVP_add_cipher'; }  {Do not localize}
@@ -12281,7 +12282,6 @@ end;
 
 function Load: Boolean;
 begin
-
   Assert(FFailedFunctionLoadList<>nil);
   FFailedFunctionLoadList.Clear;
   {$IFDEF KYLIXCOMPAT}
@@ -12337,7 +12337,7 @@ begin
   {$ENDIF}
   {$IFDEF USE_VCL_POSIX}
   if hIdCrypto = 0 then begin
-    hIdCrypto := HMODULE(HackLoad(SSLCLIB_DLL_name, SSLDLLVers));
+	hIdCrypto := HMODULE(HackLoad(SSLCLIB_DLL_name, SSLDLLVers));
   end;
   if hIdSSL = 0 then begin
     hIdSSL := HMODULE(HackLoad(SSL_DLL_name, SSLDLLVers));
@@ -12612,7 +12612,8 @@ begin
   @PKCS12_create := LoadFunctionCLib(fn_PKCS12_create);
   @i2d_PKCS12_bio := LoadFunctionCLib(fn_i2d_PKCS12_bio);
   @PKCS12_free := LoadFunctionCLib(fn_PKCS12_free);
-  @OpenSSL_add_all_algorithms := LoadFunctionCLib('OpenSSL_add_all_algorithms');
+  @OpenSSL_add_all_algorithms := LoadOldCLib(fn_OpenSSL_add_all_algorithms,
+    fn_OPENSSL_add_all_algorithms_noconf);
   @OpenSSL_add_all_ciphers := LoadFunctionCLib(fn_OpenSSL_add_all_ciphers);
   @OpenSSL_add_all_digests := LoadFunctionCLib(fn_OpenSSL_add_all_digests);
   @EVP_cleanup := LoadFunctionCLib(fn_EVP_cleanup);
@@ -12622,6 +12623,7 @@ begin
   @_FIPS_mode_set := LoadFunctionCLib(fn_FIPS_mode_set,False);
   @_FIPS_mode := LoadFunctionCLib(fn_FIPS_mode,False);
   {$ENDIF}
+
   Result := (FFailedFunctionLoadList.Count = 0);
 end;
 
