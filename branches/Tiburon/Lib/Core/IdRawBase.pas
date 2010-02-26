@@ -205,9 +205,11 @@ begin
     begin
       if Binding.Readable(ATimeOut) then begin
         Result := Binding.RecvFrom(VBuffer, LIP, LPort, LIPVersion);
+        FPkt.Reset;
         FPkt.SourceIP := LIP;
         FPkt.SourcePort := LPort;
         FPkt.SourceIPVersion := LIPVersion;
+        FPkt.DestIPVersion := LIPVersion;
       end;
     end else
     begin
