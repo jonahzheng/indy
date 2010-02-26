@@ -4,11 +4,7 @@ unit ftpprothandler;
 {$ENDIF}
 interface
 uses
-  prothandler,
-  Classes, SysUtils, IdURI,
-  {$ifdef usezlib}
-    IdCompressorZLib,  //for deflate FTP support
-  {$endif}
+  {$IFNDEF NO_FTP}
     IdFTP,
   IdFTPList, //for some diffinitions with FTP list
   IdAllFTPListParsers, //with FTP, this links in all list parsing classes.
@@ -17,15 +13,24 @@ uses
   IdFTPListParseVMS, //needed for ref. to TIdVMSFTPListItem property ;
     IdIOHandler,
   IdIOHandlerStack,
-  IdLogEvent; //for logging component
+    {$ifdef usezlib}
+    IdCompressorZLib,  //for deflate FTP support
+    {$endif}
+  IdLogEvent, //for logging component
+  {$ENDIF}
+  prothandler,
+  Classes, SysUtils, IdURI;
+
 
 type
   TFTPProtHandler = class(TProtHandler)
   protected
     FPort : Boolean;
+  {$IFNDEF NO_FTP}
     procedure OnSent(ASender: TComponent; const AText: string; const AData: string);
     procedure OnReceived(ASender: TComponent; const AText: string; const AData: string);
     procedure MakeHTMLDirTable(AURL : TIdURI; AFTP : TIdFTP);
+  {$ENDIF}
   public
      class function CanHandleURL(AURL : TIdURI) : Boolean; override;
     procedure GetFile(AURL : TIdURI); override;
@@ -37,7 +42,11 @@ implementation
 
 class function TFTPProtHandler.CanHandleURL(AURL : TIdURI) : Boolean;
 begin
+  {$IFDEF NO_FTP}
+  Result := False;
+  {$ELSE}
   Result := UpperCase(AURL.Protocol)='FTP';
+  {$ENDIF}
 end;
 
 constructor TFTPProtHandler.Create;
@@ -47,6 +56,9 @@ begin
 end;
 
 procedure TFTPProtHandler.GetFile(AURL : TIdURI); 
+  {$IFDEF NO_FTP}
+begin
+  {$ELSE}
 //In this procedure, URL handling has to be done manually because the
 //the FTP component does not handle URL's at all.
 var
@@ -135,8 +147,10 @@ begin
     FreeAndNil(LIO);
     FreeAndNil(LDI);
   end;
+{$ENDIF}
 end;
 
+{$IFNDEF NO_FTP}
 procedure TFTPProtHandler.MakeHTMLDirTable(AURL : TIdURI; AFTP : TIdFTP);
 {
 This routine is in this demo to show users how to use the directory listing from TIdFTP.
@@ -277,5 +291,7 @@ begin
     Write({$IFDEF FPC}stdout{$ELSE}output{$ENDIF},AData);
   end;
 end;
+
+{$ENDIF}
 
 end.

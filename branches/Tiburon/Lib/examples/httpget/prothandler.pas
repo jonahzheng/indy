@@ -8,6 +8,10 @@ uses
   {$define usezlib}
   {$define useopenssl}
 {$ENDIF}
+{$IFDEF POSIX}
+  {$define usezlib}
+  {$define useopenssl}
+{$ENDIF}
 {$IFDEF WIN32}
   {$define usezlib}
   {$define useopenssl}
