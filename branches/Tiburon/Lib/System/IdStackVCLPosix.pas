@@ -871,80 +871,83 @@ var
   LByte : PByte;
 
 begin
-   //we call the macro twice because we specified two possible structures.
-   //Id_IPV6_HOPLIMIT and Id_IPV6_PKTINFO
-   LSize := CMSG_LEN(CMSG_LEN(Length(VBuffer)));
-   SetLength( LControl,LSize);
-    LIOV.iov_len := Length(VBuffer); // Length(VMsgData);
-    LIOV.iov_base := @VBuffer[0]; // @VMsgData[0];
+  //we call the macro twice because we specified two possible structures.
+  //Id_IPV6_HOPLIMIT and Id_IPV6_PKTINFO
+  LSize := CMSG_LEN(CMSG_LEN(Length(VBuffer)));
+  SetLength( LControl,LSize);
 
-    FillChar(LMsg,SizeOf(LMsg),0);
+  LIOV.iov_len := Length(VBuffer); // Length(VMsgData);
+  LIOV.iov_base := @VBuffer[0]; // @VMsgData[0];
 
-    LMsg.msg_iov := @LIOV;//lpBuffers := @LMsgBuf;
-    LMsg.msg_iovlen := 1;
+  FillChar(LMsg,SizeOf(LMsg),0);
 
-    LMsg.msg_controllen := LSize;
-    LMsg.msg_control := @LControl[0];
+  LMsg.msg_iov := @LIOV;//lpBuffers := @LMsgBuf;
+  LMsg.msg_iovlen := 1;
 
-    LMsg.msg_name := @LAddr;
-    LMsg.msg_namelen := SizeOf(LAddrStore);
-    Result := 0;
-    CheckForSocketError(RecvMsg(ASocket, LMsg, Result ));
+  LMsg.msg_controllen := LSize;
+  LMsg.msg_control := @LControl[0];
 
-    case LAddr.sa_family of
-      Id_PF_INET4: begin
-        APkt.SourceIP := TranslateTInAddrToString(LAddrIPv4.sin_addr, Id_IPv4);
-        APkt.SourcePort := ntohs(LAddrIPv4.sin_port);
-        APkt.SourceIPVersion := Id_IPv4;
-      end;
-      Id_PF_INET6: begin
-        APkt.SourceIP := TranslateTInAddrToString(LAddrIPv6.sin6_addr, Id_IPv6);
-        APkt.SourcePort := ntohs(LAddrIPv6.sin6_port);
-        APkt.SourceIPVersion := Id_IPv6;
-      end;
-      else begin
-        Result := 0; // avoid warning
-        IPVersionUnsupported;
-      end;
+  LMsg.msg_name := @LAddr;
+  LMsg.msg_namelen := SizeOf(LAddrStore);
+
+  Result := 0;
+  CheckForSocketError(RecvMsg(ASocket, LMsg, Result ));
+  APkt.Reset;
+
+  case LAddr.sa_family of
+    Id_PF_INET4: begin
+      APkt.SourceIP := TranslateTInAddrToString(LAddrIPv4.sin_addr, Id_IPv4);
+      APkt.SourcePort := ntohs(LAddrIPv4.sin_port);
+      APkt.SourceIPVersion := Id_IPv4;
     end;
+    Id_PF_INET6: begin
+      APkt.SourceIP := TranslateTInAddrToString(LAddrIPv6.sin6_addr, Id_IPv6);
+      APkt.SourcePort := ntohs(LAddrIPv6.sin6_port);
+      APkt.SourceIPVersion := Id_IPv6;
+    end;
+    else begin
+      Result := 0; // avoid warning
+      IPVersionUnsupported;
+    end;
+  end;
 
-    LCurCmsg := nil;
-    repeat
-      LCurCmsg := CMSG_NXTHDR(@LMsg,LCurCmsg);
-      if LCurCmsg=nil then begin
-        break;
-      end;
-      case LCurCmsg^.cmsg_type of
-        IPV6_PKTINFO :     //done this way because IPV6_PKTINF and  IP_PKTINFO
-        //are both 19
-        begin
-          case LAddr.sa_family of
-            Id_PF_INET4: begin
-              {$IFNDEF DARWIN}
-              //This is not supported in OS X.
-              with Pin_pktinfo(CMSG_DATA(LCurCmsg))^ do begin
-                APkt.DestIP := TranslateTInAddrToString(ipi_addr, Id_IPv4);
-                APkt.DestIF := ipi_ifindex;
-              end;
-              APkt.DestIPVersion := Id_IPv4;
-              {$ENDIF}
+  LCurCmsg := nil;
+  repeat
+    LCurCmsg := CMSG_NXTHDR(@LMsg,LCurCmsg);
+    if LCurCmsg=nil then begin
+      break;
+    end;
+    case LCurCmsg^.cmsg_type of
+      IPV6_PKTINFO :     //done this way because IPV6_PKTINF and  IP_PKTINFO
+      //are both 19
+      begin
+        case LAddr.sa_family of
+          Id_PF_INET4: begin
+            {$IFNDEF DARWIN}
+            //This is not supported in OS X.
+            with Pin_pktinfo(CMSG_DATA(LCurCmsg))^ do begin
+              APkt.DestIP := TranslateTInAddrToString(ipi_addr, Id_IPv4);
+              APkt.DestIF := ipi_ifindex;
             end;
-            Id_PF_INET6: begin
-              with pin6_pktinfo(CMSG_DATA(LCurCmsg))^ do begin
-                APkt.DestIP := TranslateTInAddrToString(ipi6_addr, Id_IPv6);
-                APkt.DestIF :=  ipi6_ifindex;
-              end;
-              APkt.DestIPVersion := Id_IPv6;
+            APkt.DestIPVersion := Id_IPv4;
+            {$ENDIF}
+          end;
+          Id_PF_INET6: begin
+            with pin6_pktinfo(CMSG_DATA(LCurCmsg))^ do begin
+              APkt.DestIP := TranslateTInAddrToString(ipi6_addr, Id_IPv6);
+              APkt.DestIF :=  ipi6_ifindex;
             end;
+            APkt.DestIPVersion := Id_IPv6;
           end;
         end;
-        Id_IPV6_HOPLIMIT :
-        begin
-          LByte :=  PByte(CMSG_DATA(LCurCmsg));
-          APkt.TTL := LByte^;
-        end;
       end;
-    until False;
+      Id_IPV6_HOPLIMIT :
+      begin
+        LByte :=  PByte(CMSG_DATA(LCurCmsg));
+        APkt.TTL := LByte^;
+      end;
+    end;
+  until False;
 end;
 
 function TIdStackVCLPosix.RecvFrom(const ASocket: TIdStackSocketHandle;
