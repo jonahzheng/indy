@@ -687,12 +687,14 @@ const
 type
   {$IFDEF VCL_2009_OR_ABOVE}
   TIdUnicodeString = String;
-  TIdUnicodeChar = Char;
+  TIdWideChar = Char;
+  PIdWideChar = PChar;
   TIdBytes = TBytes;
   TIdWideChars = {$IFDEF DOTNET}array of Char{$ELSE}TCharArray{$ENDIF};
   {$ELSE}
   TIdUnicodeString = {$IFDEF DOTNET}System.String{$ELSE}WideString{$ENDIF};
-  TIdUnicodeChar = WideChar;
+  TIdWideChar = WideChar;
+  PIdWideChar = PWideChar;
   TIdBytes = array of Byte;
   TIdWideChars = array of WideChar;
   {$ENDIF}
@@ -765,10 +767,10 @@ type
   protected
     FIsSingleByte: Boolean;
     FMaxCharSize: Integer;
-    function GetByteCount(AChars: PWideChar; ACharCount: Integer): Integer; overload; virtual; abstract;
-    function GetBytes(AChars: PWideChar; ACharCount: Integer; ABytes: PByte; AByteCount: Integer): Integer; overload; virtual; abstract;
+    function GetByteCount(AChars: PIdWideChar; ACharCount: Integer): Integer; overload; virtual; abstract;
+    function GetBytes(AChars: PIdWideChar; ACharCount: Integer; ABytes: PByte; AByteCount: Integer): Integer; overload; virtual; abstract;
     function GetCharCount(ABytes: PByte; AByteCount: Integer): Integer; overload; virtual; abstract;
-    function GetChars(ABytes: PByte; AByteCount: Integer; AChars: PWideChar; ACharCount: Integer): Integer; overload; virtual; abstract;
+    function GetChars(ABytes: PByte; AByteCount: Integer; AChars: PIdWideChar; ACharCount: Integer): Integer; overload; virtual; abstract;
   public
     class function Convert(ASource, ADestination: TIdTextEncoding; const ABytes: TIdBytes): TIdBytes; overload;
     class function Convert(ASource, ADestination: TIdTextEncoding; const ABytes: TIdBytes; AStartIndex, ACount: Integer): TIdBytes; overload;
@@ -1570,17 +1572,17 @@ end;
 var
   GIdPorts: TList = nil;
   GId8BitEncoding: TIdTextEncoding = nil;
-  {$IFNDEF HAS_TEncoding}
+{$ENDIF}
+
+{$IFNDEF TIdTextEncoding_Is_Native}
+
+var
   GIdASCIIEncoding: TIdTextEncoding = nil;
   GIdBEUTF16Encoding: TIdTextEncoding = nil;
   GIdDefaultEncoding: TIdTextEncoding = nil;
   GIdLEUTF16Encoding: TIdTextEncoding = nil;
   GIdUTF7Encoding: TIdTextEncoding = nil;
   GIdUTF8Encoding: TIdTextEncoding = nil;
-  {$ENDIF}
-{$ENDIF}
-
-{$IFNDEF TIdTextEncoding_Is_Native}
 
 { TIdTextEncoding }
 
@@ -2451,90 +2453,70 @@ end;
 type
   TId8BitEncoding = class(TIdTextEncoding)
   protected
-    {$IFDEF TIdTextEncoding_Is_Native}
-    function GetByteCount(Chars: PChar; CharCount: Integer): Integer; overload; override;
-    function GetBytes(Chars: PChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PChar; CharCount: Integer): Integer; overload; override;
-    {$ELSE}
-    function GetByteCount(Chars: PWideChar; CharCount: Integer): Integer; overload; override;
-    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetChars(ABytes: PByte; AByteCount: Integer; AChars: PWideChar; ACharCount: Integer): Integer; overload; virtual; abstract;
-    {$ENDIF}
-    function GetCharCount(Bytes: PByte; ByteCount: Integer): Integer; overload; override;
+    function GetByteCount(AChars: PIdWideChar; ACharCount: Integer): Integer; override;
+    function GetBytes(AChars: PIdWideChar; ACharCount: Integer; ABytes: PByte; AByteCount: Integer): Integer; override;
+    function GetCharCount(ABytes: PByte; AByteCount: Integer): Integer; override;
+    function GetChars(ABytes: PByte; AByteCount: Integer; AChars: PIdWideChar; ACharCount: Integer): Integer; override;
   public
-    function GetPreamble: TBytes;  override;
-    function GetMaxCharCount(ByteCount: Integer): Integer;  override;
-    function GetMaxByteCount(CharCount: Integer): Integer;  override;
+    function GetMaxByteCount(ACharCount: Integer): Integer; override;
+    function GetMaxCharCount(AByteCount: Integer): Integer; override;
+    function GetPreamble: TIdBytes; override;
   end;
 
-{$IFNDEF TIdTextEncoding_Is_Native}
-function TId8BitEncoding.GetByteCount(Chars: PWideChar;
-  CharCount: Integer): Integer;
-{$ELSE}
-function TId8BitEncoding.GetByteCount(Chars: PChar;
-  CharCount: Integer): Integer;
-{$ENDIF}
+function TId8BitEncoding.GetByteCount(AChars: PIdWideChar; ACharCount: Integer): Integer;
 begin
-  Result := CharCount;
+  Result := ACharCount;
 end;
 
-{$IFNDEF TIdTextEncoding_Is_Native}
-function TId8BitEncoding.GetBytes(Chars: PWideChar; CharCount: Integer;
-  Bytes: PByte; ByteCount: Integer): Integer;
-{$ELSE}
-function TId8BitEncoding.GetBytes(Chars: PChar; CharCount: Integer;
-  Bytes: PByte; ByteCount: Integer): Integer;
-{$ENDIF}
+function TId8BitEncoding.GetBytes(AChars: PIdWideChar; ACharCount: Integer;
+  ABytes: PByte; AByteCount: Integer): Integer;
 var
   i : Integer;
-//Result number of bytes actually encoded
 begin
-  Result := IndyMin(CharCount, ByteCount);
+  Result := IndyMin(ACharCount, AByteCount);
   for i := 1 to Result do begin
-    // TODO: replace illegal characters > $FF
-    Bytes^ := Byte(Word(Chars^) and $00FF);
+    // replace illegal characters > $FF
+    if Word(AChars^) > $00FF then begin
+      ABytes^ := Byte(Ord('?'));
+    end else begin
+      ABytes^ := Byte(AChars^);
+    end;
     //advance to next char
-    Inc(Chars);
-    Inc(Bytes);
+    Inc(AChars);
+    Inc(ABytes);
   end;
 end;
 
-function TId8BitEncoding.GetCharCount(Bytes: PByte;
-  ByteCount: Integer): Integer;
+function TId8BitEncoding.GetCharCount(ABytes: PByte; AByteCount: Integer): Integer;
 begin
-  Result := ByteCount;
+  Result := AByteCount;
 end;
 
-{$IFNDEF TIdTextEncoding_Is_Native}
 function TId8BitEncoding.GetChars(ABytes: PByte; AByteCount: Integer;
-  AChars: PWideChar; ACharCount: Integer): Integer;
-{$ELSE}
-function TId8BitEncoding.GetChars(Bytes: PByte; ByteCount: Integer;
-  Chars: PChar; CharCount: Integer): Integer;
-{$ENDIF}
+  AChars: PIdWideChar; ACharCount: Integer): Integer;
 var
   i : Integer;
 begin
-  Result := IndyMin(CharCount, ByteCount);
+  Result := IndyMin(ACharCount, AByteCount);
   for i := 1 to Result do begin
-    Word(Chars^) := Bytes^;
+    Word(AChars^) := ABytes^;
     //advance to next char
-    Inc(Chars);
-    Inc(Bytes);
+    Inc(AChars);
+    Inc(ABytes);
   end;
 end;
 
-function TId8BitEncoding.GetMaxByteCount(CharCount: Integer): Integer;
+function TId8BitEncoding.GetMaxByteCount(ACharCount: Integer): Integer;
 begin
-  Result := CharCount;
+  Result := ACharCount;
 end;
 
-function TId8BitEncoding.GetMaxCharCount(ByteCount: Integer): Integer;
+function TId8BitEncoding.GetMaxCharCount(AByteCount: Integer): Integer;
 begin
-  Result := ByteCount;
+  Result := AByteCount;
 end;
 
-function TId8BitEncoding.GetPreamble: TBytes;
+function TId8BitEncoding.GetPreamble: TIdBytes;
 begin
   SetLength(Result, 0);
 end;
