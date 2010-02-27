@@ -8756,7 +8756,7 @@ function BIO_set_proxies(b : PBIO; p : PAnsiChar) : TIdC_LONG;
 function BIO_set_filter_bio(b : PBIO; s : PAnsiChar) : TIdC_LONG;
 
 function BIO_set_proxy_header(b : PBIO; sk : PAnsiChar) : TIdC_LONG;
-function BIO_set_no_connect_return(b : PBIO; bool : TIdC_LONG) : TIdC_LONG;
+function BIO_set_no_connect_return(b : PBIO; b2 : TIdC_LONG) : TIdC_LONG;
 function BIO_get_proxy_header(b : PBIO; skp : PAnsiChar) : TIdC_LONG;
 function BIO_get_proxies(b : PBIO; pxy_p : PAnsiChar) : TIdC_LONG;
 function BIO_get_url(b : PBIO; url : PAnsiChar) : TIdC_LONG;
@@ -13563,10 +13563,10 @@ begin
   Result := BIO_ctrl(b,BIO_C_SET_PROXY_PARAM,4,sk);
 end;
 
-function BIO_set_no_connect_return(b : PBIO; bool : TIdC_LONG) : TIdC_LONG;
+function BIO_set_no_connect_return(b : PBIO; b2 : TIdC_LONG) : TIdC_LONG;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := BIO_int_ctrl(b,BIO_C_SET_PROXY_PARAM,5,bool);
+  Result := BIO_int_ctrl(b,BIO_C_SET_PROXY_PARAM,5,b2);
 end;
 
 function BIO_get_proxy_header(b : PBIO; skp : PAnsiChar) : TIdC_LONG;
