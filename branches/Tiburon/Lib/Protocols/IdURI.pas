@@ -369,7 +369,7 @@ begin
         Inc(i, 5); // Then skip it.
         try
           CharCode := IndyStrToInt('$' + ESC);  {do not localize}
-          Result := Result + TIdUnicodeChar(CharCode);
+          Result := Result + TIdWideChar(CharCode);
         except end;
       end;
     end;
