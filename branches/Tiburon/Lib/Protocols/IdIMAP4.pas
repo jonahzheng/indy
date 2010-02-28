@@ -1135,9 +1135,6 @@ uses
       {$ENDIF}
     {$ENDIF}
   {$ENDIF}
-  {$IFNDEF DOTNET}
-  IdStreamVCL,
-  {$ENDIF}
   {$IFDEF DOTNET}
     {$IFDEF USE_INLINE}
   System.IO,
