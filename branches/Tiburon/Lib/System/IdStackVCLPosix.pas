@@ -14,6 +14,7 @@ ways.
 }
 
 {$WARN SYMBOL_PLATFORM OFF}
+{$WARN UNIT_PLATFORM OFF}
 uses
   Classes,
     PosixSysSelect,
@@ -1194,6 +1195,7 @@ begin
   end;
 end;
 
+{$WARN UNIT_PLATFORM ON}
 {$WARN SYMBOL_PLATFORM ON}
 initialization
   GSocketListClass := TIdSocketListVCLPosix;
