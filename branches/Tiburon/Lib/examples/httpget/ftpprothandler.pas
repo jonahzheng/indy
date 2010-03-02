@@ -21,6 +21,15 @@ uses
   prothandler,
   Classes, SysUtils, IdURI;
 
+{$IFDEF VER200}
+ {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
+{$ENDIF}
+{$IFDEF VER210}
+ {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
+{$ENDIF}
+{$IFDEF VER220}
+ {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
+{$ENDIF}
 
 type
   TFTPProtHandler = class(TProtHandler)
@@ -99,13 +108,11 @@ begin
     LF.Host := AURL.Host;
     LF.Username := AURL.Username;
     LF.IPVersion := AURL.IPVersion;
-    if LF.Username = '' then
+	LF.Password := AURL.Password;;
+	if LF.Username = '' then
     begin
       LF.Username := 'anonymous';
-      LF.Password := AURL.Password;
-      begin
-        LF.Password := 'pass@httpget';
-      end;
+      LF.Password := 'pass@httpget';
     end;
     if AURL.Document = '' then
     begin
@@ -195,6 +202,11 @@ begin
   try
     LTbl.Add('<HTML>');
     LTbl.Add('  <TITLE>'+AURL.URI+'</TITLE>');
+    {$IFDEF STRING_IS_UNICODE}
+	LTbl.Add('  <HEAD>');
+	LTbl.Add('    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >');
+	LTbl.Add('  </HEAD>');
+	{$ENDIF}
     LTbl.Add('  <BODY>');
     LTbl.Add('     <TABLE>');
     LTbl.Add('       <TR>');
@@ -268,7 +280,11 @@ begin
     LTbl.Add('     </TABLE>');
     LTbl.Add('  </BODY>');
     LTbl.Add('</HTML>');
+	{$IFDEF STRING_IS_UNICODE}
+	LTbl.SaveToFile('index.html', TEncoding.UTF8)
+	{$ELSE}
     LTbl.SaveToFile('index.html');
+	{$ENDIF}
   finally
     FreeAndNil(LTbl);
   end;
