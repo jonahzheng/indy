@@ -12795,7 +12795,7 @@ begin
   @BIO_read := nil;
   @BIO_write := nil;
   //BN
-  @BN_hex2bn = nil;
+  @BN_hex2bn := nil;
   @BN_bn2hex := nil;
   //i2d
   @i2d_X509_bio := nil;
