@@ -8344,14 +8344,15 @@ var
   CRYPTO_dbg_get_options : function: TIdC_LONG cdecl = nil;
   sk_new_null : function: PSTACK cdecl = nil;
   sk_push : function(st: PSTACK; data: PAnsiChar): TIdC_INT cdecl = nil;
-  RSA_free : procedure(rsa: PRSA) cdecl = nil;
-  //This function is depreciated.
-  RSA_generate_key : function(bits: TIdC_INT; e: TIdC_ULONG; callback: TRSA_generate_key_callback; cb_arg: Pointer): PRSA cdecl = nil;
 
-  RSA_generate_key_ex : function(rsa : PRSA; bits : TIdC_INT; e : PBIGNUM; cb : PBN_GENCB) : TIdC_INT cdecl = nil;
-  RSA_check_key : function(const rsa: PRSA): TIdC_INT cdecl = nil;
   RSA_new: function: PRSA cdecl = nil;
   RSA_size: function(key: PRSA): TIdC_INT cdecl = nil;
+  //This function is depreciated.
+  RSA_generate_key : function(bits: TIdC_INT; e: TIdC_ULONG; callback: TRSA_generate_key_callback; cb_arg: Pointer): PRSA cdecl = nil;
+  RSA_generate_key_ex : function(rsa : PRSA; bits : TIdC_INT; e : PBIGNUM; cb : PBN_GENCB) : TIdC_INT cdecl = nil;
+
+  RSA_free : procedure(rsa: PRSA) cdecl = nil;
+  RSA_check_key : function(const rsa: PRSA): TIdC_INT cdecl = nil;
   RSA_private_decrypt: function(flen: TIdC_INT; from: PByte; _to: PByte; rsa: PRSA; padding: TIdC_INT): TIdC_INT cdecl = nil;
   RSA_public_encrypt: function(flen: TIdC_INT; from: PByte; _to: PByte; rsa: PRSA; padding: TIdC_INT): TIdC_INT cdecl = nil;
 
@@ -8364,12 +8365,14 @@ var
   BIO_int_ctrl : function(bp : PBIO; cmd : TIdC_INT; larg : TIdC_LONG; iArg : TIdC_INT) : TIdC_LONG cdecl = nil;
   BIO_callback_ctrl : function(b : PBIO; cmd : TIdC_INT; fp : SSL_callback_ctrl_fp ) : TIdC_INT cdecl = nil;
   BIO_new_file : function(const filename: PAnsiChar; const mode: PAnsiChar): PBIO cdecl = nil;
-  BN_hex2bn: function(var n:PBIGNUM; const Str: PAnsiChar): TIdC_INT cdecl = nil;
-  BN_bn2hex: function(const n:PBIGNUM): PAnsiChar cdecl = nil;
 
   BIO_puts : function(b: PBIO; const txt: PAnsiChar): TIdC_INT cdecl = nil;
   BIO_read : function(b: PBIO; data: Pointer; len: TIdC_INT): TIdC_INT cdecl = nil;
   BIO_write : function(b: PBIO; const buf: Pointer; len: TIdC_INT): TIdC_INT cdecl = nil;
+
+  BN_hex2bn: function(var n:PBIGNUM; const Str: PAnsiChar): TIdC_INT cdecl = nil;
+  BN_bn2hex: function(const n:PBIGNUM): PAnsiChar cdecl = nil;
+
   {$IFNDEF SSLEAY_MACROS}
   _PEM_read_bio_X509 : function(bp: PBIO; var x: PX509; cb: ppem_password_cb; u: Pointer): PX509 cdecl = nil;
   _PEM_read_bio_X509_REQ : function(bp :PBIO; var x : PX509_REQ; cb :ppem_password_cb; u: PAnsiChar) : PX509_REQ cdecl = nil;
