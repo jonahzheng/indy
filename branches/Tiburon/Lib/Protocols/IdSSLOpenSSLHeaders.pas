@@ -8347,8 +8347,14 @@ var
   RSA_free : procedure(rsa: PRSA) cdecl = nil;
   //This function is depreciated.
   RSA_generate_key : function(bits: TIdC_INT; e: TIdC_ULONG; callback: TRSA_generate_key_callback; cb_arg: Pointer): PRSA cdecl = nil;
-  IdSslRsaGenerateKeyEx : function(rsa : PRSA; bits : TIdC_INT; e : PBIGNUM; cb : PBN_GENCB) : TIdC_INT cdecl = nil;
+
+  RSA_generate_key_ex : function(rsa : PRSA; bits : TIdC_INT; e : PBIGNUM; cb : PBN_GENCB) : TIdC_INT cdecl = nil;
   RSA_check_key : function(const rsa: PRSA): TIdC_INT cdecl = nil;
+  RSA_new: function: PRSA cdecl = nil;
+  RSA_size: function(key: PRSA): TIdC_INT cdecl = nil;
+  RSA_private_decrypt: function(flen: TIdC_INT; from: PByte; _to: PByte; rsa: PRSA; padding: TIdC_INT): TIdC_INT cdecl = nil;
+  RSA_public_encrypt: function(flen: TIdC_INT; from: PByte; _to: PByte; rsa: PRSA; padding: TIdC_INT): TIdC_INT cdecl = nil;
+
   BIO_new : function(_type: PBIO_METHOD): PBIO cdecl = nil;
   BIO_free : function(bio: PBIO): TIdC_INT cdecl = nil;
   BIO_s_mem : function: PBIO_METHOD cdecl = nil;
@@ -8358,6 +8364,8 @@ var
   BIO_int_ctrl : function(bp : PBIO; cmd : TIdC_INT; larg : TIdC_LONG; iArg : TIdC_INT) : TIdC_LONG cdecl = nil;
   BIO_callback_ctrl : function(b : PBIO; cmd : TIdC_INT; fp : SSL_callback_ctrl_fp ) : TIdC_INT cdecl = nil;
   BIO_new_file : function(const filename: PAnsiChar; const mode: PAnsiChar): PBIO cdecl = nil;
+  BN_hex2bn: function(var n:PBIGNUM; const Str: PAnsiChar): TIdC_INT cdecl = nil;
+  BN_bn2hex: function(const n:PBIGNUM): PAnsiChar cdecl = nil;
 
   BIO_puts : function(b: PBIO; const txt: PAnsiChar): TIdC_INT cdecl = nil;
   BIO_read : function(b: PBIO; data: Pointer; len: TIdC_INT): TIdC_INT cdecl = nil;
@@ -8438,7 +8446,7 @@ var
   i2d_RSAPrivateKey : function(x: PRSA; var buf: PByte): TIdC_INT cdecl = nil;
   d2i_RSAPrivateKey : function(pr : PRSA; _in : PPByte; len : TIdC_INT): PRSA cdecl = nil;
 //  d2i_RSAPublicKey
-  i2d_RSAPublicKey : function(x: PRSA; var buf: PByte): TIdC_INT cdecl = nil;
+  i2d_RSAPublicKey : function(x: PRSA; buf: PByte): TIdC_INT cdecl = nil;
   d2i_RSAPublicKey : function(pr : PRSA; _in : PPByte; len : TIdC_INT): PRSA cdecl = nil;
 //d2i_DSAPrivateKey
   i2d_DSAPrivateKey : function(x: PDSA; var buf: PByte): TIdC_INT cdecl = nil;
@@ -9945,18 +9953,18 @@ them in case we use them later.}
   {CH fn_MDC2 = 'MDC2'; }  {Do not localize}
   {$ENDIF}
   {$IFNDEF OPENSSL_NO_RSA}
-  {CH fn_RSA_new = 'RSA_new'; }  {Do not localize}
+  fn_RSA_new = 'RSA_new';   {Do not localize}
   {CH fn_RSA_new_method = 'RSA_new_method'; }  {Do not localize}
-  {CH fn_RSA_size = 'RSA_size'; }  {Do not localize}
+  fn_RSA_size = 'RSA_size';  {Do not localize}
   fn_RSA_generate_key = 'RSA_generate_key';  {Do not localize}
-  {CH fn_RSA_generate_key_ex = 'RSA_generate_key_ex'; } {Do not localize}
+  fn_RSA_generate_key_ex = 'RSA_generate_key_ex';  {Do not localize}
   {CH fn_RSA_X931_derive_ex = 'RSA_X931_derive_ex'; } {Do not localize}
   {CH fn_RSA_X931_generate_key_ex = 'RSA_X931_generate_key_ex'; } {Do not localize}
   fn_RSA_check_key = 'RSA_check_key';  {Do not localize}
-  {CH fn_RSA_public_encrypt = 'RSA_public_encrypt'; }  {Do not localize}
+  fn_RSA_public_encrypt = 'RSA_public_encrypt';   {Do not localize}
   {CH fn_RSA_private_encrypt = 'RSA_private_encrypt'; }  {Do not localize}
   {CH fn_RSA_public_decrypt = 'RSA_public_decrypt'; }  {Do not localize}
-  {CH fn_RSA_private_decrypt = 'RSA_private_decrypt'; }  {Do not localize}
+  fn_RSA_private_decrypt = 'RSA_private_decrypt';   {Do not localize}
   fn_RSA_free = 'RSA_free';  {Do not localize}
   {CH fn_RSA_flags = 'RSA_flags'; }  {Do not localize}
   {$IFDEF OPENSSL_FIPS}
@@ -10297,9 +10305,9 @@ them in case we use them later.}
   {CH fn_BN_ucmp = 'BN_ucmp'; }  {Do not localize}
   {CH fn_BN_set_bit = 'BN_set_bit'; }  {Do not localize}
   {CH fn_BN_clear_bit = 'BN_clear_bit'; }  {Do not localize}
-  {CH fn_BN_bn2hex = 'BN_bn2hex'; }  {Do not localize}
+  fn_BN_bn2hex = 'BN_bn2hex';   {Do not localize}
   {CH fn_BN_bn2dec = 'BN_bn2dec'; }  {Do not localize}
-  {CH fn_BN_hex2bn = 'BN_hex2bn'; }  {Do not localize}
+  fn_BN_hex2bn = 'BN_hex2bn';   {Do not localize}
   {CH fn_BN_dec2bn = 'BN_dec2bn'; }  {Do not localize}
   {CH fn_BN_gcd = 'BN_gcd'; }  {Do not localize}
   {CH fn_BN_mod_inverse = 'BN_mod_inverse'; }  {Do not localize}
@@ -12477,6 +12485,14 @@ begin
   @RSA_free := LoadFunctionCLib(fn_RSA_free);
   @RSA_generate_key := LoadFunctionClib(fn_RSA_generate_key);
   @RSA_check_key := LoadFunctionCLib(fn_RSA_check_key);
+  @RSA_generate_key_ex := LoadFunctionCLib(fn_RSA_generate_key_ex);
+  @RSA_new := LoadFunctionCLib(fn_RSA_new);
+  @RSA_size := LoadFunctionCLib(fn_RSA_size);
+  @RSA_private_decrypt := LoadFunctionCLib(fn_RSA_private_decrypt);
+  @RSA_public_encrypt := LoadFunctionCLib(fn_RSA_public_encrypt);
+  //BN
+  @BN_hex2bn := LoadFunctionCLib(fn_BN_hex2bn);
+  @BN_bn2hex := LoadFunctionCLib(fn_BN_bn2hex);
   //BIO
   @BIO_new := LoadFunctionCLib(fn_BIO_new);
   @BIO_free := LoadFunctionCLib(fn_BIO_free);
@@ -12758,9 +12774,14 @@ begin
   @SSL_COMP_get_compression_methods := nil;
   @sk_pop_free := nil;
   //RSA
+  @RSA_new := nil;
   @RSA_free := nil;
+  @RSA_size := nil;
   @RSA_generate_key := nil;
+  @RSA_generate_key_ex := nil;
   @RSA_check_key := nil;
+  @RSA_private_decrypt := nil;
+  @RSA_public_encrypt := nil;
   //BIO
   @BIO_new := nil;
   @BIO_free := nil;
@@ -12773,6 +12794,9 @@ begin
   @BIO_puts := nil;
   @BIO_read := nil;
   @BIO_write := nil;
+  //BN
+  @BN_hex2bn = nil;
+  @BN_bn2hex := nil;
   //i2d
   @i2d_X509_bio := nil;
   @i2d_PrivateKey_bio := nil;
