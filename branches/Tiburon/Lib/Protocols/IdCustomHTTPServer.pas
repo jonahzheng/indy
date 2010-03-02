@@ -235,6 +235,7 @@ type
     FRemoteIP: string;
     FSession: TIdHTTPSession;
     FDocument: string;
+    FURI: string;
     FCommand: string;
     FVersion: string;
     FAuthUsername: string;
@@ -257,6 +258,7 @@ type
     property CommandType: THTTPCommandType read FCommandType;
     property Cookies: TIdServerCookies read FCookies;
     property Document: string read FDocument write FDocument; // writable for isapi compatibility. Use with care
+    property URI: string read FURI;
     property Params: TStrings read FParams;
     property PostStream: TStream read FPostStream write FPostStream;
     property RawHTTPCommand: string read FRawHTTPCommand;
@@ -898,6 +900,7 @@ begin
                   // SG 29/11/01: Per request of Doychin
                   // Try to fill the "host" parameter
                   LRequestInfo.FDocument := TIdURI.URLDecode(LURI.Path) + TIdURI.URLDecode(LURI.Document);
+                  LRequestInfo.FURI := LURI.Path + LURI.Document;
                   if (Length(LURI.Host) > 0) and (Length(LRequestInfo.FHost) = 0) then begin
                     LRequestInfo.FHost := LURI.Host;
                   end;
@@ -944,7 +947,8 @@ begin
                 begin
                   // TODO: need to decode percent-encoded octets before the CharSet can then be applied...
                   LRequestInfo.FormParams := ReadStringAsCharSet(LRequestInfo.PostStream, LRequestInfo.CharSet);
-                  FreeAndNil(LRequestInfo.FPostStream); // don't need the PostStream anymore
+                  // Workaround to keep the WebappDbg.exe working
+                  //FreeAndNil(LRequestInfo.FPostStream); // don't need the PostStream anymore
                 end;
               end;
 
