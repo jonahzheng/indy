@@ -772,17 +772,18 @@ my $default_depflags = " -DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_CAPIENG -DOPENSSL_NO
 uses
   IdException,
   IdGlobal,
-  {$IFDEF KYLIX}
+  {$IFDEF KYLIXCOMPAT}
    libc,
   {$ENDIF}
-  {$IFDEF FPC}
-    {$IFDEF KYLIXCOMPAT}
-    libc,
-    {$ELSE}
-      {$IFDEF UNIX}
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  IdWinsock2,
+  {$ENDIF}
+  {$IFDEF USE_VCL_POSIX}
+  PosixSysSocket,
+  PosixSysTime,
+  {$ENDIF}
+  {$IFDEF USE_BASEUNIX}
     baseunix,
-      {$ENDIF}
-    {$ENDIF}
   {$ENDIF}
   SysUtils, 
   IdCTypes;
@@ -1087,6 +1088,8 @@ const
   ASN1_R_INVALID_MIME_TYPE = 200;
   ASN1_R_INVALID_MODIFIER = 186;
   ASN1_R_INVALID_NUMBER = 187;
+  ASN1_R_INVALID_OBJECT_ENCODING = 212;
+
   ASN1_R_INVALID_SEPARATOR = 131;
   ASN1_R_INVALID_TIME_FORMAT = 132;
   ASN1_R_INVALID_UNIVERSALSTRING_LENGTH	= 133;
@@ -1246,8 +1249,10 @@ const
 					     // * was exceed in the
 					     // * previous write
 					     // * operation */
+  BIO_CTRL_DGRAM_GET_PEER      = 46;
 
   BIO_CTRL_DGRAM_SET_PEER      = 44; //* Destination for the data */
+  BIO_CTRL_DGRAM_SET_NEXT_TIMEOUT = 45; //* Next DTLS handshake timeout to
 
   BIO_CTRL_WPENDING = 13;
   BIO_C_DESTROY_BIO_PAIR = 139;
@@ -2333,6 +2338,8 @@ const
   ENGINE_R_DSO_FAILURE = 104;
   ENGINE_R_DSO_NOT_FOUND = 132;
   ENGINE_R_ENGINES_SECTION_ERROR = 148;
+  ENGINE_R_ENGINE_CONFIGURATION_ERROR = 101;
+
   ENGINE_R_ENGINE_IS_NOT_IN_LIST = 105;
   ENGINE_R_ENGINE_SECTION_ERROR	= 149;
   ENGINE_R_FAILED_LOADING_PRIVATE_KEY	= 128;
@@ -2766,11 +2773,11 @@ const
   OBJ_NAME_TYPE_UNDEF = $00;
   OBJ_R_MALLOC_FAILURE = 100;
   OBJ_R_UNKNOWN_NID = 101;
-  OPENSSL_VERSION_NUMBER	= $009080cf;
+  OPENSSL_VERSION_NUMBER	= $009080df;
 {$IFDEF OPENSSL_FIPS}
-  OPENSSL_VERSION_TEXT = 'OpenSSL 0.9.8l-fips 5 Nov 2009'; {Do not localize}
+  OPENSSL_VERSION_TEXT = 'OpenSSL 0.9.8m-fips 25 Feb 2010'; {Do not localize}
 {$ELSE}
-  OPENSSL_VERSION_TEXT = 'OpenSSL 0.9.8l 5 Nov 2009'; {Do not localize}
+  OPENSSL_VERSION_TEXT = 'OpenSSL 0.9.8m 25 Feb 2010';  {Do not localize}
 {$ENDIF}
   OPENSSL_VERSION_PTEXT = ' part of '+ OPENSSL_VERSION_TEXT;  {Do not localize}
   PEM_BUFSIZE = 1024;
@@ -3431,6 +3438,9 @@ const
   SSL3_CK_RSA_DES_40_CBC_SHA = $03000008;
   SSL3_CK_RSA_DES_64_CBC_SHA = $03000009;
   SSL3_CK_RSA_IDEA_128_SHA = $03000007;
+  //* Signalling cipher suite value: from draft-ietf-tls-renegotiation-03.txt */
+  SSL3_CK_SCSV	= $030000FF;
+
   SSL3_CK_RSA_NULL_MD5 = $03000001;
   SSL3_CK_RSA_NULL_SHA = $03000002;
   SSL3_CK_RSA_RC2_40_MD5 = $03000006;
@@ -3448,6 +3458,8 @@ const
   SSL3_FLAGS_DELAY_CLIENT_FINISHED = $0002;
   SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS = $0001;
   SSL3_FLAGS_POP_BUFFER = $0004;
+  TLS1_FLAGS_TLS_PADDING_BUG = $0008;
+
   SSL3_MASTER_SECRET_SIZE = 48;
   SSL3_MAX_SSL_SESSION_ID_LENGTH = 32;
   SSL3_MT_HELLO_REQUEST	= 0;
@@ -3622,6 +3634,9 @@ const
   TLSEXT_TYPE_elliptic_curves = 10;
   TLSEXT_TYPE_ec_point_formats = 11;
   TLSEXT_TYPE_session_ticket = 35;
+  //* Temporary extension type */
+ TLSEXT_TYPE_renegotiate = $ff01;
+
   //* NameType value from RFC 3546 */
   TLSEXT_NAMETYPE_host_name = 0;
 //* status request value from RFC 3546 */
@@ -3706,6 +3721,15 @@ const
   SSL_CTRL_SET_TLSEXT_STATUS_REQ_OCSP_RESP = 71;
   SSL_CTRL_SET_TLSEXT_TICKET_KEY_CB	= 72;
   {$ENDIF}
+
+  DTLS_CTRL_GET_TIMEOUT	= 73;
+  DTLS_CTRL_HANDLE_TIMEOUT = 74;
+  DTLS_CTRL_LISTEN = 75;
+
+  SSL_CTRL_GET_RI_SUPPORT	= 76;
+  SSL_CTRL_CLEAR_OPTIONS = 77;
+  SSL_CTRL_CLEAR_MODE = 78;
+
   SSL_CTRL_GET_SESSION_REUSED = 8;
   SSL_CTRL_GET_CLIENT_CERT_REQUEST = 9;
   SSL_CTRL_GET_NUM_RENEGOTIATIONS = 10;
@@ -3760,6 +3784,7 @@ const
   SSL_F_D2I_SSL_SESSION = 103;
   SSL_F_DO_SSL3_WRITE = 104;
   SSL_F_DTLS1_ACCEPT = 246;
+  SSL_F_DTLS1_ADD_CERT_TO_BUF	= 280;
   SSL_F_DTLS1_BUFFER_RECORD = 247;
   SSL_F_DTLS1_CLIENT_HELLO = 248;
   SSL_F_DTLS1_CONNECT = 249;
@@ -3768,6 +3793,7 @@ const
   SSL_F_DTLS1_GET_MESSAGE = 252;
   SSL_F_DTLS1_GET_MESSAGE_FRAGMENT = 253;
   SSL_F_DTLS1_GET_RECORD = 254;
+  SSL_F_DTLS1_HANDLE_TIMEOUT = 282;
   SSL_F_DTLS1_OUTPUT_CERT_CHAIN = 255;
   SSL_F_DTLS1_PREPROCESS_FRAGMENT = 277;
   SSL_F_DTLS1_PROCESS_OUT_OF_SEQ_MESSAGE = 256;
@@ -3794,6 +3820,8 @@ const
   SSL_F_REQUEST_CERTIFICATE = 113;
   SSL_F_SERVER_HELLO = 114;
   SSL_F_SSL23_ACCEPT = 115;
+  SSL_F_SSL3_ADD_CERT_TO_BUF = 281;
+
   SSL_F_SSL23_CLIENT_HELLO = 116;
   SSL_F_SSL23_CONNECT = 117;
   SSL_F_SSL23_GET_CLIENT_HELLO = 118;
@@ -3843,9 +3871,11 @@ const
   SSL_F_SSL3_SETUP_KEY_BLOCK = 157;
   SSL_F_SSL3_WRITE_BYTES = 158;
   SSL_F_SSL3_WRITE_PENDING = 159;
+  SSL_F_SSL_ADD_CLIENTHELLO_RENEGOTIATE_EXT = 285;
   SSL_F_SSL_ADD_CLIENTHELLO_TLSEXT = 272;
   SSL_F_SSL_ADD_DIR_CERT_SUBJECTS_TO_STACK = 215;
   SSL_F_SSL_ADD_FILE_CERT_SUBJECTS_TO_STACK = 216;
+  SSL_F_SSL_ADD_SERVERHELLO_RENEGOTIATE_EXT = 286;
   SSL_F_SSL_ADD_SERVERHELLO_TLSEXT = 273;
   SSL_F_SSL_BAD_METHOD = 160;
   SSL_F_SSL_BYTES_TO_CIPHER_LIST = 161;
@@ -3887,10 +3917,14 @@ const
   SSL_F_SSL_INIT_WBIO_BUFFER = 184;
   SSL_F_SSL_LOAD_CLIENT_CA_FILE = 185;
   SSL_F_SSL_NEW = 186;
+  SSL_F_SSL_PARSE_CLIENTHELLO_RENEGOTIATE_EXT = 287;
+  SSL_F_SSL_PARSE_CLIENTHELLO_TLSEXT = 290;
+  SSL_F_SSL_PARSE_SERVERHELLO_RENEGOTIATE_EXT	= 289;
+  SSL_F_SSL_PARSE_SERVERHELLO_TLSEXT = 291;
+  SSL_F_SSL_PEEK = 270;
   SSL_F_SSL_PREPARE_CLIENTHELLO_TLSEXT = 275;
   SSL_F_SSL_PREPARE_SERVERHELLO_TLSEXT = 276;
   SSL_F_SSL_READ = 223;
-  SSL_F_SSL_PEEK = 270;
   SSL_F_SSL_RSA_PRIVATE_DECRYPT = 187;
   SSL_F_SSL_RSA_PUBLIC_ENCRYPT = 188;
   SSL_F_SSL_SESSION_NEW = 189;
@@ -3932,6 +3966,9 @@ const
   SSL_NOTHING = 1;
   SSL_OP_MICROSOFT_SESS_ID_BUG = $00000001;
   SSL_OP_NETSCAPE_CHALLENGE_BUG = $00000002;
+//* Allow initial connection to servers that don't support RI */
+  SSL_OP_LEGACY_SERVER_CONNECT = $00000004;
+
   SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG = $00000008;
   SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG = $00000010;
   SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER  = $00000020;
@@ -3944,7 +3981,12 @@ const
   SSL_OP_NO_QUERY_MTU                           = $00001000;
   SSL_OP_COOKIE_EXCHANGE                        = $00002000;
   SSL_OP_NO_TICKET                              = $00004000;
+//* Use Cisco's "speshul" version of DTLS_BAD_VER (as client)  */
+  SSL_OP_CISCO_ANYCONNECT	= $00008000;
   SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION = $00010000;
+//* Permit unsafe legacy renegotiation */
+  SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION      = $00040000;
+
   SSL_OP_SINGLE_ECDH_USE                        = $00080000;
   SSL_OP_SINGLE_DH_USE                          = $00100000;
   SSL_OP_EPHEMERAL_RSA                          = $00200000;
@@ -4013,6 +4055,8 @@ const
   SSL_R_DECRYPTION_FAILED = 147;
   SSL_R_DH_PUBLIC_VALUE_LENGTH_IS_WRONG = 148;
   SSL_R_DIGEST_CHECK_FAILED = 149;
+  SSL_R_DTLS_MESSAGE_TOO_BIG = 318;
+
   SSL_R_ENCRYPTED_LENGTH_TOO_LONG = 150;
   SSL_R_ERROR_IN_RECEIVED_CIPHER_LIST = 151;
   SSL_R_EXCESSIVE_MESSAGE_SIZE = 152;
@@ -4063,7 +4107,8 @@ const
   SSL_R_NO_PRIVATE_KEY_ASSIGNED = 190;
   SSL_R_NO_PROTOCOLS_AVAILABLE = 191;
   SSL_R_NO_PUBLICKEY = 192;
-  SSL_R_NO_RENEGOTIATION = 318;
+  //was 318
+  SSL_R_NO_RENEGOTIATION = 319;
   SSL_R_NO_SHARED_CIPHER = 193;
   SSL_R_NO_VERIFY_CALLBACK = 194;
   SSL_R_NULL_SSL_CTX = 195;
@@ -4089,10 +4134,15 @@ const
   SSL_R_READ_WRONG_PACKET_TYPE = 212;
   SSL_R_RECORD_LENGTH_MISMATCH = 213;
   SSL_R_RECORD_TOO_LARGE = 214;
+  SSL_R_RECORD_TOO_SMALL = 298;
+  SSL_R_RENEGOTIATE_EXT_TOO_LONG = 320;
+  SSL_R_RENEGOTIATION_ENCODING_ERR = 321;
+  SSL_R_RENEGOTIATION_MISMATCH = 322;
   SSL_R_REQUIRED_CIPHER_MISSING = 215;
   SSL_R_REUSE_CERT_LENGTH_NOT_ZERO = 216;
   SSL_R_REUSE_CERT_TYPE_NOT_ZERO = 217;
   SSL_R_REUSE_CIPHER_LIST_NOT_ZERO = 218;
+  SSL_R_SCSV_RECEIVED_WHEN_RENEGOTIATING = 324;
   SSL_R_SERVERHELLO_TLSEXT = 224;
   SSL_R_SESSION_ID_CONTEXT_UNINITIALIZED = 277;
   SSL_R_SHORT_READ = 219;
@@ -4163,6 +4213,7 @@ const
   SSL_R_UNKNOWN_SSL_VERSION = 254;
   SSL_R_UNSUPPORTED_STATUS_TYPE = 329;
   SSL_R_UNKNOWN_STATE = 255;
+  SSL_R_UNSAFE_LEGACY_RENEGOTIATION_DISABLED = 323;
   SSL_R_UNSUPPORTED_CIPHER = 256;
   SSL_R_UNSUPPORTED_COMPRESSION_ALGORITHM = 257;
   SSL_R_UNSUPPORTED_PROTOCOL = 258;
@@ -4328,8 +4379,6 @@ const
   TLS1_CK_ECDH_anon_WITH_AES_128_CBC_SHA          = $0300C018;
   TLS1_CK_ECDH_anon_WITH_AES_256_CBC_SHA          = $0300C019;
   TLS1_FINISH_MAC_LENGTH = 12;
-  TLS1_FLAGS_TLS_PADDING_BUG = $0008;
-  SSL3_FLAGS_ALLOW_UNSAFE_LEGACY_RENEGOTIATION = $0010;
   TLS1_TXT_RSA_EXPORT1024_WITH_RC4_56_MD5 = 'EXP1024-RC4-MD5';
   TLS1_TXT_RSA_EXPORT1024_WITH_RC2_CBC_56_MD5 = 'EXP1024-RC2-CBC-MD5';
   TLS1_TXT_RSA_EXPORT1024_WITH_DES_CBC_SHA = 'EXP1024-DES-CBC-SHA';
@@ -4564,6 +4613,46 @@ const
   X509_V_ERR_NO_EXPLICIT_POLICY = 43;
   X509_V_ERR_UNNESTED_RESOURCE = 44;
   X509_V_ERR_APPLICATION_VERIFICATION = 50;
+  //* Certificate verify flags */
+
+  //* Send issuer+subject checks to verify_cb */
+  X509_V_FLAG_CB_ISSUER_CHECK	= $1;
+  //* Use check time instead of current time */
+  X509_V_FLAG_USE_CHECK_TIME = $2;
+  //* Lookup CRLs */
+  X509_V_FLAG_CRL_CHECK	 = $4;
+  //* Lookup CRLs for whole chain */
+  X509_V_FLAG_CRL_CHECK_ALL	= $8;
+  //* Ignore unhandled critical extensions */
+  X509_V_FLAG_IGNORE_CRITICAL	 = $10;
+//* Disable workarounds for broken certificates */
+  X509_V_FLAG_X509_STRICT	= $20;
+//* Enable proxy certificate validation */
+  X509_V_FLAG_ALLOW_PROXY_CERTS	= $40;
+//* Enable policy checking */
+  X509_V_FLAG_POLICY_CHECK	= $80;
+//* Policy variable require-explicit-policy */
+  X509_V_FLAG_EXPLICIT_POLICY = $100;
+//* Policy variable inhibit-any-policy */
+  X509_V_FLAG_INHIBIT_ANY	= $200;
+//* Policy variable inhibit-policy-mapping */
+  X509_V_FLAG_INHIBIT_MAP	= $400;
+//* Notify callback that policy is OK */
+  X509_V_FLAG_NOTIFY_POLICY	= $800;
+
+//* Check selfsigned CA signature */
+  X509_V_FLAG_CHECK_SS_SIGNATURE = $4000;
+
+  X509_VP_FLAG_DEFAULT = $1;
+  X509_VP_FLAG_OVERWRITE = $2;
+  X509_VP_FLAG_RESET_FLAGS = $4;
+  X509_VP_FLAG_LOCKED	= $8;
+  X509_VP_FLAG_ONCE	= $10;
+  X509_V_FLAG_POLICY_MASK = (X509_V_FLAG_POLICY_CHECK or
+    X509_V_FLAG_EXPLICIT_POLICY or
+		X509_V_FLAG_INHIBIT_ANY or
+    X509_V_FLAG_INHIBIT_MAP);
+
   X509_V_OK = 0;
   X509v3_KU_CRL_SIGN = $0002;
   X509v3_KU_DATA_ENCIPHERMENT = $0010;
@@ -4856,7 +4945,8 @@ const
 //* this alert description is not specified anywhere... */
  DTLS1_AD_MISSING_HANDSHAKE_MESSAGE = 110;
 {$endif}
-  DTLS1_COOKIE_LENGTH = 32;
+  //was 32
+  DTLS1_COOKIE_LENGTH = 256;
   DTLS1_RT_HEADER_LENGTH = 13;
   DTLS1_HM_HEADER_LENGTH = 12;
   DTLS1_HM_BAD_FRAGMENT = -2;
@@ -8204,6 +8294,14 @@ _des_cblock = DES_cblock
     tmp_new_compression : PAnsiChar;
     {$ENDIF}
     tmp_cert_request : TIdC_INT;
+
+    //* Connection binding to prevent renegotiation attacks */
+        previous_client_finished : array [0..EVP_MAX_MD_SIZE - 1] of AnsiChar;
+        previous_client_finished_len : Byte;
+        previous_server_finished : array [0..EVP_MAX_MD_SIZE - 1] of AnsiChar;
+        previous_server_finished_len : Byte;
+        send_connection_binding : TIdC_INT; //* TODOEKR */
+
   end;
   //openssl/pq_compat.h
   ppitem = ^pitem;
@@ -8220,6 +8318,18 @@ _des_cblock = DES_cblock
     count : TIdC_INT;
   end;
   //
+  dtls1_retransmit_state = record
+	  enc_write_ctx : PEVP_CIPHER_CTX;	//* cryptographic state */
+   	write_hash : PEVP_MD;		//* used for mac generation */
+{$IFNDEF OPENSSL_NO_COMP}
+   	compress : COMP_CTX;				//* compression */
+{$ELSE}
+   	compress : PAnsiChar;
+{$ENDIF}
+   	session : PSSL_SESSION;
+	  epoch : TIdC_USHORT;
+  end;
+  Pdtls1_retransmit_state = ^dtls1_retransmit_state;
   DTLS1_BITMAP = record
     map : PQ_64BIT;
     length : TIdC_ULONG;     // sizeof the bitmap in bits
@@ -8233,6 +8343,8 @@ _des_cblock = DES_cblock
     frag_off : TIdC_ULONG;
     frag_len : TIdC_ULONG;
     is_ccs : TIdC_UINT;
+    //	struct dtls1_retransmit_state saved_retransmit_state;
+    saved_retransmit_state : dtls1_retransmit_state;
   end;
   ccs_header_st = record
     _type : PAnsiChar;
@@ -8272,6 +8384,9 @@ _des_cblock = DES_cblock
     handshake_write_seq : TIdC_USHORT;
     next_handshake_write_seq : TIdC_USHORT;
     handshake_read_seq : TIdC_USHORT;
+	//* save last sequence number for retransmissions */
+   	last_write_sequence : array [0..8-1] of byte;
+
     // Received handshake records (processed and unprocessed)
     unprocessed_rcds : record_pqueue;
     processed_rcds : record_pqueue;
@@ -8279,10 +8394,26 @@ _des_cblock = DES_cblock
     buffered_messages : pqueue;
     // Buffered (sent) handshake records
     sent_messages : pqueue;
+   ///* Buffered application records.
+	 //* Only for records between CCS and Finished
+	 //* to prevent either protocol violation or
+	 //* unnecessary message loss.
+	 //*/
+	  buffered_app_data : record_pqueue;
+
+	///* Is set when listening for new connections with dtls1_listen() */
+	  listen : TIdC_UINT;
+
     mtu : TIdC_UINT; // max wire packet size
     w_msg_hdr : hm_header;
     r_msg_hdr : hm_header;
     timeout :  dtls1_timeout_st;
+    	//* Indicates when the last handshake msg sent will timeout */
+    next_timeout : timeval;
+
+	//* Timeout duration */
+	   timeout_duration : TIdC_USHORT;
+
     // storage for Alert/Handshake protocol data received but not
     // yet processed by ssl3_read_bytes:
     alert_fragment : array [0..DTLS1_AL_HEADER_LENGTH-1] of AnsiChar;
@@ -8290,6 +8421,7 @@ _des_cblock = DES_cblock
     handshake_fragment : array[0..DTLS1_HM_HEADER_LENGTH -1] of AnsiChar;
     handshake_fragment_len : TIdC_UINT;
     retransmitting : TIdC_UINT;
+    change_cipher_spec_ok : TIdC_UINT;
   end;
   X509V3_CTX = V3_EXT_CTX;
   PX509V3_CTX = ^X509V3_CTX;
@@ -8374,17 +8506,17 @@ var
   BN_bn2hex: function(const n:PBIGNUM): PAnsiChar cdecl = nil;
 
   {$IFNDEF SSLEAY_MACROS}
-  _PEM_read_bio_X509 : function(bp: PBIO; var x: PX509; cb: ppem_password_cb; u: Pointer): PX509 cdecl = nil;
-  _PEM_read_bio_X509_REQ : function(bp :PBIO; var x : PX509_REQ; cb :ppem_password_cb; u: PAnsiChar) : PX509_REQ cdecl = nil;
-  _PEM_read_bio_X509_CRL : function(bp : PBIO; var x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL cdecl = nil;
-  _PEM_read_bio_RSAPrivateKey : function(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA cdecl = nil;
-  _PEM_read_bio_RSAPublicKey : function(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA cdecl = nil;
-  _PEM_read_bio_DSAPrivateKey : function(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA cdecl = nil;
-  _PEM_read_bio_PrivateKey : function(bp : PBIO; var x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY cdecl = nil;
-  _PEM_read_bio_PKCS7 : function(bp : PBIO; var x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7 cdecl = nil;
-  _PEM_read_bio_DHparams : function(bp : PBIO; var x : PDH; cb : ppem_password_cb; u : Pointer) : PDH cdecl = nil;
-  _PEM_read_bio_DSAparams : function(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA cdecl = nil;
-  _PEM_read_bio_NETSCAPE_CERT_SEQUENCE : function(bp : PBIO; var x : PNETSCAPE_CERT_SEQUENCE;
+  _PEM_read_bio_X509 : function(bp: PBIO; x: PX509; cb: ppem_password_cb; u: Pointer): PX509 cdecl = nil;
+  _PEM_read_bio_X509_REQ : function(bp :PBIO; x : PX509_REQ; cb :ppem_password_cb; u: PAnsiChar) : PX509_REQ cdecl = nil;
+  _PEM_read_bio_X509_CRL : function(bp : PBIO; x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL cdecl = nil;
+  _PEM_read_bio_RSAPrivateKey : function(bp : PBIO; x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA cdecl = nil;
+  _PEM_read_bio_RSAPublicKey : function(bp : PBIO; x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA cdecl = nil;
+  _PEM_read_bio_DSAPrivateKey : function(bp : PBIO; x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA cdecl = nil;
+  _PEM_read_bio_PrivateKey : function(bp : PBIO; x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY cdecl = nil;
+  _PEM_read_bio_PKCS7 : function(bp : PBIO; x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7 cdecl = nil;
+  _PEM_read_bio_DHparams : function(bp : PBIO; x : PDH; cb : ppem_password_cb; u : Pointer) : PDH cdecl = nil;
+  _PEM_read_bio_DSAparams : function(bp : PBIO; x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA cdecl = nil;
+  _PEM_read_bio_NETSCAPE_CERT_SEQUENCE : function(bp : PBIO; x : PNETSCAPE_CERT_SEQUENCE;
     cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE cdecl = nil;
   _PEM_write_bio_X509 : function(b: PBIO; x: PX509): TIdC_INT cdecl = nil;
   _PEM_write_bio_X509_REQ : function(bp: PBIO; x: PX509_REQ): TIdC_INT cdecl = nil;
@@ -8699,13 +8831,18 @@ function X509_CRL_get_nextUpdate(x : PX509_CRL) : PASN1_TIME;
 function X509_CRL_get_issuer(x : PX509_CRL) : PX509_NAME;
 function X509_CRL_get_REVOKED(x : PX509_CRL) : PSTACK_OF_X509_REVOKED;
 procedure SSL_CTX_set_info_callback(ctx: PSSL_CTX; cb: PSSL_CTX_info_callback);
+
 function SSL_CTX_set_options(ctx: PSSL_CTX; op: TIdC_LONG):TIdC_LONG;
+function SSL_CTX_clear_options(ctx : PSSL_CTX; op : TIdC_LONG):TIdC_LONG;
 function SSL_CTX_get_options(ctx: PSSL_CTX) : TIdC_LONG;
 function SSL_set_options(ssl: PSSL; op : TIdC_LONG): TIdC_LONG;
+function SSL_clear_mode(ssl : PSSL; op : TIdC_LONG) : TIdC_LONG;
 function SSL_get_options(ssl : PSSL): TIdC_LONG;
 function SSL_CTX_set_mode(ctx : PSSL_CTX; op : TIdC_LONG) : TIdC_LONG;
+function SSL_CTX_clear_mode(ctx : PSSL_CTX; op : TIdC_LONG) : TIdC_LONG;
 function SSL_CTX_get_mode(ctx : PSSL_CTX) : TIdC_LONG;
 function SSL_set_mtu(ssl : PSSL; mtu : TIdC_LONG) : TIdC_LONG;
+function SSL_get_secure_renegotiation_support(ssl : PSSL) : TIdC_LONG;
 function SSL_CTX_sess_number(ctx : PSSL_CTX) : TIdC_LONG;
 function SSL_CTX_sess_connect(ctx : PSSL_CTX) : TIdC_LONG;
 function SSL_CTX_sess_connect_good(ctx : PSSL_CTX): TIdC_LONG;
@@ -8728,6 +8865,23 @@ function SSL_CTX_get_max_cert_list(ctx : PSSL_CTX) : TIdC_LONG;
 function SSL_CTX_set_max_cert_list(ctx : PSSL_CTX; m : TIdC_LONG) : TIdC_LONG;
 function SSL_get_max_cert_list(ssl : PSSL) : TIdC_LONG;
 function SSL_set_max_cert_list(ssl : PSSL; m : TIdC_LONG) : TIdC_LONG;
+function DTLSv1_get_timeout(ssl : PSSL; var arg : timeval) : TIdC_LONG;
+function DTLSv1_handle_timeout(ssl : PSSL) : TIdC_LONG;
+function DTLSv1_listen(ssl : PSSL; var peer : sockaddr) : TIdC_LONG;
+function SSL_session_reused(ssl : PSSL) : TIdC_LONG;
+function SSL_num_renegotiations(ssl : PSSL) : TIdC_LONG;
+function SSL_clear_num_renegotiations(ssl : PSSL) : TIdC_LONG;
+function SSL_total_renegotiations(ssl : PSSL) : TIdC_LONG;
+function SSL_CTX_need_tmp_RSA(ctx : PSSL_CTX) : TIdC_LONG;
+function SSL_CTX_set_tmp_rsa(ctx  : PSSL_CTX; rsa : PRSA) : TIdC_LONG;
+function SSL_CTX_set_tmp_dh(ctx : PSSL_CTX; dh : PDH) : TIdC_LONG;
+function SSL_CTX_set_tmp_ecdh(ctx : PSSL_CTX; ecdh : PEC_KEY) : TIdC_LONG;
+function SSL_need_tmp_RSA(ssl : PSSL) : TIdC_LONG;
+procedure SSL_set_tmp_rsa(ssl : PSSL; rsa : PRSA);
+function SSL_set_tmp_dh(ssl : PSSL;dh : PDH) : TIdC_LONG;
+function SSL_set_tmp_ecdh(ssl : PSSL; ecdh : PEC_KEY) : TIdC_LONG;
+function SSL_CTX_add_extra_chain_cert(ctx : PSSL_CTX; x509 : PX509) : TIdC_LONG;
+
 {$IFNDEF OPENSSL_NO_TLSEXT}
 function SSL_set_tlsext_host_name(s : PSSL; name : AnsiString) : TIdC_LONG;
 function SSL_set_tlsext_debug_callback(ssl : PSSL; cb : SSL_callback_ctrl_fp) : TIdC_LONG;
@@ -8736,14 +8890,15 @@ function SSL_set_tlsext_status_type(ssl : PSSL; _type : TIdC_LONG):TIdC_LONG;
 function SSL_get_tlsext_status_exts(ssl : PSSL; arg : Pointer): TIdC_LONG;
 function SSL_set_tlsext_status_exts(ssl : PSSL; arg : Pointer):TIdC_LONG;
 function SSL_get_tlsext_status_ids(ssl : PSSL; arg : Pointer) : TIdC_LONG;
+
 function SSL_set_tlsext_status_ids(ssl : PSSL; arg : Pointer) : TIdC_LONG;
 function SSL_get_tlsext_status_ocsp_resp(ssl : PSSL; arg : Pointer) : TIdC_LONG;
 function SSL_set_tlsext_status_ocsp_resp(ssl : PSSL; arg : Pointer; arglen : TIdC_LONG) : TIdC_LONG;
 function SSL_CTX_set_tlsext_servername_callback(ctx : PSSL_CTX; cb :SSL_callback_ctrl_fp):TIdC_LONG;
 {$ENDIF}
-
-
 function SSL_CTX_get_version(ctx: PSSL_CTX):TIdC_INT;
+//* BIO_s_connect() and BIO_s_socks4a_connect() */
+
 function BIO_set_conn_hostname(b : PBIO; name : PAnsiChar) : TIdC_LONG;
 function BIO_set_conn_port(b : PBIO; port : PAnsiChar) : TIdC_LONG;
 function BIO_set_conn_ip(b : PBIO; ip : PAnsiChar) : TIdC_LONG;
@@ -8753,10 +8908,11 @@ function BIO_get_conn_port(b : PBIO) : PAnsiChar;
 function BIO_get_conn_ip(b : PBIO) : PAnsiChar;
 function BIO_get_conn_int_port(b : PBIO) : TIdC_LONG;
 function BIO_set_nbio(b : PBIO; n : TIdC_LONG) : TIdC_LONG;
+//* BIO_s_accept_socket() */
 function BIO_set_accept_port(b : PBIO; name : PAnsiChar) : TIdC_LONG;
 function BIO_get_accept_port(b : PBIO) : PAnsiChar;
-function BIO_set_nbio_accept(b : PBIO; n : TIdC_LONG) : TIdC_LONG;
-function BIO_set_accept_bios(b : PBIO; bio : PAnsiChar) : TIdC_LONG;
+function BIO_set_nbio_accept(b : PBIO; n : TIdC_INT) : TIdC_LONG;
+function BIO_set_accept_bios(b : PBIO; bio : PBIO) : TIdC_LONG;
 function BIO_set_bind_mode(b : PBIO; mode : TIdC_LONG) : TIdC_LONG;
 function BIO_get_bind_mode(b : PBIO; mode : TIdC_LONG) : TIdC_LONG;
 function BIO_do_handshake(b : PBIO) : TIdC_LONG;
@@ -8764,34 +8920,28 @@ function BIO_do_connect(b : PBIO) : TIdC_LONG;
 function BIO_do_accept(b : PBIO) : TIdC_LONG;
 function BIO_set_url(b : PBIO; url : PAnsiChar) : TIdC_LONG;
 function BIO_set_proxies(b : PBIO; p : PAnsiChar) : TIdC_LONG;
-function BIO_set_filter_bio(b : PBIO; s : PAnsiChar) : TIdC_LONG;
 
+//* BIO_set_nbio(b,n) */
+function BIO_set_filter_bio(b : PBIO; s : PAnsiChar) : TIdC_LONG;
 function BIO_set_proxy_header(b : PBIO; sk : PAnsiChar) : TIdC_LONG;
 function BIO_set_no_connect_return(b : PBIO; b2 : TIdC_LONG) : TIdC_LONG;
 function BIO_get_proxy_header(b : PBIO; skp : PAnsiChar) : TIdC_LONG;
 function BIO_get_proxies(b : PBIO; pxy_p : PAnsiChar) : TIdC_LONG;
 function BIO_get_url(b : PBIO; url : PAnsiChar) : TIdC_LONG;
 function BIO_get_no_connect_return(b : PBIO) : TIdC_LONG;
-function BIO_set_fd(b : PBIO; fd,c : TIdC_LONG) : TIdC_LONG;
-function BIO_get_fd(b : PBIO; c : PAnsiChar) : TIdC_LONG;
-function BIO_set_fp(b : PBIO; fp : PAnsiChar; c : TIdC_LONG) : TIdC_LONG;
-function BIO_get_fp(b : PBIO; fpp : PAnsiChar) : TIdC_LONG;
+function BIO_set_fd(b : PBIO; fd,c : TIdC_INT) : TIdC_LONG;
+function BIO_get_fd(b : PBIO; c : TIdC_INT) : TIdC_LONG;
 function BIO_seek(b : PBIO; ofs : TIdC_LONG) : TIdC_INT;
 function BIO_tell(b : PBIO) : TIdC_INT;
 {$IFDEF CONST_STRICT}
-///* If you are wondering why this isn't defined, its because CONST_STRICT is
-// * purely a compile-time kludge to allow const to be checked.
-// */
-//int BIO_read_filename(BIO *b,const char *name);
 {$ELSE}
 function BIO_read_filename(b : PBIO; name : PAnsiChar) : TIdC_LONG;
 {$ENDIF}
-
 function BIO_write_filename(b : PBIO; name : PAnsiChar) : TIdC_LONG;
 function BIO_append_filename(b : PBIO; name : PAnsiChar) : TIdC_LONG;
 function BIO_rw_filename(b : PBIO; name : PAnsiChar) : TIdC_LONG;
-function BIO_set_ssl(b : PBIO; ssl : PAnsiChar; c : TIdC_LONG) : TIdC_LONG;
-function BIO_get_ssl(b : PBIO; sslp : PAnsiChar) : TIdC_LONG;
+function BIO_set_ssl(b : PBIO; ssl : PSSL; c : TIdC_LONG) : TIdC_LONG;
+function BIO_get_ssl(b : PBIO; sslp : PSSL) : TIdC_LONG;
 function BIO_set_ssl_mode(b : PBIO; client : TIdC_LONG) : TIdC_LONG;
 function BIO_set_ssl_renegotiate_bytes(b : PBIO; num : TIdC_LONG) : TIdC_LONG;
 function BIO_get_num_renegotiates(b : PBIO) : TIdC_LONG;
@@ -8804,8 +8954,7 @@ procedure BIO_set_mem_eof_return(b : PBIO; const v : TIdC_INT);
 function BIO_get_buffer_num_lines(b : PBIO) : TIdC_INT;
 procedure BIO_set_buffer_size(b : PBIO; const size : TIdC_INT);
 //* Don't use the next one unless you know what you are doing :-) */
-function BIO_dup_state(b : PBIO; ret : PAnsiChar) : TIdC_LONG;
-
+function BIO_dup_state(b : PBIO; ret : PBIO) : TIdC_LONG;
 function BIO_reset(b : PBIO) : TIdC_INT;
 function BIO_eof(b : PBIO) : TIdC_INT;
 function BIO_set_close(b: PBIO; c: TIdC_LONG): TIdC_INT;
@@ -8813,45 +8962,40 @@ function BIO_get_close(b : PBIO) : TIdC_INT;
 function BIO_pending(b : PBIO) : TIdC_INT;
 function BIO_wpending(b : PBIO) : TIdC_INT;
 function BIO_flush(b : PBIO) : TIdC_INT;
+//* For the BIO_f_buffer() type */
 function BIO_buffer_get_num_lines(b : PBIO) : TIdC_INT;
 function BIO_get_info_callback(b : PBIO; var cbp : Pbio_info_cb) : TIdC_INT;
 function BIO_set_info_callback(b : PBIO; cb : Pbio_info_cb) : TIdC_INT;
 function BIO_set_read_buffer_size(b : PBIO; size : TIdC_LONG) : TIdC_LONG;
-
 function BIO_set_write_buffer_size(b : PBIO; size : TIdC_LONG) : TIdC_LONG;
-
 function BIO_make_bio_pair(b1, b2 : PBIO ): TIdC_INT;
-
 function BIO_destroy_bio_pair(b : PBIO) : TIdC_INT;
-
 function BIO_shutdown_wr(b : PBIO) : TIdC_INT;
-
+///* macros with inappropriate type -- but ...pending macros use int too: */
 function BIO_get_write_guarantee(b : PBIO) : TIdC_INT;
 function BIO_get_read_request(b : PBIO) : TIdC_INT;
-
-function _BIO_ctrl_dgram_connect(b : PBIO; peer : PAnsiChar) : TIdC_INT;
-
-function BIO_ctrl_set_connected(b : PBIO; state : TIdC_INT; peer : PAnsiChar) : TIdC_INT;
-
+//* ctrl macros for dgram */
+function _BIO_ctrl_dgram_connect(b : PBIO; peer : Sockaddr) : TIdC_INT;
+function BIO_ctrl_set_connected(b : PBIO; state : TIdC_INT; peer : Sockaddr) : TIdC_INT;
 function BIO_dgram_recv_timedout(b : PBIO) : TIdC_INT;
-
 function BIO_dgram_send_timedout(b : PBIO) : TIdC_INT;
+function BIO_dgram_get_peer(b : PBIO; var peer : SockAddr) : TIdC_INT;
+function BIO_dgram_set_peer(b : PBIO; peer : SockAddr) : TIdC_INT;
 
-function BIO_dgram_set_peer(b : PBIO; peer : PAnsiChar) : TIdC_INT;
 
-function PEM_read_bio_X509(bp: PBIO; var x: PX509; cb: ppem_password_cb; u: Pointer): PX509;
+function PEM_read_bio_X509(bp: PBIO; x: PX509; cb: ppem_password_cb; u: Pointer): PX509;
 
-function PEM_read_bio_X509_REQ(bp :PBIO; var x : PX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
-function PEM_read_bio_X509_CRL(bp : PBIO; var x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
-function PEM_read_bio_RSAPrivateKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
-function PEM_read_bio_RSAPublicKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
-function PEM_read_bio_DSAPrivateKey(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
-function PEM_read_bio_PrivateKey(bp : PBIO; var x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
-function PEM_read_bio_PKCS7(bp : PBIO; var x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
-function PEM_read_bio_DHparams(bp : PBIO; var x : PDH; cb : ppem_password_cb; u : Pointer) : PDH;
-function PEM_read_bio_DSAparams(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+function PEM_read_bio_X509_REQ(bp :PBIO; x : PX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
+function PEM_read_bio_X509_CRL(bp : PBIO; x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
+function PEM_read_bio_RSAPrivateKey(bp : PBIO; x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+function PEM_read_bio_RSAPublicKey(bp : PBIO; x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+function PEM_read_bio_DSAPrivateKey(bp : PBIO; x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+function PEM_read_bio_PrivateKey(bp : PBIO; x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
+function PEM_read_bio_PKCS7(bp : PBIO; x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
+function PEM_read_bio_DHparams(bp : PBIO; x : PDH; cb : ppem_password_cb; u : Pointer) : PDH;
+function PEM_read_bio_DSAparams(bp : PBIO; x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
 
-function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; var x : PNETSCAPE_CERT_SEQUENCE;
+function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PNETSCAPE_CERT_SEQUENCE;
   cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE;
 
 function PEM_write_bio_X509(bp: PBIO; x: PX509): TIdC_INT;
@@ -12090,8 +12234,10 @@ them in case we use them later.}
   {CH fn_ENGINE_load_cryptodev = 'ENGINE_load_cryptodev'; } {Do not localize}
   {CH fn_ENGINE_load_padlock = 'ENGINE_load_padlock'; } {Do not localize}
   {CH fn_ENGINE_load_builtin_engines = 'ENGINE_load_builtin_engines'; } {Do not localize}
-  {$IFNDEF OPENSSL_NO_CAPIENG}
+  {$IFDEF WIN32_OR_WIN64}
+    {$IFNDEF OPENSSL_NO_CAPIENG}
   {CH fn_ENGINE_load_capi = 'ENGINE_load_capi'; } {Do not localize}
+    {$ENDIF}
   {$ENDIF}
   {CH fn_ENGINE_get_table_flags = 'ENGINE_get_table_flags'; } {Do not localize}
   {CH fn_ENGINE_set_table_flags = 'ENGINE_set_table_flags'; }  {Do not localize}
@@ -13199,6 +13345,12 @@ begin
   Result := SSL_CTX_ctrl(ctx, SSL_CTRL_OPTIONS, op, nil);
 end;
 
+function SSL_CTX_clear_options(ctx : PSSL_CTX; op : TIdC_LONG):TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := SSL_CTX_ctrl(ctx,SSL_CTRL_CLEAR_OPTIONS,op,nil);
+end;
+
 function SSL_CTX_get_options(ctx: PSSL_CTX) : TIdC_LONG;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
@@ -13209,6 +13361,12 @@ function SSL_set_options(ssl: PSSL; op : TIdC_LONG): TIdC_LONG;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := SSL_ctrl(ssl, SSL_CTRL_OPTIONS,op,nil);
+end;
+
+function SSL_clear_mode(ssl : PSSL; op : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := SSL_ctrl(ssl,SSL_CTRL_CLEAR_MODE,op,nil);
 end;
 
 function SSL_get_options(ssl : PSSL): TIdC_LONG;
@@ -13223,6 +13381,12 @@ begin
   Result := SSL_CTX_ctrl(ctx, SSL_CTRL_MODE, op,nil);
 end;
 
+function SSL_CTX_clear_mode(ctx : PSSL_CTX; op : TIdC_LONG) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := SSL_CTX_ctrl(ctx,SSL_CTRL_CLEAR_MODE,op,nil);
+end;
+
 function SSL_CTX_get_mode(ctx : PSSL_CTX) : TIdC_LONG;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
@@ -13232,7 +13396,13 @@ end;
 function SSL_set_mtu(ssl : PSSL; mtu : TIdC_LONG) : TIdC_LONG;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := SSL_ctrl(ssl, SSL_CTRL_SET_MTU,mtu,nil);
+  Result := SSL_ctrl(ssl, SSL_CTRL_SET_MTU, mtu, nil);
+end;
+
+function SSL_get_secure_renegotiation_support(ssl : PSSL) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := SSL_ctrl(ssl, SSL_CTRL_GET_RI_SUPPORT, 0, nil);
 end;
 //
 
@@ -13368,6 +13538,102 @@ begin
   Result := SSL_ctrl(ssl, SSL_CTRL_SET_MAX_CERT_LIST, m, nil);
 end;
 
+function DTLSv1_get_timeout(ssl : PSSL; var arg : timeval) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result :=	SSL_ctrl(ssl,DTLS_CTRL_GET_TIMEOUT,0, @arg);
+end;
+
+function DTLSv1_handle_timeout(ssl : PSSL) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result :=	SSL_ctrl(ssl,DTLS_CTRL_HANDLE_TIMEOUT,0, nil);
+end;
+
+function DTLSv1_listen(ssl : PSSL; var peer : sockaddr) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_ctrl(ssl,DTLS_CTRL_LISTEN,0, @peer);
+end;
+
+function SSL_session_reused(ssl : PSSL) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_ctrl(ssl,SSL_CTRL_GET_SESSION_REUSED,0,nil);
+end;
+
+function SSL_num_renegotiations(ssl : PSSL) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_ctrl(ssl,SSL_CTRL_GET_NUM_RENEGOTIATIONS,0,nil);
+end;
+
+function SSL_clear_num_renegotiations(ssl : PSSL) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_ctrl(ssl,SSL_CTRL_CLEAR_NUM_RENEGOTIATIONS,0,nil);
+end;
+
+function SSL_total_renegotiations(ssl : PSSL) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_ctrl(ssl,SSL_CTRL_GET_TOTAL_RENEGOTIATIONS,0,nil);
+end;
+
+function SSL_CTX_need_tmp_RSA(ctx : PSSL_CTX) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_CTX_ctrl(ctx,SSL_CTRL_NEED_TMP_RSA,0,nil);
+end;
+
+function SSL_CTX_set_tmp_rsa(ctx  : PSSL_CTX; rsa : PRSA) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_CTX_ctrl(ctx,SSL_CTRL_SET_TMP_RSA,0,rsa);
+end;
+
+function SSL_CTX_set_tmp_dh(ctx : PSSL_CTX; dh : PDH) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_CTX_ctrl(ctx,SSL_CTRL_SET_TMP_DH,0,dh);
+end;
+
+function SSL_CTX_set_tmp_ecdh(ctx : PSSL_CTX; ecdh : PEC_KEY) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_CTX_ctrl(ctx,SSL_CTRL_SET_TMP_ECDH,0,ecdh);
+end;
+
+function SSL_need_tmp_RSA(ssl : PSSL) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_ctrl(ssl,SSL_CTRL_NEED_TMP_RSA,0,nil);
+end;
+
+procedure SSL_set_tmp_rsa(ssl : PSSL; rsa : PRSA);
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	SSL_ctrl(ssl,SSL_CTRL_SET_TMP_RSA,0,rsa);
+end;
+
+function SSL_set_tmp_dh(ssl : PSSL;dh : PDH) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_ctrl(ssl,SSL_CTRL_SET_TMP_DH,0,dh);
+end;
+
+function SSL_set_tmp_ecdh(ssl : PSSL; ecdh : PEC_KEY) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_ctrl(ssl,SSL_CTRL_SET_TMP_ECDH,0,ecdh);
+end;
+
+function SSL_CTX_add_extra_chain_cert(ctx : PSSL_CTX; x509 : PX509) : TIdC_LONG;
+ {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+	Result := SSL_CTX_ctrl(ctx,SSL_CTRL_EXTRA_CHAIN_CERT,0,x509);
+end;
+
 {$IFNDEF OPENSSL_NO_TLSEXT}
 function SSL_set_tlsext_host_name(s : PSSL; name : AnsiString) : TIdC_LONG;
  {$IFDEF USE_INLINE} inline; {$ENDIF}
@@ -13458,6 +13724,7 @@ begin
 end;
 
 function BIO_set_conn_ip(b : PBIO; ip : PAnsiChar) : TIdC_LONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result :=  BIO_ctrl(b,BIO_C_SET_CONNECT,2,ip);
 end;
@@ -13512,7 +13779,7 @@ begin
 end;
 
 //* #define BIO_set_nbio(b,n)	BIO_ctrl(b,BIO_C_SET_NBIO,(n),NULL) */
-function BIO_set_nbio_accept(b : PBIO; n : TIdC_LONG) : TIdC_LONG;
+function BIO_set_nbio_accept(b : PBIO; n : TIdC_INT) : TIdC_LONG;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   if n <> 0 then begin
@@ -13522,10 +13789,10 @@ begin
   end;
 end;
 
-function BIO_set_accept_bios(b : PBIO; bio : PAnsiChar) : TIdC_LONG;
+function BIO_set_accept_bios(b : PBIO; bio : PBIO) : TIdC_LONG;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := BIO_ctrl(b,BIO_C_SET_ACCEPT,2,bio);
+  Result := BIO_ctrl(b,BIO_C_SET_ACCEPT,2,PAnsiChar(bio));
 end;
 
 function BIO_set_bind_mode(b : PBIO; mode : TIdC_LONG) : TIdC_LONG;
@@ -13620,29 +13887,29 @@ begin
   Result := BIO_ctrl(b,BIO_C_GET_PROXY_PARAM,5,nil);
 end;
 
-function BIO_set_fd(b : PBIO; fd,c : TIdC_LONG) : TIdC_LONG;
+function BIO_set_fd(b : PBIO; fd,c : TIdC_INT) : TIdC_LONG;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := BIO_int_ctrl(b,BIO_C_SET_FD,c,fd);
 end;
 
-function BIO_get_fd(b : PBIO; c : PAnsiChar) : TIdC_LONG;
+function BIO_get_fd(b : PBIO; c : TIdC_INT) : TIdC_LONG;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := BIO_ctrl(b,BIO_C_GET_FD,0,c);
+  Result := BIO_ctrl(b,BIO_C_GET_FD,0,@c);
 end;
 
-function BIO_set_fp(b : PBIO; fp : PAnsiChar; c : TIdC_LONG) : TIdC_LONG;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := BIO_ctrl(b,BIO_C_SET_FILE_PTR,c,fp);
-end;
+//function BIO_set_fp(b : PBIO; fp : PAnsiChar; c : TIdC_LONG) : TIdC_LONG;
+//{$IFDEF USE_INLINE} inline; {$ENDIF}
+//begin
+//  Result := BIO_ctrl(b,BIO_C_SET_FILE_PTR,c,fp);
+//end;
 
-function BIO_get_fp(b : PBIO; fpp : PAnsiChar) : TIdC_LONG;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := BIO_ctrl(b,BIO_C_GET_FILE_PTR,0,fpp);
-end;
+//function BIO_get_fp(b : PBIO; fpp : PAnsiChar) : TIdC_LONG;
+//{$IFDEF USE_INLINE} inline; {$ENDIF}
+//begin
+//  Result := BIO_ctrl(b,BIO_C_GET_FILE_PTR,0,fpp);
+//end;
 
 function BIO_seek(b : PBIO; ofs : TIdC_LONG) : TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
@@ -13693,13 +13960,13 @@ end;
 // * SSL structure.  This is because the ssl read BIO is now pointed to by
 // * the next_bio field in the bio.  So when you free the BIO, make sure
 // * you are doing a BIO_free_all() to catch the underlying BIO. */
-function BIO_set_ssl(b : PBIO; ssl : PAnsiChar; c : TIdC_LONG) : TIdC_LONG;
+function BIO_set_ssl(b : PBIO; ssl : PSSL; c : TIdC_LONG) : TIdC_LONG;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result :=  BIO_ctrl(b,BIO_C_SET_SSL,c,ssl);
 end;
 
-function BIO_get_ssl(b : PBIO; sslp : PAnsiChar) : TIdC_LONG;
+function BIO_get_ssl(b : PBIO; sslp : PSSL) : TIdC_LONG;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := BIO_ctrl(b,BIO_C_GET_SSL,0,sslp);
@@ -13767,7 +14034,7 @@ begin
 end;
 
 //* Don't use the next one unless you know what you are doing :-) */
-function BIO_dup_state(b : PBIO; ret : PAnsiChar) : TIdC_LONG;
+function BIO_dup_state(b : PBIO; ret : PBIO) : TIdC_LONG;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := BIO_ctrl(b,BIO_CTRL_DUP,0,ret);
@@ -13885,16 +14152,16 @@ begin
 end;
 
 //* ctrl macros for dgram */
-function _BIO_ctrl_dgram_connect(b : PBIO; peer : PAnsiChar) : TIdC_INT;
+function _BIO_ctrl_dgram_connect(b : PBIO; peer : Sockaddr) : TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := BIO_ctrl(b,BIO_CTRL_DGRAM_CONNECT,0,peer);
+  Result := BIO_ctrl(b,BIO_CTRL_DGRAM_CONNECT,0,@peer);
 end;
 
-function BIO_ctrl_set_connected(b : PBIO; state : TIdC_INT; peer : PAnsiChar) : TIdC_INT;
+function BIO_ctrl_set_connected(b : PBIO; state : TIdC_INT; peer : Sockaddr) : TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := BIO_ctrl(b, BIO_CTRL_DGRAM_SET_CONNECTED, state, peer);
+  Result := BIO_ctrl(b, BIO_CTRL_DGRAM_SET_CONNECTED, state, @peer);
 end;
 
 function BIO_dgram_recv_timedout(b : PBIO) : TIdC_INT;
@@ -13909,10 +14176,16 @@ begin
   Result := BIO_ctrl(b, BIO_CTRL_DGRAM_GET_SEND_TIMER_EXP, 0, nil);
 end;
 
-function BIO_dgram_set_peer(b : PBIO; peer : PAnsiChar) : TIdC_INT;
+function BIO_dgram_get_peer(b : PBIO; var peer : SockAddr) : TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := BIO_ctrl(b, BIO_CTRL_DGRAM_SET_PEER, 0, peer);
+  Result := BIO_ctrl(b, BIO_CTRL_DGRAM_GET_PEER, 0, @peer)
+end;
+
+function BIO_dgram_set_peer(b : PBIO; peer : SockAddr) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := BIO_ctrl(b, BIO_CTRL_DGRAM_SET_PEER, 0, @peer);
 end;
 
 {$IFDEF SSLEAY_MACROS}
@@ -13953,6 +14226,7 @@ end;
 //#define	PEM_read_bio_RSAPublicKey(bp,x,cb,u) (RSA *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_RSAPublicKey,PEM_STRING_RSA_PUBLIC,bp,(char **)x,cb,u)
 function PEM_read_bio_RSAPublicKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio(@d2i_RSAPublicKey,PEM_STRING_RSA_PUBLIC, bp, Pointer(x),cb, u);
 end;
@@ -13960,6 +14234,7 @@ end;
 //#define	PEM_read_bio_DSAPrivateKey(bp,x,cb,u) (DSA *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_DSAPrivateKey,PEM_STRING_DSA,bp,(char **)x,cb,u)
 function PEM_read_bio_DSAPrivateKey(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio( @d2i_DSAPrivateKey,PEM_STRING_DSA,bp,Pointer(x),cb,u);
 end;
@@ -13967,6 +14242,7 @@ end;
 //#define	PEM_read_bio_PrivateKey(bp,x,cb,u) (EVP_PKEY *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_PrivateKey,PEM_STRING_EVP_PKEY,bp,(char **)x,cb,u)
 function PEM_read_bio_PrivateKey(bp : PBIO; var x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio( @d2i_PrivateKey, PEM_STRING_EVP_PKEY, bp, Pointer(x),cb, u);
 end;
@@ -13974,6 +14250,7 @@ end;
 //#define	PEM_read_bio_PKCS7(bp,x,cb,u) (PKCS7 *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_PKCS7,PEM_STRING_PKCS7,bp,(char **)x,cb,u)
 function PEM_read_bio_PKCS7(bp : PBIO; var x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio( @d2i_PKCS7, PEM_STRING_PKCS7,bp,Pointer(x),cb, u);
 end;
@@ -13981,6 +14258,7 @@ end;
 //#define	PEM_read_bio_DHparams(bp,x,cb,u) (DH *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_DHparams,PEM_STRING_DHPARAMS,bp,(char **)x,cb,u)
 function PEM_read_bio_DHparams(bp : PBIO; var x : PDH; cb : ppem_password_cb; u : Pointer) : PDH;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio(@d2i_DHparams,PEM_STRING_DHPARAMS,bp,Pointer(x),cb,u);
 end;
@@ -13989,6 +14267,7 @@ end;
 //	(char *(*)())d2i_DSAparams,PEM_STRING_DSAPARAMS,bp,(char **)x,cb,u)
 
 function PEM_read_bio_DSAparams(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio( @d2i_DSAparams,PEM_STRING_DSAPARAMS,bp,Pointer(x),cb,u);
 end;
@@ -13999,6 +14278,7 @@ end;
 //							(char **)x,cb,u)
 function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; var x : PNETSCAPE_CERT_SEQUENCE;
   cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio( @d2i_NETSCAPE_CERT_SEQUENCE,PEM_STRING_X509,bp,Pointer(x),cb, u);
 end;
@@ -14102,66 +14382,66 @@ end;
 
 {$ELSE}
 
-function PEM_read_bio_X509(bp: PBIO; var x: PX509; cb: ppem_password_cb; u: Pointer): PX509;
+function PEM_read_bio_X509(bp: PBIO; x: PX509; cb: ppem_password_cb; u: Pointer): PX509;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_X509(bp, x, cb, u);
 end;
 
-function PEM_read_bio_X509_REQ(bp :PBIO; var x : PX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
+function PEM_read_bio_X509_REQ(bp :PBIO; x : PX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_X509_REQ(bp, x, cb, u);
 end;
 
-function PEM_read_bio_X509_CRL(bp : PBIO; var x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
+function PEM_read_bio_X509_CRL(bp : PBIO; x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_X509_CRL(bp, x, cb, u);
 end;
 
-function PEM_read_bio_RSAPrivateKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+function PEM_read_bio_RSAPrivateKey(bp : PBIO; x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_RSAPrivateKey(bp, x, cb, u);
 end;
 
-function PEM_read_bio_RSAPublicKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+function PEM_read_bio_RSAPublicKey(bp : PBIO; x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_RSAPublicKey(bp, x, cb, u);
 end;
 
-function PEM_read_bio_DSAPrivateKey(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;{$IFDEF USE_INLINE} inline; {$ENDIF}
+function PEM_read_bio_DSAPrivateKey(bp : PBIO; x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_DSAPrivateKey(bp, x, cb, u);
 end;
 
-function PEM_read_bio_PrivateKey(bp : PBIO; var x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
+function PEM_read_bio_PrivateKey(bp : PBIO; x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_PrivateKey(bp, x, cb, u);
 end;
 
-function PEM_read_bio_PKCS7(bp : PBIO; var x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
+function PEM_read_bio_PKCS7(bp : PBIO; x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_PKCS7(bp, x, cb, u);
 end;
 
-function PEM_read_bio_DHparams(bp : PBIO; var x : PDH; cb : ppem_password_cb; u : Pointer) : PDH;
+function PEM_read_bio_DHparams(bp : PBIO; x : PDH; cb : ppem_password_cb; u : Pointer) : PDH;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_DHparams(bp, x, cb, u);
 end;
 
-function PEM_read_bio_DSAparams(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+function PEM_read_bio_DSAparams(bp : PBIO; x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_DSAparams(bp, x, cb, u);
 end;
 
-function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; var x : PNETSCAPE_CERT_SEQUENCE;
+function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PNETSCAPE_CERT_SEQUENCE;
   cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
