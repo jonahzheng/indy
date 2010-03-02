@@ -789,7 +789,7 @@ uses
   IdCTypes;
 
 //temp for compile tests
-{.$DEFINE SSLEAY_MACROS}
+{/$DEFINE SSLEAY_MACROS}
 
 const
   CONF_MFLAGS_IGNORE_ERRORS = $1;
@@ -7102,6 +7102,7 @@ type
   PPKCS8_PRIV_KEY_INFO = ^PKCS8_PRIV_KEY_INFO;
   PPPKCS8_PRIV_KEY_INFO = ^PPKCS8_PRIV_KEY_INFO;
   PPKCS7_RECIP_INFO = ^PKCS7_RECIP_INFO;
+
   PSHA_CTX = ^SHA_CTX;
   //ripemd.h
   {$IFNDEF OPENSSL_NO_RIPEMD}
@@ -7534,6 +7535,7 @@ _des_cblock = DES_cblock
   PSESS_CERT = pointer;
   //pkcs7.h
   PPKCS7 = ^PKCS7;
+  PPPKCS7 = ^PPKCS7;
   PKCS7_ISSUER_AND_SERIAL = record
     issuer : PX509_NAME;
     serial : PASN1_INTEGER;
@@ -8506,17 +8508,20 @@ var
   BN_bn2hex: function(const n:PBIGNUM): PAnsiChar cdecl = nil;
 
   {$IFNDEF SSLEAY_MACROS}
-  _PEM_read_bio_X509 : function(bp: PBIO; x: PX509; cb: ppem_password_cb; u: Pointer): PX509 cdecl = nil;
-  _PEM_read_bio_X509_REQ : function(bp :PBIO; x : PX509_REQ; cb :ppem_password_cb; u: PAnsiChar) : PX509_REQ cdecl = nil;
-  _PEM_read_bio_X509_CRL : function(bp : PBIO; x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL cdecl = nil;
-  _PEM_read_bio_RSAPrivateKey : function(bp : PBIO; x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA cdecl = nil;
-  _PEM_read_bio_RSAPublicKey : function(bp : PBIO; x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA cdecl = nil;
-  _PEM_read_bio_DSAPrivateKey : function(bp : PBIO; x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA cdecl = nil;
-  _PEM_read_bio_PrivateKey : function(bp : PBIO; x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY cdecl = nil;
-  _PEM_read_bio_PKCS7 : function(bp : PBIO; x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7 cdecl = nil;
-  _PEM_read_bio_DHparams : function(bp : PBIO; x : PDH; cb : ppem_password_cb; u : Pointer) : PDH cdecl = nil;
-  _PEM_read_bio_DSAparams : function(bp : PBIO; x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA cdecl = nil;
-  _PEM_read_bio_NETSCAPE_CERT_SEQUENCE : function(bp : PBIO; x : PNETSCAPE_CERT_SEQUENCE;
+  //Note that these are defined as a pointer to a pointer to a structure.
+  //This is done because the pointer being passed could be nil.  The pointer is probably
+  //more of a template than anything.  If it is used, it should be initialized to nil.
+  _PEM_read_bio_X509 : function(bp: PBIO; x: PPX509; cb: ppem_password_cb; u: Pointer): PX509 cdecl = nil;
+  _PEM_read_bio_X509_REQ : function(bp :PBIO; x : PPX509_REQ; cb :ppem_password_cb; u: PAnsiChar) : PX509_REQ cdecl = nil;
+  _PEM_read_bio_X509_CRL : function(bp : PBIO; x : PPX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL cdecl = nil;
+  _PEM_read_bio_RSAPrivateKey : function(bp : PBIO; x : PPRSA; cb : ppem_password_cb; u: Pointer) : PRSA cdecl = nil;
+  _PEM_read_bio_RSAPublicKey : function(bp : PBIO; x : PPRSA; cb : ppem_password_cb; u: Pointer) : PRSA cdecl = nil;
+  _PEM_read_bio_DSAPrivateKey : function(bp : PBIO; x : PPDSA; cb : ppem_password_cb; u : Pointer) : PDSA cdecl = nil;
+  _PEM_read_bio_PrivateKey : function(bp : PBIO; x : PPEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY cdecl = nil;
+  _PEM_read_bio_PKCS7 : function(bp : PBIO; x : PPPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7 cdecl = nil;
+  _PEM_read_bio_DHparams : function(bp : PBIO; x : PPDH; cb : ppem_password_cb; u : Pointer) : PDH cdecl = nil;
+  _PEM_read_bio_DSAparams : function(bp : PBIO; x : PPDSA; cb : ppem_password_cb; u : Pointer) : PDSA cdecl = nil;
+  _PEM_read_bio_NETSCAPE_CERT_SEQUENCE : function(bp : PBIO; x : PPNETSCAPE_CERT_SEQUENCE;
     cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE cdecl = nil;
   _PEM_write_bio_X509 : function(b: PBIO; x: PX509): TIdC_INT cdecl = nil;
   _PEM_write_bio_X509_REQ : function(bp: PBIO; x: PX509_REQ): TIdC_INT cdecl = nil;
@@ -8534,7 +8539,7 @@ var
   _PEM_write_bio_NETSCAPE_CERT_SEQUENCE : function(bp : PBIO; x : PDSA) : TIdC_INT cdecl = nil;
 
     {$IFNDEF OPENSSL_NO_BIO}
-  PEM_write_bio_PKCS8PrivateKey : function(bp: PBIO; key: PEVP_PKEY; enc: PEVP_CIPHER;
+  _PEM_write_bio_PKCS8PrivateKey : function(bp: PBIO; key: PEVP_PKEY; enc: PEVP_CIPHER;
       kstr: PAnsiChar; klen: TIdC_INT; cb: ppem_password_cb; u: Pointer): TIdC_INT cdecl = nil;
 
     {$ENDIF}
@@ -8983,19 +8988,19 @@ function BIO_dgram_get_peer(b : PBIO; var peer : SockAddr) : TIdC_INT;
 function BIO_dgram_set_peer(b : PBIO; peer : SockAddr) : TIdC_INT;
 
 
-function PEM_read_bio_X509(bp: PBIO; x: PX509; cb: ppem_password_cb; u: Pointer): PX509;
+function PEM_read_bio_X509(bp: PBIO; x: PPX509; cb: ppem_password_cb; u: Pointer): PX509;
 
-function PEM_read_bio_X509_REQ(bp :PBIO; x : PX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
-function PEM_read_bio_X509_CRL(bp : PBIO; x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
-function PEM_read_bio_RSAPrivateKey(bp : PBIO; x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
-function PEM_read_bio_RSAPublicKey(bp : PBIO; x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
-function PEM_read_bio_DSAPrivateKey(bp : PBIO; x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
-function PEM_read_bio_PrivateKey(bp : PBIO; x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
-function PEM_read_bio_PKCS7(bp : PBIO; x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
-function PEM_read_bio_DHparams(bp : PBIO; x : PDH; cb : ppem_password_cb; u : Pointer) : PDH;
-function PEM_read_bio_DSAparams(bp : PBIO; x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+function PEM_read_bio_X509_REQ(bp :PBIO; x : PPX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
+function PEM_read_bio_X509_CRL(bp : PBIO; x : PPX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
+function PEM_read_bio_RSAPrivateKey(bp : PBIO; x : PPRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+function PEM_read_bio_RSAPublicKey(bp : PBIO; x : PPRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+function PEM_read_bio_DSAPrivateKey(bp : PBIO; x : PPDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+function PEM_read_bio_PrivateKey(bp : PBIO; x : PPEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
+function PEM_read_bio_PKCS7(bp : PBIO; x : PPPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
+function PEM_read_bio_DHparams(bp : PBIO; x : PPDH; cb : ppem_password_cb; u : Pointer) : PDH;
+function PEM_read_bio_DSAparams(bp : PBIO; x : PPDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
 
-function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PNETSCAPE_CERT_SEQUENCE;
+function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PPNETSCAPE_CERT_SEQUENCE;
   cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE;
 
 function PEM_write_bio_X509(bp: PBIO; x: PX509): TIdC_INT;
@@ -12705,11 +12710,11 @@ begin
   @_PEM_write_bio_DHparams := LoadFunctionCLib(fn_PEM_write_bio_DHparams,False);
   @_PEM_write_bio_DSAparams := LoadFunctionClib(fn_PEM_write_bio_DSAparams,False);
   @_PEM_write_bio_NETSCAPE_CERT_SEQUENCE := LoadFunctionClib(fn_PEM_write_bio_NETSCAPE_CERT_SEQUENCE,False);
+  @_PEM_write_bio_PKCS8PrivateKey := LoadFunctionCLib(fn_PEM_write_bio_PKCS8PrivateKey,False);
   {$ELSE}
   @PEM_ASN1_write_bio := LoadFunctionCLib(fn_PEM_ASN1_write_bio,False);
   @PEM_ASN1_read_bio := LoadFunctionCLib(fn_PEM_ASN1_read_bio,False);
   {$ENDIF}
-  @PEM_write_bio_PKCS8PrivateKey := LoadFunctionCLib(fn_PEM_write_bio_PKCS8PrivateKey,False);
 
   //EVP
   {$IFNDEF OPENSSL_NO_DES}
@@ -12994,7 +12999,7 @@ begin
   @_PEM_write_bio_DSAparams := nil;
   @_PEM_write_bio_NETSCAPE_CERT_SEQUENCE := nil;
 
-  @PEM_write_bio_PKCS8PrivateKey := nil;
+  @_PEM_write_bio_PKCS8PrivateKey := nil;
 
   {$ELSE}
   @PEM_ASN1_write_bio := nil;
@@ -14194,13 +14199,13 @@ end;
 //functions.
 
 
-function PEM_read_bio_X509(bp: PBIO; var x: PX509; cb: ppem_password_cb; u: Pointer): PX509;
+function PEM_read_bio_X509(bp: PBIO; x: PPX509; cb: ppem_password_cb; u: Pointer): PX509;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio(@d2i_X509, PEM_STRING_X509, bp, Pointer(x), nil, nil);
 end;
 
-function PEM_read_bio_X509_REQ(bp :PBIO; var x : PX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
+function PEM_read_bio_X509_REQ(bp :PBIO; x : PPX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 //PEM_ASN1_read_bio( (char *(*)())d2i_X509_REQ,PEM_STRING_X509_REQ,bp,(char **)x,cb,u)
 begin
@@ -14209,7 +14214,7 @@ end;
 
 //#define	PEM_read_bio_X509_CRL(bp,x,cb,u) (X509_CRL *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_X509_CRL,PEM_STRING_X509_CRL,bp,(char **)x,cb,u)
-function PEM_read_bio_X509_CRL(bp : PBIO; var x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
+function PEM_read_bio_X509_CRL(bp : PBIO; x : PPX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio(@d2i_X509_CRL, PEM_STRING_X509_CRL, bp, Pointer(x), cb, u);
@@ -14217,7 +14222,7 @@ end;
 
 //#define	PEM_read_bio_RSAPrivateKey(bp,x,cb,u) (RSA *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_RSAPrivateKey,PEM_STRING_RSA,bp,(char **)x,cb,u)
-function PEM_read_bio_RSAPrivateKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+function PEM_read_bio_RSAPrivateKey(bp : PBIO; x : PPRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio(@d2i_RSAPrivateKey, PEM_STRING_RSA, bp, Pointer(x), cb, u);
@@ -14225,7 +14230,7 @@ end;
 
 //#define	PEM_read_bio_RSAPublicKey(bp,x,cb,u) (RSA *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_RSAPublicKey,PEM_STRING_RSA_PUBLIC,bp,(char **)x,cb,u)
-function PEM_read_bio_RSAPublicKey(bp : PBIO; var x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+function PEM_read_bio_RSAPublicKey(bp : PBIO; x : PPRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio(@d2i_RSAPublicKey,PEM_STRING_RSA_PUBLIC, bp, Pointer(x),cb, u);
@@ -14233,7 +14238,7 @@ end;
 
 //#define	PEM_read_bio_DSAPrivateKey(bp,x,cb,u) (DSA *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_DSAPrivateKey,PEM_STRING_DSA,bp,(char **)x,cb,u)
-function PEM_read_bio_DSAPrivateKey(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+function PEM_read_bio_DSAPrivateKey(bp : PBIO; x : PPDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio( @d2i_DSAPrivateKey,PEM_STRING_DSA,bp,Pointer(x),cb,u);
@@ -14241,7 +14246,7 @@ end;
 
 //#define	PEM_read_bio_PrivateKey(bp,x,cb,u) (EVP_PKEY *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_PrivateKey,PEM_STRING_EVP_PKEY,bp,(char **)x,cb,u)
-function PEM_read_bio_PrivateKey(bp : PBIO; var x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
+function PEM_read_bio_PrivateKey(bp : PBIO; x : PPEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio( @d2i_PrivateKey, PEM_STRING_EVP_PKEY, bp, Pointer(x),cb, u);
@@ -14249,7 +14254,7 @@ end;
 
 //#define	PEM_read_bio_PKCS7(bp,x,cb,u) (PKCS7 *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_PKCS7,PEM_STRING_PKCS7,bp,(char **)x,cb,u)
-function PEM_read_bio_PKCS7(bp : PBIO; var x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
+function PEM_read_bio_PKCS7(bp : PBIO; x : PPPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio( @d2i_PKCS7, PEM_STRING_PKCS7,bp,Pointer(x),cb, u);
@@ -14257,7 +14262,7 @@ end;
 
 //#define	PEM_read_bio_DHparams(bp,x,cb,u) (DH *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_DHparams,PEM_STRING_DHPARAMS,bp,(char **)x,cb,u)
-function PEM_read_bio_DHparams(bp : PBIO; var x : PDH; cb : ppem_password_cb; u : Pointer) : PDH;
+function PEM_read_bio_DHparams(bp : PBIO; x : PPDH; cb : ppem_password_cb; u : Pointer) : PDH;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio(@d2i_DHparams,PEM_STRING_DHPARAMS,bp,Pointer(x),cb,u);
@@ -14266,7 +14271,7 @@ end;
 //#define	PEM_read_bio_DSAparams(bp,x,cb,u) (DSA *)PEM_ASN1_read_bio( \
 //	(char *(*)())d2i_DSAparams,PEM_STRING_DSAPARAMS,bp,(char **)x,cb,u)
 
-function PEM_read_bio_DSAparams(bp : PBIO; var x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+function PEM_read_bio_DSAparams(bp : PBIO; x : PPDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := PEM_ASN1_read_bio( @d2i_DSAparams,PEM_STRING_DSAPARAMS,bp,Pointer(x),cb,u);
@@ -14276,7 +14281,7 @@ end;
 //		(NETSCAPE_CERT_SEQUENCE *)PEM_ASN1_read_bio( \
 //        (char *(*)())d2i_NETSCAPE_CERT_SEQUENCE,PEM_STRING_X509,bp,\
 //							(char **)x,cb,u)
-function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; var x : PNETSCAPE_CERT_SEQUENCE;
+function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PPNETSCAPE_CERT_SEQUENCE;
   cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
@@ -14382,66 +14387,66 @@ end;
 
 {$ELSE}
 
-function PEM_read_bio_X509(bp: PBIO; x: PX509; cb: ppem_password_cb; u: Pointer): PX509;
+function PEM_read_bio_X509(bp: PBIO; x: PPX509; cb: ppem_password_cb; u: Pointer): PX509;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_X509(bp, x, cb, u);
 end;
 
-function PEM_read_bio_X509_REQ(bp :PBIO; x : PX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
+function PEM_read_bio_X509_REQ(bp :PBIO; x : PPX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_X509_REQ(bp, x, cb, u);
 end;
 
-function PEM_read_bio_X509_CRL(bp : PBIO; x : PX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
+function PEM_read_bio_X509_CRL(bp : PBIO; x : PPX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_X509_CRL(bp, x, cb, u);
 end;
 
-function PEM_read_bio_RSAPrivateKey(bp : PBIO; x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+function PEM_read_bio_RSAPrivateKey(bp : PBIO; x : PPRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_RSAPrivateKey(bp, x, cb, u);
 end;
 
-function PEM_read_bio_RSAPublicKey(bp : PBIO; x : PRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
+function PEM_read_bio_RSAPublicKey(bp : PBIO; x : PPRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_RSAPublicKey(bp, x, cb, u);
 end;
 
-function PEM_read_bio_DSAPrivateKey(bp : PBIO; x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;{$IFDEF USE_INLINE} inline; {$ENDIF}
+function PEM_read_bio_DSAPrivateKey(bp : PBIO; x : PPDSA; cb : ppem_password_cb; u : Pointer) : PDSA;{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_DSAPrivateKey(bp, x, cb, u);
 end;
 
-function PEM_read_bio_PrivateKey(bp : PBIO; x : PEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
+function PEM_read_bio_PrivateKey(bp : PBIO; x : PPEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_PrivateKey(bp, x, cb, u);
 end;
 
-function PEM_read_bio_PKCS7(bp : PBIO; x : PPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
+function PEM_read_bio_PKCS7(bp : PBIO; x : PPPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_PKCS7(bp, x, cb, u);
 end;
 
-function PEM_read_bio_DHparams(bp : PBIO; x : PDH; cb : ppem_password_cb; u : Pointer) : PDH;
+function PEM_read_bio_DHparams(bp : PBIO; x : PPDH; cb : ppem_password_cb; u : Pointer) : PDH;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_DHparams(bp, x, cb, u);
 end;
 
-function PEM_read_bio_DSAparams(bp : PBIO; x : PDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
+function PEM_read_bio_DSAparams(bp : PBIO; x : PPDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := _PEM_read_bio_DSAparams(bp, x, cb, u);
 end;
 
-function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PNETSCAPE_CERT_SEQUENCE;
+function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PPNETSCAPE_CERT_SEQUENCE;
   cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
