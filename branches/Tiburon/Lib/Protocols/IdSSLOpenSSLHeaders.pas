@@ -8491,6 +8491,7 @@ var
   RSA_public_encrypt: function(flen: TIdC_INT; from: PByte; _to: PByte; rsa: PRSA; padding: TIdC_INT): TIdC_INT cdecl = nil;
 
   BIO_new : function(_type: PBIO_METHOD): PBIO cdecl = nil;
+  BIO_new_mem_buf : function (buf : Pointer; len : TIdC_INT) : PBIO cdecl = nil;
   BIO_free : function(bio: PBIO): TIdC_INT cdecl = nil;
   BIO_s_mem : function: PBIO_METHOD cdecl = nil;
   BIO_s_file : function: PBIO_METHOD cdecl = nil;
@@ -8737,6 +8738,7 @@ var
   EVP_md2 : function: PEVP_MD cdecl = nil;
   {$ENDIF}
   EVP_PKEY_type : function(_type : TIdC_INT): TIdC_INT cdecl = nil;
+  d2i_PrivateKey_bio : function(bp : PBIO; a : PPEVP_PKEY) : PEVP_PKEY cdecl = nil;
   X509_STORE_CTX_get_ex_data : function(ctx: PX509_STORE_CTX; idx: TIdC_INT): Pointer cdecl = nil;
   X509_STORE_CTX_get_error : function(ctx: PX509_STORE_CTX): TIdC_INT cdecl = nil;
   X509_STORE_CTX_set_error : procedure(ctx: PX509_STORE_CTX; s: TIdC_INT) cdecl = nil;
@@ -9761,6 +9763,7 @@ them in case we use them later.}
   fn_BIO_new_file = 'BIO_new_file';  {Do not localize}
   {CH fn_BIO_new_fp = 'BIO_new_fp'; }  {Do not localize}
   fn_BIO_new = 'BIO_new';  {Do not localize}
+  fn_BIO_new_mem_buf = 'BIO_new_mem_buf'; {Do not localize}
   {CH fn_BIO_set = 'BIO_set'; }  {Do not localize}
   fn_BIO_free = 'BIO_free';  {Do not localize}
   fn_BIO_read = 'BIO_read';  {Do not localize}
@@ -9778,6 +9781,7 @@ them in case we use them later.}
   {CH fn_BIO_get_retry_reason = 'BIO_get_retry_reason'; }  {Do not localize}
   {CH fn_BIO_dup_chain = 'BIO_dup_chain'; }  {Do not localize}
   {CH fn_BIO_debug_callback = 'BIO_debug_callback'; }  {Do not localize}
+
   fn_BIO_s_mem = 'BIO_s_mem';  {Do not localize}
   {CH fn_BIO_s_socket = 'BIO_s_socket'; }  {Do not localize}
   {CH fn_BIO_s_connect = 'BIO_s_connect'; }  {Do not localize}
@@ -11526,7 +11530,7 @@ them in case we use them later.}
   {CH fn_i2d_PKCS8_bio = 'i2d_PKCS8_bio'; }  {Do not localize}
   {CH fn_d2i_PKCS8_PRIV_KEY_INFO_bio = 'd2i_PKCS8_PRIV_KEY_INFO_bio'; }  {Do not localize}
   {CH fn_i2d_PKCS8_PRIV_KEY_INFO_bio = 'i2d_PKCS8_PRIV_KEY_INFO_bio'; }  {Do not localize}
-  {CH fn_d2i_PrivateKey_bio = 'd2i_PrivateKey_bio'; } {Do not localize}
+  fn_d2i_PrivateKey_bio = 'd2i_PrivateKey_bio';  {Do not localize}
   {CH fn_i2d_PUBKEY_bio = 'i2d_PUBKEY_bio'; } {Do not localize}
   {CH fn_d2i_PUBKEY_bio = 'd2i_PUBKEY_bio'; } {Do not localize}
   {$ENDIF}
@@ -12578,6 +12582,7 @@ begin
   @X509_STORE_CTX_set_error := LoadFunctionCLib(fn_X509_STORE_CTX_set_error);
   @X509_STORE_CTX_get_error_depth := LoadFunctionCLib(fn_X509_STORE_CTX_get_error_depth);
   @X509_STORE_CTX_get_current_cert := LoadFunctionCLib(fn_X509_STORE_CTX_get_current_cert);
+  @d2i_PrivateKey_bio := LoadFunctionCLib(fn_d2i_PrivateKey_bio);
   @X509_sign := LoadFunctionCLib(fn_X509_sign);
   @X509_REQ_sign := LoadFunctionCLib(fn_X509_REQ_sign);
   @X509_REQ_add_extensions := LoadFunctionCLib(fn_X509_REQ_add_extensions);
@@ -12650,6 +12655,7 @@ begin
   //BIO
   @BIO_new := LoadFunctionCLib(fn_BIO_new);
   @BIO_free := LoadFunctionCLib(fn_BIO_free);
+  @BIO_new_mem_buf := LoadFunctionCLib(fn_BIO_new_mem_buf);
   @BIO_s_mem := LoadFunctionCLib(fn_BIO_s_mem);
   @BIO_s_file := LoadFunctionCLib(fn_BIO_s_file);
   @BIO_ctrl := LoadFunctionCLib(fn_BIO_ctrl);
@@ -12941,6 +12947,7 @@ begin
   @BIO_free := nil;
   @BIO_s_mem := nil;
   @BIO_s_file := nil;
+  @BIO_new_mem_buf := nil;
   @BIO_ctrl := nil;
   @BIO_ptr_ctrl := nil;
   @BIO_int_ctrl := nil;
@@ -12961,6 +12968,7 @@ begin
   @i2d_X509_REQ := nil;
   @d2i_X509_REQ := nil;
   //X509
+  @d2i_PrivateKey_bio := nil;
   @X509_new := nil;
   @X509_free := nil;
   @X509_REQ_new := nil;

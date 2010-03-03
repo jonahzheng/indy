@@ -309,7 +309,7 @@ type
     fMethod: TIdSSLVersion;
     fSSLVersions : TIdSSLVersions;
     fMode: TIdSSLMode;
-    fsRootCertFile, fsCertFile, fsKeyFile: AnsiString;
+    fsRootCertFile, fsCertFile, fsKeyFile: String;
     fVerifyDepth: Integer;
     fVerifyMode: TIdSSLVerifyModeSet;
 //    fVerifyFile: String;
@@ -342,9 +342,9 @@ type
     property SSLVersions : TIdSSLVersions read fSSLVersions write fSSLVersions;
     property Method: TIdSSLVersion read fMethod write fMethod;
     property Mode: TIdSSLMode read fMode write fMode;
-    property RootCertFile: AnsiString read fsRootCertFile write fsRootCertFile;
-    property CertFile: AnsiString read fsCertFile write fsCertFile;
-    property KeyFile: AnsiString read fsKeyFile write fsKeyFile;
+    property RootCertFile: String read fsRootCertFile write fsRootCertFile;
+    property CertFile: String read fsCertFile write fsCertFile;
+    property KeyFile: String read fsKeyFile write fsKeyFile;
 //    property VerifyMode: TIdSSLVerifyModeSet read GetVerifyMode write SetVerifyMode;
     property VerifyMode: TIdSSLVerifyModeSet read fVerifyMode write fVerifyMode;
     property VerifyDepth: Integer read fVerifyDepth write fVerifyDepth;
@@ -642,6 +642,77 @@ var
   LockPassCB: TIdCriticalSection = nil;
   LockVerifyCB: TIdCriticalSection = nil;
   CallbackLockList: TThreadList = nil;
+
+function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
+var
+  LM : TMemoryStream;
+  B : PBIO;
+  LKey : PEVP_PKEY;
+begin
+  Result := False;
+  LM := TMemoryStream.Create;
+  try
+    LM.LoadFromFile(AFileName);
+    B :=  BIO_new_mem_buf(LM.Memory,LM.Size);
+    try
+      case AType of
+        SSL_FILETYPE_PEM :
+        begin
+          LKey := PEM_read_bio_PrivateKey(b,nil,CTX^.default_passwd_callback,
+            CTX^.default_passwd_callback_userdata);
+        end;
+        SSL_FILETYPE_ASN1 :
+        begin
+          LKey := d2i_PrivateKey_bio(b,nil);
+        end;
+      else
+        raise Exception.Create('Invalid Key');
+      end;
+      if LKey = nil then begin
+        EIdOSSLLoadingKeyError.RaiseException(RSSSLLoadingKeyError);
+      end;
+      result := SSL_CTX_use_PrivateKey(ctx,LKey) > 0;
+    finally
+      BIO_free(B);
+    end;
+  finally
+    FreeAndNil(LM);
+  end;
+end;
+
+function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
+var
+  LM : TMemoryStream;
+  B : PBIO;
+  LX : PX509;
+begin
+  Result := False;
+  LM := TMemoryStream.Create;
+  try
+    LM.LoadFromFile(AFileName);
+    B :=  BIO_new_mem_buf(LM.Memory,LM.Size);
+    try
+      case AType of
+        SSL_FILETYPE_ASN1 :
+        begin
+          LX := d2i_X509_bio(B,nil);
+        end;
+        SSL_FILETYPE_PEM :
+        begin
+          LX := PEM_read_bio_X509(B,nil,CTX^.default_passwd_callback,
+            CTX^.default_passwd_callback_userdata );
+        end
+      else
+        raise Exception.Create('Invalid Key');
+      end;
+      Result := SSL_CTX_use_certificate(ctx,LX) > 0;
+    finally
+      BIO_free(B);
+    end;
+  finally
+    FreeAndNil(LM);
+  end;
+end;
 
 function PasswordCallback(buf: PAnsiChar; size: TIdC_INT; rwflag: TIdC_INT; userdata: Pointer): TIdC_INT; cdecl;
 var
@@ -1265,10 +1336,9 @@ begin
   with fSSLContext do begin
     Parent := Self;
     {$IFDEF STRING_IS_UNICODE}
-    // explicit convert to Ansi
-    RootCertFile := AnsiString(SSLOptions.RootCertFile);
-    CertFile := AnsiString(SSLOptions.CertFile);
-    KeyFile := AnsiString(SSLOptions.KeyFile);
+    RootCertFile := SSLOptions.RootCertFile;
+    CertFile := SSLOptions.CertFile;
+    KeyFile := SSLOptions.KeyFile;
     {$ELSE}
     RootCertFile := SSLOptions.RootCertFile;
     CertFile := SSLOptions.CertFile;
@@ -1539,9 +1609,9 @@ begin
       Parent := Self;
       {$IFDEF STRING_IS_UNICODE}
       // explicit convert to Ansi
-      RootCertFile := AnsiString(SSLOptions.RootCertFile);
-      CertFile := AnsiString(SSLOptions.CertFile);
-      KeyFile := AnsiString(SSLOptions.KeyFile);
+      RootCertFile := SSLOptions.RootCertFile;
+      CertFile := SSLOptions.CertFile;
+      KeyFile := SSLOptions.KeyFile;
       {$ELSE}
       RootCertFile := SSLOptions.RootCertFile;
       CertFile := SSLOptions.CertFile;
@@ -1863,6 +1933,7 @@ begin
 end;
 
 function TIdSSLContext.LoadRootCert: Boolean;
+var LTmp : AnsiString;
 begin
 {  if fVerifyDirs <> '' then begin
     Result := SSL_CTX_load_verify_locations(
@@ -1872,27 +1943,28 @@ begin
   end
   else begin
 }
+    LTmp :=  RootCertFile;
     Result := SSL_CTX_load_verify_locations(
                    fContext,
-                   PAnsiChar(RootCertFile),
+                   PAnsiChar(LTmp),
                    nil) > 0;
 {  end;}
 end;
 
 function TIdSSLContext.LoadCert: Boolean;
 begin
-  Result := SSL_CTX_use_certificate_file(
+  Result := IndySSL_CTX_use_certificate_file(
                  fContext,
-                 PAnsiChar(CertFile),
-                 SSL_FILETYPE_PEM) > 0;
+                 CertFile,
+                 SSL_FILETYPE_PEM);
 end;
 
 function TIdSSLContext.LoadKey: Boolean;
 begin
-  Result := SSL_CTX_use_PrivateKey_file(
+  Result := IndySSL_CTX_use_PrivateKey_file(
                  fContext,
-                 PAnsiChar(fsKeyFile),
-                 SSL_FILETYPE_PEM) > 0;
+                 fsKeyFile,
+                 SSL_FILETYPE_PEM);
   if Result then begin
     Result := SSL_CTX_check_private_key(fContext) > 0;
   end;
