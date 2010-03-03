@@ -2680,7 +2680,6 @@ var
   LHelper: TIdIMAP4WorkHelper;
   LLengthOfAMsgHeaders: integer;
   LLengthOfFileHeaders: TIdStreamSize;
-  LLine: string;
 begin
   Result := False;
   CheckConnectionState([csAuthenticated, csSelected]);
