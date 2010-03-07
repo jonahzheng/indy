@@ -174,7 +174,7 @@ type
     procedure SetOverLapped(const AValue: Boolean);
     procedure SetHandle(AHandle: TIdStackSocketHandle);
     procedure SetIPVersion(const Value: TIdIPVersion);
-    function TryBind: Boolean;
+    function TryBind(APort: TIdPort): Boolean;
   public
     function Accept(ASocket: TIdStackSocketHandle): Boolean;
     procedure AllocateSocket(const ASocketType: TIdSocketType = Id_SOCK_STREAM;
@@ -356,7 +356,7 @@ begin
     end else if not BindPortReserved then begin
       raise EIdCanNotBindPortInRange.CreateFmt(RSCannotBindRange, [FClientPortMin, FClientPortMax]);
     end;
-  end else if not TryBind then begin
+  end else if not TryBind(Port) then begin
     raise EIdCouldNotBindSocket.Create(RSCouldNotBindSocket);
   end;
 end;
@@ -531,10 +531,10 @@ begin
   FIPVersion := ID_DEFAULT_IP_VERSION;
 end;
 
-function TIdSocketHandle.TryBind: Boolean;
+function TIdSocketHandle.TryBind(APort: TIdPort): Boolean;
 begin
   try
-    GStack.Bind(Handle, FIP, FPort, FIPVersion);
+    GStack.Bind(Handle, FIP, APort, FIPVersion);
     Result := True;
     UpdateBindingLocal;
   except
@@ -546,10 +546,9 @@ function TIdSocketHandle.BindPortReserved: Boolean;
 var
   i : TIdPort;
 begin
-  Result := false;
+  Result := False;
   for i := FClientPortMax downto FClientPortMin do begin
-    FPort := i;
-    if TryBind then begin
+    if TryBind(i) then begin
       Result := True;
       Exit;
     end;
