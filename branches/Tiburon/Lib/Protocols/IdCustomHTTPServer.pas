@@ -432,30 +432,26 @@ type
     property MIMETable: TIdMimeTable read FMIMETable;
     property SessionList: TIdHTTPCustomSessionList read FSessionList;
   published
-    property MaximumHeaderLineCount: Integer read FMaximumHeaderLineCount write FMaximumHeaderLineCount default Id_TId_HTTPMaximumHeaderLineCount;
     property AutoStartSession: boolean read FAutoStartSession write FAutoStartSession default Id_TId_HTTPAutoStartSession;
     property DefaultPort default IdPORT_HTTP;
-    property OnInvalidSession: TIdHTTPInvalidSessionEvent read FOnInvalidSession write FOnInvalidSession;
-    property OnSessionStart: TOnSessionStartEvent read FOnSessionStart write FOnSessionStart;
-    property OnSessionEnd: TOnSessionEndEvent read FOnSessionEnd write FOnSessionEnd;
+    property KeepAlive: Boolean read FKeepAlive write FKeepAlive default Id_TId_HTTPServer_KeepAlive;
+    property MaximumHeaderLineCount: Integer read FMaximumHeaderLineCount write FMaximumHeaderLineCount default Id_TId_HTTPMaximumHeaderLineCount;
+    property ParseParams: boolean read FParseParams write FParseParams default Id_TId_HTTPServer_ParseParams;
+    property ServerSoftware: string read FServerSoftware write FServerSoftware;
+    property SessionState: Boolean read FSessionState write SetSessionState default Id_TId_HTTPServer_SessionState;
+    property SessionTimeOut: Integer read FSessionTimeOut write FSessionTimeOut default Id_TId_HTTPSessionTimeOut;
+    //
+    property OnCommandError: TIdHTTPCommandError read FOnCommandError write FOnCommandError;
+    property OnCommandOther: TIdHTTPCommandEvent read FOnCommandOther write FOnCommandOther;
     property OnCreateSession: TOnCreateSession read FOnCreateSession write FOnCreateSession;
+    property OnInvalidSession: TIdHTTPInvalidSessionEvent read FOnInvalidSession write FOnInvalidSession;
     property OnHeadersAvailable: TIdHTTPHeadersAvailableEvent read FOnHeadersAvailable write FOnHeadersAvailable;
     property OnHeadersBlocked: TIdHTTPHeadersBlockedEvent read FOnHeadersBlocked write FOnHeadersBlocked;
     property OnHeaderExpectations: TIdHTTPHeaderExpectationsEvent read FOnHeaderExpectations write FOnHeaderExpectations;
-    property KeepAlive: Boolean read FKeepAlive write FKeepAlive
-     default Id_TId_HTTPServer_KeepAlive;
-    property ParseParams: boolean read FParseParams write FParseParams
-     default Id_TId_HTTPServer_ParseParams;
-    property ServerSoftware: string read FServerSoftware write FServerSoftware;
-    property SessionState: Boolean read FSessionState write SetSessionState
-     default Id_TId_HTTPServer_SessionState;
-    property SessionTimeOut: Integer read FSessionTimeOut write FSessionTimeOut
-     default Id_TId_HTTPSessionTimeOut;
-    property OnCommandOther: TIdHTTPCommandEvent read FOnCommandOther
-     write FOnCommandOther;
-    property OnCommandError: TIdHTTPCommandError read FOnCommandError write FOnCommandError;
-    property OnQuerySSLPort: TIdHTTPQuerySSLPortEvent read FOnQuerySSLPort write FOnQuerySSLPort;
     property OnParseAuthentication: TIdHTTPParseAuthenticationEvent read FOnParseAuthentication write FOnParseAuthentication;
+    property OnQuerySSLPort: TIdHTTPQuerySSLPortEvent read FOnQuerySSLPort write FOnQuerySSLPort;
+    property OnSessionStart: TOnSessionStartEvent read FOnSessionStart write FOnSessionStart;
+    property OnSessionEnd: TOnSessionEndEvent read FOnSessionEnd write FOnSessionEnd;
   end;
 
   TIdHTTPDefaultSessionList = Class(TIdHTTPCustomSessionList)
@@ -491,6 +487,9 @@ uses
     {$IFDEF USE_INLINE}
   System.IO,
   System.Threading,
+    {$ENDIF}
+    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  Windows,
     {$ENDIF}
   {$ENDIF}
   {$IFDEF VCL_2010_OR_ABOVE}
@@ -1251,26 +1250,26 @@ begin
   // Convert special characters
   // ampersand '&' separates values    {Do not Localize}
   // TODO: need to decode UTF-8 octets...
-  Params.BeginUpdate;
-  try
-    Params.Clear;
-    i := 1;
-    while i <= Length(AValue) do
-    begin
-      j := i;
-      while (j <= Length(AValue)) and (AValue[j] <> '&') do {do not localize}
+    Params.BeginUpdate;
+    try
+      Params.Clear;
+      i := 1;
+      while i <= Length(AValue) do
       begin
-        Inc(j);
-      end;
-      s := Copy(AValue, i, j-i);
-      // See RFC 1866 section 8.2.1. TP
-      s := StringReplace(s, '+', ' ', [rfReplaceAll]);  {do not localize}
+        j := i;
+        while (j <= Length(AValue)) and (AValue[j] <> '&') do {do not localize}
+        begin
+          Inc(j);
+        end;
+        s := Copy(AValue, i, j-i);
+        // See RFC 1866 section 8.2.1. TP
+        s := StringReplace(s, '+', ' ', [rfReplaceAll]);  {do not localize}
       Params.Add(TIdURI.URLDecode(s));
-      i := j + 1;
+        i := j + 1;
+      end;
+    finally
+      Params.EndUpdate;
     end;
-  finally
-    Params.EndUpdate;
-  end;
 end;
 
 destructor TIdHTTPRequestInfo.Destroy;
@@ -1360,15 +1359,8 @@ begin
     if FLastModified > 0 then begin
       Values['Last-Modified'] := LocalDateTimeToHttpStr(FLastModified); {do not localize}
     end;
-    if AuthRealm <> '' then {Do not Localize}
-    begin
-      ResponseNo := 401;
+    if AuthRealm <> '' then begin
       Values['WWW-Authenticate'] := 'Basic realm="' + AuthRealm + '"';    {Do not Localize}
-      if (Length(FContentText) = 0) and not Assigned(FContentStream) then
-      begin
-        Values['Content-Type'] := 'text/html';    {Do not Localize}
-        FContentText := '<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + RSHTTPUnauthorized + '</B></BODY></HTML>';    {Do not Localize}
-      end;
     end;
   end;
 end;
@@ -1518,6 +1510,17 @@ begin
     EIdHTTPHeaderAlreadyWritten.Toss(RSHTTPHeaderAlreadyWritten);
   end;
   FHeaderHasBeenWritten := True;
+
+  if AuthRealm <> '' then
+  begin
+    ResponseNo := 401;
+    if (Length(ContentText) = 0) and not Assigned(ContentStream) then
+    begin
+      ContentType := 'text/html; charset=utf-8';    {Do not Localize}
+      ContentText := '<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + RSHTTPUnauthorized + '</B></BODY></HTML>';    {Do not Localize}
+      ContentLength := -1; // calculated below
+    end;
+  end;
 
   // RLebeau: according to RFC 2616 Section 4.4:
   //
