@@ -1779,16 +1779,17 @@ begin
     // EIdConnClosedGracefully exception that breaks the loop
     // prematurely and thus leave unread bytes in the InputBuffer.
     // Let the loop catch the exception before exiting...
+
+    SetLength(LBuf, RecvBufferSize); // preallocate the buffer
     repeat
       if AReadUntilDisconnect then begin
-        i := RecvBufferSize;
+        i := Length(LBuf);
       end else begin
-        i := IndyMin(LByteCount, RecvBufferSize);
+        i := IndyMin(LByteCount, Length(LBuf));
         if i < 1 then begin
           Break;
         end;
       end;
-      SetLength(LBuf, 0); // clear the buffer
       //TODO: Improve this - dont like the use of the exception handler
       //DONE -oAPR: Dont use a string, use a memory buffer or better yet the buffer itself.
       try
@@ -1801,7 +1802,7 @@ begin
             // than actually requested, so don't extract too
             // many bytes here...
             i := IndyMin(i, FInputBuffer.Size);
-            FInputBuffer.ExtractToBytes(LBuf, i);
+            FInputBuffer.ExtractToBytes(LBuf, i, False);
             if (E is EIdConnClosedGracefully) and AReadUntilDisconnect then begin
               Break;
             end else begin
