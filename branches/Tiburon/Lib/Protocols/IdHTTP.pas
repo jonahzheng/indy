@@ -1331,7 +1331,6 @@ begin
       with LLocalHTTP do begin
         Request.UserAgent := ARequest.UserAgent;
         Request.Host := ARequest.Host;
-        Request.ContentLength := ARequest.ContentLength;
         Request.Pragma := 'no-cache';                       {do not localize}
         Request.URL := URL.Host + ':' + URL.Port;
         Request.Method := Id_HTTPMethodConnect;
