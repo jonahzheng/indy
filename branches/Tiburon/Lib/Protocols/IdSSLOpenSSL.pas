@@ -1855,7 +1855,7 @@ begin
   // CA list
   if RootCertFile <> '' then begin    {Do not Localize}
     SSL_CTX_set_client_CA_list(fContext,
-    SSL_load_client_CA_file(PAnsiChar(RootCertFile)));
+    SSL_load_client_CA_file(PAnsiChar(AnsiString(RootCertFile))));
   end
 end;
 
@@ -1933,20 +1933,18 @@ begin
 end;
 
 function TIdSSLContext.LoadRootCert: Boolean;
-var LTmp : AnsiString;
 begin
 {  if fVerifyDirs <> '' then begin
     Result := SSL_CTX_load_verify_locations(
                    fContext,
-                   PAnsiChar(RootCertFile),
-                   PAnsiChar(fVerifyDirs)) > 0;
+                   PAnsiChar(AnsiString(RootCertFile)),
+                   PAnsiChar(AnsiString(fVerifyDirs))) > 0;
   end
   else begin
 }
-    LTmp :=  RootCertFile;
     Result := SSL_CTX_load_verify_locations(
                    fContext,
-                   PAnsiChar(LTmp),
+                   PAnsiChar(AnsiString(RootCertFile)),
                    nil) > 0;
 {  end;}
 end;
