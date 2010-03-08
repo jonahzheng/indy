@@ -754,7 +754,7 @@ begin
   if Assigned(AStrings) then begin
     if hoForceEncodeParams in FOptions then begin
       EncodeRequestParams(AStrings);
-    end;
+        end;
     if AStrings.Count > 1 then begin
       // break trailing CR&LF
       Result := StringReplace(Trim(AStrings.Text), sLineBreak, '&',[rfReplaceAll]);
@@ -1212,7 +1212,9 @@ begin
     // The URL part is not URL encoded at this place
     ARequest.URL := URL.GetPathAndParams;
 
-    if ARequest.Method = Id_HTTPMethodOptions then begin
+    if TextIsSame(ARequest.Method, Id_HTTPMethodOptions) or
+      TextIsSame(ARequest.MethodOverride, Id_HTTPMethodOptions) then
+    begin
       if TextIsSame(LURI.Document, '*') then begin     {do not localize}
         ARequest.URL := LURI.Document;
       end;
@@ -1222,13 +1224,14 @@ begin
     FURI.IPVersion := ARequest.IPVersion;
 
     // Check for valid HTTP request methods
-    if PosInStrArray(ARequest.Method, [Id_HTTPMethodTrace, Id_HTTPMethodPut, Id_HTTPMethodOptions, Id_HTTPMethodDelete], False) > -1 then begin
+    if (PosInStrArray(ARequest.Method, [Id_HTTPMethodTrace, Id_HTTPMethodPut, Id_HTTPMethodOptions, Id_HTTPMethodDelete], False) > -1) or
+      (PosInStrArray(ARequest.MethodOverride, [Id_HTTPMethodTrace, Id_HTTPMethodPut, Id_HTTPMethodOptions, Id_HTTPMethodDelete], False) > -1) then
+    begin
       if ProtocolVersion <> pv1_1 then  begin
         raise EIdException.Create(RSHTTPMethodRequiresVersion);
       end;
     end;
 
-    //IsStringInArray(ARequest.Method , [Id_HTTPMethodPost, Id_HTTPMethodPut]) then begin
     if Assigned(ARequest.Source) then begin
       ARequest.ContentLength := ARequest.Source.Size;
     end else begin
@@ -1384,7 +1387,6 @@ begin
   // restrict which HTTP methods can post (except logically for GET and HEAD),
   // especially since TIdCustomHTTP.PrepareRequest() does not differentiate when
   // setting up the 'Content-Length' header ...
-  //if PosInStrArray(ARequest.Method, [Id_HTTPMethodPost, Id_HTTPMethodPut], False) > -1 then
   if ARequest.Source <> nil then begin
     IOHandler.Write(ARequest.Source, 0, False);
   end;
@@ -2015,6 +2017,7 @@ begin
       end;
       }
       Request.Method := LMethod;
+      Request.MethodOverride := '';
     end else begin
       Result := wnJustExit;
       Response.Location := LLocation;
@@ -2097,7 +2100,10 @@ begin
       DiscardContent;
       Result := wnAuthRequest;
     end else begin
-      if (Request.Method = Id_HTTPMethodHead) or (LResponseCode = 204) then begin
+      if TextIsSame(Request.Method, Id_HTTPMethodHead) or
+        TextIsSame(Request.MethodOverride, Id_HTTPMethodHead) or
+        (LResponseCode = 204) then
+      begin
         // Have noticed one case where a non-conforming server did send an
         // entity body in response to a HEAD request, so just ignore anything
         // the server may send by accident

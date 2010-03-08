@@ -185,6 +185,7 @@ type
     FRange: String;
     FBasicByDefault: Boolean;
     FAuthentication: TIdAuthentication;
+    FMethodOverride: String;
     //
     procedure AssignTo(Destination: TPersistent); override;
     procedure ProcessHeaders; override;
@@ -208,6 +209,7 @@ type
     property Username: String read FUsername write FUsername;
     property ProxyConnection: String read FProxyConnection write FProxyConnection;
     property Range: String read FRange write FRange;
+    property MethodOverride: String read FMethodOverride write FMethodOverride;
   end;
 
   TIdResponseHeaderInfo = class(TIdEntityHeaderInfo)
@@ -660,6 +662,8 @@ begin
     lRangeHdr := Values['Range'];                   {do not localize}
     Fetch(lRangeHdr, '=');                          {do not localize}
     FRange := lRangeHdr;
+
+    FMethodOverride := Values['X-HTTP-Method-Override']; {do not localize}
   end;
 end;
 
@@ -682,6 +686,7 @@ begin
       FBasicByDefault := Self.FBasicByDefault;
 
       FRange := Self.FRange;
+      FMethodOverride := Self.FMethodOverride;
 
       // TODO: omitted intentionally?
       // FHost := Self.FHost;
@@ -701,6 +706,7 @@ begin
   FUserAgent := DefaultUserAgent;
   FBasicByDefault := false;
   FRange := '';
+  FMethodOverride := '';
 
   // TODO: omitted intentionally?
   // FAcceptEncoding := '';
@@ -795,6 +801,11 @@ begin
           Values['Authorization'] := S;                 {do not localize}
         end;
       end;
+    end;
+
+    if Length(FMethodOverride) > 0 then
+    begin
+      Values['X-HTTP-Method-Override'] := FMethodOverride; {Do not Localize}
     end;
   end;
 end;

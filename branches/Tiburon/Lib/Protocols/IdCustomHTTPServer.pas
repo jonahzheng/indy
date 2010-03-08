@@ -872,6 +872,11 @@ begin
               {TODO Check for 1.0 only at this point}
               LCmd := UpperCase(Fetch(LInputLine, ' '));    {Do not Localize}
 
+              s := LRequestInfo.MethodOverride;
+              if s <> '' then begin
+                LCmd := UpperCase(s);
+              end;
+
               LRequestInfo.FRawHTTPCommand := LRawHTTPCommand;
               LRequestInfo.FRemoteIP := GetRemoteIP(Socket);
               LRequestInfo.FCommand := LCmd;
@@ -1342,7 +1347,7 @@ begin
   FCloseConnection := Value;
 end;
 
-procedure TIdHTTPResponseInfo.SetCookies(const AValue: TIdServerCookies);
+procedure TIdHTTPResponseInfo.SetCookies(const AValue: TIdCookies);
 begin
   FCookies.Assign(AValue);
 end;
