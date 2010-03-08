@@ -213,7 +213,7 @@ type
   TIdHTTPInvalidSessionEvent = procedure(AContext: TIdContext;
     ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo;
     var VContinueProcessing: Boolean; const AInvalidSessionID: String) of object;
-  TIdHTTPHeadersAvailableEvent = procedure(AContext: TIdContext; AHeaders: TIdHeaderList; var VContinueProcessing: Boolean) of object;
+  TIdHTTPHeadersAvailableEvent = procedure(AContext: TIdContext; const AUri: string; AHeaders: TIdHeaderList; var VContinueProcessing: Boolean) of object;
   TIdHTTPHeadersBlockedEvent = procedure(AContext: TIdContext; AHeaders: TIdHeaderList; var VResponseNo: Integer; var VResponseText, VContentText: String) of object;
   TIdHTTPHeaderExpectationsEvent = procedure(AContext: TIdContext; const AExpectations: String; var VContinueProcessing: Boolean) of object;
   TIdHTTPQuerySSLPortEvent = procedure(APort: TIdPort; var VUseSSL: Boolean) of object;
@@ -405,7 +405,7 @@ type
     procedure DoCommandError(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo;
       AResponseInfo: TIdHTTPResponseInfo; AException: Exception); virtual;
     procedure DoConnect(AContext: TIdContext); override;
-    function DoHeadersAvailable(ASender: TIdContext; AHeaders: TIdHeaderList): Boolean; virtual;
+    function DoHeadersAvailable(ASender: TIdContext; const AUri: String; AHeaders: TIdHeaderList): Boolean; virtual;
     procedure DoHeadersBlocked(ASender: TIdContext; AHeaders: TIdHeaderList; var VResponseNo: Integer; var VResponseText, VContentText: String); virtual;
     function DoHeaderExpectations(ASender: TIdContext; const AExpectations: String): Boolean; virtual;
     function DoParseAuthentication(ASender: TIdContext; const AAuthType, AAuthData: String; var VUsername, VPassword: String): Boolean;
@@ -691,11 +691,12 @@ begin
   end;
 end;
 
-function TIdCustomHTTPServer.DoHeadersAvailable(ASender: TIdContext; AHeaders: TIdHeaderList): Boolean;
+function TIdCustomHTTPServer.DoHeadersAvailable(ASender: TIdContext; const AUri: String;
+  AHeaders: TIdHeaderList): Boolean;
 begin
   Result := True;
   if Assigned(OnHeadersAvailable) then begin
-    OnHeadersAvailable(ASender, AHeaders, Result);
+    OnHeadersAvailable(ASender, AUri, AHeaders, Result);
   end;
 end;
 
@@ -736,10 +737,10 @@ var
         while IndyPos(';', S) > 0 do begin    {Do not Localize}
           LRequestInfo.Cookies.AddSrcCookie(Fetch(S, ';'));    {Do not Localize}
           S := Trim(S);
-        end;
+    end;
         if S <> '' then begin
           LRequestInfo.Cookies.AddSrcCookie(S);
-        end;
+  end;
       end;
     finally FreeAndNil(LRawCookies); end;
   end;
@@ -761,7 +762,7 @@ var
     LMajor, LMinor: Integer;
   begin
     // let the user decide if the request headers are acceptable
-    Result := DoHeadersAvailable(AContext, LRequestInfo.RawHeaders);
+    Result := DoHeadersAvailable(AContext, LRequestInfo.URI, LRequestInfo.RawHeaders);
     if not Result then begin
       DoHeadersBlocked(AContext, LRequestInfo.RawHeaders, LResponseNo, LResponseText, LContentText);
       LResponseInfo.ResponseNo := LResponseNo;
@@ -876,19 +877,15 @@ begin
               LRequestInfo.FCommand := LCmd;
               LRequestInfo.FCommandType := DecodeHTTPCommand(LCmd);
 
-              // RLebeau 12/14/2005: provide the user with the headers and let the
-              // user decide whether the response processing should continue...
-              if not HeadersCanContinue then begin
-                Break;
-              end;
-
               // GET data - may exist with POSTs also
-              LRequestInfo.QueryParams := LInputLine;
-              LInputLine := Fetch(LRequestInfo.FQueryParams, '?');    {Do not Localize}
+              LRequestInfo.FUnparsedQuery := LInputLine;
+              LInputLine := Fetch(LRequestInfo.FUnparsedQuery, '?');    {Do not Localize}
 
               // Host
               // the next line is done in TIdHTTPRequestInfo.ProcessHeaders()...
               // LRequestInfo.FHost := LRequestInfo.Headers.Values['host'];    {Do not Localize}
+
+              LRequestInfo.FURI := LInputLine;
 
               // Parse the document input line
               if LInputLine = '*' then begin    {Do not Localize}
@@ -899,13 +896,18 @@ begin
                   // SG 29/11/01: Per request of Doychin
                   // Try to fill the "host" parameter
                   LRequestInfo.FDocument := TIdURI.URLDecode(LURI.Path) + TIdURI.URLDecode(LURI.Document);
-                  LRequestInfo.FURI := LURI.Path + LURI.Document;
                   if (Length(LURI.Host) > 0) and (Length(LRequestInfo.FHost) = 0) then begin
                     LRequestInfo.FHost := LURI.Host;
                   end;
                 finally
                   FreeAndNil(LURI);
                 end;
+              end;
+
+              // RLebeau 12/14/2005: provide the user with the headers and let the
+              // user decide whether the response processing should continue...
+              if not HeadersCanContinue then begin
+                Break;
               end;
 
               // retreive the base ContentType with attributes omitted
@@ -948,8 +950,8 @@ begin
                   LRequestInfo.FormParams := ReadStringAsCharSet(LRequestInfo.PostStream, LRequestInfo.CharSet);
                   // Workaround to keep the WebappDbg.exe working
                   //FreeAndNil(LRequestInfo.FPostStream); // don't need the PostStream anymore
-                end;
-              end;
+                      end;
+                      end;
 
               // glue together parameters passed in the URL and those
               //
@@ -964,8 +966,8 @@ begin
                 end else begin
                   LRequestInfo.FUnparsedParams := LRequestInfo.UnparsedParams + '&'  {Do not Localize}
                    + LRequestInfo.QueryParams;
-                end;
-              end;
+                      end;
+                  end;
 
               // Parse Params
               if ParseParams then begin
@@ -1575,7 +1577,7 @@ begin
     // Write cookies
     for i := 0 to Cookies.Count - 1 do begin
       FConnection.IOHandler.WriteLn('Set-Cookie: ' + Cookies[i].ServerCookie);    {Do not Localize}
-    end;
+      end;
     // HTTP headers end with a double CR+LF
     FConnection.IOHandler.WriteLn;
     if LBufferingStarted then begin
