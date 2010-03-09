@@ -864,6 +864,7 @@ resourcestring
   {LPR Messages}
   RSLPRError = 'Reply %d on Job ID %s';
   RSLPRUnknown = 'Unknown';
+  RSCannotBindRange = 'Cannot bind to a LPR port from range %d to %d (No free Port)';
 
   {IRC Messages}
   RSIRCCanNotConnect = 'IRC Connect Failed';
