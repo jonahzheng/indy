@@ -617,8 +617,11 @@ function LogicalAnd(A, B: Integer): Boolean;
 function LoadOpenSSLLibrary: Boolean;
 procedure UnLoadOpenSSLLibrary;
 
+{$IFDEF STRING_IS_UNICODE}
 function IndySSL_load_client_CA_file( const AFIleName : String) : PSTACK_OF_X509_NAME;
-
+function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
+function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
+{$ENDIF}
 
 implementation
 
