@@ -2039,7 +2039,6 @@ begin
 end;
 
 function TIdSSLContext.LoadRootCert: Boolean;
-var LTmp : AnsiString;
 begin
 {  if fVerifyDirs <> '' then begin
     Result := SSL_CTX_load_verify_locations(
@@ -2049,11 +2048,25 @@ begin
   end
   else begin
 }
-    LTmp :=  RootCertFile;
+{$IFDEF STRING_IS_UNICODE}
+  {$IFDEF POSIX}
+  Result := SSL_CTX_load_verify_locations(
+                   fContext,
+                   PAnsiChar(UTF8String((RootCertFile)),
+                   nil) > 0;
+  {$ENDIF}
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
     Result := SSL_CTX_load_verify_locations(
                    fContext,
-                   PAnsiChar(LTmp),
+                   PAnsiChar(AnsiString(RootCertFile)),
                    nil) > 0;
+  {$ENDIF}
+{$ELSE}
+    Result := SSL_CTX_load_verify_locations(
+                   fContext,
+                   PAnsiChar(RootCertFile),
+                   nil) > 0;
+{$ENDIF}
 {  end;}
 end;
 
