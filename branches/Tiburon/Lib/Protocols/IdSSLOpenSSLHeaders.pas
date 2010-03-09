@@ -5374,10 +5374,11 @@ type
 //  end;
   PENGINE = Pointer;//^ENGINE;
   //asn1.h
+
   //#define I2D_OF(type) int (*)(type *,unsigned char **)
-  I2D_OF_void = function(_para1 : Pointer; _para2 : PPAnsiChar) : TIdC_INT; cdecl;
+  I2D_OF_void = function(_para1 : Pointer; _para2 : PPByte) : TIdC_INT cdecl;
   //D2I_OF(type) type *(*)(type **,const unsigned char **,long)
-  D2I_OF_void = function (_para1 : PPointer;  _para2 : PPAnsiChar; _para3 : TIdC_LONG) : Pointer cdecl;
+  D2I_OF_void = function (_para1 : PPointer;  _para2 : PPByte; _para3 : TIdC_LONG) : Pointer cdecl;
   // This is just an opaque pointer
  // ASN1_VALUE = record
  // end;
@@ -8552,10 +8553,10 @@ var
 
   {$ELSE}
     {$IFNDEF OPENSSL_NO_BIO}
-  PEM_ASN1_write_bio : function(i2d: D2I_OF_void; const name: PAnsiChar;
+  PEM_ASN1_write_bio : function(i2d: i2d_of_void; const name: PAnsiChar;
     bp: PBIO; x: PAnsiChar; const enc: PEVP_CIPHER; kstr: PAnsiChar; klen: TIdC_INT;
     cb: ppem_password_cb; u: Pointer):TIdC_INT cdecl = nil;
-  PEM_ASN1_read_bio : function(d2i: D2I_OF_void; name: PAnsiChar; bp: PBIO;
+  PEM_ASN1_read_bio : function(d2i: d2i_OF_void; name: PAnsiChar; bp: PBIO;
       x: PPointer; cb: ppem_password_cb; u:Pointer): Pointer cdecl = nil;
     {$ENDIF}
   {$ENDIF}
