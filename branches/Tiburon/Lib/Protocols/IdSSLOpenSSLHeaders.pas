@@ -789,7 +789,7 @@ uses
   IdCTypes;
 
 //temp for compile tests
-{/$DEFINE SSLEAY_MACROS}
+{$DEFINE SSLEAY_MACROS}
 
 const
   CONF_MFLAGS_IGNORE_ERRORS = $1;
@@ -5377,7 +5377,7 @@ type
   //#define I2D_OF(type) int (*)(type *,unsigned char **)
   I2D_OF_void = function(_para1 : Pointer; _para2 : PPAnsiChar) : TIdC_INT; cdecl;
   //D2I_OF(type) type *(*)(type **,const unsigned char **,long)
-  D2I_OF_void = function (var _para1 : Pointer; const _para2 : PPAnsiChar; _para3 : TIdC_LONG) : Pointer; cdecl;
+  D2I_OF_void = function (_para1 : PPointer;  _para2 : PPAnsiChar; _para3 : TIdC_LONG) : Pointer cdecl;
   // This is just an opaque pointer
  // ASN1_VALUE = record
  // end;
@@ -8429,6 +8429,7 @@ _des_cblock = DES_cblock
   PX509V3_CTX = ^X509V3_CTX;
 
 type
+  Tsk_new_cmp = function (const a, b : PAnsiChar; const c : PAnsiChar) : TIdC_INT cdecl;
   TRSA_generate_key_callback = procedure (p1, p2 : TIdC_INT; p3 : Pointer); cdecl;
   TCRYPTO_set_mem_functions_m = function (size : size_t) : Pointer; cdecl;
   TCRYPTO_set_mem_functions_r = function (ptr : Pointer; size : size_t) : Pointer; cdecl;
@@ -8476,7 +8477,11 @@ var
   CRYPTO_dbg_free : procedure(addr: Pointer; before: TIdC_INT) cdecl = nil;
   CRYPTO_dbg_set_options : procedure(bits: TIdC_LONG) cdecl = nil;
   CRYPTO_dbg_get_options : function: TIdC_LONG cdecl = nil;
+  sk_num : function (const x : PSTACK) : TIdC_INT cdecl = nil;
+  sk_value : function (x : PSTACK; i : TIdC_INT) : PAnsiChar cdecl = nil;
+  sk_new : function ( cmp : Tsk_new_cmp) : PStack cdecl = nil;
   sk_new_null : function: PSTACK cdecl = nil;
+  sk_free : procedure (st : PSTACK) cdecl = nil;
   sk_push : function(st: PSTACK; data: PAnsiChar): TIdC_INT cdecl = nil;
 
   RSA_new: function: PRSA cdecl = nil;
@@ -8550,8 +8555,8 @@ var
   PEM_ASN1_write_bio : function(i2d: D2I_OF_void; const name: PAnsiChar;
     bp: PBIO; x: PAnsiChar; const enc: PEVP_CIPHER; kstr: PAnsiChar; klen: TIdC_INT;
     cb: ppem_password_cb; u: Pointer):TIdC_INT cdecl = nil;
-  PEM_ASN1_read_bio : function(d2i: D2I_OF_void; const name: PAnsiChar; bp: PBIO;
-      var x: Pointer; cb: ppem_password_cb; u:PAnsiChar): Pointer cdecl = nil;
+  PEM_ASN1_read_bio : function(d2i: D2I_OF_void; name: PAnsiChar; bp: PBIO;
+      x: PPointer; cb: ppem_password_cb; u:Pointer): Pointer cdecl = nil;
     {$ENDIF}
   {$ENDIF}
   EVP_DigestInit_ex : function (ctx : PEVP_MD_CTX; const AType : PEVP_MD; impl : PENGINE) : TIdC_Int cdecl = nil;
@@ -8573,50 +8578,57 @@ var
   EVP_PKEY_assign : function(pkey: PEVP_PKEY; _type: TIdC_INT; key: PAnsiChar): TIdC_INT cdecl = nil;
   {$ENDIF}
   EVP_get_digestbyname : function(const name: PAnsiChar): PEVP_MD cdecl = nil;
+
   ASN1_INTEGER_set : function(a: PASN1_INTEGER; v: TIdC_LONG): TIdC_INT cdecl = nil;
   ASN1_INTEGER_get : function(a: PASN1_INTEGER) : TIdC_LONG cdecl = nil;
   //IdSslAsn1UtcTimeNew : function: Pointer cdecl = nil;
   ASN1_STRING_type_new : function(_type: TIdC_INT): PASN1_STRING cdecl = nil;
   ASN1_STRING_free : procedure(a: PASN1_STRING) cdecl = nil;
-  i2d_X509 : function(x: PX509; var buf: PByte): TIdC_INT cdecl = nil;
+  ASN1_dup : function (i2d : i2d_of_void; d2i : d2i_of_void; x : PAnsiChar) : Pointer cdecl = nil;
+  i2d_X509 : function(x: PX509;  buf: PPByte) : TIdC_INT cdecl = nil;
   d2i_X509 : function(pr : PX509; _in : PPByte; len : TIdC_INT): PX509 cdecl = nil;
-  i2d_X509_REQ : function(x: PX509_REQ; var buf: PByte): TIdC_INT cdecl = nil;
+  i2d_X509_NAME : function(x : PX509_NAME; buf : PPByte) : TIdC_INT cdecl = nil;
+  d2i_X509_NAME : function(pr : PPX509_NAME; _in : PPByte; length : TIdC_LONG):PX509_NAME cdecl = nil;
+
+  i2d_X509_REQ : function(x: PX509_REQ;  buf: PPByte): TIdC_INT cdecl = nil;
   d2i_X509_REQ : function(pr : PX509_REQ; _in : PPByte; len : TIdC_INT): PX509_REQ cdecl = nil;
-  i2d_X509_CRL : function(x: PX509_CRL; var buf: PByte): TIdC_INT cdecl = nil;
+  i2d_X509_CRL : function(x: PX509_CRL; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_X509_CRL : function(pr : PX509_CRL; _in : PPByte; len : TIdC_INT): PX509_REQ cdecl = nil;
-  i2d_RSAPrivateKey : function(x: PRSA; var buf: PByte): TIdC_INT cdecl = nil;
+  i2d_RSAPrivateKey : function(x: PRSA; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_RSAPrivateKey : function(pr : PRSA; _in : PPByte; len : TIdC_INT): PRSA cdecl = nil;
 //  d2i_RSAPublicKey
-  i2d_RSAPublicKey : function(x: PRSA; buf: PByte): TIdC_INT cdecl = nil;
+  i2d_RSAPublicKey : function(x: PRSA; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_RSAPublicKey : function(pr : PRSA; _in : PPByte; len : TIdC_INT): PRSA cdecl = nil;
 //d2i_DSAPrivateKey
-  i2d_DSAPrivateKey : function(x: PDSA; var buf: PByte): TIdC_INT cdecl = nil;
+  i2d_DSAPrivateKey : function(x: PDSA; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_DSAPrivateKey : function(pr : PDSA; _in : PPByte; len : TIdC_INT): PDSA cdecl = nil;
 
-  i2d_PrivateKey : function(x: PEVP_PKEY; var buf: PByte): TIdC_INT cdecl = nil;
+  i2d_PrivateKey : function(x: PEVP_PKEY; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_PrivateKey : function(pr : PEVP_PKEY; _in : PPByte; len : TIdC_INT): PEVP_PKEY cdecl = nil;
 
-  i2d_PKCS7 : function(x: PPKCS7; var buf: PByte): TIdC_INT cdecl = nil;
+  i2d_PKCS7 : function(x: PPKCS7; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_PKCS7 : function(pr : PPKCS7; _in : PPByte; len : TIdC_INT): PPKCS7 cdecl = nil;
 
-  i2d_DHparams : function(x: PDH; var buf: PByte): TIdC_INT cdecl = nil;
+  i2d_DHparams : function(x: PDH; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_DHparams : function(pr : PDH; _in : PPByte; len : TIdC_INT): PDH cdecl = nil;
 
-  i2d_DSAparams : function(x: PDSA; var buf: PByte): TIdC_INT cdecl = nil;
+  i2d_DSAparams : function(x: PDSA; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_DSAparams : function(pr : PDSA; _in : PPByte; len : TIdC_INT): PDSA cdecl = nil;
 //NETSCAPE_CERT_SEQUENCE
-  i2d_NETSCAPE_CERT_SEQUENCE : function(x: PNETSCAPE_CERT_SEQUENCE; var buf: PByte): TIdC_INT cdecl = nil;
+  i2d_NETSCAPE_CERT_SEQUENCE : function(x: PNETSCAPE_CERT_SEQUENCE; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_NETSCAPE_CERT_SEQUENCE : function(pr : PNETSCAPE_CERT_SEQUENCE; _in : PPByte; len : TIdC_INT): PNETSCAPE_CERT_SEQUENCE cdecl = nil;
 
   {$IFNDEF OPENSSL_NO_BIO}
   d2i_X509_bio : function(bp: PBIO; x: PPx509): PX509 cdecl = nil;
   i2d_X509_REQ_bio : function(x: PX509_REQ; bp: PBIO): TIdC_INT cdecl = nil;
-  i2d_X509_bio : function(bp: PBIO; x509: PX509): TIdC_INT cdecl = nil;
+  i2d_X509_bio : function(bp: PBIO; x: PX509): TIdC_INT cdecl = nil;
   i2d_PrivateKey_bio : function(b: PBIO; pkey: PEVP_PKEY): TIdC_INT cdecl = nil;
 
   {$ENDIF}
   X509_new : function: PPX509 cdecl = nil;
   X509_free : procedure(x: PX509) cdecl = nil;
+  X509_NAME_new : function :PX509_NAME cdecl = nil;
+  X509_NAME_free : procedure(x:PX509_NAME) cdecl = nil;
   X509_REQ_new : function :PX509_REQ cdecl = nil;
   X509_REQ_free : procedure(x:PX509_REQ) cdecl = nil;
   X509_to_X509_REQ : function(x: PX509; pkey: PEVP_PKEY; const md: PEVP_MD): PX509_REQ cdecl = nil;
@@ -8787,6 +8799,8 @@ var
   CRYPTO_cleanup_all_ex_data : procedure cdecl = nil;
   SSL_COMP_get_compression_methods : function: PSTACK_OF_SSL_COMP cdecl = nil;
   sk_pop_free : procedure(st: PSTACK; func: Tsk_pop_free_func) cdecl = nil;
+  sk_dup : function (st : PSTACK) : PSTACK cdecl = nil;
+  sk_find : function (st : PSTACK; Data : PAnsiChar) : TIdC_INT cdecl = nil;
 {$IFDEF OPENSSL_FIPS}
 {Note that I'm doing things this way so that we can have wrapper functions that hide
 any IFDEF's and cases where the FIPS functions aren't in the .DLL}
@@ -8809,10 +8823,42 @@ any IFDEF's and cases where the FIPS functions aren't in the .DLL}
   HMAC_CTX_cleanup : procedure (ctx : PHMAC_CTX) cdecl = nil;
 {$ENDIF}
 
+{begin stack fancy stuff}
+{
+For the sk functions having a type, you have to typecase one procedural pointer
+as another procedural pointer.   In the headers, these are defined in
+safestack.h.
+}
+type
+  Tsk_X509_NAME_new = function(cmp : Tsk_new_cmp) : PSTACK_OF_X509_NAME cdecl;
+  Tsk_X509_NAME_null = function : PSTACK_OF_X509_NAME cdecl;
+  Tsk_X509_NAME_free = procedure(st : PSTACK_OF_X509_NAME) cdecl;
+  Tsk_X509_NAME_num = function (const sk : PSTACK_OF_X509_NAME) : TIdC_INT cdecl;
+  Tsk_X509_NAME_value = function (const sk : PSTACK_OF_X509_NAME; i : TIdC_INT) : PX509_NAME cdecl;
+  Tsk_X509_NAME_push = function (sk : PSTACK_OF_X509_NAME; st : PX509_NAME) : TIdC_INT cdecl;
+  Tsk_X509_NAME_dup = function (sk : PSTACK_OF_X509_NAME) : PSTACK_OF_X509_NAME cdecl;
+  Tsk_X509_NAME_find = function (sk : PSTACK_OF_X509_NAME; val : PX509_NAME) : TIdC_INT cdecl;
+  Tsk_X509_NAME_pop_free = procedure (sk : PSTACK_OF_X509_NAME; func: Tsk_pop_free_func) cdecl;
+
+var
+  sk_X509_NAME_new : Tsk_X509_NAME_new absolute sk_new;
+  sk_X509_NAME_new_null : Tsk_X509_NAME_null absolute sk_new_null;
+  sk_X509_NAME_free : Tsk_X509_NAME_free absolute sk_free;
+  sk_X509_NAME_num : Tsk_X509_NAME_num absolute sk_num;
+  sk_X509_NAME_value : Tsk_X509_NAME_value absolute sk_value;
+  sk_X509_NAME_push : Tsk_X509_NAME_push absolute sk_push;
+  sk_X509_NAME_dup : Tsk_X509_NAME_dup absolute sk_dup;
+  sk_X509_NAME_find : Tsk_X509_NAME_find absolute sk_find;
+  sk_X509_NAME_pop_free :  Tsk_X509_NAME_pop_free absolute sk_pop_free;
+
+{end}
+
 function FIPS_mode_set(onoff : TIdC_INT) : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
 function FIPS_mode() : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
 
 
+
+{begin other stuff}
 function UTC_Time_Decode(UCTtime : PASN1_UTCTIME; var year, month, day, hour, min, sec: Word;
   var tz_hour, tz_min: Integer): Integer;
 function SSL_set_app_data(s: PSSL; arg: Pointer): TIdC_INT;
@@ -8825,6 +8871,7 @@ function M_ASN1_STRING_length(x : PASN1_STRING): TIdC_INT;
 procedure M_ASN1_STRING_length_set(x : PASN1_STRING; n : TIdC_INT);
 function M_ASN1_STRING_type(x : PASN1_STRING) : TIdC_INT;
 function M_ASN1_STRING_data(x : PASN1_STRING) : PAnsiChar;
+function X509_NAME_dup(xn : PX509_NAME) : PX509_NAME;
 function X509_STORE_CTX_get_app_data(ctx: PX509_STORE_CTX):Pointer;
 function X509_get_version(x : PX509): TIdC_LONG;
 function X509_get_signature_type(x : PX509) : TIdC_INT;
@@ -9594,23 +9641,23 @@ end;
 const
 {most of these are commented out because we aren't using them now.  I am keeping
 them in case we use them later.}
-  {CH fn_sk_num = 'sk_num'; }  {Do not localize}
-  {CH fn_sk_value = 'sk_value'; }  {Do not localize}
+  fn_sk_num = 'sk_num';   {Do not localize}
+  fn_sk_value = 'sk_value';   {Do not localize}
   {CH fn_sk_set = 'sk_set'; }  {Do not localize}
-  {CH fn_sk_new = 'sk_new'; }  {Do not localize}
+  fn_sk_new = 'sk_new';   {Do not localize}
   fn_sk_new_null = 'sk_new_null'; {Do not localize}
-  {CH fn_sk_free = 'sk_free'; }  {Do not localize}
+  fn_sk_free = 'sk_free';   {Do not localize}
   fn_sk_pop_free = 'sk_pop_free';  {Do not localize}
   {CH fn_sk_insert = 'sk_insert'; }  {Do not localize}
   {CH fn_sk_delete = 'sk_delete'; }  {Do not localize}
   {CH fn_sk_delete_ptr = 'sk_delete_ptr'; }  {Do not localize}
-  {CH fn_sk_find = 'sk_find'; }  {Do not localize}
+  fn_sk_find = 'sk_find';  {Do not localize}
   fn_sk_push = 'sk_push';  {Do not localize}
   {CH fn_sk_unshift = 'sk_unshift'; }  {Do not localize}
   {CH fn_sk_shift = 'sk_shift'; }  {Do not localize}
   {CH fn_sk_pop = 'sk_pop'; }  {Do not localize}
   {CH fn_sk_zero = 'sk_zero'; }  {Do not localize}
-  {CH fn_sk_dup = 'sk_dup'; }  {Do not localize}
+  fn_sk_dup = 'sk_dup';  {Do not localize}
   {CH fn_sk_sort = 'sk_sort'; }  {Do not localize}
   fn_SSLeay_version = 'SSLeay_version';  {Do not localize}
   fn_SSLeay = 'SSLeay';   {Do not localize}
@@ -10675,7 +10722,7 @@ them in case we use them later.}
   {CH fn_ASN1_check_infinite_end = 'ASN1_check_infinite_end'; }  {Do not localize}
   {CH fn_ASN1_put_object = 'ASN1_put_object'; }  {Do not localize}
   {CH fn_ASN1_object_size = 'ASN1_object_size'; }  {Do not localize}
-  {CH fn_ASN1_dup = 'ASN1_dup'; }  {Do not localize}
+   fn_ASN1_dup = 'ASN1_dup';   {Do not localize}
   {$IFNDEF OPENSSL_NO_FP_API}
   {CH fn_ASN1_d2i_fp = 'ASN1_d2i_fp'; }  {Do not localize}
   {CH fn_ASN1_i2d_fp = 'ASN1_i2d_fp'; }  {Do not localize}
@@ -11594,12 +11641,12 @@ them in case we use them later.}
   {CH fn_d2i_X509_EXTENSION = 'd2i_X509_EXTENSION'; }  {Do not localize}
   {CH fn_X509_NAME_ENTRY_new = 'X509_NAME_ENTRY_new'; }  {Do not localize}
   {CH fn_X509_NAME_ENTRY_free = 'X509_NAME_ENTRY_free'; }  {Do not localize}
-  {CH fn_i2d_X509_NAME_ENTRY = 'i2d_X509_NAME_ENTRY'; }  {Do not localize}
-  {CH fn_d2i_X509_NAME_ENTRY = 'd2i_X509_NAME_ENTRY'; }  {Do not localize}
-  {CH fn_X509_NAME_new = 'X509_NAME_new'; }  {Do not localize}
-  {CH fn_X509_NAME_free = 'X509_NAME_free'; }  {Do not localize}
-  {CH fn_i2d_X509_NAME = 'i2d_X509_NAME'; }  {Do not localize}
-  {CH fn_d2i_X509_NAME = 'd2i_X509_NAME'; }  {Do not localize}
+  fn_i2d_X509_NAME_ENTRY = 'i2d_X509_NAME_ENTRY';   {Do not localize}
+  fn_d2i_X509_NAME_ENTRY = 'd2i_X509_NAME_ENTRY';   {Do not localize}
+  fn_X509_NAME_new = 'X509_NAME_new';   {Do not localize}
+  fn_X509_NAME_free = 'X509_NAME_free';   {Do not localize}
+   fn_i2d_X509_NAME = 'i2d_X509_NAME';   {Do not localize}
+  fn_d2i_X509_NAME = 'd2i_X509_NAME';   {Do not localize}
   {CH fn_X509_NAME_set = 'X509_NAME_set'; }  {Do not localize}
   {CH fn_X509_CINF_new = 'X509_CINF_new'; }  {Do not localize}
   {CH fn_X509_CINF_free = 'X509_CINF_free'; }  {Do not localize}
@@ -12570,6 +12617,8 @@ begin
   // CRYPTO LIB
   @_SSLeay_version := LoadFunctionCLib(fn_SSLeay_version);
   @SSLeay := LoadFunctionCLib(fn_SSLeay);
+  @d2i_X509_NAME := LoadFunctionCLib(fn_d2i_X509_NAME);
+  @i2d_X509_NAME := LoadFunctionCLib(fn_i2d_X509_NAME);
   @X509_NAME_oneline := LoadFunctionCLib(fn_X509_NAME_oneline);
   @X509_NAME_hash := LoadFunctionCLib(fn_X509_NAME_hash);
   @X509_set_issuer_name := LoadFunctionCLib(fn_X509_set_issuer_name);
@@ -12685,6 +12734,8 @@ begin
   @X509_REQ_new := LoadFunctionCLib(fn_X509_REQ_new);
   @X509_REQ_free := LoadFunctionCLib(fn_X509_REQ_free);
   @X509_to_X509_REQ := LoadFunctionCLib(fn_X509_to_X509_REQ);
+  @X509_NAME_new := LoadFunctionCLib(fn_X509_NAME_new);
+  @X509_NAME_free := LoadFunctionCLib(fn_X509_NAME_free);
   @X509_NAME_add_entry_by_txt := LoadFunctionCLib(fn_X509_NAME_add_entry_by_txt);
   @X509_set_version := LoadFunctionCLib(fn_X509_set_version);
   @X509_get_serialNumber := LoadFunctionCLib(fn_X509_get_serialNumber);
@@ -12774,6 +12825,7 @@ begin
   @ASN1_INTEGER_get := LoadFunctionCLib(fn_ASN1_INTEGER_get);
   @ASN1_STRING_type_new := LoadFunctionCLib(fn_ASN1_STRING_type_new);
   @ASN1_STRING_free := LoadFunctionCLib(fn_ASN1_STRING_free);
+  @ASN1_dup := LoadFunctionCLib(fn_ASN1_dup );
   @CRYPTO_set_mem_functions := LoadFunctionCLib(fn_CRYPTO_set_mem_functions);
   @CRYPTO_malloc := LoadFunctionCLib(fn_CRYPTO_malloc);
   @CRYPTO_free := LoadFunctionCLib(fn_CRYPTO_free);
@@ -12793,8 +12845,15 @@ begin
   @OpenSSL_add_all_ciphers := LoadFunctionCLib(fn_OpenSSL_add_all_ciphers);
   @OpenSSL_add_all_digests := LoadFunctionCLib(fn_OpenSSL_add_all_digests);
   @EVP_cleanup := LoadFunctionCLib(fn_EVP_cleanup);
+
+  @sk_num := LoadFunctionCLib(fn_sk_num);
+  @sk_new := LoadFunctionCLib(fn_sk_new);
   @sk_new_null := LoadFunctionCLib(fn_sk_new_null);
+  @sk_free := LoadFunctionCLib(fn_sk_free);
   @sk_push := LoadFunctionCLib(fn_sk_push);
+  @sk_dup := LoadFunctionCLib(fn_sk_dup);
+   @sk_find := LoadFunctionCLib(fn_sk_find);
+   @sk_value := LoadFunctionCLib(fn_sk_value);
   {$IFDEF OPENSSL_FIPS}
   @_FIPS_mode_set := LoadFunctionCLib(fn_FIPS_mode_set,False);
   @_FIPS_mode := LoadFunctionCLib(fn_FIPS_mode,False);
@@ -12961,14 +13020,19 @@ begin
   //i2d
   @i2d_X509_bio := nil;
   @i2d_PrivateKey_bio := nil;
+  @d2i_PrivateKey_bio := nil;
   @i2d_X509 := nil;
   @d2i_X509_bio := nil;
   @d2i_X509 := nil;
+  @X509_NAME_new := nil;
+  @X509_NAME_free := nil;
   @i2d_X509_REQ_bio := nil;
   @i2d_X509_REQ := nil;
   @d2i_X509_REQ := nil;
+  @i2d_X509_NAME := nil;
+  @d2i_X509_NAME := nil;
   //X509
-  @d2i_PrivateKey_bio := nil;
+
   @X509_new := nil;
   @X509_free := nil;
   @X509_REQ_new := nil;
@@ -13065,6 +13129,7 @@ begin
   @ASN1_INTEGER_get := nil;
   @ASN1_STRING_type_new := nil;
   @ASN1_STRING_free := nil;
+  @ASN1_dup := nil;
   @CRYPTO_set_mem_functions := nil;
   @CRYPTO_malloc := nil;
   @CRYPTO_free := nil;
@@ -13083,8 +13148,14 @@ begin
   @OpenSSL_add_all_ciphers := nil;
   @OpenSSL_add_all_digests := nil;
   @EVP_cleanup := nil;
+  @sk_new := nil;
+  @sk_num := nil;
   @sk_new_null := nil;
+  @sk_free := nil;
   @sk_push := nil;
+  @sk_dup := nil;
+  @sk_find := nil;
+  @sk_value := nil;
   {$IFDEF OPENSSL_FIPS}
   @_FIPS_mode_set := nil;
   @_FIPS_mode := nil;
@@ -13228,6 +13299,12 @@ function M_ASN1_STRING_data(x : PASN1_STRING) : PAnsiChar;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := x^.data;
+end;
+
+function X509_NAME_dup(xn : PX509_NAME) : PX509_NAME;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := ASN1_dup(i2d_of_Void(i2d_X509_NAME), d2i_of_void(d2i_X509_NAME), PAnsiChar(xn ) );
 end;
 
 function X509_STORE_CTX_get_app_data(ctx: PX509_STORE_CTX):Pointer;
@@ -14206,18 +14283,17 @@ end;
 //because OpenSSL has a define for either using Macros or the native
 //functions.
 
-
 function PEM_read_bio_X509(bp: PBIO; x: PPX509; cb: ppem_password_cb; u: Pointer): PX509;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := PEM_ASN1_read_bio(@d2i_X509, PEM_STRING_X509, bp, Pointer(x), nil, nil);
+  Result := PEM_ASN1_read_bio(d2i_of_void(d2i_X509), PEM_STRING_X509, bp, PPointer(x), cb, u);
 end;
 
 function PEM_read_bio_X509_REQ(bp :PBIO; x : PPX509_REQ; cb :ppem_password_cb; u: Pointer) : PX509_REQ;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 //PEM_ASN1_read_bio( (char *(*)())d2i_X509_REQ,PEM_STRING_X509_REQ,bp,(char **)x,cb,u)
 begin
-  Result := PEM_ASN1_read_bio(@d2i_X509_REQ,PEM_STRING_X509_REQ,bp, Pointer(x), cb, u);
+  Result := PEM_ASN1_read_bio(d2i_of_void(d2i_X509_REQ),PEM_STRING_X509_REQ,bp, Pointer(x), cb, u);
 end;
 
 //#define	PEM_read_bio_X509_CRL(bp,x,cb,u) (X509_CRL *)PEM_ASN1_read_bio( \
@@ -14225,7 +14301,7 @@ end;
 function PEM_read_bio_X509_CRL(bp : PBIO; x : PPX509_CRL;cb : ppem_password_cb; u: Pointer) : PX509_CRL;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := PEM_ASN1_read_bio(@d2i_X509_CRL, PEM_STRING_X509_CRL, bp, Pointer(x), cb, u);
+  Result := PEM_ASN1_read_bio(d2i_of_void(d2i_X509_CRL), PEM_STRING_X509_CRL, bp, Pointer(x), cb, u);
 end;
 
 //#define	PEM_read_bio_RSAPrivateKey(bp,x,cb,u) (RSA *)PEM_ASN1_read_bio( \
@@ -14233,7 +14309,7 @@ end;
 function PEM_read_bio_RSAPrivateKey(bp : PBIO; x : PPRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := PEM_ASN1_read_bio(@d2i_RSAPrivateKey, PEM_STRING_RSA, bp, Pointer(x), cb, u);
+  Result := PEM_ASN1_read_bio(d2i_of_void(d2i_RSAPrivateKey), PEM_STRING_RSA, bp, Pointer(x), cb, u);
 end;
 
 //#define	PEM_read_bio_RSAPublicKey(bp,x,cb,u) (RSA *)PEM_ASN1_read_bio( \
@@ -14241,7 +14317,7 @@ end;
 function PEM_read_bio_RSAPublicKey(bp : PBIO; x : PPRSA; cb : ppem_password_cb; u: Pointer) : PRSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := PEM_ASN1_read_bio(@d2i_RSAPublicKey,PEM_STRING_RSA_PUBLIC, bp, Pointer(x),cb, u);
+  Result := PEM_ASN1_read_bio(d2i_of_void(d2i_RSAPublicKey),PEM_STRING_RSA_PUBLIC, bp, Pointer(x),cb, u);
 end;
 
 //#define	PEM_read_bio_DSAPrivateKey(bp,x,cb,u) (DSA *)PEM_ASN1_read_bio( \
@@ -14249,7 +14325,7 @@ end;
 function PEM_read_bio_DSAPrivateKey(bp : PBIO; x : PPDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := PEM_ASN1_read_bio( @d2i_DSAPrivateKey,PEM_STRING_DSA,bp,Pointer(x),cb,u);
+  Result := PEM_ASN1_read_bio( d2i_of_void(d2i_DSAPrivateKey),PEM_STRING_DSA,bp,Pointer(x),cb,u);
 end;
 
 //#define	PEM_read_bio_PrivateKey(bp,x,cb,u) (EVP_PKEY *)PEM_ASN1_read_bio( \
@@ -14257,7 +14333,7 @@ end;
 function PEM_read_bio_PrivateKey(bp : PBIO; x : PPEVP_PKEY; cb : ppem_password_cb; u : Pointer) : PEVP_PKEY;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := PEM_ASN1_read_bio( @d2i_PrivateKey, PEM_STRING_EVP_PKEY, bp, Pointer(x),cb, u);
+  Result := PEM_ASN1_read_bio( d2i_of_void(d2i_PrivateKey), PEM_STRING_EVP_PKEY, bp, Pointer(x),cb, u);
 end;
 
 //#define	PEM_read_bio_PKCS7(bp,x,cb,u) (PKCS7 *)PEM_ASN1_read_bio( \
@@ -14265,7 +14341,7 @@ end;
 function PEM_read_bio_PKCS7(bp : PBIO; x : PPPKCS7; cb : ppem_password_cb; u : Pointer) : PPKCS7;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := PEM_ASN1_read_bio( @d2i_PKCS7, PEM_STRING_PKCS7,bp,Pointer(x),cb, u);
+  Result := PEM_ASN1_read_bio( d2i_of_void(d2i_PKCS7), PEM_STRING_PKCS7,bp,Pointer(x),cb, u);
 end;
 
 //#define	PEM_read_bio_DHparams(bp,x,cb,u) (DH *)PEM_ASN1_read_bio( \
@@ -14273,7 +14349,7 @@ end;
 function PEM_read_bio_DHparams(bp : PBIO; x : PPDH; cb : ppem_password_cb; u : Pointer) : PDH;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := PEM_ASN1_read_bio(@d2i_DHparams,PEM_STRING_DHPARAMS,bp,Pointer(x),cb,u);
+  Result := PEM_ASN1_read_bio(d2i_of_void(d2i_DHparams),PEM_STRING_DHPARAMS,bp,Pointer(x),cb,u);
 end;
 
 //#define	PEM_read_bio_DSAparams(bp,x,cb,u) (DSA *)PEM_ASN1_read_bio( \
@@ -14282,7 +14358,7 @@ end;
 function PEM_read_bio_DSAparams(bp : PBIO; x : PPDSA; cb : ppem_password_cb; u : Pointer) : PDSA;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := PEM_ASN1_read_bio( @d2i_DSAparams,PEM_STRING_DSAPARAMS,bp,Pointer(x),cb,u);
+  Result := PEM_ASN1_read_bio( d2i_of_void(d2i_DSAparams),PEM_STRING_DSAPARAMS,bp,Pointer(x),cb,u);
 end;
 
 //#define PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp,x,cb,u) \
@@ -14293,7 +14369,7 @@ function PEM_read_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PPNETSCAPE_CERT_SEQU
   cb : ppem_password_cb; u : Pointer) : PNETSCAPE_CERT_SEQUENCE;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := PEM_ASN1_read_bio( @d2i_NETSCAPE_CERT_SEQUENCE,PEM_STRING_X509,bp,Pointer(x),cb, u);
+  Result := PEM_ASN1_read_bio( d2i_of_void(d2i_NETSCAPE_CERT_SEQUENCE),PEM_STRING_X509,bp,Pointer(x),cb, u);
 end;
 
 function PEM_write_bio_X509(bp: PBIO; x: PX509): TIdC_INT;
@@ -14301,7 +14377,7 @@ function PEM_write_bio_X509(bp: PBIO; x: PX509): TIdC_INT;
 begin
   Assert(bp<>nil);
   Assert(x<>nil);
-  Result := PEM_ASN1_write_bio(@i2d_X509, PEM_STRING_X509, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Result := PEM_ASN1_write_bio( i2d_of_void(i2d_X509), PEM_STRING_X509, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
   Assert(Result<>0);
 end;
 
@@ -14310,7 +14386,7 @@ function PEM_write_bio_X509_REQ(bp: PBIO; x: PX509_REQ): TIdC_INT;
 begin
   Assert(bp<>nil);
   Assert(x<>nil);
-  Result := PEM_ASN1_write_bio(@i2d_X509_REQ, PEM_STRING_X509_REQ, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Result := PEM_ASN1_write_bio(i2d_of_void(i2d_X509_REQ), PEM_STRING_X509_REQ, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
   Assert(Result<>0);
 end;
 
@@ -14318,7 +14394,7 @@ function PEM_write_bio_X509_CRL(bp : PBIO; x : PX509_CRL) : TIdC_INT;
 begin
   Assert(bp<>nil);
   Assert(x<>nil);
-  Result := PEM_ASN1_write_bio(@i2d_X509_CRL, PEM_STRING_X509_CRL, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Result := PEM_ASN1_write_bio(i2d_of_void(i2d_X509_CRL), PEM_STRING_X509_CRL, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
   Assert(Result<>0);
 end;
 
@@ -14327,7 +14403,7 @@ function  PEM_write_bio_RSAPrivateKey(bp : PBIO; x : PRSA; const enc : PEVP_CIPH
 begin
   Assert(bp<>nil);
   Assert(x<>nil);
-  Result := PEM_ASN1_write_bio(@i2d_RSAPrivateKey, PEM_STRING_RSA, bp, PAnsiChar(x), enc,kstr,klen,cb,u);
+  Result := PEM_ASN1_write_bio(i2d_of_void(i2d_RSAPrivateKey), PEM_STRING_RSA, bp, PAnsiChar(x), enc,kstr,klen,cb,u);
   Assert(Result<>0);
 end;
 
@@ -14335,7 +14411,7 @@ function PEM_write_bio_RSAPublicKey(bp : PBIO; x : PRSA) : TIdC_INT;
 begin
   Assert(bp<>nil);
   Assert(x<>nil);
-  Result := PEM_ASN1_write_bio(@i2d_RSAPublicKey, PEM_STRING_RSA_PUBLIC, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Result := PEM_ASN1_write_bio(i2d_of_void(i2d_RSAPublicKey), PEM_STRING_RSA_PUBLIC, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
   Assert(Result<>0);
 end;
 
@@ -14344,7 +14420,7 @@ function PEM_write_bio_DSAPrivateKey( bp : PBIO; x : PDSA; const enc : PEVP_CIPH
 begin
   Assert(bp<>nil);
   Assert(x<>nil);
-  Result := PEM_ASN1_write_bio(@i2d_DSAPrivateKey, PEM_STRING_DSA, bp, PAnsiChar(x), enc,kstr,klen,cb,u);
+  Result := PEM_ASN1_write_bio(i2d_of_void(i2d_DSAPrivateKey), PEM_STRING_DSA, bp, PAnsiChar(x), enc,kstr,klen,cb,u);
   Assert(Result<>0);
 end;
 
@@ -14354,9 +14430,9 @@ begin
   Assert(bp<>nil);
   Assert(x<>nil);
   if x^._type = EVP_PKEY_DSA then begin
-    Result := PEM_ASN1_write_bio(@i2d_PrivateKey,PEM_STRING_DSA,bp, Pointer(x),enc,kstr,klen,cb,u);
+    Result := PEM_ASN1_write_bio(i2d_of_void(i2d_PrivateKey),PEM_STRING_DSA,bp, Pointer(x),enc,kstr,klen,cb,u);
   end else begin
-    Result := PEM_ASN1_write_bio(@i2d_PrivateKey,PEM_STRING_RSA,bp, Pointer(x),enc,kstr,klen,cb,u);
+    Result := PEM_ASN1_write_bio(i2d_of_void(i2d_PrivateKey),PEM_STRING_RSA,bp, Pointer(x),enc,kstr,klen,cb,u);
   end;
   Assert(Result<>0);
 end;
@@ -14365,7 +14441,7 @@ function PEM_write_bio_PKCS7(bp : PBIO; x : PPKCS7) : TIdC_INT;
 begin
   Assert(bp<>nil);
   Assert(x<>nil);
-  Result := PEM_ASN1_write_bio(@i2d_PKCS7, PEM_STRING_PKCS7, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Result := PEM_ASN1_write_bio(i2d_of_void(i2d_PKCS7), PEM_STRING_PKCS7, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
   Assert(Result<>0);
 end;
 
@@ -14373,7 +14449,7 @@ function PEM_write_bio_DHparams(bp : PBIO; x : PDH): TIdC_INT;
 begin
   Assert(bp<>nil);
   Assert(x<>nil);
-  Result := PEM_ASN1_write_bio(@i2d_DHparams, PEM_STRING_DHPARAMS, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Result := PEM_ASN1_write_bio(i2d_of_void(i2d_DHparams), PEM_STRING_DHPARAMS, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
   Assert(Result<>0);
 end;
 
@@ -14381,7 +14457,7 @@ function PEM_write_bio_DSAparams(bp : PBIO; x : PDSA) : TIdC_INT;
 begin
   Assert(bp<>nil);
   Assert(x<>nil);
-  Result := PEM_ASN1_write_bio(@i2d_DSAparams, PEM_STRING_DSAPARAMS, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Result := PEM_ASN1_write_bio(i2d_of_void(i2d_DSAparams), PEM_STRING_DSAPARAMS, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
   Assert(Result<>0);
 end;
 
@@ -14389,7 +14465,7 @@ function PEM_write_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PDSA) : TIdC_INT;
 begin
   Assert(bp<>nil);
   Assert(x<>nil);
-  Result := PEM_ASN1_write_bio(@i2d_NETSCAPE_CERT_SEQUENCE, PEM_STRING_X509, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
+  Result := PEM_ASN1_write_bio(i2d_of_void(i2d_NETSCAPE_CERT_SEQUENCE), PEM_STRING_X509, bp, PAnsiChar(x), nil, nil, 0, nil, nil);
   Assert(Result<>0);
 end;
 

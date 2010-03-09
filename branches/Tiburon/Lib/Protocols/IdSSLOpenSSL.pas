@@ -617,6 +617,9 @@ function LogicalAnd(A, B: Integer): Boolean;
 function LoadOpenSSLLibrary: Boolean;
 procedure UnLoadOpenSSLLibrary;
 
+function IndySSL_load_client_CA_file( const AFIleName : String) : PSTACK_OF_X509_NAME;
+
+
 implementation
 
 uses
@@ -642,6 +645,109 @@ var
   LockPassCB: TIdCriticalSection = nil;
   LockVerifyCB: TIdCriticalSection = nil;
   CallbackLockList: TThreadList = nil;
+
+{$IFDEF STRING_IS_UNICODE}
+{
+IMPORTANT!!!
+
+OpenSSL can not handle Unicode file names at all.  On Posix systems, UTF8 File names
+can be used with OpenSSL.  The Windows operating system does not accept UTF8 file names
+at all so we have our own routines that will handle Unicode filenames.  THe routines
+are based on code in the OpenSSL .DLL that is translated into Delphi but loads from
+memory streams.
+}
+
+  {$IFDEF USE_VCL_POSIX}
+function IndySSL_load_client_CA_file( const AFIleName : String) : PSTACK_OF_X509_NAME;
+begin
+  Result := SSL_load_client_CA_file( PAnsiChar(UTF8String(AFileName));
+end;
+
+function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
+begin
+  Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(UTF8String( AFileName), AType) > 0);
+end;
+
+function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
+begin
+  Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(UTF8String( AFileName), AType) > 0);
+end;
+
+  {$ENDIF}
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+
+procedure IndySSL_load_client_CA_file_err( var VRes : PSTACK_OF_X509_NAME);
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  if Assigned(VRes) then begin
+    sk_X509_NAME_pop_free(VRes,@X509_NAME_free);
+    VRes := nil;
+  end;
+end;
+
+function IndySSL_load_client_CA_file( const AFIleName : String) : PSTACK_OF_X509_NAME;
+var
+  LM : TMemoryStream;
+  LB : PBIO;
+  Lsk : PSTACK_OF_X509_NAME;
+  LX : PX509;
+  LXN : PX509_NAME;
+begin
+  Result := nil;
+  LX := nil;
+  LB := nil;
+  Lsk := sk_X509_NAME_new(nil); //(xname_cmp);
+  if Assigned(Lsk) then begin
+
+    LM := TMemoryStream.Create;
+    try
+      LM.LoadFromFile(AFileName);
+      LB :=  BIO_new_mem_buf(LM.Memory,LM.Size);
+      if Assigned(LB) then begin
+        try
+          repeat
+             if (PEM_read_bio_X509(LB,@LX,nil,nil) = nil) then begin
+               break;
+             end;
+             if not Assigned(Result) then begin
+               Result := sk_X509_NAME_new_null;
+               LXN := X509_get_subject_name(LX);
+               if not assigned(LXN) then begin
+                 //error
+                 IndySSL_load_client_CA_file_err(Result);
+               end;
+               //* check for duplicates */
+	             LXN := X509_NAME_dup(LXN);
+               if not Assigned(LXN) then begin
+                 //error
+                 IndySSL_load_client_CA_file_err(Result);
+               end;
+               if (sk_X509_NAME_find(Lsk,LXN) >= 0) then begin
+                 X509_NAME_free(Lxn);
+               end else begin
+                 sk_X509_NAME_push(Result,LXN);
+	               sk_X509_NAME_push(Result,LXN);
+               end;
+             end;
+          until False;
+          if Assigned(Lsk) then begin
+            sk_X509_NAME_free(Lsk);
+          end;
+          if Assigned(LX) then begin
+            X509_free(LX);
+          end;
+          if Assigned(Result) then begin
+             ERR_clear_error;
+          end;
+        finally
+          BIO_free(LB);
+        end;
+      end;
+    finally
+      FreeAndNil(LM);
+    end;
+  end;
+end;
 
 function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
 var
@@ -713,6 +819,8 @@ begin
     FreeAndNil(LM);
   end;
 end;
+   {$ENDIF}
+{$ENDIF}
 
 function PasswordCallback(buf: PAnsiChar; size: TIdC_INT; rwflag: TIdC_INT; userdata: Pointer): TIdC_INT; cdecl;
 var
@@ -1083,8 +1191,7 @@ var
   i : integer;
 begin
   //ssl was never loaded
-  if LockInfoCB=nil then 
-  begin
+  if LockInfoCB=nil then begin
     Exit;
   end;
   CRYPTO_set_locking_callback(nil);
@@ -1092,8 +1199,7 @@ begin
   FreeAndNil(LockInfoCB);
   FreeAndNil(LockPassCB);
   FreeAndNil(LockVerifyCB);
-  if Assigned(CallbackLockList) then
-  begin
+  if Assigned(CallbackLockList) then begin
     with CallbackLockList.LockList do
       try
         for i := 0 to Count-1 do begin
@@ -1855,7 +1961,7 @@ begin
   // CA list
   if RootCertFile <> '' then begin    {Do not Localize}
     SSL_CTX_set_client_CA_list(fContext,
-    SSL_load_client_CA_file(PAnsiChar(AnsiString(RootCertFile))));
+    IndySSL_load_client_CA_file(RootCertFile));
   end
 end;
 
@@ -1933,36 +2039,53 @@ begin
 end;
 
 function TIdSSLContext.LoadRootCert: Boolean;
+var LTmp : AnsiString;
 begin
 {  if fVerifyDirs <> '' then begin
     Result := SSL_CTX_load_verify_locations(
                    fContext,
-                   PAnsiChar(AnsiString(RootCertFile)),
-                   PAnsiChar(AnsiString(fVerifyDirs))) > 0;
+                   PAnsiChar(RootCertFile),
+                   PAnsiChar(fVerifyDirs)) > 0;
   end
   else begin
 }
+    LTmp :=  RootCertFile;
     Result := SSL_CTX_load_verify_locations(
                    fContext,
-                   PAnsiChar(AnsiString(RootCertFile)),
+                   PAnsiChar(LTmp),
                    nil) > 0;
 {  end;}
 end;
 
 function TIdSSLContext.LoadCert: Boolean;
 begin
+
+  {$IFDEF STRING_IS_UNICODE}
   Result := IndySSL_CTX_use_certificate_file(
                  fContext,
                  CertFile,
                  SSL_FILETYPE_PEM);
+  {$ELSE}
+  Result := SSL_CTX_use_certificate_file(
+                 fContext,
+                 CertFile,
+                 SSL_FILETYPE_PEM);
+  {$ENDIF}
 end;
 
 function TIdSSLContext.LoadKey: Boolean;
 begin
+  {$IFDEF STRING_IS_UNICODE}
   Result := IndySSL_CTX_use_PrivateKey_file(
                  fContext,
                  fsKeyFile,
                  SSL_FILETYPE_PEM);
+  {$ELSE}
+  Result := SSL_CTX_use_PrivateKey_file(
+                 fContext,
+                 fsKeyFile,
+                 SSL_FILETYPE_PEM);
+  {$ENDIF}
   if Result then begin
     Result := SSL_CTX_check_private_key(fContext) > 0;
   end;
