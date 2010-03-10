@@ -208,9 +208,6 @@ begin
   // Restriction in RFC 1179
   // The source port must be in the range 721 to 731, inclusive.
 
-  // Known problem with this: some trouble while multible printjobs are running,
-  // this is the FD_WAIT port problem where a port is in a FD_WAIT state
-  // but you can bind to it. You get a port reuse error.
   BoundPortMin := 721;
   BoundPortMax := 731;
 end;
@@ -219,9 +216,6 @@ procedure TIdLPR.Connect;
 var
   LPort: TIdPort;
 begin
-  // Restriction in RFC 1179
-  // The source port must be in the range 721 to 731, inclusive.
-
   // RLebeau 3/7/2010: there is a problem on Windows where sometimes it will
   // not raise a WSAEADDRINUSE error in TIdSocketHandle.TryBind(), but will
   // delay it until TIdSocketHandle.Connect() instead.  So we will loop here
@@ -243,7 +237,7 @@ begin
       on E: EIdCouldNotBindSocket do begin end;
       on E: EIdSocketError do begin
         if E.LastError <> Id_WSAEADDRINUSE then begin
-      	  raise;
+          raise;
         end;
         // Socket already in use, cleanup and try again with the next
         Disconnect;
@@ -252,7 +246,7 @@ begin
   end;
 
   // no local ports could be bound successfully
-  raise EIdCanNotBindPortInRange.CreateFmt(RSCannotBindRange, [721, 731]);
+  raise EIdCanNotBindPortInRange.CreateFmt(RSCannotBindRange, [BoundPortMin, BoundPortMax]);
 end;
 
 procedure TIdLPR.Print(const AText: String);
