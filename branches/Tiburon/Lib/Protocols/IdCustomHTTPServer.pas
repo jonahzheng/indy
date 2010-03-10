@@ -737,10 +737,10 @@ var
         while IndyPos(';', S) > 0 do begin    {Do not Localize}
           LRequestInfo.Cookies.AddSrcCookie(Fetch(S, ';'));    {Do not Localize}
           S := Trim(S);
-    end;
+        end;
         if S <> '' then begin
           LRequestInfo.Cookies.AddSrcCookie(S);
-  end;
+        end;
       end;
     finally FreeAndNil(LRawCookies); end;
   end;
@@ -883,8 +883,8 @@ begin
               LRequestInfo.FCommandType := DecodeHTTPCommand(LCmd);
 
               // GET data - may exist with POSTs also
-              LRequestInfo.FUnparsedQuery := LInputLine;
-              LInputLine := Fetch(LRequestInfo.FUnparsedQuery, '?');    {Do not Localize}
+              LRequestInfo.QueryParams := LInputLine;
+              LInputLine := Fetch(LRequestInfo.FQueryParams, '?');    {Do not Localize}
 
               // Host
               // the next line is done in TIdHTTPRequestInfo.ProcessHeaders()...
@@ -955,8 +955,8 @@ begin
                   LRequestInfo.FormParams := ReadStringAsCharSet(LRequestInfo.PostStream, LRequestInfo.CharSet);
                   // Workaround to keep the WebappDbg.exe working
                   //FreeAndNil(LRequestInfo.FPostStream); // don't need the PostStream anymore
-                      end;
-                      end;
+                end;
+              end;
 
               // glue together parameters passed in the URL and those
               //
@@ -971,8 +971,8 @@ begin
                 end else begin
                   LRequestInfo.FUnparsedParams := LRequestInfo.UnparsedParams + '&'  {Do not Localize}
                    + LRequestInfo.QueryParams;
-                      end;
-                  end;
+                end;
+              end;
 
               // Parse Params
               if ParseParams then begin
@@ -1257,26 +1257,26 @@ begin
   // Convert special characters
   // ampersand '&' separates values    {Do not Localize}
   // TODO: need to decode UTF-8 octets...
-    Params.BeginUpdate;
-    try
-      Params.Clear;
-      i := 1;
-      while i <= Length(AValue) do
+  Params.BeginUpdate;
+  try
+    Params.Clear;
+    i := 1;
+    while i <= Length(AValue) do
+    begin
+      j := i;
+      while (j <= Length(AValue)) and (AValue[j] <> '&') do {do not localize}
       begin
-        j := i;
-        while (j <= Length(AValue)) and (AValue[j] <> '&') do {do not localize}
-        begin
-          Inc(j);
-        end;
-        s := Copy(AValue, i, j-i);
-        // See RFC 1866 section 8.2.1. TP
-        s := StringReplace(s, '+', ' ', [rfReplaceAll]);  {do not localize}
-      Params.Add(TIdURI.URLDecode(s));
-        i := j + 1;
+        Inc(j);
       end;
-    finally
-      Params.EndUpdate;
+      s := Copy(AValue, i, j-i);
+      // See RFC 1866 section 8.2.1. TP
+      s := StringReplace(s, '+', ' ', [rfReplaceAll]);  {do not localize}
+      Params.Add(TIdURI.URLDecode(s));
+      i := j + 1;
     end;
+  finally
+    Params.EndUpdate;
+  end;
 end;
 
 destructor TIdHTTPRequestInfo.Destroy;
@@ -1347,7 +1347,7 @@ begin
   FCloseConnection := Value;
 end;
 
-procedure TIdHTTPResponseInfo.SetCookies(const AValue: TIdCookies);
+procedure TIdHTTPResponseInfo.SetCookies(const AValue: TIdServerCookies);
 begin
   FCookies.Assign(AValue);
 end;
@@ -1366,7 +1366,7 @@ begin
     if FLastModified > 0 then begin
       Values['Last-Modified'] := LocalDateTimeToHttpStr(FLastModified); {do not localize}
     end;
-    if AuthRealm <> '' then begin
+    if AuthRealm <> '' then {Do not Localize}
       Values['WWW-Authenticate'] := 'Basic realm="' + AuthRealm + '"';    {Do not Localize}
     end;
   end;
@@ -1518,7 +1518,7 @@ begin
   end;
   FHeaderHasBeenWritten := True;
 
-  if AuthRealm <> '' then
+  if AuthRealm <> '' then    {Do not Localize}
   begin
     ResponseNo := 401;
     if (Length(ContentText) = 0) and not Assigned(ContentStream) then
@@ -1582,7 +1582,7 @@ begin
     // Write cookies
     for i := 0 to Cookies.Count - 1 do begin
       FConnection.IOHandler.WriteLn('Set-Cookie: ' + Cookies[i].ServerCookie);    {Do not Localize}
-      end;
+    end;
     // HTTP headers end with a double CR+LF
     FConnection.IOHandler.WriteLn;
     if LBufferingStarted then begin
