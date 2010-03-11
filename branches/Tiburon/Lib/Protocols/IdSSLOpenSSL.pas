@@ -617,11 +617,9 @@ function LogicalAnd(A, B: Integer): Boolean;
 function LoadOpenSSLLibrary: Boolean;
 procedure UnLoadOpenSSLLibrary;
 
-{$IFDEF STRING_IS_UNICODE}
-function IndySSL_load_client_CA_file( const AFIleName : String) : PSTACK_OF_X509_NAME;
-function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
-function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
-{$ENDIF}
+function IndySSL_load_client_CA_file(const AFileName : String) : PSTACK_OF_X509_NAME;
+function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
+function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
 
 implementation
 
@@ -661,98 +659,97 @@ memory streams.
 }
 
   {$IFDEF USE_VCL_POSIX}
-function IndySSL_load_client_CA_file( const AFIleName : String) : PSTACK_OF_X509_NAME;
+function IndySSL_load_client_CA_file(const AFileName : String) : PSTACK_OF_X509_NAME;
 begin
-  Result := SSL_load_client_CA_file( PAnsiChar(UTF8String(AFileName));
+  Result := SSL_load_client_CA_file(PAnsiChar(UTF8String(AFileName)));
 end;
 
 function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
 begin
-  Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(UTF8String( AFileName), AType) > 0);
+  Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(UTF8String(AFileName)), AType) > 0;
 end;
 
 function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
 begin
-  Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(UTF8String( AFileName), AType) > 0);
+  Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(UTF8String(AFileName)), AType) > 0;
 end;
 
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
 
-procedure IndySSL_load_client_CA_file_err( var VRes : PSTACK_OF_X509_NAME);
+procedure IndySSL_load_client_CA_file_err(var VRes : PSTACK_OF_X509_NAME);
   {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   if Assigned(VRes) then begin
-    sk_X509_NAME_pop_free(VRes,@X509_NAME_free);
+    sk_X509_NAME_pop_free(VRes, @X509_NAME_free);
     VRes := nil;
   end;
 end;
 
-function IndySSL_load_client_CA_file( const AFIleName : String) : PSTACK_OF_X509_NAME;
+function IndySSL_load_client_CA_file(const AFileName : String) : PSTACK_OF_X509_NAME;
 var
   LM : TMemoryStream;
   LB : PBIO;
   Lsk : PSTACK_OF_X509_NAME;
   LX : PX509;
-  LXN : PX509_NAME;
+  LXN, LXNDup : PX509_NAME;
 begin
   Result := nil;
   LX := nil;
-  LB := nil;
   Lsk := sk_X509_NAME_new(nil); //(xname_cmp);
   if Assigned(Lsk) then begin
-
-    LM := TMemoryStream.Create;
     try
-      LM.LoadFromFile(AFileName);
-      LB :=  BIO_new_mem_buf(LM.Memory,LM.Size);
-      if Assigned(LB) then begin
-        try
-          repeat
-             if (PEM_read_bio_X509(LB,@LX,nil,nil) = nil) then begin
-               break;
-             end;
-             if not Assigned(Result) then begin
-               Result := sk_X509_NAME_new_null;
-               LXN := X509_get_subject_name(LX);
-               if not assigned(LXN) then begin
-                 //error
-                 IndySSL_load_client_CA_file_err(Result);
-               end;
-               //* check for duplicates */
-	             LXN := X509_NAME_dup(LXN);
-               if not Assigned(LXN) then begin
-                 //error
-                 IndySSL_load_client_CA_file_err(Result);
-               end;
-               if (sk_X509_NAME_find(Lsk,LXN) >= 0) then begin
-                 X509_NAME_free(Lxn);
-               end else begin
-                 sk_X509_NAME_push(Result,LXN);
-	               sk_X509_NAME_push(Result,LXN);
-               end;
-             end;
-          until False;
-          if Assigned(Lsk) then begin
-            sk_X509_NAME_free(Lsk);
+      LM := TMemoryStream.Create;
+      try
+        LM.LoadFromFile(AFileName);
+        LB :=  BIO_new_mem_buf(LM.Memory,LM.Size);
+        if Assigned(LB) then begin
+          try
+            while (PEM_read_bio_X509(LB, @LX, nil, nil) <> nil) do begin
+              try
+                if not Assigned(Result) then begin
+                  Result := sk_X509_NAME_new_null;
+                  // RLebeau: exit here if not Assigned??
+                end;
+                LXN := X509_get_subject_name(LX);
+                if not Assigned(LXN) then begin
+                  //error
+                  IndySSL_load_client_CA_file_err(Result);
+                  // RLebeau: exit here??
+                end;
+                //* check for duplicates */
+                LXNDup := X509_NAME_dup(LXN);
+                if not Assigned(LXNDup) then begin
+                  //error
+                  IndySSL_load_client_CA_file_err(Result);
+                  // RLebeau: exit here??
+                end;
+                if (sk_X509_NAME_find(Lsk, LXNDup) >= 0) then begin
+                  X509_NAME_free(LXNDup);
+                end else begin
+                  sk_X509_NAME_push(Result, LXNDup);
+                end;
+              finally
+                X509_free(LX);
+              end;
+            end;
+          finally
+            BIO_free(LB);
           end;
-          if Assigned(LX) then begin
-            X509_free(LX);
-          end;
-          if Assigned(Result) then begin
-             ERR_clear_error;
-          end;
-        finally
-          BIO_free(LB);
         end;
+      finally
+        FreeAndNil(LM);
       end;
     finally
-      FreeAndNil(LM);
+      sk_X509_NAME_free(Lsk);
     end;
+  end;
+  if Assigned(Result) then begin
+    ERR_clear_error;
   end;
 end;
 
-function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
+function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
 var
   LM : TMemoryStream;
   B : PBIO;
@@ -780,7 +777,7 @@ begin
       if LKey = nil then begin
         EIdOSSLLoadingKeyError.RaiseException(RSSSLLoadingKeyError);
       end;
-      result := SSL_CTX_use_PrivateKey(ctx,LKey) > 0;
+      Result := SSL_CTX_use_PrivateKey(ctx,LKey) > 0;
     finally
       BIO_free(B);
     end;
@@ -789,7 +786,7 @@ begin
   end;
 end;
 
-function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
+function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
 var
   LM : TMemoryStream;
   B : PBIO;
@@ -823,6 +820,24 @@ begin
   end;
 end;
    {$ENDIF}
+
+{$ELSE}
+
+function IndySSL_load_client_CA_file(const AFileName : String) : PSTACK_OF_X509_NAME;
+begin
+  Result := SSL_load_client_CA_file(PAnsiChar(AFileName));
+end;
+
+function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
+begin
+  Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(AFileName), AType) > 0;
+end;
+
+function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
+begin
+  Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(AFileName), AType) > 0;
+end;
+
 {$ENDIF}
 
 function PasswordCallback(buf: PAnsiChar; size: TIdC_INT; rwflag: TIdC_INT; userdata: Pointer): TIdC_INT; cdecl;
@@ -1963,8 +1978,7 @@ begin
   end;
   // CA list
   if RootCertFile <> '' then begin    {Do not Localize}
-    SSL_CTX_set_client_CA_list(fContext,
-    IndySSL_load_client_CA_file(RootCertFile));
+    SSL_CTX_set_client_CA_list(fContext, IndySSL_load_client_CA_file(RootCertFile));
   end
 end;
 
@@ -2075,33 +2089,12 @@ end;
 
 function TIdSSLContext.LoadCert: Boolean;
 begin
-
-  {$IFDEF STRING_IS_UNICODE}
-  Result := IndySSL_CTX_use_certificate_file(
-                 fContext,
-                 CertFile,
-                 SSL_FILETYPE_PEM);
-  {$ELSE}
-  Result := SSL_CTX_use_certificate_file(
-                 fContext,
-                 CertFile,
-                 SSL_FILETYPE_PEM);
-  {$ENDIF}
+  Result := IndySSL_CTX_use_certificate_file(fContext, CertFile, SSL_FILETYPE_PEM);
 end;
 
 function TIdSSLContext.LoadKey: Boolean;
 begin
-  {$IFDEF STRING_IS_UNICODE}
-  Result := IndySSL_CTX_use_PrivateKey_file(
-                 fContext,
-                 fsKeyFile,
-                 SSL_FILETYPE_PEM);
-  {$ELSE}
-  Result := SSL_CTX_use_PrivateKey_file(
-                 fContext,
-                 fsKeyFile,
-                 SSL_FILETYPE_PEM);
-  {$ENDIF}
+  Result := IndySSL_CTX_use_PrivateKey_file(fContext, fsKeyFile, SSL_FILETYPE_PEM);
   if Result then begin
     Result := SSL_CTX_check_private_key(fContext) > 0;
   end;
