@@ -2114,13 +2114,28 @@ begin
 end;
 
 procedure TIdIRC.CommandNAMEREPLY(ASender: TIdCommand);
+var
+  i: Integer;
+  LNames: string;
+  LNameList: TStringList;
 begin
   if not Assigned(FNames) then begin
     FNames := TStringList.Create;
   end;
-  // TODO: use a collection instead
-  if ASender.Params.Count > 1 then begin
-    FNames.Add(ASender.Params[0] + ' ' + ASender.Params[1]); {do not localize}
+  // AWinkelsdorf 3/10/2010 Rewrote logic to split Names into single Lines of FNames
+  if ASender.Params.Count >= 4 then begin // Names are in [3]
+    LNames := StringsReplace(ASender.Params[3], [' '], [',']); {do not localize}
+    LNameList := TStringList.Create;
+    try
+      LNameList.CommaText := LNames;
+      for i := 0 to LNameList.Count - 1 do
+      begin
+        if LNameList[i] <> '' then
+          FNames.Add(LNameList[i]);
+      end;
+    finally
+      LNameList.Free;
+    end;
   end else begin
     FNames.Add(ASender.Params[0]);
   end;
@@ -2131,7 +2146,7 @@ begin
   if not Assigned(FNames) then begin
     FNames := TStringList.Create;
   end;
-  FNames.Add(ASender.Params[0]);
+  // FNames.Add(ASender.Params[0]);
   if Assigned(FOnNickList) then begin
     OnNicknamesListReceived(ASender.Context, FSenderNick, FNames);
   end;
