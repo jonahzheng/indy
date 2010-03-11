@@ -1537,7 +1537,7 @@ begin
               if Assigned(FOnCTCPQry) then begin
                 FOnCTCPQry(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
               end;
-              CTCPReply(FSenderNick, 'ERRMSG', LCTCP +' ' + LData + ' :unknown query'); {do not localize}
+              CTCPReply(FSenderNick, 'ERRMSG', LCTCP +' ' + LData + ' unknown query'); {do not localize}
             end;
           1: { SOUND }
             begin
@@ -1549,7 +1549,7 @@ begin
               if Assigned(FOnCTCPQry) then begin
                 FOnCTCPQry(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
               end;
-              CTCPReply(FSenderNick, 'ERRMSG', LCTCP +' ' + LData + ' :unknown query'); {do not localize}
+              CTCPReply(FSenderNick, 'ERRMSG', LCTCP +' ' + LData + ' unknown query'); {do not localize}
             end;
           2: { PING }
             begin
@@ -1566,32 +1566,34 @@ begin
               if Assigned(FOnCTCPQry) then begin
                 FOnCTCPQry(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
               end;
-              CTCPReply(FSenderNick, LCTCP, ':' + DateTimeToStr(Now)); {do not localize}
+              // AWinkelsdorf 3/10/2010 ToDo: CTCP Ping might need a CTIME result but
+              // many clients do not send the required CTIME with the Ping Query...
+              CTCPReply(FSenderNick, LCTCP, DateTimeToStr(Now)); {do not localize}
             end;
           3: { FINGER }
             begin
-              CTCPReply(FSenderNick, LCTCP, ':' + Replies.Finger); {do not localize}
+              CTCPReply(FSenderNick, LCTCP, Replies.Finger); {do not localize}
             end;
           4: { USERINFO }
             begin
-              CTCPReply(FSenderNick, LCTCP, ':' + Replies.UserInfo); {do not localize}
+              CTCPReply(FSenderNick, LCTCP, Replies.UserInfo); {do not localize}
             end;
           5: { VERSION }
             begin
-              CTCPReply(FSenderNick, LCTCP, ':' + Replies.Version); {do not localize}
+              CTCPReply(FSenderNick, LCTCP, Replies.Version); {do not localize}
             end;
           6: { CLIENTINFO }
             begin
               // TODO: add OnClientInfoQuery event to handle per-command queries
-              CTCPReply(FSenderNick, LCTCP, ':' + Replies.ClientInfo); {do not localize}
+              CTCPReply(FSenderNick, LCTCP, Replies.ClientInfo); {do not localize}
             end;
           7: { TIME }
             begin
-              CTCPReply(FSenderNick, LCTCP, IndyFormat(RSIRCTimeIsNow, [DateTimeToStr(Now)]));
+              CTCPReply(FSenderNick, LCTCP, DateTimeToStr(Now));
             end;
           8: { ERROR }
             begin
-              CTCPReply(FSenderNick, LCTCP, LData + ' :No Error'); {do not localize}
+              CTCPReply(FSenderNick, LCTCP, LData + ' No Error'); {do not localize}
             end;
           9: { DCC }
             begin
@@ -1603,14 +1605,14 @@ begin
               if Assigned(FOnCTCPQry) then begin
                 FOnCTCPQry(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
               end;
-              CTCPReply(FSenderNick, LCTCP, LData + ' :unknown query'); {do not localize}
+              CTCPReply(FSenderNick, LCTCP, LData + ' unknown query'); {do not localize}
             end;
           else
             begin
               if Assigned(FOnCTCPQry) then begin
                 FOnCTCPQry(ASender.Context, FSenderNick, FSenderHost, LTarget, LCTCP, LData);
               end;
-              CTCPReply(FSenderNick, LCTCP, LData + ' :unknown query'); {do not localize}
+              CTCPReply(FSenderNick, LCTCP, LData + ' unknown query'); {do not localize}
             end;
         end;
       end;

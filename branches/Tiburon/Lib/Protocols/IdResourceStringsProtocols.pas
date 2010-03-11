@@ -868,14 +868,14 @@ resourcestring
 
   {IRC Messages}
   RSIRCCanNotConnect = 'IRC Connect Failed';
-  RSIRCNotConnected = 'Not connected to server.';
-  RSIRCClientVersion =  'TIdIRC 1.061 by Steve Williams';
-  RSIRCClientInfo = '%s Non-visual component for 32-bit Delphi.';
-  RSIRCNick = 'Nick';
-  RSIRCAltNick = 'OtherNick';
-  RSIRCUserName = 'ircuser';
-  RSIRCRealName = 'Real name';
-  RSIRCTimeIsNow = 'Local time is %s';
+  // RSIRCNotConnected = 'Not connected to server.';
+  // RSIRCClientVersion =  'TIdIRC 1.061 by Steve Williams';
+  // RSIRCClientInfo = '%s Non-visual component for 32-bit Delphi.';
+  // RSIRCNick = 'Nick';
+  // RSIRCAltNick = 'OtherNick';
+  // RSIRCUserName = 'ircuser';
+  // RSIRCRealName = 'Real name';
+  // RSIRCTimeIsNow = 'Local time is %s'; // difficult to strip for clients
 
   {HL7 Lower Layer Protocol Messages}
   RSHL7StatusStopped           = 'Stopped';
