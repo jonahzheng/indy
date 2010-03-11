@@ -658,18 +658,21 @@ are based on code in the OpenSSL .DLL that is translated into Delphi but loads f
 memory streams.
 }
 
-  {$IFDEF USE_VCL_POSIX}
+  {$IFDEF UNIX}
 function IndySSL_load_client_CA_file(const AFileName : String) : PSTACK_OF_X509_NAME;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := SSL_load_client_CA_file(PAnsiChar(UTF8String(AFileName)));
 end;
 
-function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
+function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(UTF8String(AFileName)), AType) > 0;
 end;
 
-function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; AFileName : String; AType : Integer) : Boolean;
+function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(UTF8String(AFileName)), AType) > 0;
 end;
@@ -824,16 +827,19 @@ end;
 {$ELSE}
 
 function IndySSL_load_client_CA_file(const AFileName : String) : PSTACK_OF_X509_NAME;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := SSL_load_client_CA_file(PAnsiChar(AFileName));
 end;
 
 function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(AFileName), AType) > 0;
 end;
 
 function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(AFileName), AType) > 0;
 end;
@@ -2057,19 +2063,12 @@ end;
 
 function TIdSSLContext.LoadRootCert: Boolean;
 begin
-{  if fVerifyDirs <> '' then begin
-    Result := SSL_CTX_load_verify_locations(
-                   fContext,
-                   PAnsiChar(RootCertFile),
-                   PAnsiChar(fVerifyDirs)) > 0;
-  end
-  else begin
-}
+
 {$IFDEF STRING_IS_UNICODE}
-  {$IFDEF POSIX}
+  {$IFDEF UNIX}
   Result := SSL_CTX_load_verify_locations(
                    fContext,
-                   PAnsiChar(UTF8String((RootCertFile)),
+                   PAnsiChar(UTF8String(RootCertFile)),
                    nil) > 0;
   {$ENDIF}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
@@ -2084,7 +2083,6 @@ begin
                    PAnsiChar(RootCertFile),
                    nil) > 0;
 {$ENDIF}
-{  end;}
 end;
 
 function TIdSSLContext.LoadCert: Boolean;
