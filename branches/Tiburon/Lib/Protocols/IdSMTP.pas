@@ -201,7 +201,8 @@ uses
   IdSASLCollection,
   IdSMTPBase,
   IdBaseComponent,
-  IdGlobal;
+  IdGlobal,
+  SysUtils;
 
 type
   TIdSMTPAuthenticationType = (satNone, satDefault, satSASL);
@@ -265,7 +266,7 @@ uses
   IdReplySMTP,
   IdSSL,
   IdResourceStringsProtocols,
-  IdTCPConnection, SysUtils;
+  IdTCPConnection;
 
 { TIdSMTP }
 
