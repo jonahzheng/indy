@@ -117,7 +117,7 @@ type
 implementation
 
 uses
-  IdCoderMIME, IdResourceStringsProtocols, SysUtils;
+  IdCoderMIME, IdGlobalProtocols, IdResourceStringsProtocols, SysUtils;
 
 var
   AuthList: TStringList = nil;
@@ -166,8 +166,8 @@ end;
 constructor TIdAuthentication.Create;
 begin
   inherited Create;
-  FAuthParams := TIdHeaderList.Create;
-  FParams := TIdHeaderList.Create;
+  FAuthParams := TIdHeaderList.Create(QuoteHTTP);
+  FParams := TIdHeaderList.Create(QuoteHTTP);
   FCurrentStep := 0;
 end;
 

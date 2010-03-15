@@ -264,13 +264,13 @@ begin
     FFileName := ExtractFileName(AFileName);
     FFieldObject := AFileData;
     if Length(AContentType) > 0 then begin
-      FContentType := RemoveHeaderEntry(AContentType, 'charset'); {do not localize}
+      FContentType := RemoveHeaderEntry(AContentType, 'charset', QuoteMIMEContentType); {do not localize}
       if ACharset <> '' then begin
         FCharset := ACharset;
       end else
       begin
         {RLebeau: override the current CharSet only if the header specifies a new value}
-        LCharSet := ExtractHeaderSubItem(AContentType, 'charset'); {do not localize}
+        LCharSet := ExtractHeaderSubItem(AContentType, 'charset', QuoteMIMEContentType); {do not localize}
         if LCharSet <> '' then begin
           FCharSet := LCharSet;
         end;
@@ -672,9 +672,9 @@ var
   LCharSet: String;
 begin
   if Length(Value) > 0 then begin
-    FContentType := RemoveHeaderEntry(Value, 'charset'); {do not localize}
+    FContentType := RemoveHeaderEntry(Value, 'charset', QuoteMIMEContentType); {do not localize}
     {RLebeau: override the current CharSet only if the header specifies a new value}
-    LCharSet := ExtractHeaderSubItem(Value, 'charset'); {do not localize}
+    LCharSet := ExtractHeaderSubItem(Value, 'charset', QuoteMIMEContentType); {do not localize}
     if LCharSet <> '' then begin
       FCharSet := LCharSet;
     end;

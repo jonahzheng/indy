@@ -483,10 +483,10 @@ function TIdMessageDecoderMIME.GetAttachmentFilename(const AContentType, AConten
 var
   LValue: string;
 begin
-  LValue := ExtractHeaderSubItem(AContentDisposition, 'filename'); {do not localize}
+  LValue := ExtractHeaderSubItem(AContentDisposition, 'filename', QuoteRFC822); {do not localize}
   if LValue = '' then begin
     // Get filename from Content-Type
-    LValue := ExtractHeaderSubItem(AContentType, 'name'); {do not localize}
+    LValue := ExtractHeaderSubItem(AContentType, 'name', QuoteMIMEContentType); {do not localize}
   end;
   if Length(LValue) > 0 then begin
     Result := RemoveInvalidCharsFromFilename(DecodeHeader(LValue));
@@ -578,7 +578,7 @@ begin
     //CC: Need to detect on "multipart" rather than boundary, because only the
     //"multipart" bit will be visible later...
     if TextStartsWith(s, MIMEGenericMultiPart) then begin  {do not localize}
-      ABoundary := ExtractHeaderSubItem(s, 'boundary');  {do not localize}
+      ABoundary := ExtractHeaderSubItem(s, 'boundary', QuoteMIMEContentType);  {do not localize}
       if Owner is TIdMessage then begin
         if Length(ABoundary) > 0 then begin
           TIdMessage(Owner).MIMEBoundary.Push(ABoundary, TIdMessage(Owner).MessageParts.Count);

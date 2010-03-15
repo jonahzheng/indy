@@ -658,15 +658,15 @@ begin
   FCcList := TIdEmailAddressList.Create(Self);
   FMessageParts := TIdMessageParts.Create(Self);
   FNewsGroups := TStringList.Create;
-  FHeaders := TIdHeaderList.Create;
+  FHeaders := TIdHeaderList.Create(QuoteRFC822);
   FFromList := TIdEmailAddressList.Create(Self);
   FReplyTo := TIdEmailAddressList.Create(Self);
   FSender := TIdEmailAddressItem.Create;
-  FExtraHeaders := TIdHeaderList.Create;
+  FExtraHeaders := TIdHeaderList.Create(QuoteRFC822);
   FReceiptRecipient := TIdEmailAddressItem.Create;
   NoDecode := ID_MSG_NODECODE;
   FMIMEBoundary := TIdMIMEBoundary.Create;
-  FLastGeneratedHeaders := TIdHeaderList.Create;
+  FLastGeneratedHeaders := TIdHeaderList.Create(QuoteRFC822);
   Clear;
   FEncoding := meDefault;
 end;
@@ -823,10 +823,10 @@ begin
         if FContentType <> '' then begin
           LContentType := FContentType;
           if FCharSet <> '' then begin
-            LContentType := ReplaceHeaderSubItem(LContentType, 'charset', FCharSet);  {do not localize}
+            LContentType := ReplaceHeaderSubItem(LContentType, 'charset', FCharSet, QuoteMIMEContentType);  {do not localize}
           end;
           if (MessageParts.Count > 0) and (LMIMEBoundary <> '') then begin
-            LContentType := ReplaceHeaderSubItem(LContentType, 'boundary', LMIMEBoundary);  {do not localize}
+            LContentType := ReplaceHeaderSubItem(LContentType, 'boundary', LMIMEBoundary, QuoteMIMEContentType);  {do not localize}
           end;
           Values['Content-Type'] := LContentType; {do not localize}
         end;
@@ -839,7 +839,7 @@ begin
       Values['Content-Transfer-Encoding'] := ContentTransferEncoding; {do not localize}
       LContentType := FContentType;
       if (LContentType <> '') and (FCharSet <> '') then begin
-        LContentType := ReplaceHeaderSubItem(LContentType, 'charset', FCharSet);  {do not localize}
+        LContentType := ReplaceHeaderSubItem(LContentType, 'charset', FCharSet, QuoteMIMEContentType);  {do not localize}
       end;
       Values['Content-Type'] := LContentType;  {do not localize}
     end;
@@ -928,8 +928,8 @@ begin
     FContentType := 'text/plain';  {do not localize}
     FCharSet := '';
   end else begin
-    FCharSet := ExtractHeaderSubItem(FContentType, 'charset');// Headers.Params['Content-Type', 'charset'];  {do not localize}
-    FContentType := RemoveHeaderEntry(FContentType, 'charset');  {do not localize}
+    FCharSet := ExtractHeaderSubItem(FContentType, 'charset', QuoteMIMEContentType);// Headers.Params['Content-Type', 'charset'];  {do not localize}
+    FContentType := RemoveHeaderEntry(FContentType, 'charset', QuoteMIMEContentType);  {do not localize}
   end;
 
   ContentTransferEncoding := Headers.Values['Content-Transfer-Encoding']; {do not localize}
@@ -961,7 +961,7 @@ begin
   end;
   {Note that the following code ensures MIMEBoundary.Count is 0 for single-part MIME messages...}
   LBoundary := Headers.Params['Content-Type', 'boundary'];  {do not localize}
-  FContentType := RemoveHeaderEntry(FContentType, 'boundary');  {do not localize}
+  FContentType := RemoveHeaderEntry(FContentType, 'boundary', QuoteMIMEContentType);  {do not localize}
   if LBoundary <> '' then begin
     MIMEBoundary.Push(LBoundary, -1);
   end;
@@ -993,9 +993,9 @@ procedure TIdMessage.SetContentType(const AValue: String);
 var
   LCharSet: string;
 begin
-  FContentType := RemoveHeaderEntry(AValue, 'charset'); {do not localize}
+  FContentType := RemoveHeaderEntry(AValue, 'charset', QuoteMIMEContentType); {do not localize}
   {RLebeau: override the current CharSet only if the header specifies a new value}
-  LCharSet := ExtractHeaderSubItem(AValue, 'charset'); {do not localize}
+  LCharSet := ExtractHeaderSubItem(AValue, 'charset', QuoteMIMEContentType); {do not localize}
   if LCharSet <> '' then begin
     FCharSet := LCharSet;
   end;

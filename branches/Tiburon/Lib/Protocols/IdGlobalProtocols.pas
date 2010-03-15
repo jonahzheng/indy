@@ -393,6 +393,8 @@ type
     Windows2003Server, Windows2003AdvancedServer);
   {$ENDIF}
 
+  TIdHeaderQuotingType = (QuotePlain, QuoteRFC822, QuoteMIMEContentType, QuoteHTTP);
+
   //
   EIdExtensionAlreadyExists = class(EIdException);
 // Procs - KEEP THESE ALPHABETICAL!!!!!
@@ -407,15 +409,17 @@ type
   procedure CommaSeparatedToStringList(AList: TStrings; const Value:string);
   function CompareDateTime(const ADateTime1, ADateTime2 : TDateTime) : Integer;
 
-  function ContentTypeToEncoding(const AContentType: string): TIdTextEncoding;
+  function ContentTypeToEncoding(const AContentType: string; AQuoteType: TIdHeaderQuotingType): TIdTextEncoding;
   function CharsetToEncoding(const ACharset: string): TIdTextEncoding;
 
-  function ReadStringAsContentType(AStream: TStream; const AContentType: String
+  function ReadStringAsContentType(AStream: TStream; const AContentType: String;
+    AQuoteType: TIdHeaderQuotingType
     {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}): String;
   function ReadStringAsCharset(AStream: TStream; const ACharset: String
     {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}): String;
 
-  procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings; const AContentType: string
+  procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings; const AContentType: String;
+    AQuoteType: TIdHeaderQuotingType
     {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF});
   procedure ReadStringsAsCharset(AStream: TStream; AStrings: TStrings; const ACharset: string
     {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF});
@@ -438,8 +442,8 @@ type
   function DomainName(const AHost: String): String;
   function EnsureMsgIDBrackets(const AMsgID: String): String;
   function ExtractHeaderItem(const AHeaderLine: String): String;
-  function ExtractHeaderSubItem(const AHeaderLine,ASubItem: String): String;
-  function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String): String;
+  function ExtractHeaderSubItem(const AHeaderLine, ASubItem: String; AQuoteType: TIdHeaderQuotingType): String;
+  function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String; AQuoteType: TIdHeaderQuotingType): String;
   function FileSizeByName(const AFilename: TIdFileName): Int64;
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   function IsVolume(const APathName : TIdFileName) : Boolean;
@@ -513,8 +517,8 @@ type
   function IndyWrapText(const ALine, ABreakStr, ABreakChars : string; MaxCol: Integer): string;
  
   //The following is for working on email headers and message part headers...
-  function RemoveHeaderEntry(const AHeader, AEntry: string): string;
-  function RemoveHeaderEntries(const AHeader: string; AEntries: array of string): string;
+  function RemoveHeaderEntry(const AHeader, AEntry: string; AQuoteType: TIdHeaderQuotingType): string;
+  function RemoveHeaderEntries(const AHeader: string; AEntries: array of string; AQuoteType: TIdHeaderQuotingType): string;
 
   {
     Three functions for easier manipulating of strings.  Don't know of any
@@ -1392,7 +1396,7 @@ begin
   LOldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
   try
     {$ENDIF}
-  Result := CopyFile(PIdFileNameChar(Source), PIdFileNameChar(Destination), False);
+    Result := CopyFile(PIdFileNameChar(Source), PIdFileNameChar(Destination), False);
     {$IFDEF WIN32_OR_WIN64}
   finally
     SetErrorMode(LOldErrorMode);
@@ -1637,7 +1641,7 @@ begin
       end;
     {$IFDEF WIN32_OR_WIN64}
     finally
-     SetErrorMode(LOldErrorMode);
+      SetErrorMode(LOldErrorMode);
     end;
     {$ENDIF}
   end;
@@ -3513,11 +3517,17 @@ begin
 end;
 
 const
-  token_specials = '()<>@,;:\"/[]?='; {do not localize}
+  QuoteSpecials: array[TIdHeaderQuotingType] of String = (
+    {Plain } '',                    {do not localize}
+    {RFC822} '()<>@,;:\"./',        {do not localize}
+    {MIME  } '()<>@,;:\"/[]?=',     {do not localize}
+    {HTTP  } '()<>@,;:\"/[]?={} '#9 {do not localize}
+    );
 
-procedure SplitHeaderSubItems(AHeaderLine: String; AItems: TStrings);
+procedure SplitHeaderSubItems(AHeaderLine: String; AItems: TStrings;
+  AQuoteType: TIdHeaderQuotingType);
 var
-  LName, LValue: String;
+  LName, LValue, LSep: String;
   I: Integer;
 
   function FetchQuotedString(var VHeaderLine: string): string;
@@ -3527,6 +3537,7 @@ var
     I := 1;
     while I <= Length(VHeaderLine) do begin
       if VHeaderLine[I] = '\' then begin
+        // TODO: disable this logic for HTTP 1.0
         if I < Length(VHeaderLine) then begin
           Delete(VHeaderLine, I, 1);
         end;
@@ -3542,7 +3553,8 @@ var
   end;
 
 begin
-  Fetch(AHeaderLine, ';'); { do not localize}
+  Fetch(AHeaderLine, ';'); {do not localize}
+  LSep := CharRange(#0, #32) + QuoteSpecials[AQuoteType] + #127;
   while AHeaderLine <> '' do
   begin
     AHeaderLine := TrimLeft(AHeaderLine);
@@ -3554,8 +3566,8 @@ begin
     if TextStartsWith(AHeaderLine, '"') then {do not localize}
     begin
       LValue := FetchQuotedString(AHeaderLine);
-    end else  begin
-      I := FindFirstOf(' ' + token_specials, AHeaderLine);
+    end else begin
+      I := FindFirstOf(LSep, AHeaderLine);
       if I <> 0 then
       begin
         LValue := Copy(AHeaderLine, 1, I-1);
@@ -3574,7 +3586,8 @@ begin
   end;
 end;
 
-function ExtractHeaderSubItem(const AHeaderLine, ASubItem: String): String;
+function ExtractHeaderSubItem(const AHeaderLine, ASubItem: String;
+  AQuoteType: TIdHeaderQuotingType): String;
 var
   LItems: TStringList;
   {$IFNDEF VCL_6_OR_ABOVE}
@@ -3585,7 +3598,7 @@ begin
   Result := '';
   LItems := TStringList.Create;
   try
-    SplitHeaderSubItems(AHeaderLine, LItems);
+    SplitHeaderSubItems(AHeaderLine, LItems, AQuoteType);
     {$IFDEF VCL_6_OR_ABOVE}
     LItems.CaseSensitive := False;
     Result := LItems.Values[ASubItem];
@@ -3605,7 +3618,8 @@ begin
   end;
 end;
 
-function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String): String;
+function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String;
+  AQuoteType: TIdHeaderQuotingType): String;
 var
   LItems: TStringList;
   I: Integer;
@@ -3634,18 +3648,31 @@ var
   function QuoteString(const S: String): String;
   var
     I: Integer;
-    LQuotesNeeded: Boolean;
+    LAddQuotes: Boolean;
+    LNeedQuotes, LNeedEscape: String;
   begin
     Result := '';
-    LQuotesNeeded := False;
+    if Length(S) = 0 then begin
+      Exit;
+    end;
+    LAddQuotes := False;
+    LNeedQuotes := CharRange(#0, #32) + QuoteSpecials[AQuoteType] + #127;
+    // TODO: disable this logic for HTTP 1.0
+    LNeedEscape := '"\'; {Do not Localize}
+    if AQuoteType in [QuoteRFC822, QuoteMIMEContentType] then begin
+      LNeedEscape := LNeedEscape + CR; {Do not Localize}
+    end;
     for I := 1 to Length(S) do begin
-      if CharIsInSet(S, I, token_specials) then begin
+      if CharIsInSet(S, I, LNeedEscape) then begin
+        LAddQuotes := True;
         Result := Result + '\'; {do not localize}
-        LQuotesNeeded := True;
+      end
+      else if CharIsInSet(S, I, LNeedQuotes) then begin
+        LAddQuotes := True;
       end;
       Result := Result + S[I];
     end;
-    if LQuotesNeeded then begin
+    if LAddQuotes then begin
       Result := '"' + Result + '"';
     end;
   end;
@@ -3654,7 +3681,7 @@ begin
   Result := '';
   LItems := TStringList.Create;
   try
-    SplitHeaderSubItems(AHeaderLine, LItems);
+    SplitHeaderSubItems(AHeaderLine, LItems, AQuoteType);
     {$IFDEF VCL_6_OR_ABOVE}
     LItems.CaseSensitive := False;
     LItems.Values[ASubItem] := Trim(AValue);
@@ -3675,7 +3702,6 @@ begin
     if Result <> '' then begin
       for I := 0 to LItems.Count-1 do begin
         LTmp := LItems.Strings[I];
-        // TODO - escapse special characters
         Result := Result + '; ' + LItems.Names[I] + '=' + QuoteString(Copy(LTmp, Pos('=', LTmp)+1, MaxInt)); {do not localize}
       end;
     end;
@@ -3880,21 +3906,23 @@ end;
 
 //The following is for working on email headers and message part headers.
 //For example, to remove the boundary from the ContentType header, call
-//ContentType := RemoveHeaderEntry(ContentType, 'boundary');
-function RemoveHeaderEntry(const AHeader, AEntry: string): string;
+//ContentType := RemoveHeaderEntry(ContentType, 'boundary', QuoteMIMEContentType);
+function RemoveHeaderEntry(const AHeader, AEntry: string;
+  AQuoteType: TIdHeaderQuotingType): string;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  Result := ReplaceHeaderSubItem(AHeader, AEntry, '');
+  Result := ReplaceHeaderSubItem(AHeader, AEntry, '', AQuoteType);
 end;
 
-function RemoveHeaderEntries(const AHeader: string; AEntries: array of string): string;
+function RemoveHeaderEntries(const AHeader: string; AEntries: array of string;
+  AQuoteType: TIdHeaderQuotingType): string;
 var
   I: Integer;
 begin
   Result := AHeader;
   if Length(AEntries) > 0 then begin
     for I := Low(AEntries) to High(AEntries) do begin
-      Result := ReplaceHeaderSubItem(Result, AEntries[I], '');
+      Result := ReplaceHeaderSubItem(Result, AEntries[I], '', AQuoteType);
     end;
   end;
 end;
@@ -3970,11 +3998,12 @@ begin
   end;
 end;
 
-function ContentTypeToEncoding(const AContentType: String): TIdTextEncoding;
+function ContentTypeToEncoding(const AContentType: String;
+  AQuoteType: TIdHeaderQuotingType): TIdTextEncoding;
 var
   LCharset: String;
 begin
-  LCharset := ExtractHeaderSubItem(AContentType, 'charset');  {do not localize}
+  LCharset := ExtractHeaderSubItem(AContentType, 'charset', AQuoteType);  {do not localize}
   Result := CharsetToEncoding(LCharset);
 end;
 
@@ -4043,14 +4072,15 @@ begin
   end;
 end;
 
-function ReadStringAsContentType(AStream: TStream; const AContentType: String
+function ReadStringAsContentType(AStream: TStream; const AContentType: String;
+  AQuoteType: TIdHeaderQuotingType
   {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
 ): String;
 var
   LEncoding: TIdTextEncoding;
 begin
   Result := '';
-  LEncoding := ContentTypeToEncoding(AContentType);
+  LEncoding := ContentTypeToEncoding(AContentType, AQuoteType);
   {$IFNDEF DOTNET}
   try
   {$ENDIF}
@@ -4062,13 +4092,14 @@ begin
   {$ENDIF}
 end;
 
-procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings; const AContentType: string
+procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings;
+  const AContentType: String; AQuoteType: TIdHeaderQuotingType
   {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
 );
 var
   LEncoding: TIdTextEncoding;
 begin
-  LEncoding := ContentTypeToEncoding(AContentType);
+  LEncoding := ContentTypeToEncoding(AContentType, AQuoteType);
   {$IFNDEF DOTNET}
   try
   {$ENDIF}

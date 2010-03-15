@@ -186,7 +186,7 @@ constructor TIdHTTPProxyServerContext.Create(AConnection: TIdTCPConnection;
   AYarn: TIdYarn; AList: TThreadList = nil);
 begin
   inherited Create(AConnection, AYarn, AList);
-  FHeaders := TIdHeaderList.Create;
+  FHeaders := TIdHeaderList.Create(QuoteHTTP);
 end;
 
 destructor TIdHTTPProxyServerContext.Destroy;

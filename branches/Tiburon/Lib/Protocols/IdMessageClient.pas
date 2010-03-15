@@ -681,7 +681,7 @@ var
           if AMsg.IsMsgSinglePartMime then begin
             ReadStringsAsCharSet(LMStream, AMsg.Body, AMsg.CharSet);
           end else begin
-            ReadStringsAsContentType(LMStream, AMsg.Body, VDecoder.Headers.Values[SContentType]);
+            ReadStringsAsContentType(LMStream, AMsg.Body, VDecoder.Headers.Values[SContentType], QuoteMIMEContentType);
           end;
         end else begin
           if AMsg.IsMsgSinglePartMime then begin

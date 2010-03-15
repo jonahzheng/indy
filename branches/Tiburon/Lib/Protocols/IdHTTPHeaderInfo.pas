@@ -259,9 +259,9 @@ constructor TIdEntityHeaderInfo.Create;
 begin
   inherited Create;
 
-  FRawHeaders := TIdHeaderList.Create;
+  FRawHeaders := TIdHeaderList.Create(QuoteHTTP);
   FRawHeaders.FoldLength := 1024;
-  FCustomHeaders := TIdHeaderList.Create;
+  FCustomHeaders := TIdHeaderList.Create(QuoteHTTP);
 
   Clear;
 end;
@@ -459,7 +459,7 @@ begin
     end;
     if Length(FContentType) > 0 then
     begin
-      Values['Content-Type'] := ReplaceHeaderSubItem(FContentType, 'charset', FCharSet); {do not localize}
+      Values['Content-Type'] := ReplaceHeaderSubItem(FContentType, 'charset', FCharSet, QuoteHTTP); {do not localize}
     end;
     if FContentLength >= 0 then
     begin
@@ -517,9 +517,9 @@ var
 begin
   if AValue <> '' then
   begin
-    FContentType := RemoveHeaderEntry(AValue, 'charset'); {do not localize}
+    FContentType := RemoveHeaderEntry(AValue, 'charset', QuoteHTTP); {do not localize}
     {RLebeau: override the current CharSet only if the header specifies a new value}
-    LCharSet := ExtractHeaderSubItem(AValue, 'charset'); {do not localize}
+    LCharSet := ExtractHeaderSubItem(AValue, 'charset', QuoteHTTP); {do not localize}
     if LCharSet <> '' then begin
       FCharSet := LCharSet;
     end;
@@ -822,9 +822,9 @@ constructor TIdResponseHeaderInfo.Create;
 begin
   inherited Create;
   FContentType := 'text/html';  {do not localize}
-  FWWWAuthenticate := TIdHeaderList.Create;
-  FProxyAuthenticate := TIdHeaderList.Create;
-  FMetaHTTPEquiv := TIdHeaderList.Create;
+  FWWWAuthenticate := TIdHeaderList.Create(QuoteHTTP);
+  FProxyAuthenticate := TIdHeaderList.Create(QuoteHTTP);
+  FMetaHTTPEquiv := TIdHeaderList.Create(QuoteHTTP);
   FAcceptRanges := '';
 end;
 
