@@ -437,9 +437,6 @@
 
 //Delphi & C++Builder 2011 (Fulcrum)
 {$IFDEF VER220}
-//REMOVE DCC DEFINE after the next Fulcrum beta.
-//It will be defined there.
-  {$DEFINE DCC}
   {$DEFINE USE_INLINE}
   {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
   {$DEFINE VCL_4_OR_ABOVE}
