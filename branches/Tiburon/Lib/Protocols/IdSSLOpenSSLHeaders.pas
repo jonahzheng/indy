@@ -5661,13 +5661,13 @@ type
     // software" implementations.
     rsa_keygen : function (rsa : PRSA; bits : TIdC_INT; e : PBIGNUM; cb : PBN_GENCB) : TIdC_INT; cdecl;
   end;
-  PRSA_METHOD = Pointer;
+  PRSA_METHOD = ^RSA_METHOD;
   RSA = record
     // The first parameter is used to pickup errors where
     // this is passed instead of aEVP_PKEY, it is set to 0
     pad : TIdC_INT;
     version : TIdC_LONG;
-    RSA_METHOD : Pointer; // const RSA_METHOD *meth;
+    meth : PRSA_METHOD; // const RSA_METHOD *meth;
     // functional reference if 'meth' is ENGINE-provided
     engine : PENGINE;
     n : PBIGNUM;
