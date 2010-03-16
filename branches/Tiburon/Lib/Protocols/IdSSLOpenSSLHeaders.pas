@@ -5667,7 +5667,7 @@ type
     // this is passed instead of aEVP_PKEY, it is set to 0
     pad : TIdC_INT;
     version : TIdC_LONG;
-    //const RSA_METHOD *meth;
+    RSA_METHOD : Pointer; // const RSA_METHOD *meth;
     // functional reference if 'meth' is ENGINE-provided
     engine : PENGINE;
     n : PBIGNUM;
