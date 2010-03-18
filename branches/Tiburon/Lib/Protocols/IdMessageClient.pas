@@ -691,7 +691,7 @@ var
           end;
           LTxt := TIdText.Create(AMsg.MessageParts);
           try
-            ReadStringsAsContentType(LMStream, LTxt.Body, LHdrs.Values[SContentType]);
+            ReadStringsAsContentType(LMStream, LTxt.Body, LHdrs.Values[SContentType], QuoteMIMEContentType);
             RemoveLastBlankLine(LTxt.Body);
             LTxt.ContentType := LTxt.ResolveContentType(LHdrs.Values[SContentType]);
             LTxt.CharSet := LTxt.GetCharSet(LHdrs.Values[SContentType]);       {do not localize}
