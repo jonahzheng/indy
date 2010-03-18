@@ -4513,32 +4513,56 @@ const
   X509_EX_V_INIT = $0001;
   X509_EX_V_NETSCAPE_HACK = $8000;
   X509_FILETYPE_DEFAULT = 3;
-  X509_F_ADD_CERT_DIR = 100;
-  X509_F_BY_FILE_CTRL = 101;
-  X509_F_DIR_CTRL = 102;
-  X509_F_GET_CERT_BY_SUBJECT = 103;
-  X509_F_X509V3_ADD_EXT = 104;
-  X509_F_X509_CHECK_PRIVATE_KEY = 128;
-  X509_F_X509_EXTENSION_CREATE_BY_NID = 108;
-  X509_F_X509_EXTENSION_CREATE_BY_OBJ = 109;
-  X509_F_X509_GET_PUBKEY_PARAMETERS = 110;
-  X509_F_X509_LOAD_CERT_FILE = 111;
-  X509_F_X509_LOAD_CRL_FILE = 112;
-  X509_F_X509_NAME_ADD_ENTRY = 113;
+  X509_F_ADD_CERT_DIR                  = 100;
+  X509_F_BY_FILE_CTRL                  = 101;
+  X509_F_DIR_CTRL                      = 102;
+  X509_F_GET_CERT_BY_SUBJECT           = 103;
+  X509_F_X509V3_ADD_EXT                = 104;
+  X509_F_X509_EXTENSION_CREATE_BY_NID  = 108;
+  X509_F_X509_EXTENSION_CREATE_BY_OBJ  = 109;
+
+  X509_F_X509_GET_PUBKEY_PARAMETERS    = 110;
+  X509_F_X509_LOAD_CERT_FILE           = 111;
+  X509_F_X509_LOAD_CRL_FILE            = 112;
+  X509_F_X509_NAME_ADD_ENTRY           = 113;
   X509_F_X509_NAME_ENTRY_CREATE_BY_NID = 114;
-  X509_F_X509_NAME_ENTRY_SET_OBJECT = 115;
-  X509_F_X509_NAME_ONELINE = 116;
-  X509_F_X509_NAME_PRINT = 117;
-  X509_F_X509_PRINT_FP = 118;
-  X509_F_X509_PUBKEY_GET = 119;
-  X509_F_X509_PUBKEY_SET = 120;
-  X509_F_X509_REQ_PRINT = 121;
-  X509_F_X509_REQ_PRINT_FP = 122;
-  X509_F_X509_REQ_TO_X509 = 123;
-  X509_F_X509_STORE_ADD_CERT = 124;
-  X509_F_X509_STORE_ADD_CRL = 125;
-  X509_F_X509_TO_X509_REQ = 126;
-  X509_F_X509_VERIFY_CERT = 127;
+  X509_F_X509_NAME_ENTRY_SET_OBJECT    = 115;
+  X509_F_X509_NAME_ONELINE             = 116;
+  X509_F_X509_NAME_PRINT               = 117;
+  X509_F_X509_PRINT_FP                 = 118;
+  X509_F_X509_PUBKEY_GET               = 119;
+
+  X509_F_X509_PUBKEY_SET               = 120;
+  X509_F_X509_REQ_PRINT                = 121;
+  X509_F_X509_REQ_PRINT_FP             = 122;
+  X509_F_X509_REQ_TO_X509              = 123;
+  X509_F_X509_STORE_ADD_CERT           = 124;
+  X509_F_X509_STORE_ADD_CRL            = 125;
+  X509_F_X509_TO_X509_REQ              = 126;
+  X509_F_X509_VERIFY_CERT              = 127;
+  X509_F_X509_CHECK_PRIVATE_KEY        = 128;
+  X509_F_NETSCAPE_SPKI_B64_DECODE	     = 129;
+
+  X509_F_NETSCAPE_SPKI_B64_ENCODE	     = 130;
+  X509_F_X509_NAME_ENTRY_CREATE_BY_TXT = 131;
+  X509_F_X509_LOAD_CERT_CRL_FILE       = 132;
+  X509_F_X509_TRUST_ADD                = 133;
+  X509_F_X509_STORE_CTX_PURPOSE_INHERIT	= 134;
+  X509_F_X509AT_ADD1_ATTR	             = 135;
+  X509_F_X509_ATTRIBUTE_CREATE_BY_NID  = 136;
+  X509_F_X509_ATTRIBUTE_CREATE_BY_OBJ	 = 137;
+  X509_F_X509_ATTRIBUTE_SET1_DATA      = 138;
+  X509_F_X509_ATTRIBUTE_GET0_DATA      = 139;
+
+  X509_F_X509_ATTRIBUTE_CREATE_BY_TXT	 = 140;
+  X509_F_X509_TRUST_SET                = 141;
+  X509_F_X509_STORE_CTX_NEW		         = 142;
+  X509_F_X509_STORE_CTX_INIT           = 143;
+  X509_F_X509_REQ_CHECK_PRIVATE_KEY	   = 144;
+  X509_F_CHECK_POLICY	                 = 145;
+  X509_F_X509_STORE_CTX_GET1_ISSUER		 = 146;
+  X509_F_X509_CRL_PRINT_FP             = 147;
+
   X509_LU_CRL = 2;
   X509_LU_FAIL = 0;
   X509_LU_PKEY = 3;
@@ -8496,6 +8520,7 @@ var
   RSA_private_decrypt: function(flen: TIdC_INT; from: PByte; _to: PByte; rsa: PRSA; padding: TIdC_INT): TIdC_INT cdecl = nil;
   RSA_public_encrypt: function(flen: TIdC_INT; from: PByte; _to: PByte; rsa: PRSA; padding: TIdC_INT): TIdC_INT cdecl = nil;
 
+  X509_get_default_cert_file : function : PAnsiChar cdecl = nil;
   X509_get_default_cert_file_env : function : PAnsiChar cdecl = nil;
 
   BIO_new : function(_type: PBIO_METHOD): PBIO cdecl = nil;
@@ -8800,6 +8825,7 @@ var
   ERR_put_error : procedure (lib, func, reason : TIdC_INT; _file : PAnsiChar; line : TIdC_INT) cdecl = nil;
   ERR_get_error : function: TIdC_ULONG cdecl = nil;
   ERR_peek_error : function: TIdC_ULONG cdecl = nil;
+  ERR_peek_last_error : function : TIdC_ULONG cdecl = nil;
   ERR_clear_error : procedure cdecl = nil;
   ERR_error_string : function (e: TIdC_ULONG; buf: PAnsiChar): PAnsiChar cdecl = nil;
   ERR_lib_error_string : function(e : TIdC_ULONG): PAnsiChar cdecl = nil;
@@ -11651,7 +11677,7 @@ them in case we use them later.}
   fn_X509_gmtime_adj = 'X509_gmtime_adj';  {Do not localize}
   {CH fn_X509_get_default_cert_area = 'X509_get_default_cert_area'; }  {Do not localize}
   {CH fn_X509_get_default_cert_dir = 'X509_get_default_cert_dir'; }  {Do not localize}
-  {CH fn_X509_get_default_cert_file = 'X509_get_default_cert_file'; }  {Do not localize}
+   fn_X509_get_default_cert_file = 'X509_get_default_cert_file';   {Do not localize}
   {CH fn_X509_get_default_cert_dir_env = 'X509_get_default_cert_dir_env'; }  {Do not localize}
   fn_X509_get_default_cert_file_env = 'X509_get_default_cert_file_env';   {Do not localize}
   {CH fn_X509_get_default_private_dir = 'X509_get_default_private_dir'; }  {Do not localize}
@@ -12238,9 +12264,10 @@ them in case we use them later.}
 {CH fn_ERR_get_error_line = 'ERR_get_error_line'; }  {Do not localize}
 {CH fn_ERR_get_error_line_data = 'ERR_get_error_line_data'; }  {Do not localize}
   fn_ERR_peek_error = 'ERR_peek_error';  {Do not localize}
-{CH fn_ERR_peek_error_line = 'ERR_peek_error_line'; } {Do not localize}
+  fn_ERR_peek_last_error = 'ERR_peek_last_error'; {Do not localize}
+  {CH fn_ERR_peek_error_line = 'ERR_peek_error_line'; } {Do not localize}
 {CH fn_ERR_peek_error_line_data = 'ERR_peek_error_line_data'; } {Do not localize}
-{CH fn_ERR_peek_last_error_line = 'ERR_peek_last_error_line'; } {Do not localize}
+  fn_ERR_peek_last_error_line = 'ERR_peek_last_error_line'; {Do not localize}
 {CH fn_ERR_peek_last_error_line_data = 'ERR_peek_last_error_line_data'; } {Do not localize}
   fn_ERR_clear_error = 'ERR_clear_error';  {Do not localize}
   fn_ERR_error_string = 'ERR_error_string';  {Do not localize}
@@ -12738,6 +12765,7 @@ begin
   @ERR_put_error := LoadFunctionCLib(fn_ERR_put_error);
   @ERR_get_error := LoadFunctionCLib(fn_ERR_get_error);
   @ERR_peek_error := LoadFunctionCLib(fn_ERR_peek_error);
+  @ERR_peek_last_error := LoadFunctionCLib(fn_ERR_peek_last_error);
   @ERR_clear_error := LoadFunctionCLib(fn_ERR_clear_error);
   @ERR_error_string := LoadFunctionCLib(fn_ERR_error_string);
   @ERR_error_string_n := LoadFunctionCLib(fn_ERR_error_string_n);
@@ -12791,7 +12819,8 @@ begin
   @d2i_RSAPublicKey := LoadFunctionClib(fn_d2i_RSAPublicKey);
 
   //X509
-  X509_get_default_cert_file_env := LoadFunctionCLib(fn_X509_get_default_cert_file_env);
+  @X509_get_default_cert_file := LoadFunctionCLib(fn_X509_get_default_cert_file);
+  @X509_get_default_cert_file_env := LoadFunctionCLib(fn_X509_get_default_cert_file_env);
   @X509_new := LoadFunctionCLib(fn_X509_new);
   @X509_free := LoadFunctionCLib(fn_X509_free);
   @X509_REQ_new := LoadFunctionCLib(fn_X509_REQ_new);
@@ -13048,6 +13077,7 @@ begin
   @ERR_put_error := nil;
   @ERR_get_error := nil;
   @ERR_peek_error := nil;
+  @ERR_peek_last_error := nil;
   @ERR_clear_error := nil;
   @ERR_error_string := nil;
   @ERR_error_string_n := nil;
@@ -13101,6 +13131,7 @@ begin
   @i2d_X509_NAME := nil;
   @d2i_X509_NAME := nil;
   //X509
+  @X509_get_default_cert_file := nil;
   @X509_get_default_cert_file_env := nil;
   @X509_new := nil;
   @X509_free := nil;
