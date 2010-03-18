@@ -6928,8 +6928,8 @@ type
     free : procedure (ctx : PX509_LOOKUP); cdecl;
     init : function(ctx : PX509_LOOKUP) : TIdC_INT; cdecl;
     shutdown : function(ctx : PX509_LOOKUP) : TIdC_INT; cdecl;
-    ctrl: function(ctx : PX509_LOOKUP; cmd : TIdC_INT; argc : PAnsiChar; argl : TIdC_LONG; out ret : PAnsiChar ) : TIdC_INT; cdecl;
-    get_by_subject: function(ctx : PX509_LOOKUP; _type : TIdC_INT; name : PX509_NAME; ret : X509_OBJECT ) : TIdC_INT; cdecl;
+    ctrl: function(ctx : PX509_LOOKUP; cmd : TIdC_INT; const argc : PAnsiChar; argl : TIdC_LONG; out ret : PAnsiChar ) : TIdC_INT; cdecl;
+    get_by_subject: function(ctx : PX509_LOOKUP; _type : TIdC_INT; name : PX509_NAME; ret : PX509_OBJECT ) : TIdC_INT; cdecl;
     get_by_issuer_serial : function(ctx : PX509_LOOKUP; _type : TIdC_INT; name : PX509_NAME; serial : PASN1_INTEGER; ret : PX509_OBJECT) : TIdC_INT; cdecl;
     get_by_fingerprint : function (ctx : PX509_LOOKUP; _type : TIdC_INT; bytes : PAnsiChar; len : TIdC_INT; ret : PX509_OBJECT): TIdC_INT; cdecl;
     get_by_alias : function(ctx : PX509_LOOKUP; _type : TIdC_INT; str : PAnsiChar; ret : PX509_OBJECT) : TIdC_INT; cdecl;
@@ -8496,6 +8496,8 @@ var
   RSA_private_decrypt: function(flen: TIdC_INT; from: PByte; _to: PByte; rsa: PRSA; padding: TIdC_INT): TIdC_INT cdecl = nil;
   RSA_public_encrypt: function(flen: TIdC_INT; from: PByte; _to: PByte; rsa: PRSA; padding: TIdC_INT): TIdC_INT cdecl = nil;
 
+  X509_get_default_cert_file_env : function : PAnsiChar cdecl = nil;
+
   BIO_new : function(_type: PBIO_METHOD): PBIO cdecl = nil;
   BIO_new_mem_buf : function (buf : Pointer; len : TIdC_INT) : PBIO cdecl = nil;
   BIO_free : function(bio: PBIO): TIdC_INT cdecl = nil;
@@ -8558,8 +8560,13 @@ var
     cb: ppem_password_cb; u: Pointer):TIdC_INT cdecl = nil;
   PEM_ASN1_read_bio : function(d2i: d2i_OF_void; name: PAnsiChar; bp: PBIO;
       x: PPointer; cb: ppem_password_cb; u:Pointer): Pointer cdecl = nil;
+
     {$ENDIF}
   {$ENDIF}
+  PEM_X509_INFO_read_bio : function (bp : PBIO; sk : PSTACK_OF_X509_INFO;
+    cb : ppem_password_cb; u : Pointer) : PSTACK_OF_X509_INFO cdecl = nil;
+  PEM_read_bio_X509_AUX : function (bp : PBIO; x : PPX509;
+    cb : ppem_password_cb; u : Pointer) : PX509 cdecl = nil;
   EVP_DigestInit_ex : function (ctx : PEVP_MD_CTX; const AType : PEVP_MD; impl : PENGINE) : TIdC_Int cdecl = nil;
 //int	EVP_DigestUpdate(EVP_MD_CTX *ctx,const void *d,
 //			 size_t cnt);
@@ -8635,6 +8642,7 @@ var
   X509_to_X509_REQ : function(x: PX509; pkey: PEVP_PKEY; const md: PEVP_MD): PX509_REQ cdecl = nil;
   X509_NAME_add_entry_by_txt : function(name: PX509_NAME; const field: PAnsiChar; _type: TIdC_INT;
     const bytes: PAnsiChar; len, loc, _set: TIdC_INT): TIdC_INT cdecl = nil;
+  X509_INFO_free : procedure (a : PX509_INFO) cdecl = nil;
   X509_set_version : function(x: PX509; version: TIdC_LONG): TIdC_INT cdecl = nil;
   X509_get_serialNumber : function(x: PX509): PASN1_INTEGER cdecl = nil;
   X509_gmtime_adj : function(s: PASN1_TIME; adj: TIdC_LONG): PASN1_TIME cdecl = nil;
@@ -8655,6 +8663,7 @@ var
   //X509_print
   X509_print : function(bp : PBIO; x : PX509) : TIdC_INT cdecl = nil;
   {$ENDIF}
+  X509_STORE_add_lookup : function (v : PX509_STORE; m : PX509_LOOKUP_METHOD) : PX509_LOOKUP cdecl = nil;
   SSL_CTX_set_cipher_list : function(_para1: PSSL_CTX; const str: PAnsiChar): TIdC_INT cdecl = nil;
   SSL_CTX_new : function(meth: PSSL_METHOD): PSSL_CTX cdecl = nil;
   SSL_CTX_free : procedure(_para1: PSSL_CTX) cdecl = nil;
@@ -8752,6 +8761,8 @@ var
   {$ENDIF}
   EVP_PKEY_type : function(_type : TIdC_INT): TIdC_INT cdecl = nil;
   d2i_PrivateKey_bio : function(bp : PBIO; a : PPEVP_PKEY) : PEVP_PKEY cdecl = nil;
+  X509_STORE_add_cert : function (ctx : PX509_STORE; x : PX509) : TIdC_INT cdecl = nil;
+  X509_STORE_add_crl : function (ctx : PX509_STORE; x : PX509_CRL) : TIdC_INT cdecl = nil;
   X509_STORE_CTX_get_ex_data : function(ctx: PX509_STORE_CTX; idx: TIdC_INT): Pointer cdecl = nil;
   X509_STORE_CTX_get_error : function(ctx: PX509_STORE_CTX): TIdC_INT cdecl = nil;
   X509_STORE_CTX_set_error : procedure(ctx: PX509_STORE_CTX; s: TIdC_INT) cdecl = nil;
@@ -8786,6 +8797,7 @@ var
   SSL_CIPHER_get_bits: function(const c: PSSL_CIPHER; var alg_bits: TIdC_INT): TIdC_INT cdecl = nil;
   //experimental
   ERR_error_string_n: procedure(e: TIdC_ULONG; buf: PAnsiChar; len : size_t) cdecl = nil;
+  ERR_put_error : procedure (lib, func, reason : TIdC_INT; _file : PAnsiChar; line : TIdC_INT) cdecl = nil;
   ERR_get_error : function: TIdC_ULONG cdecl = nil;
   ERR_peek_error : function: TIdC_ULONG cdecl = nil;
   ERR_clear_error : procedure cdecl = nil;
@@ -8841,6 +8853,10 @@ type
   Tsk_X509_NAME_find = function (sk : PSTACK_OF_X509_NAME; val : PX509_NAME) : TIdC_INT cdecl;
   Tsk_X509_NAME_pop_free = procedure (sk : PSTACK_OF_X509_NAME; func: Tsk_pop_free_func) cdecl;
 
+  Tsk_X509_INFO_num = function (const sk : PSTACK_OF_X509_INFO) : TIdC_INT cdecl;
+  Tsk_X509_INFO_value = function (const sk : PSTACK_OF_X509_INFO; i : TIdC_INT) : PX509_INFO cdecl;
+  Tsk_X509_INFO_pop_free = procedure (sk : PSTACK_OF_X509_INFO; func: Tsk_pop_free_func) cdecl;
+
 var
   sk_X509_NAME_new : Tsk_X509_NAME_new absolute sk_new;
   sk_X509_NAME_new_null : Tsk_X509_NAME_null absolute sk_new_null;
@@ -8851,7 +8867,9 @@ var
   sk_X509_NAME_dup : Tsk_X509_NAME_dup absolute sk_dup;
   sk_X509_NAME_find : Tsk_X509_NAME_find absolute sk_find;
   sk_X509_NAME_pop_free :  Tsk_X509_NAME_pop_free absolute sk_pop_free;
-
+  sk_X509_INFO_num : Tsk_X509_INFO_num absolute sk_num;
+  sk_X509_INFO_value : Tsk_X509_INFO_value absolute sk_value;
+  sk_X509_INFO_pop_free : Tsk_X509_INFO_pop_free absolute sk_free;
 {end}
 
 function FIPS_mode_set(onoff : TIdC_INT) : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
@@ -9090,6 +9108,43 @@ function EVP_PKEY_assign_EC_KEY(pkey : PEVP_PKEY; eckey : PAnsiChar) : TIdC_INT;
 procedure X509V3_set_ctx_nodb(ctx: X509V3_CTX);
 //
 function ErrMsg(AErr : TIdC_ULONG) : AnsiString;
+function ERR_PACK(l, f, r : TIdC_INT) : TIdC_ULONG;
+function ERR_GET_LIB(const l : TIdC_INT) : TIdC_ULONG;
+function ERR_GET_FUNC(const l : TIdC_INT) : TIdC_ULONG;
+function ERR_FATAL_ERROR(const l : TIdC_INT) : Boolean;
+function ERR_GET_REASON(const l : TIdC_INT) : TIdC_INT;
+procedure SYSerr(const f,r : TIdC_INT);
+procedure BNerr(const f,r : TIdC_INT);
+procedure RSAerr(const f,r : TIdC_INT);
+procedure DHerrr(const f,r : TIdC_INT);
+procedure EVPerr(const f,r : TIdC_INT);
+procedure BUFerr(const f,r : TIdC_INT);
+procedure OBJerr(const f,r : TIdC_INT);
+procedure PEMerr(const f,r : TIdC_INT);
+procedure DSAerr(const f,r : TIdC_INT);
+procedure X509err(const f,r : TIdC_INT);
+procedure ASN1err(const f,r : TIdC_INT);
+procedure CONFerr(const f,r : TIdC_INT);
+procedure CRYPTOerr(const f,r : TIdC_INT);
+procedure ECerr(const f,r : TIdC_INT);
+procedure SSLerr(const f,r : TIdC_INT);
+procedure BIOerr(const f,r : TIdC_INT);
+procedure PKCS7err(const f,r : TIdC_INT);
+procedure X509V3err(const f,r : TIdC_INT);
+procedure PKCS12err(const f,r : TIdC_INT);
+procedure RANDerr(const f,r : TIdC_INT);
+procedure DSOerr(const f,r : TIdC_INT);
+procedure ENGINEerr(const f,r : TIdC_INT);
+procedure OCSPerr(const f,r : TIdC_INT);
+procedure UIerr(const f,r : TIdC_INT);
+procedure COMPerr(const f,r : TIdC_INT);
+procedure ECDSAerr(const f,r : TIdC_INT);
+procedure ECDHerr(const f,r : TIdC_INT);
+procedure STOREerr(const f,r : TIdC_INT);
+procedure FIPSerr(const f,r : TIdC_INT);
+procedure CMSerr(const f,r : TIdC_INT);
+procedure JPAKEerr(const f,r : TIdC_INT);
+
 function GetCryptLibHandle : Integer;
 
 type
@@ -11357,11 +11412,11 @@ them in case we use them later.}
   {CH fn_X509_STORE_free = 'X509_STORE_free'; }  {Do not localize}
   {CH fn_X509_STORE_CTX_init = 'X509_STORE_CTX_init'; }  {Do not localize}
   {CH fn_X509_STORE_CTX_cleanup = 'X509_STORE_CTX_cleanup'; }  {Do not localize}
-  {CH fn_X509_STORE_add_lookup = 'X509_STORE_add_lookup'; }  {Do not localize}
+  fn_X509_STORE_add_lookup = 'X509_STORE_add_lookup';   {Do not localize}
   {CH fn_X509_LOOKUP_hash_dir = 'X509_LOOKUP_hash_dir'; }  {Do not localize}
   {CH fn_X509_LOOKUP_file = 'X509_LOOKUP_file'; }  {Do not localize}
-  {CH fn_X509_STORE_add_cert = 'X509_STORE_add_cert'; }  {Do not localize}
-  {CH fn_X509_STORE_add_crl = 'X509_STORE_add_crl'; }  {Do not localize}
+  fn_X509_STORE_add_cert = 'X509_STORE_add_cert';   {Do not localize}
+  fn_X509_STORE_add_crl = 'X509_STORE_add_crl';   {Do not localize}
   {CH fn_X509_STORE_get_by_subject = 'X509_STORE_get_by_subject'; }  {Do not localize}
   {CH fn_X509_LOOKUP_ctrl = 'X509_LOOKUP_ctrl'; }  {Do not localize}
   {CH fn_X509_load_cert_file = 'X509_load_cert_file'; }  {Do not localize}
@@ -11598,7 +11653,7 @@ them in case we use them later.}
   {CH fn_X509_get_default_cert_dir = 'X509_get_default_cert_dir'; }  {Do not localize}
   {CH fn_X509_get_default_cert_file = 'X509_get_default_cert_file'; }  {Do not localize}
   {CH fn_X509_get_default_cert_dir_env = 'X509_get_default_cert_dir_env'; }  {Do not localize}
-  {CH fn_X509_get_default_cert_file_env = 'X509_get_default_cert_file_env'; }  {Do not localize}
+  fn_X509_get_default_cert_file_env = 'X509_get_default_cert_file_env';   {Do not localize}
   {CH fn_X509_get_default_private_dir = 'X509_get_default_private_dir'; }  {Do not localize}
   fn_X509_to_X509_REQ = 'X509_to_X509_REQ';  {Do not localize}
   {CH fn_X509_REQ_to_X509 = 'X509_REQ_to_X509'; }  {Do not localize}
@@ -11686,7 +11741,7 @@ them in case we use them later.}
   {CH fn_d2i_NETSCAPE_CERT_SEQUENCE = 'd2i_NETSCAPE_CERT_SEQUENCE'; }  {Do not localize}
   {CH fn_NETSCAPE_CERT_SEQUENCE_free = 'NETSCAPE_CERT_SEQUENCE_free'; }  {Do not localize}
   {CH fn_X509_INFO_new = 'X509_INFO_new'; }  {Do not localize}
-  {CH fn_X509_INFO_free = 'X509_INFO_free'; }  {Do not localize}
+  fn_X509_INFO_free = 'X509_INFO_free';   {Do not localize}
   fn_X509_NAME_oneline = 'X509_NAME_oneline';  {Do not localize}
   {CH fn_ASN1_verify = 'ASN1_verify'; }  {Do not localize}
   {CH fn_ASN1_digest = 'ASN1_digest'; }  {Do not localize}
@@ -11816,7 +11871,7 @@ them in case we use them later.}
   {CH fn_PEM_write_bio = 'PEM_write_bio'; }  {Do not localize}
   fn_PEM_ASN1_read_bio = 'PEM_ASN1_read_bio';  {Do not localize}
   fn_PEM_ASN1_write_bio = 'PEM_ASN1_write_bio';  {Do not localize}
-  {CH fn_PEM_X509_INFO_read_bio = 'PEM_X509_INFO_read_bio'; }  {Do not localize}
+  fn_PEM_X509_INFO_read_bio = 'PEM_X509_INFO_read_bio';   {Do not localize}
   {CH fn_PEM_X509_INFO_write_bio = 'PEM_X509_INFO_write_bio'; }  {Do not localize}
   {CH fn_PEM_read = 'PEM_read'; }  {Do not localize}
   {CH fn_PEM_write = 'PEM_write'; }  {Do not localize}
@@ -11862,6 +11917,7 @@ them in case we use them later.}
   fn_PEM_write_bio_PKCS8PrivateKey = 'PEM_write_bio_PKCS8PrivateKey';  {Do not localize}
     {$ENDIF}
   {$ENDIF}
+  fn_PEM_read_bio_X509_AUX = 'PEM_read_bio_X509_AUX';  {Do not localize}
   {CH fn_PEM_read_X509 = 'PEM_read_X509'; }  {Do not localize}
   {CH fn_PEM_write_X509 = 'PEM_write_X509'; }  {Do not localize}
   {CH fn_PEM_read_X509_REQ = 'PEM_read_X509_REQ'; }  {Do not localize}
@@ -12177,6 +12233,7 @@ them in case we use them later.}
   {$ENDIF}
   {CH fn_ERR_load_RAND_strings = 'ERR_load_RAND_strings'; } {Do not localize}
   //experimental
+  fn_ERR_put_error = 'ERR_put_error';  {Do not localize}
   fn_ERR_get_error = 'ERR_get_error';  {Do not localize}
 {CH fn_ERR_get_error_line = 'ERR_get_error_line'; }  {Do not localize}
 {CH fn_ERR_get_error_line_data = 'ERR_get_error_line_data'; }  {Do not localize}
@@ -12627,11 +12684,14 @@ begin
   @X509_set_subject_name := LoadFunctionCLib(fn_X509_set_subject_name);
   @X509_get_subject_name := LoadFunctionCLib(fn_X509_get_subject_name);
   @X509_digest := LoadFunctionCLib(fn_X509_digest);
+  @X509_STORE_add_cert := LoadFunctionCLib(fn_X509_STORE_add_cert);
+  @X509_STORE_add_crl := LoadFunctionCLib(fn_X509_STORE_add_crl);
   @X509_STORE_CTX_get_ex_data := LoadFunctionCLib(fn_X509_STORE_CTX_get_ex_data);
   @X509_STORE_CTX_get_error := LoadFunctionCLib(fn_X509_STORE_CTX_get_error);
   @X509_STORE_CTX_set_error := LoadFunctionCLib(fn_X509_STORE_CTX_set_error);
   @X509_STORE_CTX_get_error_depth := LoadFunctionCLib(fn_X509_STORE_CTX_get_error_depth);
   @X509_STORE_CTX_get_current_cert := LoadFunctionCLib(fn_X509_STORE_CTX_get_current_cert);
+  @X509_STORE_add_lookup := LoadFunctionCLib(fn_X509_STORE_add_lookup);
   @d2i_PrivateKey_bio := LoadFunctionCLib(fn_d2i_PrivateKey_bio);
   @X509_sign := LoadFunctionCLib(fn_X509_sign);
   @X509_REQ_sign := LoadFunctionCLib(fn_X509_REQ_sign);
@@ -12675,6 +12735,7 @@ begin
   {$IFNDEF WIN32_OR_WIN64}
   @CRYPTO_set_id_callback := LoadFunctionCLib(fn_CRYPTO_set_id_callback);
   {$ENDIF}
+  @ERR_put_error := LoadFunctionCLib(fn_ERR_put_error);
   @ERR_get_error := LoadFunctionCLib(fn_ERR_get_error);
   @ERR_peek_error := LoadFunctionCLib(fn_ERR_peek_error);
   @ERR_clear_error := LoadFunctionCLib(fn_ERR_clear_error);
@@ -12730,6 +12791,7 @@ begin
   @d2i_RSAPublicKey := LoadFunctionClib(fn_d2i_RSAPublicKey);
 
   //X509
+  X509_get_default_cert_file_env := LoadFunctionCLib(fn_X509_get_default_cert_file_env);
   @X509_new := LoadFunctionCLib(fn_X509_new);
   @X509_free := LoadFunctionCLib(fn_X509_free);
   @X509_REQ_new := LoadFunctionCLib(fn_X509_REQ_new);
@@ -12738,6 +12800,7 @@ begin
   @X509_NAME_new := LoadFunctionCLib(fn_X509_NAME_new);
   @X509_NAME_free := LoadFunctionCLib(fn_X509_NAME_free);
   @X509_NAME_add_entry_by_txt := LoadFunctionCLib(fn_X509_NAME_add_entry_by_txt);
+  @X509_INFO_free := LoadFunctionCLib(fn_X509_INFO_free);
   @X509_set_version := LoadFunctionCLib(fn_X509_set_version);
   @X509_get_serialNumber := LoadFunctionCLib(fn_X509_get_serialNumber);
   @X509_gmtime_adj := LoadFunctionCLib(fn_X509_gmtime_adj);
@@ -12773,7 +12836,8 @@ begin
   @PEM_ASN1_write_bio := LoadFunctionCLib(fn_PEM_ASN1_write_bio,False);
   @PEM_ASN1_read_bio := LoadFunctionCLib(fn_PEM_ASN1_read_bio,False);
   {$ENDIF}
-
+  @PEM_X509_INFO_read_bio := LoadFunctionCLib(fn_PEM_X509_INFO_read_bio);
+  @PEM_read_bio_X509_AUX := LoadFunctionCLib(fn_PEM_read_bio_X509_AUX);
   //EVP
   {$IFNDEF OPENSSL_NO_DES}
   @EVP_des_ede3_cbc := LoadFunctionCLib(fn_EVP_des_ede3_cbc);
@@ -12931,11 +12995,14 @@ begin
   @X509_set_subject_name := nil;
   @X509_get_subject_name := nil;
   @X509_digest := nil;
+  @X509_STORE_add_cert := nil;
+  @X509_STORE_add_crl := nil;
   @X509_STORE_CTX_get_ex_data := nil;
   @X509_STORE_CTX_get_error := nil;
   @X509_STORE_CTX_set_error := nil;
   @X509_STORE_CTX_get_error_depth := nil;
   @X509_STORE_CTX_get_current_cert := nil;
+  @X509_STORE_add_lookup := nil;
   @X509_sign := nil;
   @X509_REQ_sign := nil;
   @X509_REQ_add_extensions := nil;
@@ -12978,6 +13045,7 @@ begin
   {$IFNDEF WIN32_OR_WIN64}
   @CRYPTO_set_id_callback := nil;
   {$ENDIF}
+  @ERR_put_error := nil;
   @ERR_get_error := nil;
   @ERR_peek_error := nil;
   @ERR_clear_error := nil;
@@ -13033,13 +13101,14 @@ begin
   @i2d_X509_NAME := nil;
   @d2i_X509_NAME := nil;
   //X509
-
+  @X509_get_default_cert_file_env := nil;
   @X509_new := nil;
   @X509_free := nil;
   @X509_REQ_new := nil;
   @X509_REQ_free := nil;
   @X509_to_X509_REQ := nil;
   @X509_NAME_add_entry_by_txt := nil;
+  @X509_INFO_free := nil;
   @X509_set_version := nil;
   @X509_get_serialNumber := nil;
   @X509_gmtime_adj := nil;
@@ -13078,6 +13147,8 @@ begin
   @PEM_ASN1_write_bio := nil;
   @PEM_ASN1_read_bio := nil;
   {$ENDIF}
+  @PEM_X509_INFO_read_bio := nil;
+  @PEM_read_bio_X509_AUX := nil;
   //EVP
   {$IFNDEF OPENSSL_NO_DES}
   @EVP_des_ede3_cbc := nil;
@@ -14664,6 +14735,230 @@ procedure X509V3_set_ctx_nodb(ctx: X509V3_CTX);
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   ctx.db := nil;
+end;
+
+///* Borland C seems too stupid to be able to shift and do longs in
+// * the pre-processor :-( */
+//#define ERR_PACK(l,f,r)		(((((unsigned long)l)&0xffL)*0x1000000)| \
+//				((((unsigned long)f)&0xfffL)*0x1000)| \
+//				((((unsigned long)r)&0xfffL)))
+function ERR_PACK(l, f, r : TIdC_INT) : TIdC_ULONG;
+begin
+  Result := ((TIdC_ULONG(l) and $ff) * $1000000) or
+    ((TIdC_ULONG(f) and $fff) * $1000) or
+    (TIdC_ULONG(r) and $fff);
+end;
+
+function ERR_GET_LIB(const l : TIdC_INT) : TIdC_ULONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := (l shr 24) and $ff;
+end;
+
+function ERR_GET_FUNC(const l : TIdC_INT) : TIdC_ULONG;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := (l shr 12) and $fff;
+end;
+
+function  ERR_FATAL_ERROR(const l : TIdC_INT) : Boolean;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := (l and ERR_R_FATAL) > 0;
+end;
+
+function ERR_GET_REASON(const l : TIdC_INT) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := l and $fff;
+end;
+
+//__FILE__,__LINE__ preprocessor macros are not available in Pascal.
+//so we can't pass error location info in the last two parameters.
+procedure SYSerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_SYS,f,r,nil,0);
+end;
+
+procedure BNerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+   ERR_PUT_error(ERR_LIB_BN,f,r,nil,0);
+end;
+
+procedure RSAerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_RSA,f,r,nil,0);
+end;
+
+procedure DHerrr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+   ERR_PUT_error(ERR_LIB_DH,f,r,nil,0);
+end;
+
+procedure EVPerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_EVP,f,r,nil,0);
+end;
+
+procedure BUFerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_BUF,f,r,nil,0);
+end;
+
+procedure OBJerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_OBJ,f,r,nil,0);
+end;
+
+procedure PEMerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_PEM,f,r,nil,0);
+end;
+
+procedure DSAerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_DSA,f,r,nil,0);
+end;
+
+procedure X509err(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_X509,f,r,nil,0);
+end;
+
+procedure ASN1err(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+ ERR_PUT_error(ERR_LIB_ASN1,f,r,nil,0);
+end;
+
+procedure CONFerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_CONF,f,r,nil,0);
+end;
+
+procedure CRYPTOerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_CRYPTO,f,r,nil,0);
+end;
+
+procedure ECerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_EC,f,r,nil,0);
+end;
+
+procedure SSLerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_SSL,f,r,nil,0);
+end;
+
+procedure BIOerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_BIO,f,r,nil,0);
+end;
+
+procedure PKCS7err(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_PKCS7,f,r,nil,0);
+end;
+
+procedure X509V3err(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_X509V3,f,r,nil,0);
+end;
+
+procedure PKCS12err(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_PKCS12,f,r,nil,0);
+end;
+
+procedure RANDerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_RAND,f,r,nil,0);
+end;
+
+procedure DSOerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_DSO,f,r,nil,0);
+end;
+
+procedure ENGINEerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_ENGINE,f,r,nil,0);
+end;
+
+procedure OCSPerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_OCSP,f,r,nil,0);
+end;
+
+procedure UIerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_UI,f,r,nil,0);
+end;
+
+procedure COMPerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_COMP,f,r,nil,0);
+end;
+
+procedure ECDSAerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_ECDSA,f,r,nil,0);
+end;
+
+procedure ECDHerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_ECDH,f,r,nil,0);
+end;
+
+procedure STOREerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_STORE,f,r,nil,0);
+end;
+
+procedure FIPSerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_FIPS,f,r,nil,0);
+end;
+
+procedure CMSerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_CMS,f,r,nil,0);
+end;
+
+procedure JPAKEerr(const f,r : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  ERR_PUT_error(ERR_LIB_JPAKE,f,r,nil,0);
 end;
 
 initialization
