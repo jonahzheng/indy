@@ -443,7 +443,9 @@ type
   function EnsureMsgIDBrackets(const AMsgID: String): String;
   function ExtractHeaderItem(const AHeaderLine: String): String;
   function ExtractHeaderSubItem(const AHeaderLine, ASubItem: String; AQuoteType: TIdHeaderQuotingType): String;
-  function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String; AQuoteType: TIdHeaderQuotingType): String;
+  function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String; AQuoteType: TIdHeaderQuotingType): String; overload;
+  function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String; var VOld: String; AQuoteType: TIdHeaderQuotingType): String; overload;
+  function IsHeaderMediaType(const AHeaderLine, AMediaType: String): Boolean;
   function FileSizeByName(const AFilename: TIdFileName): Int64;
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   function IsVolume(const APathName : TIdFileName) : Boolean;
@@ -517,7 +519,8 @@ type
   function IndyWrapText(const ALine, ABreakStr, ABreakChars : string; MaxCol: Integer): string;
  
   //The following is for working on email headers and message part headers...
-  function RemoveHeaderEntry(const AHeader, AEntry: string; AQuoteType: TIdHeaderQuotingType): string;
+  function RemoveHeaderEntry(const AHeader, AEntry: string; AQuoteType: TIdHeaderQuotingType): string; overload;
+  function RemoveHeaderEntry(const AHeader, AEntry: string; var VOld: String; AQuoteType: TIdHeaderQuotingType): string; overload;
   function RemoveHeaderEntries(const AHeader: string; AEntries: array of string; AQuoteType: TIdHeaderQuotingType): string;
 
   {
@@ -3621,6 +3624,14 @@ end;
 function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String;
   AQuoteType: TIdHeaderQuotingType): String;
 var
+  LOld: String;
+begin
+  Result := ReplaceHeaderSubItem(AHeaderLine, ASubItem, AValue, LOld, AQuoteType);
+end;
+
+function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String;
+  var VOld: String; AQuoteType: TIdHeaderQuotingType): String;
+var
   LItems: TStringList;
   I: Integer;
   LTmp: string;
@@ -3684,9 +3695,14 @@ begin
     SplitHeaderSubItems(AHeaderLine, LItems, AQuoteType);
     {$IFDEF VCL_6_OR_ABOVE}
     LItems.CaseSensitive := False;
+    VOld := LItems.Values[ASubItem];
     LItems.Values[ASubItem] := Trim(AValue);
     {$ELSE}
     I := FindIndexOfItem;
+    if I >= 0 then begin
+      VOld := LItems.Strings[I];
+      Fetch(VOld, '=');
+    end;
     LValue := Trim(AValue);
     if LValue <> '' then begin
       if I < 0 then begin
@@ -3707,6 +3723,18 @@ begin
     end;
   finally
     LItems.Free;
+  end;
+end;
+
+function IsHeaderMediaType(const AHeaderLine, AMediaType: String): Boolean;
+var
+  LHeader: String;
+begin
+  LHeader := ExtractHeaderItem(AHeaderLine);
+  if Pos('/', AMediaType) > 0 then begin {do not localize}
+    Result := TextIsSame(LHeader, AMediaType);
+  end else begin
+    Result := TextStartsWith(LHeader, AMediaType + '/'); {do not localize}
   end;
 end;
 
@@ -3912,6 +3940,13 @@ function RemoveHeaderEntry(const AHeader, AEntry: string;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Result := ReplaceHeaderSubItem(AHeader, AEntry, '', AQuoteType);
+end;
+
+function RemoveHeaderEntry(const AHeader, AEntry: string; var VOld: String;
+  AQuoteType: TIdHeaderQuotingType): string;
+{$IFDEF USE_INLINE}inline;{$ENDIF}
+begin
+  Result := ReplaceHeaderSubItem(AHeader, AEntry, '', VOld, AQuoteType);
 end;
 
 function RemoveHeaderEntries(const AHeader: string; AEntries: array of string;
