@@ -251,7 +251,6 @@ procedure TIdMultiPartFormDataStream.AddObject(const AFieldName,
   AContentType, ACharset: string; AFileData: TObject; const AFileName: string = '');
 var
   LItem: TIdFormDataField;
-  LCharSet: String;
 begin
   if not ((AFileData is TStream) or (AFileData is TStrings)) then begin
     raise EIdInvalidObjectType.Create(RSMFDIvalidObjectType);
@@ -263,23 +262,9 @@ begin
     FFieldName := AFieldName;
     FFileName := ExtractFileName(AFileName);
     FFieldObject := AFileData;
-    if Length(AContentType) > 0 then begin
-      FContentType := RemoveHeaderEntry(AContentType, 'charset', QuoteMIMEContentType); {do not localize}
-      if ACharset <> '' then begin
-        FCharset := ACharset;
-      end else
-      begin
-        {RLebeau: override the current CharSet only if the header specifies a new value}
-        LCharSet := ExtractHeaderSubItem(AContentType, 'charset', QuoteMIMEContentType); {do not localize}
-        if LCharSet <> '' then begin
-          FCharSet := LCharSet;
-        end;
-      end;
-    end
-    else if Length(FFileName) > 0 then begin
-      FContentType := GetMIMETypeFromFile(FFileName);
-    end else begin
-      FContentType := sContentTypeOctetStream;
+    ContentType := AContentType;
+    if ACharset <> '' then begin
+      FCharSet := ACharset;
     end;
   end;
 end;
@@ -669,20 +654,39 @@ end;
 
 procedure TIdFormDataField.SetContentType(const Value: string);
 var
-  LCharSet: String;
+  LTmp: string;
 begin
   if Length(Value) > 0 then begin
-    FContentType := RemoveHeaderEntry(Value, 'charset', QuoteMIMEContentType); {do not localize}
-    {RLebeau: override the current CharSet only if the header specifies a new value}
-    LCharSet := ExtractHeaderSubItem(Value, 'charset', QuoteMIMEContentType); {do not localize}
-    if LCharSet <> '' then begin
-      FCharSet := LCharSet;
-    end;
+    LTmp := Value;
   end
   else if Length(FFileName) > 0 then begin
-    FContentType := GetMIMETypeFromFile(FFileName);
-  end else begin;
-    FContentType := sContentTypeOctetStream;
+    LTmp := GetMIMETypeFromFile(FFileName);
+  end
+  else begin
+    LTmp := sContentTypeOctetStream;
+  end;
+
+  FContentType := RemoveHeaderEntry(LTmp, 'charset', FCharSet, QuoteMIMEContentType); {do not localize}
+
+  // RLebeau: per RFC 2045 Section 5.2:
+  //
+  // Default RFC 822 messages without a MIME Content-Type header are taken
+  // by this protocol to be plain text in the US-ASCII character set,
+  // which can be explicitly specified as:
+  //
+  //   Content-type: text/plain; charset=us-ascii
+  //
+  // This default is assumed if no Content-Type header field is specified.
+  // It is also recommend that this default be assumed when a
+  // syntactically invalid Content-Type header field is encountered. In
+  // the presence of a MIME-Version header field and the absence of any
+  // Content-Type header field, a receiving User Agent can also assume
+  // that plain US-ASCII text was the sender's intent.  Plain US-ASCII
+  // text may still be assumed in the absence of a MIME-Version or the
+  // presence of an syntactically invalid Content-Type header field, but
+  // the sender's intent might have been otherwise.
+  if (FCharSet = '') and IsHeaderMediaType(FContentType, 'text') then begin {do not localize}
+    FCharSet := 'us-ascii'; {do not localize}
   end;
 end;
 
