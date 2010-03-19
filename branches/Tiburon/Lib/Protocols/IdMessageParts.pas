@@ -236,7 +236,7 @@ end;
 
 function TIdMessagePart.GetCharSet(AHeader: string): String;
 begin
-  Result := ExtractHeaderSubItem(AHeader, 'CHARSET'); {do not localize}
+  Result := ExtractHeaderSubItem(AHeader, 'CHARSET', QuoteMIMEContentType); {do not localize}
 end;
 
 function TIdMessagePart.ResolveContentType(AContentType: string): string;
@@ -318,12 +318,7 @@ procedure TIdMessagePart.SetContentDisposition(const Value: string);
 var
   LTmp: string;
 begin
-  Headers.Values['Content-Disposition'] := RemoveHeaderEntry(Value, 'filename', QuoteRFC822); {do not localize}
-  {RLebeau: override the current value only if the header specifies a new one}
-  LTmp := ExtractHeaderSubItem(Value, 'filename', QuoteRFC822); {do not localize}
-  if LTmp <> '' then begin
-    FFileName := LTmp;
-  end;
+  Headers.Values['Content-Disposition'] := RemoveHeaderEntry(Value, 'filename', FFileName, QuoteRFC822); {do not localize}
 end;
 
 procedure TIdMessagePart.SetContentLocation(const Value: string);
@@ -340,16 +335,9 @@ procedure TIdMessagePart.SetContentType(const Value: string);
 var
   LTmp: string;
 begin
-  Headers.Values['Content-Type'] := RemoveHeaderEntries(Value, ['charset', 'name'], QuoteMIMEContentType); {do not localize}
-  {RLebeau: override the current values only if the header specifies new ones}
-  LTmp := ExtractHeaderSubItem(Value, 'charset', QuoteMIMEContentType); {do not localize}
-  if LTmp <> '' then begin
-    FCharSet := LTmp;
-  end;
-  LTmp := ExtractHeaderSubItem(Value, 'name', QuoteMIMEContentType); {do not localize}
-  if LTmp <> '' then begin
-    FName := LTmp;
-  end;
+  LTmp := RemoveHeaderEntry(Value, 'charset', FCharset, QuoteMIMEContentType);{do not localize}
+  LTmp := RemoveHeaderEntry(LTmp, 'name', FName, QuoteMIMEContentType);{do not localize}
+  Headers.Values['Content-Type'] := LTmp;
 end;
 
 procedure TIdMessagePart.SetExtraHeaders(const Value: TIdHeaderList);
