@@ -344,7 +344,7 @@ begin
     LContentTransferEncoding := FHeaders.Values['Content-Transfer-Encoding']; {Do not Localize}
   end;
   if LContentTransferEncoding = '' then begin
-    if TextIsSame(ExtractHeaderItem(LContentType), 'application/mac-binhex40') then begin  {Do not Localize}
+    if IsHeaderMediaType(LContentType, 'application/mac-binhex40') then begin  {Do not Localize}
       LContentTransferEncoding := 'binhex40'; {do not localize}
     end;
   end;
