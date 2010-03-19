@@ -778,7 +778,7 @@ var
         end else begin
           //Watch out for BinHex 4.0 encoding: no ContentTransfer is specified
           //in the header, but we need to set it to something meaningful for us...
-          if TextStartsWith(LAttachment.ContentType, 'application/mac-binhex40') then begin {do not localize}
+          if IsHeaderMediaType(LAttachment.ContentType, 'application/mac-binhex40') then begin {do not localize}
             LAttachment.ContentTransfer := 'binhex40'; {do not localize}
           end else begin
             LAttachment.ContentTransfer := LHdrs.Values[SContentTransferEncoding];
@@ -1007,7 +1007,7 @@ var
     // the message correctly, but Indy was not.  So let's check for that scenario
     // and ignore illegal "Content-Transfer-Encoding" values if present...
 
-    if TextStartsWith(ATextPart.ContentType, 'multipart/') then begin {do not localize}
+    if IsHeaderMediaType(ATextPart.ContentType, 'multipart') then begin {do not localize}
       if ATextPart.ContentTransfer <> '' then begin
         if PosInStrArray(ATextPart.ContentTransfer, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
           ATextPart.ContentTransfer := '';
