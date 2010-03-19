@@ -228,7 +228,7 @@ begin
   inherited Create(True);
   FAcceptWait := 1000;
   FBufferSize := AOwner.BufferSize;
-  SetLength(FBuffer,FBufferSize);
+  FBuffer := nil;
   FServer := AOwner;
 end;
 
@@ -247,16 +247,17 @@ var
   i: Integer;
   LBuffer : TIdBytes;
 begin
-  SetLength(LBuffer,4096);
+  SetLength(LBuffer, FBufferSize);
+
   // create a socket list to select for read
   LReadList := TIdSocketList.CreateSocketList;
-
   try
     // fill list of socket handles for reading
     for i := 0 to FServer.Bindings.Count - 1 do
     begin
       LReadList.Add(FServer.Bindings[i].Handle);
     end;
+
     // select the handles for reading
     LReadList.SelectRead(AcceptWait);
 
