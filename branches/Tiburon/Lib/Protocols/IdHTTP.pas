@@ -660,7 +660,7 @@ end;
 
 function IsContentTypeHtml(AInfo: TIdEntityHeaderInfo) : Boolean;
 begin
-  Result := TextIsSame(ExtractHeaderItem(AInfo.ContentType), 'text/html'); {do not localize}
+  Result := IsHeaderMediaType(AInfo.ContentType, 'text/html'); {do not localize}
 end;
 
 destructor TIdCustomHTTP.Destroy;
@@ -1339,6 +1339,7 @@ begin
         Request.Method := Id_HTTPMethodConnect;
         Request.ProxyConnection := 'keep-alive';            {do not localize}
 
+        // TODO: change this to nil so data is discarded without wasting memory?
         Response.ContentStream := TMemoryStream.Create;
         try
           try
@@ -1440,7 +1441,6 @@ begin
       for i := 0 to Cookies2.Count - 1 do begin
         CookieManager.AddCookie2(Cookies2[i], FURI);
       end;
-      
     end;
   finally
     FreeAndNil(Cookies);
