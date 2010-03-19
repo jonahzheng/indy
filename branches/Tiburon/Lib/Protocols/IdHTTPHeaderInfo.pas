@@ -258,11 +258,9 @@ const
 constructor TIdEntityHeaderInfo.Create;
 begin
   inherited Create;
-
   FRawHeaders := TIdHeaderList.Create(QuoteHTTP);
   FRawHeaders.FoldLength := 1024;
   FCustomHeaders := TIdHeaderList.Create(QuoteHTTP);
-
   Clear;
 end;
 
@@ -459,7 +457,8 @@ begin
     end;
     if Length(FContentType) > 0 then
     begin
-      Values['Content-Type'] := ReplaceHeaderSubItem(FContentType, 'charset', FCharSet, QuoteHTTP); {do not localize}
+      Values['Content-Type'] := FContentType; {do not localize}
+      Params['Content-Type', 'charset'] := FCharSet; {do not localize}
     end;
     if FContentLength >= 0 then
     begin
@@ -512,20 +511,24 @@ begin
 end;
 
 procedure TIdEntityHeaderInfo.SetContentType(const AValue: String);
-var
-  LCharSet: string;
 begin
-  if AValue <> '' then
-  begin
-    FContentType := RemoveHeaderEntry(AValue, 'charset', QuoteHTTP); {do not localize}
-    {RLebeau: override the current CharSet only if the header specifies a new value}
-    LCharSet := ExtractHeaderSubItem(AValue, 'charset', QuoteHTTP); {do not localize}
-    if LCharSet <> '' then begin
-      FCharSet := LCharSet;
+  if AValue <> '' then begin
+    FContentType := RemoveHeaderEntry(AValue, 'charset', FCharSet, QuoteHTTP); {do not localize}
+    // RLebeau: per RFC 2616 Section 3.7.1:
+    //
+    // The "charset" parameter is used with some media types to define the
+    // character set (section 3.4) of the data. When no explicit charset
+    // parameter is provided by the sender, media subtypes of the "text"
+    // type are defined to have a default charset value of "ISO-8859-1" when
+    // received via HTTP. Data in character sets other than "ISO-8859-1" or
+    // its subsets MUST be labeled with an appropriate charset value. See
+    // section 3.4.1 for compatibility problems.
+    if (FCharSet = '') and IsHeaderMediaType(FContentType, 'text') then begin {do not localize}
+      FCharSet := 'ISO-8859-1'; {do not localize}
     end;
-  end else
-  begin
+  end else begin
     FContentType := '';
+    FCharSet := '';
   end;
 end;
 
@@ -822,6 +825,7 @@ constructor TIdResponseHeaderInfo.Create;
 begin
   inherited Create;
   FContentType := 'text/html';  {do not localize}
+  FCharSet := 'ISO-8859-1';  {do not localize}
   FWWWAuthenticate := TIdHeaderList.Create(QuoteHTTP);
   FProxyAuthenticate := TIdHeaderList.Create(QuoteHTTP);
   FMetaHTTPEquiv := TIdHeaderList.Create(QuoteHTTP);
@@ -897,6 +901,7 @@ begin
 
   // S.G. 20/4/2003: Default to text/HTML
   FContentType := 'text/html';  {do not localize}
+  FCharSet := 'ISO-8859-1';  {do not localize}
 
   FLocation := '';
   FServer := '';
