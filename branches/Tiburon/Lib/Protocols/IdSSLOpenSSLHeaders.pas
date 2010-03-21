@@ -8689,6 +8689,7 @@ var
   X509_print : function(bp : PBIO; x : PX509) : TIdC_INT cdecl = nil;
   {$ENDIF}
   X509_STORE_add_lookup : function (v : PX509_STORE; m : PX509_LOOKUP_METHOD) : PX509_LOOKUP cdecl = nil;
+  X509_STORE_load_locations : function ( ctx : PX509_STORE; const _file, path : PAnsiChar) : TIdC_INT cdecl = nil;
   SSL_CTX_set_cipher_list : function(_para1: PSSL_CTX; const str: PAnsiChar): TIdC_INT cdecl = nil;
   SSL_CTX_new : function(meth: PSSL_METHOD): PSSL_CTX cdecl = nil;
   SSL_CTX_free : procedure(_para1: PSSL_CTX) cdecl = nil;
@@ -8786,6 +8787,7 @@ var
   {$ENDIF}
   EVP_PKEY_type : function(_type : TIdC_INT): TIdC_INT cdecl = nil;
   d2i_PrivateKey_bio : function(bp : PBIO; a : PPEVP_PKEY) : PEVP_PKEY cdecl = nil;
+  X509_LOOKUP_ctrl : function(ctx : PX509_LOOKUP; cmd : TIdC_INT; argc : PAnsiChar; arg1 : TIdC_LONG; ret : PPAnsiChar) : TIdC_INT cdecl = nil;
   X509_STORE_add_cert : function (ctx : PX509_STORE; x : PX509) : TIdC_INT cdecl = nil;
   X509_STORE_add_crl : function (ctx : PX509_STORE; x : PX509_CRL) : TIdC_INT cdecl = nil;
   X509_STORE_CTX_get_ex_data : function(ctx: PX509_STORE_CTX; idx: TIdC_INT): Pointer cdecl = nil;
@@ -9170,6 +9172,8 @@ procedure STOREerr(const f,r : TIdC_INT);
 procedure FIPSerr(const f,r : TIdC_INT);
 procedure CMSerr(const f,r : TIdC_INT);
 procedure JPAKEerr(const f,r : TIdC_INT);
+function X509_LOOKUP_load_file(x : PX509_LOOKUP; name : PAnsiChar; _type : TIdC_LONG) : TIdC_INT;
+function X509_LOOKUP_add_dir(x : PX509_LOOKUP; name : PAnsiChar; _type : TIdC_LONG) : TIdC_INT;
 
 function GetCryptLibHandle : Integer;
 
@@ -11444,7 +11448,7 @@ them in case we use them later.}
   fn_X509_STORE_add_cert = 'X509_STORE_add_cert';   {Do not localize}
   fn_X509_STORE_add_crl = 'X509_STORE_add_crl';   {Do not localize}
   {CH fn_X509_STORE_get_by_subject = 'X509_STORE_get_by_subject'; }  {Do not localize}
-  {CH fn_X509_LOOKUP_ctrl = 'X509_LOOKUP_ctrl'; }  {Do not localize}
+   fn_X509_LOOKUP_ctrl = 'X509_LOOKUP_ctrl';   {Do not localize}
   {CH fn_X509_load_cert_file = 'X509_load_cert_file'; }  {Do not localize}
   {CH fn_X509_load_crl_file = 'X509_load_crl_file'; }  {Do not localize}
   {CH fn_X509_LOOKUP_new = 'X509_LOOKUP_new'; }  {Do not localize}
@@ -11455,7 +11459,7 @@ them in case we use them later.}
   {CH fn_X509_LOOKUP_by_fingerprint = 'X509_LOOKUP_by_fingerprint'; }  {Do not localize}
   {CH fn_X509_LOOKUP_by_alias = 'X509_LOOKUP_by_alias'; }  {Do not localize}
   {CH fn_X509_LOOKUP_shutdown = 'X509_LOOKUP_shutdown'; }  {Do not localize}
-  {CH fn_X509_STORE_load_locations = 'X509_STORE_load_locations'; }  {Do not localize}
+  fn_X509_STORE_load_locations = 'X509_STORE_load_locations';   {Do not localize}
   {CH fn_X509_STORE_set_default_paths = 'X509_STORE_set_default_paths'; }  {Do not localize}
   {CH fn_X509_STORE_CTX_get_ex_new_index = 'X509_STORE_CTX_get_ex_new_index'; }  {Do not localize}
   {CH fn_X509_STORE_CTX_set_ex_data = 'X509_STORE_CTX_set_ex_data'; }  {Do not localize}
@@ -12711,6 +12715,7 @@ begin
   @X509_set_subject_name := LoadFunctionCLib(fn_X509_set_subject_name);
   @X509_get_subject_name := LoadFunctionCLib(fn_X509_get_subject_name);
   @X509_digest := LoadFunctionCLib(fn_X509_digest);
+  @X509_LOOKUP_ctrl := LoadFunctionCLib( fn_X509_LOOKUP_ctrl );
   @X509_STORE_add_cert := LoadFunctionCLib(fn_X509_STORE_add_cert);
   @X509_STORE_add_crl := LoadFunctionCLib(fn_X509_STORE_add_crl);
   @X509_STORE_CTX_get_ex_data := LoadFunctionCLib(fn_X509_STORE_CTX_get_ex_data);
@@ -12719,6 +12724,7 @@ begin
   @X509_STORE_CTX_get_error_depth := LoadFunctionCLib(fn_X509_STORE_CTX_get_error_depth);
   @X509_STORE_CTX_get_current_cert := LoadFunctionCLib(fn_X509_STORE_CTX_get_current_cert);
   @X509_STORE_add_lookup := LoadFunctionCLib(fn_X509_STORE_add_lookup);
+  @X509_STORE_load_locations := LoadFunctionClib(fn_X509_STORE_load_locations);
   @d2i_PrivateKey_bio := LoadFunctionCLib(fn_d2i_PrivateKey_bio);
   @X509_sign := LoadFunctionCLib(fn_X509_sign);
   @X509_REQ_sign := LoadFunctionCLib(fn_X509_REQ_sign);
@@ -13024,6 +13030,7 @@ begin
   @X509_set_subject_name := nil;
   @X509_get_subject_name := nil;
   @X509_digest := nil;
+  @X509_LOOKUP_ctrl := nil;
   @X509_STORE_add_cert := nil;
   @X509_STORE_add_crl := nil;
   @X509_STORE_CTX_get_ex_data := nil;
@@ -13032,6 +13039,7 @@ begin
   @X509_STORE_CTX_get_error_depth := nil;
   @X509_STORE_CTX_get_current_cert := nil;
   @X509_STORE_add_lookup := nil;
+  @X509_STORE_load_locations := nil;
   @X509_sign := nil;
   @X509_REQ_sign := nil;
   @X509_REQ_add_extensions := nil;
@@ -14990,6 +14998,18 @@ procedure JPAKEerr(const f,r : TIdC_INT);
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   ERR_PUT_error(ERR_LIB_JPAKE,f,r,nil,0);
+end;
+
+function X509_LOOKUP_load_file(x : PX509_LOOKUP; name : PAnsiChar; _type : TIdC_LONG) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := X509_LOOKUP_ctrl(x, X509_L_FILE_LOAD, name, _type, nil);
+end;
+
+function X509_LOOKUP_add_dir(x : PX509_LOOKUP; name : PAnsiChar; _type : TIdC_LONG) : TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := X509_LOOKUP_ctrl(x, X509_L_ADD_DIR, name, _type, nil);
 end;
 
 initialization
