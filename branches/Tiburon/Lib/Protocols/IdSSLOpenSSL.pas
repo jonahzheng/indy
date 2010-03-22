@@ -620,6 +620,24 @@ procedure UnLoadOpenSSLLibrary;
 function IndySSL_load_client_CA_file(const AFileName : String) : PSTACK_OF_X509_NAME;
 function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
 function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
+function IndyX509_STORE_load_locations( ctx : PX509_STORE; const AFileName,
+		APathName : String) : TIdC_INT;
+function IndySSL_CTX_load_verify_locations(ctx : PSSL_CTX; const ACAFile, ACAPath : String): TIdC_INT;
+
+{$IFDEF STRING_IS_UNICODE}
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+{
+This is for some file lookup definitions for a LOOKUP method that
+uses Unicode filesnames instead of ASCII or UTF8.  It is not meant to be portable
+at all.
+}
+function by_Indy_unicode_file_ctrl(ctx : PX509_LOOKUP;
+  cmd : TIdC_INT;
+  const argc : PAnsiChar;
+  argl : TIdC_LONG;
+  out ret : PAnsiChar ) : TIdC_INT; cdecl;
+  {$ENDIF}
+{$ENDIF}
 
 implementation
 
@@ -651,6 +669,218 @@ var
 {
 IMPORTANT!!!
 
+OpenSSL's X509 lookup code by default does not handle Unicode filenames and path
+names at all.  We have to use our own X509 lookup method for such a thing.
+
+}
+{
+NOTE that most of this section and the helper routines for Windows are based on
+code in the OpenSSL .DLL which is copyrighted by the OpenSSL developers.  I am
+copied some of it and translated it into Pascal and made some modifications so
+that it will handle Unicode filenames.
+}
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+function IndyX509_load_cert_crl_file(ctx : PX509_LOOKUP;
+  const AFileName : String;
+  const _type : TIdC_INT) : TIdC_INT;  forward;
+function IndyX509_load_cert_file( ctx : PX509_LOOKUP;
+  const AFileName : String; _type : TIdC_INT) : TIdC_INT; forward;
+
+const
+ Indy_x509_unicode_file_lookup : X509_LOOKUP_METHOD = (
+	name : PAnsiChar('Load file into cache');
+	new_item : nil;		//* new */
+	free : nil;		//* free */
+	init : nil; 		//* init */
+	shutdown : nil;		//* shutdown */
+	ctrl : by_Indy_unicode_file_ctrl;	//* ctrl */
+	get_by_subject : nil;		//* get_by_subject */
+	get_by_issuer_serial : nil;		//* get_by_issuer_serial */
+	get_by_fingerprint : nil;		//* get_by_fingerprint */
+	get_by_alias : nil		//* get_by_alias */
+	);
+
+function Indy_Unicode_X509_LOOKUP_file () : PX509_LOOKUP_METHOD cdecl;
+begin
+  Result := @Indy_x509_unicode_file_lookup;
+end;
+
+function by_Indy_unicode_file_ctrl(ctx : PX509_LOOKUP;
+  cmd : TIdC_INT;
+  const argc : PAnsiChar;
+  argl : TIdC_LONG;
+  out ret : PAnsiChar ) : TIdC_INT; cdecl;
+var
+  LOk : TIdC_INT;
+  LFileName : String;
+
+begin
+  LOk := 0;
+  case cmd of
+    X509_L_FILE_LOAD :
+    begin
+      case argl of
+        X509_FILETYPE_DEFAULT :
+        begin
+          LFilename := GetEnvironmentVariable(String(X509_get_default_cert_file_env));
+          if LFileName <> '' then  begin
+            Result := IndyX509_load_cert_crl_file(ctx,LFileName, X509_FILETYPE_PEM);
+          end else begin
+            Result := IndyX509_load_cert_crl_file(ctx,String(X509_get_default_cert_file), X509_FILETYPE_PEM);
+          end;
+          if Result = 0 then begin
+            X509err(X509_F_BY_FILE_CTRL,X509_R_LOADING_DEFAULTS);
+          end;
+        end;
+        X509_FILETYPE_PEM :
+        begin
+          //Note that typecasting an AnsiChar as a WideChar is normally a crazy
+          //thing to do.  The thing is that the OpenSSL API is based on ASCII or
+          //UTF8, not Unicode and we are writing this just for Unicode filenames.
+          LFilename := PWideChar(argc);
+          LOk := IndyX509_load_cert_crl_file(ctx,LFilename,X509_FILETYPE_PEM);
+        end;
+      else
+        LFilename := PWideChar(argc);
+        Lok := IndyX509_load_cert_file(ctx,LFilename,TIdC_INT(argl));
+      end;
+    end;
+  end;
+    Result := LOk;
+end;
+
+function IndyX509_load_cert_file( ctx : PX509_LOOKUP; const AFileName : String; _type : TIdC_INT) : TIdC_INT;
+var
+  LM : TMemoryStream;
+  Linf : PSTACK_OF_X509_INFO;
+  Lin : PBIO;
+  LX : PX509;
+  i : Integer;
+begin
+  Result := 0;
+  Lx := nil;
+  LIn := nil;
+  LM := TMemoryStream.Create;
+  try
+    LM.LoadFromFile(AFileName);
+    Lin := BIO_new_mem_buf(LM.Memory,LM.Size);
+    if Assigned(LIn) then begin
+      case _type of
+        X509_FILETYPE_PEM :
+        begin
+          repeat
+            Lx := PEM_read_bio_X509_AUX(Lin,nil,nil,nil);
+            if not Assigned(lx) then begin
+		  	    	if ((ERR_GET_REASON(ERR_peek_last_error()) =
+		  		    	PEM_R_NO_START_LINE) and (Result > 0)) then begin
+		   	      		ERR_clear_error();
+		              break;
+                end else begin
+			            X509err(X509_F_X509_LOAD_CERT_FILE, ERR_R_PEM_LIB);
+//					goto err;
+                end;
+            end else begin
+              i := X509_STORE_add_cert(ctx^.store_ctx,Lx);
+              if i <> 0 then begin
+                Result := i;
+              end;
+              X509_free(Lx);
+	   	        Lx := nil;
+            end;
+          until False;
+        end;
+        X509_FILETYPE_ASN1 :
+        begin
+          Lx := d2i_X509_bio(Lin,nil);
+          if not Assigned(Lx) then begin
+		        X509err(X509_F_X509_LOAD_CERT_FILE,ERR_R_ASN1_LIB);
+//			goto err;
+          end else begin;
+            i := X509_STORE_add_cert(ctx^.store_ctx,Lx);
+            if i = 0 then begin
+            end else begin
+              Result := i;
+            end;
+          end;
+        end;
+      else
+	      X509err(X509_F_X509_LOAD_CERT_FILE,X509_R_BAD_X509_FILETYPE);
+		//goto err;
+      end;
+    end else begin
+      X509err(X509_F_X509_LOAD_CERT_FILE,ERR_R_SYS_LIB);
+	   	//goto err;
+    end;
+  finally
+    BIO_free(Lin);
+    FreeAndNil(LM);
+  end;
+
+end;
+
+function IndyX509_load_cert_crl_file(ctx : PX509_LOOKUP;
+  const AFileName : String;
+  const _type : TIdC_INT) : TIdC_INT;
+var
+  LM : TMemoryStream;
+  Linf : PSTACK_OF_X509_INFO;
+  Litmp : PX509_INFO;
+  Lin : PBIO;
+  i : Integer;
+begin
+  Result := 0;
+  LInf := nil;
+  Lin := nil;
+  if _type <> X509_FILETYPE_PEM then begin
+    Result := IndyX509_load_cert_file(ctx, AFileName, _type);
+    exit;
+  end;
+  LM := TMemoryStream.Create;
+  try
+    LM.LoadFromFile(AFileName);
+    Lin :=  BIO_new_mem_buf(LM.Memory,LM.Size);
+    if Assigned(Lin) then begin
+      Linf := PEM_X509_INFO_read_bio(Lin, nil, nil, nil);
+    end else begin
+      X509err(X509_F_X509_LOAD_CERT_CRL_FILE,ERR_R_SYS_LIB);
+    end;
+    BIO_free(Lin);
+    FreeAndNil(LM);
+    //Surpress exception here since it's going to be called by the OpenSSL .DLL
+    //Follow the OpenSSL .DLL Error conventions.
+  except
+    X509err(X509_F_X509_LOAD_CERT_CRL_FILE,ERR_R_SYS_LIB);
+    BIO_free(Lin);
+    FreeAndNil(LM);
+    Exit;
+  end;
+  if not Assigned(LInF) then begin
+		X509err(X509_F_X509_LOAD_CERT_CRL_FILE,ERR_R_PEM_LIB);
+    Exit;
+  end;
+  try
+    for i := 0 to sk_X509_INFO_num(Linf) -1 do begin
+      Litmp := sk_X509_INFO_value(Linf, i);
+      if Assigned(Litmp^.x509) then begin
+        X509_STORE_add_cert(ctx^.store_ctx, Litmp^.x509);
+        Inc(Result);
+      end;
+      if Assigned(Litmp^.crl) then begin
+   			X509_STORE_add_crl(ctx^.store_ctx, Litmp^.crl);
+	  		Inc(Result);
+      end;
+    end;
+  finally
+    sk_X509_INFO_pop_free(Linf, @X509_INFO_free);
+  end;
+end;
+  {$ENDIF}
+{$ENDIF}
+
+{$IFDEF STRING_IS_UNICODE}
+{
+IMPORTANT!!!
+
 OpenSSL can not handle Unicode file names at all.  On Posix systems, UTF8 File names
 can be used with OpenSSL.  The Windows operating system does not accept UTF8 file names
 at all so we have our own routines that will handle Unicode filenames.  THe routines
@@ -675,6 +905,23 @@ function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; const AFileName : Stri
   {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(UTF8String(AFileName)), AType) > 0;
+end;
+
+function IndyX509_STORE_load_locations( ctx : PX509_STORE; const AFileName,
+		APathName : String) : TIdC_INT;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+    Result := X509_STORE_load_locations(ctx, PAnsiChar(UTF8String(AFileName)),
+      PAnsiChar(UTF8String(APathName)));
+
+end;
+
+function IndySSL_CTX_load_verify_locations(ctx : PSSL_CTX; const ACAFile, ACAPath : String): TIdC_INT;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := X509_STORE_load_locations(ctx^.cert_store,
+    PAnsiChar(UTF8String(ACAFile)),
+    PAnsiChar(UTF8String(ACAPath)));
 end;
 
   {$ENDIF}
@@ -713,12 +960,17 @@ begin
                 if not Assigned(Result) then begin
                   Result := sk_X509_NAME_new_null;
                   // RLebeau: exit here if not Assigned??
+                  if not Assigned(Result) then begin
+                     SSLerr(SSL_F_SSL_LOAD_CLIENT_CA_FILE,ERR_R_MALLOC_FAILURE);
+                  end;
+
                 end;
                 LXN := X509_get_subject_name(LX);
                 if not Assigned(LXN) then begin
                   //error
                   IndySSL_load_client_CA_file_err(Result);
                   // RLebeau: exit here??
+                  // goto err;
                 end;
                 //* check for duplicates */
                 LXNDup := X509_NAME_dup(LXN);
@@ -726,6 +978,7 @@ begin
                   //error
                   IndySSL_load_client_CA_file_err(Result);
                   // RLebeau: exit here??
+                  //goto err;
                 end;
                 if (sk_X509_NAME_find(Lsk, LXNDup) >= 0) then begin
                   X509_NAME_free(LXNDup);
@@ -739,6 +992,8 @@ begin
           finally
             BIO_free(LB);
           end;
+        end else begin
+          SSLerr(SSL_F_SSL_LOAD_CLIENT_CA_FILE,ERR_R_MALLOC_FAILURE);
         end;
       finally
         FreeAndNil(LM);
@@ -746,6 +1001,8 @@ begin
     finally
       sk_X509_NAME_free(Lsk);
     end;
+  end else begin
+    SSLerr(SSL_F_SSL_LOAD_CLIENT_CA_FILE,ERR_R_MALLOC_FAILURE);
   end;
   if Assigned(Result) then begin
     ERR_clear_error;
@@ -757,32 +1014,44 @@ var
   LM : TMemoryStream;
   B : PBIO;
   LKey : PEVP_PKEY;
+  j : TIdC_INT;
 begin
   Result := False;
   LM := TMemoryStream.Create;
   try
     LM.LoadFromFile(AFileName);
     B :=  BIO_new_mem_buf(LM.Memory,LM.Size);
-    try
-      case AType of
-        SSL_FILETYPE_PEM :
-        begin
-          LKey := PEM_read_bio_PrivateKey(b,nil,CTX^.default_passwd_callback,
-            CTX^.default_passwd_callback_userdata);
+    if Assigned(B) then begin
+      try
+        case AType of
+          SSL_FILETYPE_PEM :
+          begin
+            j := ERR_R_PEM_LIB;
+            LKey := PEM_read_bio_PrivateKey(b,nil,CTX^.default_passwd_callback,
+              CTX^.default_passwd_callback_userdata);
+          end;
+          SSL_FILETYPE_ASN1 :
+          begin
+            j := ERR_R_ASN1_LIB;
+            LKey := d2i_PrivateKey_bio(b,nil);
+          end;
+        else
+          SSLerr(SSL_F_SSL_CTX_USE_PRIVATEKEY_FILE,SSL_R_BAD_SSL_FILETYPE);
         end;
-        SSL_FILETYPE_ASN1 :
-        begin
-          LKey := d2i_PrivateKey_bio(b,nil);
+        if Assigned(LKey) then begin
+          Result := SSL_CTX_use_PrivateKey(ctx,LKey) > 0;
+          EVP_PKEY_free(LKey);
+        end else begin
+          SSLerr(SSL_F_SSL_CTX_USE_PRIVATEKEY_FILE,j);
         end;
-      else
-        raise Exception.Create('Invalid Key');
+
+      finally
+        if Assigned(B) then begin
+          BIO_free(B);
+        end;
       end;
-      if LKey = nil then begin
-        EIdOSSLLoadingKeyError.RaiseException(RSSSLLoadingKeyError);
-      end;
-      Result := SSL_CTX_use_PrivateKey(ctx,LKey) > 0;
-    finally
-      BIO_free(B);
+    end else begin
+      SSLerr(SSL_F_SSL_CTX_USE_PRIVATEKEY_FILE,ERR_R_BUF_LIB);
     end;
   finally
     FreeAndNil(LM);
@@ -794,33 +1063,77 @@ var
   LM : TMemoryStream;
   B : PBIO;
   LX : PX509;
+  j : TIdC_INT;
 begin
   Result := False;
   LM := TMemoryStream.Create;
   try
     LM.LoadFromFile(AFileName);
     B :=  BIO_new_mem_buf(LM.Memory,LM.Size);
-    try
-      case AType of
-        SSL_FILETYPE_ASN1 :
-        begin
-          LX := d2i_X509_bio(B,nil);
+    if Assigned(B) then begin
+      try
+        case AType of
+          SSL_FILETYPE_ASN1 :
+          begin
+            j := ERR_R_ASN1_LIB;
+            LX := d2i_X509_bio(B,nil);
+          end;
+          SSL_FILETYPE_PEM :
+          begin
+            j := ERR_R_PEM_LIB;
+            LX := PEM_read_bio_X509(B,nil,CTX^.default_passwd_callback,
+              CTX^.default_passwd_callback_userdata );
+          end
+        else
+          SSLerr(SSL_F_SSL_CTX_USE_CERTIFICATE_FILE,SSL_R_BAD_SSL_FILETYPE);
         end;
-        SSL_FILETYPE_PEM :
-        begin
-          LX := PEM_read_bio_X509(B,nil,CTX^.default_passwd_callback,
-            CTX^.default_passwd_callback_userdata );
-        end
-      else
-        raise Exception.Create('Invalid Key');
+        if Assigned(LX) then begin
+          Result := SSL_CTX_use_certificate(ctx,LX) > 0;
+        end else begin
+          SSLerr(SSL_F_SSL_CTX_USE_CERTIFICATE_FILE,j);
+        end;
+      finally
+        BIO_free(B);
       end;
-      Result := SSL_CTX_use_certificate(ctx,LX) > 0;
-    finally
-      BIO_free(B);
+    end else begin
+      SSLerr(SSL_F_SSL_CTX_USE_CERTIFICATE_FILE,ERR_R_BUF_LIB);
     end;
   finally
     FreeAndNil(LM);
   end;
+  if Assigned(LX) then begin
+    X509_free(LX);
+  end;
+end;
+
+function IndyX509_STORE_load_locations( ctx : PX509_STORE; const AFileName,
+		APathName : String) : TIdC_INT;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+var
+  lookup : PX509_LOOKUP;
+
+
+begin
+  Result := 0;
+  if AFileName <> '' then begin
+    lookup:=X509_STORE_add_lookup(ctx, Indy_Unicode_X509_LOOKUP_file );
+    if Assigned(lookup) then begin
+      if (X509_LOOKUP_load_file(lookup,PAnsiChar(@AFileName[1]),X509_FILETYPE_PEM) <> 1) then begin
+        Exit;
+      end;
+    end else begin
+      Exit;
+    end;
+
+  end;
+  {To do:  Figure out how to do the hash dir lookup with Unicode.}
+
+end;
+
+function IndySSL_CTX_load_verify_locations(ctx : PSSL_CTX; const ACAFile, ACAPath : String): TIdC_INT;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := IndyX509_STORE_load_locations(ctx^.cert_store,ACAFile,ACAPath);
 end;
    {$ENDIF}
 
@@ -844,6 +1157,17 @@ begin
   Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(AFileName), AType) > 0;
 end;
 
+function IndyX509_STORE_load_locations( ctx : PX509_STORE; const AFileName,
+		APathName : String) : TIdC_INT;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := X509_STORE_load_locations(ctx, PAnsiChar(@AFileName[1]),PAnsiChar(APathName));
+end;
+
+function IndySSL_CTX_load_verify_locations(ctx : PSSL_CTX; const ACAFile, ACAPath : String): TIdC_INT;
+begin
+  Result := SSL_CTX_load_verify_locations(ctx,PAnsiChar(ACAFile),PAnsiChar(ACAPath));
+end;
 {$ENDIF}
 
 function PasswordCallback(buf: PAnsiChar; size: TIdC_INT; rwflag: TIdC_INT; userdata: Pointer): TIdC_INT; cdecl;
@@ -2063,26 +2387,10 @@ end;
 
 function TIdSSLContext.LoadRootCert: Boolean;
 begin
-
-{$IFDEF STRING_IS_UNICODE}
-  {$IFDEF UNIX}
-  Result := SSL_CTX_load_verify_locations(
+    Result := IndySSL_CTX_load_verify_locations(
                    fContext,
-                   PAnsiChar(UTF8String(RootCertFile)),
-                   nil) > 0;
-  {$ENDIF}
-  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-    Result := SSL_CTX_load_verify_locations(
-                   fContext,
-                   PAnsiChar(AnsiString(RootCertFile)),
-                   nil) > 0;
-  {$ENDIF}
-{$ELSE}
-    Result := SSL_CTX_load_verify_locations(
-                   fContext,
-                   PAnsiChar(RootCertFile),
-                   nil) > 0;
-{$ENDIF}
+                   RootCertFile,
+                   '') > 0;
 end;
 
 function TIdSSLContext.LoadCert: Boolean;
