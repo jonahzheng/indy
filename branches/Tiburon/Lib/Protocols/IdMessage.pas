@@ -1002,6 +1002,8 @@ begin
 end;
 
 procedure TIdMessage.SetContentType(const AValue: String);
+var
+  LCharSet: String;
 begin
   // RLebeau: per RFC 2045 Section 5.2:
   //
@@ -1023,9 +1025,13 @@ begin
 
   if AValue <> '' then
   begin
-    FContentType := RemoveHeaderEntry(AValue, 'charset', FCharSet, QuoteMIMEContentType); {do not localize}
-    if (FCharSet = '') and IsHeaderMediaType(FContentType, 'text') then begin {do not localize}
-      FCharSet := 'us-ascii'; {do not localize}
+    FContentType := RemoveHeaderEntry(AValue, 'charset', LCharSet, QuoteMIMEContentType); {do not localize}
+    if (LCharSet = '') and IsHeaderMediaType(FContentType, 'text') then begin {do not localize}
+      LCharSet := 'us-ascii'; {do not localize}
+    end;
+    {RLebeau: override the current CharSet only if the header specifies a new value}
+    if LCharSet <> '' then begin
+      FCharSet := LCharSet;
     end;
   end else
   begin

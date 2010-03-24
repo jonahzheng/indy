@@ -248,7 +248,7 @@ begin
   //This extracts 'text/plain' from 'text/plain; charset="xyz"; boundary="123"'
   //or, if '', it finds the correct default value for MIME messages.
   if AContentType <> '' then begin
-    Result := Trim(Fetch(AContentType, ';'));  {do not localize}
+    Result := ExtractHeaderItem(AContentType);
   end else begin
     //If it is MIME, then we need to find the correct default...
     LParts := MessageParts;
@@ -258,8 +258,7 @@ begin
         //There is an exception if we are a child of multipart/digest...
         if ParentPart <> -1 then begin
           AContentType := LParts.Items[ParentPart].Headers.Values['Content-Type'];  {do not localize}
-          LTemp := Trim(Fetch(AContentType, ';'));  {do not localize}
-          if TextIsSame(LTemp, 'multipart/digest') then begin  {do not localize}
+          if IsHeaderMediaType(AContentType, 'multipart/digest') then begin  {do not localize}
             Result := 'message/rfc822';  {do not localize}
             Exit;
           end;
@@ -316,9 +315,13 @@ end;
 
 procedure TIdMessagePart.SetContentDisposition(const Value: string);
 var
-  LTmp: string;
+  LFileName: string;
 begin
-  Headers.Values['Content-Disposition'] := RemoveHeaderEntry(Value, 'filename', FFileName, QuoteRFC822); {do not localize}
+  Headers.Values['Content-Disposition'] := RemoveHeaderEntry(Value, 'filename', LFileName, QuoteRFC822); {do not localize}
+  {RLebeau: override the current value only if the header specifies a new one}
+  if LFileName <> '' then begin
+    FFileName := LFileName;
+  end;
 end;
 
 procedure TIdMessagePart.SetContentLocation(const Value: string);
@@ -333,11 +336,18 @@ end;
 
 procedure TIdMessagePart.SetContentType(const Value: string);
 var
-  LTmp: string;
+  LTmp, LCharSet, LName: string;
 begin
-  LTmp := RemoveHeaderEntry(Value, 'charset', FCharset, QuoteMIMEContentType);{do not localize}
-  LTmp := RemoveHeaderEntry(LTmp, 'name', FName, QuoteMIMEContentType);{do not localize}
+  LTmp := RemoveHeaderEntry(Value, 'charset', LCharSet, QuoteMIMEContentType);{do not localize}
+  LTmp := RemoveHeaderEntry(LTmp, 'name', LName, QuoteMIMEContentType);{do not localize}
   Headers.Values['Content-Type'] := LTmp;
+  {RLebeau: override the current values only if the header specifies new ones}
+  if LCharSet <> '' then begin
+    FCharSet := LCharSet;
+  end;
+  if LName <> '' then begin
+    FName := LName;
+  end;
 end;
 
 procedure TIdMessagePart.SetExtraHeaders(const Value: TIdHeaderList);

@@ -654,19 +654,19 @@ end;
 
 procedure TIdFormDataField.SetContentType(const Value: string);
 var
-  LTmp: string;
+  LContentType, LCharSet: string;
 begin
   if Length(Value) > 0 then begin
-    LTmp := Value;
+    LContentType := Value;
   end
   else if Length(FFileName) > 0 then begin
-    LTmp := GetMIMETypeFromFile(FFileName);
+    LContentType := GetMIMETypeFromFile(FFileName);
   end
   else begin
-    LTmp := sContentTypeOctetStream;
+    LContentType := sContentTypeOctetStream;
   end;
 
-  FContentType := RemoveHeaderEntry(LTmp, 'charset', FCharSet, QuoteMIMEContentType); {do not localize}
+  FContentType := RemoveHeaderEntry(LContentType, 'charset', LCharSet, QuoteMIMEContentType); {do not localize}
 
   // RLebeau: per RFC 2045 Section 5.2:
   //
@@ -685,8 +685,12 @@ begin
   // text may still be assumed in the absence of a MIME-Version or the
   // presence of an syntactically invalid Content-Type header field, but
   // the sender's intent might have been otherwise.
-  if (FCharSet = '') and IsHeaderMediaType(FContentType, 'text') then begin {do not localize}
-    FCharSet := 'us-ascii'; {do not localize}
+  if (LCharSet = '') and IsHeaderMediaType(FContentType, 'text') then begin {do not localize}
+    LCharSet := 'us-ascii'; {do not localize}
+  end;
+  {RLebeau: override the current CharSet only if the header specifies a new value}
+  if LCharSet <> '' then begin
+    FCharSet := LCharSet;
   end;
 end;
 

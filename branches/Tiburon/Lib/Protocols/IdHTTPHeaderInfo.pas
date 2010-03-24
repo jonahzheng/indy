@@ -511,9 +511,11 @@ begin
 end;
 
 procedure TIdEntityHeaderInfo.SetContentType(const AValue: String);
+var
+  LCharSet: string;
 begin
   if AValue <> '' then begin
-    FContentType := RemoveHeaderEntry(AValue, 'charset', FCharSet, QuoteHTTP); {do not localize}
+    FContentType := RemoveHeaderEntry(AValue, 'charset', LCharSet, QuoteHTTP); {do not localize}
     // RLebeau: per RFC 2616 Section 3.7.1:
     //
     // The "charset" parameter is used with some media types to define the
@@ -523,8 +525,12 @@ begin
     // received via HTTP. Data in character sets other than "ISO-8859-1" or
     // its subsets MUST be labeled with an appropriate charset value. See
     // section 3.4.1 for compatibility problems.
-    if (FCharSet = '') and IsHeaderMediaType(FContentType, 'text') then begin {do not localize}
-      FCharSet := 'ISO-8859-1'; {do not localize}
+    if (LCharSet = '') and IsHeaderMediaType(FContentType, 'text') then begin {do not localize}
+      LCharSet := 'ISO-8859-1'; {do not localize}
+    end;
+    {RLebeau: override the current CharSet only if the header specifies a new value}
+    if LCharSet <> '' then begin
+      FCharSet := LCharSet;
     end;
   end else begin
     FContentType := '';

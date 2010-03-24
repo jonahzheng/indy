@@ -3634,10 +3634,7 @@ function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String;
 var
   LItems: TStringList;
   I: Integer;
-  LTmp: string;
-  {$IFNDEF VCL_6_OR_ABOVE}
-  LValue: string;
-  {$ENDIF}
+  LTmp, LValue: string;
 
   {$IFNDEF VCL_6_OR_ABOVE}
   function FindIndexOfItem: Integer;
@@ -3695,10 +3692,10 @@ begin
     SplitHeaderSubItems(AHeaderLine, LItems, AQuoteType);
     {$IFDEF VCL_6_OR_ABOVE}
     LItems.CaseSensitive := False;
-    VOld := LItems.Values[ASubItem];
-    LItems.Values[ASubItem] := Trim(AValue);
+    I := LItems.IndexOf(ASubItem);
     {$ELSE}
     I := FindIndexOfItem;
+    {$ENDIF}
     if I >= 0 then begin
       VOld := LItems.Strings[I];
       Fetch(VOld, '=');
@@ -3713,7 +3710,6 @@ begin
     else if I >= 0 then begin
       LItems.Delete(I);
     end;
-    {$ENDIF}
     Result := ExtractHeaderItem(AHeaderLine);
     if Result <> '' then begin
       for I := 0 to LItems.Count-1 do begin
