@@ -789,7 +789,7 @@ uses
   IdCTypes;
 
 //temp for compile tests
-{$DEFINE SSLEAY_MACROS}
+{.$DEFINE SSLEAY_MACROS}
 
 const
   CONF_MFLAGS_IGNORE_ERRORS = $1;
@@ -7887,6 +7887,24 @@ _des_cblock = DES_cblock
     hctx : PHMAC_CTX; enc : TIdC_INT) : TIdC_INT; cdecl;
 //	int (*tlsext_status_cb)(SSL *ssl, void *arg);
   Ptlsext_status_cb = function (ssl : PSSL; arg : Pointer) : TIdC_INT; cdecl;
+  SSL_CTX_stats = record
+    sess_connect: TIdC_INT;  // SSL new conn - started
+    sess_connect_renegotiate: TIdC_INT;  // SSL reneg - requested
+    sess_connect_good: TIdC_INT; // SSL new conne/reneg - finished
+    sess_accept: TIdC_INT;    // SSL new accept - started
+    sess_accept_renegotiate: TIdC_INT; // SSL reneg - requested
+    sess_accept_good: TIdC_INT;  // SSL accept/reneg - finished
+    sess_miss: TIdC_INT;  // session lookup misses
+    sess_timeout: TIdC_INT; // reuse attempt on timeouted session
+    sess_cache_full: TIdC_INT; // session removed due to full cache
+    sess_hit: TIdC_INT; // session reuse actually done
+    sess_cb_hit: TIdC_INT; // session-id that was not
+                          // in the cache was
+                          // passed back via the callback.  This
+                          // indicates that the application is
+                          // supplying session-id's from other
+                          // processes - spooky :-)
+  end;
   SSL_CTX = record
     method: PSSL_METHOD;
     cipher_list: PSTACK_OF_SSL_CIPHER;
@@ -7918,22 +7936,7 @@ _des_cblock = DES_cblock
     new_session_cb: function (ssl : PSSL; sess: PSSL_SESSION): TIdC_INT; cdecl;
     remove_session_cb: procedure (ctx : PSSL_CTX; sess : PSSL_SESSION); cdecl;
     get_session_cb: function (ssl : PSSL; data : PByte; len: TIdC_INT; copy : PIdC_INT) : PSSL_SESSION; cdecl;
-    sess_connect: TIdC_INT;  // SSL new conn - started
-    sess_connect_renegotiate: TIdC_INT;  // SSL reneg - requested
-    sess_connect_good: TIdC_INT; // SSL new conne/reneg - finished
-    sess_accept: TIdC_INT;    // SSL new accept - started
-    sess_accept_renegotiate: TIdC_INT; // SSL reneg - requested
-    sess_accept_good: TIdC_INT;  // SSL accept/reneg - finished
-    sess_miss: TIdC_INT;  // session lookup misses
-    sess_timeout: TIdC_INT; // reuse attempt on timeouted session
-    sess_cache_full: TIdC_INT; // session removed due to full cache
-    sess_hit: TIdC_INT; // session reuse actually done
-    sess_cb_hit: TIdC_INT; // session-id that was not
-                          // in the cache was
-                          // passed back via the callback.  This
-                          // indicates that the application is
-                          // supplying session-id's from other
-                          // processes - spooky :-)
+    stats : SSL_CTX_stats;
     
     references: TIdC_INT;
     // if defined, these override the X509_verify_cert() calls
@@ -8622,29 +8625,22 @@ var
   d2i_X509 : function(pr : PX509; _in : PPByte; len : TIdC_INT): PX509 cdecl = nil;
   i2d_X509_NAME : function(x : PX509_NAME; buf : PPByte) : TIdC_INT cdecl = nil;
   d2i_X509_NAME : function(pr : PPX509_NAME; _in : PPByte; length : TIdC_LONG):PX509_NAME cdecl = nil;
-
   i2d_X509_REQ : function(x: PX509_REQ;  buf: PPByte): TIdC_INT cdecl = nil;
   d2i_X509_REQ : function(pr : PX509_REQ; _in : PPByte; len : TIdC_INT): PX509_REQ cdecl = nil;
   i2d_X509_CRL : function(x: PX509_CRL; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_X509_CRL : function(pr : PX509_CRL; _in : PPByte; len : TIdC_INT): PX509_REQ cdecl = nil;
   i2d_RSAPrivateKey : function(x: PRSA; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_RSAPrivateKey : function(pr : PRSA; _in : PPByte; len : TIdC_INT): PRSA cdecl = nil;
-//  d2i_RSAPublicKey
   i2d_RSAPublicKey : function(x: PRSA; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_RSAPublicKey : function(pr : PRSA; _in : PPByte; len : TIdC_INT): PRSA cdecl = nil;
-//d2i_DSAPrivateKey
   i2d_DSAPrivateKey : function(x: PDSA; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_DSAPrivateKey : function(pr : PDSA; _in : PPByte; len : TIdC_INT): PDSA cdecl = nil;
-
   i2d_PrivateKey : function(x: PEVP_PKEY; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_PrivateKey : function(pr : PEVP_PKEY; _in : PPByte; len : TIdC_INT): PEVP_PKEY cdecl = nil;
-
   i2d_PKCS7 : function(x: PPKCS7; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_PKCS7 : function(pr : PPKCS7; _in : PPByte; len : TIdC_INT): PPKCS7 cdecl = nil;
-
   i2d_DHparams : function(x: PDH; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_DHparams : function(pr : PDH; _in : PPByte; len : TIdC_INT): PDH cdecl = nil;
-
   i2d_DSAparams : function(x: PDSA; buf: PPByte): TIdC_INT cdecl = nil;
   d2i_DSAparams : function(pr : PDSA; _in : PPByte; len : TIdC_INT): PDSA cdecl = nil;
 //NETSCAPE_CERT_SEQUENCE
@@ -10324,8 +10320,8 @@ them in case we use them later.}
   {CH fn_DH_check_pub_key = 'DH_check_pub_key'; } {Do not localize}
   {CH fn_DH_generate_key = 'DH_generate_key'; }  {Do not localize}
   {CH fn_DH_compute_key = 'DH_compute_key'; }  {Do not localize}
-  {CH fn_d2i_DHparams = 'd2i_DHparams'; }  {Do not localize}
-  {CH fn_i2d_DHparams = 'i2d_DHparams'; }  {Do not localize}
+  fn_d2i_DHparams = 'd2i_DHparams';   {Do not localize}
+  fn_i2d_DHparams = 'i2d_DHparams';   {Do not localize}
   {CH fn_DH_OpenSSL = 'DH_OpenSSL'; } {Do not localize}
   {$IFDEF OPENSSL_FIPS}
   {CH fn_FIPS_dh_new = 'FIPS_dh_new'; } {Do not localize}
@@ -10355,17 +10351,18 @@ them in case we use them later.}
   {CH fn_DSA_verify = 'DSA_verify'; }  {Do not localize}
   {CH fn_DSA_free = 'DSA_free'; }  {Do not localize}
   {CH fn_ERR_load_DSA_strings = 'ERR_load_DSA_strings'; }  {Do not localize}
-  {CH fn_d2i_DSAPublicKey = 'd2i_DSAPublicKey'; }  {Do not localize}
-  {CH fn_d2i_DSAPrivateKey = 'd2i_DSAPrivateKey'; }  {Do not localize}
-  {CH fn_d2i_DSAparams = 'd2i_DSAparams'; }  {Do not localize}
+
     {$IFNDEF OPENSSL_NO_DEPRECATED}
   {CH fn_DSA_generate_parameters = 'DSA_generate_parameters'; }  {Do not localize}
     {$ENDIF}
   {CH fn_DSA_generate_parameters_ex = 'DSA_generate_parameters_ex'; } {Do not localize}
   {CH fn_DSA_generate_key = 'DSA_generate_key'; }  {Do not localize}
-  {CH fn_i2d_DSAPublicKey = 'i2d_DSAPublicKey'; }  {Do not localize}
-  {CH fn_i2d_DSAPrivateKey = 'i2d_DSAPrivateKey'; }  {Do not localize}
-  {CH fn_i2d_DSAparams = 'i2d_DSAparams'; }  {Do not localize}
+   fn_d2i_DSAPublicKey = 'd2i_DSAPublicKey';  {Do not localize}
+   fn_i2d_DSAPublicKey = 'i2d_DSAPublicKey';   {Do not localize}
+   fn_d2i_DSAPrivateKey = 'd2i_DSAPrivateKey';   {Do not localize}
+  fn_i2d_DSAPrivateKey = 'i2d_DSAPrivateKey';   {Do not localize}
+  fn_i2d_DSAparams = 'i2d_DSAparams';   {Do not localize}
+  fn_d2i_DSAparams = 'd2i_DSAparams';   {Do not localize}
     {$IFNDEF OPENSSL_NO_BIO}
   {CH fn_DSAparams_print = 'DSAparams_print'; }  {Do not localize}
   {CH fn_DSA_print = 'DSA_print'; }  {Do not localize}
@@ -11175,11 +11172,11 @@ them in case we use them later.}
   {$ENDIF}
   fn_EVP_PKEY_new = 'EVP_PKEY_new';  {Do not localize}
   fn_EVP_PKEY_free = 'EVP_PKEY_free';  {Do not localize}
-  {CH fn_d2i_PublicKey = 'd2i_PublicKey'; }  {Do not localize}
-  {CH fn_i2d_PublicKey = 'i2d_PublicKey'; }  {Do not localize}
-  {CH fn_d2i_PrivateKey = 'd2i_PrivateKey'; }  {Do not localize}
+  fn_d2i_PublicKey = 'd2i_PublicKey';   {Do not localize}
+  fn_i2d_PublicKey = 'i2d_PublicKey';   {Do not localize}
+   fn_d2i_PrivateKey = 'd2i_PrivateKey';   {Do not localize}
   { fn_d2i_AutoPrivateKey = 'd2i_AutoPrivateKey';  {Do not localize}
-  {CH fn_i2d_PrivateKey = 'i2d_PrivateKey'; }  {Do not localize}
+   fn_i2d_PrivateKey = 'i2d_PrivateKey';   {Do not localize}
   {CH fn_EVP_PKEY_copy_parameters = 'EVP_PKEY_copy_parameters'; }  {Do not localize}
   {CH fn_EVP_PKEY_missing_parameters = 'EVP_PKEY_missing_parameters'; }  {Do not localize}
   {CH fn_EVP_PKEY_save_parameters = 'EVP_PKEY_save_parameters'; }  {Do not localize}
@@ -11558,8 +11555,8 @@ them in case we use them later.}
   {CH fn_PKCS7_new = 'PKCS7_new'; }  {Do not localize}
   {CH fn_PKCS7_free = 'PKCS7_free'; }  {Do not localize}
   {CH fn_PKCS7_content_free = 'PKCS7_content_free'; }  {Do not localize}
-  {CH fn_i2d_PKCS7 = 'i2d_PKCS7'; }  {Do not localize}
-  {CH fn_d2i_PKCS7 = 'd2i_PKCS7'; }  {Do not localize}
+  fn_i2d_PKCS7 = 'i2d_PKCS7';   {Do not localize}
+   fn_d2i_PKCS7 = 'd2i_PKCS7';   {Do not localize}
   {CH fn_ERR_load_PKCS7_strings = 'ERR_load_PKCS7_strings'; }  {Do not localize}
   {CH fn_PKCS7_ctrl = 'PKCS7_ctrl'; }  {Do not localize}
   {CH fn_PKCS7_set_type = 'PKCS7_set_type'; }  {Do not localize}
@@ -11766,9 +11763,10 @@ them in case we use them later.}
   {CH fn_NETSCAPE_SPKAC_free = 'NETSCAPE_SPKAC_free'; }  {Do not localize}
   {CH fn_i2d_NETSCAPE_SPKAC = 'i2d_NETSCAPE_SPKAC'; }  {Do not localize}
   {CH fn_d2i_NETSCAPE_SPKAC = 'd2i_NETSCAPE_SPKAC'; }  {Do not localize}
-  {CH fn_i2d_NETSCAPE_CERT_SEQUENCE = 'i2d_NETSCAPE_CERT_SEQUENCE'; }  {Do not localize}
+   fn_i2d_NETSCAPE_CERT_SEQUENCE = 'i2d_NETSCAPE_CERT_SEQUENCE';   {Do not localize}
+   fn_d2i_NETSCAPE_CERT_SEQUENCE = 'd2i_NETSCAPE_CERT_SEQUENCE';   {Do not localize}
+
   {CH fn_NETSCAPE_CERT_SEQUENCE_new = 'NETSCAPE_CERT_SEQUENCE_new'; }  {Do not localize}
-  {CH fn_d2i_NETSCAPE_CERT_SEQUENCE = 'd2i_NETSCAPE_CERT_SEQUENCE'; }  {Do not localize}
   {CH fn_NETSCAPE_CERT_SEQUENCE_free = 'NETSCAPE_CERT_SEQUENCE_free'; }  {Do not localize}
   {CH fn_X509_INFO_new = 'X509_INFO_new'; }  {Do not localize}
   fn_X509_INFO_free = 'X509_INFO_free';   {Do not localize}
@@ -12725,6 +12723,9 @@ begin
   @X509_STORE_CTX_get_current_cert := LoadFunctionCLib(fn_X509_STORE_CTX_get_current_cert);
   @X509_STORE_add_lookup := LoadFunctionCLib(fn_X509_STORE_add_lookup);
   @X509_STORE_load_locations := LoadFunctionClib(fn_X509_STORE_load_locations);
+  @i2d_DSAPrivateKey := LoadFunctionClib(fn_i2d_DSAPrivateKey);
+  @d2i_DSAPrivateKey := LoadFunctionCLib(fn_d2i_DSAPrivateKey);
+  @d2i_PrivateKey := LoadFunctionCLib(fn_d2i_PrivateKey);
   @d2i_PrivateKey_bio := LoadFunctionCLib(fn_d2i_PrivateKey_bio);
   @X509_sign := LoadFunctionCLib(fn_X509_sign);
   @X509_REQ_sign := LoadFunctionCLib(fn_X509_REQ_sign);
@@ -12813,16 +12814,29 @@ begin
   //i2d
   @i2d_X509_bio := LoadFunctionCLib(fn_i2d_X509_bio);
   @i2d_PrivateKey_bio := LoadFunctionCLib(fn_i2d_PrivateKey_bio);
-  @i2d_X509 := LoadFunctionCLib(fn_i2d_X509);
   @d2i_X509_bio := LoadFunctionCLib(fn_d2i_X509_bio);
-  @d2i_X509 := LoadFunctionClib(fn_d2i_X509);
   @i2d_X509_REQ_bio := LoadFunctionClib(fn_i2d_X509_REQ_bio);
+  @i2d_PKCS7 := LoadFunctionClib(fn_i2d_PKCS7);
+  @d2i_PKCS7 := LoadFunctionCLib(fn_d2i_PKCS7);
+  @i2d_X509 := LoadFunctionCLib(fn_i2d_X509);
+  @d2i_X509 := LoadFunctionClib(fn_d2i_X509);
   @i2d_X509_REQ := LoadFunctionClib(fn_i2d_X509_REQ);
   @d2i_X509_REQ := LoadFunctionClib(fn_d2i_X509_REQ );
   @i2d_X509_CRL := LoadFunctionClib(fn_i2d_X509_CRL );
   @d2i_X509_CRL := LoadFunctionClib(fn_d2i_X509_CRL );
+  @i2d_RSAPrivateKey := LoadFunctionCLib(fn_i2d_RSAPrivateKey );
+  @d2i_RSAPrivateKey := LoadFunctionCLib(fn_d2i_RSAPrivateKey );
   @i2d_RSAPublicKey := LoadFunctionCLib(fn_i2d_RSAPublicKey);
   @d2i_RSAPublicKey := LoadFunctionClib(fn_d2i_RSAPublicKey);
+  @i2d_PrivateKey := LoadFunctionCLib(fn_i2d_PrivateKey);
+  @d2i_PrivateKey := LoadFunctionCLib(fn_d2i_PrivateKey);
+
+  @i2d_DSAparams := LoadFunctionCLib(fn_i2d_DSAparams);
+  @d2i_DSAparams := LoadFunctionClib(fn_d2i_DSAparams);
+  @i2d_DHparams := LoadFunctionCLib(fn_i2d_DHparams);
+  @d2i_DHparams := LoadFunctionClib(fn_d2i_DHparams);
+  @i2d_NETSCAPE_CERT_SEQUENCE := LoadFunctionClib(fn_i2d_NETSCAPE_CERT_SEQUENCE);
+  @d2i_NETSCAPE_CERT_SEQUENCE := LoadFunctionClib(fn_i2d_NETSCAPE_CERT_SEQUENCE);
 
   //X509
   @X509_get_default_cert_file := LoadFunctionCLib(fn_X509_get_default_cert_file);
@@ -13125,9 +13139,19 @@ begin
   @BN_hex2bn := nil;
   @BN_bn2hex := nil;
   //i2d
+  @i2d_PKCS7 := nil;
+  @d2i_PKCS7 := nil;
+  @i2d_RSAPrivateKey := nil;
+  @d2i_RSAPrivateKey := nil;
+  @i2d_DSAPrivateKey := nil;
+  @d2i_DSAPrivateKey := nil;
   @i2d_X509_bio := nil;
   @i2d_PrivateKey_bio := nil;
+  @i2d_PrivateKey := nil;
+  @d2i_PrivateKey := nil;
   @d2i_PrivateKey_bio := nil;
+
+
   @i2d_X509 := nil;
   @d2i_X509_bio := nil;
   @d2i_X509 := nil;
@@ -13138,6 +13162,12 @@ begin
   @d2i_X509_REQ := nil;
   @i2d_X509_NAME := nil;
   @d2i_X509_NAME := nil;
+  @i2d_DSAparams := nil;
+  @d2i_DSAparams := nil;
+  @i2d_DHparams := nil;
+  @d2i_DHparams := nil;
+  @i2d_NETSCAPE_CERT_SEQUENCE := nil;
+  @d2i_NETSCAPE_CERT_SEQUENCE := nil;
   //X509
   @X509_get_default_cert_file := nil;
   @X509_get_default_cert_file_env := nil;
