@@ -687,18 +687,18 @@ function IndyX509_load_cert_file( ctx : PX509_LOOKUP;
   const AFileName : String; _type : TIdC_INT) : TIdC_INT; forward;
 
 const
- Indy_x509_unicode_file_lookup : X509_LOOKUP_METHOD = (
-	name : PAnsiChar('Load file into cache');
-	new_item : nil;		//* new */
-	free : nil;		//* free */
-	init : nil; 		//* init */
-	shutdown : nil;		//* shutdown */
-	ctrl : by_Indy_unicode_file_ctrl;	//* ctrl */
-	get_by_subject : nil;		//* get_by_subject */
-	get_by_issuer_serial : nil;		//* get_by_issuer_serial */
-	get_by_fingerprint : nil;		//* get_by_fingerprint */
-	get_by_alias : nil		//* get_by_alias */
-	);
+  Indy_x509_unicode_file_lookup : X509_LOOKUP_METHOD = (
+    name : PAnsiChar('Load file into cache');
+    new_item : nil;		//* new */
+    free : nil;		//* free */
+    init : nil; 		//* init */
+    shutdown : nil;		//* shutdown */
+    ctrl : by_Indy_unicode_file_ctrl;	//* ctrl */
+    get_by_subject : nil;		//* get_by_subject */
+    get_by_issuer_serial : nil;		//* get_by_issuer_serial */
+    get_by_fingerprint : nil;		//* get_by_fingerprint */
+    get_by_alias : nil		//* get_by_alias */
+  );
 
 function Indy_Unicode_X509_LOOKUP_file () : PX509_LOOKUP_METHOD cdecl;
 begin
@@ -752,13 +752,11 @@ end;
 function IndyX509_load_cert_file( ctx : PX509_LOOKUP; const AFileName : String; _type : TIdC_INT) : TIdC_INT;
 var
   LM : TMemoryStream;
-  Linf : PSTACK_OF_X509_INFO;
   Lin : PBIO;
   LX : PX509;
   i : Integer;
 begin
   Result := 0;
-  Lx := nil;
   LIn := nil;
   LM := TMemoryStream.Create;
   try
@@ -771,21 +769,19 @@ begin
           repeat
             Lx := PEM_read_bio_X509_AUX(Lin,nil,nil,nil);
             if not Assigned(lx) then begin
-		  	    	if ((ERR_GET_REASON(ERR_peek_last_error()) =
-		  		    	PEM_R_NO_START_LINE) and (Result > 0)) then begin
-		   	      		ERR_clear_error();
-		              break;
-                end else begin
-			            X509err(X509_F_X509_LOAD_CERT_FILE, ERR_R_PEM_LIB);
-//					goto err;
-                end;
+              if ((ERR_GET_REASON(ERR_peek_last_error()) = PEM_R_NO_START_LINE) and (Result > 0)) then begin
+                ERR_clear_error();
+                Break;
+              end else begin
+                X509err(X509_F_X509_LOAD_CERT_FILE, ERR_R_PEM_LIB);
+                //goto err;
+              end;
             end else begin
               i := X509_STORE_add_cert(ctx^.store_ctx,Lx);
               if i <> 0 then begin
                 Result := i;
               end;
               X509_free(Lx);
-	   	        Lx := nil;
             end;
           until False;
         end;
@@ -793,8 +789,8 @@ begin
         begin
           Lx := d2i_X509_bio(Lin,nil);
           if not Assigned(Lx) then begin
-		        X509err(X509_F_X509_LOAD_CERT_FILE,ERR_R_ASN1_LIB);
-//			goto err;
+            X509err(X509_F_X509_LOAD_CERT_FILE,ERR_R_ASN1_LIB);
+            //goto err;
           end else begin;
             i := X509_STORE_add_cert(ctx^.store_ctx,Lx);
             if i = 0 then begin
@@ -804,12 +800,12 @@ begin
           end;
         end;
       else
-	      X509err(X509_F_X509_LOAD_CERT_FILE,X509_R_BAD_X509_FILETYPE);
-		//goto err;
+        X509err(X509_F_X509_LOAD_CERT_FILE,X509_R_BAD_X509_FILETYPE);
+        //goto err;
       end;
     end else begin
       X509err(X509_F_X509_LOAD_CERT_FILE,ERR_R_SYS_LIB);
-	   	//goto err;
+      //goto err;
     end;
   finally
     BIO_free(Lin);
@@ -866,8 +862,8 @@ begin
         Inc(Result);
       end;
       if Assigned(Litmp^.crl) then begin
-   			X509_STORE_add_crl(ctx^.store_ctx, Litmp^.crl);
-	  		Inc(Result);
+        X509_STORE_add_crl(ctx^.store_ctx, Litmp^.crl);
+        Inc(Result);
       end;
     end;
   finally
@@ -908,7 +904,7 @@ begin
 end;
 
 function IndyX509_STORE_load_locations( ctx : PX509_STORE; const AFileName,
-		APathName : String) : TIdC_INT;
+  APathName : String) : TIdC_INT;
   {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
     Result := X509_STORE_load_locations(ctx, PAnsiChar(UTF8String(AFileName)),
@@ -963,7 +959,6 @@ begin
                   if not Assigned(Result) then begin
                      SSLerr(SSL_F_SSL_LOAD_CLIENT_CA_FILE,ERR_R_MALLOC_FAILURE);
                   end;
-
                 end;
                 LXN := X509_get_subject_name(LX);
                 if not Assigned(LXN) then begin
@@ -1023,6 +1018,7 @@ begin
     B :=  BIO_new_mem_buf(LM.Memory,LM.Size);
     if Assigned(B) then begin
       try
+        LKey := nil;
         case AType of
           SSL_FILETYPE_PEM :
           begin
@@ -1036,7 +1032,7 @@ begin
             LKey := d2i_PrivateKey_bio(b,nil);
           end;
         else
-          SSLerr(SSL_F_SSL_CTX_USE_PRIVATEKEY_FILE,SSL_R_BAD_SSL_FILETYPE);
+          j := SSL_R_BAD_SSL_FILETYPE;
         end;
         if Assigned(LKey) then begin
           Result := SSL_CTX_use_PrivateKey(ctx,LKey) > 0;
@@ -1044,7 +1040,6 @@ begin
         end else begin
           SSLerr(SSL_F_SSL_CTX_USE_PRIVATEKEY_FILE,j);
         end;
-
       finally
         if Assigned(B) then begin
           BIO_free(B);
@@ -1072,6 +1067,7 @@ begin
     B :=  BIO_new_mem_buf(LM.Memory,LM.Size);
     if Assigned(B) then begin
       try
+        LX := nil;
         case AType of
           SSL_FILETYPE_ASN1 :
           begin
@@ -1085,10 +1081,11 @@ begin
               CTX^.default_passwd_callback_userdata );
           end
         else
-          SSLerr(SSL_F_SSL_CTX_USE_CERTIFICATE_FILE,SSL_R_BAD_SSL_FILETYPE);
+          j := SSL_R_BAD_SSL_FILETYPE;
         end;
         if Assigned(LX) then begin
           Result := SSL_CTX_use_certificate(ctx,LX) > 0;
+          X509_free(LX);
         end else begin
           SSLerr(SSL_F_SSL_CTX_USE_CERTIFICATE_FILE,j);
         end;
@@ -1101,18 +1098,13 @@ begin
   finally
     FreeAndNil(LM);
   end;
-  if Assigned(LX) then begin
-    X509_free(LX);
-  end;
 end;
 
 function IndyX509_STORE_load_locations( ctx : PX509_STORE; const AFileName,
-		APathName : String) : TIdC_INT;
+  APathName : String) : TIdC_INT;
   {$IFDEF USE_INLINE} inline; {$ENDIF}
 var
   lookup : PX509_LOOKUP;
-
-
 begin
   Result := 0;
   if AFileName <> '' then begin
@@ -1124,10 +1116,8 @@ begin
     end else begin
       Exit;
     end;
-
   end;
   {To do:  Figure out how to do the hash dir lookup with Unicode.}
-
 end;
 
 function IndySSL_CTX_load_verify_locations(ctx : PSSL_CTX; const ACAFile, ACAPath : String): TIdC_INT;
@@ -1158,7 +1148,7 @@ begin
 end;
 
 function IndyX509_STORE_load_locations( ctx : PX509_STORE; const AFileName,
-		APathName : String) : TIdC_INT;
+  APathName : String) : TIdC_INT;
   {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := X509_STORE_load_locations(ctx, PAnsiChar(@AFileName[1]),PAnsiChar(APathName));
