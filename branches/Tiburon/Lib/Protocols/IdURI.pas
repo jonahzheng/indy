@@ -372,7 +372,7 @@ begin
       begin
         // unicode ESC code
 
-        // RLebeau 5/10/2006: under Win32, the character will end
+        // RLebeau 5/10/2006: under Win32, the character will likely end
         // up as '?' in the Result when converted from Unicode to Ansi,
         // but at least the URL will be parsed properly
         
@@ -463,7 +463,7 @@ begin
     // Unicode codepoint value, depending on the codepage used for the source code.
     // For instance, #128 may become #$20AC...
 
-    if WideCharIsInSet(UnsafeChars, LChar) or (Ord(LChar) < 33) or (Ord(LChar) > 128) then
+    if CharSetContains(UnsafeChars, LChar) or (Ord(LChar) < 33) or (Ord(LChar) > 128) then
     begin
       {$IFDEF STRING_IS_UNICODE}
       Len := CalcUTF16CharLength(ASrc, I+1); // calculate length including surrogates
@@ -520,7 +520,7 @@ begin
   begin
     LChar := {$IFDEF STRING_IS_UNICODE}ASrc[I+1]{$ELSE}LChars[I]{$ENDIF};
 
-    if WideCharIsInSet(UnsafeChars, LChar) or (Ord(LChar) < 32) or (Ord(LChar) > 127) then
+    if CharSetContains(UnsafeChars, LChar) or (Ord(LChar) < 32) or (Ord(LChar) > 127) then
     begin
       {$IFDEF STRING_IS_UNICODE}
       Len := CalcUTF16CharLength(ASrc, I+1); // calculate length including surrogates
