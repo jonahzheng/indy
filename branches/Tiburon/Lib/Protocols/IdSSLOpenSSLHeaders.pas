@@ -4954,18 +4954,6 @@ const
   UI_R_RESULT_TOO_LARGE	= 100;
   UI_R_RESULT_TOO_SMALL	= 101;
   UI_R_UNKNOWN_CONTROL_COMMAND = 106;
-{$DEFINE ERR_file_name__FILE_}
-{$IFNDEF NO_ERR}
-{procedure ERR_PUT_error(a,b,c,d, e);
-begin
-  _ERR_PUT_error_internal(a,b,c,d,e);
-end;   }
-{$ELSE}
-{procedure ERR_PUT_error(a,b,c,d, e);
-begin
-  _ERR_PUT_error_internal(a,b,c,nil,0);
-end; }
-{$ENDIF}
 
 const
   // reasons
