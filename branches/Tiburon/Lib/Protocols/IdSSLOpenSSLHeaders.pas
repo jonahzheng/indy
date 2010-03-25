@@ -1552,8 +1552,11 @@ const
   SMIME_STREAM  =	$1000;
 
   _CLOCKS_PER_SEC_ = 1000;
+  {$EXTERNALSYM _CLOCKS_PER_SEC_}
   CLOCKS_PER_SEC = _CLOCKS_PER_SEC_;
+  {$EXTERNALSYM CLOCKS_PER_SEC}
   CLK_TCK = CLOCKS_PER_SEC;
+  {$EXTERNALSYM CLK_TCK}
 //* Function codes. */
   COMP_F_BIO_ZLIB_FLUSH = 99;
   COMP_F_BIO_ZLIB_NEW	= 100;
@@ -4744,42 +4747,79 @@ const
   X509_PURPOSE_DYNAMIC = $1;
   X509_PURPOSE_DYNAMIC_NAME = $2;
   _ATEXIT_SIZE = 32;
+  {$EXTERNALSYM _ATEXIT_SIZE}
   _IOFBF = 0;
+  {$EXTERNALSYM _IOFBF}
   _IOLBF = 1;
+  {$EXTERNALSYM _IOLBF}
   _IONBF = 2;
+  {$EXTERNALSYM _IONBF}
   _N_LISTS = 30;
+  {$EXTERNALSYM _N_LISTS}
   _MSS_WIN32 = 1;
+  {$EXTERNALSYM _MSS_WIN32}
   _MSS_X86_ = 1;
+  {$EXTERNALSYM _MSS_X86_}
   __CYGWIN32__ = 1;
+  {$EXTERNALSYM __CYGWIN32__}
   __CYGWIN__ = 1;
+  {$EXTERNALSYM __CYGWIN__}
   __GNUC_MINOR__ = 91;
+  {$EXTERNALSYM __GNUC_MINOR__}
   __GNUC__ = 2;
+  {$EXTERNALSYM __GNUC__}
   __SAPP = $0100;
+  {$EXTERNALSYM __SAPP }
   __SEOF = $0020;
+  {$EXTERNALSYM __SEOF }
   __SERR = $0040;
+  {$EXTERNALSYM __SERR }
   __SLBF = $0001;
+  {$EXTERNALSYM __SLBF }
   __SMBF = $0080;
+  {$EXTERNALSYM __SMBF }
   __SMOD = $2000;
+  {$EXTERNALSYM __SMOD }
   __SNBF = $0002;
+  {$EXTERNALSYM __SNBF }
   __SNPT = $0800;
+  {$EXTERNALSYM __SNPT }
   __SOFF = $1000;
+  {$EXTERNALSYM __SOFF }
   __SOPT = $0400;
+  {$EXTERNALSYM __SOPT }
   __SRD = $0004;
+  {$EXTERNALSYM __SRD }
   __SRW = $0010;
+  {$EXTERNALSYM __SRW }
   __SSTR = $0200;
+  {$EXTERNALSYM __SSTR }
   __STDC__ = 1;
+  {$EXTERNALSYM __STDC__}
   __SWR = $0008;
+  {$EXTERNALSYM __SWR }
   __WINNT = 1;
+  {$EXTERNALSYM __WINNT}
   __WINNT__ = 1;
+  {$EXTERNALSYM __WINNT__}
   __i386 = 1;
+  {$EXTERNALSYM __i386}
   __i386__ = 1;
+  {$EXTERNALSYM __i386__}
   __i586 = 1;
+  {$EXTERNALSYM __i586}
   __i586__ = 1;
+  {$EXTERNALSYM __i586__}
   __pentium = 1;
+  {$EXTERNALSYM __pentium}
   __pentium__ = 1;
+  {$EXTERNALSYM __pentium__}
   i386 = 1;
+  {$EXTERNALSYM i386}
   i586 = 1;
+  {$EXTERNALSYM i586}
   pentium = 1;
+  {$EXTERNALSYM pentium}
 //kssl.h
 {$IFNDEF OPENSSL_NO_KRB5}
 {These are consts for Kerberos support.  These will not be complete because

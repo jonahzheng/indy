@@ -336,12 +336,14 @@ var
   i, j: Integer;
   ESC: string;
   CharCode: Integer;
+  IsUTF8: boolean;
   {$IFDEF VCL_2009_OR_ABOVE}
   r: RawByteString;
   {$ELSE}
   r : AnsiString;
   {$ENDIF}
 begin
+  IsUTF8 := false;
   Result := '';    {Do not Localize}
   // S.G. 27/11/2002: Spaces is NOT to be encoded as "+".
   // S.G. 27/11/2002: "+" is a field separator in query parameter, space is...
@@ -367,6 +369,7 @@ begin
           Result := Result + Char(CharCode);
           r[j] := AnsiChar(CharCode);
           Inc(j);
+          IsUTF8 := true;
         except end;
       end else
       begin
@@ -384,6 +387,14 @@ begin
         except end;
       end;
     end;
+  end;
+
+  {If UTF8 characters have been found in the Result string, then do a conversion. This
+   assumes that no UTF16 characters have been added to the Result. ()}
+  if IsUTF8 then
+  begin
+    SetLength(r, j-1);
+    Result := System.UTF8ToString(RawByteString(r));
   end;
 end;
 

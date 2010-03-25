@@ -331,6 +331,7 @@ type
     procedure ContextCreated(AContext: TIdContext); virtual;
     procedure ContextConnected(AContext: TIdContext); virtual;
     procedure ContextDisconnected(AContext: TIdContext); virtual;
+    function CreateConnection: TIdTCPConnection; virtual;
     procedure DoBeforeBind(AHandle: TIdSocketHandle); virtual;
     procedure DoAfterBind; virtual;
     procedure DoBeforeListenerRun(AThread: TIdThread); virtual;
@@ -487,6 +488,11 @@ begin
       AContext.Connection.IOHandler.Intercept := nil;
     end;
   end;
+end;
+
+function TIdCustomTCPServer.CreateConnection: TIdTCPConnection;
+begin
+  Result := TIdTCPConnection.Create(nil);
 end;
 
 procedure TIdCustomTCPServer.DoConnect(AContext: TIdContext);

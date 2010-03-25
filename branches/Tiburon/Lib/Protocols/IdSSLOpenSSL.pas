@@ -1102,7 +1102,6 @@ end;
 
 function IndyX509_STORE_load_locations( ctx : PX509_STORE; const AFileName,
   APathName : String) : TIdC_INT;
-  {$IFDEF USE_INLINE} inline; {$ENDIF}
 var
   lookup : PX509_LOOKUP;
 begin

@@ -170,6 +170,7 @@ type
     function BindPortReserved: Boolean;
     procedure BroadcastEnabledChanged;
     procedure SetBroadcastEnabled(const AValue: Boolean);
+    procedure Disconnect; virtual;
     procedure SetBroadcastFlag(const AEnabled: Boolean);
     procedure SetOverLapped(const AValue: Boolean);
     procedure SetHandle(AHandle: TIdStackSocketHandle);
@@ -255,6 +256,11 @@ begin
   SetHandle(GStack.NewSocketHandle(ASocketType, AProtocol, FIPVersion, FOverLapped));
 end;
 
+procedure TIdSocketHandle.Disconnect;
+begin
+  GStack.Disconnect(Handle);
+end;
+
 procedure TIdSocketHandle.CloseSocket;
 begin
   if HandleAllocated then begin
@@ -263,7 +269,7 @@ begin
       // may then call (in other threads) Connected, which in turn looks at
       // FHandleAllocated.
       FHandleAllocated := False;
-      GStack.Disconnect(Handle);
+      Disconnect;
       SetHandle(Id_INVALID_SOCKET);
     finally
       FConnectionHandle.Leave;
