@@ -213,6 +213,7 @@ uses
   IdStackConsts,
   IdSocketHandle,
   IdSSLOpenSSLHeaders,
+    IdSSLOpenSSLUtils,
   IdComponent,
   IdIOHandler,
   IdGlobalProtocols,
@@ -241,25 +242,6 @@ const
   
 type
   TIdX509 = class;
-
-  TULong = packed record
-    case Byte of
-      0: (B1,B2,B3,B4: Byte);
-      1: (W1,W2: Word);
-      2: (L1: Longint);
-      3: (C1: LongWord);
-  end;
-
-  TEVP_MD = record
-    Length: TIdC_UINT;
-    MD: Array[0..EVP_MAX_MD_SIZE-1] of AnsiChar;
-  end;
-
-  TByteArray = record
-    Length: TIdC_INT;
-    Data: PAnsiChar;
-  End;
-
   TIdSSLIOHandlerSocketOpenSSL = class;
   TIdSSLCipher = class;
   TCallbackEvent  = procedure(const AMsg: String) of object;
@@ -367,7 +349,7 @@ type
     procedure Connect(const pHandle: TIdStackSocketHandle);
     function Send(const ABuffer : TIdBytes; AOffset, ALength: Integer): Integer;
     function Recv(var ABuffer : TIdBytes): Integer;
-    function GetSessionID: TByteArray;
+    function GetSessionID: TIdSSLByteArray;
     function GetSessionIDAsString:String;
     procedure SetCipherList(CipherList: String);
     //
@@ -476,12 +458,12 @@ type
   protected
     fX509Name: PX509_NAME;
     function CertInOneLine: String;
-    function GetHash: TULong;
+    function GetHash: TIdSSLULong;
     function GetHashAsString: String;
   public
     constructor Create(aX509Name: PX509_NAME);
     //
-    property Hash: TULong read GetHash;
+    property Hash: TIdSSLULong read GetHash;
     property HashAsString: string read GetHashAsString;
     property OneLine: string read CertInOneLine;
   end;
@@ -497,20 +479,20 @@ type
 
   TIdX509Fingerprints = class(TIdX509Info)
   protected
-    function GetMD5: TEVP_MD;
+    function GetMD5: TIdSSLEVP_MD;
     function GetMD5AsString:String;
-    function GetSHA1: TEVP_MD;
+    function GetSHA1: TIdSSLEVP_MD;
     function GetSHA1AsString:String;
-    function GetSHA224 : TEVP_MD;
+    function GetSHA224 : TIdSSLEVP_MD;
     function GetSHA224AsString : String;
-    function GetSHA256 : TEVP_MD;
+    function GetSHA256 : TIdSSLEVP_MD;
     function GetSHA256AsString : String;
-    function GetSHA384 : TEVP_MD;
+    function GetSHA384 : TIdSSLEVP_MD;
     function GetSHA384AsString : String;
-    function GetSHA512 : TEVP_MD;
+    function GetSHA512 : TIdSSLEVP_MD;
     function GetSHA512AsString : String;
   public
-     property MD5 : TEVP_MD read GetMD5;
+     property MD5 : TIdSSLEVP_MD read GetMD5;
      property MD5AsString : String read  GetMD5AsString;
 {IMPORTANT!!!
 
@@ -523,15 +505,15 @@ SHA-512
 
 http://csrc.nist.gov/CryptoToolkit/tkhash.html
 }
-    property SHA1 : TEVP_MD read GetSHA1;
+    property SHA1 : TIdSSLEVP_MD read GetSHA1;
     property SHA1AsString : String read  GetSHA1AsString;
-    property SHA224 : TEVP_MD read GetSHA224;
+    property SHA224 : TIdSSLEVP_MD read GetSHA224;
     property SHA224AsString : String read GetSHA224AsString;
-    property SHA256 : TEVP_MD read GetSHA256;
+    property SHA256 : TIdSSLEVP_MD read GetSHA256;
     property SHA256AsString : String read GetSHA256AsString;
-    property SHA384 : TEVP_MD read GetSHA384;
+    property SHA384 : TIdSSLEVP_MD read GetSHA384;
     property SHA384AsString : String read GetSHA384AsString;
-    property SHA512 : TEVP_MD read GetSHA512;
+    property SHA512 : TIdSSLEVP_MD read GetSHA512;
     property SHA512AsString : String read GetSHA512AsString;
   end;
 
@@ -559,7 +541,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     function RIssuer:TIdX509Name;
     function RnotBefore:TDateTime;
     function RnotAfter:TDateTime;
-    function RFingerprint:TEVP_MD;
+    function RFingerprint:TIdSSLEVP_MD;
     function RFingerprintAsString:String;
     function GetSerialNumber: String;
     function GetVersion : TIdC_LONG;
@@ -572,7 +554,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
     property SigInfo : TIdX509SigInfo read FSigInfo;
     property Fingerprints : TIdX509Fingerprints read FFingerprints;
     //
-    property Fingerprint: TEVP_MD read RFingerprint;
+    property Fingerprint: TIdSSLEVP_MD read RFingerprint;
     property FingerprintAsString: String read RFingerprintAsString;
     property Subject: TIdX509Name read RSubject;
     property Issuer: TIdX509Name read RIssuer;
@@ -611,33 +593,10 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
   EIdOSSLDataBindingError = class(EIdOpenSSLAPISSLError);
   EIdOSSLAcceptError = class(EIdOpenSSLAPISSLError);
   EIdOSSLConnectError = class(EIdOpenSSLAPISSLError);
-  
-function LogicalAnd(A, B: Integer): Boolean;
 
-function LoadOpenSSLLibrary: Boolean;
-procedure UnLoadOpenSSLLibrary;
+function LoadOpenSSLLibrary: Boolean; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'use IdSSLOpenSSLUtils.LoadOpenSSLLibrary'{$ENDIF};{$ENDIF}
+procedure UnLoadOpenSSLLibrary; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'use IdSSLOpenSSLUtils.UnLoadOpenSSLLibrary'{$ENDIF};{$ENDIF}
 
-function IndySSL_load_client_CA_file(const AFileName : String) : PSTACK_OF_X509_NAME;
-function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
-function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
-function IndyX509_STORE_load_locations( ctx : PX509_STORE; const AFileName,
-		APathName : String) : TIdC_INT;
-function IndySSL_CTX_load_verify_locations(ctx : PSSL_CTX; const ACAFile, ACAPath : String): TIdC_INT;
-
-{$IFDEF STRING_IS_UNICODE}
-  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-{
-This is for some file lookup definitions for a LOOKUP method that
-uses Unicode filesnames instead of ASCII or UTF8.  It is not meant to be portable
-at all.
-}
-function by_Indy_unicode_file_ctrl(ctx : PX509_LOOKUP;
-  cmd : TIdC_INT;
-  const argc : PAnsiChar;
-  argl : TIdC_LONG;
-  out ret : PAnsiChar ) : TIdC_INT; cdecl;
-  {$ENDIF}
-{$ENDIF}
 
 implementation
 
@@ -658,507 +617,6 @@ uses
   IdThreadSafe,
   SysUtils;
 
-var
-  SSLIsLoaded: TIdThreadSafeBoolean = nil;
-  LockInfoCB: TIdCriticalSection = nil;
-  LockPassCB: TIdCriticalSection = nil;
-  LockVerifyCB: TIdCriticalSection = nil;
-  CallbackLockList: TThreadList = nil;
-
-{$IFDEF STRING_IS_UNICODE}
-{
-IMPORTANT!!!
-
-OpenSSL's X509 lookup code by default does not handle Unicode filenames and path
-names at all.  We have to use our own X509 lookup method for such a thing.
-
-}
-{
-NOTE that most of this section and the helper routines for Windows are based on
-code in the OpenSSL .DLL which is copyrighted by the OpenSSL developers.  I am
-copied some of it and translated it into Pascal and made some modifications so
-that it will handle Unicode filenames.
-}
-  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-function IndyX509_load_cert_crl_file(ctx : PX509_LOOKUP;
-  const AFileName : String;
-  const _type : TIdC_INT) : TIdC_INT;  forward;
-function IndyX509_load_cert_file( ctx : PX509_LOOKUP;
-  const AFileName : String; _type : TIdC_INT) : TIdC_INT; forward;
-
-const
-  Indy_x509_unicode_file_lookup : X509_LOOKUP_METHOD = (
-    name : PAnsiChar('Load file into cache');
-    new_item : nil;		//* new */
-    free : nil;		//* free */
-    init : nil; 		//* init */
-    shutdown : nil;		//* shutdown */
-    ctrl : by_Indy_unicode_file_ctrl;	//* ctrl */
-    get_by_subject : nil;		//* get_by_subject */
-    get_by_issuer_serial : nil;		//* get_by_issuer_serial */
-    get_by_fingerprint : nil;		//* get_by_fingerprint */
-    get_by_alias : nil		//* get_by_alias */
-  );
-
-function Indy_Unicode_X509_LOOKUP_file () : PX509_LOOKUP_METHOD cdecl;
-begin
-  Result := @Indy_x509_unicode_file_lookup;
-end;
-
-function by_Indy_unicode_file_ctrl(ctx : PX509_LOOKUP;
-  cmd : TIdC_INT;
-  const argc : PAnsiChar;
-  argl : TIdC_LONG;
-  out ret : PAnsiChar ) : TIdC_INT; cdecl;
-var
-  LOk : TIdC_INT;
-  LFileName : String;
-
-begin
-  LOk := 0;
-  case cmd of
-    X509_L_FILE_LOAD :
-    begin
-      case argl of
-        X509_FILETYPE_DEFAULT :
-        begin
-          LFilename := GetEnvironmentVariable(String(X509_get_default_cert_file_env));
-          if LFileName <> '' then  begin
-            Result := IndyX509_load_cert_crl_file(ctx,LFileName, X509_FILETYPE_PEM);
-          end else begin
-            Result := IndyX509_load_cert_crl_file(ctx,String(X509_get_default_cert_file), X509_FILETYPE_PEM);
-          end;
-          if Result = 0 then begin
-            X509err(X509_F_BY_FILE_CTRL,X509_R_LOADING_DEFAULTS);
-          end;
-        end;
-        X509_FILETYPE_PEM :
-        begin
-          //Note that typecasting an AnsiChar as a WideChar is normally a crazy
-          //thing to do.  The thing is that the OpenSSL API is based on ASCII or
-          //UTF8, not Unicode and we are writing this just for Unicode filenames.
-          LFilename := PWideChar(argc);
-          LOk := IndyX509_load_cert_crl_file(ctx,LFilename,X509_FILETYPE_PEM);
-        end;
-      else
-        LFilename := PWideChar(argc);
-        Lok := IndyX509_load_cert_file(ctx,LFilename,TIdC_INT(argl));
-      end;
-    end;
-  end;
-    Result := LOk;
-end;
-
-function IndyX509_load_cert_file( ctx : PX509_LOOKUP; const AFileName : String; _type : TIdC_INT) : TIdC_INT;
-var
-  LM : TMemoryStream;
-  Lin : PBIO;
-  LX : PX509;
-  i : Integer;
-begin
-  Result := 0;
-  LIn := nil;
-  LM := TMemoryStream.Create;
-  try
-    LM.LoadFromFile(AFileName);
-    Lin := BIO_new_mem_buf(LM.Memory,LM.Size);
-    if Assigned(LIn) then begin
-      case _type of
-        X509_FILETYPE_PEM :
-        begin
-          repeat
-            Lx := PEM_read_bio_X509_AUX(Lin,nil,nil,nil);
-            if not Assigned(lx) then begin
-              if ((ERR_GET_REASON(ERR_peek_last_error()) = PEM_R_NO_START_LINE) and (Result > 0)) then begin
-                ERR_clear_error();
-                Break;
-              end else begin
-                X509err(X509_F_X509_LOAD_CERT_FILE, ERR_R_PEM_LIB);
-                //goto err;
-              end;
-            end else begin
-              i := X509_STORE_add_cert(ctx^.store_ctx,Lx);
-              if i <> 0 then begin
-                Result := i;
-              end;
-              X509_free(Lx);
-            end;
-          until False;
-        end;
-        X509_FILETYPE_ASN1 :
-        begin
-          Lx := d2i_X509_bio(Lin,nil);
-          if not Assigned(Lx) then begin
-            X509err(X509_F_X509_LOAD_CERT_FILE,ERR_R_ASN1_LIB);
-            //goto err;
-          end else begin;
-            i := X509_STORE_add_cert(ctx^.store_ctx,Lx);
-            if i = 0 then begin
-            end else begin
-              Result := i;
-            end;
-          end;
-        end;
-      else
-        X509err(X509_F_X509_LOAD_CERT_FILE,X509_R_BAD_X509_FILETYPE);
-        //goto err;
-      end;
-    end else begin
-      X509err(X509_F_X509_LOAD_CERT_FILE,ERR_R_SYS_LIB);
-      //goto err;
-    end;
-  finally
-    BIO_free(Lin);
-    FreeAndNil(LM);
-  end;
-
-end;
-
-function IndyX509_load_cert_crl_file(ctx : PX509_LOOKUP;
-  const AFileName : String;
-  const _type : TIdC_INT) : TIdC_INT;
-var
-  LM : TMemoryStream;
-  Linf : PSTACK_OF_X509_INFO;
-  Litmp : PX509_INFO;
-  Lin : PBIO;
-  i : Integer;
-begin
-  Result := 0;
-  LInf := nil;
-  Lin := nil;
-  if _type <> X509_FILETYPE_PEM then begin
-    Result := IndyX509_load_cert_file(ctx, AFileName, _type);
-    exit;
-  end;
-  LM := TMemoryStream.Create;
-  try
-    LM.LoadFromFile(AFileName);
-    Lin :=  BIO_new_mem_buf(LM.Memory,LM.Size);
-    if Assigned(Lin) then begin
-      Linf := PEM_X509_INFO_read_bio(Lin, nil, nil, nil);
-    end else begin
-      X509err(X509_F_X509_LOAD_CERT_CRL_FILE,ERR_R_SYS_LIB);
-    end;
-    BIO_free(Lin);
-    FreeAndNil(LM);
-    //Surpress exception here since it's going to be called by the OpenSSL .DLL
-    //Follow the OpenSSL .DLL Error conventions.
-  except
-    X509err(X509_F_X509_LOAD_CERT_CRL_FILE,ERR_R_SYS_LIB);
-    BIO_free(Lin);
-    FreeAndNil(LM);
-    Exit;
-  end;
-  if not Assigned(LInF) then begin
-		X509err(X509_F_X509_LOAD_CERT_CRL_FILE,ERR_R_PEM_LIB);
-    Exit;
-  end;
-  try
-    for i := 0 to sk_X509_INFO_num(Linf) -1 do begin
-      Litmp := sk_X509_INFO_value(Linf, i);
-      if Assigned(Litmp^.x509) then begin
-        X509_STORE_add_cert(ctx^.store_ctx, Litmp^.x509);
-        Inc(Result);
-      end;
-      if Assigned(Litmp^.crl) then begin
-        X509_STORE_add_crl(ctx^.store_ctx, Litmp^.crl);
-        Inc(Result);
-      end;
-    end;
-  finally
-    sk_X509_INFO_pop_free(Linf, @X509_INFO_free);
-  end;
-end;
-  {$ENDIF}
-{$ENDIF}
-
-{$IFDEF STRING_IS_UNICODE}
-{
-IMPORTANT!!!
-
-OpenSSL can not handle Unicode file names at all.  On Posix systems, UTF8 File names
-can be used with OpenSSL.  The Windows operating system does not accept UTF8 file names
-at all so we have our own routines that will handle Unicode filenames.  THe routines
-are based on code in the OpenSSL .DLL that is translated into Delphi but loads from
-memory streams.
-}
-
-  {$IFDEF UNIX}
-function IndySSL_load_client_CA_file(const AFileName : String) : PSTACK_OF_X509_NAME;
-  {$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := SSL_load_client_CA_file(PAnsiChar(UTF8String(AFileName)));
-end;
-
-function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
-  {$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(UTF8String(AFileName)), AType) > 0;
-end;
-
-function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
-  {$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(UTF8String(AFileName)), AType) > 0;
-end;
-
-function IndyX509_STORE_load_locations( ctx : PX509_STORE; const AFileName,
-  APathName : String) : TIdC_INT;
-  {$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-    Result := X509_STORE_load_locations(ctx, PAnsiChar(UTF8String(AFileName)),
-      PAnsiChar(UTF8String(APathName)));
-
-end;
-
-function IndySSL_CTX_load_verify_locations(ctx : PSSL_CTX; const ACAFile, ACAPath : String): TIdC_INT;
-  {$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := X509_STORE_load_locations(ctx^.cert_store,
-    PAnsiChar(UTF8String(ACAFile)),
-    PAnsiChar(UTF8String(ACAPath)));
-end;
-
-  {$ENDIF}
-  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-
-procedure IndySSL_load_client_CA_file_err(var VRes : PSTACK_OF_X509_NAME);
-  {$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  if Assigned(VRes) then begin
-    sk_X509_NAME_pop_free(VRes, @X509_NAME_free);
-    VRes := nil;
-  end;
-end;
-
-function IndySSL_load_client_CA_file(const AFileName : String) : PSTACK_OF_X509_NAME;
-var
-  LM : TMemoryStream;
-  LB : PBIO;
-  Lsk : PSTACK_OF_X509_NAME;
-  LX : PX509;
-  LXN, LXNDup : PX509_NAME;
-begin
-  Result := nil;
-  LX := nil;
-  Lsk := sk_X509_NAME_new(nil); //(xname_cmp);
-  if Assigned(Lsk) then begin
-    try
-      LM := TMemoryStream.Create;
-      try
-        LM.LoadFromFile(AFileName);
-        LB :=  BIO_new_mem_buf(LM.Memory,LM.Size);
-        if Assigned(LB) then begin
-          try
-            while (PEM_read_bio_X509(LB, @LX, nil, nil) <> nil) do begin
-              try
-                if not Assigned(Result) then begin
-                  Result := sk_X509_NAME_new_null;
-                  // RLebeau: exit here if not Assigned??
-                  if not Assigned(Result) then begin
-                     SSLerr(SSL_F_SSL_LOAD_CLIENT_CA_FILE,ERR_R_MALLOC_FAILURE);
-                  end;
-                end;
-                LXN := X509_get_subject_name(LX);
-                if not Assigned(LXN) then begin
-                  //error
-                  IndySSL_load_client_CA_file_err(Result);
-                  // RLebeau: exit here??
-                  // goto err;
-                end;
-                //* check for duplicates */
-                LXNDup := X509_NAME_dup(LXN);
-                if not Assigned(LXNDup) then begin
-                  //error
-                  IndySSL_load_client_CA_file_err(Result);
-                  // RLebeau: exit here??
-                  //goto err;
-                end;
-                if (sk_X509_NAME_find(Lsk, LXNDup) >= 0) then begin
-                  X509_NAME_free(LXNDup);
-                end else begin
-                  sk_X509_NAME_push(Result, LXNDup);
-                end;
-              finally
-                X509_free(LX);
-              end;
-            end;
-          finally
-            BIO_free(LB);
-          end;
-        end else begin
-          SSLerr(SSL_F_SSL_LOAD_CLIENT_CA_FILE,ERR_R_MALLOC_FAILURE);
-        end;
-      finally
-        FreeAndNil(LM);
-      end;
-    finally
-      sk_X509_NAME_free(Lsk);
-    end;
-  end else begin
-    SSLerr(SSL_F_SSL_LOAD_CLIENT_CA_FILE,ERR_R_MALLOC_FAILURE);
-  end;
-  if Assigned(Result) then begin
-    ERR_clear_error;
-  end;
-end;
-
-function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
-var
-  LM : TMemoryStream;
-  B : PBIO;
-  LKey : PEVP_PKEY;
-  j : TIdC_INT;
-begin
-  Result := False;
-  LM := TMemoryStream.Create;
-  try
-    LM.LoadFromFile(AFileName);
-    B :=  BIO_new_mem_buf(LM.Memory,LM.Size);
-    if Assigned(B) then begin
-      try
-        LKey := nil;
-        case AType of
-          SSL_FILETYPE_PEM :
-          begin
-            j := ERR_R_PEM_LIB;
-            LKey := PEM_read_bio_PrivateKey(b,nil,CTX^.default_passwd_callback,
-              CTX^.default_passwd_callback_userdata);
-          end;
-          SSL_FILETYPE_ASN1 :
-          begin
-            j := ERR_R_ASN1_LIB;
-            LKey := d2i_PrivateKey_bio(b,nil);
-          end;
-        else
-          j := SSL_R_BAD_SSL_FILETYPE;
-        end;
-        if Assigned(LKey) then begin
-          Result := SSL_CTX_use_PrivateKey(ctx,LKey) > 0;
-          EVP_PKEY_free(LKey);
-        end else begin
-          SSLerr(SSL_F_SSL_CTX_USE_PRIVATEKEY_FILE,j);
-        end;
-      finally
-        if Assigned(B) then begin
-          BIO_free(B);
-        end;
-      end;
-    end else begin
-      SSLerr(SSL_F_SSL_CTX_USE_PRIVATEKEY_FILE,ERR_R_BUF_LIB);
-    end;
-  finally
-    FreeAndNil(LM);
-  end;
-end;
-
-function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
-var
-  LM : TMemoryStream;
-  B : PBIO;
-  LX : PX509;
-  j : TIdC_INT;
-begin
-  Result := False;
-  LM := TMemoryStream.Create;
-  try
-    LM.LoadFromFile(AFileName);
-    B :=  BIO_new_mem_buf(LM.Memory,LM.Size);
-    if Assigned(B) then begin
-      try
-        LX := nil;
-        case AType of
-          SSL_FILETYPE_ASN1 :
-          begin
-            j := ERR_R_ASN1_LIB;
-            LX := d2i_X509_bio(B,nil);
-          end;
-          SSL_FILETYPE_PEM :
-          begin
-            j := ERR_R_PEM_LIB;
-            LX := PEM_read_bio_X509(B,nil,CTX^.default_passwd_callback,
-              CTX^.default_passwd_callback_userdata );
-          end
-        else
-          j := SSL_R_BAD_SSL_FILETYPE;
-        end;
-        if Assigned(LX) then begin
-          Result := SSL_CTX_use_certificate(ctx,LX) > 0;
-          X509_free(LX);
-        end else begin
-          SSLerr(SSL_F_SSL_CTX_USE_CERTIFICATE_FILE,j);
-        end;
-      finally
-        BIO_free(B);
-      end;
-    end else begin
-      SSLerr(SSL_F_SSL_CTX_USE_CERTIFICATE_FILE,ERR_R_BUF_LIB);
-    end;
-  finally
-    FreeAndNil(LM);
-  end;
-end;
-
-function IndyX509_STORE_load_locations( ctx : PX509_STORE; const AFileName,
-  APathName : String) : TIdC_INT;
-var
-  lookup : PX509_LOOKUP;
-begin
-  Result := 0;
-  if AFileName <> '' then begin
-    lookup:=X509_STORE_add_lookup(ctx, Indy_Unicode_X509_LOOKUP_file );
-    if Assigned(lookup) then begin
-      if (X509_LOOKUP_load_file(lookup,PAnsiChar(@AFileName[1]),X509_FILETYPE_PEM) <> 1) then begin
-        Exit;
-      end;
-    end else begin
-      Exit;
-    end;
-  end;
-  {To do:  Figure out how to do the hash dir lookup with Unicode.}
-end;
-
-function IndySSL_CTX_load_verify_locations(ctx : PSSL_CTX; const ACAFile, ACAPath : String): TIdC_INT;
-  {$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := IndyX509_STORE_load_locations(ctx^.cert_store,ACAFile,ACAPath);
-end;
-   {$ENDIF}
-
-{$ELSE}
-
-function IndySSL_load_client_CA_file(const AFileName : String) : PSTACK_OF_X509_NAME;
-  {$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := SSL_load_client_CA_file(PAnsiChar(AFileName));
-end;
-
-function IndySSL_CTX_use_PrivateKey_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
-  {$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(AFileName), AType) > 0;
-end;
-
-function IndySSL_CTX_use_certificate_file(ctx : PSSL_CTX; const AFileName : String; AType : Integer) : Boolean;
-  {$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(AFileName), AType) > 0;
-end;
-
-function IndyX509_STORE_load_locations( ctx : PX509_STORE; const AFileName,
-  APathName : String) : TIdC_INT;
-  {$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := X509_STORE_load_locations(ctx, PAnsiChar(@AFileName[1]),PAnsiChar(APathName));
-end;
-
-function IndySSL_CTX_load_verify_locations(ctx : PSSL_CTX; const ACAFile, ACAPath : String): TIdC_INT;
-begin
-  Result := SSL_CTX_load_verify_locations(ctx,PAnsiChar(ACAFile),PAnsiChar(ACAPath));
-end;
-{$ENDIF}
-
 function PasswordCallback(buf: PAnsiChar; size: TIdC_INT; rwflag: TIdC_INT; userdata: Pointer): TIdC_INT; cdecl;
 var
   Password: AnsiString;
@@ -1169,7 +627,7 @@ begin
   //clobers it.  CYA.
   LErr := GStack.WSGetLastError;
   try
-    LockPassCB.Enter;
+    LockPasswordCB_Enter;
     try
       Password := '';    {Do not Localize}
       IdSSLContext := TIdSSLContext(userdata);
@@ -1190,119 +648,13 @@ begin
       Result := Length(Password);
       buf[size-1] := #0; // RLebeau: truncate the password if needed
     finally
-      LockPassCB.Leave;
+      LockPasswordCB_Leave;
     end;
   finally
      GStack.WSSetLastError(LErr);
   end;
 end;
 
-procedure GetStateVars(const sslSocket: PSSL; AWhere, Aret: TIdC_INT; var VTypeStr, VMsg : String);
-  {$IFDEF USEINLINE}inline;{$ENDIF}
-begin
-  case AWhere of
-    SSL_CB_ALERT :
-    begin
-      VTypeStr := IndyFormat( RSOSSLAlert,[SSL_alert_type_string_long(Aret)]);
-      VMsg := String(SSL_alert_type_string_long(Aret));
-    end;
-    SSL_CB_READ_ALERT :
-    begin
-      VTypeStr := IndyFormat(RSOSSLReadAlert,[SSL_alert_type_string_long(Aret)]);
-      VMsg := String( SSL_alert_desc_string_long(Aret));
-    end;
-    SSL_CB_WRITE_ALERT :
-    begin
-      VTypeStr := IndyFormat(RSOSSLWriteAlert,[SSL_alert_type_string_long(Aret)]);
-      VMsg := String( SSL_alert_desc_string_long(Aret));
-    end;
-    SSL_CB_ACCEPT_LOOP :
-    begin
-      VTypeStr :=  RSOSSLAcceptLoop;
-      VMsg := String( SSL_state_string_long(sslSocket));
-    end;
-    SSL_CB_ACCEPT_EXIT :
-    begin
-      if ARet < 0  then begin
-        VTypeStr := RSOSSLAcceptError;
-      end else begin
-        if ARet = 0 then begin
-          VTypeStr := RSOSSLAcceptFailed;
-        end else begin
-          VTypeStr := RSOSSLAcceptExit;
-        end;
-      end;
-      VMsg := String( SSL_state_string_long(sslSocket) );
-    end;
-    SSL_CB_CONNECT_LOOP :
-    begin
-      VTypeStr := RSOSSLConnectLoop;
-      VMsg := String( SSL_state_string_long(sslSocket) );
-    end;
-  SSL_CB_CONNECT_EXIT :
-    begin
-      if ARet < 0  then begin
-        VTypeStr := RSOSSLConnectError;
-      end else begin
-        if ARet = 0 then begin
-          VTypeStr := RSOSSLConnectFailed
-        end else begin
-          VTypeStr := RSOSSLConnectExit;
-        end;
-      end;
-      VMsg := String( SSL_state_string_long(sslSocket) );
-    end;
-  SSL_CB_HANDSHAKE_START :
-    begin
-      VTypeStr :=  RSOSSLHandshakeStart;
-      VMsg := String( SSL_state_string_long(sslSocket) );
-    end;
-  SSL_CB_HANDSHAKE_DONE :
-    begin
-      VTypeStr := RSOSSLHandshakeDone;
-      VMsg := String( SSL_state_string_long(sslSocket) );
-    end;
-  end;
-{var LW : TIdC_INT;
-begin
-  VMsg := '';
-  LW := Awhere and (not SSL_ST_MASK);
-  if (LW and SSL_ST_CONNECT) > 0 then begin
-    VWhereStr :=   'SSL_connect:';
-  end else begin
-    if (LW and SSL_ST_ACCEPT) > 0 then begin
-      VWhereStr := ' SSL_accept:';
-    end else begin
-      VWhereStr := '  undefined:';
-    end;
-  end;
-//  IdSslStateStringLong
-  if (Awhere and SSL_CB_LOOP) > 0 then begin
-       VMsg := IdSslStateStringLong(sslSocket);
-  end else begin
-    if (Awhere and SSL_CB_ALERT) > 0 then begin
-       if (Awhere and SSL_CB_READ > 0) then begin
-         VWhereStr := VWhereStr + ' read:'+ IdSslAlertTypeStringLong(Aret);
-       end else begin
-         VWhereStr := VWhereStr + 'write:'+ IdSslAlertTypeStringLong(Aret);
-       end;;
-       VMsg := IdSslAlertDescStringLong(Aret);
-    end else begin
-       if (Awhere and SSL_CB_EXIT) > 0 then begin
-         if ARet = 0 then begin
-
-          VWhereStr := VWhereStr +'failed';
-          VMsg := IdSslStateStringLong(sslSocket);
-         end else begin
-           if ARet < 0  then  begin
-               VWhereStr := VWhereStr +'error';
-               VMsg := IdSslStateStringLong(sslSocket);
-           end;
-         end;
-       end;
-    end;
-  end;          }
-end;
 
 procedure InfoCallback(const sslSocket: PSSL; where, ret: TIdC_INT); cdecl;
 var
@@ -1322,14 +674,13 @@ JPM.
 }
   LErr := GStack.WSGetLastError;
   try
-    LockInfoCB.Enter;
+    LockInfoCB_Enter;
     try
       IdSSLSocket := TIdSSLSocket(
       SSL_get_app_data(sslSocket));
       StatusStr := IndyFormat(RSOSSLStatusString, [StrPas(SSL_state_string_long(sslSocket))]);
       if (IdSSLSocket.fParent is TIdSSLIOHandlerSocketOpenSSL) then begin
         TIdSSLIOHandlerSocketOpenSSL(IdSSLSocket.fParent).DoStatusInfo(StatusStr);
-//GetStateVars
         if Assigned(TIdSSLIOHandlerSocketOpenSSL(IdSSLSocket.fParent).fOnStatusInfoEx) then begin
           GetStateVars(sslSocket,where,ret,StatusStr,LMsg);
           TIdSSLIOHandlerSocketOpenSSL(IdSSLSocket.fParent).DoStatusInfoEx(sslSocket,where,ret,StatusStr,LMsg);
@@ -1343,234 +694,23 @@ JPM.
         end;
       end;
     finally
-      LockInfoCB.Leave;
+      LockInfoCB_Leave;
     end;
   finally
     GStack.WSSetLastError(LErr);
   end;
 end;
 
-{function RSACallback(sslSocket: PSSL; e: Integer; KeyLength: Integer):PRSA; cdecl;
-const
-  RSA: PRSA = nil;
-var
-  SSLSocket: TSSLWSocket;
-  IdSSLSocket: TIdSSLSocket;
-begin
-  IdSSLSocket := TIdSSLSocket(IdSslGetAppData(sslSocket));
-
-  if Assigned(IdSSLSocket) then begin
-    IdSSLSocket.TriggerSSLRSACallback(KeyLength);
-  end;
-
-  if not Assigned(RSA) then begin
-    RSA := f_RSA_generate_key(KeyLength, RSA_F4, @RSAProgressCallback, ssl);
-  end;
-  Result := RSA;
-end;}
-
-function AddMins (const DT: TDateTime; const Mins: Extended): TDateTime;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := DT + Mins / (60 * 24)
-end;
-
-function AddHrs (const DT: TDateTime; const Hrs: Extended): TDateTime;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := DT + Hrs / 24.0;
-end;
-
-function GetLocalTime (const DT: TDateTime): TDateTime;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := DT - TimeZoneBias{ / (24 * 60)};
-end;
-
-procedure SslLockingCallback(mode, n : TIdC_INT; Afile : PAnsiChar; line : TIdC_INT) cdecl;
-var
-  Lock: TIdCriticalSection;
-begin
-  Assert(CallbackLockList<>nil);
-  Lock := nil;
-
-  with CallbackLockList.LockList do
-  try
-    if n < Count then begin
-      Lock := TIdCriticalSection(Items[n]);
-    end;
-  finally
-    CallbackLockList.UnlockList;
-  end;
-  Assert(Lock<>nil);
-  if (mode and CRYPTO_LOCK) = CRYPTO_LOCK then begin
-    Lock.Acquire;
-  end else begin
-    Lock.Release;
-  end;
-end;
-
-procedure PrepareOpenSSLLocking;
-var
-  i, cnt : integer;
-  Lock: TIdCriticalSection;
-begin
-  with CallbackLockList.LockList do
-  try
-    cnt := _CRYPTO_num_locks;
-    for i := 0 to cnt-1 do
-    begin
-      Lock := TIdCriticalSection.Create;
-      try
-        Add(Lock);
-      except
-        Lock.Free;
-        raise;
-      end;
-    end;
-  finally
-    CallbackLockList.UnlockList;
-  end;
-end;
-
-{$IFNDEF WIN32_OR_WIN64}
-function _GetThreadID: TIdC_ULONG; cdecl;
-begin
-  // TODO: Verify how well this will work with fibers potentially running from
-  // thread to thread or many on the same thread.
-  Result := TIdC_ULONG(CurrentThreadId);
-end;
-{$ENDIF}
-
-{$IFDEF OPENSSL_SET_MEMORY_FUNCS}
-function IdMalloc(num: Cardinal): Pointer cdecl;
-begin
-  Result := AllocMem(num);
-end;
-
-function IdRealloc(addr: Pointer; num: Cardinal): Pointer cdecl;
-begin
-  Result := addr;
-  ReallocMem(Result, num);
-end;
-
-procedure IdFree(addr: Pointer) cdecl;
-begin
-  FreeMem(addr);
-end;
-
-procedure IdSslCryptoMallocInit;
-//replaces the actual alloc routines
-//this is useful if you are using a memory manager that can report on leaks
-//at shutdown time.
-var
- r: Integer;
-begin
- r := CRYPTO_set_mem_functions(@IdMalloc, @IdRealloc, @IdFree);
- Assert(r <> 0);
-end;
-{$ENDIF}
-
 function LoadOpenSSLLibrary: Boolean;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Assert(SSLIsLoaded<>nil);
-  SSLIsLoaded.Lock;
-  try
-    if SSLIsLoaded.Value then
-    begin
-      Result := True;
-      Exit;
-    end;
-    Result := IdSSLOpenSSLHeaders.Load;
-    if not Result then 
-    begin
-      Exit;
-    end;
-    {$IFDEF OPENSSL_SET_MEMORY_FUNCS}
-    //has to be done before anything that uses memory
-    IdSslCryptoMallocInit;
-    {$ENDIF}
-    //required eg to encrypt a private key when writing
-    OpenSSL_add_all_ciphers;
-    OpenSSL_add_all_digests;
-    InitializeRandom;
-    // IdSslRandScreen;
-    SSL_load_error_strings;
-    // Successful loading if true
-    Result := SSLeay_add_ssl_algorithms > 0;
-    if not Result then 
-    begin
-      Exit;
-    end;
-    // Create locking structures, we need them for callback routines
-    Assert(LockInfoCB=nil);
-    LockInfoCB := TIdCriticalSection.Create;
-    LockPassCB := TIdCriticalSection.Create;
-    LockVerifyCB := TIdCriticalSection.Create;
-    // Handle internal OpenSSL locking
-    CallbackLockList := TThreadList.Create;
-    PrepareOpenSSLLocking;
-    CRYPTO_set_locking_callback(SslLockingCallback);
-    {$IFNDEF WIN32_OR_WIN64}
-    CRYPTO_set_id_callback(_GetThreadID);
-    {$ENDIF}
-    SSLIsLoaded.Value := True;
-    Result := True;
-  finally
-    SSLIsLoaded.Unlock;
-  end;
+  Result := IdSSLOpenSSLUtils.LoadOpenSSLLibrary
 end;
 
 procedure UnLoadOpenSSLLibrary;
-//allow the user to call unload directly?
-//will then need to implement reference count
-var
-  i : integer;
-begin
-  //ssl was never loaded
-  if LockInfoCB=nil then begin
-    Exit;
-  end;
-  CRYPTO_set_locking_callback(nil);
-  IdSSLOpenSSLHeaders.Unload;
-  FreeAndNil(LockInfoCB);
-  FreeAndNil(LockPassCB);
-  FreeAndNil(LockVerifyCB);
-  if Assigned(CallbackLockList) then begin
-    with CallbackLockList.LockList do
-      try
-        for i := 0 to Count-1 do begin
-          TObject(Items[i]).Free;
-        end;
-        Clear;
-      finally
-        CallbackLockList.UnlockList;
-      end;
-    FreeAndNil(CallbackLockList);
-  end;
-  SSLIsLoaded.Value := False;
-end;
-
-//Note that I define UCTTime as  PASN1_STRING
-function UTCTime2DateTime(UCTTime: PASN1_UTCTIME):TDateTime;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
-var
-  year  : Word;
-  month : Word;
-  day   : Word;
-  hour  : Word;
-  min   : Word;
-  sec   : Word;
-  tz_h  : Integer;
-  tz_m  : Integer;
 begin
-  Result := 0;
-  if UTC_Time_Decode(UCTTime, year, month, day, hour, min, sec, tz_h, tz_m) > 0 then begin
-    Result := EncodeDate(year, month, day) + EncodeTime(hour, min, sec, 0);
-    AddMins(Result, tz_m);
-    AddHrs(Result, tz_h);
-    Result := GetLocalTime(Result);
-  end;
+  IdSSLOpenSSLUtils.UnLoadOpenSSLLibrary;
 end;
 
 function TranslateInternalVerifyToSSL(Mode: TIdSSLVerifyModeSet): Integer;
@@ -1588,45 +728,6 @@ begin
   end;
 end;
 
-function LogicalAnd(A, B: Integer): Boolean;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := (A and B) = B;
-end;
-
-function BytesToHexString(APtr : Pointer; ALen : Integer) : String;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-var
-  i : PtrInt;
-  LPtr: PByte;
-begin
-  Result := '';
-  LPtr := PByte(APtr);
-  for i := 0 to (ALen - 1) do
-  begin
-    if I <> 0 then
-    begin
-      Result := Result + ':';    {Do not Localize}
-    end;
-    Result := Result + IndyFormat('%.2x', [LPtr^]);
-    Inc(LPtr);
-  end;
-end;
-
-function MDAsString(const AMD : TEVP_MD) : String;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-var
-  I : Integer;
-begin
-  Result := '';
-  for I := 0 to AMD.Length - 1 do begin
-    if I <> 0 then begin
-      Result := Result + ':';    {Do not Localize}
-    end;
-    Result := Result + IndyFormat('%.2x', [Byte(AMD.MD[I])]);  {do not localize}
-  end;
-end;
-
 function VerifyCallback(Ok: TIdC_INT; ctx: PX509_STORE_CTX): TIdC_INT; cdecl;
 var
   hcert: PX509;
@@ -1639,7 +740,7 @@ var
   // Error: Integer;
   LOk: Boolean;
 begin
-  LockVerifyCB.Enter;
+  LockVerifyCB_Enter;
   try
     VerifiedOK := True;
     try
@@ -1684,7 +785,7 @@ begin
     end;
   //  Result := Ok; // testing
   finally
-    LockVerifyCB.Leave;
+    LockVerifyCB_Leave;
   end;
 end;
 
@@ -2199,7 +1300,7 @@ begin
   inherited Create;
   //an exception here probably means that you are using the wrong version
   //of the openssl libraries. refer to comments at the top of this file.
-  if not IdSSLOpenSSL.LoadOpenSSLLibrary then begin
+  if not IdSSLOpenSSLUtils.LoadOpenSSLLibrary then begin
     raise EIdOSSLCouldNotLoadSSLLibrary.Create(RSOSSLCouldNotLoadSSLLibrary);
   end;
   fVerifyMode := [];
@@ -2625,13 +1726,13 @@ begin
   Result := fSSLCipher;
 end;
 
-function TIdSSLSocket.GetSessionID: TByteArray;
+function TIdSSLSocket.GetSessionID: TIdSSLByteArray;
 var
   pSession: PSSL_SESSION;
-  tmpArray: TByteArray;
+  tmpArray: TIdSSLByteArray;
 begin
   Result.Length := 0;
-  FillChar(tmpArray, SizeOf(TByteArray), 0);
+  FillChar(tmpArray, SizeOf(TIdSSLByteArray), 0);
   if Assigned(SSL_get_session) then
   begin
     if fSSL<>nil then begin
@@ -2646,7 +1747,7 @@ end;
 
 function  TIdSSLSocket.GetSessionIDAsString:String;
 var
-  Data: TByteArray;
+  Data: TIdSSLByteArray;
   i: Integer;
 begin
   Result := '';    {Do not Localize}
@@ -2685,7 +1786,7 @@ begin
   end;
 end;
 
-function TIdX509Name.GetHash: TULong;
+function TIdX509Name.GetHash: TIdSSLULong;
 begin
   if FX509Name = nil then begin
     FillChar(Result, SizeOf(Result), 0)
@@ -2720,7 +1821,7 @@ end;
 
 { TIdX509Fingerprints }
 
-function TIdX509Fingerprints.GetMD5: TEVP_MD;
+function TIdX509Fingerprints.GetMD5: TIdSSLEVP_MD;
 begin
   CheckMD5Permitted;
   X509_digest(FX509, EVP_md5, PByte(@Result.MD), Result.Length);
@@ -2731,7 +1832,7 @@ begin
   Result := MDAsString(MD5);
 end;
 
-function TIdX509Fingerprints.GetSHA1: TEVP_MD;
+function TIdX509Fingerprints.GetSHA1: TIdSSLEVP_MD;
 begin
   X509_digest(FX509, EVP_sha1, PByte(@Result.MD), Result.Length);
 end;
@@ -2741,7 +1842,7 @@ begin
   Result := MDAsString(SHA1);
 end;
 
-function TIdX509Fingerprints.GetSHA224 : TEVP_MD;
+function TIdX509Fingerprints.GetSHA224 : TIdSSLEVP_MD;
 begin
   if Assigned(EVP_sha224) then begin
     X509_digest(FX509, EVP_sha224, PByte(@Result.MD), Result.Length);
@@ -2759,7 +1860,7 @@ begin
   end;
 end;
 
-function TIdX509Fingerprints.GetSHA256 : TEVP_MD;
+function TIdX509Fingerprints.GetSHA256 : TIdSSLEVP_MD;
 begin
   if Assigned(EVP_sha256) then begin
     X509_digest(FX509, EVP_sha256, PByte(@Result.MD), Result.Length);
@@ -2777,7 +1878,7 @@ begin
   end;
 end;
 
-function TIdX509Fingerprints.GetSHA384 : TEVP_MD;
+function TIdX509Fingerprints.GetSHA384 : TIdSSLEVP_MD;
 begin
   if Assigned(EVP_SHA384) then begin
     X509_digest(FX509, EVP_SHA384, PByte(@Result.MD), Result.Length);
@@ -2795,7 +1896,7 @@ begin
   end;
 end;
 
-function TIdX509Fingerprints.GetSHA512 : TEVP_MD;
+function TIdX509Fingerprints.GetSHA512 : TIdSSLEVP_MD;
 begin
   if Assigned(EVP_sha512) then begin
     X509_digest(FX509, EVP_sha512, PByte(@Result.MD), Result.Length);
@@ -2862,40 +1963,6 @@ begin
   inherited Destroy;
 end;
 
-procedure DumpCert(AOut : TStrings; AX509 : PX509);
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-{$IFNDEF OPENSSL_NO_BIO}
-var
-  LMem : pBIO;
-  LBuf,s : AnsiString;
-  LRes : TIdC_INT;
-const
-  LBUF_LEN = 1024;
-begin
-  LMem := BIO_new(BIO_s_mem);
-  try
-     if Assigned(X509_print) then begin
-       X509_print(LMem,AX509);
-       s := '';
-       SetLength(LBuf,LBUF_LEN);
-       repeat
-         LRes := BIO_read(LMem,@LBuf[1],LBUF_LEN);
-         if LRes < 1 then begin
-           Break;
-         end;
-         //do this indirectly because OpenSSL will format the output.
-         s := s + Copy(LBuf,1,LRes);
-       until False;
-       AOut.Text := String(s);
-     end;
-  finally
-    BIO_free(LMem);
-  end;
-end;
-{$ELSE}
-begin
-end;
-{$ENDIF}
 
 function TIdX509.GetDisplayInfo: TStrings;
 begin
@@ -2953,7 +2020,7 @@ begin
   Result := FIssuer;
 end;
 
-function TIdX509.RFingerprint: TEVP_MD;
+function TIdX509.RFingerprint: TIdSSLEVP_MD;
 begin
   X509_digest(FX509, EVP_md5, PByte(@Result.MD), Result.Length);
 end;
@@ -3028,11 +2095,7 @@ initialization
     'Original Author - Gregor Ibic',                                        {do not localize}
     TIdSSLIOHandlerSocketOpenSSL,
     TIdServerIOHandlerSSLOpenSSL);
-  Assert(SSLIsLoaded=nil);
-  SSLIsLoaded := TIdThreadSafeBoolean.Create;
-finalization
-  UnLoadOpenSSLLibrary;
-  //free the lock last as unload makes calls that use it
-  FreeAndNil(SSLIsLoaded);
+
+
 
 end.
