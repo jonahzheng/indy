@@ -42,8 +42,7 @@ function AddMins(const DT: TDateTime; const Mins: Extended): TDateTime;
 function AddHrs(const DT: TDateTime; const Hrs: Extended): TDateTime;
 function GetLocalTime(const DT: TDateTime): TDateTime;
 
-function IndySSL_load_client_CA_file(const AFileName: String)
-  : PSTACK_OF_X509_NAME;
+function IndySSL_load_client_CA_file(const AFileName: String) : PSTACK_OF_X509_NAME;
 function IndySSL_CTX_use_PrivateKey_file(ctx: PSSL_CTX; const AFileName: String;
   AType: Integer): Boolean;
 function IndySSL_CTX_use_certificate_file(ctx: PSSL_CTX;
@@ -159,9 +158,9 @@ end;
   that it will handle Unicode filenames.
 }
 {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-function IndyX509_load_cert_crl_file(ctx: PX509_LOOKUP; const AFileName: String;
+function Indy_unicode_X509_load_cert_crl_file(ctx: PX509_LOOKUP; const AFileName: String;
   const _type: TIdC_INT): TIdC_INT; forward;
-function IndyX509_load_cert_file(ctx: PX509_LOOKUP; const AFileName: String;
+function Indy_unicode_X509_load_cert_file(ctx: PX509_LOOKUP; const AFileName: String;
   _type: TIdC_INT): TIdC_INT; forward;
 
 function Indy_Unicode_X509_LOOKUP_file(): PX509_LOOKUP_METHOD cdecl;
@@ -188,12 +187,12 @@ begin
                 (String(X509_get_default_cert_file_env));
               if LFileName <> '' then
               begin
-                Result := IndyX509_load_cert_crl_file(ctx, LFileName,
+                Result := Indy_unicode_X509_load_cert_crl_file(ctx, LFileName,
                   X509_FILETYPE_PEM);
               end
               else
               begin
-                Result := IndyX509_load_cert_crl_file(ctx,
+                Result := Indy_unicode_X509_load_cert_crl_file(ctx,
                   String(X509_get_default_cert_file), X509_FILETYPE_PEM);
               end;
               if Result = 0 then
@@ -207,19 +206,19 @@ begin
               // thing to do.  The thing is that the OpenSSL API is based on ASCII or
               // UTF8, not Unicode and we are writing this just for Unicode filenames.
               LFileName := PWideChar(argc);
-              LOk := IndyX509_load_cert_crl_file(ctx, LFileName,
+              LOk := Indy_unicode_X509_load_cert_crl_file(ctx, LFileName,
                 X509_FILETYPE_PEM);
             end;
         else
           LFileName := PWideChar(argc);
-          LOk := IndyX509_load_cert_file(ctx, LFileName, TIdC_INT(argl));
+          LOk := Indy_unicode_X509_load_cert_file(ctx, LFileName, TIdC_INT(argl));
         end;
       end;
   end;
   Result := LOk;
 end;
 
-function IndyX509_load_cert_file(ctx: PX509_LOOKUP; const AFileName: String;
+function Indy_unicode_X509_load_cert_file(ctx: PX509_LOOKUP; const AFileName: String;
   _type: TIdC_INT): TIdC_INT;
 var
   LM: TMemoryStream;
@@ -240,47 +239,27 @@ begin
           begin
             repeat
               LX := PEM_read_bio_X509_AUX(Lin, nil, nil, nil);
-              if not Assigned(LX) then
-              begin
+              if not Assigned(LX) then begin
                 if ((ERR_GET_REASON(ERR_peek_last_error())
-                      = PEM_R_NO_START_LINE) and (Result > 0)) then
-                begin
+                      = PEM_R_NO_START_LINE) and (Result > 0)) then begin
                   ERR_clear_error();
                   Break;
-                end
-                else
-                begin
+                end else begin
                   X509err(X509_F_X509_LOAD_CERT_FILE, ERR_R_PEM_LIB);
                   // goto err;
                 end;
-              end
-              else
-              begin
-                i := X509_STORE_add_cert(ctx^.store_ctx, LX);
-                if i <> 0 then
-                begin
-                  Result := i;
-                end;
-                X509_free(LX);
               end;
             until False;
           end;
         X509_FILETYPE_ASN1:
           begin
             LX := d2i_X509_bio(Lin, nil);
-            if not Assigned(LX) then
-            begin
+            if not Assigned(LX) then begin
               X509err(X509_F_X509_LOAD_CERT_FILE, ERR_R_ASN1_LIB);
               // goto err;
-            end
-            else
-            begin ;
+            end else begin
               i := X509_STORE_add_cert(ctx^.store_ctx, LX);
-              if i = 0 then
-              begin
-              end
-              else
-              begin
+              if i <> 0 then begin
                 Result := i;
               end;
             end;
@@ -289,9 +268,7 @@ begin
         X509err(X509_F_X509_LOAD_CERT_FILE, X509_R_BAD_X509_FILETYPE);
         // goto err;
       end;
-    end
-    else
-    begin
+    end else begin
       X509err(X509_F_X509_LOAD_CERT_FILE, ERR_R_SYS_LIB);
       // goto err;
     end;
@@ -302,7 +279,7 @@ begin
 
 end;
 
-function IndyX509_load_cert_crl_file(ctx: PX509_LOOKUP; const AFileName: String;
+function Indy_unicode_X509_load_cert_crl_file(ctx: PX509_LOOKUP; const AFileName: String;
   const _type: TIdC_INT): TIdC_INT;
 var
   LM: TMemoryStream;
@@ -314,21 +291,17 @@ begin
   Result := 0;
   Linf := nil;
   Lin := nil;
-  if _type <> X509_FILETYPE_PEM then
-  begin
-    Result := IndyX509_load_cert_file(ctx, AFileName, _type);
+  if _type <> X509_FILETYPE_PEM then begin
+    Result := Indy_unicode_X509_load_cert_file(ctx, AFileName, _type);
     exit;
   end;
   LM := TMemoryStream.Create;
   try
     LM.LoadFromFile(AFileName);
     Lin := BIO_new_mem_buf(LM.Memory, LM.Size);
-    if Assigned(Lin) then
-    begin
+    if Assigned(Lin) then begin
       Linf := PEM_X509_INFO_read_bio(Lin, nil, nil, nil);
-    end
-    else
-    begin
+    end else begin
       X509err(X509_F_X509_LOAD_CERT_CRL_FILE, ERR_R_SYS_LIB);
     end;
     BIO_free(Lin);
@@ -341,22 +314,18 @@ begin
     FreeAndNil(LM);
     exit;
   end;
-  if not Assigned(Linf) then
-  begin
+  if not Assigned(Linf) then begin
     X509err(X509_F_X509_LOAD_CERT_CRL_FILE, ERR_R_PEM_LIB);
     exit;
   end;
   try
-    for i := 0 to sk_X509_INFO_num(Linf) - 1 do
-    begin
+    for i := 0 to sk_X509_INFO_num(Linf) - 1 do begin
       Litmp := sk_X509_INFO_value(Linf, i);
-      if Assigned(Litmp^.x509) then
-      begin
+      if Assigned(Litmp^.x509) then begin
         X509_STORE_add_cert(ctx^.store_ctx, Litmp^.x509);
         Inc(Result);
       end;
-      if Assigned(Litmp^.crl) then
-      begin
+      if Assigned(Litmp^.crl) then begin
         X509_STORE_add_crl(ctx^.store_ctx, Litmp^.crl);
         Inc(Result);
       end;
@@ -380,8 +349,7 @@ end;
 
 {$IFDEF UNIX}
 
-function IndySSL_load_client_CA_file(const AFileName: String)
-  : PSTACK_OF_X509_NAME;
+function IndySSL_load_client_CA_file(const AFileName: String) : PSTACK_OF_X509_NAME;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := SSL_load_client_CA_file(PAnsiChar(UTF8String(AFileName)));
@@ -458,18 +426,15 @@ begin
             while (PEM_read_bio_X509(LB, @LX, nil, nil) <> nil) do
             begin
               try
-                if not Assigned(Result) then
-                begin
+                if not Assigned(Result) then begin
                   Result := sk_X509_NAME_new_null;
                   // RLebeau: exit here if not Assigned??
-                  if not Assigned(Result) then
-                  begin
+                  if not Assigned(Result) then begin
                     SSLerr(SSL_F_SSL_LOAD_CLIENT_CA_FILE, ERR_R_MALLOC_FAILURE);
                   end;
                 end;
                 LXN := X509_get_subject_name(LX);
-                if not Assigned(LXN) then
-                begin
+                if not Assigned(LXN) then begin
                   // error
                   IndySSL_load_client_CA_file_err(Result);
                   // RLebeau: exit here??
@@ -477,19 +442,15 @@ begin
                 end;
                 // * check for duplicates */
                 LXNDup := X509_NAME_dup(LXN);
-                if not Assigned(LXNDup) then
-                begin
+                if not Assigned(LXNDup) then begin
                   // error
                   IndySSL_load_client_CA_file_err(Result);
                   // RLebeau: exit here??
                   // goto err;
                 end;
-                if (sk_X509_NAME_find(Lsk, LXNDup) >= 0) then
-                begin
+                if (sk_X509_NAME_find(Lsk, LXNDup) >= 0) then begin
                   X509_NAME_free(LXNDup);
-                end
-                else
-                begin
+                end else begin
                   sk_X509_NAME_push(Result, LXNDup);
                 end;
               finally
@@ -499,9 +460,7 @@ begin
           finally
             BIO_free(LB);
           end;
-        end
-        else
-        begin
+        end else begin
           SSLerr(SSL_F_SSL_LOAD_CLIENT_CA_FILE, ERR_R_MALLOC_FAILURE);
         end;
       finally
@@ -510,13 +469,10 @@ begin
     finally
       sk_X509_NAME_free(Lsk);
     end;
-  end
-  else
-  begin
+  end else begin
     SSLerr(SSL_F_SSL_LOAD_CLIENT_CA_FILE, ERR_R_MALLOC_FAILURE);
   end;
-  if Assigned(Result) then
-  begin
+  if Assigned(Result) then begin
     ERR_clear_error;
   end;
 end;
@@ -534,8 +490,7 @@ begin
   try
     LM.LoadFromFile(AFileName);
     B := BIO_new_mem_buf(LM.Memory, LM.Size);
-    if Assigned(B) then
-    begin
+    if Assigned(B) then begin
       try
         LKey := nil;
         case AType of
@@ -554,24 +509,18 @@ begin
         else
           j := SSL_R_BAD_SSL_FILETYPE;
         end;
-        if Assigned(LKey) then
-        begin
+        if Assigned(LKey) then begin
           Result := SSL_CTX_use_PrivateKey(ctx, LKey) > 0;
           EVP_PKEY_free(LKey);
-        end
-        else
-        begin
+        end else begin
           SSLerr(SSL_F_SSL_CTX_USE_PRIVATEKEY_FILE, j);
         end;
       finally
-        if Assigned(B) then
-        begin
+        if Assigned(B) then begin
           BIO_free(B);
         end;
       end;
-    end
-    else
-    begin
+    end else begin
       SSLerr(SSL_F_SSL_CTX_USE_PRIVATEKEY_FILE, ERR_R_BUF_LIB);
     end;
   finally
@@ -592,8 +541,7 @@ begin
   try
     LM.LoadFromFile(AFileName);
     B := BIO_new_mem_buf(LM.Memory, LM.Size);
-    if Assigned(B) then
-    begin
+    if Assigned(B) then begin
       try
         LX := nil;
         case AType of
@@ -611,21 +559,16 @@ begin
           else
             j := SSL_R_BAD_SSL_FILETYPE;
         end;
-        if Assigned(LX) then
-        begin
+        if Assigned(LX) then begin
           Result := SSL_CTX_use_certificate(ctx, LX) > 0;
           X509_free(LX);
-        end
-        else
-        begin
+        end else begin
           SSLerr(SSL_F_SSL_CTX_USE_CERTIFICATE_FILE, j);
         end;
       finally
         BIO_free(B);
       end;
-    end
-    else
-    begin
+    end else begin
       SSLerr(SSL_F_SSL_CTX_USE_CERTIFICATE_FILE, ERR_R_BUF_LIB);
     end;
   finally
@@ -639,19 +582,14 @@ var
   lookup: PX509_LOOKUP;
 begin
   Result := 0;
-  if AFileName <> '' then
-  begin
+  if AFileName <> '' then begin
     lookup := X509_STORE_add_lookup(ctx, Indy_Unicode_X509_LOOKUP_file);
-    if Assigned(lookup) then
-    begin
+    if Assigned(lookup) then begin
       if (X509_LOOKUP_load_file(lookup, PAnsiChar(@AFileName[1]),
-          X509_FILETYPE_PEM) <> 1) then
-      begin
+          X509_FILETYPE_PEM) <> 1) then begin
         exit;
       end;
-    end
-    else
-    begin
+    end else begin
       exit;
     end;
   end;
@@ -667,8 +605,7 @@ end;
 {$ENDIF}
 {$ELSE}
 
-function IndySSL_load_client_CA_file(const AFileName: String)
-  : PSTACK_OF_X509_NAME;
+function IndySSL_load_client_CA_file(const AFileName: String) : PSTACK_OF_X509_NAME;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := SSL_load_client_CA_file(PAnsiChar(AFileName));
@@ -764,15 +701,13 @@ const
 begin
   LMem := BIO_new(BIO_s_mem);
   try
-    if Assigned(X509_print) then
-    begin
+    if Assigned(X509_print) then begin
       X509_print(LMem, AX509);
       s := '';
       SetLength(LBuf, LBUF_LEN);
       repeat
         LRes := BIO_read(LMem, @LBuf[1], LBUF_LEN);
-        if LRes < 1 then
-        begin
+        if LRes < 1 then begin
           Break;
         end;
         // do this indirectly because OpenSSL will format the output.
@@ -795,14 +730,12 @@ begin
   Assert(SSLIsLoaded <> nil);
   SSLIsLoaded.Lock;
   try
-    if SSLIsLoaded.Value then
-    begin
+    if SSLIsLoaded.Value then begin
       Result := True;
       exit;
     end;
     Result := IdSSLOpenSSLHeaders.Load;
-    if not Result then
-    begin
+    if not Result then begin
       exit;
     end;
 {$IFDEF OPENSSL_SET_MEMORY_FUNCS}
@@ -817,8 +750,7 @@ begin
     SSL_load_error_strings;
     // Successful loading if true
     Result := SSLeay_add_ssl_algorithms > 0;
-    if not Result then
-    begin
+    if not Result then begin
       exit;
     end;
     // Create locking structures, we need them for callback routines
@@ -847,8 +779,7 @@ var
   i: Integer;
 begin
   // ssl was never loaded
-  if LockInfoCB = nil then
-  begin
+  if LockInfoCB = nil then begin
     exit;
   end;
   CRYPTO_set_locking_callback(nil);
@@ -856,12 +787,10 @@ begin
   FreeAndNil(LockInfoCB);
   FreeAndNil(LockPassCB);
   FreeAndNil(LockVerifyCB);
-  if Assigned(CallbackLockList) then
-  begin
+  if Assigned(CallbackLockList) then begin
     with CallbackLockList.LockList do
       try
-        for i := 0 to Count - 1 do
-        begin
+        for i := 0 to Count - 1 do begin
           TObject(Items[i]).free;
         end;
         Clear;
@@ -883,20 +812,16 @@ begin
 
   with CallbackLockList.LockList do
     try
-      if n < Count then
-      begin
+      if n < Count then begin
         Lock := TIdCriticalSection(Items[n]);
       end;
     finally
       CallbackLockList.UnlockList;
     end;
   Assert(Lock <> nil);
-  if (mode and CRYPTO_LOCK) = CRYPTO_LOCK then
-  begin
+  if (mode and CRYPTO_LOCK) = CRYPTO_LOCK then begin
     Lock.Acquire;
-  end
-  else
-  begin
+  end else begin
     Lock.Release;
   end;
 end;
@@ -909,8 +834,7 @@ begin
   with CallbackLockList.LockList do
     try
       cnt := _CRYPTO_num_locks;
-      for i := 0 to cnt - 1 do
-      begin
+      for i := 0 to cnt - 1 do begin
         Lock := TIdCriticalSection.Create;
         try
           Add(Lock);
@@ -949,8 +873,7 @@ var
 begin
   Result := 0;
   if UTC_Time_Decode(UCTTime, year, month, day, hour, min, sec, tz_h,
-    tz_m) > 0 then
-  begin
+    tz_m) > 0 then begin
     Result := EncodeDate(year, month, day) + EncodeTime(hour, min, sec, 0);
     AddMins(Result, tz_m);
     AddHrs(Result, tz_h);
@@ -991,10 +914,8 @@ var
 begin
   Result := '';
   LPtr := PByte(APtr);
-  for i := 0 to (ALen - 1) do
-  begin
-    if i <> 0 then
-    begin
+  for i := 0 to (ALen - 1) do begin
+    if i <> 0 then begin
       Result := Result + ':'; { Do not Localize }
     end;
     Result := Result + IndyFormat('%.2x', [LPtr^]);
@@ -1008,10 +929,8 @@ var
   i: Integer;
 begin
   Result := '';
-  for i := 0 to AMD.Length - 1 do
-  begin
-    if i <> 0 then
-    begin
+  for i := 0 to AMD.Length - 1 do begin
+    if i <> 0 then begin
       Result := Result + ':'; { Do not Localize }
     end;
     Result := Result + IndyFormat('%.2x', [Byte(AMD.MD[i])]);
