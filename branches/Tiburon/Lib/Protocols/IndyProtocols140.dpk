@@ -2,13 +2,18 @@ package IndyProtocols140;
 
 {$R *.res}
 {$ALIGN 8}
+{$ASSERTIONS ON}
 {$BOOLEVAL OFF}
+{$DEBUGINFO ON}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
+{$IOCHECKS ON}
 {$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
 {$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
 {$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
 {$STACKFRAMES OFF}
@@ -224,6 +229,7 @@ contains
   IdSSL in 'IdSSL.pas',
   IdSSLOpenSSL in 'IdSSLOpenSSL.pas',
   IdSSLOpenSSLHeaders in 'IdSSLOpenSSLHeaders.pas',
+  IdSSLOpenSSLUtils in 'IdSSLOpenSSLUtils.pas',
   IdServerInterceptLogBase in 'IdServerInterceptLogBase.pas',
   IdServerInterceptLogEvent in 'IdServerInterceptLogEvent.pas',
   IdServerInterceptLogFile in 'IdServerInterceptLogFile.pas',
@@ -263,3 +269,4 @@ contains
   IdZLibHeaders in 'IdZLibHeaders.pas';
 
 end.
+
