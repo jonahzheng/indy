@@ -190,8 +190,9 @@ CFLAG= /MD /Ox /W3 /Gs0 /GF /Gy /nologo
 interface
 
 {$i IdCompilerDefines.inc}
+
 {$IFNDEF USE_OPENSSL}
-      {$message error Should not compile if USE_OPENSSL is not defined!!!}
+  {$message error Should not compile if USE_OPENSSL is not defined!!!}
 {$ENDIF}
 {$WRITEABLECONST OFF}
 
@@ -5036,6 +5037,10 @@ type
      {$ENDIF}
   {$ENDIF}
   PPByte    =^PByte;
+  {$IFNDEF VCL_6_OR_ABOVE}
+  PPointer = ^Pointer;
+  {$ENDIF}
+
 //This is just a synthasis since Pascal probably has what we need.
 //In C, the OpenSSL developers were using the PQ_64BIT moniker
 //to ensure that they had a value that is always 64bit.
@@ -5330,10 +5335,10 @@ type
    	UIT_ERROR);	 //* Send an error message to the user */
   //crypto.h
   OPENSSL_ITEM = record
-	  code : TIdC_INT;
-	  value : Pointer;		//* Not used for flag attributes */
-	  value_size : size_t;	//* Max size of value for output, length for input */
-	  value_length : ^size_t;	//* Returned length of value for output */
+    code : TIdC_INT;
+    value : Pointer;		//* Not used for flag attributes */
+    value_size : size_t;	//* Max size of value for output, length for input */
+    value_length : ^size_t;	//* Returned length of value for output */
   end;
   CRYPTO_EX_DATA = record
     sk : PSTACK;
@@ -5366,11 +5371,11 @@ type
   CRYPTO_EX_dup = function (_to : PCRYPTO_EX_DATA; from : PCRYPTO_EX_DATA;
     from_d : Pointer; idx : TIdC_INT; arg1 : TIdC_LONG; argp : Pointer) : TIdC_INT; cdecl;
   CRYPTO_EX_DATA_FUNCS = record
-	  argl : TIdC_LONG;	//* Arbitary long */
-	  argp : Pointer;	//* Arbitary void * */
-	  new_func : CRYPTO_EX_new;
-	  free_func : CRYPTO_EX_free;
-	  dup_func : CRYPTO_EX_dup;
+    argl : TIdC_LONG;	//* Arbitary long */
+    argp : Pointer;	//* Arbitary void * */
+    new_func : CRYPTO_EX_new;
+    free_func : CRYPTO_EX_free;
+    dup_func : CRYPTO_EX_dup;
   end;
   {$IFDEF DEBUG_SAFESTACK}
   STACK_OF_CRYPTO_EX_DATA_FUNCS = record
