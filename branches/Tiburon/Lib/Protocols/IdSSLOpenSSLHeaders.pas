@@ -9076,9 +9076,9 @@ function BIO_set_ssl_mode(b : PBIO; client : TIdC_LONG) : TIdC_LONG;
 function BIO_set_ssl_renegotiate_bytes(b : PBIO; num : TIdC_LONG) : TIdC_LONG;
 function BIO_get_num_renegotiates(b : PBIO) : TIdC_LONG;
 function BIO_set_ssl_renegotiate_timeout(b : PBIO; seconds : TIdC_LONG) : TIdC_LONG;
-function BIO_get_mem_data(b : PBIO; pp : Pointer) : TIdC_INT;
+function BIO_get_mem_data(b : PBIO; out pp : Pointer) : TIdC_INT;
 function BIO_set_mem_buf(b : PBIO; bm : PAnsiChar; c : TIdC_INT) : TIdC_INT;
-function BIO_get_mem_ptr(b: PBIO; pp: Pointer) : TIdC_INT;
+function BIO_get_mem_ptr(b: PBIO; out pp: Pointer) : TIdC_INT;
 procedure BIO_set_mem_eof_return(b : PBIO; const v : TIdC_INT);
 //* For the BIO_f_buffer() type */
 function BIO_get_buffer_num_lines(b : PBIO) : TIdC_INT;
@@ -14260,7 +14260,7 @@ begin
  Result := BIO_ctrl(b,BIO_C_SET_SSL_RENEGOTIATE_TIMEOUT,seconds,nil);
 end;
 
-function BIO_get_mem_data(b : PBIO; pp : Pointer) : TIdC_INT;
+function BIO_get_mem_data(b : PBIO; out pp : Pointer) : TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
 	Result := BIO_ctrl(b,BIO_CTRL_INFO,0,pp);
@@ -14272,7 +14272,7 @@ begin
   Result := BIO_ctrl(b, BIO_C_SET_BUF_MEM, c, bm);
 end;
 
-function BIO_get_mem_ptr(b: PBIO; pp: Pointer) : TIdC_INT;
+function BIO_get_mem_ptr(b: PBIO; out pp: Pointer) : TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := BIO_ctrl(b, BIO_C_GET_BUF_MEM_PTR, 0, pp);
