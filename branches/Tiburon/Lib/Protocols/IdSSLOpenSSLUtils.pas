@@ -694,31 +694,30 @@ procedure DumpCert(AOut: TStrings; AX509: PX509);
 {$IFNDEF OPENSSL_NO_BIO}
 var
   LMem: PBIO;
-  LBuf, s: AnsiString;
-  LRes: TIdC_INT;
-const
-  LBUF_LEN = 1024;
+  LLen : TIdC_INT;
+  LBufPtr : Pointer;
 begin
+  LBufPtr := nil;
   LMem := BIO_new(BIO_s_mem);
   try
     if Assigned(X509_print) then begin
       X509_print(LMem, AX509);
-      s := '';
-      SetLength(LBuf, LBUF_LEN);
-      repeat
-        LRes := BIO_read(LMem, @LBuf[1], LBUF_LEN);
-        if LRes < 1 then begin
-          Break;
-        end;
-        // do this indirectly because OpenSSL will format the output.
-        s := s + Copy(LBuf, 1, LRes);
-      until False;
-      AOut.Text := String(s);
+      LLen := BIO_get_mem_data( LMem, @LBufPtr);
+      if (LLen > 0) and assigned(LBufPtr) then begin
+        {
+        We could have used RawToString but that would have made a copy of the
+        output buffer.
+        }
+        AOut.Text := TIdTextEncoding.UTF8.GetString( TBytes( LBufPtr^),0,LLen);
+      end;
     end;
   finally
-    BIO_free(LMem);
+    if Assigned(LMem) then begin
+      BIO_free(LMem);
+    end;
   end;
 end;
+
 {$ELSE}
 
 begin
