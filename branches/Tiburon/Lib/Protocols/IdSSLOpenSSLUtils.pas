@@ -697,12 +697,11 @@ var
   LLen : TIdC_INT;
   LBufPtr : Pointer;
 begin
-  LBufPtr := nil;
   LMem := BIO_new(BIO_s_mem);
   try
     if Assigned(X509_print) then begin
       X509_print(LMem, AX509);
-      LLen := BIO_get_mem_data( LMem, @LBufPtr);
+      LLen := BIO_get_mem_data( LMem, LBufPtr);
       if (LLen > 0) and assigned(LBufPtr) then begin
         {
         We could have used RawToString but that would have made a copy of the
