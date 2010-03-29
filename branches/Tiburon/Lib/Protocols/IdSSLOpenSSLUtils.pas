@@ -143,21 +143,22 @@ procedure LockVerifyCB_Leave;
 begin
   LockVerifyCB.Leave;
 end;
-{$IFDEF STRING_IS_UNICODE}
+
 {
   IMPORTANT!!!
 
-  OpenSSL's X509 lookup code by default does not handle Unicode filenames and path
-  names at all.  We have to use our own X509 lookup method for such a thing.
+  OpenSSL can not handle Unicode file names at all.  On Posix systems, UTF8 File
+  names can be used with OpenSSL.  The Windows operating system does not accept
+  UTF8 file names at all so we have our own routines that will handle Unicode
+  filenames.   Most of this section of code is based on code in the OpenSSL .DLL
+  which is copyrighted by the OpenSSL developers.  Come of it is translated into
+  Pascal and made some modifications so that it will handle Unicode filenames.
+}
 
-}
-{
-  NOTE that most of this section and the helper routines for Windows are based on
-  code in the OpenSSL .DLL which is copyrighted by the OpenSSL developers.  I am
-  copied some of it and translated it into Pascal and made some modifications so
-  that it will handle Unicode filenames.
-}
-{$IFDEF WIN32_OR_WIN64_OR_WINCE}
+{$IFDEF STRING_IS_UNICODE}
+
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+
 function Indy_unicode_X509_load_cert_crl_file(ctx: PX509_LOOKUP; const AFileName: String;
   const _type: TIdC_INT): TIdC_INT; forward;
 function Indy_unicode_X509_load_cert_file(ctx: PX509_LOOKUP; const AFileName: String;
@@ -334,62 +335,6 @@ begin
     sk_X509_INFO_pop_free(Linf, @X509_INFO_free);
   end;
 end;
-{$ENDIF}
-{$ENDIF}
-{$IFDEF STRING_IS_UNICODE}
-{
-  IMPORTANT!!!
-
-  OpenSSL can not handle Unicode file names at all.  On Posix systems, UTF8 File names
-  can be used with OpenSSL.  The Windows operating system does not accept UTF8 file names
-  at all so we have our own routines that will handle Unicode filenames.  THe routines
-  are based on code in the OpenSSL .DLL that is translated into Delphi but loads from
-  memory streams.
-}
-
-{$IFDEF UNIX}
-
-function IndySSL_load_client_CA_file(const AFileName: String) : PSTACK_OF_X509_NAME;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := SSL_load_client_CA_file(PAnsiChar(UTF8String(AFileName)));
-end;
-
-function IndySSL_CTX_use_PrivateKey_file(ctx: PSSL_CTX; const AFileName: String;
-  AType: Integer): Boolean;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(UTF8String(AFileName)),
-    AType) > 0;
-end;
-
-function IndySSL_CTX_use_certificate_file(ctx: PSSL_CTX;
-  const AFileName: String; AType: Integer): Boolean;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(UTF8String(AFileName)),
-    AType) > 0;
-end;
-
-function IndyX509_STORE_load_locations(ctx: PX509_STORE;
-  const AFileName, APathName: String): TIdC_INT;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := X509_STORE_load_locations(ctx, PAnsiChar(UTF8String(AFileName)),
-    PAnsiChar(UTF8String(APathName)));
-
-end;
-
-function IndySSL_CTX_load_verify_locations(ctx: PSSL_CTX;
-  const ACAFile, ACAPath: String): TIdC_INT;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-begin
-  Result := X509_STORE_load_locations(ctx^.cert_store,
-    PAnsiChar(UTF8String(ACAFile)), PAnsiChar(UTF8String(ACAPath)));
-end;
-
-{$ENDIF}
-{$IFDEF WIN32_OR_WIN64_OR_WINCE}
 
 procedure IndySSL_load_client_CA_file_err(var VRes: PSTACK_OF_X509_NAME);
 {$IFDEF USE_INLINE} inline; {$ENDIF}
@@ -401,8 +346,7 @@ begin
   end;
 end;
 
-function IndySSL_load_client_CA_file(const AFileName: String)
-  : PSTACK_OF_X509_NAME;
+function IndySSL_load_client_CA_file(const AFileName: String): PSTACK_OF_X509_NAME;
 var
   LM: TMemoryStream;
   LB: PBIO;
@@ -602,8 +546,51 @@ function IndySSL_CTX_load_verify_locations(ctx: PSSL_CTX;
 begin
   Result := IndyX509_STORE_load_locations(ctx^.cert_store, ACAFile, ACAPath);
 end;
-{$ENDIF}
-{$ELSE}
+
+  {$ENDIF} // WIN32_OR_WIN64_OR_WINCE
+
+  {$IFDEF UNIX}
+
+function IndySSL_load_client_CA_file(const AFileName: String) : PSTACK_OF_X509_NAME;
+begin
+  Result := SSL_load_client_CA_file(PAnsiChar(UTF8String(AFileName)));
+end;
+
+function IndySSL_CTX_use_PrivateKey_file(ctx: PSSL_CTX; const AFileName: String;
+  AType: Integer): Boolean;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(UTF8String(AFileName)),
+    AType) > 0;
+end;
+
+function IndySSL_CTX_use_certificate_file(ctx: PSSL_CTX;
+  const AFileName: String; AType: Integer): Boolean;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(UTF8String(AFileName)),
+    AType) > 0;
+end;
+
+function IndyX509_STORE_load_locations(ctx: PX509_STORE;
+  const AFileName, APathName: String): TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := X509_STORE_load_locations(ctx, PAnsiChar(UTF8String(AFileName)),
+    PAnsiChar(UTF8String(APathName)));
+end;
+
+function IndySSL_CTX_load_verify_locations(ctx: PSSL_CTX;
+  const ACAFile, ACAPath: String): TIdC_INT;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  Result := X509_STORE_load_locations(ctx^.cert_store,
+    PAnsiChar(UTF8String(ACAFile)), PAnsiChar(UTF8String(ACAPath)));
+end;
+
+  {$ENDIF} // UNIX
+
+{$ELSE} // STRING_IS_UNICODE
 
 function IndySSL_load_client_CA_file(const AFileName: String) : PSTACK_OF_X509_NAME;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
@@ -629,7 +616,7 @@ function IndyX509_STORE_load_locations(ctx: PX509_STORE;
   const AFileName, APathName: String): TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := X509_STORE_load_locations(ctx, PAnsiChar(@AFileName[1]),
+  Result := X509_STORE_load_locations(ctx, PAnsiChar(AFileName),
     PAnsiChar(APathName));
 end;
 
@@ -639,6 +626,7 @@ begin
   Result := SSL_CTX_load_verify_locations(ctx, PAnsiChar(ACAFile),
     PAnsiChar(ACAPath));
 end;
+
 {$ENDIF}
 
 function AddMins(const DT: TDateTime; const Mins: Extended): TDateTime;
@@ -940,7 +928,7 @@ end;
 
 
 procedure GetStateVars(const sslSocket: PSSL; AWhere, Aret: TIdC_INT; var VTypeStr, VMsg : String);
-  {$IFDEF USEINLINE}inline;{$ENDIF}
+  {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   case AWhere of
     SSL_CB_ALERT :
