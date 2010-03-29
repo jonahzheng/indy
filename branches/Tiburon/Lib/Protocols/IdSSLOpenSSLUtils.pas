@@ -689,38 +689,40 @@ begin
 end;
 {$ENDIF}
 
+{$IFNDEF OPENSSL_NO_BIO}
 procedure DumpCert(AOut: TStrings; AX509: PX509);
 {$IFDEF USE_INLINE} inline; {$ENDIF}
-{$IFNDEF OPENSSL_NO_BIO}
 var
   LMem: PBIO;
   LLen : TIdC_INT;
   LBufPtr : Pointer;
 begin
-  LMem := BIO_new(BIO_s_mem);
-  try
-    if Assigned(X509_print) then begin
+  if Assigned(X509_print) then begin
+    LMem := BIO_new(BIO_s_mem);
+    try
       X509_print(LMem, AX509);
       LLen := BIO_get_mem_data( LMem, LBufPtr);
-      if (LLen > 0) and assigned(LBufPtr) then begin
+      if (LLen > 0) and Assigned(LBufPtr) then begin
         {
-        We could have used RawToString but that would have made a copy of the
+        We could have used RawToBytes() but that would have made a copy of the
         output buffer.
         }
-        AOut.Text := TIdTextEncoding.UTF8.GetString( TBytes( LBufPtr^),0,LLen);
+        AOut.Text := TIdTextEncoding.UTF8.GetString( TIdBytes(LBufPtr^), 0, LLen);
       end;
-    end;
-  finally
-    if Assigned(LMem) then begin
-      BIO_free(LMem);
+    finally
+      if Assigned(LMem) then begin
+        BIO_free(LMem);
+      end;
     end;
   end;
 end;
 
 {$ELSE}
 
+procedure DumpCert(AOut: TStrings; AX509: PX509);
 begin
 end;
+
 {$ENDIF}
 
 function LoadOpenSSLLibrary: Boolean;
