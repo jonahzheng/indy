@@ -118,7 +118,7 @@ type
   public
     class procedure RaiseIfError(aStatus: SECURITY_STATUS; const aFunctionName: string);
     function IsAvailable: Boolean;
-    property FunctionTable: PSecurityFunctionTable read GetFunctionTable;
+    property FunctionTable: SecurityFunctionTable read GetFunctionTable;
   public
     constructor Create;
     destructor Destroy; override;
