@@ -228,7 +228,7 @@ type
   TIdHTTPRequestInfo = class(TIdRequestHeaderInfo)
   protected
     FAuthExists: Boolean;
-    FCookies: TIdServerCookies;
+    FCookies: TIdCookies;
     FParams: TStrings;
     FPostStream: TStream;
     FRawHTTPCommand: string;
@@ -256,7 +256,7 @@ type
     property AuthUsername: string read FAuthUsername;
     property Command: string read FCommand;
     property CommandType: THTTPCommandType read FCommandType;
-    property Cookies: TIdServerCookies read FCookies;
+    property Cookies: TIdCookies read FCookies;
     property Document: string read FDocument write FDocument; // writable for isapi compatibility. Use with care
     property URI: string read FURI;
     property Params: TStrings read FParams;
@@ -274,7 +274,7 @@ type
     FAuthRealm: string;
     FConnection: TIdTCPConnection;
     FResponseNo: Integer;
-    FCookies: TIdServerCookies;
+    FCookies: TIdCookies;
     FContentStream: TStream;
     FContentText: string;
     FCloseConnection: Boolean;
@@ -285,7 +285,7 @@ type
     FSession: TIdHTTPSession;
     //
     procedure ReleaseContentStream;
-    procedure SetCookies(const AValue: TIdServerCookies);
+    procedure SetCookies(const AValue: TIdCookies);
     procedure SetHeaders; override;
     procedure SetResponseNo(const AValue: Integer);
     procedure SetCloseConnection(const Value: Boolean);
@@ -307,7 +307,7 @@ type
     property CloseConnection: Boolean read FCloseConnection write SetCloseConnection;
     property ContentStream: TStream read FContentStream write FContentStream;
     property ContentText: string read FContentText write FContentText;
-    property Cookies: TIdServerCookies read FCookies write SetCookies;
+    property Cookies: TIdCookies read FCookies write SetCookies;
     property FreeContentStream: Boolean read FFreeContentStream write FFreeContentStream;
     // writable for isapi compatibility. Use with care
     property HeaderHasBeenWritten: Boolean read FHeaderHasBeenWritten write FHeaderHasBeenWritten;
@@ -727,22 +727,17 @@ var
   procedure ReadCookiesFromRequestHeader;
   var
     LRawCookies: TStringList;
-    i: Integer;
-    S: String;
   begin
-    LRawCookies := TStringList.Create; try
-      LRequestInfo.RawHeaders.Extract('cookie', LRawCookies);    {Do not Localize}
-      for i := 0 to LRawCookies.Count -1 do begin
-        S := LRawCookies[i];
-        while IndyPos(';', S) > 0 do begin    {Do not Localize}
-          LRequestInfo.Cookies.AddSrcCookie(Fetch(S, ';'));    {Do not Localize}
-          S := Trim(S);
-        end;
-        if S <> '' then begin
-          LRequestInfo.Cookies.AddSrcCookie(S);
-        end;
-      end;
-    finally FreeAndNil(LRawCookies); end;
+    LRawCookies := TStringList.Create;
+    try
+      LRequestInfo.RawHeaders.Extract('Cookie', LRawCookies);    {Do not Localize}
+      LRequestInfo.Cookies.AddClientCookies(LRawCookies);
+      LRawCookies.Clear;
+      LRequestInfo.RawHeaders.Extract('Cookie2', LRawCookies);    {Do not Localize}
+      LRequestInfo.Cookies.AddClientCookies2(LRawCookies);
+    finally
+      FreeAndNil(LRawCookies);
+    end;
   end;
 
   function GetRemoteIP(ASocket: TIdIOHandlerSocket): String;
@@ -1244,7 +1239,7 @@ constructor TIdHTTPRequestInfo.Create;
 begin
   inherited Create;
   FCommandType := hcUnknown;
-  FCookies := TIdServerCookies.Create(self);
+  FCookies := TIdCookies.Create(Self);
   FParams  := TStringList.Create;
   ContentLength := -1;
 end;
@@ -1309,7 +1304,7 @@ begin
   ContentLength := GFContentLength;
   {Some clients may not support folded lines}
   RawHeaders.FoldLines := False;
-  FCookies := TIdServerCookies.Create(self);
+  FCookies := TIdCookies.Create(Self);
   {TODO Specify version - add a class method dummy that calls version}
   ServerSoftware := GServerSoftware;
   ContentType := ''; //GContentType;
@@ -1347,7 +1342,7 @@ begin
   FCloseConnection := Value;
 end;
 
-procedure TIdHTTPResponseInfo.SetCookies(const AValue: TIdServerCookies);
+procedure TIdHTTPResponseInfo.SetCookies(const AValue: TIdCookies);
 begin
   FCookies.Assign(AValue);
 end;
@@ -1366,8 +1361,9 @@ begin
     if FLastModified > 0 then begin
       Values['Last-Modified'] := LocalDateTimeToHttpStr(FLastModified); {do not localize}
     end;
-    if AuthRealm <> '' then begin {Do not Localize}
-      Values['WWW-Authenticate'] := 'Basic realm="' + AuthRealm + '"';    {Do not Localize}
+    if AuthRealm <> '' then begin
+      Values['WWW-Authenticate'] := 'Basic';    {Do not Localize}
+      Params['WWW-Authenticate', 'realm'] := AuthRealm;    {Do not Localize}
     end;
   end;
 end;
@@ -1512,6 +1508,7 @@ var
   i: Integer;
   LEncoding: TIdTextEncoding;
   LBufferingStarted: Boolean;
+  LCookie: TIdNetscapeCookie;
 begin
   if HeaderHasBeenWritten then begin
     EIdHTTPHeaderAlreadyWritten.Toss(RSHTTPHeaderAlreadyWritten);
@@ -1581,7 +1578,12 @@ begin
     FConnection.IOHandler.Write(RawHeaders);
     // Write cookies
     for i := 0 to Cookies.Count - 1 do begin
-      FConnection.IOHandler.WriteLn('Set-Cookie: ' + Cookies[i].ServerCookie);    {Do not Localize}
+      LCookie := Cookies[i];
+      if LCookie is TIdCookieRFC2965 then begin
+        FConnection.IOHandler.WriteLn('Set-Cookie2: ' + LCookie.ServerCookie);    {Do not Localize}
+      end else begin
+        FConnection.IOHandler.WriteLn('Set-Cookie: ' + LCookie.ServerCookie);    {Do not Localize}
+      end;
     end;
     // HTTP headers end with a double CR+LF
     FConnection.IOHandler.WriteLn;

@@ -896,34 +896,14 @@ begin
 end;
 
 procedure TIdCustomHTTP.SetCookies(AURL: TIdURI; ARequest: TIdHTTPRequest);
-var
-  S: string;
 begin
-  if Assigned(FCookieManager) then begin
+  if Assigned(FCookieManager) then
+  begin
     // Send secure cookies only if we have Secured connection
-    S := FCookieManager.GenerateCookieList(AURL, TextIsSame(AURL.Protocol, 'HTTPS')); {do not localize}
-    if Length(S) > 0 then begin
-      ARequest.RawHeaders.Values['Cookie'] := S;  {do not localize}
-
-      // RLebeau: per RFC 2965:
-      //
-      // "A user agent that supports both this specification and Netscape-style
-      // cookies SHOULD send a Cookie request header that follows the older
-      // Netscape specification if it received the cookie in a Set-Cookie
-      // response header and not in a Set-Cookie2 response header.  However,
-      // it SHOULD send the following request header as well:
-      //
-      // Cookie2: $Version="1"
-      //
-      // The Cookie2 header advises the server that the user agent understands
-      // new-style cookies.  If the server understands new-style cookies, as
-      // well, it SHOULD continue the stateful session by sending a Set-
-      // Cookie2 response header, rather than Set-Cookie.  A server that does
-      // not understand new-style cookies will simply ignore the Cookie2
-      // request header.
-
-      ARequest.RawHeaders.Values['Cookie2'] := '$Version="1"';  {do not localize}
-    end;
+    FCookieManager.GenerateClientCookies(
+      AURL,
+      TextIsSame(AURL.Protocol, 'HTTPS'), {do not localize}
+      ARequest.RawHeaders);
   end;
 end;
 
@@ -1400,9 +1380,27 @@ end;
 
 procedure TIdCustomHTTP.ProcessCookies(ARequest: TIdHTTPRequest; AResponse: TIdHTTPResponse);
 var
-  Cookies, Cookies2: TStringList;
+  Temp, Cookies, Cookies2: TStringList;
   i, j: Integer;
+  S, Cur: String;
+
+  // RLebeau: a single Set-Cookie header can have more than 1 cookie in it...
+  procedure ReadCookies(AHeaders: TIdHeaderList; const AHeader: String; ACookies: TStrings);
+  var
+    k: Integer;
+  begin
+    Temp.Clear;
+    AHeaders.Extract(AHeader, Temp);
+    for k := 0 to Temp.Count-1 do begin
+      S := Temp[k];
+      while ExtractNextCookie(S, Cur, True) do begin
+        ACookies.Add(Cur);
+      end;
+    end;
+  end;
+
 begin
+  Temp := nil;
   Cookies := nil;
   Cookies2 := nil;
   try
@@ -1412,14 +1410,16 @@ begin
     end;
 
     if Assigned(FCookieManager) then begin
+      Temp := TStringList.Create;
       Cookies := TStringList.Create;
       Cookies2 := TStringList.Create;
 
-      AResponse.RawHeaders.Extract('Set-cookie', Cookies);    {do not localize}
-      AResponse.RawHeaders.Extract('Set-cookie2', Cookies2);  {do not localize}
+      ReadCookies(AResponse.RawHeaders, 'Set-Cookie', Cookies);  {do not localize}
+      ReadCookies(AResponse.RawHeaders, 'Set-Cookie2', Cookies2);  {do not localize}
 
-      FMetaHTTPEquiv.RawHeaders.Extract('Set-cookie', Cookies);    {do not localize}
-      FMetaHTTPEquiv.RawHeaders.Extract('Set-cookie2', Cookies2);  {do not localize}
+      ReadCookies(FMetaHTTPEquiv.RawHeaders, 'Set-Cookie', Cookies);    {do not localize}
+      ReadCookies(FMetaHTTPEquiv.RawHeaders, 'Set-Cookie2', Cookies2);  {do not localize}
+
       // RLebeau: per RFC 2965:
       //
       // "User agents that receive in the same response both a
@@ -1435,14 +1435,15 @@ begin
       end;
 
       for i := 0 to Cookies.Count - 1 do begin
-        CookieManager.AddCookie(Cookies[i], FURI);
+        CookieManager.AddServerCookie(Cookies[i], FURI);
       end;
 
       for i := 0 to Cookies2.Count - 1 do begin
-        CookieManager.AddCookie2(Cookies2[i], FURI);
+        CookieManager.AddServerCookie2(Cookies2[i], FURI);
       end;
     end;
   finally
+    FreeAndNil(Temp);
     FreeAndNil(Cookies);
     FreeAndNil(Cookies2);
   end;
@@ -1726,7 +1727,7 @@ begin
   URL.Port := IntToStr(Value);
 end;
 }
-procedure TIdCustomHTTP.SetRequestHEaders(Value: TIdHTTPRequest);
+procedure TIdCustomHTTP.SetRequestHeaders(Value: TIdHTTPRequest);
 begin
   FHTTPProto.Request.Assign(Value);
 end;
