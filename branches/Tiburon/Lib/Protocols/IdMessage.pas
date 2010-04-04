@@ -680,6 +680,7 @@ begin
   FreeAndNil(FMessageParts);
   FreeAndNil(FNewsGroups);
   FreeAndNil(FHeaders);
+  FreeAndNil(FExtraHeaders);
   FreeAndNil(FFromList);
   FreeAndNil(FReplyTo);
   FreeAndNil(FSender);
