@@ -533,11 +533,15 @@ begin
           X509_FILETYPE_PEM) <> 1) then begin
         exit;
       end;
+      Result := 1;
     end else begin
       exit;
     end;
   end;
   { To do:  Figure out how to do the hash dir lookup with Unicode. }
+  if APathName <> '' then begin
+    Result := X509_STORE_load_locations(ctx, nil, PAnsiChar(AnsiString(APathName)));
+  end;
 end;
 
 function IndySSL_CTX_load_verify_locations(ctx: PSSL_CTX;
