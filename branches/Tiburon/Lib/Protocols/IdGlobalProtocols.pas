@@ -3692,7 +3692,7 @@ begin
     SplitHeaderSubItems(AHeaderLine, LItems, AQuoteType);
     {$IFDEF VCL_6_OR_ABOVE}
     LItems.CaseSensitive := False;
-    I := LItems.IndexOf(ASubItem);
+    I := LItems.IndexOfName(ASubItem);
     {$ELSE}
     I := FindIndexOfItem;
     {$ENDIF}
