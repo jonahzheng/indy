@@ -186,18 +186,14 @@ begin
             begin
               LFileName := GetEnvironmentVariable
                 (String(X509_get_default_cert_file_env));
-              if LFileName <> '' then
-              begin
+              if LFileName <> '' then begin
                 Result := Indy_unicode_X509_load_cert_crl_file(ctx, LFileName,
                   X509_FILETYPE_PEM);
-              end
-              else
-              begin
+              end else begin
                 Result := Indy_unicode_X509_load_cert_crl_file(ctx,
                   String(X509_get_default_cert_file), X509_FILETYPE_PEM);
               end;
-              if Result = 0 then
-              begin
+              if Result = 0 then begin
                 X509err(X509_F_BY_FILE_CTRL, X509_R_LOADING_DEFAULTS);
               end;
             end;
@@ -233,8 +229,7 @@ begin
   try
     LM.LoadFromFile(AFileName);
     Lin := BIO_new_mem_buf(LM.Memory, LM.Size);
-    if Assigned(Lin) then
-    begin
+    if Assigned(Lin) then begin
       case _type of
         X509_FILETYPE_PEM:
           begin
@@ -339,8 +334,7 @@ end;
 procedure IndySSL_load_client_CA_file_err(var VRes: PSTACK_OF_X509_NAME);
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  if Assigned(VRes) then
-  begin
+  if Assigned(VRes) then begin
     sk_X509_NAME_pop_free(VRes, @X509_NAME_free);
     VRes := nil;
   end;
@@ -357,18 +351,15 @@ begin
   Result := nil;
   LX := nil;
   Lsk := sk_X509_NAME_new(nil); // (xname_cmp);
-  if Assigned(Lsk) then
-  begin
+  if Assigned(Lsk) then begin
     try
       LM := TMemoryStream.Create;
       try
         LM.LoadFromFile(AFileName);
         LB := BIO_new_mem_buf(LM.Memory, LM.Size);
-        if Assigned(LB) then
-        begin
+        if Assigned(LB) then begin
           try
-            while (PEM_read_bio_X509(LB, @LX, nil, nil) <> nil) do
-            begin
+            while (PEM_read_bio_X509(LB, @LX, nil, nil) <> nil) do begin
               try
                 if not Assigned(Result) then begin
                   Result := sk_X509_NAME_new_null;
@@ -755,7 +746,11 @@ begin
     PrepareOpenSSLLocking;
     CRYPTO_set_locking_callback(SslLockingCallback);
 {$IFNDEF WIN32_OR_WIN64}
-    CRYPTO_set_id_callback(_GetThreadID);
+    if Assigned(CRYPTO_THREADID_set_callback( then begin
+      CRYPTO_THREADID_set_callback( _threadid_func );
+    end else begin
+      CRYPTO_set_id_callback(_GetThreadID);
+    end;
 {$ENDIF}
     SSLIsLoaded.Value := True;
     Result := True;
@@ -841,6 +836,12 @@ begin
 end;
 
 {$IFNDEF WIN32_OR_WIN64}
+procedure _threadid_func(id : PCRYPTO_THREADID) cdecl;
+begin
+  if Assigned(CRYPTO_THREADID_set_numeric) then begin
+    CRYPTO_THREADID_set_numeric(id, TIdC_ULONG(CurrentThreadId);
+  end;
+end;
 
 function _GetThreadID: TIdC_ULONG; cdecl;
 begin

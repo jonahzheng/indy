@@ -5338,6 +5338,14 @@ type
    	UIT_INFO,		 //* Send info to the user */
    	UIT_ERROR);	 //* Send an error message to the user */
   //crypto.h
+  //  OpenSSL 1.0.0 structure
+  ///* Don't use this structure directly. */
+  CRYPTO_THREADID = record
+    ptr : Pointer;
+    val : TIdC_ULONG;
+  end;
+  PCRYPTO_THREADID = ^CRYPTO_THREADID;
+  //  end OpenSSL 1.0.0 structures
   OPENSSL_ITEM = record
     code : TIdC_INT;
     value : Pointer;		//* Not used for flag attributes */
@@ -8511,6 +8519,7 @@ type
   Tsk_pop_free_func = procedure (p : Pointer); cdecl;
   SSL_callback_ctrl_fp = procedure (para1 : PBIO; para2 : TIdC_INT;
     para3 : PAnsiChar; para4 : TIdC_INT; para5, para6 : TIdC_INT); cdecl;
+  TCRYPTO_THREADID_set_callback_threadid_func = procedure (id : PCRYPTO_THREADID) cdecl;
 
 var
   OpenSSL_add_all_algorithms : procedure cdecl = nil;
@@ -8542,6 +8551,9 @@ var
   CRYPTO_dbg_free : procedure(addr: Pointer; before: TIdC_INT) cdecl = nil;
   CRYPTO_dbg_set_options : procedure(bits: TIdC_LONG) cdecl = nil;
   CRYPTO_dbg_get_options : function: TIdC_LONG cdecl = nil;
+  CRYPTO_THREADID_set_numeric : procedure(id : PCRYPTO_THREADID; val : TIdC_ULONG) cdecl = nil;
+  CRYPTO_THREADID_set_pointer : procedure(id : PCRYPTO_THREADID; ptr : Pointer) cdecl = nil;
+  CRYPTO_THREADID_set_callback : function(threadid_func : TCRYPTO_THREADID_set_callback_threadid_func) : TIdC_INT cdecl = nil;
   sk_num : function (const x : PSTACK) : TIdC_INT cdecl = nil;
   sk_value : function (x : PSTACK; i : TIdC_INT) : PAnsiChar cdecl = nil;
   sk_new : function ( cmp : Tsk_new_cmp) : PStack cdecl = nil;
@@ -8869,6 +8881,7 @@ var
   ERR_load_ERR_strings : procedure cdecl = nil;
   ERR_load_crypto_strings : procedure cdecl = nil;
   ERR_free_strings : procedure cdecl = nil;
+  ERR_remove_thread_state : procedure(const tId : PCRYPTO_THREADID) cdecl = nil;
   ERR_remove_state : procedure(pid: TIdC_ULONG) cdecl = nil;
   CRYPTO_cleanup_all_ex_data : procedure cdecl = nil;
   SSL_COMP_get_compression_methods : function: PSTACK_OF_SSL_COMP cdecl = nil;
@@ -9883,6 +9896,11 @@ them in case we use them later.}
   {CH fn_CRYPTO_get_lock_name = 'CRYPTO_get_lock_name'; }  {Do not localize}
   {CH fn_CRYPTO_add_lock = 'CRYPTO_add_lock'; }  {Do not localize}
   {CH fn_int_CRYPTO_set_do_dynlock_callback = 'int_CRYPTO_set_do_dynlock_callback'; } {Do not localize}
+  //OpenSSL 1.0.0 - use these instead of the depreciated CRYPTO_set_id_callback
+  fn_CRYPTO_THREADID_set_numeric = 'CRYPTO_THREADID_set_numeric';  {Do not localize}
+  fn_CRYPTO_THREADID_set_pointer = 'CRYPTO_THREADID_set_pointer';  {Do not localize}
+  fn_CRYPTO_THREADID_set_callback = 'CRYPTO_THREADID_set_callback'; {Do not localize}
+  //end section
   fn_CRYPTO_set_mem_functions = 'CRYPTO_set_mem_functions';  {Do not localize}
   {CH fn_CRYPTO_set_mem_info_functions = 'CRYPTO_set_mem_info_functions'; } {Do not localize}
   {CH fn_CRYPTO_get_mem_functions = 'CRYPTO_get_mem_functions'; }  {Do not localize}
@@ -12334,6 +12352,7 @@ them in case we use them later.}
   {$ENDIF}
   fn_ERR_load_ERR_strings = 'ERR_load_ERR_strings';  {Do not localize}
   fn_ERR_free_strings = 'ERR_free_strings';  {do not localize}
+  fn_ERR_remove_thread_state = 'ERR_remove_thread_state';  {Do not localize}
   fn_ERR_remove_state = 'ERR_remove_state';  {do not localize}
 {CH fn_ERR_unload_strings = 'ERR_unload_strings'; } {Do not localize}
 {CH fn_ERR_load_ERR_strings = 'ERR_load_ERR_strings'; } {Do not localize}
@@ -12814,7 +12833,17 @@ begin
   @_CRYPTO_num_locks := LoadFunctionCLib(fn_CRYPTO_num_locks);
   @CRYPTO_set_locking_callback := LoadFunctionCLib(fn_CRYPTO_set_locking_callback);
   {$IFNDEF WIN32_OR_WIN64}
-  @CRYPTO_set_id_callback := LoadFunctionCLib(fn_CRYPTO_set_id_callback);
+{
+In OpenSSL 1.0.0, you should use these callback functions instead of the
+depreciated set_id_callback.  They are not in the older 0.9.8 OpenSSL series so
+we have to handle both cases.
+}
+  @CRYPTO_THREADID_set_callback := LoadFunctionCLib(fn_CRYPTO_THREADID_set_callback,False);
+  @CRYPTO_THREADID_set_numeric := LoadFunctionClib(fn_CRYPTO_THREADID_set_numeric,False);
+  @CRYPTO_THREADID_set_pointer := LoadFunctionClib(fn_CRYPTO_THREADID_set_pointer,False);  {Do not localize}
+  if not assigned(CRYPTO_THREADID_set_callback) then begin
+    @CRYPTO_set_id_callback := LoadFunctionCLib(fn_CRYPTO_set_id_callback);
+  end;
   {$ENDIF}
   @ERR_put_error := LoadFunctionCLib(fn_ERR_put_error);
   @ERR_get_error := LoadFunctionCLib(fn_ERR_get_error);
@@ -12829,7 +12858,10 @@ begin
   @ERR_load_ERR_strings := LoadFunctionCLib( fn_ERR_load_ERR_strings);
   @ERR_load_crypto_strings := LoadFunctionCLib(fn_ERR_load_crypto_strings);
   @ERR_free_strings := LoadFunctionCLib(fn_ERR_free_strings);
-  @ERR_remove_state := LoadFunctionCLib(fn_ERR_remove_state);
+  @ERR_remove_thread_state := LoadFunctionCLib(fn_ERR_remove_thread_state,False);
+  if not Assigned(ERR_remove_thread_state) then begin
+    @ERR_remove_state := LoadFunctionCLib(fn_ERR_remove_state);
+  end;
   @CRYPTO_cleanup_all_ex_data := LoadFunctionCLib(fn_CRYPTO_cleanup_all_ex_data);
   @SSL_COMP_get_compression_methods := LoadFunction(fn_SSL_COMP_get_compression_methods);
   @sk_pop_free := LoadFunctionCLib(fn_sk_pop_free);
@@ -13141,6 +13173,9 @@ begin
   @_CRYPTO_num_locks := nil;
   @CRYPTO_set_locking_callback := nil;
   {$IFNDEF WIN32_OR_WIN64}
+  @CRYPTO_THREADID_set_callback := nil;
+  @CRYPTO_THREADID_set_numeric := nil;
+  @CRYPTO_THREADID_set_pointer = nil;
   @CRYPTO_set_id_callback := nil;
   {$ENDIF}
   @ERR_put_error := nil;
@@ -13156,6 +13191,7 @@ begin
   @ERR_load_ERR_strings := nil;
   @ERR_load_crypto_strings := nil;
   @ERR_free_strings := nil;
+  @ERR_remove_thread_state := nil;
   @ERR_remove_state := nil;
   @CRYPTO_cleanup_all_ex_data := nil;
   @SSL_COMP_get_compression_methods := nil;
@@ -13197,8 +13233,6 @@ begin
   @i2d_PrivateKey := nil;
   @d2i_PrivateKey := nil;
   @d2i_PrivateKey_bio := nil;
-
-
   @i2d_X509 := nil;
   @d2i_X509_bio := nil;
   @d2i_X509 := nil;
@@ -13362,7 +13396,11 @@ begin
   end;
   CRYPTO_cleanup_all_ex_data;
   ERR_free_strings;
-  ERR_remove_state(0);
+  if Assigned(ERR_remove_thread_state) then begin
+    ERR_remove_thread_state(nil);
+  end else begin
+    ERR_remove_state(0);
+  end;
   EVP_cleanup;
   if hIdSSL > 0 then begin
     {$IFDEF WIN32_OR_WIN64_OR_WINCE}Windows.{$ENDIF}FreeLibrary(hIdSSL);
