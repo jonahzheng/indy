@@ -3699,6 +3699,8 @@ begin
     if I >= 0 then begin
       VOld := LItems.Strings[I];
       Fetch(VOld, '=');
+    end else begin
+      VOld := '';
     end;
     LValue := Trim(AValue);
     if LValue <> '' then begin
