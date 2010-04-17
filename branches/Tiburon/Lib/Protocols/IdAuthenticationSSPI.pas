@@ -293,6 +293,10 @@ type
     property Domain: String read GetDomain write SetDomain;
   end;
 
+  // RLebeau 4/17/10: this forces C++Builder to link to this unit so
+  // RegisterAuthenticationMethod can be called correctly at program startup...
+  (*$HPPEMIT '#pragma link "IdAuthenticationSSPI"'*)
+
 implementation
 
 uses

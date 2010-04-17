@@ -84,6 +84,10 @@ type
     property Postbody: TStringList read FPostbody write FPostbody;
   end;
 
+  // RLebeau 4/17/10: this forces C++Builder to link to this unit so
+  // RegisterAuthenticationMethod can be called correctly at program startup...
+  (*$HPPEMIT '#pragma link "IdAuthenticationDigest"'*)
+
 implementation
 
 uses
