@@ -499,7 +499,7 @@ begin
   LI := AItem as TIdMLSTFTPListItem;
   LFacts := TStringList.Create;
   try
-    LI.FileName := TIdTextEncoding.UTF8.GetString(ToBytes(ParseFacts(AItem.Data, LFacts), Indy8BitEncoding));
+    LI.FileName := ParseFacts(AItem.Data, LFacts);
     LI.LocalFileName := AItem.FileName;
 
     LBuffer := LFacts.Values['type']; {do not localize}

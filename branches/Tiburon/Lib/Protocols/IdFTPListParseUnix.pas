@@ -753,7 +753,7 @@ begin
     end;
   end;
 
-  LI.FileName := TIdTextEncoding.UTF8.GetString(ToBytes(LName, Indy8BitEncoding));
+  LI.FileName := LName;
   Result := True;
 end;
 
