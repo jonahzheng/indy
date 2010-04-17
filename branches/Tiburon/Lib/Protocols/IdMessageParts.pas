@@ -169,7 +169,8 @@ type
 implementation
 
 uses
-  IdMessage, IdGlobalProtocols, IdResourceStringsProtocols, IdMessageCoder, SysUtils;
+  IdMessage, IdGlobalProtocols, IdResourceStringsProtocols, IdMessageCoder, IdCoderHeader,
+  SysUtils;
 
 { TIdMessagePart }
 
@@ -236,7 +237,7 @@ end;
 
 function TIdMessagePart.GetCharSet(AHeader: string): String;
 begin
-  Result := ExtractHeaderSubItem(AHeader, 'CHARSET', QuoteMIMEContentType); {do not localize}
+  Result := ExtractHeaderSubItem(AHeader, 'charset', QuoteMIMEContentType); {do not localize}
 end;
 
 function TIdMessagePart.ResolveContentType(AContentType: string): string;
@@ -319,6 +320,9 @@ var
 begin
   Headers.Values['Content-Disposition'] := RemoveHeaderEntry(Value, 'filename', LFileName, QuoteRFC822); {do not localize}
   {RLebeau: override the current value only if the header specifies a new one}
+  if LFileName <> '' then begin
+    LFileName := DecodeHeader(LFileName);
+  end;
   if LFileName <> '' then begin
     FFileName := LFileName;
   end;
