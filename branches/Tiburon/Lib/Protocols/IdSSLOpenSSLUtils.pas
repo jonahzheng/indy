@@ -571,16 +571,22 @@ function IndyX509_STORE_load_locations(ctx: PX509_STORE;
   const AFileName, APathName: String): TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := X509_STORE_load_locations(ctx, PAnsiChar(UTF8String(AFileName)),
-    PAnsiChar(UTF8String(APathName)));
+  // RLebeau 4/18/2010: X509_STORE_load_locations() expects nil pointers
+  // for unused values, but casting a string directly to a PAnsiChar
+  // always produces a non-nil pointer, which causes X509_STORE_load_locations()
+  // to fail. Need to cast the string to an intermediate Pointer so the
+  // PAnsiChar cast is applied to the raw data and thus can be nil...
+  //
+  Result := X509_STORE_load_locations(ctx,
+    PAnsiChar(Pointer(UTF8String(AFileName))),
+    PAnsiChar(Pointer(UTF8String(APathName))));
 end;
 
 function IndySSL_CTX_load_verify_locations(ctx: PSSL_CTX;
   const ACAFile, ACAPath: String): TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := X509_STORE_load_locations(ctx^.cert_store,
-    PAnsiChar(UTF8String(ACAFile)), PAnsiChar(UTF8String(ACAPath)));
+  Result := IndyX509_STORE_load_locations(ctx^.cert_store, ACAFile, ACAPath);
 end;
 
   {$ENDIF} // UNIX
@@ -611,15 +617,29 @@ function IndyX509_STORE_load_locations(ctx: PX509_STORE;
   const AFileName, APathName: String): TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := X509_STORE_load_locations(ctx, PAnsiChar(AFileName),
-    PAnsiChar(APathName));
+  // RLebeau 4/18/2010: X509_STORE_load_locations() expects nil pointers
+  // for unused values, but casting a string directly to a PAnsiChar
+  // always produces a non-nil pointer, which causes X509_STORE_load_locations()
+  // to fail. Need to cast the string to an intermediate Pointer so the
+  // PAnsiChar cast is applied to the raw data and thus can be nil...
+  //
+  Result := X509_STORE_load_locations(ctx,
+    PAnsiChar(Pointer(AFileName)),
+    PAnsiChar(Pointer(APathName)));
 end;
 
 function IndySSL_CTX_load_verify_locations(ctx: PSSL_CTX;
   const ACAFile, ACAPath: String): TIdC_INT;
 begin
-  Result := SSL_CTX_load_verify_locations(ctx, PAnsiChar(ACAFile),
-    PAnsiChar(ACAPath));
+  // RLebeau 4/18/2010: X509_STORE_load_locations() expects nil pointers
+  // for unused values, but casting a string directly to a PAnsiChar
+  // always produces a non-nil pointer, which causes X509_STORE_load_locations()
+  // to fail. Need to cast the string to an intermediate Pointer so the
+  // PAnsiChar cast is applied to the raw data and thus can be nil...
+  //
+  Result := SSL_CTX_load_verify_locations(ctx,
+    PAnsiChar(Pointer(ACAFile)),
+    PAnsiChar(Pointer(ACAPath)));
 end;
 
 {$ENDIF}
