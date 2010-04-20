@@ -1362,8 +1362,7 @@ begin
       Values['Last-Modified'] := LocalDateTimeToHttpStr(FLastModified); {do not localize}
     end;
     if AuthRealm <> '' then begin
-      Values['WWW-Authenticate'] := 'Basic';    {Do not Localize}
-      Params['WWW-Authenticate', 'realm'] := AuthRealm;    {Do not Localize}
+      Values['WWW-Authenticate'] := 'Basic realm="' + AuthRealm + '"';    {Do not Localize}
     end;
   end;
 end;
