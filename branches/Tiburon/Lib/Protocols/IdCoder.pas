@@ -143,7 +143,7 @@ type
     procedure Decode(ASrcStream: TStream; const ABytes: Integer = -1); overload; virtual; abstract;
 
     class function DecodeString(const AIn: string; AByteEncoding: TIdTextEncoding = nil
-      {$IFDEF STRING_IS_ANSI}ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+      {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
       ): string;
     class function DecodeBytes(const AIn: string): TIdBytes;
   end;
@@ -186,9 +186,8 @@ begin
   end;
 end;
 
-class function TIdDecoder.DecodeString(const AIn: string;
-  AByteEncoding: TIdTextEncoding = nil
-  {$IFDEF STRING_IS_ANSI}ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+class function TIdDecoder.DecodeString(const AIn: string; AByteEncoding: TIdTextEncoding = nil
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
   ): string;
 var
   LDecoder: TIdDecoder;
