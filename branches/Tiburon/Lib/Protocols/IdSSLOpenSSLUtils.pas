@@ -728,6 +728,22 @@ end;
 
 {$ENDIF}
 
+{$IFNDEF WIN32_OR_WIN64}
+procedure _threadid_func(id : PCRYPTO_THREADID) cdecl;
+begin
+  if Assigned(CRYPTO_THREADID_set_numeric) then begin
+    CRYPTO_THREADID_set_numeric(id, TIdC_ULONG(CurrentThreadId));
+  end;
+end;
+
+function _GetThreadID: TIdC_ULONG; cdecl;
+begin
+  // TODO: Verify how well this will work with fibers potentially running from
+  // thread to thread or many on the same thread.
+  Result := TIdC_ULONG(CurrentThreadId);
+end;
+{$ENDIF}
+
 function LoadOpenSSLLibrary: Boolean;
 begin
   Assert(SSLIsLoaded <> nil);
@@ -766,7 +782,7 @@ begin
     PrepareOpenSSLLocking;
     CRYPTO_set_locking_callback(SslLockingCallback);
 {$IFNDEF WIN32_OR_WIN64}
-    if Assigned(CRYPTO_THREADID_set_callback( then begin
+    if Assigned(CRYPTO_THREADID_set_callback) then begin
       CRYPTO_THREADID_set_callback( _threadid_func );
     end else begin
       CRYPTO_set_id_callback(_GetThreadID);
@@ -855,21 +871,7 @@ begin
     end;
 end;
 
-{$IFNDEF WIN32_OR_WIN64}
-procedure _threadid_func(id : PCRYPTO_THREADID) cdecl;
-begin
-  if Assigned(CRYPTO_THREADID_set_numeric) then begin
-    CRYPTO_THREADID_set_numeric(id, TIdC_ULONG(CurrentThreadId);
-  end;
-end;
 
-function _GetThreadID: TIdC_ULONG; cdecl;
-begin
-  // TODO: Verify how well this will work with fibers potentially running from
-  // thread to thread or many on the same thread.
-  Result := TIdC_ULONG(CurrentThreadId);
-end;
-{$ENDIF}
 
 // Note that I define UCTTime as  PASN1_STRING
 function UTCTime2DateTime(UCTTime: PASN1_UTCTIME): TDateTime;
