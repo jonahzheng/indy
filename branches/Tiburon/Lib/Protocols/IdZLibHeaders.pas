@@ -61,7 +61,12 @@ uses
   {$ENDIF};
 
 const
-  ZLIB_VERSION = '1.2.3';
+  ZLIB_VERSION = '1.2.5';
+  ZLIB_VERNUM = $1250;
+  ZLIB_VER_MAJOR = 1;
+  ZLIB_VER_MINOR = 2;
+  ZLIB_VER_REVISION = 5;
+  ZLIB_VER_SUBREVISION = 0;
 
 type
 {JPM - I made some types from our old header to the new C types defined originally
@@ -148,7 +153,7 @@ const
   Z_FULL_FLUSH    = 3;
   Z_FINISH        = 4;
   Z_BLOCK         = 5;
-  
+  Z_TREES         = 6;
   Z_OK            =  0;
   Z_STREAM_END    =  1;
   Z_NEED_DICT     =  2;
@@ -170,10 +175,12 @@ const
   Z_DEFAULT_STRATEGY    = 0;
 
   Z_BINARY   = 0;
-  Z_ASCII    = 1;
+  Z_TEXT     = 1;
+  Z_ASCII    = Z_TEXT;   //* for compatibility with 1.2.2 and earlier */
   Z_UNKNOWN  = 2;
 
   Z_DEFLATED = 8;
+  Z_NULL = 0;  //* for initializing zalloc, zfree, opaque */
 
   MAX_WBITS = 15; { 32K LZ77 window }
 
