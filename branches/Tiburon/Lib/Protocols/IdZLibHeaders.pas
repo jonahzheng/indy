@@ -44,6 +44,17 @@ The only things that still are cdecl are the callback functions.
 {$ENDIF}
 
 uses
+  //reference off_t
+  {$IFDEF KYLIXCOMPAT}
+   libc,
+  {$ENDIF}
+
+  {$IFDEF USE_VCL_POSIX}
+  PosixSysTypes,
+  {$ENDIF}
+  {$IFDEF USE_BASEUNIX}
+    baseunix,
+  {$ENDIF}
   IdCTypes
   {$IFNDEF STATICLOAD_ZLIB}
   , IdException
@@ -55,6 +66,18 @@ const
 type
 {JPM - I made some types from our old header to the new C types defined originally
  for compatability.}
+  {$IFDEF USE_VCL_POSIX}
+  z_off_t = off_t;
+  {$ENDIF}
+  {$IFDEF KYLIXCOMPAT}
+  z_off_t = off_t;
+  {$ENDIF}
+  {$IFDEF USE_BASEUNIX}
+  z_off_t = off_t;
+  {$ENDIF}
+  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+   z_off_t = TIdC_LONG;
+  {$ENDIF}
   alloc_func = function(opaque: Pointer; items, size: TIdC_UINT): Pointer;  cdecl;
   TAlloc     = alloc_func;
   free_func  = procedure(opaque, address: Pointer); cdecl;
@@ -185,10 +208,13 @@ type
     property ErrorMessage : String read FErrorMessage;
     property Title : String read FTitle;
   end;
-  
+
 type
   LPN_adler32 = function (adler: TIdC_ULONG; 
     const buf: PAnsiChar; len: TIdC_UINT): TIdC_ULONG; cdecl;
+  LPN_adler32_combine = function (crc1, crc2 : TIdC_ULONG;
+    len2 : z_off_t) : TIdC_ULONG; cdecl;
+
   LPN_compress = function (dest: PAnsiChar; var destLen: TIdC_ULONG;
     const source: PAnsiChar; sourceLen: TIdC_ULONG): TIdC_INT;cdecl;
   LPN_compress2 = function(dest: PAnsiChar; var destLen: TIdC_ULONG;
@@ -198,6 +224,8 @@ type
   LPN_compressBound = function (sourceLen: TIdC_ULONG): TIdC_ULONG;cdecl;
   LPN_crc32 = function (crc: TIdC_ULONG; const buf: PAnsiChar; 
                 len: TIdC_UINT): TIdC_ULONG; cdecl;
+  LPN_crc32_combine = function (crc1, crc2 : TIdC_ULONG;
+    len2 : z_off_t) : TIdC_ULONG; cdecl;
   LPN_deflate = function (var strm: z_stream; flush: TIdC_INT): TIdC_INT; cdecl;
   LPN_deflateBound = function (var strm: z_stream; 
     sourceLen: TIdC_ULONG): TIdC_ULONG; cdecl;
@@ -231,6 +259,11 @@ type
   LPN_inflateInit2_ = function (var strm: z_stream; windowBits: TIdC_INT;
                        const version: PAnsiChar; stream_size: TIdC_INT): TIdC_INT;cdecl;
   LPN_inflateReset = function (var strm: z_stream): TIdC_INT; cdecl;
+
+  LPN_inflateReset2 = function (var strm : z_stream; windowBits : TIdC_INT) : TIdC_INT; cdecl;
+  LPN_inflatePrime = function (var strm : z_stream; bits, value : TIdC_INT ) : TIdC_INT;  cdecl;
+  LPN_inflateMark = function (var strm : z_stream) : TIdC_LONG; cdecl;
+
   LPN_inflateSetDictionary = function (var strm: z_stream; const dictionary: PAnsiChar;
                               dictLength: TIdC_UINT): TIdC_INT; cdecl;
 
@@ -245,16 +278,18 @@ type
   LPN_get_crc_table = function : PIdC_ULONG; cdecl;
 
   LPN_zlibVersion = function : PAnsiChar; cdecl;
-
+  LPN_inflateUndermine = function (var strm: z_stream; subvert : TIdC_INT ) : TIdC_INT; cdecl;
   LPN_deflateSetHeader = function (var strm: z_stream; var head: gz_header): TIdC_INT; cdecl;
   LPN_inflateGetHeader = function (var strm: z_stream; var head: gz_header): TIdC_INT; cdecl;
 {Vars}
 var
   adler32 : LPN_adler32 = nil;
+  adler32_combine : LPN_adler32_combine = nil;
   compress : LPN_compress = nil;
   compress2 : LPN_compress2 = nil;
   compressBound : LPN_compressBound = nil;
   crc32 : LPN_crc32 = nil;
+  crc32_combine : LPN_crc32_combine = nil;
   deflate : LPN_deflate = nil; 
   deflateBound : LPN_deflateBound = nil;
   deflateCopy : LPN_deflateCopy = nil;
@@ -276,14 +311,19 @@ var
   inflateInit_ : LPN_inflateInit_ = nil;
   inflateInit2_ : LPN_inflateInit2_ = nil;
   inflateReset : LPN_inflateReset = nil;
-  inflateSetDictionary : LPN_inflateSetDictionary = nil; 
+
+  inflateReset2 : LPN_inflateReset2 = nil;
+  inflatePrime : LPN_inflatePrime = nil;
+  inflateMark : LPN_inflateMark = nil;
+
+  inflateSetDictionary : LPN_inflateSetDictionary = nil;
   inflateSync : LPN_inflateSync = nil; 
   uncompress : LPN_uncompress = nil; 
   zlibCompileFlags : LPN_zlibCompileFlags = nil;
   zError : LPN_zError = nil; 
   inflateSyncPoint : LPN_inflateSyncPoint = nil;
   get_crc_table : LPN_get_crc_table = nil;
-  
+  inflateUndermine = LPN_LPN_inflateUndermine = nil;
   zlibVersion : LPN_zlibVersion = nil;
   deflateSetHeader : LPN_deflateSetHeader = nil;
   inflateGetHeader : LPN_inflateGetHeader = nil;
@@ -317,7 +357,9 @@ function inflateSetDictionary(var strm: z_stream; const dictionary: PAnsiChar;
 function inflateSync(var strm: z_stream): TIdC_INT;
 function inflateCopy(var dest, source: z_stream): TIdC_INT;
 function inflateReset(var strm: z_stream): TIdC_INT;
-
+function inflateReset2(var strm : z_stream; windowBits : TIdC_INT) : TIdC_INT;
+function inflatePrime(var strm : z_stream; bits, value : TIdC_INT ) : TIdC_INT;
+function inflateMark(var strm : z_stream) : TIdC_LONG;
 function inflateBack(var strm: z_stream; in_fn: in_func; in_desc: Pointer;
                      out_fn: out_func; out_desc: Pointer): TIdC_INT;
 function inflateBackEnd(var strm: z_stream): TIdC_INT;
@@ -328,6 +370,7 @@ function zlibCompileFlags: TIdC_ULONG;
 function  zError (err : TIdC_INT) : PAnsiChar;
 function inflateSyncPoint(var z : TZStreamRec) : TIdC_INT;
 //const uLongf * get_crc_table (void);
+function inflateUndermine(var strm: z_stream; subvert : TIdC_INT ) : TIdC_INT;
 
 function  get_crc_table : PIdC_ULONG;
 {end JPM additions}
@@ -343,11 +386,12 @@ function uncompress(dest: PAnsiChar; var destLen: TIdC_ULONG;
                    const source: PAnsiChar; sourceLen: TIdC_ULONG): TIdC_INT;
 
 (* checksum functions *)
-function adler32(adler: TIdC_ULONG; 
+function adler32(adler: TIdC_ULONG;
     const buf: PAnsiChar; len: TIdC_UINT): TIdC_ULONG;
-function crc32(crc: TIdC_ULONG; const buf: PAnsiChar; 
+function adler32_combine(crc1, crc2 : TIdC_ULONG; len2 : z_off_t) : TIdC_ULONG;
+function crc32(crc: TIdC_ULONG; const buf: PAnsiChar;
                 len: TIdC_UINT): TIdC_ULONG;
-
+function crc32_combine(crc1, crc2 : TIdC_ULONG; len2 : z_off_t) : TIdC_ULONG;
 (* various hacks, don't look :) *)
 function deflateInit_(var strm: z_stream; level: TIdC_INT;
                       const version: PAnsiChar; stream_size: TIdC_INT): TIdC_INT;
@@ -410,10 +454,12 @@ uses
 {$L zutil.obj}
 
 function adler32; external;
+function adler32_combine; external;
 function compress; external;
 function compress2; external;
 function compressBound; external;
 function crc32; external;
+function crc32_combine; external;
 function deflate; external;
 function deflateBound; external;
 function deflateCopy; external;
@@ -434,6 +480,7 @@ function inflateEnd; external;
 function inflateInit_; external;
 function inflateInit2_; external;
 function inflateReset; external;
+function inflateReset2; external;
 function inflateSetDictionary; external;
 function inflateSync; external;
 function uncompress; external;
@@ -441,8 +488,11 @@ function zlibCompileFlags; external;
 function zError; external;
 function inflateSyncPoint; external;
 function get_crc_table; external;
+function inflateUndermine; external;
 function zlibVersion; external;
 function deflateSetHeader; external;
+function inflatePrime; external;
+function inflateMark; external;
 function inflateGetHeader; external;
 {$ELSE}
 var
@@ -507,6 +557,13 @@ begin
   Result := adler32(adler, buf, len);
 end;
 
+function stub_adler32_combine (crc1, crc2 : TIdC_ULONG;
+    len2 : z_off_t) : TIdC_ULONG; cdecl;
+begin
+  adler32_combine := FixupStub(hZLib, 'adler32_combine'); {Do not Localize}
+  Result := adler32_combine(crc1, crc2, len2);
+end;
+
 function stub_compress(dest: PAnsiChar; var destLen: TIdC_ULONG;
     const source: PAnsiChar; sourceLen: TIdC_ULONG): TIdC_INT; 
     cdecl;
@@ -535,6 +592,13 @@ function stub_crc32(crc: TIdC_ULONG; const buf: PAnsiChar;
 begin
   crc32 := FixupStub(hZLib, 'crc32'); {Do not Localize}
   Result := crc32(crc, buf, len);
+end;
+
+function stub_crc32_combine (crc1, crc2 : TIdC_ULONG;
+    len2 : z_off_t) : TIdC_ULONG; cdecl;
+begin
+  crc32_combine := FixupStub(hZLib, 'crc32_combine'); {Do not Localize}
+  Result := crc32_combine(crc1, crc2, len2);
 end;
 
 function stub_deflate(var strm: z_stream; flush: TIdC_INT): TIdC_INT; cdecl;
@@ -670,6 +734,24 @@ begin
   Result := inflateReset(strm);
 end;
 
+function stub_inflateReset2(var strm : z_stream; windowBits : TIdC_INT) : TIdC_INT; cdecl;
+begin
+  inflateReset2 := FixupStub(hZLib, 'inflateReset2'); {Do not Localize}
+  Result := inflateReset2(strm, windowBits);
+end;
+
+function stub_inflatePrime(var strm : z_stream; bits, value : TIdC_INT ) : TIdC_INT; cdecl;
+begin
+  inflatePrime := FixupStub(hZLib, 'inflatePrime'); {Do not Localize}
+  Result := inflatePrime(strm, bits, value);
+end;
+
+function stub_inflateMark(var strm : z_stream) : TIdC_LONG; cdecl;
+begin
+  inflateMark := FixupStub(hZLib, 'inflateMark'); {Do not Localize}
+  Result := inflateMark(strm);
+end;
+
 function stub_inflateSetDictionary(var strm: z_stream; const dictionary: PAnsiChar;
                               dictLength: TIdC_UINT): TIdC_INT;cdecl;
 begin
@@ -712,8 +794,14 @@ function stub_get_crc_table : PIdC_ULONG; cdecl;
 begin
   get_crc_table := FixupStub(hZLib, 'get_crc_table'); {Do not Localize}
   Result := get_crc_table;
-end; 
-  
+end;
+
+function inflateUndermine(var strm: z_stream; subvert : TIdC_INT ) : TIdC_INT; cdecl;
+begin
+  inflateUndermine := FixupStub(hZLib, 'inflateUndermine'); {Do not Localize}
+  Result := inflateUndermine(strm,subvert);
+end;
+
 function stub_zlibVersion : PAnsiChar; cdecl;
 begin
   Result := '';
@@ -737,13 +825,16 @@ begin
 end;
 
 
+
 procedure InitializeStubs;
 begin
   adler32 := stub_adler32;
+  adler32_combine := stub_adler32_combine;
   compress := stub_compress;
   compress2 := stub_compress2;
   compressBound := stub_compressBound;
   crc32 := stub_crc32;
+  crc32_combine := stub_crc32_combine;
   deflate := stub_deflate;
   deflateBound := stub_deflateBound;
   deflateCopy := stub_deflateCopy;
@@ -764,12 +855,16 @@ begin
   inflateInit_ := stub_inflateInit_;
   inflateInit2_ := stub_inflateInit2_;
   inflateReset := stub_inflateReset;
+  inflateReset2 := stub_inflateReset2;
+  inflatePrime := stub_inflatePrime;
+  inflateMark := stub_inflateMark;
+
   inflateSetDictionary := stub_inflateSetDictionary;
   inflateSync := stub_inflateSync;
   uncompress := stub_uncompress; 
   zlibCompileFlags := stub_zlibCompileFlags;
   zError := stub_zError;
-
+  inflateUndermine := stub_inflateUndermine;
   inflateSyncPoint := stub_inflateSyncPoint;
 
   get_crc_table := stub_get_crc_table;
