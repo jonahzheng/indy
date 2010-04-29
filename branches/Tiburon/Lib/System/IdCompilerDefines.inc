@@ -18,6 +18,7 @@
 
 {$UNDEF USE_OPENSSL}
 {$UNDEF USE_ZLIB_UNIT}
+{$UNDEF USE_SSPI}
 
 // $DEFINE the following if the global objects in the IdStack and IdThread
 // units should be freed on finalization
@@ -430,6 +431,7 @@
     {$DEFINE HAS_TCharacter}
   {$ENDIF}
   {$DEFINE HAS_CLASSPROPERTIES}
+  {$DEFINE HAS_DELAYLOAD}
   {$DEFINE HAS_DEPRECATED}
   {$DEFINE HAS_DEPRECATED_MSG}
   {$DEFINE HAS_REMOVEFREENOTIFICATION}
@@ -437,6 +439,9 @@
 
 //Delphi & C++Builder 2011 (Fulcrum)
 {$IFDEF VER220}
+//REMOVE DCC DEFINE after the next Fulcrum beta.
+//It will be defined there.
+  {$DEFINE DCC}
   {$DEFINE USE_INLINE}
   {$DEFINE STRING_IS_UNICODE} // 'String' type is Unicode now
   {$DEFINE VCL_4_OR_ABOVE}
@@ -479,6 +484,7 @@
     {$DEFINE HAS_TInterlocked}
   {$ENDIF}
   {$DEFINE HAS_CLASSPROPERTIES}
+  {$DEFINE HAS_DELAYLOAD}
   {$DEFINE HAS_DEPRECATED}
   {$DEFINE HAS_DEPRECATED_MSG}
   {$DEFINE HAS_REMOVEFREENOTIFICATION}
@@ -646,9 +652,13 @@
 {$ENDIF}
 
 {$IFDEF WIN32_OR_WIN64}
+  {$DEFINE WIN32_OR_WIN64_OR_WINCE}
   {$DEFINE USE_OPENSSL}
   {$DEFINE USE_ZLIB_UNIT}
-  {$DEFINE WIN32_OR_WIN64_OR_WINCE}
+  {$DEFINE USE_SSPI}
+  {$IFDEF STRING_IS_UNICODE}
+    {$DEFINE SSPI_UNICODE}
+  {$ENDIF}
 {$ENDIF}
 
 // High-performance counters are not reliable on multi-core systems, and have
@@ -664,10 +674,10 @@
 {$ENDIF}
 
 {$IFDEF UNIX}
-    {$DEFINE USE_OPENSSL}
-    {$DEFINE USE_ZLIB_UNIT}
+  {$DEFINE USE_OPENSSL}
+  {$DEFINE USE_ZLIB_UNIT}
 {$ENDIF}
-    
+
 {$IFDEF FPC_REQUIRES_PROPER_ALIGNMENT}
   {$DEFINE REQUIRES_PROPER_ALIGNMENT}
 {$ENDIF}
