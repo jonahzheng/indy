@@ -629,7 +629,7 @@ begin
   Recipients.Clear;
   Priority := ID_MSG_PRIORITY;
   ReceiptRecipient.Text := '';
-  ContentType := '';
+  FContentType := '';
   FCharSet := '';
   ContentTransferEncoding := '';
   ContentDisposition := '';
