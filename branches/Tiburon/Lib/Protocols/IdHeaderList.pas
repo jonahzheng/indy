@@ -466,11 +466,11 @@ begin
   LValue := Values[AName];
   if LValue <> '' then
   begin
+    LValue := ExtractHeaderItem(LValue);
     if AValue <> '' then begin
-      Values[AName] := ExtractHeaderItem(LValue) + '; ' + AValue; {do not localize}
-    end else begin
-      Values[AName] := ExtractHeaderItem(LValue);
+      LValue := LValue + '; ' + AValue; {do not localize}
     end;
+    Values[AName] := LValue;
   end;
 end;
 
