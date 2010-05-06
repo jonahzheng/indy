@@ -218,6 +218,7 @@ type
     FLastSocketError: Integer;
     FExceptionMessage: string;
     procedure Execute; override;
+    procedure DoTerminate; override;
   public
     constructor Create(ABinding: TIdSocketHandle); reintroduce;
     property Terminated;
@@ -257,13 +258,10 @@ procedure TIdIOHandlerStack.ConnectClient;
         end;
       end else
       begin
-        while (ATimeout > LSleepTime) and (not LThread.Terminated) do begin
-          IndySleep(LSleepTime);
+        while (ATimeout > 0) and (not LThread.Terminated) do begin
+          IndySleep(IndyMin(ATimeout, LSleepTime));
           TIdAntiFreezeBase.DoProcess;
-          Dec(ATimeout, LSleepTime);
-        end;
-        if ATimeout > 0 then begin
-          IndySleep(ATimeout);
+          Dec(ATimeout, IndyMin(ATimeout, LSleepTime));
         end;
       end;
 
@@ -428,8 +426,13 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TIdConnectThread.DoTerminate;
+begin
   // Necessary as caller checks this
   Terminate;
+  inherited;
 end;
 
 initialization
