@@ -207,19 +207,6 @@ type
     class function GenerateBoundary: String;
   end;
 
-const
-  //NOTE: If you used IndyMIMEBoundary, just prefix it with "IdMIMEBoundaryStrings." now.
-  //IndyMIMEBoundary                 = '=_NextPart_2rfkindysadvnqw3nerasdf'; {do not localize}
-  //IndyMultiPartAlternativeBoundary = '=_NextPart_2altrfkindysadvnqw3nerasdf'; {do not localize}
-  //IndyMultiPartRelatedBoundary     = '=_NextPart_2relrfksadvnqindyw3nerasdf'; {do not localize}
-  MIMEGenericText = 'text/'; {do not localize}
-  MIMEGenericMultiPart = 'multipart/'; {do not localize}
-  MIME7Bit = '7bit'; {do not localize}
-  MIMEAttachment = 'attachment'; {do not localize}
-  MIMEInline = 'inline'; {do not localize}
-  // MtW: Inversed: see http://support.microsoft.com/default.aspx?scid=kb;en-us;207188
-  InvalidWindowsFilenameChars = '\/:*?"<>|'; {do not localize}
-
 implementation
 
 uses
@@ -359,7 +346,7 @@ begin
   // the message correctly, but Indy was not.  So let's check for that scenario
   // and ignore illegal "Content-Transfer-Encoding" values if present...
 
-  if TextStartsWith(LContentType, MIMEGenericMultiPart) and (LContentTransferEncoding <> '') then {do not localize}
+  if IsHeaderMediaType(LContentType, 'multipart') and (LContentTransferEncoding <> '') then {do not localize}
   begin
     if PosInStrArray(LContentTransferEncoding, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
       LContentTransferEncoding := '';
@@ -508,8 +495,8 @@ begin
   FFileName := GetAttachmentFilename(AContentType, AContentDisposition);
 
   {see what type the part is...}
-  if (TextStartsWith(AContentType, MIMEGenericText) or TextStartsWith(AContentType, MIMEGenericMultiPart)) and
-    (not TextIsSame(ExtractHeaderItem(AContentDisposition), MIMEAttachment)) then
+  if IsHeaderMediaTypes(AContentType, ['text', 'multipart']) and {do not localize}
+    (not TextIsSame(ExtractHeaderItem(AContentDisposition), 'attachment')) then {do not localize}
   begin
     FPartType := mcptText;
   end else begin
@@ -577,7 +564,7 @@ begin
     s := FHeaders.Values['Content-Type'];    {do not localize}
     //CC: Need to detect on "multipart" rather than boundary, because only the
     //"multipart" bit will be visible later...
-    if TextStartsWith(s, MIMEGenericMultiPart) then begin  {do not localize}
+    if IsHeaderMediaType(s, 'multipart') then begin  {do not localize}
       ABoundary := ExtractHeaderSubItem(s, 'boundary', QuoteMIMEContentType);  {do not localize}
       if Owner is TIdMessage then begin
         if Length(ABoundary) > 0 then begin
@@ -597,6 +584,9 @@ begin
 end;
 
 function TIdMessageDecoderMIME.RemoveInvalidCharsFromFilename(const AFilename: string): string;
+const
+  // MtW: Inversed: see http://support.microsoft.com/default.aspx?scid=kb;en-us;207188
+  InvalidWindowsFilenameChars = '\/:*?"<>|'; {do not localize}
 var
   LN: integer;
 begin
@@ -611,7 +601,7 @@ begin
   //Now remove any invalid filename chars.
   //Hmm - this code will be less buggy if I just replace them with _
   for LN := 1 to Length(Result) do begin
-    // MtW: WAS: if Pos(Result[LN], ValidWindowsFilenameChars) = 0 then begin 
+    // MtW: WAS: if Pos(Result[LN], ValidWindowsFilenameChars) = 0 then begin
     if Pos(Result[LN], InvalidWindowsFilenameChars) > 0 then begin
       Result[LN] := '_';    {do not localize}
     end;
