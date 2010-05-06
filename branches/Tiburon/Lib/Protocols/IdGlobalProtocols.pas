@@ -446,6 +446,7 @@ type
   function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String; AQuoteType: TIdHeaderQuotingType): String; overload;
   function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String; var VOld: String; AQuoteType: TIdHeaderQuotingType): String; overload;
   function IsHeaderMediaType(const AHeaderLine, AMediaType: String): Boolean;
+  function IsHeaderMediaTypes(const AHeaderLine: String; const AMediaTypes: array of String): Boolean;
   function FileSizeByName(const AFilename: TIdFileName): Int64;
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   function IsVolume(const APathName : TIdFileName) : Boolean;
@@ -3733,6 +3734,25 @@ begin
     Result := TextIsSame(LHeader, AMediaType);
   end else begin
     Result := TextStartsWith(LHeader, AMediaType + '/'); {do not localize}
+  end;
+end;
+
+function IsHeaderMediaTypes(const AHeaderLine: String; const AMediaTypes: array of String): Boolean;
+var
+  LHeader: String;
+  I: Integer;
+begin
+  Result := False;
+  LHeader := ExtractHeaderItem(AHeaderLine);
+  for I := Low(AMediaTypes) to High(AMediaTypes) do begin
+    if Pos('/', AMediaTypes[I]) > 0 then begin {do not localize}
+      Result := TextIsSame(LHeader, AMediaTypes[I]);
+    end else begin
+      Result := TextStartsWith(LHeader, AMediaTypes[I] + '/'); {do not localize}
+    end;
+    if Result then begin
+      Break;
+    end;
   end;
 end;
 
