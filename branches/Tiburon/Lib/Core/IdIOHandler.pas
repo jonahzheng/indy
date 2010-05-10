@@ -1457,15 +1457,16 @@ begin
   // Check here as this side may have closed the socket
   CheckForDisconnect(ARaiseExceptionIfDisconnected);
   if SourceIsAvailable then begin
-    LByteCount := 0;
     repeat
+      LByteCount := 0;
       if Readable(ATimeout) then begin
         if Opened then begin
           // No need to call AntiFreeze, the Readable does that.
           if SourceIsAvailable then begin
             // TODO: Whey are we reallocating LBuffer every time? This should
             // be a one time operation per connection.
-            SetLength(LBuffer, RecvBufferSize); try
+            SetLength(LBuffer, RecvBufferSize);
+            try
               LByteCount := ReadDataFromSource(LBuffer);
               if LByteCount > 0 then begin
                 SetLength(LBuffer, LByteCount);
@@ -1477,15 +1478,16 @@ begin
                 //TODO: If not intercept, we can skip this step
                 InputBuffer.Write(LBuffer);
               end;
-            finally LBuffer := nil; end;
-          end else begin
+            finally
+              LBuffer := nil;
+            end;
+          end
+          else if ARaiseExceptionIfDisconnected then begin
             EIdClosedSocket.Toss(RSStatusDisconnected);
           end;
-        end else begin
-          LByteCount := 0;
-          if ARaiseExceptionIfDisconnected then begin
-            EIdNotConnected.Toss(RSNotConnected);
-          end;
+        end
+        else if ARaiseExceptionIfDisconnected then begin
+          EIdNotConnected.Toss(RSNotConnected);
         end;
         if LByteCount < 0 then
         begin
@@ -1493,12 +1495,12 @@ begin
           FClosedGracefully := True;
           Close;
           // Do not raise unless all data has been read by the user
-          if InputBufferIsEmpty then begin
+          if InputBufferIsEmpty and ARaiseExceptionIfDisconnected then begin
             RaiseError(LLastError);
           end;
           LByteCount := 0;
-        end;
-        if LByteCount = 0 then begin
+        end
+        else if LByteCount = 0 then begin
           FClosedGracefully := True;
         end;
         // Check here as other side may have closed connection
@@ -1827,37 +1829,6 @@ begin
     end;
     LBuf := nil;
   end;
-end;
-
-{ TIdDiscardStream }
-
-type
-  TIdDiscardStream = class(TIdBaseStream)
-  protected
-    function IdRead(var VBuffer: TIdBytes; AOffset, ACount: Longint): Longint; override;
-    function IdWrite(const ABuffer: TIdBytes; AOffset, ACount: Longint): Longint; override;
-    function IdSeek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64; override;
-    procedure IdSetSize(ASize: Int64); override;
-  end;
-
-function TIdDiscardStream.IdRead(var VBuffer: TIdBytes; AOffset, ACount: Longint): Longint;
-begin
-  Result := 0;
-end;
-
-function TIdDiscardStream.IdSeek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64;
-begin
-  Result := 0;
-end;
-
-procedure TIdDiscardStream.IdSetSize(ASize: Int64);
-begin
-//
-end;
-
-function TIdDiscardStream.IdWrite(const ABuffer: TIdBytes; AOffset, ACount: Longint): Longint;
-begin
-  Result := ACount;
 end;
 
 procedure TIdIOHandler.Discard(AByteCount: Int64);
