@@ -681,7 +681,7 @@ var
           if AMsg.IsMsgSinglePartMime then begin
             ReadStringsAsCharSet(LMStream, AMsg.Body, AMsg.CharSet);
           end else begin
-            ReadStringsAsContentType(LMStream, AMsg.Body, VDecoder.Headers.Values[SContentType], QuoteMIMEContentType);
+            ReadStringsAsContentType(LMStream, AMsg.Body, VDecoder.Headers.Values[SContentType], QuoteMIME);
           end;
         end else begin
           if AMsg.IsMsgSinglePartMime then begin
@@ -691,7 +691,7 @@ var
           end;
           LTxt := TIdText.Create(AMsg.MessageParts);
           try
-            ReadStringsAsContentType(LMStream, LTxt.Body, LHdrs.Values[SContentType], QuoteMIMEContentType);
+            ReadStringsAsContentType(LMStream, LTxt.Body, LHdrs.Values[SContentType], QuoteMIME);
             RemoveLastBlankLine(LTxt.Body);
             LTxt.ContentType := LTxt.ResolveContentType(LHdrs.Values[SContentType]);
             LTxt.CharSet := LTxt.GetCharSet(LHdrs.Values[SContentType]);       {do not localize}
