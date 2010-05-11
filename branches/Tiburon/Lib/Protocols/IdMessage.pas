@@ -940,7 +940,7 @@ begin
     FContentType := 'text/plain';  {do not localize}
     FCharSet := 'us-ascii';  {do not localize}
   end else begin
-    FContentType := RemoveHeaderEntry(FContentType, 'charset', FCharSet, QuoteMIMEContentType);  {do not localize}
+    FContentType := RemoveHeaderEntry(FContentType, 'charset', FCharSet, QuoteMIME);  {do not localize}
     if (FCharSet = '') and IsHeaderMediaType(FContentType, 'text') then begin  {do not localize}
       FCharSet := 'us-ascii';  {do not localize}
     end;
