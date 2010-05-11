@@ -470,10 +470,10 @@ function TIdMessageDecoderMIME.GetAttachmentFilename(const AContentType, AConten
 var
   LValue: string;
 begin
-  LValue := ExtractHeaderSubItem(AContentDisposition, 'filename', QuoteRFC822); {do not localize}
+  LValue := ExtractHeaderSubItem(AContentDisposition, 'filename', QuoteMIME); {do not localize}
   if LValue = '' then begin
     // Get filename from Content-Type
-    LValue := ExtractHeaderSubItem(AContentType, 'name', QuoteMIMEContentType); {do not localize}
+    LValue := ExtractHeaderSubItem(AContentType, 'name', QuoteMIME); {do not localize}
   end;
   if Length(LValue) > 0 then begin
     Result := RemoveInvalidCharsFromFilename(DecodeHeader(LValue));
@@ -496,7 +496,7 @@ begin
 
   {see what type the part is...}
   if IsHeaderMediaTypes(AContentType, ['text', 'multipart']) and {do not localize}
-    (not TextIsSame(ExtractHeaderItem(AContentDisposition), 'attachment')) then {do not localize}
+    (not IsHeaderValue(AContentDisposition, 'attachment')) then {do not localize}
   begin
     FPartType := mcptText;
   end else begin
@@ -537,7 +537,7 @@ var
 
 begin
   if FBodyEncoded then begin // Read header from the actual message since body parts don't exist    {Do not Localize}
-    CheckAndSetType(TIdMessage(Owner).ContentType, TIdMessage(OWner).ContentDisposition);
+    CheckAndSetType(TIdMessage(Owner).ContentType, TIdMessage(Owner).ContentDisposition);
   end else begin
     // Read header
     repeat
@@ -565,7 +565,7 @@ begin
     //CC: Need to detect on "multipart" rather than boundary, because only the
     //"multipart" bit will be visible later...
     if IsHeaderMediaType(s, 'multipart') then begin  {do not localize}
-      ABoundary := ExtractHeaderSubItem(s, 'boundary', QuoteMIMEContentType);  {do not localize}
+      ABoundary := ExtractHeaderSubItem(s, 'boundary', QuoteMIME);  {do not localize}
       if Owner is TIdMessage then begin
         if Length(ABoundary) > 0 then begin
           TIdMessage(Owner).MIMEBoundary.Push(ABoundary, TIdMessage(Owner).MessageParts.Count);

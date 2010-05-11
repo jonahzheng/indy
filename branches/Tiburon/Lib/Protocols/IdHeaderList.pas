@@ -383,11 +383,17 @@ begin
   s := Values[AName];
   if s <> '' then begin
     LQuoteType := FQuoteType;
-    if (LQuoteType = QuoteRFC822) and TextIsSame(AName, 'Content-Type') then begin {Do not Localize}
-      LQuoteType := QuoteMIMEContentType;
-    end
-    else if (LQuoteType = QuoteMIMEContentType) and (not TextIsSame(AName, 'Content-Type')) then begin {Do not Localize}
-      LQuoteType := QuoteRFC822;
+    case LQuoteType of
+      QuoteRFC822: begin
+        if PosInStrArray(AName, ['Content-Type', 'Content-Dosposition'], False) <> -1 then begin {Do not Localize}
+          LQuoteType := QuoteMIME;
+        end;
+      end;
+      QuoteMIME: begin
+        if PosInStrArray(AName, ['Content-Type', 'Content-Disposition'], False) = -1 then begin {Do not Localize}
+          LQuoteType := QuoteRFC822;
+        end;
+      end;
     end;
     Result := ExtractHeaderSubItem(s, AParam, LQuoteType);
   end else begin
@@ -450,11 +456,17 @@ var
   LQuoteType: TIdHeaderQuotingType;
 begin
   LQuoteType := FQuoteType;
-  if (LQuoteType = QuoteRFC822) and TextIsSame(AName, 'Content-Type') then begin {Do not Localize}
-    LQuoteType := QuoteMIMEContentType;
-  end
-  else if (LQuoteType = QuoteMIMEContentType) and (not TextIsSame(AName, 'Content-Type')) then begin {Do not Localize}
-    LQuoteType := QuoteRFC822;
+  case LQuoteType of
+    QuoteRFC822: begin
+      if PosInStrArray(AName, ['Content-Type', 'Content-Disposition'], False) <> -1 then begin {Do not Localize}
+        LQuoteType := QuoteMIME;
+      end;
+    end;
+    QuoteMIME: begin
+      if PosInStrArray(AName, ['Content-Type', 'Content-Disposition'], False) = -1 then begin {Do not Localize}
+        LQuoteType := QuoteRFC822;
+      end;
+    end;
   end;
   Values[AName] := ReplaceHeaderSubItem(Values[AName], AParam, AValue, LQuoteType);
 end;

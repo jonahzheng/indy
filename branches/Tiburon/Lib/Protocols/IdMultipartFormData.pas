@@ -666,7 +666,7 @@ begin
     LContentType := sContentTypeOctetStream;
   end;
 
-  FContentType := RemoveHeaderEntry(LContentType, 'charset', LCharSet, QuoteMIMEContentType); {do not localize}
+  FContentType := RemoveHeaderEntry(LContentType, 'charset', LCharSet, QuoteMIME); {do not localize}
 
   // RLebeau: per RFC 2045 Section 5.2:
   //

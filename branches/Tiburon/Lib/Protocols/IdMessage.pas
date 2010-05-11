@@ -833,9 +833,9 @@ begin
       end;
     end else begin
       //CC: non-MIME can have ContentTransferEncoding of base64, quoted-printable...
-      Values['Content-Transfer-Encoding'] := ContentTransferEncoding; {do not localize}
       Values['Content-Type'] := FContentType;  {do not localize}
       Params['Content-Type', 'charset'] := FCharSet;  {do not localize}
+      Values['Content-Transfer-Encoding'] := ContentTransferEncoding; {do not localize}
     end;
     Values['Sender'] := Sender.Text; {do not localize}
     Values['Reply-To'] := EncodeAddress(ReplyTo, HeaderEncoding, ISOCharSet); {do not localize}
@@ -974,7 +974,7 @@ begin
     Priority := GetMsgPriority(Headers.Values['X-Priority']) {do not localize}
   end;
   {Note that the following code ensures MIMEBoundary.Count is 0 for single-part MIME messages...}
-  FContentType := RemoveHeaderEntry(FContentType, 'boundary', LBoundary, QuoteMIMEContentType);  {do not localize}
+  FContentType := RemoveHeaderEntry(FContentType, 'boundary', LBoundary, QuoteMIME);  {do not localize}
   if LBoundary <> '' then begin
     MIMEBoundary.Push(LBoundary, -1);
   end;
@@ -1026,7 +1026,7 @@ begin
 
   if AValue <> '' then
   begin
-    FContentType := RemoveHeaderEntry(AValue, 'charset', LCharSet, QuoteMIMEContentType); {do not localize}
+    FContentType := RemoveHeaderEntry(AValue, 'charset', LCharSet, QuoteMIME); {do not localize}
     if (LCharSet = '') and IsHeaderMediaType(FContentType, 'text') then begin {do not localize}
       LCharSet := 'us-ascii'; {do not localize}
     end;
