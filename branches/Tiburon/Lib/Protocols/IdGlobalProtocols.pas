@@ -393,7 +393,7 @@ type
     Windows2003Server, Windows2003AdvancedServer);
   {$ENDIF}
 
-  TIdHeaderQuotingType = (QuotePlain, QuoteRFC822, QuoteMIMEContentType, QuoteHTTP);
+  TIdHeaderQuotingType = (QuotePlain, QuoteRFC822, QuoteMIME, QuoteHTTP);
 
   //
   EIdExtensionAlreadyExists = class(EIdException);
@@ -447,6 +447,7 @@ type
   function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String; var VOld: String; AQuoteType: TIdHeaderQuotingType): String; overload;
   function IsHeaderMediaType(const AHeaderLine, AMediaType: String): Boolean;
   function IsHeaderMediaTypes(const AHeaderLine: String; const AMediaTypes: array of String): Boolean;
+  function IsHeaderValue(const AHeaderLine: String; const AValue: String): Boolean;
   function FileSizeByName(const AFilename: TIdFileName): Int64;
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   function IsVolume(const APathName : TIdFileName) : Boolean;
@@ -3668,7 +3669,7 @@ var
     LNeedQuotes := CharRange(#0, #32) + QuoteSpecials[AQuoteType] + #127;
     // TODO: disable this logic for HTTP 1.0
     LNeedEscape := '"\'; {Do not Localize}
-    if AQuoteType in [QuoteRFC822, QuoteMIMEContentType] then begin
+    if AQuoteType in [QuoteRFC822, QuoteMIME] then begin
       LNeedEscape := LNeedEscape + CR; {Do not Localize}
     end;
     for I := 1 to Length(S) do begin
@@ -3725,16 +3726,18 @@ begin
   end;
 end;
 
-function IsHeaderMediaType(const AHeaderLine, AMediaType: String): Boolean;
-var
-  LHeader: String;
+function MediaTypeMatches(const AValue, AMediaType: String): Boolean;
 begin
-  LHeader := ExtractHeaderItem(AHeaderLine);
   if Pos('/', AMediaType) > 0 then begin {do not localize}
-    Result := TextIsSame(LHeader, AMediaType);
+    Result := TextIsSame(AValue, AMediaType);
   end else begin
-    Result := TextStartsWith(LHeader, AMediaType + '/'); {do not localize}
+    Result := TextStartsWith(AValue, AMediaType + '/'); {do not localize}
   end;
+end;
+
+function IsHeaderMediaType(const AHeaderLine, AMediaType: String): Boolean;
+begin
+  Result := MediaTypeMatches(ExtractHeaderItem(AHeaderLine), AMediaType);
 end;
 
 function IsHeaderMediaTypes(const AHeaderLine: String; const AMediaTypes: array of String): Boolean;
@@ -3745,15 +3748,16 @@ begin
   Result := False;
   LHeader := ExtractHeaderItem(AHeaderLine);
   for I := Low(AMediaTypes) to High(AMediaTypes) do begin
-    if Pos('/', AMediaTypes[I]) > 0 then begin {do not localize}
-      Result := TextIsSame(LHeader, AMediaTypes[I]);
-    end else begin
-      Result := TextStartsWith(LHeader, AMediaTypes[I] + '/'); {do not localize}
-    end;
-    if Result then begin
-      Break;
+    if MediaTypeMatches(LHeader, AMediaTypes[I]) then begin
+      Result := True;
+      Exit;
     end;
   end;
+end;
+
+function IsHeaderValue(const AHeaderLine: String; const AValue: String): Boolean;
+begin
+  Result := TextIsSame(ExtractHeaderItem(AHeaderLine), AValue);
 end;
 
 function GetClockValue : Int64;
@@ -3952,7 +3956,7 @@ end;
 
 //The following is for working on email headers and message part headers.
 //For example, to remove the boundary from the ContentType header, call
-//ContentType := RemoveHeaderEntry(ContentType, 'boundary', QuoteMIMEContentType);
+//ContentType := RemoveHeaderEntry(ContentType, 'boundary', QuoteMIME);
 function RemoveHeaderEntry(const AHeader, AEntry: string;
   AQuoteType: TIdHeaderQuotingType): string;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
