@@ -626,6 +626,10 @@ my $default_depflags = " -DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_CAPIENG -DOPENSSL_NO
 
 {enable if you want FIPS support and are using an openssl library with FIPS support compiled in.}
 {$DEFINE OPENSSL_FIPS}
+//use this only for Safe Stack define and some define changes in OpenSSL 1.0
+//defines.
+
+{$UNDEF OPENSSL_1_0}
 
 {$IFDEF WIN32}
   {$DEFINE OPENSSL_SYSNAME_WIN32}
@@ -659,6 +663,7 @@ my $default_depflags = " -DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_CAPIENG -DOPENSSL_NO
 
   {$DEFINE OPENSSL_NO_CAPIENG}
   {$DEFINE OPENSSL_NO_JPAKE}
+  {$DEFINE OPENSSL_1_0}
 {$ENDIF}
 
 {$IFDEF WINCE}
@@ -759,7 +764,13 @@ my $default_depflags = " -DOPENSSL_NO_CAMELLIA -DOPENSSL_NO_CAPIENG -DOPENSSL_NO
     {$DEFINE THIRTY_TWO_BIT}
   {$ENDIF}
 {$ENDIF}
-
+{$IFDEF OPENSSL_1_0}
+  {$DEFINE DEBUG_SAFESTACK}
+  {$UNDEF OPENSSL_NO_SEED}
+  {$UNDEF OPENSSL_NO_MDC2}
+  {$UNDEF OPENSSL_NO_CMS}
+  {$UNDEF OPENSSL_NO_CAPIENG}
+{$ENDIF}
 // the following emits are a workaround to a
 // name conflict with Win32 API header files
 (*$HPPEMIT '#include <time.h>'*)
@@ -1671,6 +1682,14 @@ const
   AES_MAXNR = 14;
   AES_BLOCK_SIZE = 16;
   {$ENDIF}
+  //seed.h
+  {$IFNDEF OPENSSL_NO_SEED}
+     {$IFDEF AES_LONG} //* look whether we need 'long' to get 32 bits */
+       {$DEFINE SEED_LONG}
+     {$ENDIF}
+  SEED_BLOCK_SIZE = 16;
+  SEED_KEY_LENGTH = 16;
+  {$ENDIF}
   {$IFNDEF OPENSSL_NO_CAST}
   CAST_BLOCK = 8;
   CAST_DECRYPT = 0;
@@ -1962,13 +1981,48 @@ const
 
   EVP_PKEY_MO_SIGN = $0001;
   EVP_PKEY_MO_VERIFY = $0002;
+
   EVP_PKEY_MO_ENCRYPT = $0004;
   EVP_PKEY_MO_DECRYPT = $0008;
 
   EVP_MD_FLAG_FIPS = $0400;
   //* Note if suitable for use in FIPS mode */
+  EVP_MD_FLAG_PKEY_DIGEST	= $0002; //* digest is a "clone" digest used
+//					* which is a copy of an existing
+//					* one for a specific public key type.
+//					* EVP_dss1() etc */
+//* Digest uses EVP_PKEY_METHOD for signing instead of MD specific signing */
+
+  EVP_MD_FLAG_PKEY_METHOD_SIGNATURE	= $0004;  //note: conflicts with FIPS
+
+//* DigestAlgorithmIdentifier flags... */
+
+  EVP_MD_FLAG_DIGALGID_MASK		= $0018;
+
+//* NULL or absent parameter accepted. Use NULL */
+
+  EVP_MD_FLAG_DIGALGID_NULL	 = $0000;
+
+//* NULL or absent parameter accepted. Use NULL for PKCS#1 otherwise absent */
+
+  EVP_MD_FLAG_DIGALGID_ABSENT	 = $0008;
+
+//* Custom handling via ctrl */
+
+  EVP_MD_FLAG_DIGALGID_CUSTOM	 = $0018;
+
   EVP_MD_FLAG_SVCTX	= $0800;
   //* pass EVP_MD_SVCTX to sign/verify */
+
+//* Digest ctrls */
+
+  EVP_MD_CTRL_DIGALGID	  = $1;
+  EVP_MD_CTRL_MICALG			= $2;
+
+//* Minimum Algorithm specific ctrl value */
+
+	EVP_MD_CTRL_ALG_CTRL		 =	$1000;
+
   NID_undef = 0;
   NID_rsaEncryption = 6;
   NID_rsa = 19;
@@ -2014,9 +2068,20 @@ const
   EVP_MD_CTX_FLAG_REUSE	=	$0004;
   //* Don't free up ctx->md_data
 	//* in EVP_MD_CTX_cleanup */
-  EVP_MD_CTX_FLAG_NON_FIPS_ALLOW = $0008;
-  //* Allow use of non FIPS digest
-	// * in FIPS mode */
+  //OpenSSL 1.0.0.
+  //* FIPS and pad options are ignored in 1.0.0, definitions are here
+// * so we don't accidentally reuse the values for other purposes.
+// */
+
+ EVP_MD_CTX_FLAG_NON_FIPS_ALLOW = $0008;	//* Allow use of non FIPS digest
+//						 * in FIPS mode */
+
+//* The following PAD options are also currently ignored in 1.0.0, digest
+// * parameters are handled through EVP_DigestSign*() and EVP_DigestVerify*()
+// * instead.
+// */
+
+
   EVP_MD_CTX_FLAG_PAD_MASK = $F0;	//* RSA mode to use */
   EVP_MD_CTX_FLAG_PAD_PKCS1 = $00;	//* PKCS#1 v1.5 mode */
   EVP_MD_CTX_FLAG_PAD_X931 = $10;	//* X9.31 mode */
@@ -2025,13 +2090,17 @@ const
 //		((ctx->flags>>16) &0xFFFF) /* seed length */
   EVP_MD_CTX_FLAG_PSS_MDLEN = $FFFF;	//* salt len same as digest */
   EVP_MD_CTX_FLAG_PSS_MREC = $FFFE;	//* salt max or auto recovered */
-//* Modes for ciphers */
+   EVP_MD_CTX_FLAG_NO_INIT = $0100; //* Don't initialize md_data */
+
+  //* Modes for ciphers */
   EVP_CIPH_STREAM_CIPHER = $0;
   EVP_CIPH_ECB_MODE	= $1;
   EVP_CIPH_CBC_MODE	= $2;
   EVP_CIPH_CFB_MODE	= $3;
   EVP_CIPH_OFB_MODE	= $4;
-  EVP_CIPH_MODE	= $7;
+//was:  EVP_CIPH_MODE	= $7;
+	EVP_CIPH_MODE	= $F0007;
+
 //* Set if variable length cipher */
   EVP_CIPH_VARIABLE_LENGTH = $8;
 //* Set if the iv handling should be done by the cipher itself */
@@ -2048,8 +2117,12 @@ const
   EVP_CIPH_RAND_KEY	= $200;
 //* Note if suitable for use in FIPS mode */
   EVP_CIPH_FLAG_FIPS = $400;
+
 //* Allow non FIPS cipher in FIPS mode */
   EVP_CIPH_FLAG_NON_FIPS_ALLOW = $800;
+//* cipher has its own additional copying logic */
+ 	EVP_CIPH_CUSTOM_COPY	=	$400;
+
 //* Allow use default ASN1 get/set iv */
   EVP_CIPH_FLAG_DEFAULT_ASN1 = $1000;
 //* Buffer length in bits not bytes: CFB1 mode only */
@@ -2061,6 +2134,75 @@ const
   EVP_CTRL_GET_RC5_ROUNDS	= $4;
   EVP_CTRL_SET_RC5_ROUNDS = $5;
   EVP_CTRL_RAND_KEY	= $6;
+  EVP_CTRL_PBE_PRF_NID	 = $7;
+  EVP_CTRL_COPY	= $8;
+//* PBE type */
+
+//* Can appear as the outermost AlgorithmIdentifier */
+  EVP_PBE_TYPE_OUTER = $0;
+//* Is an PRF type OID */
+  EVP_PBE_TYPE_PRF = $1;
+
+  ASN1_PKEY_ALIAS	 = $1;
+  ASN1_PKEY_DYNAMIC	= $2;
+  ASN1_PKEY_SIGPARAM_NULL	= $4;
+
+  ASN1_PKEY_CTRL_PKCS7_SIGN	= $1;
+  ASN1_PKEY_CTRL_PKCS7_ENCRYPT = $2;
+  ASN1_PKEY_CTRL_DEFAULT_MD_NID	= $3;
+  ASN1_PKEY_CTRL_CMS_SIGN	= $5;
+  ASN1_PKEY_CTRL_CMS_ENVELOPE	= $7;
+
+  EVP_PKEY_OP_UNDEFINED	 = 0;
+  EVP_PKEY_OP_PARAMGEN	 =(1 shl 1);
+  EVP_PKEY_OP_KEYGEN = (1 shl 2);
+  EVP_PKEY_OP_SIGN	 = (1 shl 3);
+  EVP_PKEY_OP_VERIFY  = (1 shl 4);
+  EVP_PKEY_OP_VERIFYRECOVER = (1 shl 5);
+  EVP_PKEY_OP_SIGNCTX = (1 shl 6);
+  EVP_PKEY_OP_VERIFYCTX = (1 shl 7);
+  EVP_PKEY_OP_ENCRYPT	 = (1 shl 8);
+  EVP_PKEY_OP_DECRYPT	 = (1 shl 9);
+  EVP_PKEY_OP_DERIVE	 = (1 shl 10);
+
+  EVP_PKEY_OP_TYPE_SIG =
+    (EVP_PKEY_OP_SIGN or EVP_PKEY_OP_VERIFY or EVP_PKEY_OP_VERIFYRECOVER
+    or EVP_PKEY_OP_SIGNCTX or EVP_PKEY_OP_VERIFYCTX);
+
+ EVP_PKEY_OP_TYPE_CRYPT = (EVP_PKEY_OP_ENCRYPT or EVP_PKEY_OP_DECRYPT);
+
+//  EVP_PKEY_OP_TYPE_NOGEN =
+//	(EVP_PKEY_OP_SIG or EVP_PKEY_OP_CRYPT or EVP_PKEY_OP_DERIVE);
+//  guessing from above.  THere may be a typo in the header.
+  EVP_PKEY_OP_TYPE_NOGEN =
+	(EVP_PKEY_OP_TYPE_SIG or EVP_PKEY_OP_TYPE_CRYPT or EVP_PKEY_OP_DERIVE);
+
+  EVP_PKEY_OP_TYPE_GEN =
+		(EVP_PKEY_OP_PARAMGEN or EVP_PKEY_OP_KEYGEN);
+
+  EVP_PKEY_CTRL_MD	=	1;
+  EVP_PKEY_CTRL_PEER_KEY	 = 2;
+
+  EVP_PKEY_CTRL_PKCS7_ENCRYPT	= 3;
+  EVP_PKEY_CTRL_PKCS7_DECRYPT	= 4;
+
+  EVP_PKEY_CTRL_PKCS7_SIGN	= 5;
+
+  EVP_PKEY_CTRL_SET_MAC_KEY	= 6;
+
+  EVP_PKEY_CTRL_DIGESTINIT	= 7;
+
+//* Used by GOST key encryption in TLS */
+
+  EVP_PKEY_CTRL_SET_IV 	= 8;
+  EVP_PKEY_CTRL_CMS_ENCRYPT	= 9;
+  EVP_PKEY_CTRL_CMS_DECRYPT = 10;
+  EVP_PKEY_CTRL_CMS_SIGN	 = 11;
+
+  EVP_PKEY_ALG_CTRL		= $1000;
+
+  EVP_PKEY_FLAG_AUTOARGLEN	= 2;
+
   EVP_F_AES_INIT_KEY = 133;
   EVP_F_ALG_MODULE_INIT	= 138;
   EVP_F_CAMELLIA_INIT_KEY = 159;
@@ -2208,6 +2350,9 @@ const
   ENGINE_METHOD_CIPHERS	: TIdC_UINT = $0040;
   ENGINE_METHOD_DIGESTS	: TIdC_UINT = $0080;
   ENGINE_METHOD_STORE	: TIdC_UINT = $0100;
+  ENGINE_METHOD_PKEY_METHS : TIdC_UINT = $0200;
+  ENGINE_METHOD_PKEY_ASN1_METHS	: TIdC_UINT = $0400;
+
 //* Obvious all-or-nothing cases. */
   ENGINE_METHOD_ALL	: TIdC_UINT = $FFFF;
   ENGINE_METHOD_NONE : TIdC_UINT = $0000;
@@ -2312,13 +2457,17 @@ const
   ENGINE_F_ENGINE_GET_DEFAULT_TYPE = 177;
   ENGINE_F_ENGINE_GET_DIGEST = 186;
   ENGINE_F_ENGINE_GET_NEXT = 115;
+  ENGINE_F_ENGINE_GET_PKEY_ASN1_METH = 193;
+  ENGINE_F_ENGINE_GET_PKEY_METH	= 192;
   ENGINE_F_ENGINE_GET_PREV = 116;
   ENGINE_F_ENGINE_INIT = 119;
   ENGINE_F_ENGINE_LIST_ADD = 120;
   ENGINE_F_ENGINE_LIST_REMOVE	= 121;
   ENGINE_F_ENGINE_LOAD_PRIVATE_KEY = 150;
   ENGINE_F_ENGINE_LOAD_PUBLIC_KEY	= 151;
-  ENGINE_F_ENGINE_LOAD_SSL_CLIENT_CERT = 192;
+ //was ENGINE_F_ENGINE_LOAD_SSL_CLIENT_CERT = 192;
+  ENGINE_F_ENGINE_LOAD_SSL_CLIENT_CERT = 194;
+
   ENGINE_F_ENGINE_NEW	= 122;
   ENGINE_F_ENGINE_REMOVE = 123;
   ENGINE_F_ENGINE_SET_DEFAULT_STRING = 189;
@@ -2346,7 +2495,8 @@ const
   ENGINE_R_DSO_FAILURE = 104;
   ENGINE_R_DSO_NOT_FOUND = 132;
   ENGINE_R_ENGINES_SECTION_ERROR = 148;
-  ENGINE_R_ENGINE_CONFIGURATION_ERROR = 101;
+//was:  ENGINE_R_ENGINE_CONFIGURATION_ERROR = 101;
+  ENGINE_R_ENGINE_CONFIGURATION_ERROR	= 102;
 
   ENGINE_R_ENGINE_IS_NOT_IN_LIST = 105;
   ENGINE_R_ENGINE_SECTION_ERROR	= 149;
@@ -2374,6 +2524,7 @@ const
   ENGINE_R_RSA_NOT_IMPLEMENTED = 141;
   ENGINE_R_UNIMPLEMENTED_CIPHER	= 146;
   ENGINE_R_UNIMPLEMENTED_DIGEST	= 147;
+  ENGINE_R_UNIMPLEMENTED_PUBLIC_KEY_METHOD = 101;
   ENGINE_R_VERSION_INCOMPATIBILITY = 145;
 {$ENDIF}
   MSS_EXIT_FAILURE = 1;
@@ -2394,6 +2545,20 @@ const
   L_ctermid = 16;
   L_cuserid = 9;
   L_tmpnam = 1024;
+  //chamellia.h
+  {$IFNDEF OPENSSL_NO_CAMELLIA}
+  CAMELLIA_ENCRYPT = 1;
+  CAMELLIA_DECRYPT	= 0;
+//* This should be a hidden type, but EVP requires that the size be known */
+
+  CAMELLIA_BLOCK_SIZE = 16;
+  CAMELLIA_TABLE_BYTE_LEN = 272;
+  CAMELLIA_TABLE_WORD_LEN = (CAMELLIA_TABLE_BYTE_LEN / 4);
+  {$ENDIF}
+  //whrlpool.h
+  WHIRLPOOL_DIGEST_LENGTH = (512 div 8);
+  WHIRLPOOL_BBLOCK	= 512;
+  WHIRLPOOL_COUNTER	= (256 div 8);
   {$IFNDEF OPENSSL_NO_MD2}
   MD2_BLOCK = 16;
   MD2_DIGEST_LENGTH = 16;
@@ -4751,6 +4916,558 @@ const
   XKU_DVCS = $80;
   X509_PURPOSE_DYNAMIC = $1;
   X509_PURPOSE_DYNAMIC_NAME = $2;
+
+  X509_PURPOSE_SSL_CLIENT	= 1;
+  X509_PURPOSE_SSL_SERVER	= 2;
+  X509_PURPOSE_NS_SSL_SERVER = 3;
+  X509_PURPOSE_SMIME_SIGN	= 4;
+  X509_PURPOSE_SMIME_ENCRYPT = 5;
+  X509_PURPOSE_CRL_SIGN	= 6;
+  X509_PURPOSE_ANY = 7;
+  X509_PURPOSE_OCSP_HELPER = 8;
+  X509_PURPOSE_TIMESTAMP_SIGN = 9;
+
+  X509_PURPOSE_MIN = 1;
+  X509_PURPOSE_MAX = 9;
+
+
+//* Flags for X509V3_EXT_print() */
+
+  X509V3_EXT_UNKNOWN_MASK		= TIdC_LONG($f shl 16);
+//* Return error for unknown extensions */
+  X509V3_EXT_DEFAULT		= 0;
+//* Print error for unknown extensions */
+  X509V3_EXT_ERROR_UNKNOWN = (TIdC_LONG(1) shl 16);
+//* ASN1 parse unknown extensions */
+  X509V3_EXT_PARSE_UNKNOWN = (TIdC_LONG(2) shl 16);
+//* BIO_dump unknown extensions */
+  X509V3_EXT_DUMP_UNKNOWN	 = (TIdC_LONG(3) shl 16);
+
+//* Flags for X509V3_add1_i2d */
+
+  X509V3_ADD_OP_MASK	 = TIdC_LONG($f);
+  X509V3_ADD_DEFAULT	 = TIdC_LONG(0);
+  X509V3_ADD_APPEND		= TIdC_LONG(1);
+  X509V3_ADD_REPLACE	= TIdC_LONG(2);
+  X509V3_ADD_REPLACE_EXISTING	= TIdC_LONG(3);
+  X509V3_ADD_KEEP_EXISTING	= TIdC_LONG(4);
+  X509V3_ADD_DELETE		= TIdC_LONG(5);
+  X509V3_ADD_SILENT	 = TIdC_LONG($10);
+
+  {$IFNDEF OPENSSL_NO_RFC3779}
+	ASIdOrRange_id	  =	0;
+  ASIdOrRange_range	= 1;
+
+  ASIdentifierChoice_inherit = 0;
+  ASIdentifierChoice_asIdsOrRanges = 1;
+
+  IPAddressOrRange_addressPrefix	= 0;
+  IPAddressOrRange_addressRange	= 1;
+
+  IPAddressChoice_inherit		 = 0;
+  IPAddressChoice_addressesOrRanges	= 1;
+
+//  /*
+// * API tag for elements of the ASIdentifer SEQUENCE.
+// */
+  V3_ASID_ASNUM	= 0;
+  V3_ASID_RDI	= 1;
+
+//*
+// * AFI values, assigned by IANA.  It'd be nice to make the AFI
+// * handling code totally generic, but there are too many little things
+// * that would need to be defined for other address families for it to
+// * be worth the trouble.
+// */
+	IANA_AFI_IPV4	= 1;
+	IANA_AFI_IPV6	= 2;
+  {$ENDIF}
+
+	//* Function codes. */
+	X509V3_F_A2I_GENERAL_NAME		 = 164;
+	X509V3_F_ASIDENTIFIERCHOICE_CANONIZE		= 161;
+	X509V3_F_ASIDENTIFIERCHOICE_IS_CANONICAL	= 162;
+	X509V3_F_COPY_EMAIL				= 122;
+	X509V3_F_COPY_ISSUER			 = 123;
+	X509V3_F_DO_DIRNAME				= 144;
+	X509V3_F_DO_EXT_CONF			 = 124;
+	X509V3_F_DO_EXT_I2D				= 135;
+	X509V3_F_DO_EXT_NCONF				= 151;
+	X509V3_F_DO_I2V_NAME_CONSTRAINTS		= 148;
+	X509V3_F_GNAMES_FROM_SECTNAME			= 156;
+	X509V3_F_HEX_TO_STRING				 = 111;
+	X509V3_F_I2S_ASN1_ENUMERATED	= 121;
+	X509V3_F_I2S_ASN1_IA5STRING	  = 149;
+	X509V3_F_I2S_ASN1_INTEGER = 120;
+	X509V3_F_I2V_AUTHORITY_INFO_ACCESS		= 138;
+	X509V3_F_NOTICE_SECTION				 =132;
+	X509V3_F_NREF_NOS				 =133;
+	X509V3_F_POLICY_SECTION				 =131;
+	X509V3_F_PROCESS_PCI_VALUE			 =150;
+	X509V3_F_R2I_CERTPOL				 =130;
+	X509V3_F_R2I_PCI				 =155;
+	X509V3_F_S2I_ASN1_IA5STRING			 =100;
+	X509V3_F_S2I_ASN1_INTEGER			 =108;
+
+	X509V3_F_S2I_ASN1_OCTET_STRING			= 112;
+	X509V3_F_S2I_ASN1_SKEY_ID		 = 114;
+	X509V3_F_S2I_SKEY_ID				= 115;
+	X509V3_F_SET_DIST_POINT_NAME		 = 158;
+	X509V3_F_STRING_TO_HEX				= 113;
+	X509V3_F_SXNET_ADD_ID_ASC			 = 125;
+	X509V3_F_SXNET_ADD_ID_INTEGER			= 126;
+	X509V3_F_SXNET_ADD_ID_ULONG			= 127;
+	X509V3_F_SXNET_GET_ID_ASC			 = 128;
+	X509V3_F_SXNET_GET_ID_ULONG			 = 129;
+	X509V3_F_V2I_ASIDENTIFIERS			 = 163;
+	X509V3_F_V2I_ASN1_BIT_STRING			= 101;
+	X509V3_F_V2I_AUTHORITY_INFO_ACCESS	 = 139;
+	X509V3_F_V2I_AUTHORITY_KEYID			= 119;
+	X509V3_F_V2I_BASIC_CONSTRAINTS			= 102;
+	X509V3_F_V2I_CRLD				= 134;
+	X509V3_F_V2I_EXTENDED_KEY_USAGE			= 103;
+	X509V3_F_V2I_GENERAL_NAMES			 = 118;
+	X509V3_F_V2I_GENERAL_NAME_EX			= 117;
+	X509V3_F_V2I_IDP				= 157;
+	X509V3_F_V2I_IPADDRBLOCKS			= 159;
+	X509V3_F_V2I_ISSUER_ALT				= 153;
+	X509V3_F_V2I_NAME_CONSTRAINTS			= 147;
+	X509V3_F_V2I_POLICY_CONSTRAINTS		= 146;
+	X509V3_F_V2I_POLICY_MAPPINGS			= 145;
+	X509V3_F_V2I_SUBJECT_ALT			= 154;
+	X509V3_F_V3_ADDR_VALIDATE_PATH_INTERNAL		= 160;
+	X509V3_F_V3_GENERIC_EXTENSION			= 116;
+	X509V3_F_X509V3_ADD1_I2D			= 140;
+	X509V3_F_X509V3_ADD_VALUE			= 105;
+	X509V3_F_X509V3_EXT_ADD				= 104;
+	X509V3_F_X509V3_EXT_ADD_ALIAS			= 106;
+	X509V3_F_X509V3_EXT_CONF		 = 107;
+	X509V3_F_X509V3_EXT_I2D			 = 136;
+	X509V3_F_X509V3_EXT_NCONF		 = 152;
+	X509V3_F_X509V3_GET_SECTION			= 142;
+	X509V3_F_X509V3_GET_STRING			= 143;
+	X509V3_F_X509V3_GET_VALUE_BOOL			= 110;
+	X509V3_F_X509V3_PARSE_LIST			= 109;
+	X509V3_F_X509_PURPOSE_ADD			= 137;
+	X509V3_F_X509_PURPOSE_SET			= 141;
+
+	//* Reason codes. */
+	X509V3_R_BAD_IP_ADDRESS			 =  118;
+	X509V3_R_BAD_OBJECT				 = 119;
+	X509V3_R_BN_DEC2BN_ERROR			= 100;
+	X509V3_R_BN_TO_ASN1_INTEGER_ERROR	= 101;
+	X509V3_R_DIRNAME_ERROR				 = 149;
+	X509V3_R_DISTPOINT_ALREADY_SET			= 160;
+	X509V3_R_DUPLICATE_ZONE_ID			 = 133;
+	X509V3_R_ERROR_CONVERTING_ZONE			= 131;
+	X509V3_R_ERROR_CREATING_EXTENSION		= 144;
+	X509V3_R_ERROR_IN_EXTENSION			= 128;
+	X509V3_R_EXPECTED_A_SECTION_NAME		= 137;
+	X509V3_R_EXTENSION_EXISTS			 = 145;
+	X509V3_R_EXTENSION_NAME_ERROR		 = 115;
+	X509V3_R_EXTENSION_NOT_FOUND		 =  102;
+	X509V3_R_EXTENSION_SETTING_NOT_SUPPORTED	 = 103;
+
+	X509V3_R_EXTENSION_VALUE_ERROR		 = 116;
+	X509V3_R_ILLEGAL_EMPTY_EXTENSION		= 151;
+	X509V3_R_ILLEGAL_HEX_DIGIT			 = 113;
+	X509V3_R_INCORRECT_POLICY_SYNTAX_TAG		= 152;
+	X509V3_R_INVALID_MULTIPLE_RDNS			= 161;
+	X509V3_R_INVALID_ASNUMBER			= 162;
+	X509V3_R_INVALID_ASRANGE			= 163;
+	X509V3_R_INVALID_BOOLEAN_STRING		 = 104;
+	X509V3_R_INVALID_EXTENSION_STRING	 = 105;
+	X509V3_R_INVALID_INHERITANCE			= 165;
+	X509V3_R_INVALID_IPADDRESS			 = 166;
+	X509V3_R_INVALID_NAME				= 106;
+	X509V3_R_INVALID_NULL_ARGUMENT			= 107;
+	X509V3_R_INVALID_NULL_NAME		 = 108;
+	X509V3_R_INVALID_NULL_VALUE			= 109;
+	X509V3_R_INVALID_NUMBER				= 140;
+	X509V3_R_INVALID_NUMBERS			= 141;
+	X509V3_R_INVALID_OBJECT_IDENTIFIER		= 110;
+	X509V3_R_INVALID_OPTION				= 138;
+	X509V3_R_INVALID_POLICY_IDENTIFIER		= 134;
+	X509V3_R_INVALID_PROXY_POLICY_SETTING	 = 153;
+	X509V3_R_INVALID_PURPOSE		 = 146;
+	X509V3_R_INVALID_SAFI				= 164;
+	X509V3_R_INVALID_SECTION			= 135;
+	X509V3_R_INVALID_SYNTAX				 = 143;
+	X509V3_R_ISSUER_DECODE_ERROR		 = 126;
+	X509V3_R_MISSING_VALUE				 = 124;
+	X509V3_R_NEED_ORGANIZATION_AND_NUMBERS		= 142;
+	X509V3_R_NO_CONFIG_DATABASE			= 136;
+	X509V3_R_NO_ISSUER_CERTIFICATE			= 121;
+	X509V3_R_NO_ISSUER_DETAILS			= 127;
+	X509V3_R_NO_POLICY_IDENTIFIER			= 139;
+	X509V3_R_NO_PROXY_CERT_POLICY_LANGUAGE_DEFINED	= 154;
+	X509V3_R_NO_PUBLIC_KEY				= 114;
+	X509V3_R_NO_SUBJECT_DETAILS			= 125;
+	X509V3_R_ODD_NUMBER_OF_DIGITS		 = 112;
+	X509V3_R_OPERATION_NOT_DEFINED			= 148;
+	X509V3_R_OTHERNAME_ERROR			 = 147;
+	X509V3_R_POLICY_LANGUAGE_ALREADY_DEFINED	= 155;
+	X509V3_R_POLICY_PATH_LENGTH			= 156;
+	X509V3_R_POLICY_PATH_LENGTH_ALREADY_DEFINED	 = 157;
+	X509V3_R_POLICY_SYNTAX_NOT_CURRENTLY_SUPPORTED	= 158;
+	X509V3_R_POLICY_WHEN_PROXY_LANGUAGE_REQUIRES_NO_POLICY = 159;
+	X509V3_R_SECTION_NOT_FOUND			 = 150;
+	X509V3_R_UNABLE_TO_GET_ISSUER_DETAILS	= 122;
+	X509V3_R_UNABLE_TO_GET_ISSUER_KEYID	= 123;
+	X509V3_R_UNKNOWN_BIT_STRING_ARGUMENT = 111;
+	X509V3_R_UNKNOWN_EXTENSION = 129;
+	X509V3_R_UNKNOWN_EXTENSION_NAME	= 130;
+	X509V3_R_UNKNOWN_OPTION = 120;
+	X509V3_R_UNSUPPORTED_OPTION	= 117;
+	X509V3_R_UNSUPPORTED_TYPE	= 167;
+	X509V3_R_USER_TOO_LONG = 132;
+
+//* Possible values for status. See ts_resp_print.c && ts_resp_verify.c. */
+
+	TS_STATUS_GRANTED		=	0;
+	TS_STATUS_GRANTED_WITH_MODS	 = 1;
+	TS_STATUS_REJECTION		 =	2;
+	TS_STATUS_WAITING		 =	3;
+	TS_STATUS_REVOCATION_WARNING	 =	4;
+	TS_STATUS_REVOCATION_NOTIFICATION	= 5;
+
+//* Possible values for failure_info. See ts_resp_print.c && ts_resp_verify.c */
+
+	TS_INFO_BAD_ALG		=	0;
+	TS_INFO_BAD_REQUEST	 =	2;
+	TS_INFO_BAD_DATA_FORMAT	 =	5;
+	TS_INFO_TIME_NOT_AVAILABLE = 14;
+	TS_INFO_UNACCEPTED_POLICY	= 15;
+	TS_INFO_UNACCEPTED_EXTENSION = 16;
+	TS_INFO_ADD_INFO_NOT_AVAILABLE = 17;
+	TS_INFO_SYSTEM_FAILURE	 = 25;
+//* Declarations related to response generation, defined in ts/ts_resp_sign.c. */
+//* Optional flags for response generation. */
+//* Don't include the TSA name in response. */
+  TS_TSA_NAME		= $01;
+//* Set ordering to true in response. */
+  TS_ORDERING		= $02;
+///*
+// * Include the signer certificate and the other specified certificates in
+// * the ESS signing certificate attribute beside the PKCS7 signed data.
+// * Only the signer certificates is included by default.
+// */
+  TS_ESS_CERT_ID_CHAIN	= $04;
+//* At most we accept usec precision. */
+ TS_MAX_CLOCK_PRECISION_DIGITS = 6;
+//* Context structure for the generic verify method. */
+
+//* Verify the signer's certificate and the signature of the response. */
+  TS_VFY_SIGNATURE  = TIdC_ULONG(1 shl 0);
+//* Verify the version number of the response. */
+	TS_VFY_VERSION	  =	TIdC_ULONG(1 shl 1);
+///* Verify if the policy supplied by the user matches the policy of the TSA. */
+  TS_VFY_POLICY		= TIdC_ULONG(1 shl 2);
+///* Verify the message imprint provided by the user. This flag should not be
+//   specified with TS_VFY_DATA. */
+  TS_VFY_IMPRINT	 = TIdC_ULONG(1 shl 3);
+///* Verify the message imprint computed by the verify method from the user
+//   provided data and the MD algorithm of the response. This flag should not be
+//   specified with TS_VFY_IMPRINT. */
+  TS_VFY_DATA		= TIdC_ULONG(1 shl 4);
+//* Verify the nonce value. */
+  TS_VFY_NONCE	 = TIdC_ULONG(1 shl 5);
+//* Verify if the TSA name field matches the signer certificate. */
+  TS_VFY_SIGNER	 = TIdC_ULONG(1 shl 6);
+//* Verify if the TSA name field equals to the user provided name. */
+  TS_VFY_TSA_NAME	 = TIdC_ULONG(1 shl 7);
+
+//* You can use the following convenience constants. */
+	TS_VFY_ALL_IMPRINT	= (TS_VFY_SIGNATURE
+				 or TS_VFY_VERSION
+				 or TS_VFY_POLICY
+				 or TS_VFY_IMPRINT
+				 or TS_VFY_NONCE
+				 or TS_VFY_SIGNER
+				 or TS_VFY_TSA_NAME);
+	TS_VFY_ALL_DATA		= (TS_VFY_SIGNATURE
+				 or TS_VFY_VERSION
+				 or TS_VFY_POLICY
+				 or TS_VFY_DATA
+				 or TS_VFY_NONCE
+				 or TS_VFY_SIGNER
+				 or TS_VFY_TSA_NAME);
+
+//* Error codes for the TS functions. */
+
+//* Function codes. */
+  TS_F_D2I_TS_RESP				= 147;
+  TS_F_DEF_SERIAL_CB				= 110;
+  TS_F_DEF_TIME_CB				= 111;
+  TS_F_ESS_ADD_SIGNING_CERT			= 112;
+  TS_F_ESS_CERT_ID_NEW_INIT			= 113;
+  TS_F_ESS_SIGNING_CERT_NEW_INIT			= 114;
+  TS_F_INT_TS_RESP_VERIFY_TOKEN			 = 149;
+  TS_F_PKCS7_TO_TS_TST_INFO			= 148;
+  TS_F_TS_ACCURACY_SET_MICROS			= 115;
+  TS_F_TS_ACCURACY_SET_MILLIS			= 116;
+  TS_F_TS_ACCURACY_SET_SECONDS			= 117;
+  TS_F_TS_CHECK_IMPRINTS				= 100;
+  TS_F_TS_CHECK_NONCES				= 101;
+  TS_F_TS_CHECK_POLICY				= 102;
+  TS_F_TS_CHECK_SIGNING_CERTS			= 103;
+  TS_F_TS_CHECK_STATUS_INFO			= 104;
+  TS_F_TS_COMPUTE_IMPRINT				= 145;
+  TS_F_TS_CONF_SET_DEFAULT_ENGINE			= 146;
+  TS_F_TS_GET_STATUS_TEXT				= 105;
+  TS_F_TS_MSG_IMPRINT_SET_ALGO			= 118;
+  TS_F_TS_REQ_SET_MSG_IMPRINT			= 119;
+  TS_F_TS_REQ_SET_NONCE				= 120;
+  TS_F_TS_REQ_SET_POLICY_ID			= 121;
+  TS_F_TS_RESP_CREATE_RESPONSE			= 122;
+  TS_F_TS_RESP_CREATE_TST_INFO			= 123;
+  TS_F_TS_RESP_CTX_ADD_FAILURE_INFO		= 124;
+  TS_F_TS_RESP_CTX_ADD_MD				= 125;
+  TS_F_TS_RESP_CTX_ADD_POLICY			= 126;
+  TS_F_TS_RESP_CTX_NEW				= 127;
+  TS_F_TS_RESP_CTX_SET_ACCURACY			= 128;
+  TS_F_TS_RESP_CTX_SET_CERTS			= 129;
+  TS_F_TS_RESP_CTX_SET_DEF_POLICY			= 130;
+  TS_F_TS_RESP_CTX_SET_SIGNER_CERT		= 131;
+  TS_F_TS_RESP_CTX_SET_STATUS_INFO		= 132;
+  TS_F_TS_RESP_GET_POLICY				= 133;
+  TS_F_TS_RESP_SET_GENTIME_WITH_PRECISION		= 134;
+  TS_F_TS_RESP_SET_STATUS_INFO			 = 135;
+  TS_F_TS_RESP_SET_TST_INFO			= 150;
+  TS_F_TS_RESP_SIGN				= 136;
+  TS_F_TS_RESP_VERIFY_SIGNATURE			= 106;
+  TS_F_TS_RESP_VERIFY_TOKEN			= 107;
+  TS_F_TS_TST_INFO_SET_ACCURACY			= 137;
+  TS_F_TS_TST_INFO_SET_MSG_IMPRINT		= 138;
+  TS_F_TS_TST_INFO_SET_NONCE			= 139;
+  TS_F_TS_TST_INFO_SET_POLICY_ID			= 140;
+  TS_F_TS_TST_INFO_SET_SERIAL			= 141;
+  TS_F_TS_TST_INFO_SET_TIME			= 142;
+  TS_F_TS_TST_INFO_SET_TSA			= 143;
+  TS_F_TS_VERIFY					= 108;
+  TS_F_TS_VERIFY_CERT				= 109;
+  TS_F_TS_VERIFY_CTX_NEW				= 144;
+
+//* Reason codes. */
+  TS_R_BAD_PKCS7_TYPE				= 132;
+  TS_R_BAD_TYPE					= 133;
+  TS_R_CERTIFICATE_VERIFY_ERROR			= 100;
+  TS_R_COULD_NOT_SET_ENGINE			= 127;
+  TS_R_COULD_NOT_SET_TIME				= 115;
+  TS_R_D2I_TS_RESP_INT_FAILED			= 128;
+  TS_R_DETACHED_CONTENT				= 134;
+  TS_R_ESS_ADD_SIGNING_CERT_ERROR			= 116;
+  TS_R_ESS_SIGNING_CERTIFICATE_ERROR		= 101;
+  TS_R_INVALID_NULL_POINTER			= 102;
+  TS_R_INVALID_SIGNER_CERTIFICATE_PURPOSE		= 117;
+  TS_R_MESSAGE_IMPRINT_MISMATCH			= 103;
+  TS_R_NONCE_MISMATCH				= 104;
+  TS_R_NONCE_NOT_RETURNED				= 105;
+  TS_R_NO_CONTENT					= 106;
+  TS_R_NO_TIME_STAMP_TOKEN			= 107;
+  TS_R_PKCS7_ADD_SIGNATURE_ERROR			= 118;
+  TS_R_PKCS7_ADD_SIGNED_ATTR_ERROR		= 119;
+  TS_R_PKCS7_TO_TS_TST_INFO_FAILED		= 129;
+  TS_R_POLICY_MISMATCH				= 108;
+  TS_R_PRIVATE_KEY_DOES_NOT_MATCH_CERTIFICATE	= 120;
+  TS_R_RESPONSE_SETUP_ERROR			= 121;
+  TS_R_SIGNATURE_FAILURE				= 109;
+  TS_R_THERE_MUST_BE_ONE_SIGNER			= 110;
+  TS_R_TIME_SYSCALL_ERROR				= 122;
+  TS_R_TOKEN_NOT_PRESENT				= 130;
+  TS_R_TOKEN_PRESENT				= 131;
+  TS_R_TSA_NAME_MISMATCH				= 111;
+  TS_R_TSA_UNTRUSTED				= 112;
+  TS_R_TST_INFO_SETUP_ERROR			= 123;
+  TS_R_TS_DATASIGN				= 124;
+  TS_R_UNACCEPTABLE_POLICY			= 125;
+  TS_R_UNSUPPORTED_MD_ALGORITHM			= 126;
+  TS_R_UNSUPPORTED_VERSION			= 113;
+  TS_R_WRONG_CONTENT_TYPE				= 114;
+
+  {$UNDEF OPENSSL_NO_CMS}
+  {$IFNDEF OPENSSL_NO_CMS}
+  CMS_SIGNERINFO_ISSUER_SERIAL	= 0;
+  CMS_SIGNERINFO_KEYIDENTIFIER = 1;
+
+  CMS_RECIPINFO_TRANS	 = 0;
+  CMS_RECIPINFO_AGREE	 = 1;
+  CMS_RECIPINFO_KEK	 = 2;
+  CMS_RECIPINFO_PASS	 = 3;
+  CMS_RECIPINFO_OTHER	 = 4;
+
+//* S/MIME related flags */
+
+  CMS_TEXT			= $1;
+  CMS_NOCERTS			= $2;
+  CMS_NO_CONTENT_VERIFY	 = $4;
+  CMS_NO_ATTR_VERIFY	 = $8;
+  CMS_NOSIGS			= (CMS_NO_CONTENT_VERIFY or CMS_NO_ATTR_VERIFY);
+  CMS_NOINTERN		 = $10;
+  CMS_NO_SIGNER_CERT_VERIFY	= $20;
+  CMS_NOVERIFY			= $20;
+  CMS_DETACHED			= $40;
+  CMS_BINARY			= $80;
+  CMS_NOATTR			= $100;
+  CMS_NOSMIMECAP			= $200;
+  CMS_NOOLDMIMETYPE		= $400;
+  CMS_CRLFEOL			= $800;
+  CMS_STREAM			= $1000;
+  CMS_NOCRL			= $2000;
+  CMS_PARTIAL		 = $4000;
+  CMS_REUSE_DIGEST		= $8000;
+  CMS_USE_KEYID		 = $10000;
+
+//* Error codes for the CMS functions. */
+
+//* Function codes. */
+  CMS_F_CHECK_CONTENT				= 99;
+  CMS_F_CMS_ADD0_CERT				= 164;
+  CMS_F_CMS_ADD0_RECIPIENT_KEY			= 100;
+  CMS_F_CMS_ADD1_RECEIPTREQUEST			= 158;
+  CMS_F_CMS_ADD1_RECIPIENT_CERT			= 101;
+  CMS_F_CMS_ADD1_SIGNER				= 102;
+  CMS_F_CMS_ADD1_SIGNINGTIME			= 103;
+  CMS_F_CMS_COMPRESS				= 104;
+  CMS_F_CMS_COMPRESSEDDATA_CREATE			= 105;
+  CMS_F_CMS_COMPRESSEDDATA_INIT_BIO		= 106;
+  CMS_F_CMS_COPY_CONTENT				= 107;
+  CMS_F_CMS_COPY_MESSAGEDIGEST			= 108;
+  CMS_F_CMS_DATA					= 109;
+  CMS_F_CMS_DATAFINAL				= 110;
+  CMS_F_CMS_DATAINIT				= 111;
+  CMS_F_CMS_DECRYPT				= 112;
+  CMS_F_CMS_DECRYPT_SET1_KEY			= 113;
+  CMS_F_CMS_DECRYPT_SET1_PKEY			= 114;
+  CMS_F_CMS_DIGESTALGORITHM_FIND_CTX		= 115;
+  CMS_F_CMS_DIGESTALGORITHM_INIT_BIO		= 116;
+  CMS_F_CMS_DIGESTEDDATA_DO_FINAL			= 117;
+  CMS_F_CMS_DIGEST_VERIFY				= 118;
+  CMS_F_CMS_ENCODE_RECEIPT			= 161;
+  CMS_F_CMS_ENCRYPT				= 119;
+  CMS_F_CMS_ENCRYPTEDCONTENT_INIT_BIO		= 120;
+  CMS_F_CMS_ENCRYPTEDDATA_DECRYPT			= 121;
+  CMS_F_CMS_ENCRYPTEDDATA_ENCRYPT			= 122;
+  CMS_F_CMS_ENCRYPTEDDATA_SET1_KEY		= 123;
+  CMS_F_CMS_ENVELOPEDDATA_CREATE			= 124;
+  CMS_F_CMS_ENVELOPEDDATA_INIT_BIO		= 125;
+  CMS_F_CMS_ENVELOPED_DATA_INIT			= 126;
+  CMS_F_CMS_FINAL					= 127;
+  CMS_F_CMS_GET0_CERTIFICATE_CHOICES		= 128;
+  CMS_F_CMS_GET0_CONTENT				= 129;
+  CMS_F_CMS_GET0_ECONTENT_TYPE			= 130;
+  CMS_F_CMS_GET0_ENVELOPED			= 131;
+  CMS_F_CMS_GET0_REVOCATION_CHOICES		= 132;
+  CMS_F_CMS_GET0_SIGNED				= 133;
+  CMS_F_CMS_MSGSIGDIGEST_ADD1			= 162;
+  CMS_F_CMS_RECEIPTREQUEST_CREATE0		= 159;
+  CMS_F_CMS_RECEIPT_VERIFY			= 160;
+  CMS_F_CMS_RECIPIENTINFO_DECRYPT			= 134;
+  CMS_F_CMS_RECIPIENTINFO_KEKRI_DECRYPT		= 135;
+  CMS_F_CMS_RECIPIENTINFO_KEKRI_ENCRYPT		= 136;
+  CMS_F_CMS_RECIPIENTINFO_KEKRI_GET0_ID		= 137;
+  CMS_F_CMS_RECIPIENTINFO_KEKRI_ID_CMP		= 138;
+  CMS_F_CMS_RECIPIENTINFO_KTRI_CERT_CMP		= 139;
+  CMS_F_CMS_RECIPIENTINFO_KTRI_DECRYPT		= 140;
+  CMS_F_CMS_RECIPIENTINFO_KTRI_ENCRYPT		= 141;
+  CMS_F_CMS_RECIPIENTINFO_KTRI_GET0_ALGS		= 142;
+  CMS_F_CMS_RECIPIENTINFO_KTRI_GET0_SIGNER_ID	= 143;
+  CMS_F_CMS_RECIPIENTINFO_SET0_KEY		= 144;
+  CMS_F_CMS_RECIPIENTINFO_SET0_PKEY		= 145;
+  CMS_F_CMS_SET1_SIGNERIDENTIFIER			= 146;
+  CMS_F_CMS_SET_DETACHED				= 147;
+  CMS_F_CMS_SIGN					= 148;
+  CMS_F_CMS_SIGNED_DATA_INIT			= 149;
+  CMS_F_CMS_SIGNERINFO_CONTENT_SIGN		= 150;
+  CMS_F_CMS_SIGNERINFO_SIGN			= 151;
+  CMS_F_CMS_SIGNERINFO_VERIFY			= 152;
+  CMS_F_CMS_SIGNERINFO_VERIFY_CERT		= 153;
+  CMS_F_CMS_SIGNERINFO_VERIFY_CONTENT		= 154;
+  CMS_F_CMS_SIGN_RECEIPT			  = 163;
+  CMS_F_CMS_STREAM				= 155;
+  CMS_F_CMS_UNCOMPRESS				= 156;
+  CMS_F_CMS_VERIFY				= 157;
+
+//* Reason codes. */
+  CMS_R_ADD_SIGNER_ERROR				= 99;
+  CMS_R_CERTIFICATE_ALREADY_PRESENT		= 175;
+  CMS_R_CERTIFICATE_HAS_NO_KEYID			= 160;
+  CMS_R_CERTIFICATE_VERIFY_ERROR			= 100;
+  CMS_R_CIPHER_INITIALISATION_ERROR		= 101;
+  CMS_R_CIPHER_PARAMETER_INITIALISATION_ERROR	 = 102;
+  CMS_R_CMS_DATAFINAL_ERROR			 = 103;
+  CMS_R_CMS_LIB					= 104;
+  CMS_R_CONTENTIDENTIFIER_MISMATCH		= 170;
+  CMS_R_CONTENT_NOT_FOUND				 = 105;
+  CMS_R_CONTENT_TYPE_MISMATCH			 = 171;
+  CMS_R_CONTENT_TYPE_NOT_COMPRESSED_DATA		= 106;
+  CMS_R_CONTENT_TYPE_NOT_ENVELOPED_DATA		= 107;
+  CMS_R_CONTENT_TYPE_NOT_SIGNED_DATA		= 108;
+  CMS_R_CONTENT_VERIFY_ERROR			= 109;
+  CMS_R_CTRL_ERROR				= 110;
+  CMS_R_CTRL_FAILURE				= 111;
+  CMS_R_DECRYPT_ERROR				= 112;
+  CMS_R_DIGEST_ERROR				= 161;
+  CMS_R_ERROR_GETTING_PUBLIC_KEY			= 113;
+  CMS_R_ERROR_READING_MESSAGEDIGEST_ATTRIBUTE	= 114;
+  CMS_R_ERROR_SETTING_KEY				= 115;
+  CMS_R_ERROR_SETTING_RECIPIENTINFO		= 116;
+  CMS_R_INVALID_ENCRYPTED_KEY_LENGTH		= 117;
+  CMS_R_INVALID_KEY_LENGTH			= 118;
+  CMS_R_MD_BIO_INIT_ERROR				= 119;
+  CMS_R_MESSAGEDIGEST_ATTRIBUTE_WRONG_LENGTH	= 120;
+  CMS_R_MESSAGEDIGEST_WRONG_LENGTH		= 121;
+  CMS_R_MSGSIGDIGEST_ERROR			= 172;
+  CMS_R_MSGSIGDIGEST_VERIFICATION_FAILURE		= 162;
+  CMS_R_MSGSIGDIGEST_WRONG_LENGTH			= 163;
+  CMS_R_NEED_ONE_SIGNER				= 164;
+  CMS_R_NOT_A_SIGNED_RECEIPT			= 165;
+  CMS_R_NOT_ENCRYPTED_DATA			= 122;
+  CMS_R_NOT_KEK					= 123;
+  CMS_R_NOT_KEY_TRANSPORT				= 124;
+  CMS_R_NOT_SUPPORTED_FOR_THIS_KEY_TYPE		= 125;
+  CMS_R_NO_CIPHER					= 126;
+  CMS_R_NO_CONTENT				= 127;
+  CMS_R_NO_CONTENT_TYPE				= 173;
+  CMS_R_NO_DEFAULT_DIGEST				= 128;
+  CMS_R_NO_DIGEST_SET				= 129;
+  CMS_R_NO_KEY					= 130;
+  CMS_R_NO_KEY_OR_CERT				= 174;
+  CMS_R_NO_MATCHING_DIGEST			= 131;
+  CMS_R_NO_MATCHING_RECIPIENT			= 132;
+  CMS_R_NO_MATCHING_SIGNATURE			= 166;
+  CMS_R_NO_MSGSIGDIGEST				= 167;
+  CMS_R_NO_PRIVATE_KEY				= 133;
+  CMS_R_NO_PUBLIC_KEY				= 134;
+  CMS_R_NO_RECEIPT_REQUEST			= 168;
+  CMS_R_NO_SIGNERS				= 135;
+  CMS_R_PRIVATE_KEY_DOES_NOT_MATCH_CERTIFICATE	= 136;
+  CMS_R_RECEIPT_DECODE_ERROR			= 169;
+  CMS_R_RECIPIENT_ERROR				= 137;
+  CMS_R_SIGNER_CERTIFICATE_NOT_FOUND		= 138;
+  CMS_R_SIGNFINAL_ERROR				= 139;
+  CMS_R_SMIME_TEXT_ERROR				= 140;
+  CMS_R_STORE_INIT_ERROR				= 141;
+  CMS_R_TYPE_NOT_COMPRESSED_DATA			= 142;
+  CMS_R_TYPE_NOT_DATA				= 143;
+  CMS_R_TYPE_NOT_DIGESTED_DATA			= 144;
+  CMS_R_TYPE_NOT_ENCRYPTED_DATA			= 145;
+  CMS_R_TYPE_NOT_ENVELOPED_DATA			= 146;
+  CMS_R_UNABLE_TO_FINALIZE_CONTEXT		= 147;
+  CMS_R_UNKNOWN_CIPHER				= 148;
+  CMS_R_UNKNOWN_DIGEST_ALGORIHM			= 149;
+  CMS_R_UNKNOWN_ID				= 150;
+  CMS_R_UNSUPPORTED_COMPRESSION_ALGORITHM		= 151;
+  CMS_R_UNSUPPORTED_CONTENT_TYPE			= 152;
+  CMS_R_UNSUPPORTED_KEK_ALGORITHM			= 153;
+  CMS_R_UNSUPPORTED_RECIPIENT_TYPE		= 154;
+  CMS_R_UNSUPPORTED_RECPIENTINFO_TYPE		= 155;
+  CMS_R_UNSUPPORTED_TYPE				= 156;
+  CMS_R_UNWRAP_ERROR				= 157;
+  CMS_R_VERIFICATION_FAILURE			= 158;
+  CMS_R_WRAP_ERROR				= 159;
+
+  {$ENDIF}
   _ATEXIT_SIZE = 32;
   {$EXTERNALSYM _ATEXIT_SIZE}
   _IOFBF = 0;
@@ -4887,7 +5604,10 @@ const
   ERR_LIB_STORE = 44;
   ERR_LIB_FIPS = 45;
   ERR_LIB_CMS = 46;
-  ERR_LIB_JPAKE = 47;
+  ERR_LIB_TS	=	47;
+  ERR_LIB_HMAC	=	48;
+  //OpenSSL 0.9.8n was 47
+  ERR_LIB_JPAKE = 49;
 //* fatal error */
   ERR_R_FATAL	= 64;
 //was  ERR_R_FATAL = 32;
@@ -4990,6 +5710,8 @@ const
   ERR_R_ECDSA_LIB = ERR_LIB_ECDSA;
   ERR_R_ECDH_LIB = ERR_LIB_ECDH;
   ERR_R_STORE_LIB = ERR_LIB_STORE;
+  ERR_R_TS_LIB = ERR_LIB_TS;       //* 45 */
+
   ERR_R_NESTED_ASN1_ERROR = 58;
   ERR_R_BAD_ASN1_OBJECT_HEADER = 59;
   ERR_R_BAD_GET_ASN1_OBJECT_CALL = 60;
@@ -5084,6 +5806,7 @@ type
       {$ENDIF}
     {$ENDIF}
   {$ENDIF}
+
   {$IFNDEF OPENSSL_NO_RC1}
     {$IFDEF RC2_SHORT}
   RC2_INT = TIdC_USHORT;
@@ -5241,6 +5964,38 @@ type
     arg : Pointer;    // callback-specific data
     cb : BN_GENCB_union;
   end;
+  //aes.h
+
+  //seed.h
+
+  //chamellia.h
+  {$IFNDEF OPENSSL_NO_CAMELLIA}
+  KEY_TABLE_TYPE = array [0..(CAMELLIA_TABLE_WORD_LEN - 1)] of TIdC_UINT; //* to match with WORD */
+  CAMELLIA_KEY_union = record
+  case byte of
+    0 : (d : TIdC_DOUBLE); //* ensures 64-bit align */
+    1 : (rd_key : KEY_TABLE_TYPE);
+  end;
+  CAMELLIA_KEY = record
+    u : CAMELLIA_KEY_union;
+    grand_rounds : TIdC_INT;
+  end;
+  PCAMELLIA_KEY = ^CAMELLIA_KEY;
+  {$ENDIF}
+  //whrlpool.h
+  WHIRLPOOL_CTX_union = record
+  case byte of
+    0 : (c : array [0..WHIRLPOOL_DIGEST_LENGTH - 1] of byte );
+    1 : (q : array [0..(WHIRLPOOL_DIGEST_LENGTH div SizeOf(TIdC_DOUBLE))-1 ] of TIdC_DOUBLE);
+  end;
+  WHIRLPOOL_CTX = record
+    H : WHIRLPOOL_CTX_union;
+    data : array [0..(WHIRLPOOL_BBLOCK div 8)-1] of byte;
+    bitoff : TIdC_INT;
+    bitlen : array[0..(WHIRLPOOL_COUNTER div sizeof(size_t))-1] of size_t;
+  end;
+  PWHIRLPOOL_CTX = ^WHIRLPOOL_CTX;
+
   //md2.h
   {$IFNDEF OPENSSL_NO_MD2}
   MD2_CTX = record
@@ -5457,7 +6212,7 @@ type
   STACK_OF_ASN1_VALUE = record
     stack: stack;
   end;
-  PSTACK_OF_ASN1_VALUE = ^STACK_OF_AASN1_VALUE;
+  PSTACK_OF_ASN1_VALUE = ^STACK_OF_ASN1_VALUE;
   {$ELSE}
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_ASN1_VALUE = PSTACK;
@@ -5761,6 +6516,7 @@ type
     mt_blinding : PBN_BLINDING;
   end;
   {$ENDIF}
+
   //dh.h
   {$IFNDEF OPENSSL_NO_DH}
   PDH = ^DH;
@@ -5898,6 +6654,9 @@ type
   //evp.h
 //  EVP_PBE_KEYGEN = record
 //  end;
+  PEVP_PKEY_METHOD = pointer;  //This is not defined publically in OpenSSL 1.0.0
+  PEVP_PKEY_CTX = pointer; //This is not defined publically in OpenSSL 1.0.0
+  PEVP_PKEY_ASN1_METHOD = pointer;
   PEVP_PBE_KEYGEN = Pointer;//^EVP_PBE_KEYGEN;
   //evp.h
   //struct evp_pkey_st
@@ -5935,17 +6694,24 @@ type
     _type : TIdC_INT;
     save_type : TIdC_INT;
     references : TIdC_INT;
+    ameth : PEVP_PKEY_ASN1_METHOD;
     pkey : EVP_PKEY_union;
     attributes : PSTACK_OF_X509_ATTRIBUTE;  // [ 0 ]
   end;
   PEVP_MD = ^EVP_MD;
+  PEVP_MD_CTX = ^EVP_MD_CTX;
   EVP_MD_CTX = record
     digest : PEVP_MD;
     engine : PENGINE; // functional reference if 'digest' is ENGINE-provided
     flags : TIdC_ULONG;
     md_data : Pointer;
+	//* Public key context for sign/verify */
+	  pctx : PEVP_PKEY_CTX;
+	//* Update function: usually copied from EVP_MD */
+//	int (*update)(EVP_MD_CTX *ctx,const void *data,size_t count);
+     update : function (ctx : PEVP_MD_CTX; const data : Pointer; count : size_t) : TIdC_INT cdecl;
   end;
-  PEVP_MD_CTX = ^EVP_MD_CTX;
+
   EVP_MD_SVCTX = record
 	  mctx : PEVP_MD_CTX;
 	  key : Pointer;
@@ -5980,7 +6746,7 @@ type
     iv_len : TIdC_INT;
     flags : TIdC_UINT; // Various flags
     init : function (ctx : PEVP_CIPHER_CTX; key : PAnsiChar; iv : PAnsiChar; enc : TIdC_INT): TIdC_INT; cdecl;
-    do_cipher : function (ctx : PEVP_CIPHER_CTX; _out : PAnsiChar; _in : PAnsiChar; inl : TIdC_UINT) : TIdC_INT; cdecl;
+    do_cipher : function (ctx : PEVP_CIPHER_CTX; _out : PAnsiChar; _in : PAnsiChar; inl : size_t) : TIdC_INT; cdecl;
     cleanup : function (_para1 : PEVP_CIPHER_CTX): TIdC_INT; cdecl; // cleanup ctx
     ctx_size : TIdC_INT;  // how big ctx->cipher_data needs to be
     set_asn1_parameters : function (_para1 : PEVP_CIPHER_CTX;
@@ -6121,7 +6887,11 @@ type
 //typedef int (*ENGINE_CIPHERS_PTR)(ENGINE *, const EVP_CIPHER **, const int **, int);
   ENGINE_CIPHERS_PTR = function(para1 : PENGINE; var para2 : PEVP_CIPHER; var para3 : PIdC_Int; para4 : TIdC_Int) : TIdC_Int; cdecl;
 //typedef int (*ENGINE_DIGESTS_PTR)(ENGINE *, const EVP_MD **, const int **, int);
-  ENGINE_DIGESTS_PTR = function(para1 : PENGINE; var Para2 : PEVP_MD; var Para3 : PIdC_INT; para : TIdC_INT) : TIdC_INT; cdecl;
+  ENGINE_DIGESTS_PTR = function(para1 : PENGINE; var Para2 : PEVP_MD; var Para3 : PIdC_INT; para4 : TIdC_INT) : TIdC_INT cdecl;
+//typedef int (*ENGINE_PKEY_METHS_PTR)(ENGINE *, EVP_PKEY_METHOD **, const int **, int);
+  ENGINE_PKEY_METHS_PTR = function(para1 : PENGINE; var Para2 : PEVP_PKEY_METHOD; var Para3 : PIdC_INT; para4 : TIdC_INT) : TIdC_INT cdecl;
+//typedef int (*ENGINE_PKEY_ASN1_METHS_PTR)(ENGINE *, EVP_PKEY_ASN1_METHOD **, const int **, int);
+  ENGINE_PKEY_ASN1_METHS_PTR = function(para1 : PENGINE; var Para2 : PEVP_PKEY_ASN1_METHOD; var Para3 : PIdC_INT; para4 : TIdC_INT) : TIdC_INT cdecl;
 {
 /* When compiling an ENGINE entirely as an external shared library, loadable by
  * the "dynamic" ENGINE, these types are needed. The 'dynamic_fns' structure
@@ -6215,6 +6985,17 @@ type
   end;
   PAES_KEY = ^AES_KEY;
   PPAES_KEY = ^PAES_KEY;
+  {$ENDIF}
+  //seed.h
+  {$IFNDEF OPENSSL_NO_SEED}
+  SEED_KEY_SCHEDULE = record
+    {$IFDEF SEED_LONG}
+    data : array [0..(32 -1)] of TIdC_ULONG ;
+    {$ELSE}
+    data : array[0..(32-1)] of TIdC_UINT;
+    {$ENDIF}
+   end;
+  PSEED_KEY_SCHEDULE = ^SEED_KEY_SCHEDULE;
   {$ENDIF}
   //lhash.h
   PLHASH_NODE = ^LHASH_NODE;
@@ -6644,8 +7425,12 @@ type
   end;
   {$ELSE}
   //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_POLICYQUALINFO = PSTACK;
   {$ENDIF}
   {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_POLICYINFO = record
+    _stack: stack;
+  end;
   PSTACK_OF_POLICYINFO = ^STACK_OF_POLICYINFO;
   {$ELSE}
   PSTACK_OF_POLICYINFO = PSTACK;
@@ -6654,13 +7439,7 @@ type
     policyid : PASN1_OBJECT;
     qualifiers : PSTACK_OF_POLICYQUALINFO;
   end;
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_POLICYQUALINFO = record
-    _stack: stack;
-  end;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  {$ENDIF}
+
   CERTIFICATEPOLICIES = PSTACK_OF_POLICYINFO;
   //typedef STACK_OF(POLICYINFO) CERTIFICATEPOLICIES;
   POLICY_MAPPING = record
@@ -6669,7 +7448,7 @@ type
   end;
   PPOLICY_MAPPING = ^POLICY_MAPPING;
   {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_PPOLICY_MAPPING = record
+  STACK_OF_POLICY_MAPPING = record
     _stack: stack;
   end;
   PSTACK_OF_POLICY_MAPPING = ^STACK_OF_POLICY_MAPPING;
@@ -6734,6 +7513,98 @@ type
   {$ELSE}
   //I think the DECLARE_STACK_OF macro is empty
   PSTACK_OF_X509_PURPOSE = PSTACK;
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_RFC3779}
+  ASRange = record
+    min, max : PASN1_INTEGER;
+  end;
+  PASRange = ^ASRange;
+  ASIdOrRange_union = record
+    case byte of
+     ASIdOrRange_id : (id : PASN1_INTEGER);
+     ASIdOrRange_range : (range : PASRange);
+  end;
+  ASIdOrRange = record
+    _type : TIdC_INT;
+    u : ASIdOrRange_union;
+  end;
+  PASIdOrRange = ^ASIdOrRange;
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_ASIdOrRange = record
+    _stack: stack;
+  end;
+  PSTACK_OF_ASIdOrRange = ^STACK_OF_ASIdOrRange;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ASIdOrRange = PSTACK;
+  {$ENDIF}
+  PASIdOrRanges = PSTACK_OF_ASIdOrRange;
+
+  ASIdentifierChoice_union = record
+  case byte of
+   ASIdentifierChoice_inherit : (inherit : PASN1_NULL);
+   ASIdentifierChoice_asIdsOrRanges : (asIdsOrRanges : PASIdOrRanges);
+  end;
+  ASIdentifierChoice = record
+    _type : TIdC_INT;
+    u : ASIdentifierChoice_union;
+  end;
+  PASIdentifierChoice = ^ASIdentifierChoice;
+  ASIdentifiers = record
+    asnum : PASIdentifierChoice;
+    rdi : PASIdentifierChoice;
+  end;
+  PASIdentifiers = ^ASIdentifiers;
+  IPAddressRange = record
+    min, max : PASN1_BIT_STRING;
+  end;
+  PIPAddressRange = ^IPAddressRange;
+  IPAddressOrRange_union = record
+  case byte of
+    IPAddressOrRange_addressPrefix : (addressPrefix : PASN1_BIT_STRING);
+    IPAddressOrRange_addressRange : (addressRange : PIPAddressRange);
+  end;
+  IPAddressOrRange = record
+    _type : TIdC_INT;
+    u : IPAddressOrRange_union;
+  end;
+  PIPAddressOrRange = ^IPAddressOrRange;
+    {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_IPAddressOrRange = record
+    _stack: stack;
+  end;
+  PSTACK_OF_IPAddressOrRange = ^STACK_OF_IPAddressOrRange;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_IPAddressOrRange = PSTACK;
+  {$ENDIF}
+  PIPAddressOrRanges = PSTACK_OF_IPAddressOrRange;
+  IPAddressChoice_union = record
+  case byte of
+    IPAddressChoice_inherit : (inherit : PASN1_NULL);
+    IPAddressChoice_addressesOrRanges : (addressesOrRanges : PIPAddressOrRanges);
+  end;
+  IPAddressChoice = record
+    _type : TIdC_INT;
+    u : IPAddressChoice_union;
+  end;
+  PIPAddressChoice = ^IPAddressChoice;
+  IPAddressFamily = record
+  	addressFamily : PASN1_OCTET_STRING;
+  	ipAddressChoice : PIPAddressChoice;
+  end;
+  PIPAddressFamily = ^IPAddressFamily;
+
+   {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_IPAddressFamily = record
+    _stack: stack;
+  end;
+  PSTACK_OF_IPAddressFamily = ^STACK_OF_IPAddressFamily;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_IPAddressFamily = PSTACK;
+  {$ENDIF}
+  PIPAddrBlocks = PSTACK_OF_IPAddressFamily;
   {$ENDIF}
   //x509.h
   X509_HASH_DIR_CTX = record
@@ -6819,6 +7690,7 @@ type
   end;
   {$ELSE}
   //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_X509_NAME_ENTRY = PSTACK;
   {$ENDIF}
   X509_NAME = record
     entries : PSTACK_OF_X509_NAME_ENTRY;
@@ -6915,6 +7787,10 @@ type
     skid : PASN1_OCTET_STRING;
     akid : PAUTHORITY_KEYID;
     policy_cache : PX509_POLICY_CACHE;
+    {$IFNDEF OPENSSL_NO_RFC3779}
+    rfc3779_addr : PSTACK_OF_IPAddressFamily;
+    rfc3779_asid : PASIdentifiers;
+    {$ENDIF}
     {$IFNDEF OPENSSL_NO_SHA}
     sha1_hash : array [0..SHA_DIGEST_LENGTH-1] of AnsiChar;
     {$ENDIF}
@@ -7069,7 +7945,7 @@ type
   end;
   PPX509_TRUST = ^PX509_TRUST;
   {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_X509_NAME_ENTRY = record
+  STACK_OF_509_TRUST = record
     _stack: stack;
   end;
   PSTACK_OF_509_TRUST = ^STACK_OF_509_TRUST;
@@ -7174,6 +8050,31 @@ type
   PPKCS7_RECIP_INFO = ^PKCS7_RECIP_INFO;
 
   PSHA_CTX = ^SHA_CTX;
+  //cms.h
+  {$IFDEF OPENSSL_NO_CMS}
+  PCMS_ContentInfo = Pointer;
+  PCMS_SignerInfo = Pointer;
+  PCMS_CertificateChoices = Pointer;
+  PCMS_RevocationInfoChoice = Pointer;
+  PCMS_RecipientInfo = Pointer;
+  PCMS_ReceiptRequest = Pointer;
+  PCMS_Receipt = Pointer;
+   {$IFDEF DEBUG_SAFESTACK}
+  //These are cut and paste but the duplication is for type checking.
+  STACK_OF_CMS_SignerInfo = record
+    _stack: stack;
+  end;
+  STACK_OF_GENERAL_NAMES = record
+    _stack: stack;
+  end;
+  PSTACK_OF_CMS_SignerInfo = ^STACK_OF_CMS_SignerInfo;
+  PSTACK_OF_GENERAL_NAMES = ^STACK_OF_GENERAL_NAMES;
+    {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_CMS_SignerInfo = PSTACK;
+  PSTACK_OF_GENERAL_NAMES) = PSTACK;
+    {$ENDIF}
+  {$ENDIF}
   //ripemd.h
   {$IFNDEF OPENSSL_NO_RIPEMD}
   RIPEMD160_LONG = TIdC_UINT;
@@ -7755,6 +8656,162 @@ _des_cblock = DES_cblock
     mac : PPKCS12_MAC_DATA;
     authsafes : PPKCS7;
   end;
+  //ts.h
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_EVP_MD = record
+    _stack: stack;
+  end;
+  PSTACK_OF_EVP_MD = ^STACK_OF_EVP_MD;
+  STACK_OF_ASN1_UTF8STRING = record
+    _stack: stack;
+  end;
+  PSTACK_OF_ASN1_UTF8STRING = ^STACK_OF_ASN1_UTF8STRING;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_EVP_MD = PSTACK;
+  PSTACK_OF_ASN1_UTF8STRING = PSTACK;
+  {$ENDIF}
+  TS_MSG_IMPRINT = record
+	 hash_algo : PX509_ALGOR;
+	 hashed_msg : PASN1_OCTET_STRING;
+  end;
+  PTS_MSG_IMPRINT = ^TS_MSG_IMPRINT;
+  TS_REQ = record
+	  version : PASN1_INTEGER;
+	  msg_imprint : PTS_MSG_IMPRINT;
+	  policy_id : PASN1_OBJECT;		//* OPTIONAL */
+	  nonce : PASN1_INTEGER;		//* OPTIONAL */
+    cert_req : ASN1_BOOLEAN;		//* DEFAULT FALSE */
+	  extensions : PSTACK_OF_X509_EXTENSION;	//* [0] OPTIONAL */
+  end;
+  PTS_REQ = ^TS_REQ;
+  TS_ACCURACY = record
+	  seconds : PASN1_INTEGER;
+	  millis : PASN1_INTEGER;
+	  micros : PASN1_INTEGER;
+  end;
+  PTS_ACCURACY = ^TS_ACCURACY;
+  TS_TST_INFO = record
+	  version : PASN1_INTEGER;
+	  policy_id : PASN1_OBJECT;
+	  msg_imprint : PTS_MSG_IMPRINT;
+	  serial : PASN1_INTEGER;
+	  time : PASN1_GENERALIZEDTIME;
+	  accuracy : PTS_ACCURACY;
+	  ordering : PASN1_BOOLEAN;
+	  nonce : PASN1_INTEGER;
+	  tsa : PGENERAL_NAME;
+    extensions : PSTACK_OF_X509_EXTENSION;
+  end;
+  PTS_TST_INFO = ^TS_TST_INFO;
+  TS_STATUS_INFO = record
+	  status : PASN1_INTEGER;
+	  text : PSTACK_OF_ASN1_UTF8STRING;
+	  failure_info : PASN1_BIT_STRING;
+  end;
+  PTS_STATUS_INFO = ^TS_STATUS_INFO;
+  TS_RESP = record
+  	status_info : PTS_STATUS_INFO;
+	  token : PPKCS7;
+	  tst_info : PTS_TST_INFO;
+  end;
+  PTS_RESP = ^TS_RESP;
+  ESS_ISSUER_SERIAL = record
+  	issuer : PSTACK_OF_GENERAL_NAME;
+    serial : PASN1_INTEGER;
+  end;
+  PESS_ISSUER_SERIAL = ^ESS_ISSUER_SERIAL;
+  ESS_CERT_ID = record
+	  hash : PASN1_OCTET_STRING;	//* Always SHA-1 digest. */
+	  issuer_serial : PESS_ISSUER_SERIAL;
+  end;
+  PESS_CERT_ID = ^ESS_CERT_ID;
+  {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_ESS_CERT_ID = record
+    _stack: stack;
+  end;
+  PSTACK_OF_ESS_CERT_ID = ^STACK_OF_ESS_CERT_ID;
+  {$ELSE}
+  //I think the DECLARE_STACK_OF macro is empty
+  PSTACK_OF_ESS_CERT_ID = PSTACK;
+  {$ENDIF}
+  ESS_SIGNING_CERT = record
+	 cert_ids : PSTACK_OF_ESS_CERT_ID;
+	 policy_info : PSTACK_OF_POLICYINFO;
+  end;
+  PESS_SIGNING_CERT = ^ESS_SIGNING_CERT;
+  PTS_resp_ctx = ^TS_resp_ctx;
+//* This must return a unique number less than 160 bits long. */
+//typedef ASN1_INTEGER *(*TS_serial_cb)(struct TS_resp_ctx *, void *);
+  TS_serial_cb = function (p1 : PTS_resp_ctx; p2 : Pointer) : PASN1_INTEGER cdecl;
+  //* This must return the seconds and microseconds since Jan 1, 1970 in
+ //  the sec and usec variables allocated by the caller.
+ //  Return non-zero for success and zero for failure. */
+//typedef	int (*TS_time_cb)(struct TS_resp_ctx *, void *, long *sec, long *usec);
+  TS_time_cb = function (p1 : PTS_resp_ctx; p2 : Pointer; sec, usec : TIdC_LONG) : TIdC_INT cdecl;
+///* This must process the given extension.
+// * It can modify the TS_TST_INFO object of the context.
+// * Return values: !0 (processed), 0 (error, it must set the
+// * status info/failure info of the response).
+// */
+//typedef	int (*TS_extension_cb)(struct TS_resp_ctx *, X509_EXTENSION *, void *);
+  TS_extension_cb = function (p1 : PTS_resp_ctx; p2 : PX509_EXTENSION; p3 : Pointer) : TIdC_INT cdecl;
+  TS_RESP_CTX = record
+		signer_cert : PX509;
+		signer_key : PEVP_PKEY;
+	  certs : PSTACK_OF_X509;	//* Certs to include in signed data. */
+	  policies : PSTACK_OF_ASN1_OBJECT;	//* Acceptable policies. */
+		default_policy : PASN1_OBJECT; //* It may appear in policies, too. */
+	  mds : PSTACK_OF_EVP_MD;	//* Acceptable message digests. */
+		seconds : PASN1_INTEGER;	//* accuracy, 0 means not specified. */
+		millis : PASN1_INTEGER;	//* accuracy, 0 means not specified. */
+		micros : PASN1_INTEGER;	//* accuracy, 0 means not specified. */
+		clock_precision_digits : TIdC_UNSIGNED; //* fraction of seconds in
+						   //time stamp token. */
+		flags : TIdC_UNSIGNED;		//* Optional info, see values above. */
+
+	//* Callback functions. */
+	  serial_cb : TS_serial_cb;
+	  serial_cb_data : Pointer;	//* User data for serial_cb. */
+
+	  time_cb : TS_time_cb;
+	  time_cb_data : Pointer;	//* User data for time_cb. */
+
+	  extension_cb : TS_extension_cb;
+	  extension_cb_data : Pointer;	//* User data for extension_cb. */
+
+	//* These members are used only while creating the response. */
+		request : PTS_REQ;
+		response : PTS_RESP;
+		tst_info : PTS_TST_INFO;
+  end;
+  TS_VERIFY_CTX = record
+  	//* Set this to the union of TS_VFY_... flags you want to carry out. */
+		flags : TIdC_UNSIGNED;
+
+	//* Must be set only with TS_VFY_SIGNATURE. certs is optional. */
+		store : PX509_STORE;
+	  certs : PSTACK_OF_X509;
+
+	//* Must be set only with TS_VFY_POLICY. */
+		policy : PASN1_OBJECT;
+
+//	/* Must be set only with TS_VFY_IMPRINT. If md_alg is NULL,
+//	   the algorithm from the response is used. */
+		md_alg : PX509_ALGOR;
+	  imprint : PAnsiChar;
+		imprint_len : TIdC_UNSIGNED;
+
+	//* Must be set only with TS_VFY_DATA. */
+	  data : PBIO;
+
+	//* Must be set only with TS_VFY_TSA_NAME. */
+		nonce : PASN1_INTEGER;
+
+	//* Must be set only with TS_VFY_TSA_NAME. */
+    tsa_name : PGENERAL_NAME;
+  end;
+  PTS_VERIFY_CTX = ^TS_VERIFY_CTX;
   //comp.h
   PCOMP_CTX = ^COMP_CTX;
   COMP_METHOD = record
@@ -8530,7 +9587,9 @@ var
   //SSL Version function
   _SSLeay_version : function(_type : TIdC_INT) : PAnsiChar cdecl = nil;
   //SSLeay
-  SSLeay : function : TIdC_ULONG cdecl;
+  SSLeay : function : TIdC_ULONG cdecl = nil;
+  _CRYPTO_lock : procedure(mode, _type : TIdC_INT; const _file : PAnsiChar; line : TIdC_INT) cdecl = nil;
+
   //CRYPTO_set_mem_ex_functions
   CRYPTO_set_mem_functions : function(
     m: TCRYPTO_set_mem_functions_m;
@@ -8896,18 +9955,45 @@ any IFDEF's and cases where the FIPS functions aren't in the .DLL}
 {$ENDIF}
 
 {$IFNDEF OPENSSL_NO_HMAC}
+{
+NOTE:
+
+There is breakage between OpenSSL 0.9.x and OpenSSL 1.0x.  Some HMAC functions
+were changed to return a result code.  MOst of this is ugly but necessary to
+work around the issues involved.  Basically, the result of the C functions is
+changed from "void" to "int" so that they can return failure.
+}
 //void HMAC_CTX_init(HMAC_CTX *ctx);
   HMAC_CTX_init : procedure(ctx : PHMAC_CTX) cdecl = nil;
+
 //void HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len,
 //		  const EVP_MD *md, ENGINE *impl);
-  HMAC_Init_ex : procedure(ctx : PHMAC_CTX; key : Pointer; len : TIdC_INT;
+
+  _HMAC_Init_ex : procedure(ctx : PHMAC_CTX; key : Pointer; len : TIdC_INT;
     md : PEVP_MD; impl : PENGINE) cdecl = nil;
+//OpenSSL 1.0
+//int HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len,
+//		  const EVP_MD *md, ENGINE *impl);
+  _1_0_HMAC_Init_ex : function(ctx : PHMAC_CTX; key : Pointer; len : TIdC_INT;
+    md : PEVP_MD; impl : PENGINE) : TIdC_INT cdecl = nil;
 //void HMAC_Update(HMAC_CTX *ctx, const unsigned char *data, size_t len);
-  HMAC_Update : procedure(ctx : PHMAC_CTX; data : PAnsiChar; len : size_t) cdecl = nil;
-//void HMAC_Final(HMAC_CTX *ctx, unsigned char *md, unsigned int *len);
-  HMAC_Final : procedure(ctx : PHMAC_CTX; md : PAnsiChar; len : PIdC_UINT) cdecl = nil;
+  _HMAC_Update : procedure(ctx : PHMAC_CTX; data : PAnsiChar; len : size_t) cdecl = nil;
+  //OpenSSL 1.0
+//int HMAC_Update(HMAC_CTX *ctx, const unsigned char *data, size_t len);
+  _1_0_HMAC_Update : function(ctx : PHMAC_CTX; data : PAnsiChar; len : size_t) : TIdC_INT cdecl = nil;
+  //void HMAC_Final(HMAC_CTX *ctx, unsigned char *md, unsigned int *len);
+  _HMAC_Final : procedure(ctx : PHMAC_CTX; md : PAnsiChar; len : PIdC_UINT) cdecl = nil;
+//OpenSSL 1.0
+//   int HMAC_Final(HMAC_CTX *ctx, unsigned char *md, unsigned int *len);
+  _1_0_HMAC_Final : function(ctx : PHMAC_CTX; md : PAnsiChar; len : PIdC_UINT) : TIdC_INT cdecl = nil;
 //void HMAC_CTX_cleanup(HMAC_CTX *ctx);
   HMAC_CTX_cleanup : procedure (ctx : PHMAC_CTX) cdecl = nil;
+
+procedure HMAC_Init_ex(ctx : PHMAC_CTX; key : Pointer; len : TIdC_INT;
+    md : PEVP_MD; impl : PENGINE);
+
+procedure HMAC_Update(ctx : PHMAC_CTX; data : PAnsiChar; len : size_t);
+procedure HMAC_Final(ctx : PHMAC_CTX; md : PAnsiChar; len : PIdC_UINT);
 {$ENDIF}
 
 {begin stack fancy stuff}
@@ -8948,7 +10034,6 @@ var
 
 function FIPS_mode_set(onoff : TIdC_INT) : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
 function FIPS_mode() : TIdC_INT;  {$IFDEF INLINE}inline;{$ENDIF}
-
 
 
 {begin other stuff}
@@ -9217,6 +10302,8 @@ procedure ECDHerr(const f,r : TIdC_INT);
 procedure STOREerr(const f,r : TIdC_INT);
 procedure FIPSerr(const f,r : TIdC_INT);
 procedure CMSerr(const f,r : TIdC_INT);
+procedure TSerr(const f,r : TIdC_INT);
+procedure HMACerr(const f,r : TIdC_INT);
 procedure JPAKEerr(const f,r : TIdC_INT);
 function X509_LOOKUP_load_file(x : PX509_LOOKUP; name : PAnsiChar; _type : TIdC_LONG) : TIdC_INT;
 function X509_LOOKUP_add_dir(x : PX509_LOOKUP; name : PAnsiChar; _type : TIdC_LONG) : TIdC_INT;
@@ -9255,6 +10342,8 @@ type
   EIdDigestInitEx = class(EIdDigestError);
   EIdDigestUpdate = class(EIdDigestError);
 
+function IsOpenSSL_1x : Boolean;
+
 implementation
 
 uses
@@ -9270,12 +10359,63 @@ uses
   , Windows
   {$ENDIF};
 
+{$IFNDEF OPENSSL_NO_HMAC}
+procedure HMAC_Init_ex(ctx : PHMAC_CTX; key : Pointer; len : TIdC_INT;
+    md : PEVP_MD; impl : PENGINE);
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  if Assigned(_HMAC_Init_ex) then begin
+    _HMAC_Init_ex(ctx, key, len, md, impl );
+  end else begin
+    if Assigned(_1_0_HMAC_Init_ex) then begin
+      _1_0_HMAC_Init_ex(ctx, key, len, md, impl );
+    end;
+  end;
+end;
+
+procedure HMAC_Update(ctx : PHMAC_CTX; data : PAnsiChar; len : size_t);
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  if Assigned(_HMAC_Update) then begin
+    _HMAC_Update(ctx, data, len );
+  end else begin
+    if Assigned(_1_0_HMAC_Update) then begin
+      _1_0_HMAC_Update(ctx, data, len );
+    end;
+  end;
+end;
+
+procedure HMAC_Final(ctx : PHMAC_CTX; md : PAnsiChar; len : PIdC_UINT);
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  if Assigned(_HMAC_Final) then begin
+    _HMAC_Final(ctx, md, len );
+  end else begin
+    if Assigned(_1_0_HMAC_Update) then begin
+      _1_0_HMAC_Final(ctx, md, len );
+    end;
+  end;
+end;
+{$ENDIF}
+
+//I would've liked to put this in IdSSLOpenSSLUtils but we need it here
+//to detect some API changes between OpenSSL 0.9x and 1.x.
+function IsOpenSSL_1x : Boolean;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  if Assigned( SSLeay ) then begin
+    Result := SSLeay and $F0000000 = $10000000;
+  end else begin
+    Result := False;
+  end;
+end;
+
 //**************** FIPS Support backend *******************
 function OpenSSLIsHashingIntfAvail : Boolean;
 begin
   Result := Assigned(EVP_DigestInit_ex) and
-             Assigned(EVP_DigestUpdate) and
-             Assigned(EVP_DigestFinal_ex);
+            Assigned(EVP_DigestUpdate) and
+            Assigned(EVP_DigestFinal_ex) ;
 end;
 
 function OpenSSLGetFIPSMode : Boolean;
@@ -9501,9 +10641,9 @@ begin
   Result := False;
   {$ELSE}
   Result := Assigned(HMAC_CTX_init) and
-            Assigned(HMAC_Init_ex) and
-            Assigned(HMAC_Update) and
-            Assigned(HMAC_Final) and
+            ( Assigned(_HMAC_Init_ex) or Assigned(_1_0_HMAC_Init_ex) ) and
+            ( Assigned(_HMAC_Update) or Assigned(_1_0_HMAC_Update) ) and
+            ( Assigned(_HMAC_Final) or Assigned(_1_0_HMAC_Final) ) and
             Assigned(HMAC_CTX_cleanup);
   {$ENDIF}
 end;
@@ -9605,6 +10745,7 @@ begin
   {$ELSE}
   Result := AllocMem(SizeOf(HMAC_CTX));
   HMAC_CTX_init(Result);
+  HMAC_Init_ex(Result,@AKey[0],Length(AKey),EVP_sha384, nil);
   {$ENDIF}
 end;
 
@@ -9888,7 +11029,7 @@ them in case we use them later.}
   {CH fn_OPENSSL_ia32cap_loc = 'OPENSSL_ia32cap_loc'; { {Do not localize}
   {CH fn_CRYPTO_get_new_lockid = 'CRYPTO_get_new_lockid'; }  {Do not localize}
   fn_CRYPTO_num_locks = 'CRYPTO_num_locks';  {Do not localize}
-  {CH fn_CRYPTO_lock = 'CRYPTO_lock'; }  {Do not localize}
+  fn_CRYPTO_lock = 'CRYPTO_lock';   {Do not localize}
   fn_CRYPTO_set_locking_callback = 'CRYPTO_set_locking_callback';  {Do not localize}
   {CH fn_CRYPTO_set_add_lock_callback = 'CRYPTO_set_add_lock_callback'; }  {Do not localize}
   fn_CRYPTO_set_id_callback = 'CRYPTO_set_id_callback';  {Do not localize}
@@ -12830,6 +13971,7 @@ begin
   @SSL_CIPHER_get_version := LoadFunction(fn_SSL_CIPHER_get_version);
   @SSL_CIPHER_get_bits  := LoadFunction(fn_SSL_CIPHER_get_bits);
   // Thread safe
+  @_CRYPTO_lock := LoadFunctionCLib(fn_CRYPTO_lock);
   @_CRYPTO_num_locks := LoadFunctionCLib(fn_CRYPTO_num_locks);
   @CRYPTO_set_locking_callback := LoadFunctionCLib(fn_CRYPTO_set_locking_callback);
   {$IFNDEF WIN32_OR_WIN64}
@@ -13003,9 +14145,15 @@ we have to handle both cases.
   //HMAC
 {$IFNDEF OPENSSL_NO_HMAC}
   @HMAC_CTX_init := LoadFunctionCLib(fn_HMAC_CTX_init);
-  @HMAC_Init_ex := LoadFunctionCLib(fn_HMAC_Init_ex);
-  @HMAC_Update := LoadFunctionCLib(fn_HMAC_Update);
-  @HMAC_Final := LoadFunctionCLib(fn_HMAC_Final);
+  if IsOpenSSL_1x then begin
+    @_1_0_HMAC_Init_ex :=  LoadFunctionCLib(fn_HMAC_Init_ex);
+    @_1_0_HMAC_Update  := LoadFunctionCLib(fn_HMAC_Update);
+    @_1_0_HMAC_Final := LoadFunctionCLib(fn_HMAC_Final);
+  end else begin
+    @_HMAC_Init_ex := LoadFunctionCLib(fn_HMAC_Init_ex);
+    @_HMAC_Update := LoadFunctionCLib(fn_HMAC_Update);
+    @_HMAC_Final := LoadFunctionCLib(fn_HMAC_Final);
+  end;
   @HMAC_CTX_cleanup := LoadFunctionCLib(fn_HMAC_CTX_cleanup);
 {$ENDIF}
   //OBJ
@@ -13175,7 +14323,7 @@ begin
   {$IFNDEF WIN32_OR_WIN64}
   @CRYPTO_THREADID_set_callback := nil;
   @CRYPTO_THREADID_set_numeric := nil;
-  @CRYPTO_THREADID_set_pointer = nil;
+  @CRYPTO_THREADID_set_pointer := nil;
   @CRYPTO_set_id_callback := nil;
   {$ENDIF}
   @ERR_put_error := nil;
@@ -13336,9 +14484,12 @@ begin
   //HMAC
 {$IFNDEF OPENSSL_NO_HMAC}
   @HMAC_CTX_init := nil;
-  @HMAC_Init_ex := nil;
-  @HMAC_Update := nil;
-  @HMAC_Final := nil;
+  @_HMAC_Init_ex := nil;
+  @_HMAC_Update := nil;
+  @_HMAC_Final := nil;
+  @_1_0_HMAC_Init_ex :=  nil;
+  @_1_0_HMAC_Update  := nil;
+  @_1_0_HMAC_Final := nil;
   @HMAC_CTX_cleanup := nil;
 {$ENDIF}
   //OBJ
@@ -13352,6 +14503,7 @@ begin
   @ASN1_STRING_type_new := nil;
   @ASN1_STRING_free := nil;
   @ASN1_dup := nil;
+  @_CRYPTO_lock := nil;
   @CRYPTO_set_mem_functions := nil;
   @CRYPTO_malloc := nil;
   @CRYPTO_free := nil;
@@ -15109,10 +16261,52 @@ begin
   ERR_PUT_error(ERR_LIB_CMS,f,r,nil,0);
 end;
 
+procedure TSerr(const f,r : TIdC_INT);
+begin
+  ERR_PUT_error(ERR_LIB_TS,f,r,nil,0);
+end;
+
+procedure HMACerr(const f,r : TIdC_INT);
+begin
+  ERR_PUT_error(ERR_LIB_HMAC,(f),(r),nil,0);
+end;
+
 procedure JPAKEerr(const f,r : TIdC_INT);
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   ERR_PUT_error(ERR_LIB_JPAKE,f,r,nil,0);
+end;
+
+procedure CRYPTO_w_lock(const _type : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  {$IFNDEF OPENSSL_NO_LOCKING}
+  _CRYPTO_lock(CRYPTO_LOCK or CRYPTO_WRITE,_type, nil, 0);
+  {$ENDIF}
+end;
+
+procedure CRYPTO_w_unlock(const _type : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  {$IFNDEF OPENSSL_NO_LOCKING}
+  _CRYPTO_lock(CRYPTO_UNLOCK or CRYPTO_WRITE,_type, nil, 0);
+  {$ENDIF}
+end;
+
+procedure CRYPTO_r_lock(const _type : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  {$IFNDEF OPENSSL_NO_LOCKING}
+  _CRYPTO_lock(CRYPTO_LOCK or CRYPTO_READ,_type, nil, 0);
+  {$ENDIF}
+end;
+
+procedure CRYPTO_r_unlock(const _type : TIdC_INT);
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+begin
+  {$IFNDEF OPENSSL_NO_LOCKING}
+  _CRYPTO_lock(CRYPTO_UNLOCK or CRYPTO_READ,_type, nil, 0);
+  {$ENDIF}
 end;
 
 function X509_LOOKUP_load_file(x : PX509_LOOKUP; name : PAnsiChar; _type : TIdC_LONG) : TIdC_INT;
