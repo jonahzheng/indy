@@ -974,6 +974,7 @@ begin
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   LIO.PassThrough := True;
   LIO.OnGetPassword := DoGetPassword;
+  LIO.OnGetPasswordEx := OnGetPasswordEx;
   //todo memleak here - setting IsPeer causes SSLOptions to not free
   LIO.IsPeer := True;
   LIO.SSLOptions.Assign(SSLOptions);
@@ -995,6 +996,7 @@ begin
   LIO := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
   LIO.PassThrough := True;
   LIO.OnGetPassword := DoGetPassword;
+  LIO.OnGetPasswordEx := OnGetPasswordEx;
   //todo memleak here - setting IsPeer causes SSLOptions to not free
   LIO.IsPeer := True;
   LIO.SSLOptions.Assign(SSLOptions);
@@ -1020,6 +1022,7 @@ begin
 //  LIO.SSLContext := SSLContext;
   LIO.SSLContext := nil;//SSLContext.Clone; // BGO: clone does not work, it must be either NIL, or SSLContext
   LIO.OnGetPassword := DoGetPassword;
+   LIO.OnGetPasswordEx := OnGetPasswordEx;
   Result := LIO;
 end;
 
