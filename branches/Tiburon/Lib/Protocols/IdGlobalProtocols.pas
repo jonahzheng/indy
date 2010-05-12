@@ -2412,18 +2412,21 @@ begin
     Add('.nml=animation/narrative');    {Do not Localize}
 
     { Audio }
+    Add('.aac=audio/mp4');
     Add('.aiff=audio/x-aiff');    {Do not Localize}
     Add('.au=audio/basic');    {Do not Localize}
+    Add('.gsm=audio/x-gsm');    {Do not Localize}
+
     Add('.mid=midi/mid');    {Do not Localize}
     Add('.mp3=audio/x-mpg');    {Do not Localize}
     Add('.m3u=audio/x-mpegurl');    {Do not Localize}
     Add('.qcp=audio/vnd.qcelp');    {Do not Localize}
     Add('.ra=audio/x-realaudio');    {Do not Localize}
+    Add('.ram=audio/x-pn-realaudio');    {Do not Localize}
     Add('.wav=audio/x-wav');    {Do not Localize}
-    Add('.gsm=audio/x-gsm');    {Do not Localize}
     Add('.wax=audio/x-ms-wax');    {Do not Localize}
     Add('.wma=audio/x-ms-wma');    {Do not Localize}
-    Add('.ram=audio/x-pn-realaudio');    {Do not Localize}
+
     Add('.mjf=audio/x-vnd.AudioExplosion.MjuiceMediaFile');    {Do not Localize}
 
     { Image }
@@ -2457,6 +2460,8 @@ begin
 
     { Text }
     Add('.323=text/h323');    {Do not Localize}
+
+
     Add('.xml=text/xml');    {Do not Localize}
     Add('.uls=text/iuls');    {Do not Localize}
     Add('.txt=text/plain');    {Do not Localize}
@@ -2477,10 +2482,16 @@ begin
     Add('.mpa=video/mpeg');    {Do not Localize}
     Add('.mpe=video/mpeg');    {Do not Localize}
     Add('.mpg=video/mpeg');    {Do not Localize}
+    Add('.moov=video/quicktime');     {Do not Localize}
     Add('.mov=video/quicktime');    {Do not Localize}
+    Add('.qt=video/quicktime');    {Do not Localize}
+    Add('.qtc=video/x-qtc'); {Do not loccalize}
+
+
     Add('.rv=video/vnd.rn-realvideo');    {Do not Localize}
     Add('.ivf=video/x-ivf');    {Do not Localize}
     Add('.wm=video/x-ms-wm');    {Do not Localize}
+
     Add('.wmp=video/x-ms-wmp');    {Do not Localize}
     Add('.wmv=video/x-ms-wmv');    {Do not Localize}
     Add('.wmx=video/x-ms-wmx');    {Do not Localize}
@@ -2490,15 +2501,22 @@ begin
     Add('.movie=video/x-sgi-movie');    {Do not Localize}
 
     { Application }
+    Add('.7z=application/x-7z-compressed');   {Do not Localize}
+    Add('.a=application/x-archive');   {Do not Localize}
+
     Add('.aab=application/x-authorware-bin');    {Do not Localize}
     Add('.aam=application/x-authorware-map');    {Do not Localize}
     Add('.aas=application/x-authorware-seg');    {Do not Localize}
     Add('.abw=application/x-abiword');    {Do not Localize}
+    Add('.ace=application/x-ace-compressed');  {Do not Localize}
     Add('.ai=application/postscript');    {Do not Localize}
+    Add('.alz=application/x-alz-compressed');    {Do not Localize}
     Add('.arj=application/x-arj');    {Do not Localize}
     Add('.asf=application/vnd.ms-asf');    {Do not Localize}
     Add('.bat=application/x-msdos-program');    {Do not Localize}
     Add('.bcpio=application/x-bcpio');    {Do not Localize}
+    Add('.boz=application/x-bzip2');     {Do not Localize}
+    Add('.bz=application/x-bzip');
     Add('.bz2=application/x-bzip2');    {Do not Localize}
     Add('.cab=application/vnd.ms-cab-compressed');    {Do not Localize}
     Add('.cat=application/vnd.ms-pki.seccat');    {Do not Localize}
@@ -2518,6 +2536,7 @@ begin
     Add('.crd=application/x-mscardfile');    {Do not Localize}
     Add('.crl=application/pkix-crl');    {Do not Localize}
     Add('.csh=application/x-csh');    {Do not Localize}
+    Add('.dar=application/x-dar');    {Do not Localize}
     Add('.dbf=application/x-dbase');    {Do not Localize}
     Add('.dcr=application/x-director');    {Do not Localize}
     Add('.deb=application/x-debian-package');    {Do not Localize}
@@ -2538,6 +2557,7 @@ begin
     Add('.fif=application/fractals');    {Do not Localize}
     Add('.flm=application/vnd.kde.kivio');    {Do not Localize}
     Add('.fml=application/x-file-mirror-list');    {Do not Localize}
+    Add('.gzip=application/x-gzip');  {Do not Localize}
     Add('.gnumeric=application/x-gnumeric');    {Do not Localize}
     Add('.gtar=application/x-gtar');    {Do not Localize}
     Add('.gz=application/x-gzip');    {Do not Localize}
@@ -2562,7 +2582,11 @@ begin
     Add('.lha=application/x-lzh');    {Do not Localize}
     Add('.lcc=application/fastman');    {Do not Localize}
     Add('.lrm=application/vnd.ms-lrm');    {Do not Localize}
+    Add('.lz=application/x-lzip');    {Do not Localize}
     Add('.lzh=application/x-lzh');    {Do not Localize}
+    Add('.lzma=application/x-lzma');  {Do not Localize}
+    Add('.lzo=application/x-lzop'); {Do not Localize}
+    Add('.lzx=application/x-lzx');
     Add('.m13=application/x-msmediaview');    {Do not Localize}
     Add('.m14=application/x-msmediaview');    {Do not Localize}
     Add('.mpp=application/vnd.ms-project');    {Do not Localize}
@@ -2627,8 +2651,6 @@ begin
     Add('.rss=application/rss+xml');    {Do not Localize}
     Add('.scm=application/x-icq-scm');    {Do not Localize}
     Add('.ser=application/java-serialized-object');    {Do not Localize}
-    Add('.sh=application/x-sh');    {Do not Localize}
-    Add('.shar=application/x-shar');    {Do not Localize}
     Add('.scd=application/x-msschedule');    {Do not Localize}
     Add('.sda=application/vnd.stardivision.draw');    {Do not Localize}
     Add('.sdc=application/vnd.stardivision.calc');    {Do not Localize}
@@ -2636,8 +2658,11 @@ begin
     Add('.sdp=application/x-sdp');    {Do not Localize}
     Add('.setpay=application/set-payment-initiation');    {Do not Localize}
     Add('.setreg=application/set-registration-initiation');    {Do not Localize}
+    Add('.sh=application/x-sh');    {Do not Localize}
+    Add('.shar=application/x-shar');    {Do not Localize}
     Add('.shw=application/presentations');    {Do not Localize}
     Add('.sit=application/x-stuffit');    {Do not Localize}
+    Add('.sitx=application/x-stuffitx');  {Do not localize}
     Add('.skd=application/x-koan');    {Do not Localize}
     Add('.skm=application/x-koan');    {Do not Localize}
     Add('.skp=application/x-koan');    {Do not Localize}
@@ -2657,6 +2682,7 @@ begin
     Add('.sv4cpio=application/x-sv4cpio');    {Do not Localize}
     Add('.sv4crc=application/x-sv4crc');    {Do not Localize}
     Add('.swf=application/x-shockwave-flash');    {Do not Localize}
+    Add('.swf1=application/x-shockwave-flash');    {Do not Localize}
     Add('.sxc=application/vnd.sun.xml.calc');    {Do not Localize}
     Add('.sxi=application/vnd.sun.xml.impress');    {Do not Localize}
     Add('.sxm=application/vnd.sun.xml.math');    {Do not Localize}
@@ -2668,13 +2694,19 @@ begin
     Add('.tex=application/x-tex');    {Do not Localize}
     Add('.texi=application/x-texinfo');    {Do not Localize}
     Add('.texinfo=application/x-texinfo');    {Do not Localize}
+    Add('.tbz=application/x-bzip-compressed-tar');   {Do not Localize}
+    Add('.tbz2','application/x-bzip-compressed-tar');   {Do not Localize}
+    Add('.tgz=application/x-compressed-tar');    {Do not Localize}
+    Add('.tlz=application/x-lzma-compressed-tar');    {Do not Localize}
     Add('.tr=application/x-troff');    {Do not Localize}
     Add('.trm=application/x-msterminal');    {Do not Localize}
     Add('.troff=application/x-troff');    {Do not Localize}
     Add('.tsp=application/dsptype');    {Do not Localize}
-    Add('.tgz=application/x-compressed');    {Do not Localize}
     Add('.torrent=application/x-bittorrent');    {Do not Localize}
     Add('.ttz=application/t-time');    {Do not Localize}
+    Add('.txz=application/x-xz-compressed-tar'); {Do not localize}
+    Add('.udeb=application/x-debian-package');    {Do not Localize}
+
     Add('.uin=application/x-icq');    {Do not Localize}
     Add('.urls=application/x-url-list');    {Do not Localize}
     Add('.ustar=application/x-ustar');    {Do not Localize}
@@ -2723,18 +2755,22 @@ begin
     if a web-browser shows all of the 8bit charactors.
     }
     //of course, we have to add this :-).
+    Add('.asm=text/x-asm');   {Do not Localize}
     Add('.p=text/x-pascal');    {Do not Localize}
     Add('.pas=text/x-pascal');    {Do not Localize}
-    Add('.h++=text/x-c++hdr');    {Do not Localize}
-    Add('.hpp=text/x-c++hdr');    {Do not Localize}
-    Add('.hxx=text/x-c++hdr');    {Do not Localize}
-    Add('.hh=text/x-c++hdr');    {Do not Localize}
+
+    Add('.cs=text/x-csharp'); {Do not Localize}
+
+    Add('.c=text/x-csrc');    {Do not Localize}
     Add('.c++=text/x-c++src');    {Do not Localize}
     Add('.cpp=text/x-c++src');    {Do not Localize}
     Add('.cxx=text/x-c++src');    {Do not Localize}
     Add('.cc=text/x-c++src');    {Do not Localize}
-    Add('.h=text/x-chdr');    {Do not Localize}
-    Add('.c=text/x-csrc');    {Do not Localize}
+    Add('.h=text/x-chdr'); {Do not localize}
+    Add('.h++=text/x-c++hdr');    {Do not Localize}
+    Add('.hpp=text/x-c++hdr');    {Do not Localize}
+    Add('.hxx=text/x-c++hdr');    {Do not Localize}
+    Add('.hh=text/x-c++hdr');    {Do not Localize}
     Add('.java=text/x-java');    {Do not Localize}
 
     { WEB }
@@ -2924,6 +2960,7 @@ var
   LExt: string;
 begin
   LExt := IndyLowerCase(ExtractFileExt(AFileName));
+
   Index := FFileExt.IndexOf(LExt);
   if Index = -1 then begin
     BuildCache;
