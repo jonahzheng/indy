@@ -242,7 +242,6 @@ end;
 
 function TIdMessagePart.ResolveContentType(AContentType: string): string;
 var
-  LTemp: string;
   LMsg: TIdMessage;
   LParts: TIdMessageParts;
 begin
