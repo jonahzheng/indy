@@ -2245,7 +2245,7 @@ const
     (TimeZone:'MST';  Offset:'-0700'), // Mountain Standard Time - North America                 {do not localize}
     (TimeZone:'N';    Offset:'-0100'), // November Time Zone - Military                          {do not localize}
     (TimeZone:'NDT';  Offset:'-0230'), // Newfoundland Daylight Time - North America             {do not localize}
-    (TimeZone:'NFT';  Offset:'+1130'), // Norfolk (Island), Time - Australia                      {do not localize}
+    (TimeZone:'NFT';  Offset:'+1130'), // Norfolk (Island), Time - Australia                     {do not localize}
     (TimeZone:'NST';  Offset:'-0330'), // Newfoundland Standard Time - North America             {do not localize}
     (TimeZone:'O';    Offset:'-0200'), // Oscar Time Zone - Military                             {do not localize}
     (TimeZone:'P';    Offset:'-0300'), // Papa Time Zone - Military                              {do not localize}
@@ -2256,6 +2256,7 @@ const
     (TimeZone:'S';    Offset:'-0600'), // Sierra Time Zone - Military                            {do not localize}
     (TimeZone:'T';    Offset:'-0700'), // Tango Time Zone - Military                             {do not localize}
     (TimeZone:'U';    Offset:'-0800'), // Uniform Time Zone - Military                           {do not localize}
+    (TimeZone:'UT';   Offset:'+0000'), // Universal Time - Europe                                {do not localize}
     (TimeZone:'UTC';  Offset:'+0000'), // Coordinated Universal Time - Europe                    {do not localize}
     (TimeZone:'V';    Offset:'-0900'), // Victor Time Zone - Military                            {do not localize}
     (TimeZone:'W';    Offset:'-1000'), // Whiskey Time Zone - Military                           {do not localize}
