@@ -2177,7 +2177,7 @@ type
     Offset: String;
   end;
 const
-  cTimeZones: array[0..89] of TimeZoneOffset = (
+  cTimeZones: array[0..90] of TimeZoneOffset = (
     (TimeZone:'A';    Offset:'+0100'), // Alpha Time Zone - Military                             {do not localize}
     (TimeZone:'ACDT'; Offset:'+1030'), // Australian Central Daylight Time                       {do not localize}
     (TimeZone:'ACST'; Offset:'+0930'), // Australian Central Standard Time                       {do not localize}
