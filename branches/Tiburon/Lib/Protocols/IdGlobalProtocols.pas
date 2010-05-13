@@ -2543,7 +2543,7 @@ begin
     Add('.ace=application/x-ace-compressed');  {Do not Localize}
     Add('.ai=application/postscript');    {Do not Localize}
     Add('.alz=application/x-alz-compressed');    {Do not Localize}
-    Add('.ani=	application/x-navi-animation');   {Do not Localize}
+    Add('.ani=application/x-navi-animation');   {Do not Localize}
     Add('.arj=application/x-arj');    {Do not Localize}
     Add('.asf=application/vnd.ms-asf');    {Do not Localize}
     Add('.bat=application/x-msdos-program');    {Do not Localize}
