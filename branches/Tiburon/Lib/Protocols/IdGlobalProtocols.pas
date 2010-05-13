@@ -2728,7 +2728,7 @@ begin
     Add('.texi=application/x-texinfo');    {Do not Localize}
     Add('.texinfo=application/x-texinfo');    {Do not Localize}
     Add('.tbz=application/x-bzip-compressed-tar');   {Do not Localize}
-    Add('.tbz2','application/x-bzip-compressed-tar');   {Do not Localize}
+    Add('.tbz2=application/x-bzip-compressed-tar');   {Do not Localize}
     Add('.tgz=application/x-compressed-tar');    {Do not Localize}
     Add('.tlz=application/x-lzma-compressed-tar');    {Do not Localize}
     Add('.tr=application/x-troff');    {Do not Localize}
