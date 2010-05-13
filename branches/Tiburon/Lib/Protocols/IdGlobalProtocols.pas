@@ -2413,16 +2413,30 @@ begin
 
     { Audio }
     Add('.aac=audio/mp4');
+    Add('.aif=audio/x-aiff');    {Do not Localize}
+    Add('.aifc=audio/x-aiff');    {Do not Localize}
     Add('.aiff=audio/x-aiff');    {Do not Localize}
+
     Add('.au=audio/basic');    {Do not Localize}
     Add('.gsm=audio/x-gsm');    {Do not Localize}
-
-    Add('.mid=midi/mid');    {Do not Localize}
+    Add('.kar=audio/midi');    {Do not Localize}
+    Add('.m3u=audio/mpegurl');    {Do not Localize}
+    Add('.m4a=audio/x-mpg');    {Do not Localize}
+    Add('.mid=audio/midi');    {Do not Localize}
+    Add('.midi=audio/midi');    {Do not Localize}
+    Add('.mpega=audio/x-mpg');    {Do not Localize}
+    Add('.mp2=audio/x-mpg');    {Do not Localize}
     Add('.mp3=audio/x-mpg');    {Do not Localize}
+    Add('.mpga=audio/x-mpg');    {Do not Localize}
     Add('.m3u=audio/x-mpegurl');    {Do not Localize}
+    Add('.pls=audio/x-scpls');   {Do not Localize}
     Add('.qcp=audio/vnd.qcelp');    {Do not Localize}
     Add('.ra=audio/x-realaudio');    {Do not Localize}
     Add('.ram=audio/x-pn-realaudio');    {Do not Localize}
+    Add('.rm=audio/x-pn-realaudio');    {Do not Localize}
+    Add('.sd2=audio/x-sd2');    {Do not Localize}
+    Add('.sid=audio/prs.sid');   {Do not Localize}
+    Add('.snd=audio/basic');   {Do not Localize}
     Add('.wav=audio/x-wav');    {Do not Localize}
     Add('.wax=audio/x-ms-wax');    {Do not Localize}
     Add('.wma=audio/x-ms-wma');    {Do not Localize}
@@ -2430,37 +2444,48 @@ begin
     Add('.mjf=audio/x-vnd.AudioExplosion.MjuiceMediaFile');    {Do not Localize}
 
     { Image }
+    Add('.art=image/x-jg');    {Do not Localize}
     Add('.bmp=image/bmp');    {Do not Localize}
+    Add('.cdr=image/x-coreldraw');    {Do not Localize}
+    Add('.cdt=image/x-coreldrawtemplate');    {Do not Localize}
+    Add('.cpt=image/x-corelphotopaint');    {Do not Localize}
+    Add('.djv=image/vnd.djvu');    {Do not Localize}
+    Add('.djvu=image/vnd.djvu');    {Do not Localize}
     Add('.gif=image/gif');    {Do not Localize}
+    Add('.ief=image/ief');    {Do not Localize}
+    Add('.ico=image/x-icon');    {Do not Localize}
+    Add('.jng=image/x-jng');    {Do not Localize}
     Add('.jpg=image/jpeg');    {Do not Localize}
     Add('.jpeg=image/jpeg');    {Do not Localize}
     Add('.jpe=image/jpeg');    {Do not Localize}
-    Add('.pict=image/x-pict');    {Do not Localize}
-    Add('.png=image/x-png');    {Do not Localize}
-    Add('.svg=image/svg-xml');    {Do not Localize}
-    Add('.tif=image/x-tiff');    {Do not Localize}
-    Add('.rf=image/vnd.rn-realflash');    {Do not Localize}
-    Add('.rp=image/vnd.rn-realpix');    {Do not Localize}
-    Add('.ico=image/x-icon');    {Do not Localize}
-    Add('.art=image/x-jg');    {Do not Localize}
-    Add('.pntg=image/x-macpaint');    {Do not Localize}
-    Add('.qtif=image/x-quicktime');    {Do not Localize}
-    Add('.sgi=image/x-sgi');    {Do not Localize}
-    Add('.targa=image/x-targa');    {Do not Localize}
-    Add('.xbm=image/xbm');    {Do not Localize}
-    Add('.psd=image/x-psd');    {Do not Localize}
-    Add('.pnm=image/x-portable-anymap');    {Do not Localize}
+    Add('.pat=image/x-coreldrawpattern');   {Do not Localize}
+    Add('.pcx=image/pcx');    {Do not Localize}
     Add('.pbm=image/x-portable-bitmap');    {Do not Localize}
     Add('.pgm=image/x-portable-graymap');    {Do not Localize}
+    Add('.pict=image/x-pict');    {Do not Localize}
+    Add('.png=image/x-png');    {Do not Localize}
+    Add('.pnm=image/x-portable-anymap');    {Do not Localize}
+    Add('.pntg=image/x-macpaint');    {Do not Localize}
     Add('.ppm=image/x-portable-pixmap');    {Do not Localize}
+    Add('.psd=image/x-psd');    {Do not Localize}
+    Add('.qtif=image/x-quicktime');    {Do not Localize}
+    Add('.ras=image/x-cmu-raster');    {Do not Localize}
+    Add('.rf=image/vnd.rn-realflash');    {Do not Localize}
     Add('.rgb=image/x-rgb');    {Do not Localize}
+    Add('.rp=image/vnd.rn-realpix');    {Do not Localize}
+    Add('.sgi=image/x-sgi');    {Do not Localize}
+    Add('.svg=image/svg-xml');    {Do not Localize}
+    Add('.svgz=image/svg-xml');    {Do not Localize}
+    Add('.targa=image/x-targa');    {Do not Localize}
+    Add('.tif=image/x-tiff');    {Do not Localize}
+    Add('.wbmp=image/vnd.wap.wbmp');    {Do not Localize}
+    Add('.xbm=image/xbm');    {Do not Localize}
     Add('.xbm=image/x-xbitmap');    {Do not Localize}
     Add('.xpm=image/x-xpixmap');    {Do not Localize}
     Add('.xwd=image/x-xwindowdump');    {Do not Localize}
 
     { Text }
     Add('.323=text/h323');    {Do not Localize}
-
 
     Add('.xml=text/xml');    {Do not Localize}
     Add('.uls=text/iuls');    {Do not Localize}
@@ -2473,8 +2498,18 @@ begin
     Add('.vcf=text/x-vcard');    {Do not Localize}
 
     { Video }
+    Add('.asf=video/x-ms-asf');    {Do not Localize}
+    Add('.asx=video/x-ms-asf');    {Do not Localize}
     Add('.avi=video/x-msvideo');    {Do not Localize}
+    Add('.dl=video/dl');    {Do not Localize}
+    Add('.dv=video/dv');  {Do not Localize}
     Add('.flc=video/flc');    {Do not Localize}
+    Add('.fli=video/fli');    {Do not Localize}
+    Add('.gl=video/gl');    {Do not Localize}
+    Add('.lsf=video/x-la-asf');    {Do not Localize}
+    Add('.lsx=video/x-la-asf');    {Do not Localize}
+    Add('.mng=video/x-mng');    {Do not Localize}
+
     Add('.mp2=video/mpeg');    {Do not Localize}
     Add('.mp3=video/mpeg');    {Do not Localize}
     Add('.mp4=video/mpeg');    {Do not Localize}
@@ -2484,14 +2519,12 @@ begin
     Add('.mpg=video/mpeg');    {Do not Localize}
     Add('.moov=video/quicktime');     {Do not Localize}
     Add('.mov=video/quicktime');    {Do not Localize}
+    Add('.mxu=video/vnd.mpegurl');   {Do not Localize}
     Add('.qt=video/quicktime');    {Do not Localize}
     Add('.qtc=video/x-qtc'); {Do not loccalize}
-
-
     Add('.rv=video/vnd.rn-realvideo');    {Do not Localize}
     Add('.ivf=video/x-ivf');    {Do not Localize}
     Add('.wm=video/x-ms-wm');    {Do not Localize}
-
     Add('.wmp=video/x-ms-wmp');    {Do not Localize}
     Add('.wmv=video/x-ms-wmv');    {Do not Localize}
     Add('.wmx=video/x-ms-wmx');    {Do not Localize}
@@ -2503,7 +2536,6 @@ begin
     { Application }
     Add('.7z=application/x-7z-compressed');   {Do not Localize}
     Add('.a=application/x-archive');   {Do not Localize}
-
     Add('.aab=application/x-authorware-bin');    {Do not Localize}
     Add('.aam=application/x-authorware-map');    {Do not Localize}
     Add('.aas=application/x-authorware-seg');    {Do not Localize}
@@ -2511,6 +2543,7 @@ begin
     Add('.ace=application/x-ace-compressed');  {Do not Localize}
     Add('.ai=application/postscript');    {Do not Localize}
     Add('.alz=application/x-alz-compressed');    {Do not Localize}
+    Add('.ani=	application/x-navi-animation');   {Do not Localize}
     Add('.arj=application/x-arj');    {Do not Localize}
     Add('.asf=application/vnd.ms-asf');    {Do not Localize}
     Add('.bat=application/x-msdos-program');    {Do not Localize}
