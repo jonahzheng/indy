@@ -584,6 +584,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
   EIdOSSLCouldNotLoadSSLLibrary = class(EIdOpenSSLError);
   EIdOSSLModeNotSet             = class(EIdOpenSSLError);
   EIdOSSLGetMethodError         = class(EIdOpenSSLError);
+  EIdOSSLCreatingSessionError   = class(EIdOpenSSLError);
   EIdOSSLCreatingContextError   = class(EIdOpenSSLError);
   EIdOSSLLoadingRootCertError = class(EIdOpenSSLAPICryptoError);
   EIdOSSLLoadingCertError = class(EIdOpenSSLAPICryptoError);
@@ -879,15 +880,9 @@ begin
   fSSLContext := TIdSSLContext.Create;
   with fSSLContext do begin
     Parent := Self;
-    {$IFDEF STRING_IS_UNICODE}
     RootCertFile := SSLOptions.RootCertFile;
     CertFile := SSLOptions.CertFile;
     KeyFile := SSLOptions.KeyFile;
-    {$ELSE}
-    RootCertFile := SSLOptions.RootCertFile;
-    CertFile := SSLOptions.CertFile;
-    KeyFile := SSLOptions.KeyFile;
-    {$ENDIF}
     fVerifyDepth := SSLOptions.fVerifyDepth;
     fVerifyMode := SSLOptions.fVerifyMode;
     // fVerifyFile := SSLOptions.fVerifyFile;
@@ -1154,16 +1149,9 @@ begin
     fSSLContext := TIdSSLContext.Create;
     with fSSLContext do begin
       Parent := Self;
-      {$IFDEF STRING_IS_UNICODE}
-      // explicit convert to Ansi
       RootCertFile := SSLOptions.RootCertFile;
       CertFile := SSLOptions.CertFile;
       KeyFile := SSLOptions.KeyFile;
-      {$ELSE}
-      RootCertFile := SSLOptions.RootCertFile;
-      CertFile := SSLOptions.CertFile;
-      KeyFile := SSLOptions.KeyFile;
-      {$ENDIF}
       fVerifyDepth := SSLOptions.fVerifyDepth;
       fVerifyMode := SSLOptions.fVerifyMode;
       // fVerifyFile := SSLOptions.fVerifyFile;
@@ -1604,13 +1592,17 @@ begin
   Assert(fSSL=nil);
   Assert(fSSLContext<>nil);
   fSSL := SSL_new(fSSLContext.fContext);
-  if fSSL = nil then exit;
+  if fSSL = nil then begin
+    raise EIdOSSLCreatingSessionError.Create(RSSSLCreatingSessionError);
+  end;
   error := SSL_set_app_data(fSSL, Self);
   if error <= 0 then begin
     EIdOSSLDataBindingError.RaiseException(fSSL, error, RSSSLDataBindingError);
-    Exit;
   end;
-  SSL_set_fd(fSSL, pHandle);
+  error := SSL_set_fd(fSSL, pHandle);
+  if error <= 0 then begin
+    EIdOSSLFDSetError.RaiseException(fSSL, error, RSSSLFDSetError);
+  end;
   error := SSL_accept(fSSL);
   if error <= 0 then begin
     EIdOSSLAcceptError.RaiseException(fSSL, error, RSSSLAcceptError);
@@ -1633,7 +1625,7 @@ begin
   Assert(fSSLContext<>nil);
   fSSL := SSL_new(fSSLContext.fContext);
   if fSSL = nil then begin
-    exit;
+    raise EIdOSSLCreatingSessionError.Create(RSSSLCreatingSessionError);
   end;
   error := SSL_set_app_data(fSSL, Self);
   if error <= 0 then begin

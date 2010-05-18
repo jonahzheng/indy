@@ -515,6 +515,7 @@ resourcestring
   RSSSLAcceptError = 'Error accepting connection with SSL.';
   RSSSLConnectError = 'Error connecting with SSL.';
   RSSSLSettingCipherError = 'SetCipher failed.';
+  RSSSLCreatingSessionError = 'Error creating SSL session.';
   RSSSLCreatingContextError = 'Error creating SSL context.';
   RSSSLLoadingRootCertError = 'Could not load root certificate.';
   RSSSLLoadingCertError = 'Could not load certificate.';
@@ -981,11 +982,15 @@ resourcestring
   {$ENDIF}
 
   // TIdURI
-  {$IFNDEF HAS_TCharacter}
+  {$IFDEF DOTNET}
+  RSUTF16InvalidSurrogatePair = 'Characters at Index %d are not a valid UTF-16 Surrogate Pair';
+  {$ELSE}
+    {$IFNDEF HAS_TCharacter}
   RSUTF16IndexOutOfRange = 'Character Index %d out of Range, Length = %d';
   RSUTF16InvalidHighSurrogate = 'Character at Index %d is not a valid UTF-16 High Surrogate';
   RSUTF16InvalidLowSurrogate = 'Character at Index %d is not a valid UTF-16 Low Surrogate';
   RSUTF16MissingLowSurrogate = 'Missing a Low Surrogate in UTF-16 sequence';
+    {$ENDIF}
   {$ENDIF}
 
   // Message Header Encoding

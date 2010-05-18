@@ -14909,8 +14909,8 @@ function GetErrorMessage(const AErr : TIdC_ULONG) : AnsiString;
 var
   LErrMsg: array [0..160] of AnsiChar;
 begin
-  ERR_error_string(AErr, PAnsiChar(@LErrMsg));
-  result := StrPas(PAnsiChar(@LErrMsg));
+  ERR_error_string(AErr, LErrMsg);
+  Result := StrPas(LErrMsg);
 end;
 
 { EIdOpenSSLAPICryptoError }
@@ -14955,31 +14955,30 @@ begin
     SSL_ERROR_SYSCALL :
     begin
       LErrQueue := ERR_get_error;
-      if LErrQueue = 0 then begin
-        if ARetCode = 0 then begin
-          LException := Create(LErrStr + RSSSLEOFViolation);
-          LException.FErrorCode := LErr;
-          LException.FRetCode := ARetCode;
-          raise LException;
-        end;
-        {Note that if LErrQueue returns 0 and ARetCode = -1, there probably
-        is an error in the underlying socket so you should raise a socket error}
-        if ARetCode = -1 then begin
-          GStack.RaiseLastSocketError;
-        end;
-      end else begin
+      if LErrQueue <> 0 then begin
         EIdOSSLUnderlyingCryptoError.RaiseExceptionCode(LErrQueue, LErrStr + AMsg);
+      end;
+      if ARetCode = 0 then begin
+        LException := Create(LErrStr + RSSSLEOFViolation);
+        LException.FErrorCode := LErr;
+        LException.FRetCode := ARetCode;
+        raise LException;
+      end;
+      {Note that if LErrQueue returns 0 and ARetCode = -1, there probably
+      is an error in the underlying socket so you should raise a socket error}
+      if ARetCode = -1 then begin
+        GStack.RaiseLastSocketError;
       end;
     end;
     SSL_ERROR_SSL : begin
       EIdOSSLUnderlyingCryptoError.RaiseException(LErrStr + AMsg);
     end
-  else
-    LException := Create(LErrStr + String(GetErrorMessage(LErr)));
-    LException.FErrorCode := LErr;
-    LException.FRetCode := ARetCode;
-    raise LException;
   end;
+  // everything else...
+  LException := Create(LErrStr + String(GetErrorMessage(LErr)));
+  LException.FErrorCode := LErr;
+  LException.FRetCode := ARetCode;
+  raise LException;
 end;
 
 const
