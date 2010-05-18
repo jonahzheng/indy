@@ -393,7 +393,7 @@ begin
             FInputStream := TMemoryStream.Create;
             FFreeInputStream := True;
             try
-              TIdEncoderQuotedPrintable.EncodeString(TStrings(LItem.FieldObject).Text, FInputStream, LEncoding);
+              TIdEncoderQuotedPrintable.EncodeString(TStrings(LItem.FieldObject).Text, FInputStream, LEncoding{$IFDEF STRING_IS_ANSI}, TIdTextEncoding.Default{$ENDIF});
             except
               FreeAndNil(FInputStream);
               FFreeInputStream := False;
@@ -601,7 +601,7 @@ begin
       {$ENDIF}
         LStream := TMemoryStream.Create;
         try
-          TIdEncoderQuotedPrintable.EncodeString(TStrings(FieldObject).Text, LStream, LEncoding);
+          TIdEncoderQuotedPrintable.EncodeString(TStrings(FieldObject).Text, LStream, LEncoding{$IFDEF STRING_IS_ANSI}, TIdTextEncoding.Default{$ENDIF});
           // the encoded text always includes a CRLF at the end...
           Result := Result + LStream.Size {+2};
         finally
