@@ -543,7 +543,7 @@ begin
     repeat
       LLine := ReadLnRFC(LMsgEnd);
       if LMsgEnd then begin // TODO: abnormal situation (Masters!)    {Do not Localize}
-        FPartType := mcptUnknown;
+        FPartType := mcptEOF;
         Exit;
       end;//if
       if LLine = '' then begin

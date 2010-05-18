@@ -1427,7 +1427,6 @@ const
   bitMasks: array[0..4] of Cardinal = ($00000000, $00000001, $00000003, $00000007, $0000000F);
 var
   ch : Byte;
-  c  : Byte;
   last : Char;
   bitBuf  : Cardinal;
   escaped : Boolean;
@@ -4455,7 +4454,7 @@ begin
       AThePart.ContentType := LParams[0]+'/'+LParams[1]+ParseBodyStructureSectionAsEquates(LParams[2]);  {Do not Localize}
       AThePart.ContentTransfer := LParams[5];
       //Watch out for BinHex4.0, the encoding is inferred from the Content-Type...
-      if TextStartsWith(AThePart.ContentType, 'application/mac-binhex40') then begin {do not localize}
+      if IsHeaderMediaType(AThePart.ContentType, 'application/mac-binhex40') then begin {do not localize}
         AThePart.ContentTransfer := 'binhex40';                         {do not localize}
       end;
       AThePart.DisplayName := LFilename;
@@ -5797,10 +5796,10 @@ Begin
               LActiveDecoder.SourceStream := TIdTCPStream.Create(Self);
               LActiveDecoder.ReadHeader;
               case LActiveDecoder.PartType of
-                mcptUnknown:    raise EIdException.Create(RSMsgClientUnkownMessagePartType);
                 mcptText:       ProcessTextPart(LActiveDecoder);
                 mcptAttachment: ProcessAttachment(LActiveDecoder);
                 mcptIgnore:     FreeAndNil(LActiveDecoder);
+                mcptEOF:        begin FreeAndNil(LActiveDecoder); LMsgEnd := True; end;
               end;
             end;
           end;

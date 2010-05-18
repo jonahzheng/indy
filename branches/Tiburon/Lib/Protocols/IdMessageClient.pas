@@ -709,7 +709,7 @@ var
               end;
             end;
             LTxt.Filename := VDecoder.Filename;
-            if TextStartsWith(LTxt.ContentType, 'multipart/') then begin {do not localize}
+            if IsHeaderMediaType(LTxt.ContentType, 'multipart') then begin {do not localize}
               LTxt.ParentPart := LPreviousParentPart;
 
               // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
@@ -797,7 +797,7 @@ var
           end;
         end;
         LAttachment.Filename := VDecoder.Filename;
-        if TextStartsWith(LAttachment.ContentType, 'multipart/') then begin  {do not localize}
+        if IsHeaderMediaType(LAttachment.ContentType, 'multipart') then begin  {do not localize}
           LAttachment.ParentPart := LPreviousParentPart;
 
           // RLebeau 08/17/09 - According to RFC 2045 Section 6.4:
@@ -851,7 +851,7 @@ begin
   // the message correctly, but Indy was not.  So let's check for that scenario
   // and ignore illegal "Content-Transfer-Encoding" values if present...
 
-  if TextStartsWith(AMsg.ContentType, 'multipart/') and (AMsg.ContentTransferEncoding <> '') then {do not localize}
+  if IsHeaderMediaType(AMsg.ContentType, 'multipart') and (AMsg.ContentTransferEncoding <> '') then {do not localize}
   begin
     if PosInStrArray(AMsg.ContentTransferEncoding, ['7bit', '8bit', 'binary'], False) = -1 then begin {do not localize}
       AMsg.ContentTransferEncoding := '';
@@ -903,10 +903,10 @@ begin
                 LPreviousParentPart := AMsg.MIMEBoundary.ParentPart;
                 LActiveDecoder.ReadHeader;
                 case LActiveDecoder.PartType of
-                  mcptUnknown:    EIdException.Toss(RSMsgClientUnkownMessagePartType);
                   mcptText:       ProcessTextPart(LActiveDecoder, False);
                   mcptAttachment: ProcessAttachment(LActiveDecoder);
                   mcptIgnore:     FreeAndNil(LActiveDecoder);
+                  mcptEOF:        begin FreeAndNil(LActiveDecoder); LMsgEnd := True; end;
                 end;
               end;
             end;
@@ -921,10 +921,10 @@ begin
           TIdMessageDecoderMime(LActiveDecoder).BodyEncoded := True;
           TIdMessageDecoderMime(LActiveDecoder).ReadHeader;
           case LActiveDecoder.PartType of
-            mcptUnknown:    EIdException.Toss(RSMsgClientUnkownMessagePartType);
             mcptText:       ProcessTextPart(LActiveDecoder, True); //Put the text into TIdMessage.Body
             mcptAttachment: ProcessAttachment(LActiveDecoder);
             mcptIgnore:     FreeAndNil(LActiveDecoder);
+            mcptEOF:        FreeAndNil(LActiveDecoder);
           end;
         end;
       finally
@@ -1255,7 +1255,7 @@ begin
       end;
       for i := 0 to LLastPart do begin
         LLine := AMsg.MessageParts.Items[i].ContentType;
-        if TextStartsWith(LLine, 'multipart/') then begin  {do not localize}
+        if IsHeaderMediaType(LLine, 'multipart') then begin  {do not localize}
           //A multipart header.  Write out the CURRENT boundary first...
           IOHandler.WriteLn('--' + LBoundary);      {do not localize}
           //Make the current boundary and this part number active...

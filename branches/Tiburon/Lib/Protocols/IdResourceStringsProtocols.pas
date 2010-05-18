@@ -202,7 +202,6 @@ resourcestring
   // MessageClient Strings
   RSMsgClientEncodingText = 'Encoding text';
   RSMsgClientEncodingAttachment = 'Encoding attachment';
-  RSMsgClientUnkownMessagePartType = 'Unknown Message Part Type.';
   RSMsgClientInvalidEncoding = 'Invalid Encoding. UU only allows Body and Attachments.';
   RSMsgClientInvalidForTransferEncoding = 'Message parts cannot be used in a message which has a ContentTransferEncoding value.';
 
