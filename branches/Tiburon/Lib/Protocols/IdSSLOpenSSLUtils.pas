@@ -98,6 +98,15 @@ const
 implementation
 
 uses
+{$IFDEF WIN32_OR_WIN64}
+  Windows,
+{$ENDIF}
+{$IFDEF USE_VCL_POSIX}
+  PosixGlue,
+  PosixSysTime,
+  PosixTime,
+  PosixUnistd,
+{$ENDIF}
   IdGlobal,
   IdGlobalProtocols,
   IdResourceStrings,
@@ -212,7 +221,15 @@ begin
         end;
       end;
   end;
-  Result := LOk;
+  {Do it this way because 1 must be returned for success and unfortunately, some
+  routines return the number of certificates that were loaded which could be
+  more than 1}
+  if LOk > 0 then begin
+
+    Result := 1;
+  end else begin
+    Result := 0;
+  end;
 end;
 
 function Indy_unicode_X509_load_cert_file(ctx: PX509_LOOKUP; const AFileName: String;
