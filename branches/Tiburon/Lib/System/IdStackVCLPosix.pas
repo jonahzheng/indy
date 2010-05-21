@@ -140,6 +140,9 @@ type
 
 
 implementation
+
+{$O-}
+
 uses
   IdResourceStrings,
   IdException,
