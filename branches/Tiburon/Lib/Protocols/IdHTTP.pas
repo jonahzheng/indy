@@ -2145,6 +2145,7 @@ end;
 
 function TIdCustomHTTP.InternalReadLn: String;
 begin
+  IOHandler.ReadTimeout := ConnectTimeout;
   Result := IOHandler.ReadLn;
   if IOHandler.ReadLnTimedout then begin
     raise EIdReadTimeout.Create(RSReadTimeout);
