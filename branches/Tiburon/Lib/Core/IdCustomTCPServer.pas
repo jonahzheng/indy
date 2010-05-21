@@ -325,6 +325,7 @@ type
     FOnBeforeBind: TIdSocketHandleEvent;
     FOnAfterBind: TNotifyEvent;
     FOnBeforeListenerRun: TIdNotifyThreadEvent;
+    FUseNagle : Boolean;
     //
     procedure CheckActive;
     procedure CheckOkToBeActive;  virtual;
@@ -392,6 +393,12 @@ type
     property OnException: TIdServerThreadExceptionEvent read FOnException write FOnException;
     property OnListenException: TIdListenExceptionEvent read FOnListenException write FOnListenException;
     property ReuseSocket: TIdReuseSocket read FReuseSocket write FReuseSocket default rsOSDependent;
+//UseNagle should be set to true in most cases.
+//See: http://tangentsoft.net/wskfaq/intermediate.html#disable-nagle and
+//   http://tangentsoft.net/wskfaq/articles/lame-list.html#item19
+//The Nagle algorithm reduces the amount of needless traffic.  Disabling Nagle
+//program’s throughput to degrade.
+    property UseNagle: boolean read FUseNagle write FUseNagle default true;
     property TerminateWaitTime: Integer read FTerminateWaitTime write FTerminateWaitTime default 5000;
     property Scheduler: TIdScheduler read FScheduler write SetScheduler;
   end;
@@ -689,6 +696,7 @@ begin
           end;
           DoBeforeBind(Bindings[I]);
           Bind;
+          SetSockOpt(Id_SOCKETOPTIONLEVEL_TCP, Id_TCP_NODELAY, Integer(not UseNagle));
         end;
         Inc(I);
       end;
@@ -827,6 +835,7 @@ begin
   FListenerThreads := TThreadList.Create;
   //TODO: When reestablished, use a sleeping thread instead
 //  fSessionTimer := TTimer.Create(self);
+  FUseNagle := true; // default
 end;
 
 procedure TIdCustomTCPServer.Shutdown;
