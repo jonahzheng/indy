@@ -162,6 +162,7 @@ type
     FPort: TIdPort;
     FPeerPort: TIdPort;
     FReadSocketList: TIdSocketList;
+    FSocketType : TIdSocketType;
     FOverLapped: Boolean;
     FIPVersion: TIdIPVersion;
     FConnectionHandle: TIdCriticalSection;
@@ -226,6 +227,7 @@ type
     property OverLapped: Boolean read FOverLapped write SetOverLapped;
     property PeerIP: string read FPeerIP;
     property PeerPort: TIdPort read FPeerPort;
+    property SocketType : TIdSocketType read FSocketType;
   published
     property BroadcastEnabled: Boolean read FBroadcastEnabled write SetBroadcastEnabled default False;
     property ClientPortMin : TIdPort read FClientPortMin write FClientPortMin default DEF_PORT_ANY;
@@ -581,6 +583,8 @@ begin
   FHandleAllocated := FHandle <> Id_INVALID_SOCKET;
   if FHandleAllocated then begin
     FReadSocketList.Add(FHandle);
+    Self.GetSockOpt(Id_SOL_SOCKET,Id_SO_TYPE,FSocketType);
+ //   GStack.GetSocketOption(FHandle,Id_SOL_SOCKET,Id_SO_TYPE,FSocketType);
   end;
 end;
 

@@ -384,6 +384,7 @@ const
   Id_SO_RCVBUF           =  SO_RCVBUF;
   Id_SO_REUSEADDR        =  SO_REUSEADDR;
   Id_SO_SNDBUF           =  SO_SNDBUF;
+  Id_SO_TYPE             =  SO_TYPE;
   {$ELSE}
 {
 SocketOptionName.AcceptConnection;// Socket is listening.
