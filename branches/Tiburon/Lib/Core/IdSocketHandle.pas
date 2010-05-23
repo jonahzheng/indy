@@ -167,6 +167,7 @@ type
     FIPVersion: TIdIPVersion;
     FConnectionHandle: TIdCriticalSection;
     FBroadcastEnabled: Boolean;
+    FUseNagle : Boolean;
     //
     function BindPortReserved: Boolean;
     procedure BroadcastEnabledChanged;
@@ -176,6 +177,7 @@ type
     procedure SetOverLapped(const AValue: Boolean);
     procedure SetHandle(AHandle: TIdStackSocketHandle);
     procedure SetIPVersion(const Value: TIdIPVersion);
+    procedure SetUseNagle(const AValue: Boolean);
     function TryBind(APort: TIdPort): Boolean;
   public
     function Accept(ASocket: TIdStackSocketHandle): Boolean;
@@ -221,6 +223,7 @@ type
     procedure SetLoopBack(const AValue: Boolean);
     procedure SetMulticastTTL(const AValue: Byte);
     procedure SetTTL(const AValue: Integer);
+    procedure SetNagleOpt(const AEnabled: Boolean);
     //
     property HandleAllocated: Boolean read FHandleAllocated;
     property Handle: TIdStackSocketHandle read FHandle;
@@ -458,6 +461,7 @@ end;
 constructor TIdSocketHandle.Create(ACollection: TCollection);
 begin
   inherited Create(ACollection);
+  FUseNagle := True;
   FConnectionHandle := TIdCriticalSection.Create;
   FReadSocketList := TIdSocketList.CreateSocketList;
   Reset;
@@ -618,12 +622,28 @@ begin
   GStack.SetMulticastTTL(Handle, AValue, FIPVersion);
 end;
 
+procedure TIdSocketHandle.SetNagleOpt(const AEnabled: Boolean);
+begin
+{You only want to set a Nagle option for TCP.}
+  if HandleAllocated and ( SocketType = Id_SOCK_STREAM ) then begin
+    SetSockOpt(Id_SOCKETOPTIONLEVEL_TCP, Id_TCP_NODELAY, Integer(not AEnabled));
+  end;
+end;
+
 procedure TIdSocketHandle.SetTTL(const AValue: Integer);
 begin
   if FIPVersion = Id_IPv4 then begin
     SetSockOpt(Id_SOL_IP, Id_SO_IP_TTL, AValue);
   end else begin
     SetSockOpt(Id_SOL_IPv6, Id_IPV6_UNICAST_HOPS, AValue);
+  end;
+end;
+
+procedure TIdSocketHandle.SetUseNagle(const AValue: Boolean);
+begin
+  if FUseNagle <> AValue then begin
+    FUseNagle := AValue;
+    SetNagleOpt(FUseNagle);
   end;
 end;
 
