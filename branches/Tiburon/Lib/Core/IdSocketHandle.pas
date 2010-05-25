@@ -446,12 +446,23 @@ var
   LAcceptedSocket: TIdStackSocketHandle;
   LIP: String;
   LPort: TIdPort;
+  LOpt : Integer;
 begin
   Reset;
   LAcceptedSocket := GStack.Accept(ASocket, LIP, LPort);
   Result := (LAcceptedSocket <> Id_INVALID_SOCKET);
   if Result then begin
     SetHandle(LAcceptedSocket);
+    //Get the NODELAY Socket option if we have a TCP Socket.
+    if ( SocketType = Id_SOCK_STREAM ) then begin
+       Self.GetSockOpt(Id_SOCKETOPTIONLEVEL_TCP, Id_TCP_NODELAY, LOpt);
+       if LOpt <> 1 then begin
+         FUseNagle := True;
+       end else begin
+         FUseNagle := False;
+       end;
+    end;
+
     // UpdateBindingLocal is necessary as it may be listening on multiple IPs/Ports
     UpdateBindingLocal;
     UpdateBindingPeer;
