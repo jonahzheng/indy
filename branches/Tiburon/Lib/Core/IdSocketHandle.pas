@@ -238,6 +238,7 @@ type
     property IP: string read FIP write FIP;
     property IPVersion: TIdIPVersion read FIPVersion write SetIPVersion default ID_DEFAULT_IP_VERSION;
     property Port: TIdPort read FPort write FPort;
+    property UseNagle: Boolean read FUseNagle write SetUseNagle default True;
   end;
 
   TIdSocketHandleEvent = procedure(AHandle: TIdSocketHandle) of object;
@@ -446,23 +447,12 @@ var
   LAcceptedSocket: TIdStackSocketHandle;
   LIP: String;
   LPort: TIdPort;
-  LOpt : Integer;
 begin
   Reset;
   LAcceptedSocket := GStack.Accept(ASocket, LIP, LPort);
   Result := (LAcceptedSocket <> Id_INVALID_SOCKET);
   if Result then begin
     SetHandle(LAcceptedSocket);
-    //Get the NODELAY Socket option if we have a TCP Socket.
-    if ( SocketType = Id_SOCK_STREAM ) then begin
-       Self.GetSockOpt(Id_SOCKETOPTIONLEVEL_TCP, Id_TCP_NODELAY, LOpt);
-       if LOpt <> 1 then begin
-         FUseNagle := True;
-       end else begin
-         FUseNagle := False;
-       end;
-    end;
-
     // UpdateBindingLocal is necessary as it may be listening on multiple IPs/Ports
     UpdateBindingLocal;
     UpdateBindingPeer;
@@ -590,6 +580,8 @@ begin
 end;
 
 procedure TIdSocketHandle.SetHandle(AHandle: TIdStackSocketHandle);
+var
+  LOpt: Integer;
 begin
   if FHandle <> Id_INVALID_SOCKET then begin
     FReadSocketList.Remove(FHandle);
@@ -598,8 +590,14 @@ begin
   FHandleAllocated := FHandle <> Id_INVALID_SOCKET;
   if FHandleAllocated then begin
     FReadSocketList.Add(FHandle);
-    Self.GetSockOpt(Id_SOL_SOCKET,Id_SO_TYPE,FSocketType);
- //   GStack.GetSocketOption(FHandle,Id_SOL_SOCKET,Id_SO_TYPE,FSocketType);
+    GetSockOpt(Id_SOL_SOCKET, Id_SO_TYPE, FSocketType);
+    //Get the NODELAY Socket option if we have a TCP Socket.
+    if SocketType = Id_SOCK_STREAM then begin
+      GetSockOpt(Id_SOCKETOPTIONLEVEL_TCP, Id_TCP_NODELAY, LOpt);
+      FUseNagle := (LOpt = 0);
+    end;
+  end else begin
+    FSocketType := Id_SOCK_UNKNOWN;
   end;
 end;
 
@@ -635,8 +633,8 @@ end;
 
 procedure TIdSocketHandle.SetNagleOpt(const AEnabled: Boolean);
 begin
-{You only want to set a Nagle option for TCP.}
-  if HandleAllocated and ( SocketType = Id_SOCK_STREAM ) then begin
+  { You only want to set a Nagle option for TCP.}
+  if HandleAllocated and (SocketType = Id_SOCK_STREAM) then begin
     SetSockOpt(Id_SOCKETOPTIONLEVEL_TCP, Id_TCP_NODELAY, Integer(not AEnabled));
   end;
 end;

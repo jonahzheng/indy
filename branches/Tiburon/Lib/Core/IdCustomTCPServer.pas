@@ -696,7 +696,7 @@ begin
           end;
           DoBeforeBind(Bindings[I]);
           Bind;
-          SetSockOpt(Id_SOCKETOPTIONLEVEL_TCP, Id_TCP_NODELAY, Integer(not UseNagle));
+          UseNagle := Self.FUseNagle;
         end;
         Inc(I);
       end;
