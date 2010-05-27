@@ -10898,7 +10898,13 @@ type
   PX509_REQ_INFO = ^X509_REQ_INFO;
   PPX509_REQ_INFO = ^PX509_REQ_INFO;
   {$IFDEF DEBUG_SAFESTACK}
+  STACK_OF_X509_NAME_ENTRY = record
+    _stack: stack;
+  end;
   PSTACK_OF_X509_NAME_ENTRY = ^STACK_OF_X509_NAME_ENTRY;
+  STACK_OF_X509_REVOKED = record
+    _stack: stack;
+  end;
   PSTACK_OF_X509_REVOKED = ^STACK_OF_X509_REVOKED;
   {$ELSE}
   PSTACK_OF_X509_NAME_ENTRY = PSTACK;
@@ -10932,6 +10938,9 @@ type
     _stack: stack;
   end;
   PSTACK_OF_X509_POLICY_NODE = ^STACK_OF_X509_POLICY_NODE;
+  STACK_OF_POLICYQUALINFO = record
+    _stack: stack;
+  end;
   PSTACK_OF_POLICYQUALINFO = ^STACK_OF_POLICYQUALINFO;
   {$ELSE}
   //I think the DECLARE_STACK_OF macro is empty
@@ -11516,14 +11525,7 @@ type
     d : POLICYQUALINFO_union;
   end;
   PPOLICYQUALINFO = ^POLICYQUALINFO;
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_POLICYQUALINFO = record
-    _stack: stack;
-  end;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_POLICYQUALINFO = PSTACK;
-  {$ENDIF}
+
   {$IFDEF DEBUG_SAFESTACK}
   STACK_OF_POLICYINFO = record
     _stack: stack;
@@ -11781,14 +11783,7 @@ type
     _set : TIdC_INT;
     size : TIdC_INT; // temp variable
   end;
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_X509_NAME_ENTRY = record
-    _stack: stack;
-  end;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  PSTACK_OF_X509_NAME_ENTRY = PSTACK;
-  {$ENDIF}
+
   X509_NAME = record
     entries : PSTACK_OF_X509_NAME_ENTRY;
     modified : TIdC_INT;  // true if 'bytes' needs to be built
@@ -12058,13 +12053,7 @@ type
   end;
   PX509_REVOKED      = ^X509_REVOKED;
   PPX509_REVOKED     =^PX509_REVOKED;
-  {$IFDEF DEBUG_SAFESTACK}
-  STACK_OF_X509_REVOKED = record
-    _stack: stack;
-  end;
-  {$ELSE}
-  //I think the DECLARE_STACK_OF macro is empty
-  {$ENDIF}
+
   PX509_PKEY       = Pointer;
   PPX509_PKEY      =^PX509_PKEY;
   X509_INFO = record
