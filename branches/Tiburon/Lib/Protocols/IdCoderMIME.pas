@@ -94,9 +94,9 @@ var
   LPos: Integer;
 begin
   if Length(FLeftFromLastTime) > 0 then begin
-    LPos := Length(FLeftFromLastTime)+1;
+    LPos := Length(FLeftFromLastTime);
     SetLength(FLeftFromLastTime, 4);
-    while LPos <= 4 do begin
+    while LPos < 4 do begin
       FLeftFromLastTime[LPos] := Ord(FFillChar);
       Inc(LPos);
     end;
