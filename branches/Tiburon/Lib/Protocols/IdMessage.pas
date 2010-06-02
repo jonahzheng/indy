@@ -957,14 +957,19 @@ begin
   {CC2: Added support for BCCList...}
   BCCList.EMailAddresses := DecodeHeader(Headers.Values['Bcc']); {do not localize}
   Organization := Headers.Values['Organization']; {do not localize}
-  ReceiptRecipient.Text := Headers.Values['Disposition-Notification-To']; {do not localize}
 
+  ReceiptRecipient.Text := Headers.Values['Disposition-Notification-To']; {do not localize}
   if Length(ReceiptRecipient.Text) = 0 then begin
     ReceiptRecipient.Text := Headers.Values['Return-Receipt-To']; {do not localize}
   end;
 
   References := Headers.Values['References']; {do not localize}
+
   ReplyTo.EmailAddresses := Headers.Values['Reply-To']; {do not localize}
+  if Length(ReplyTo.EmailAddresses) = 0 then begin
+    ReplyTo.EmailAddresses := Headers.Values['Return-Path'];
+  end;
+
   Date := GMTToLocalDateTime(Headers.Values['Date']); {do not localize}
   Sender.Text := Headers.Values['Sender']; {do not localize}
 
@@ -973,11 +978,13 @@ begin
   end else begin
     Priority := GetMsgPriority(Headers.Values['X-Priority']) {do not localize}
   end;
+
   {Note that the following code ensures MIMEBoundary.Count is 0 for single-part MIME messages...}
   FContentType := RemoveHeaderEntry(FContentType, 'boundary', LBoundary, QuoteMIME);  {do not localize}
   if LBoundary <> '' then begin
     MIMEBoundary.Push(LBoundary, -1);
   end;
+
   {CC2: Set MESSAGE_LEVEL "encoding" (really the format or layout)}
   LMIMEVersion := Headers.Values['MIME-Version']; {do not localize}
   if LMIMEVersion = '' then begin
