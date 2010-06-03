@@ -2985,7 +2985,7 @@ begin
   meaning that the user has no envelopes.}
   CheckConnectionState(csSelected);
   SendCmd(NewCmdCounter, ( IMAP4Commands[cmdUID] + ' ' + IMAP4Commands[cmdFetch] + ' 1:* (' +  {Do not Localize}
-    IMAP4FetchDataItem[fdEnvelope] + ')'), [IMAP4Commands[cmdFetch]]);                         {Do not Localize}
+    IMAP4FetchDataItem[fdEnvelope] + ' ' + IMAP4FetchDataItem[fdFlags] + ')'), [IMAP4Commands[cmdFetch]]); {Do not Localize}
   if LastCmdResult.Code = IMAP_OK then begin
     for Ln := 0 to LastCmdResult.Text.Count-1 do begin
       if ParseLastCmdResult(LastCmdResult.Text[Ln], IMAP4Commands[cmdFetch], [IMAP4FetchDataItem[fdEnvelope]]) then begin
@@ -2993,9 +2993,11 @@ begin
           LMsgItem := AMsgList.Add;
           ParseEnvelopeResult(LMsgItem.Msg, FLineStruct.IMAPValue);
           LMsgItem.Msg.UID := FLineStruct.UID;
+          LMsgItem.Msg.Flags := FLineStruct.Flags;
         end else begin
           ParseEnvelopeResult(AMsgList.Messages[LN], FLineStruct.IMAPValue);
           AMsgList.Messages[LN].UID := FLineStruct.UID;
+          AMsgList.Messages[LN].Flags := FLineStruct.Flags;
         end;
       end;
     end;
