@@ -321,7 +321,7 @@ begin
     end;
 
     LContext.Headers.Clear;
-    LContext.Connection.IOHandler.Capture(LContext.Headers, '');
+    LContext.Connection.IOHandler.Capture(LContext.Headers, '', False);
     LContext.FTransferMode := FDefTransferMode;
     LContext.FTransferSource := tsClient;
     DoHTTPBeforeCommand(LContext);
@@ -331,7 +331,7 @@ begin
       TransferData(LContext, LContext.Connection, LContext.FOutboundClient);
 
       LContext.Headers.Clear;
-      LContext.FOutboundClient.IOHandler.Capture(LContext.Headers, '');
+      LContext.FOutboundClient.IOHandler.Capture(LContext.Headers, '', False);
       LContext.FTransferMode := FDefTransferMode;
       LContext.FTransferSource := tsServer;
       DoHTTPResponse(LContext);
@@ -374,7 +374,7 @@ begin
       TIdTCPClient(LContext.FOutboundClient).Port := IndyStrToInt(LRemoteHost, 443);
 
       LContext.Headers.Clear;
-      LContext.Connection.IOHandler.Capture(LContext.Headers, '');
+      LContext.Connection.IOHandler.Capture(LContext.Headers, '', False);
       LContext.FTransferMode := FDefTransferMode;
       LContext.FTransferSource := tsClient;
       DoHTTPBeforeCommand(LContext);
