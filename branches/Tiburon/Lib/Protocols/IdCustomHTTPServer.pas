@@ -941,7 +941,7 @@ begin
 
               // Retrieve the HTTP header
               LRequestInfo.RawHeaders.Clear;
-              IOHandler.Capture(LRequestInfo.RawHeaders, '');    {Do not Localize}
+              IOHandler.Capture(LRequestInfo.RawHeaders, '', False);    {Do not Localize}
               LRequestInfo.ProcessHeaders;
 
               LResponseInfo.CloseConnection := not (FKeepAlive and
