@@ -585,7 +585,7 @@ http://csrc.nist.gov/CryptoToolkit/tkhash.html
   EIdOSSLModeNotSet             = class(EIdOpenSSLError);
   EIdOSSLGetMethodError         = class(EIdOpenSSLError);
   EIdOSSLCreatingSessionError   = class(EIdOpenSSLError);
-  EIdOSSLCreatingContextError   = class(EIdOpenSSLError);
+  EIdOSSLCreatingContextError   = class(EIdOpenSSLAPICryptoError);
   EIdOSSLLoadingRootCertError = class(EIdOpenSSLAPICryptoError);
   EIdOSSLLoadingCertError = class(EIdOpenSSLAPICryptoError);
   EIdOSSLLoadingKeyError = class(EIdOpenSSLAPICryptoError);
