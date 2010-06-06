@@ -4746,13 +4746,12 @@ const
   {$EXTERNALSYM OBJ_R_UNKNOWN_NID}
   OBJ_R_UNKNOWN_NID = 101;
   {$EXTERNALSYM OPENSSL_VERSION_NUMBER}
-  OPENSSL_VERSION_NUMBER	= $1000000f; // MMNNFFPPS Major, Minor, Fix, Patch, Status
+  OPENSSL_VERSION_NUMBER = $1000001f;   // MMNNFFPPS Major, Minor, Fix, Patch, Status
+  {$EXTERNALSYM OPENSSL_VERSION_TEXT}
 {$IFDEF OPENSSL_FIPS}
-  {$EXTERNALSYM OPENSSL_VERSION_TEXT}
-  OPENSSL_VERSION_TEXT	= 'OpenSSL 1.0.0-fips 29 Mar 2010'; {Do not localize}
+  OPENSSL_VERSION_TEXT	= 'OpenSSL 1.0.0a-fips 1 Jun 2010'; {Do not localize}
 {$ELSE}
-  {$EXTERNALSYM OPENSSL_VERSION_TEXT}
-  OPENSSL_VERSION_TEXT = 'OpenSSL 1.0.0 29 Mar 2010';  {Do not localize}
+  OPENSSL_VERSION_TEXT = 'OpenSSL 1.0.0a 1 Jun 2010';   {Do not localize}
 {$ENDIF}
   {$EXTERNALSYM OPENSSL_VERSION_PTEXT}
   OPENSSL_VERSION_PTEXT = ' part of '+ OPENSSL_VERSION_TEXT;  {Do not localize}
@@ -14504,6 +14503,7 @@ _des_cblock = DES_cblock
   hm_fragment = record
     msg_header : hm_header;
     fragment : PAnsiChar;
+    reassembly : PAnsiChar;
   end;
   {$EXTERNALSYM DTLS1_STATE}     
   DTLS1_STATE = record
@@ -14563,6 +14563,7 @@ _des_cblock = DES_cblock
     retransmitting : TIdC_UINT;
     change_cipher_spec_ok : TIdC_UINT;
   end;
+
   {$EXTERNALSYM X509V3_CTX}    
   X509V3_CTX = V3_EXT_CTX;
   {$EXTERNALSYM PX509V3_CTX}      
