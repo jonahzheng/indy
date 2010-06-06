@@ -473,6 +473,9 @@ SocketOptionName.UseLoopback;//  Bypass hardware when possible.
   Id_INVALID_SOCKET        = INVALID_SOCKET;
   Id_SOCKET_ERROR          = SOCKET_ERROR;
   Id_SOCKETOPTIONLEVEL_TCP = Id_IPPROTO_TCP; // BGO: rename to Id_SOL_TCP
+     {$IFDEF HAS_TCP_CORK}
+  Id_TCP_CORK = TCP_CORK;
+     {$ENDIF}
   {$ELSE}
   Id_TCP_NODELAY           = SocketOptionName.NoDelay;
   Id_INVALID_SOCKET        = nil;
