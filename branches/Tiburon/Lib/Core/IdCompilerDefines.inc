@@ -919,6 +919,23 @@ it's a LongInt.
   {$ENDIF}
 {$ENDIF}
 
+{Take advantage of some TCP features specific to some stacks.
+They work somewhat similarly but there's a key difference.
+In Linux, TCP_CORK is turned on to send fixed packet sizes and
+when turned-off (uncorked), any remaining data is sent. With 
+TCP_NOPUSH, this might not happen and remaining data is only sent
+before disconnect.}
+{$UNDEF HAS_TCP_NOPUSH}
+{$UNDEF HAS_TCP_CORK}
+{$IFDEF BSD}
+  {$DEFINE HAS_TCP_NOPUSH}
+{$ENDIF}
+{$IFDEF LINUX}
+  {$DEFINE HAS_TCP_CORK}
+{$ENDIF}
+{$IFDEF SOLARIS}
+  {$DEFINE HAS_TCP_CORK}
+{$ENDIF}
 
 {$IFDEF DEBUG}
   {$UNDEF USE_INLINE}
