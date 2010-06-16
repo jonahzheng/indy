@@ -1058,10 +1058,10 @@ varies between servers.  A typical line that gets parsed into this is:
     function  GetResponse: string; reintroduce; overload;
     function  SendCmd(const AOut: string; AExpectedResponses: array of String): string; overload;
     function  SendCmd(const ATag, AOut: string; AExpectedResponses: array of String): string; overload;
-    function  ReadLnWait: string; {$IFDEF HAS_DEPRECATED}deprecated;{$ENDIF}
-    procedure WriteLn(const AOut: string = ''); {$IFDEF HAS_DEPRECATED}deprecated;{$ENDIF}
+    function  ReadLnWait: string; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IOHandler.ReadLnWait()'{$ENDIF};{$ENDIF}
+    procedure WriteLn(const AOut: string = ''); {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IOHandler.WriteLn()'{$ENDIF};{$ENDIF}
   { IdTCPConnection Commands }
-    published
+  published
     property  OnAlert: TIdAlertEvent read FOnAlert write FOnAlert;
     property  Password;
     property  RetrieveOnSelect: TIdRetrieveOnSelect read FRetrieveOnSelect write FRetrieveOnSelect default rsDisabled;
@@ -2485,7 +2485,7 @@ begin
       AInferiorMailBoxList.Clear;
       for Ln := 0 to AMailBoxList.Count - 1 do begin
         SendCmd(NewCmdCounter, ( IMAP4Commands[cmdList] + ' "" "' +            {Do not Localize}
-          AMailBoxList[Ln] + FMailBoxSeparator + '%"'), [IMAP4Commands[cmdList]]);     {Do not Localize}
+          DoMUTFEncode(AMailBoxList[Ln]) + FMailBoxSeparator + '%"'), [IMAP4Commands[cmdList]]);     {Do not Localize}
         if LastCmdResult.Code = IMAP_OK then begin
           ParseListResult(LAuxMailBoxList, LastCmdResult.Text);
           AInferiorMailBoxList.AddStrings(LAuxMailBoxList);
@@ -2728,7 +2728,7 @@ begin
       which was not expected by the client and caused an exception.}
 
       //CC: Added double quotes around mailbox name, else mailbox names with spaces will cause server parsing error
-      LCmd := IMAP4Commands[cmdAppend] + ' "' + AMBName + '" ';         {Do not Localize}
+      LCmd := IMAP4Commands[cmdAppend] + ' "' + DoMUTFEncode(AMBName) + '" ';         {Do not Localize}
       if Length(LFlags) <> 0 then begin
         LCmd := LCmd + LFlags + ' ';                    {Do not Localize}
       end;
@@ -2836,7 +2836,7 @@ begin
       which was not expected by the client and caused an exception.}
 
       //CC: Added double quotes around mailbox name, else mailbox names with spaces will cause server parsing error
-      LCmd := IMAP4Commands[cmdAppend] + ' "' + AMBName + '" ';     {Do not Localize}
+      LCmd := IMAP4Commands[cmdAppend] + ' "' + DoMUTFEncode(AMBName) + '" ';     {Do not Localize}
       if Length(LFlags) <> 0 then begin                 {Do not Localize}
         LCmd := LCmd + LFlags + ' ';                {Do not Localize}
       end;
@@ -5659,7 +5659,7 @@ const
     try
       IOHandler.Capture(LMStream, LDelim, True, Indy8BitEncoding());
       LMStream.Position := 0;
-      ReadStringsAsCharSet(LMStream, AMsg.Body, AMsg.CharSet);
+      ReadStringsAsCharSet(LMStream, AMsg.Body, AMsg.CharSet{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding(){$ENDIF});
     finally
       LMStream.Free;
     end;
