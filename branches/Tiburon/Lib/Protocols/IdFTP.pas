@@ -2287,7 +2287,7 @@ begin
   if IsExtSupported('CLNT') then begin {do not localize}
     LClnt := FClientInfo.ClntOutput;
     if LClnt = '' then begin
-      LClnt := gsIdProductName + gsIdVersion;
+      LClnt := gsIdProductName + ' '+ gsIdVersion;
     end;
     SendCmd('CLNT '+ LClnt);  {do not localize}
   end;
