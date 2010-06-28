@@ -167,7 +167,7 @@ uses
   IdGlobal, IdStack,
   IdExceptionCore, IdGlobalProtocols, IdHeaderList, IdCustomTCPServer,
   IdTCPConnection, IdThread, IdCookie, IdHTTPHeaderInfo, IdStackConsts,
-  IdBaseComponent,
+  IdBaseComponent, IdThreadSafe,
   SysUtils;
 
 type
@@ -366,13 +366,36 @@ type
     property OnSessionStart: TIdHTTPSessionStartEvent read FOnSessionStart write FOnSessionStart;
   end;
 
+  TIdThreadSafeMimeTable = class(TIdThreadSafe)
+  protected
+    FTable: TIdMimeTable;
+    function GetLoadTypesFromOS: Boolean;
+    procedure SetLoadTypesFromOS(AValue: Boolean);
+    function GetOnBuildCache: TNotifyEvent;
+    procedure SetOnBuildCache(AValue: TNotifyEvent);
+  public
+    constructor Create(const AutoFill: Boolean = True); reintroduce;
+    destructor Destroy; override;
+    procedure BuildCache;
+    procedure AddMimeType(const Ext, MIMEType: string; const ARaiseOnError: Boolean = True);
+    function GetFileMIMEType(const AFileName: string): string;
+    function GetDefaultFileExt(const MIMEType: string): string;
+    procedure LoadFromStrings(const AStrings: TStrings; const MimeSeparator: Char = '=');    {Do not Localize}
+    procedure SaveToStrings(const AStrings: TStrings; const MimeSeparator: Char = '=');    {Do not Localize}
+    function Lock: TIdMimeTable; reintroduce;
+    procedure Unlock; reintroduce;
+    //
+    property LoadTypesFromOS: Boolean read GetLoadTypesFromOS write SetLoadTypesFromOS;
+    property OnBuildCache: TNotifyEvent read GetOnBuildCache write SetOnBuildCache;
+  end;
+
   TIdCustomHTTPServer = class(TIdCustomTCPServer)
   protected
     FAutoStartSession: Boolean;
     FKeepAlive: Boolean;
     FParseParams: Boolean;
     FServerSoftware: string;
-    FMIMETable: TIdMimeTable;
+    FMIMETable: TIdThreadSafeMimeTable;
     FSessionList: TIdHTTPCustomSessionList;
     FSessionState: Boolean;
     FSessionTimeOut: Integer;
@@ -433,7 +456,7 @@ type
     destructor Destroy; override;
     function EndSession(const SessionName: string): boolean;
     //
-    property MIMETable: TIdMimeTable read FMIMETable;
+    property MIMETable: TIdThreadSafeMimeTable read FMIMETable;
     property SessionList: TIdHTTPCustomSessionList read FSessionList;
   published
     property AutoStartSession: boolean read FAutoStartSession write FAutoStartSession default Id_TId_HTTPAutoStartSession;
@@ -575,6 +598,103 @@ begin
   end;
 end;
 
+{ TIdThreadSafeMimeTable }
+
+constructor TIdThreadSafeMimeTable.Create(const AutoFill: Boolean = True);
+begin
+  inherited Create;
+  FTable := TIdMimeTable.Create(AutoFill);
+end;
+
+destructor TIdThreadSafeMimeTable.Destroy;
+begin
+  inherited Lock; try
+    FreeAndNil(FTable);
+  finally inherited Unlock; end;
+  inherited Destroy;
+end;
+
+function TIdThreadSafeMimeTable.GetLoadTypesFromOS: Boolean;
+begin
+  with Lock do try
+    Result := LoadTypesFromOS;
+  finally Unlock; end;
+end;
+
+procedure TIdThreadSafeMimeTable.SetLoadTypesFromOS(AValue: Boolean);
+begin
+  with Lock do try
+    LoadTypesFromOS := AValue;
+  finally Unlock; end;
+end;
+
+function TIdThreadSafeMimeTable.GetOnBuildCache: TNotifyEvent;
+begin
+  with Lock do try
+    Result := OnBuildCache;
+  finally Unlock; end;
+end;
+
+procedure TIdThreadSafeMimeTable.SetOnBuildCache(AValue: TNotifyEvent);
+begin
+  with Lock do try
+    OnBuildCache := AValue;
+  finally Unlock; end;
+end;
+
+procedure TIdThreadSafeMimeTable.BuildCache;
+begin
+  with Lock do try
+    BuildCache;
+  finally Unlock; end;
+end;
+
+procedure TIdThreadSafeMimeTable.AddMimeType(const Ext, MIMEType: string; const ARaiseOnError: Boolean = True);
+begin
+  with Lock do try
+    AddMimeType(Ext, MIMEType, ARaiseOnError);
+  finally Unlock; end;
+end;
+
+function TIdThreadSafeMimeTable.GetFileMIMEType(const AFileName: string): string;
+begin
+  with Lock do try
+    Result := GetFileMIMEType(AFileName);
+  finally Unlock; end;
+end;
+
+function TIdThreadSafeMimeTable.GetDefaultFileExt(const MIMEType: string): string;
+begin
+  with Lock do try
+    Result := GetDefaultFileExt(MIMEType);
+  finally Unlock; end;
+end;
+
+procedure TIdThreadSafeMimeTable.LoadFromStrings(const AStrings: TStrings; const MimeSeparator: Char = '=');    {Do not Localize}
+begin
+  with Lock do try
+    LoadFromStrings(AStrings, MimeSeparator);
+  finally Unlock; end;
+end;
+
+procedure TIdThreadSafeMimeTable.SaveToStrings(const AStrings: TStrings; const MimeSeparator: Char = '=');    {Do not Localize}
+begin
+  with Lock do try
+    SaveToStrings(AStrings, MimeSeparator);
+  finally Unlock; end;
+end;
+
+function TIdThreadSafeMimeTable.Lock: TIdMimeTable;
+begin
+  inherited Lock;
+  Result := FTable;
+end;
+
+procedure TIdThreadSafeMimeTable.Unlock;
+begin
+  inherited Unlock;
+end;
+
 { TIdCustomHTTPServer }
 
 procedure TIdCustomHTTPServer.InitComponent;
@@ -584,7 +704,7 @@ begin
   DefaultPort := IdPORT_HTTP;
   ParseParams := Id_TId_HTTPServer_ParseParams;
   FSessionList := TIdHTTPDefaultSessionList.Create(Self);
-  FMIMETable := TIdMimeTable.Create(False);
+  FMIMETable := TIdThreadSafeMimeTable.Create(False);
   FSessionTimeOut := Id_TId_HTTPSessionTimeOut;
   FAutoStartSession := Id_TId_HTTPAutoStartSession;
   FKeepAlive := Id_TId_HTTPServer_KeepAlive;
