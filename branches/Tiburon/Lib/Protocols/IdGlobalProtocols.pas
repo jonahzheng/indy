@@ -3707,7 +3707,10 @@ function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String;
 var
   LItems: TStringList;
   I: Integer;
-  LTmp, LValue: string;
+  {$IFNDEF HAS_TSTRINGS_VALUEFROMINDEX}
+  LTmp: string;
+  {$ENDIF}
+  LValue: string;
 
   {$IFNDEF VCL_6_OR_ABOVE}
   function FindIndexOfItem: Integer;
@@ -3788,8 +3791,12 @@ begin
     Result := ExtractHeaderItem(AHeaderLine);
     if Result <> '' then begin
       for I := 0 to LItems.Count-1 do begin
+        {$IFDEF HAS_TSTRINGS_VALUEFROMINDEX}
+        Result := Result + '; ' + LItems.Names[I] + '=' + QuoteString(LItems.ValueFromIndex[I]); {do not localize}
+        {$ELSE}
         LTmp := LItems.Strings[I];
         Result := Result + '; ' + LItems.Names[I] + '=' + QuoteString(Copy(LTmp, Pos('=', LTmp)+1, MaxInt)); {do not localize}
+        {$ENDIF}
       end;
     end;
   finally
