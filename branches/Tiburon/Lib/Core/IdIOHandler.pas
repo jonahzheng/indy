@@ -478,7 +478,7 @@ type
     procedure InterceptReceive(var VBuffer: TIdBytes);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure PerformCapture(const ADest: TObject; out VLineCount: Integer;
-     const ADelim: string; AIsRFCMessage: Boolean; AByteEncoding: TIdTextEncoding = nil
+     const ADelim: string; AUsesDotTransparency: Boolean; AByteEncoding: TIdTextEncoding = nil
      {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
      ); virtual;
     procedure RaiseConnClosedGracefully;
@@ -569,7 +569,8 @@ type
     procedure Write(AValue: Word; AConvert: Boolean = True); overload;
     procedure Write(AValue: SmallInt; AConvert: Boolean = True); overload;
     procedure Write(AValue: Int64; AConvert: Boolean = True); overload;
-    procedure Write(AStream: TStream; ASize: TIdStreamSize = 0; AWriteByteCount: Boolean = False); overload; virtual;
+    procedure Write(AStream: TStream; ASize: TIdStreamSize = 0;
+      AWriteByteCount: Boolean = False); overload; virtual;
     procedure WriteRFCStrings(AStrings: TStrings; AWriteTerminator: Boolean = True;
       AByteEncoding: TIdTextEncoding = nil
       {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF}
@@ -594,11 +595,11 @@ type
       {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
       ); overload; // .Net overload
     procedure Capture(ADest: TStream; ADelim: string;
-      AIsRFCMessage: Boolean = True; AByteEncoding: TIdTextEncoding = nil
+      AUsesDotTransparency: Boolean = True; AByteEncoding: TIdTextEncoding = nil
       {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
       ); overload;
     procedure Capture(ADest: TStream; out VLineCount: Integer;
-      const ADelim: string = '.'; AIsRFCMessage: Boolean = True;
+      const ADelim: string = '.'; AUsesDotTransparency: Boolean = True;
       AByteEncoding: TIdTextEncoding = nil
       {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
       ); overload;
@@ -606,11 +607,11 @@ type
       {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
       ); overload; // .Net overload
     procedure Capture(ADest: TStrings; const ADelim: string;
-      AIsRFCMessage: Boolean = True; AByteEncoding: TIdTextEncoding = nil
+      AUsesDotTransparency: Boolean = True; AByteEncoding: TIdTextEncoding = nil
       {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
       ); overload;
     procedure Capture(ADest: TStrings; out VLineCount: Integer;
-      const ADelim: string = '.'; AIsRFCMessage: Boolean = True;
+      const ADelim: string = '.'; AUsesDotTransparency: Boolean = True;
       AByteEncoding: TIdTextEncoding = nil
       {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
       ); overload;
@@ -1973,7 +1974,7 @@ end;
 
 procedure TIdIOHandler.PerformCapture(const ADest: TObject;
   out VLineCount: Integer; const ADelim: string;
-  AIsRFCMessage: Boolean; AByteEncoding: TIdTextEncoding = nil
+  AUsesDotTransparency: Boolean; AByteEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
   );
 var
@@ -2016,9 +2017,9 @@ begin
           raise EIdMaxCaptureLineExceeded.Create(RSMaximumNumberOfCaptureLineExceeded);
         end;
       end;
-      // For RFC 822 retrieves
+      // For RFC retrieves that use dot transparency
       // No length check necessary, if only one byte it will be byte x + #0.
-      if AIsRFCMessage then begin
+      if AUsesDotTransparency then begin
         if TextStartsWith(s, '..') then begin
           Delete(s, 1, 1);
         end;
@@ -2182,37 +2183,37 @@ begin
 end;
 
 procedure TIdIOHandler.Capture(ADest: TStream; out VLineCount: Integer;
-  const ADelim: string = '.'; AIsRFCMessage: Boolean = True;
+  const ADelim: string = '.'; AUsesDotTransparency: Boolean = True;
   AByteEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
   );
 {$IFDEF USE_CLASSINLINE}inline;{$ENDIF}
 begin
-  PerformCapture(ADest, VLineCount, ADelim, AIsRFCMessage, AByteEncoding
+  PerformCapture(ADest, VLineCount, ADelim, AUsesDotTransparency, AByteEncoding
     {$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF}
     );
 end;
 
 procedure TIdIOHandler.Capture(ADest: TStream; ADelim: string;
-  AIsRFCMessage: Boolean = True; AByteEncoding: TIdTextEncoding = nil
+  AUsesDotTransparency: Boolean = True; AByteEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
   );
 var
   LLineCount: Integer;
 begin
-  PerformCapture(ADest, LLineCount, '.', AIsRFCMessage, AByteEncoding   {do not localize}
+  PerformCapture(ADest, LLineCount, '.', AUsesDotTransparency, AByteEncoding   {do not localize}
     {$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF}
     );
 end;
 
 procedure TIdIOHandler.Capture(ADest: TStrings; out VLineCount: Integer;
-  const ADelim: string = '.'; AIsRFCMessage: Boolean = True;
+  const ADelim: string = '.'; AUsesDotTransparency: Boolean = True;
   AByteEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
   );
 {$IFDEF USE_CLASSINLINE}inline;{$ENDIF}
 begin
-  PerformCapture(ADest, VLineCount, ADelim, AIsRFCMessage, AByteEncoding
+  PerformCapture(ADest, VLineCount, ADelim, AUsesDotTransparency, AByteEncoding
     {$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF}
     );
 end;
@@ -2229,13 +2230,13 @@ begin
 end;
 
 procedure TIdIOHandler.Capture(ADest: TStrings; const ADelim: string;
-  AIsRFCMessage: Boolean = True; AByteEncoding: TIdTextEncoding = nil
+  AUsesDotTransparency: Boolean = True; AByteEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
   );
 var
   LLineCount: Integer;
 begin
-  PerformCapture(ADest, LLineCount, ADelim, AIsRFCMessage, AByteEncoding
+  PerformCapture(ADest, LLineCount, ADelim, AUsesDotTransparency, AByteEncoding
     {$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF}
     );
 end;
