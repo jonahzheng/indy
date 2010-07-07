@@ -179,9 +179,15 @@ var
 { TIdMessageDecoderList }
 
 class function TIdMessageDecoderList.ByName(const AName: string): TIdMessageDecoderInfo;
+var
+  I: Integer;
 begin
-  with GMessageDecoderList.FMessageCoders do begin
-    Result := TIdMessageDecoderInfo(Objects[IndexOf(AName)]);
+  Result := nil;
+  if GMessageDecoderList <> nil then begin
+    I := GMessageDecoderList.FMessageCoders.IndexOf(AName);
+    if I <> -1 then begin
+      Result := TIdMessageDecoderInfo(GMessageDecoderList.FMessageCoders.Objects[I]);
+    end;
   end;
   if Result = nil then begin
     raise EIdException.Create(RSMessageDecoderNotFound + ': ' + AName);    {Do not Localize}
@@ -193,11 +199,12 @@ var
   i: integer;
 begin
   Result := nil;
-  for i := 0 to GMessageDecoderList.FMessageCoders.Count - 1 do begin
-    Result := TIdMessageDecoderInfo(GMessageDecoderList.FMessageCoders.Objects[i]).CheckForStart(ASender
-     , ALine);
-    if Result <> nil then begin
-      Break;
+  if GMessageDecoderList <> nil then begin
+    for i := 0 to GMessageDecoderList.FMessageCoders.Count - 1 do begin
+      Result := TIdMessageDecoderInfo(GMessageDecoderList.FMessageCoders.Objects[i]).CheckForStart(ASender, ALine);
+      if Result <> nil then begin
+        Break;
+      end;
     end;
   end;
 end;
@@ -312,9 +319,15 @@ end;
 { TIdMessageEncoderList }
 
 class function TIdMessageEncoderList.ByName(const AName: string): TIdMessageEncoderInfo;
+var
+  I: Integer;
 begin
-  with GMessageEncoderList.FMessageCoders do begin
-    Result := TIdMessageEncoderInfo(Objects[IndexOf(AName)]);
+  Result := nil;
+  if GMessageEncoderList <> nil then begin
+    I := GMessageEncoderList.FMessageCoders.IndexOf(AName);
+    if I <> -1 then begin
+      Result := TIdMessageEncoderInfo(GMessageEncoderList.FMessageCoders.Objects[I]);
+    end;
   end;
   if Result = nil then begin
     raise EIdException.Create(RSMessageEncoderNotFound + ': ' + AName);    {Do not Localize}
