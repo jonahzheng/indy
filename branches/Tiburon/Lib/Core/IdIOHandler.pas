@@ -2257,9 +2257,7 @@ procedure TIdIOHandler.Write(const ABuffer: TIdBytes; const ALength: Integer = -
   const AOffset: Integer = 0);
 var
   LLength: Integer;
-  LTemp: TIdBytes;
 begin
-  LTemp := nil; // keep the compiler happy
   LLength := IndyLength(ABuffer, ALength, AOffset);
   if LLength > 0 then begin
     if FWriteBuffer = nil then begin
