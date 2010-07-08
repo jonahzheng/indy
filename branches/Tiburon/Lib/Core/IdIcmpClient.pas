@@ -178,6 +178,8 @@ type
     property ReplyData: string read FReplydata;
     property ReplyStatus: TReplyStatus read FReplyStatus;
 
+    property OnReply: TOnReplyEvent read FOnReply write FOnReply;
+
   public
     destructor Destroy; override;
     procedure Send(const AHost: string; const APort: TIdPort; const ABuffer : TIdBytes); override;
@@ -197,7 +199,7 @@ type
     {$ENDIF}
     property PacketSize;
     property ReceiveTimeout default Id_TIDICMP_ReceiveTimeout;
-    property OnReply: TOnReplyEvent read FOnReply write FOnReply;
+    property OnReply;
   end;
 
 implementation
@@ -208,9 +210,9 @@ uses
   Windows,
   {$ENDIF}
   {$IFDEF USE_VCL_POSIX}
-	  {$IFDEF DARWIN}
+    {$IFDEF DARWIN}
     CoreServices,
-	  {$ENDIF}
+    {$ENDIF}
   {$ENDIF}
   IdExceptionCore, IdRawHeaders, IdResourceStringsCore,
   IdStack, IdStruct, SysUtils;
