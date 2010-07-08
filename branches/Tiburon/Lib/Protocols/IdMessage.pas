@@ -711,7 +711,7 @@ var
   ISOCharset: string;
   HeaderEncoding: Char;
   LN: Integer;
-  LEncoding, LMIMEBoundary: string;
+  LEncoding, LCharSet, LMIMEBoundary: string;
   LDate: TDateTime;
   LReceiptRecipient: string;
 begin
@@ -800,7 +800,10 @@ begin
       Values['Bcc'] := EncodeAddress(BCCList, HeaderEncoding, ISOCharSet); {do not localize}
     end;
     Values['Newsgroups'] := NewsGroups.CommaText; {do not localize}
-    if Encoding = meMIME then
+
+    // RLebeau: Delphi 2011 introduces a new TStrings.Encoding property,
+    // so we have to qualify which Encoding property to access here...
+    if Self.Encoding = meMIME then
     begin
       if IsMsgSinglePartMime then begin
         {This is a single-part MIME: the part may be a text part or an attachment.
@@ -821,8 +824,12 @@ begin
         Values['Content-Disposition'] := '';
       end else begin
         if FContentType <> '' then begin
+          LCharSet := FCharSet;
+          if (LCharSet = '') and IsHeaderMediaType(FContentType, 'text') then begin {do not localize}
+            LCharSet := 'us-ascii';  {do not localize}
+          end;
           Values['Content-Type'] := FContentType;  {do not localize}
-          Params['Content-Type', 'charset'] := FCharSet;  {do not localize}
+          Params['Content-Type', 'charset'] := LCharSet;  {do not localize}
           if (MessageParts.Count > 0) and (LMIMEBoundary <> '') then begin
             Params['Content-Type', 'boundary'] := LMIMEBoundary;  {do not localize}
           end;
@@ -833,8 +840,12 @@ begin
       end;
     end else begin
       //CC: non-MIME can have ContentTransferEncoding of base64, quoted-printable...
+      LCharSet := FCharSet;
+      if (LCharSet = '') and IsHeaderMediaType(FContentType, 'text') then begin {do not localize}
+        LCharSet := 'us-ascii';  {do not localize}
+      end;
       Values['Content-Type'] := FContentType;  {do not localize}
-      Params['Content-Type', 'charset'] := FCharSet;  {do not localize}
+      Params['Content-Type', 'charset'] := LCharSet;  {do not localize}
       Values['Content-Transfer-Encoding'] := ContentTransferEncoding; {do not localize}
     end;
     Values['Sender'] := Sender.Text; {do not localize}
