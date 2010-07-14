@@ -1,3 +1,4 @@
+
 {
   $Project$
   $Workfile$
@@ -2450,22 +2451,21 @@ begin
   Result := TIdTextEncoding.UTF8;
 end;
 
-// RLebeau: TODO - implement a custom 8-bit encoding class?
-//
-// We need a class that converts UFT-16 codeunits in the $00-$FF range
-// to/from their numeric values as-is.  Was previously using "Windows-1252"
-// (codepage 1252) for that, which does so for most codeunits, however
-// codeunits $80-$9F in Windows-1252 map to different codepoints in Unicode,
-// which we don't want.  "ISO 8859-1" (codepage 28591), on the other hand,
-// treats codeunits $00-$FF as-is, and seems to be just as widely supported
-// as codepage 1252 on most systems, so we'll use that for now...
-
 {$IFDEF DOTNET}
+
+// We need a charset that converts UTF-16 codeunits in the $00-$FF range
+// to/from their numeric values as-is.  Was previously using "Windows-1252"
+// which does so for most codeunits, however codeunits $80-$9F in
+// Windows-1252 map to different codepoints in Unicode, which we don't want.
+// "ISO-8859-1" aka "ISO_8859-1:1987" (not to be confused with the older
+// "ISO 8859-1" charset), on the other hand, treats codeunits $00-$FF as-is,
+// and seems to be just as widely supported as Windows-1252 on most systems,
+// so we'll use that for now...
 
 function Indy8BitEncoding: TIdTextEncoding;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  Result := TIdTextEncoding.GetEncoding(28591);
+  Result := TIdTextEncoding.GetEncoding('ISO-8859-1');
 end;
 
 {$ELSE}
