@@ -530,7 +530,8 @@ function TIdVSEPQDispositionDispositionCode(const ADisp : TIdVSEPQDisposition) :
 {EPLF and MLST/MLSD support}
 function ParseFacts(AData : String; AResults : TStrings;
   const AFactDelim : String = ';'; const ANameDelim : String=' '): String;
-
+function ParseFactsMLS(AData : String; AResults : TStrings;
+  const AFactDelim : String = ';'; const ANameDelim : String = ' '): String;
 {Sterling Commerce support routines}
 
 function IsValidSterCommFlags(const AString : String) : Boolean;
@@ -2275,7 +2276,8 @@ begin
   end;
 end;
 
-//===== MLST/MLSD and EPLF formats
+
+//===== EPLF formats
 function ParseFacts(AData : String; AResults : TStrings;
   const AFactDelim : String = ';'; const ANameDelim : String = ' '): String;
   {$IFDEF USE_INLINE} inline; {$ENDIF}
@@ -2289,6 +2291,32 @@ begin
     AResults.Add(Fetch(LBuf, AFactDelim));
   until LBuf = '';
 end;
+
+//===== MLSD Parse facts, this has to be different because of different charsets
+function ParseFactsMLS(AData : String; AResults : TStrings;
+  const AFactDelim : String = ';'; const ANameDelim : String = ' '): String;
+  {$IFDEF USE_INLINE} inline; {$ENDIF}
+var LBuf : TIdBytes;
+  LCharSet : String;
+  LEncoding : TIdTextEncoding;
+begin
+  LBuf := ToBytes(ParseFacts(AData, AResults, AFactDelim, ANameDelim),Indy8bitEncoding);
+  LCharSet := AResults.Values['charset'];
+  if LCharSet = '' then begin
+    LCharSet := 'UTF-8';
+  end;
+  LEncoding := CharsetToEncoding(LCharSet);
+  try
+    try
+      Result := BytesToString(LBuf, LEncoding);
+    except
+      Result := BytesToString(LBuf, Indy8bitEncoding);
+    end;
+  finally
+    FreeAndNil(LEncoding);
+  end;
+end;
+
 
 {Sterling Commerce support routines}
 
