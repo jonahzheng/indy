@@ -685,13 +685,11 @@ end;
 
 procedure TIdCustomHTTP.Get(AURL: string; AResponseContent: TStream);
 begin
-  Assert(AResponseContent<>nil);
   Get(AURL, AResponseContent, []);
 end;
 
 procedure TIdCustomHTTP.Trace(AURL: string; AResponseContent: TStream);
 begin
-  Assert(AResponseContent<>nil);
   DoRequest(Id_HTTPMethodTrace, AURL, nil, AResponseContent, []);
 end;
 
@@ -704,9 +702,6 @@ procedure TIdCustomHTTP.Post(AURL: string; ASource, AResponseContent: TStream);
 var
   OldProtocol: TIdHTTPProtocolVersion;
 begin
-  Assert(ASource<>nil);
-  Assert(AResponseContent<>nil);
-
   // PLEASE READ CAREFULLY
 
   // Currently when issuing a POST, IdHTTP will automatically set the protocol
@@ -794,21 +789,23 @@ procedure TIdCustomHTTP.Post(AURL: string; ASource: TStrings; AResponseContent: 
 var
   LParams: TMemoryStream;
 begin
-  Assert(ASource<>nil);
-  Assert(AResponseContent<>nil);
-
   // Usual posting request have default ContentType is application/x-www-form-urlencoded
   if (Request.ContentType = '') or IsContentTypeHtml(Request) then begin
     Request.ContentType := 'application/x-www-form-urlencoded'; {do not localize}
   end;
 
-  LParams := TMemoryStream.Create;
-  try
-    WriteStringToStream(LParams, SetRequestParams(ASource));
-    LParams.Position := 0;
-    Post(AURL, LParams, AResponseContent);
-  finally
-    FreeAndNil(LParams);
+  if ASource <> nil then
+  begin
+    LParams := TMemoryStream.Create;
+    try
+      WriteStringToStream(LParams, SetRequestParams(ASource));
+      LParams.Position := 0;
+      Post(AURL, LParams, AResponseContent);
+    finally
+      FreeAndNil(LParams);
+    end;
+  end else begin
+    Post(AURL, TStream(nil), AResponseContent);
   end;
 end;
 
@@ -816,8 +813,6 @@ function TIdCustomHTTP.Post(AURL: string; ASource: TStrings): string;
 var
   LResponse: TMemoryStream;
 begin
-  Assert(ASource<>nil);
-
   LResponse := TMemoryStream.Create;
   try
     Post(AURL, ASource, LResponse);
@@ -832,8 +827,6 @@ function TIdCustomHTTP.Post(AURL: string; ASource: TStream): string;
 var
   LResponse: TMemoryStream;
 begin
-  Assert(ASource<>nil);
-
   LResponse := TMemoryStream.Create;
   try
     Post(AURL, ASource, LResponse);
@@ -846,9 +839,6 @@ end;
 
 procedure TIdCustomHTTP.Put(AURL: string; ASource, AResponseContent: TStream);
 begin
-  Assert(ASource<>nil);
-  Assert(AResponseContent<>nil);
-
   DoRequest(Id_HTTPMethodPut, AURL, ASource, AResponseContent, []);
 end;
 
@@ -856,8 +846,6 @@ function TIdCustomHTTP.Put(AURL: string; ASource: TStream): string;
 var
   LResponse: TMemoryStream;
 begin
-  Assert(ASource<>nil);
-
   LResponse := TMemoryStream.Create;
   try
     Put(AURL, ASource, LResponse);
@@ -988,6 +976,7 @@ var
   //0 - no compression was used or we can't support that feature
   //1 - deflate
   //2 - gzip
+  LTrailHeader: String;
 
   function ChunkSize: integer;
   var
@@ -1052,8 +1041,12 @@ begin
             InternalReadLn; // CRLF at end of chunk data
             Size := ChunkSize;
           end;
-          // skip trailer headers
-          repeat until InternalReadLn = '';
+          // read trailer headers
+          LTrailHeader := InternalReadLn;
+          while LTrailHeader <> '' do begin
+            AResponse.RawHeaders.Add(LTrailHeader);
+            LTrailHeader := InternalReadLn;
+          end;
         finally
           EndWork(wmRead);
         end;
@@ -1282,33 +1275,33 @@ begin
   end;
 
   if Assigned(FCompressor) and FCompressor.IsReady then begin
-    if IndyPos('deflate', Request.AcceptEncoding) = 0 then  {do not localize}
+    if IndyPos('deflate', ARequest.AcceptEncoding) = 0 then  {do not localize}
     begin
-      if Request.AcceptEncoding <> '' then begin {do not localize}
-        Request.AcceptEncoding := Request.AcceptEncoding + ', deflate'; {do not localize}
+      if ARequest.AcceptEncoding <> '' then begin {do not localize}
+        ARequest.AcceptEncoding := ARequest.AcceptEncoding + ', deflate'; {do not localize}
       end else begin
-        Request.AcceptEncoding := 'deflate'; {do not localize}
+        ARequest.AcceptEncoding := 'deflate'; {do not localize}
       end;
     end;
-    if IndyPos('gzip', Request.AcceptEncoding) = 0 then {do not localize}
+    if IndyPos('gzip', ARequest.AcceptEncoding) = 0 then {do not localize}
     begin
-      if Request.AcceptEncoding <> '' then begin {do not localize}
-        Request.AcceptEncoding := Request.AcceptEncoding + ', gzip'; {do not localize}
+      if ARequest.AcceptEncoding <> '' then begin {do not localize}
+        ARequest.AcceptEncoding := ARequest.AcceptEncoding + ', gzip'; {do not localize}
       end else begin
-        Request.AcceptEncoding := 'gzip'; {do not localize}
+        ARequest.AcceptEncoding := 'gzip'; {do not localize}
       end;
     end;
   end;
 
-  if IndyPos('identity', Request.AcceptEncoding) = 0 then begin  {do not localize}
-    if Request.AcceptEncoding <> '' then begin
-      Request.AcceptEncoding := Request.AcceptEncoding + ', identity'; {do not localize}
+  if IndyPos('identity', ARequest.AcceptEncoding) = 0 then begin  {do not localize}
+    if ARequest.AcceptEncoding <> '' then begin
+      ARequest.AcceptEncoding := ARequest.AcceptEncoding + ', identity'; {do not localize}
     end else begin
-      Request.AcceptEncoding := 'identity'; {do not localize}
+      ARequest.AcceptEncoding := 'identity'; {do not localize}
     end;
   end;
 
-  if ARequest.UseProxy = ctSSLProxy then begin
+  if ARequest.UseProxy in [ctProxy, ctSSLProxy] then begin
     LLocalHTTP := TIdHTTPProtocol.Create(Self);
     try
       with LLocalHTTP do begin
@@ -1339,7 +1332,7 @@ begin
 
               if Response.ResponseCode = 200 then begin
                 // Connection established
-                if (IOHandler is TIdSSLIOHandlerSocketBase) then begin
+                if (ARequest.UseProxy = ctSSLProxy) and (IOHandler is TIdSSLIOHandlerSocketBase) then begin
                   TIdSSLIOHandlerSocketBase(IOHandler).PassThrough := False;
                 end;
                 Break;
@@ -1381,18 +1374,18 @@ end;
 procedure TIdCustomHTTP.ProcessCookies(ARequest: TIdHTTPRequest; AResponse: TIdHTTPResponse);
 var
   Temp, Cookies, Cookies2: TStringList;
-  i, j: Integer;
+  i: Integer;
   S, Cur: String;
 
   // RLebeau: a single Set-Cookie header can have more than 1 cookie in it...
   procedure ReadCookies(AHeaders: TIdHeaderList; const AHeader: String; ACookies: TStrings);
   var
-    k: Integer;
+    j: Integer;
   begin
     Temp.Clear;
     AHeaders.Extract(AHeader, Temp);
-    for k := 0 to Temp.Count-1 do begin
-      S := Temp[k];
+    for j := 0 to Temp.Count-1 do begin
+      S := Temp[j];
       while ExtractNextCookie(S, Cur, True) do begin
         ACookies.Add(Cur);
       end;
@@ -1404,7 +1397,7 @@ begin
   Cookies := nil;
   Cookies2 := nil;
   try
-    if not Assigned(FCookieManager) and AllowCookies then begin
+    if (not Assigned(FCookieManager)) and AllowCookies then begin
       CookieManager := TIdCookieManager.Create(Self);
       FFreeCookieManager := True;
     end;
@@ -1736,7 +1729,6 @@ procedure TIdCustomHTTP.Post(AURL: string; ASource: TIdMultiPartFormDataStream;
   AResponseContent: TStream);
 begin
   Assert(ASource<>nil);
-  Assert(AResponseContent<>nil);
   Request.ContentType := ASource.RequestContentType;
   // TODO: Request.CharSet := ASource.RequestCharSet;
   Post(AURL, TStream(ASource), AResponseContent);
@@ -1895,7 +1887,7 @@ begin
     begin
       Response.RawHeaders.Add(S);
       s := FHTTP.InternalReadLn;
-      inc(LHeaderCount);
+      Inc(LHeaderCount);
     end;
   except
     on E: EIdConnClosedGracefully do begin
@@ -2169,8 +2161,6 @@ end;
 procedure TIdCustomHTTP.Get(AURL: string; AResponseContent: TStream;
   AIgnoreReplies: array of SmallInt);
 begin
-  Assert(AResponseContent<>nil);
-
   DoRequest(Id_HTTPMethodGet, AURL, nil, AResponseContent, AIgnoreReplies);
 end;
 
@@ -2198,7 +2188,6 @@ begin
 
   try
     repeat
-
       PrepareRequest(Request);
       if IOHandler is TIdSSLIOHandlerSocketBase then begin
         TIdSSLIOHandlerSocketBase(IOHandler).URIToCheck := FURI.URI;
