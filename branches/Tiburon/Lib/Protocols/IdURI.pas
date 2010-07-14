@@ -130,7 +130,7 @@ type
 implementation
 
 uses
-  IdGlobalProtocols, IdResourceStringsProtocols,
+  IdGlobalProtocols, IdResourceStringsProtocols, IdUriUtils,
   SysUtils;
 
 { TIdURI }
