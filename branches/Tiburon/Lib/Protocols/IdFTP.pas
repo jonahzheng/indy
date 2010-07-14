@@ -966,6 +966,7 @@ type
     //
     property SupportsVerification : Boolean read GetSupportsVerification;
     property CanResume: Boolean read ResumeSupported;
+    property CanUseMLS : Boolean read FCanUseMLS;
     property DirectoryListing: TIdFTPListItems read GetDirectoryListing;
     property DirFormat : String read FDirFormat;
     property LangsSupported : TStrings read FLangsSupported;
