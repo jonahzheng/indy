@@ -228,7 +228,7 @@ begin
 
           for i := LParams.Count-1 downto 0 do
           begin
-            {$IFDEF HAS_TSTRINGS_VALUEFROMINDEX}
+            {$IFDEF HAS_TStrings_ValueFromIndex}
             LParams.ValueFromIndex[i] := RemoveQuote(LParams.ValueFromIndex[i]);
             {$ELSE}
             LParams.Values[LParams.Names[i]] := RemoveQuote(LParams.Values[LParams.Names[i]]);
