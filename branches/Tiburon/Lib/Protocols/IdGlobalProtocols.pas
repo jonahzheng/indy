@@ -1,4 +1,4 @@
-{
+    {
   $Project$
   $Workfile$
   $Revision$
@@ -595,24 +595,14 @@ uses
   Messages,
   Registry,
   {$ENDIF}
-    {$IFDEF USE_VCL_POSIX}
-
-    {$ENDIF}
   {$IFDEF DOTNET}
   System.IO,
   System.Text,
-  {$ELSE}
-    {$IFDEF HAS_TCharacter}
-    Character,
-    {$ENDIF}
   {$ENDIF}
   IdAssignedNumbers,
   IdResourceStringsCore,
   IdResourceStringsProtocols,
   IdStack;
-
-
-
 
 //
 
@@ -3717,7 +3707,7 @@ function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String;
 var
   LItems: TStringList;
   I: Integer;
-  {$IFNDEF HAS_TSTRINGS_VALUEFROMINDEX}
+  {$IFNDEF HAS_TStrings_ValueFromIndex}
   LTmp: string;
   {$ENDIF}
   LValue: string;
@@ -3801,7 +3791,7 @@ begin
     Result := ExtractHeaderItem(AHeaderLine);
     if Result <> '' then begin
       for I := 0 to LItems.Count-1 do begin
-        {$IFDEF HAS_TSTRINGS_VALUEFROMINDEX}
+        {$IFDEF HAS_TStrings_ValueFromIndex}
         Result := Result + '; ' + LItems.Names[I] + '=' + QuoteString(LItems.ValueFromIndex[I]); {do not localize}
         {$ELSE}
         LTmp := LItems.Strings[I];
