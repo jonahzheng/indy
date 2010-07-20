@@ -134,7 +134,8 @@ begin
 end;
 
 function TIdSASLDigest.StartAuthenticate(const AChallenge, AHost, AProtocolName: string): String;
-var LBuf : String;
+var
+  LBuf : String;
   LChallange: TStringList;
   LReply : TStringList;
   Lqop : String;
@@ -155,17 +156,16 @@ begin
   LQopOptions:= TStringList.Create;
   try
     LBuf := AChallenge;
-    repeat
-      if Length(LBuf)=0 then
-      begin
-        break;
-      end;
+    while Length(LBuf) > 0 do begin
       LChallange.Add(Fetch(LBuf,','));
-    until False;
+    end;
     for i := LChallange.Count-1 downto 0 do
     begin
-      LChallange.Values[LChallange.Names[i]] :=
-        RemoveQuote(LChallange.Values[LChallange.Names[i]]);
+      {$IFDEF HAS_TStrings_ValueFromIndex}
+      LChallange.ValueFromIndex[i] := RemoveQuote(LChallange.ValueFromIndex[i]);
+      {$ELSE}
+      LChallange.Values[LChallange.Names[i]] := RemoveQuote(LChallange.Values[LChallange.Names[i]]);
+      {$ENDIF}
     end;
     LQopOptions.CommaText := LChallange.Values['qop'];
     Lqop := 'auth';
@@ -205,12 +205,9 @@ begin
 //      end;
 //    end;
 
-   if LCharset='' then
-   begin
+   if LCharset = '' then begin
      Result := '';
-   end
-   else
-   begin
+   end else begin
      Result := 'charset='+LCharset+',';
    end;
 {
