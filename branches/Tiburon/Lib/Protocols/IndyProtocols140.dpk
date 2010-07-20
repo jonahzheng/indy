@@ -224,7 +224,6 @@ contains
   IdSSL in 'IdSSL.pas',
   IdSSLOpenSSL in 'IdSSLOpenSSL.pas',
   IdSSLOpenSSLHeaders in 'IdSSLOpenSSLHeaders.pas',
-  IdSSLOpenSSLUtils in 'IdSSLOpenSSLUtils.pas',
   IdSSPI in 'IdSSPI.pas',
   IdServerInterceptLogBase in 'IdServerInterceptLogBase.pas',
   IdServerInterceptLogEvent in 'IdServerInterceptLogEvent.pas',
@@ -263,7 +262,8 @@ contains
   IdZLib in 'IdZLib.pas',
   IdZLibCompressorBase in 'IdZLibCompressorBase.pas',
   IdZLibConst in 'IdZLibConst.pas',
-  IdZLibHeaders in 'IdZLibHeaders.pas';
+  IdZLibHeaders in 'IdZLibHeaders.pas',
+  IdFTPTextEncoding in 'IdFTPTextEncoding.pas';
 
 end.
 
