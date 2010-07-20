@@ -3666,7 +3666,7 @@ function ExtractHeaderSubItem(const AHeaderLine, ASubItem: String;
   AQuoteType: TIdHeaderQuotingType): String;
 var
   LItems: TStringList;
-  {$IFNDEF VCL_6_OR_ABOVE}
+  {$IFNDEF HAS_TStringList_CaseSensitive}
   I: Integer;
   LTmp: string;
   {$ENDIF}
@@ -3675,7 +3675,7 @@ begin
   LItems := TStringList.Create;
   try
     SplitHeaderSubItems(AHeaderLine, LItems, AQuoteType);
-    {$IFDEF VCL_6_OR_ABOVE}
+    {$IFDEF HAS_TStringList_CaseSensitive}
     LItems.CaseSensitive := False;
     Result := LItems.Values[ASubItem];
     {$ELSE}
@@ -3712,7 +3712,7 @@ var
   {$ENDIF}
   LValue: string;
 
-  {$IFNDEF VCL_6_OR_ABOVE}
+  {$IFNDEF HAS_TStringList_CaseSensitive}
   function FindIndexOfItem: Integer;
   var
     I: Integer;
@@ -3766,7 +3766,7 @@ begin
   LItems := TStringList.Create;
   try
     SplitHeaderSubItems(AHeaderLine, LItems, AQuoteType);
-    {$IFDEF VCL_6_OR_ABOVE}
+    {$IFDEF HAS_TStringList_CaseSensitive}
     LItems.CaseSensitive := False;
     I := LItems.IndexOfName(ASubItem);
     {$ELSE}

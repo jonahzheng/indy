@@ -128,6 +128,7 @@
     {$DEFINE DELPHI_6}
   {$ENDIF}
   {$DEFINE HAS_TSelectionEditor}
+  {$DEFINE HAS_TStringList_CaseSensitive}
   {$DEFINE HAS_OPTIONAL_PARAMS}
   {$DEFINE HAS_SAMETEXT}
   {$DEFINE CPUI386}
@@ -157,6 +158,7 @@
   {.$DEFINE HAS_STATIC_TThread_Synchronize}
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TSelectionEditor}
+  {$DEFINE HAS_TStringList_CaseSensitive}
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
   {$DEFINE CPU32}
@@ -185,6 +187,7 @@
   {.$DEFINE HAS_STATIC_TThread_Synchronize}
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TSelectionEditor}
+  {$DEFINE HAS_TStringList_CaseSensitive}
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
   {$DEFINE CPU32}
@@ -211,6 +214,7 @@
   {.$DEFINE HAS_STATIC_TThread_Synchronize}
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TSelectionEditor}
+  {$DEFINE HAS_TStringList_CaseSensitive}
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
   {$DEFINE CPU32}
@@ -258,6 +262,7 @@
   {$ENDIF}
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TSelectionEditor}
+  {$DEFINE HAS_TStringList_CaseSensitive}
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
   {$DEFINE CPU32}
@@ -302,6 +307,7 @@
   {$ENDIF}
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TSelectionEditor}
+  {$DEFINE HAS_TStringList_CaseSensitive}
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
   {$DEFINE CPU32}
@@ -340,6 +346,7 @@
   {$DEFINE HAS_STATIC_TThread_Synchronize}
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TSelectionEditor}
+  {$DEFINE HAS_TStringList_CaseSensitive}
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
   {$DEFINE CPU32}
@@ -387,6 +394,7 @@
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE BROKEN_FmtStr} // TODO: need to differentiate between RTM and Update 1
   {$DEFINE HAS_TSelectionEditor}
+  {$DEFINE HAS_TStringList_CaseSensitive}
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
   {$DEFINE CPU32}
@@ -437,6 +445,7 @@
   {$ENDIF}
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TSelectionEditor}
+  {$DEFINE HAS_TStringList_CaseSensitive}
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
   {$DEFINE CPU32}
@@ -495,6 +504,7 @@
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TFormatSettings_Object}
   {$DEFINE HAS_TSelectionEditor}
+  {$DEFINE HAS_TStringList_CaseSensitive}
   {$DEFINE CPUI386}
   {$DEFINE ENDIAN_LITTLE}
   {$DEFINE CPU32}
@@ -585,6 +595,7 @@
   {$DEFINE HAS_OPTIONAL_PARAMS}
   {$DEFINE HAS_SAMETEXT}
   {.$DEFINE HAS_NAMED_THREADS}
+  {.$DEFINE HAS_TStringList_CaseSensitive}
   {$DEFINE NO_TMultiReadExclusiveWriteSynchronizer}
   {$DEFINE FPC_REINTRODUCE_BUG}
   {$DEFINE FPC_CIRCULAR_BUG}
