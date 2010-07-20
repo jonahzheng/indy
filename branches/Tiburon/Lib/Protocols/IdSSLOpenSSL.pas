@@ -913,7 +913,7 @@ end;
 //   Utilities
 //////////////////////////////////////////////////////
 
-function IndySSL_load_client_CA_file(const AFileName: String) : Pointer; forward;
+function IndySSL_load_client_CA_file(const AFileName: String) : PSTACK_OF_X509_NAME; forward;
 function IndySSL_CTX_use_PrivateKey_file(ctx: PSSL_CTX; const AFileName: String;
   AType: Integer): TIdC_INT; forward;
 function IndySSL_CTX_use_certificate_file(ctx: PSSL_CTX; const AFileName: String;
@@ -1162,11 +1162,11 @@ begin
   Result := count;
 end;
 
-procedure IndySSL_load_client_CA_file_err(var VRes: Pointer);
+procedure IndySSL_load_client_CA_file_err(var VRes: PSTACK_OF_X509_NAME);
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   if Assigned(VRes) then begin
-    sk_X509_NAME_pop_free(PSTACK_OF_X509_NAME(VRes), @X509_NAME_free);
+    sk_X509_NAME_pop_free(VRes, @X509_NAME_free);
     VRes := nil;
   end;
 end;
@@ -1176,7 +1176,7 @@ begin
   Result := X509_NAME_cmp(a^, b^);
 end;
 
-function IndySSL_load_client_CA_file(const AFileName: String): Pointer;
+function IndySSL_load_client_CA_file(const AFileName: String): PSTACK_OF_X509_NAME;
 var
   LM: TMemoryStream;
   LB: PBIO;
@@ -1415,25 +1415,23 @@ end;
 
   {$IFDEF UNIX}
 
-function IndySSL_load_client_CA_file(const AFileName: String) : Pointer;
+function IndySSL_load_client_CA_file(const AFileName: String) : PSTACK_OF_X509_NAME;
 begin
   Result := SSL_load_client_CA_file(PAnsiChar(UTF8String(AFileName)));
 end;
 
 function IndySSL_CTX_use_PrivateKey_file(ctx: PSSL_CTX; const AFileName: String;
-  AType: Integer): Boolean;
+  AType: Integer): TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(UTF8String(AFileName)),
-    AType) > 0;
+  Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(UTF8String(AFileName)), AType);
 end;
 
 function IndySSL_CTX_use_certificate_file(ctx: PSSL_CTX;
-  const AFileName: String; AType: Integer): Boolean;
+  const AFileName: String; AType: Integer): TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(UTF8String(AFileName)),
-    AType) > 0;
+  Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(UTF8String(AFileName)), AType);
 end;
 
 function IndyX509_STORE_load_locations(ctx: PX509_STORE;
@@ -1462,24 +1460,24 @@ end;
 
 {$ELSE} // STRING_IS_UNICODE
 
-function IndySSL_load_client_CA_file(const AFileName: String) : Pointer;
+function IndySSL_load_client_CA_file(const AFileName: String) : PSTACK_OF_X509_NAME;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
   Result := SSL_load_client_CA_file(PAnsiChar(AFileName));
 end;
 
 function IndySSL_CTX_use_PrivateKey_file(ctx: PSSL_CTX; const AFileName: String;
-  AType: Integer): Boolean;
+  AType: Integer): TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(AFileName), AType) > 0;
+  Result := SSL_CTX_use_PrivateKey_file(ctx, PAnsiChar(AFileName), AType);
 end;
 
 function IndySSL_CTX_use_certificate_file(ctx: PSSL_CTX;
-  const AFileName: String; AType: Integer): Boolean;
+  const AFileName: String; AType: Integer): TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
-  Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(AFileName), AType) > 0;
+  Result := SSL_CTX_use_certificate_file(ctx, PAnsiChar(AFileName), AType);
 end;
 
 function IndyX509_STORE_load_locations(ctx: PX509_STORE;
@@ -1775,12 +1773,12 @@ begin
     // Handle internal OpenSSL locking
     CallbackLockList := TThreadList.Create;
     PrepareOpenSSLLocking;
-    CRYPTO_set_locking_callback(SslLockingCallback);
+    CRYPTO_set_locking_callback(@SslLockingCallback);
 {$IFNDEF WIN32_OR_WIN64}
     if Assigned(CRYPTO_THREADID_set_callback) then begin
-      CRYPTO_THREADID_set_callback( _threadid_func );
+      CRYPTO_THREADID_set_callback(@_threadid_func);
     end else begin
-      CRYPTO_set_id_callback(_GetThreadID);
+      CRYPTO_set_id_callback(@_GetThreadID);
     end;
 {$ENDIF}
     SSLIsLoaded.Value := True;
@@ -2419,7 +2417,7 @@ begin
   end;
   // CA list
   if RootCertFile <> '' then begin    {Do not Localize}
-    SSL_CTX_set_client_CA_list(fContext, PSTACK_OF_X509_NAME(IndySSL_load_client_CA_file(RootCertFile)));
+    SSL_CTX_set_client_CA_list(fContext, IndySSL_load_client_CA_file(RootCertFile));
   end
 end;
 
