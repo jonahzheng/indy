@@ -32,10 +32,13 @@ function WideCharIsInSet(const ASet: TIdUnicodeString; const AChar: WideChar): B
 implementation
 
 {$IFNDEF DOTNET}
-  {$IFDEF HAS_TCharacter}
 uses
-  Character;
+  {$IFDEF HAS_TCharacter}
+  Character
+  {$ELSE}
+  IdResourceStringsProtocols
   {$ENDIF}
+  ;
 {$ENDIF}
 
 function CalcUTF16CharLength(const AStr: {$IFDEF STRING_IS_UNICODE}string{$ELSE}TIdWideChars{$ENDIF};
