@@ -1374,18 +1374,18 @@ end;
 procedure TIdCustomHTTP.ProcessCookies(ARequest: TIdHTTPRequest; AResponse: TIdHTTPResponse);
 var
   Temp, Cookies, Cookies2: TStringList;
-  i: Integer;
+  i, j: Integer;
   S, Cur: String;
 
   // RLebeau: a single Set-Cookie header can have more than 1 cookie in it...
   procedure ReadCookies(AHeaders: TIdHeaderList; const AHeader: String; ACookies: TStrings);
   var
-    j: Integer;
+    k: Integer;
   begin
     Temp.Clear;
     AHeaders.Extract(AHeader, Temp);
-    for j := 0 to Temp.Count-1 do begin
-      S := Temp[j];
+    for k := 0 to Temp.Count-1 do begin
+      S := Temp[k];
       while ExtractNextCookie(S, Cur, True) do begin
         ACookies.Add(Cur);
       end;
