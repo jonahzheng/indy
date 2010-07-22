@@ -192,6 +192,7 @@ end;
 destructor TIdHTTPProxyServerContext.Destroy;
 begin
   FreeAndNil(FHeaders);
+  inherited Destroy;
 end;
 
 { TIdHTTPProxyServer }
