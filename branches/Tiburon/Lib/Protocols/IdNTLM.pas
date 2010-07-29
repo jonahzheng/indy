@@ -46,8 +46,7 @@ interface
 
 uses
   IdGlobal,
-  IdStruct
-  {$IFNDEF DOTNET}, IdSSLOpenSSLHeaders{$ENDIF};
+  IdStruct;
 
 type
   {$IFDEF DOTNET}
@@ -252,8 +251,6 @@ type
     flags: LongWord;                    // 0xA0808205
   end;
 
-  Pdes_key_schedule = ^des_key_schedule;
-
 function BuildType1Message(const ADomain, AHost: String): String;
 function BuildType3Message(const ADomain, AHost, AUsername: TIdUnicodeString; const APassword: String; const ANonce: TIdBytes): String;
 {$ENDIF}
@@ -290,7 +287,12 @@ uses
   IdGlobalProtocols,
   IdHash,
   IdHashMessageDigest,
-  IdCoderMIME;
+  IdCoderMIME
+  {$IFNDEF DOTNET}, IdSSLOpenSSLHeaders{$ENDIF}
+  ;
+
+type
+  Pdes_key_schedule = ^des_key_schedule;
 
 const
   cProtocolStr: AnsiString = 'NTLMSSP'#0; {Do not Localize}
@@ -321,9 +323,12 @@ end;
 {$ELSE}
 function NTLMFunctionsLoaded : Boolean;
 begin
-  Result := Assigned(DES_set_odd_parity) and
-    Assigned(DES_set_key) and
-    Assigned(DES_ecb_encrypt);
+  Result := IdSSLOpenSSLHeaders.Load;
+  if Result then begin
+    Result := Assigned(DES_set_odd_parity) and
+      Assigned(DES_set_key) and
+      Assigned(DES_ecb_encrypt);
+  end;
 end;
 {$ENDIF}
 
@@ -585,6 +590,7 @@ begin
 end;
 
 {$ELSE}
+
 procedure BytesToCharArray(const ABytes : TIdBytes; var VArray : Array of Char; const AIndex : Integer = 0);
 var
   i, ll, lh : Integer;
@@ -833,6 +839,7 @@ begin
     flags: LongWord;                    // 0xA0808205
 }
 end;
+
 {$ENDIF}
 
 end.
