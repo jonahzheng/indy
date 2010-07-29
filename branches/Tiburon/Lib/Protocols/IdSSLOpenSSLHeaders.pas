@@ -19373,71 +19373,73 @@ Begin
   Result := PAnsiChar(LString);
 end;
 
-function Load: Boolean;
+{$UNDEF USE_BASEUNIX_OR_VCL_POSIX}
+{$IFDEF USE_BASEUNIX}
+  {$DEFINE USE_BASEUNIX_OR_VCL_POSIX}
+{$ENDIF}
+{$IFDEF USE_VCL_POSIX}
+  {$DEFINE USE_BASEUNIX_OR_VCL_POSIX}
+{$ENDIF}
+
+function LoadSSLCryptoLibrary: Integer;
 begin
-  Assert(FFailedFunctionLoadList<>nil);
-  FFailedFunctionLoadList.Clear;
   {$IFDEF KYLIXCOMPAT}
   // Workaround that is required under Linux (changed RTLD_GLOBAL with RTLD_LAZY Note: also work with LoadLibrary())
-  if hIdCrypto = 0 then begin
-    hIdCrypto := HackLoad(SSLCLIB_DLL_name, SSLDLLVers);
-  end;
-  if hIdSSL = 0 then begin
-    hIdSSL := HackLoad(SSL_DLL_name, SSLDLLVers);
-  end;
-  {$ENDIF}
-    Result := True;
-  {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-    {$IFDEF FPC}
+  Result := HackLoad(SSLCLIB_DLL_name, SSLDLLVers);
+  {$ELSE}
+    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   //On Windows, you should use SafeLoadLibrary because
   //the LoadLibrary API call messes with the FPU control word.
-  if hIdCrypto = 0 then begin
-    hIdCrypto := SafeLoadLibrary(SSLCLIB_DLL_name);
-  end;
-  if hIdSSL = 0 then begin
-    hIdSSL := SafeLoadLibrary(SSL_DLL_name);
-    //This is a workaround for mingw32-compiled SSL .DLL which
-    //might be named 'libssl32.dll'.
-    if hIdSSL = 0 then begin
-      hIdSSL := SafeLoadLibrary(SSL_DLL_name_alt);
-    end;
-  end else begin
-    Exit;
-  end;
+  Result := SafeLoadLibrary(SSLCLIB_DLL_name);
     {$ELSE}
-  if hIdCrypto = 0 then begin
-    hIdCrypto := SafeLoadLibrary(SSLCLIB_DLL_name);
-  end;
-  if hIdSSL = 0 then begin
-    hIdSSL := SafeLoadLibrary(SSL_DLL_name);
-    //This is a workaround for mingw32-compiled SSL .DLL which
-    //might be named 'libssl32.dll'.
-    if hIdSSL = 0 then begin
-      hIdSSL := SafeLoadLibrary(SSL_DLL_name_alt);
-    end;    
-  end else begin
-    Exit;
-  end;	
+      {$IFDEF USE_BASEUNIX_OR_VCL_POSIX}
+  Result := HMODULE(HackLoad(SSLCLIB_DLL_name, SSLDLLVers));
+      {$ELSE}
+  Result := 0;
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
-  {$IFDEF USE_BASEUNIX}
-  if hIdCrypto = 0 then begin
-   hIdCrypto := HMODULE(HackLoad(SSLCLIB_DLL_name, SSLDLLVers));
+end;
+
+function LoadSSLLibrary: Integer;
+begin
+  {$IFDEF KYLIXCOMPAT}
+  // Workaround that is required under Linux (changed RTLD_GLOBAL with RTLD_LAZY Note: also work with LoadLibrary())
+  Result := HackLoad(SSL_DLL_name, SSLDLLVers);
+  {$ELSE}
+    {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+  //On Windows, you should use SafeLoadLibrary because
+  //the LoadLibrary API call messes with the FPU control word.
+  Result := SafeLoadLibrary(SSL_DLL_name);
+  //This is a workaround for mingw32-compiled SSL .DLL which
+  //might be named 'libssl32.dll'.
+  if Result = 0 then begin
+    Result := SafeLoadLibrary(SSL_DLL_name_alt);
   end;
-  if hIdSSL = 0 then begin
-    hIdSSL := HMODULE(HackLoad(SSL_DLL_name, SSLDLLVers));
-  end;
+    {$ELSE}
+      {$IFDEF USE_BASEUNIX_OR_VCL_POSIX}
+  Result := HMODULE(HackLoad(SSL_DLL_name, SSLDLLVers));
+      {$ELSE}
+  Result := 0;
+      {$ENDIF}
+    {$ENDIF}
   {$ENDIF}
-  {$IFDEF USE_VCL_POSIX}
+end;
+
+function Load: Boolean;
+begin
+  Result := True;
+  Assert(FFailedFunctionLoadList<>nil);
+  FFailedFunctionLoadList.Clear;
   if hIdCrypto = 0 then begin
-	hIdCrypto := HMODULE(HackLoad(SSLCLIB_DLL_name, SSLDLLVers));
+    hIdCrypto := LoadSSLCryptoLibrary;
   end;
   if hIdSSL = 0 then begin
-    hIdSSL := HMODULE(HackLoad(SSL_DLL_name, SSLDLLVers));
+    hIdSSL := LoadSSLLibrary;
   end else begin
     Exit;
   end;
-  {$ENDIF}
+
   @SSL_CTX_set_cipher_list := LoadFunction(fn_SSL_CTX_set_cipher_list);
   @SSL_CTX_new := LoadFunction(fn_SSL_CTX_new);
   @SSL_CTX_free := LoadFunction(fn_SSL_CTX_free);
@@ -19529,7 +19531,7 @@ begin
   @X509V3_set_ctx := LoadFunctionCLib(fn_X509V3_set_ctx);
   @X509_EXTENSION_free := LoadFunctionCLib(fn_X509_EXTENSION_free);
   @X509_add_ext := LoadFunctionCLib(fn_X509_add_ext);
-    {$IFNDEF OPENSSL_NO_BIO}
+  {$IFNDEF OPENSSL_NO_BIO}
   //X509_print
   @X509_print := LoadFunctionCLib(fn_X509_print, False );
   {$ENDIF}
@@ -19730,7 +19732,7 @@ we have to handle both cases.
   @EVP_PKEY_assign := LoadFunctionCLib(fn_EVP_PKEY_assign);
   @EVP_get_digestbyname := LoadFunctionCLib(fn_EVP_get_digestbyname);
   //HMAC
-{$IFNDEF OPENSSL_NO_HMAC}
+  {$IFNDEF OPENSSL_NO_HMAC}
   @HMAC_CTX_init := LoadFunctionCLib(fn_HMAC_CTX_init);
   if IsOpenSSL_1x then begin
     @_1_0_HMAC_Init_ex :=  LoadFunctionCLib(fn_HMAC_Init_ex);
@@ -19742,7 +19744,7 @@ we have to handle both cases.
     @_HMAC_Final := LoadFunctionCLib(fn_HMAC_Final);
   end;
   @HMAC_CTX_cleanup := LoadFunctionCLib(fn_HMAC_CTX_cleanup);
-{$ENDIF}
+  {$ENDIF}
   //OBJ
   @OBJ_obj2nid := LoadFunctionCLib(fn_OBJ_obj2nid);
   @OBJ_nid2obj := LoadFunctionCLib(fn_OBJ_nid2obj);
