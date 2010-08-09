@@ -4756,9 +4756,9 @@ const
 
     0,     // Big5-HKSCS
 
-    0,     // UTF-16BE
+    1201,  // UTF-16BE
 
-    0,     // UTF-16LE
+    1200,  // UTF-16LE
 
     1200,  // UTF-16
 
