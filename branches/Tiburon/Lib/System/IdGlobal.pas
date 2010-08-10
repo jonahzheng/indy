@@ -741,20 +741,23 @@ type
   Ansi-compatible encodings are being used with AnsiString values.
   }
 
-  {$UNDEF TIdTextEncoding_Is_Native}
-  {$IFDEF DOTNET}
+  {$IFDEF TIdTextEncoding_IS_NATIVE}
+    {$IFDEF DOTNET}
   TIdTextEncoding = System.Text.Encoding;
-  {$DEFINE TIdTextEncoding_Is_Native}
-  {$ELSE}
-    {$IFDEF HAS_TEncoding}
-      {$IFNDEF USE_ICONV}
+  //TIdMBCSEncoding = ?
+  TIdUTF7Encoding = System.Text.UTF7Encoding;
+  TIdUTF8Encoding = System.Text.UTF8Encoding;
+  TIdUTF16LittleEndianEncoding = System.Text.UnicodeEncoding;
+  TIdUTF16BigEndianEncoding = System.Text.UnicodeEncoding;
+    {$ELSE}
   TIdTextEncoding = SysUtils.TEncoding;
-  {$DEFINE TIdTextEncoding_Is_Native}
-      {$ENDIF}
+  TIdMBCSEncoding = SysUtils.TMBCSEncoding;
+  TIdUTF7Encoding = SysUtils.TUTF7Encoding;
+  TIdUTF8Encoding = SysUtils.TUTF8Encoding;
+  TIdUTF16LittleEndianEncoding = SysUtils.TUnicodeEncoding;
+  TIdUTF16BigEndianEncoding = SysUtils.TBigEndianUnicodeEncoding;
     {$ENDIF}
-  {$ENDIF}
-
-  {$IFNDEF TIdTextEncoding_Is_Native}
+  {$ELSE}
   TIdTextEncoding = class
   {$IFDEF HAS_CLASSPROPERTIES}
   private
@@ -821,6 +824,80 @@ type
     class function UTF7: TIdTextEncoding;
     class function UTF8: TIdTextEncoding;
     {$ENDIF}
+  end;
+
+  TIdMBCSEncoding = class(TIdTextEncoding)
+  private
+    {$IFDEF USE_ICONV}
+    FToUTF16 : iconv_t;
+    FFromUTF16 : iconv_t;
+    {$ELSE}
+      {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+    FCodePage: Cardinal;
+    FMBToWCharFlags: Cardinal;
+    FWCharToMBFlags: Cardinal;
+      {$ENDIF}
+    {$ENDIF}
+  protected
+    function GetByteCount(Chars: PWideChar; CharCount: Integer): Integer; overload; override;
+    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
+    function GetCharCount(Bytes: PByte; ByteCount: Integer): Integer; overload; override;
+    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
+  public
+    constructor Create; overload; virtual;
+    {$IFDEF USE_ICONV}
+    constructor Create(const CharSet : AnsiString); overload; virtual;
+    destructor Destroy; override;
+    {$ELSE}
+      {$IFDEF WIN32_OR_WIN64_OR_WINCE}
+    constructor Create(CodePage: Integer); overload; virtual;
+    constructor Create(CodePage, MBToWCharFlags, WCharToMBFlags: Integer); overload; virtual;
+      {$ENDIF}
+    {$ENDIF}
+    function GetMaxByteCount(CharCount: Integer): Integer; override;
+    function GetMaxCharCount(ByteCount: Integer): Integer; override;
+    function GetPreamble: TIdBytes; override;
+  end;
+
+  TIdUTF7Encoding = class(TIdMBCSEncoding)
+  protected
+    function GetByteCount(Chars: PWideChar; CharCount: Integer): Integer; overload; override;
+    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
+    function GetCharCount(Bytes: PByte; ByteCount: Integer): Integer; overload; override;
+    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
+  public
+    constructor Create; override;
+    function GetMaxByteCount(CharCount: Integer): Integer; override;
+    function GetMaxCharCount(ByteCount: Integer): Integer; override;
+  end;
+
+  TIdUTF8Encoding = class(TIdUTF7Encoding)
+  public
+    constructor Create; override;
+    function GetMaxByteCount(CharCount: Integer): Integer; override;
+    function GetMaxCharCount(ByteCount: Integer): Integer; override;
+    function GetPreamble: TIdBytes; override;
+  end;
+
+  TIdUTF16LittleEndianEncoding = class(TIdTextEncoding)
+  protected
+    function GetByteCount(Chars: PWideChar; CharCount: Integer): Integer; overload; override;
+    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
+    function GetCharCount(Bytes: PByte; ByteCount: Integer): Integer; overload; override;
+    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
+  public
+    constructor Create; virtual;
+    function GetMaxByteCount(CharCount: Integer): Integer; override;
+    function GetMaxCharCount(ByteCount: Integer): Integer; override;
+    function GetPreamble: TIdBytes; override;
+  end;
+
+  TIdUTF16BigEndianEncoding = class(TIdUTF16LittleEndianEncoding)
+  protected
+    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
+    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
+  public
+    function GetPreamble: TIdBytes; override;
   end;
   {$ENDIF}
 
@@ -967,7 +1044,9 @@ type
   EIdFailedToRetreiveTimeZoneInfo = class(EIdException);
 
   TIdPort = Word;
+
   //We don't have a native type that can hold an IPv6 address.
+  {$NODEFINE TIdIPv6Address}
   TIdIPv6Address = array [0..7] of word;
 
   // C++ does not allow an array to be returned by a function,
@@ -983,7 +1062,6 @@ type
   (*$HPPEMIT '        operator Word*() { return data; }'*)
   (*$HPPEMIT '    };'*)
   (*$HPPEMIT '}'*)
-  {$NODEFINE TIdIPv6Address}
 
   {This way instead of a boolean for future expansion of other actions}
   TIdMaxLineAction = (maException, maSplit);
@@ -1484,83 +1562,6 @@ const
   {$ENDIF}
 {$ENDIF}
 
-{$IFNDEF TIdTextEncoding_Is_Native}
-type
-  TIdMBCSEncoding = class(TIdTextEncoding)
-  private
-    {$IFDEF USE_ICONV}
-    FToUTF16 : iconv_t;
-    FFromUTF16 : iconv_t;
-    {$ELSE}
-      {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-    FCodePage: Cardinal;
-    FMBToWCharFlags: Cardinal;
-    FWCharToMBFlags: Cardinal;
-      {$ENDIF}
-    {$ENDIF}
-  protected
-    function GetByteCount(Chars: PWideChar; CharCount: Integer): Integer; overload; override;
-    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetCharCount(Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
-  public
-    constructor Create; overload; virtual;
-    {$IFDEF USE_ICONV}
-    constructor Create(const CharSet : AnsiString); overload; virtual;
-    destructor Destroy; override;
-    {$ELSE}
-      {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-    constructor Create(CodePage: Integer); overload; virtual;
-    constructor Create(CodePage, MBToWCharFlags, WCharToMBFlags: Integer); overload; virtual;
-      {$ENDIF}
-    {$ENDIF}
-    function GetMaxByteCount(CharCount: Integer): Integer; override;
-    function GetMaxCharCount(ByteCount: Integer): Integer; override;
-    function GetPreamble: TIdBytes; override;
-  end;
-
-  TIdUTF7Encoding = class(TIdMBCSEncoding)
-  protected
-    function GetByteCount(Chars: PWideChar; CharCount: Integer): Integer; overload; override;
-    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetCharCount(Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
-  public
-    constructor Create; override;
-    function GetMaxByteCount(CharCount: Integer): Integer; override;
-    function GetMaxCharCount(ByteCount: Integer): Integer; override;
-  end;
-
-  TIdUTF8Encoding = class(TIdUTF7Encoding)
-  public
-    constructor Create; override;
-    function GetMaxByteCount(CharCount: Integer): Integer; override;
-    function GetMaxCharCount(ByteCount: Integer): Integer; override;
-    function GetPreamble: TIdBytes; override;
-  end;
-
-  TIdLEUTF16Encoding = class(TIdTextEncoding)
-  protected
-    function GetByteCount(Chars: PWideChar; CharCount: Integer): Integer; overload; override;
-    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetCharCount(Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
-  public
-    constructor Create; virtual;
-    function GetMaxByteCount(CharCount: Integer): Integer; override;
-    function GetMaxCharCount(ByteCount: Integer): Integer; override;
-    function GetPreamble: TIdBytes; override;
-  end;
-
-  TIdBEUTF16Encoding = class(TIdLEUTF16Encoding)
-  protected
-    function GetBytes(Chars: PWideChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer; overload; override;
-    function GetChars(Bytes: PByte; ByteCount: Integer; Chars: PWideChar; CharCount: Integer): Integer; overload; override;
-  public
-    function GetPreamble: TIdBytes; override;
-  end;
-{$ENDIF}
-
 procedure EnsureEncoding(var VEncoding : TIdTextEncoding; ADefEncoding: IdAnsiEncodingType = encASCII);
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
@@ -1597,7 +1598,7 @@ var
   GId8BitEncoding: TIdTextEncoding = nil;
 {$ENDIF}
 
-{$IFNDEF TIdTextEncoding_Is_Native}
+{$IFNDEF TIdTextEncoding_IS_NATIVE}
 
 var
   GIdASCIIEncoding: TIdTextEncoding = nil;
@@ -1666,7 +1667,7 @@ var
 begin
   if GIdBEUTF16Encoding = nil then
   begin
-    LEncoding := TIdBEUTF16Encoding.Create;
+    LEncoding := TIdUTF16BigEndianEncoding.Create;
     if InterlockedCompareExchangePtr(Pointer(GIdBEUTF16Encoding), LEncoding, nil) <> nil then
       LEncoding.Free;
   end;
@@ -1878,7 +1879,14 @@ end;
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
 class function TIdTextEncoding.GetEncoding(ACodePage: Integer): TIdTextEncoding;
 begin
-  Result := TIdMBCSEncoding.Create(ACodePage);
+  case ACodePage of
+    1200:  Result := TIdUTF16LittleEndianEncoding.Create;
+    1201:  Result := TIdUTF16BigEndianEncoding.Create;
+    65000: Result := TIdUTF7Encoding.Create;
+    65001: Result := TIdUTF8Encoding.Create;
+  else
+    Result := TIdMBCSEncoding.Create(ACodePage);
+  end;
 end;
   {$ENDIF}
 {$ENDIF}
@@ -1906,7 +1914,7 @@ var
 begin
   if GIdLEUTF16Encoding = nil then
   begin
-    LEncoding := TIdLEUTF16Encoding.Create;
+    LEncoding := TIdUTF16LittleEndianEncoding.Create;
     if InterlockedCompareExchangePtr(Pointer(GIdLEUTF16Encoding), LEncoding, nil) <> nil then
       LEncoding.Free;
   end;
@@ -2285,20 +2293,20 @@ begin
   Result[2] := $BF;
 end;
 
-{ TIdLEUTF16Encoding }
+{ TIdUTF16LittleEndianEncoding }
 
-constructor TIdLEUTF16Encoding.Create;
+constructor TIdUTF16LittleEndianEncoding.Create;
 begin
   FIsSingleByte := False;
   FMaxCharSize := 4;
 end;
 
-function TIdLEUTF16Encoding.GetByteCount(Chars: PWideChar; CharCount: Integer): Integer;
+function TIdUTF16LittleEndianEncoding.GetByteCount(Chars: PWideChar; CharCount: Integer): Integer;
 begin
   Result := CharCount * SizeOf(WideChar);
 end;
 
-function TIdLEUTF16Encoding.GetBytes(Chars: PWideChar; CharCount: Integer;
+function TIdUTF16LittleEndianEncoding.GetBytes(Chars: PWideChar; CharCount: Integer;
   Bytes: PByte; ByteCount: Integer): Integer;
 {$IFDEF ENDIAN_BIG}
 var
@@ -2321,12 +2329,12 @@ begin
   {$ENDIF}
 end;
 
-function TIdLEUTF16Encoding.GetCharCount(Bytes: PByte; ByteCount: Integer): Integer;
+function TIdUTF16LittleEndianEncoding.GetCharCount(Bytes: PByte; ByteCount: Integer): Integer;
 begin
   Result := ByteCount div SizeOf(WideChar);
 end;
 
-function TIdLEUTF16Encoding.GetChars(Bytes: PByte; ByteCount: Integer;
+function TIdUTF16LittleEndianEncoding.GetChars(Bytes: PByte; ByteCount: Integer;
   Chars: PWideChar; CharCount: Integer): Integer;
 {$IFDEF ENDIAN_BIG}
 var
@@ -2351,26 +2359,26 @@ begin
   {$ENDIF}
 end;
 
-function TIdLEUTF16Encoding.GetMaxByteCount(CharCount: Integer): Integer;
+function TIdUTF16LittleEndianEncoding.GetMaxByteCount(CharCount: Integer): Integer;
 begin
   Result := (CharCount + 1) * 2;
 end;
 
-function TIdLEUTF16Encoding.GetMaxCharCount(ByteCount: Integer): Integer;
+function TIdUTF16LittleEndianEncoding.GetMaxCharCount(ByteCount: Integer): Integer;
 begin
   Result := (ByteCount div SizeOf(WideChar)) + (ByteCount and 1) + 1;
 end;
 
-function TIdLEUTF16Encoding.GetPreamble: TIdBytes;
+function TIdUTF16LittleEndianEncoding.GetPreamble: TIdBytes;
 begin
   SetLength(Result, 2);
   Result[0] := $FF;
   Result[1] := $FE;
 end;
 
-{ TIdBEUTF16Encoding }
+{ TIdUTF16BigEndianEncoding }
 
-function TIdBEUTF16Encoding.GetBytes(Chars: PWideChar; CharCount: Integer;
+function TIdUTF16BigEndianEncoding.GetBytes(Chars: PWideChar; CharCount: Integer;
   Bytes: PByte; ByteCount: Integer): Integer;
 {$IFDEF ENDIAN_LITTLE}
 var
@@ -2393,7 +2401,7 @@ begin
   {$ENDIF}
 end;
 
-function TIdBEUTF16Encoding.GetChars(Bytes: PByte; ByteCount: Integer;
+function TIdUTF16BigEndianEncoding.GetChars(Bytes: PByte; ByteCount: Integer;
   Chars: PWideChar; CharCount: Integer): Integer;
 {$IFDEF ENDIAN_LITTLE}
 var
@@ -2418,14 +2426,14 @@ begin
   {$ENDIF}
 end;
 
-function TIdBEUTF16Encoding.GetPreamble: TIdBytes;
+function TIdUTF16BigEndianEncoding.GetPreamble: TIdBytes;
 begin
   SetLength(Result, 2);
   Result[0] := $FE;
   Result[1] := $FF;
 end;
 
-{$ENDIF} // end of {$IFNDEF TIdTextEncoding_Is_Native}
+{$ENDIF} // end of {$IFNDEF TIdTextEncoding_IS_NATIVE}
 
 function enDefault: TIdTextEncoding;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
