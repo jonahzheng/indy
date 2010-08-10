@@ -448,6 +448,8 @@ type
   function ReplaceHeaderSubItem(const AHeaderLine, ASubItem, AValue: String; var VOld: String; AQuoteType: TIdHeaderQuotingType): String; overload;
   function IsHeaderMediaType(const AHeaderLine, AMediaType: String): Boolean;
   function IsHeaderMediaTypes(const AHeaderLine: String; const AMediaTypes: array of String): Boolean;
+  function ExtractHeaderMediaType(const AHeaderLine: String): String;
+  function ExtractHeaderMediaSubType(const AHeaderLine: String): String;
   function IsHeaderValue(const AHeaderLine: String; const AValue: String): Boolean;
   function FileSizeByName(const AFilename: TIdFileName): Int64;
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
@@ -3833,6 +3835,34 @@ begin
   end;
 end;
 
+function ExtractHeaderMediaType(const AHeaderLine: String): String;
+var
+  S: String;
+  I: Integer;
+begin
+  S := ExtractHeaderItem(AHeaderLine);
+  I := Pos('/', S);
+  if I > 0 then begin
+    Result := Copy(S, 1, I-1);
+  end else begin
+    Result := '';
+  end;
+end;
+
+function ExtractHeaderMediaSubType(const AHeaderLine: String): String;
+var
+  S: String;
+  I: Integer;
+begin
+  S := ExtractHeaderItem(AHeaderLine);
+  I := Pos('/', S);
+  if I > 0 then begin
+    Result := Copy(S, I+1, Length(S));
+  end else begin
+    Result := '';
+  end;
+end;
+
 function IsHeaderValue(const AHeaderLine: String; const AValue: String): Boolean;
 begin
   Result := TextIsSame(ExtractHeaderItem(AHeaderLine), AValue);
@@ -4142,7 +4172,17 @@ begin
   Result := CharsetToEncoding(LCharset);
 end;
 
-//TODO:  Figure out what should happen with Unicode content type.
+{$IFNDEF DOTNET_OR_ICONV}
+  // SysUtils.TEncoding.GetEncoding() in D2009 and D2010 does not
+  // implement UTF-7 and UTF-16 correctly.  This was fixed in D2011...
+  {$DEFINE USE_TIdTextEncoding_GetEncoding}
+  {$IFDEF TIdTextEncoding_IS_NATIVE}
+    {$IFDEF BROKEN_TEncoding_GetEncoding}
+      {$UNDEF USE_TIdTextEncoding_GetEncoding}
+    {$ENDIF}
+  {$ENDIF}
+{$ENDIF}
+
 function CharsetToEncoding(const ACharset: String): TIdTextEncoding;
 {$IFNDEF DOTNET_OR_ICONV}
 var
@@ -4152,12 +4192,14 @@ begin
   Result := nil;
   if ACharSet <> '' then
   begin
+    // let the user provide a custom encoding first, if desired...
     if Assigned(GEncodingNeeded) then begin
       Result := GEncodingNeeded(ACharSet);
       if Assigned(Result) then begin
         Exit;
       end;
     end;
+
     // RLebeau 3/13/09: if there is a problem initializing an encoding
     // class for the requested charset, either because the charset is
     // not known to Indy, or because the OS does not support it natively,
@@ -4172,7 +4214,18 @@ begin
       {$ELSE}
       CP := CharsetToCodePage(ACharset);
       if CP <> 0 then begin
+        {$IFDEF USE_TIdTextEncoding_GetEncoding}
         Result := TIdTextEncoding.GetEncoding(CP);
+        {$ELSE}
+        case CP of
+          1200:  Result := TIdUTF16LittleEndianEncoding.Create;
+          1201:  Result := TIdUTF16BigEndianEncoding.Create;
+          65000: Result := TIdUTF7Encoding.Create;
+          65001: Result := TIdUTF8Encoding.Create;
+        else
+          Result := TIdMBCSEncoding.Create(CP);
+        end;
+        {$ENDIF}
       end;
       {$ENDIF}
     except end;
