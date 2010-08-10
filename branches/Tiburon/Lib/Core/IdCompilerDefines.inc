@@ -51,6 +51,7 @@
 {$UNDEF HAS_TEncoding}
 {$UNDEF HAS_TCharacter}
 {$UNDEF HAS_TInterlocked}
+{$UNDEF TIdTextEncoding_IS_NATIVE}
 
 // Make sure that this is defined only for environments where we are using
 // the iconv library to charactor conversions.
@@ -405,6 +406,7 @@
     {$DEFINE VCL_60_PLUS}
     {$DEFINE HAS_TEncoding}
     {$DEFINE HAS_TCharacter}
+    {$DEFINE BROKEN_TEncoding_GetEncoding}
   {$ENDIF}
   {$DEFINE HAS_CLASSPROPERTIES}
   {$DEFINE HAS_CLASSVARS}
@@ -456,6 +458,7 @@
     {$DEFINE VCL_60_PLUS}
     {$DEFINE HAS_TEncoding}
     {$DEFINE HAS_TCharacter}
+    {$DEFINE BROKEN_TEncoding_GetEncoding}
   {$ENDIF}
   {$DEFINE HAS_CLASSPROPERTIES}
   {$DEFINE HAS_CLASSVARS}
@@ -773,7 +776,7 @@
   //important!!! iconv functions are defined in the libc.pas Novell Netware header.
   //Do not define USE_ICONVUNIT
   {$UNDEF USE_ICONV_UNIT}
-  {$UNDEF USE_ICONV_ENC}  
+  {$UNDEF USE_ICONV_ENC}
   {$DEFINE INT_THREAD_PRIORITY}
   {$DEFINE HAS_TInterlocked}
 {$ENDIF}
@@ -884,6 +887,13 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
 
 {$IFDEF DOTNET}
   {$DEFINE DOTNET_OR_ICONV}
+  {$DEFINE TIdTextEncoding_IS_NATIVE}
+{$ELSE}
+  {$IFDEF HAS_TEncoding}
+    {$IFNDEF USE_ICONV}
+      {$DEFINE TIdTextEncoding_IS_NATIVE}
+    {$ENDIF}
+  {$ENDIF}
 {$ENDIF}
 {$IFDEF USE_ICONV}
   {$DEFINE DOTNET_OR_ICONV}
