@@ -4173,8 +4173,8 @@ begin
 end;
 
 {$IFNDEF DOTNET_OR_ICONV}
-  // SysUtils.TEncoding.GetEncoding() in D2009 and D2010 does not
-  // implement UTF-7 and UTF-16 correctly.  This was fixed in D2011...
+  // SysUtils.TEncoding.GetEncoding() in Delphi 2009 and 2010 does not
+  // implement UTF-7 and UTF-16 correctly.  This was fixed in Delphi XE...
   {$DEFINE USE_TIdTextEncoding_GetEncoding}
   {$IFDEF TIdTextEncoding_IS_NATIVE}
     {$IFDEF BROKEN_TEncoding_GetEncoding}

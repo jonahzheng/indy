@@ -471,7 +471,7 @@
   {$DEFINE HAS_TStrings_ValueFromIndex}
 {$ENDIF}
 
-//Delphi & C++Builder 2011 (Fulcrum)
+//Delphi & C++Builder XE (Fulcrum)
 {$IFDEF VER220}
 //REMOVE DCC DEFINE after the next Fulcrum beta.
 //It will be defined there.
@@ -488,12 +488,12 @@
   {$DEFINE VCL_2007_OR_ABOVE}
   {$DEFINE VCL_2009_OR_ABOVE}
   {$DEFINE VCL_2010_OR_ABOVE}
-  {$DEFINE VCL_2011_OR_ABOVE}
-  {$DEFINE VCL_2011}
+  {$DEFINE VCL_XE_OR_ABOVE}
+  {$DEFINE VCL_XE}
   {$IFDEF CBUILDER}
-    {$DEFINE CBUILDER_2011}
+    {$DEFINE CBUILDER_XE}
   {$ELSE}
-    {$DEFINE DELPHI_2011}
+    {$DEFINE DELPHI_XE}
   {$ENDIF}
   {$DEFINE HAS_OPTIONAL_PARAMS}
   {$DEFINE HAS_SAMETEXT}
