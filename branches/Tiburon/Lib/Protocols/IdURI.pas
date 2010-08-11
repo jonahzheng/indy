@@ -148,17 +148,37 @@ var
   i: Integer;
 begin
   // Normalize the directory delimiters to follow the UNIX syntax
-  i := 1;
+
+  // RLebeau 8/10/2010: only normalize within the actual path,
+  // nothing outside of it...
+
+  i := Pos(':', APath);  {do not localize}
+  if i > 0 then begin
+    Inc(i);
+    // if the path does not already begin with '//', then do not
+    // normalize the first two characters if they would produce
+    // '//', as that will change the semantics of the URL...
+    if CharIsInSet(APath, I, '\/') and CharIsInSet(APath, I+1, '\/') then begin
+      Inc(i, 2);
+    end;
+  end else begin
+    i := 1;
+  end;
+
   while i <= Length(APath) do begin
     {$IFDEF STRING_IS_ANSI}
     if IsLeadChar(APath[i]) then begin
-      inc(i, 2)
-    end else {$ENDIF} if APath[i] = '\' then begin    {Do not Localize}
-      APath[i] := '/';    {Do not Localize}
-      inc(i, 1);
-    end else begin
-      inc(i, 1);
+      Inc(i, 2)
+    end else
+    {$ENDIF}
+    if (APath[i] = '?') or (APath[i] = '#') then begin {Do not Localize}
+      // stop normalizing at query/fragment portion of the URL
+      Break;
     end;
+    if APath[i] = '\' then begin    {Do not Localize}
+      APath[i] := '/';    {Do not Localize}
+    end;
+    Inc(i);
   end;
 end;
 
