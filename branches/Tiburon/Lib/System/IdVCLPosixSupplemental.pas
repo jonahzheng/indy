@@ -8564,34 +8564,374 @@ type
   SelectorFunctionUPP = SelectorFunctionProcPtr;
   
 //MacErrors.h
-{$EXTERNAL SysError}
+{*
+ *  SysError()
+ *  
+ *  Availability:
+ *    Mac OS X:         in version 10.0 and later in CoreServices.framework
+ *    CarbonLib:        in CarbonLib 1.0 and later
+ *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
+ *}
+{$EXTERNALSYM SysError}
 procedure SysError(errorCode : TIdC_SHORT) {AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER}; cdecl;
 //gestalt.h
+{*
+ *  Gestalt()
+ *  
+ *  Summary:
+ *    Gestalt returns information about the operating environment.
+ *  
+ *  Discussion:
+ *    The Gestalt function places the information requested by the
+ *    selector parameter in the variable parameter response . Note that
+ *    Gestalt returns the response from all selectors in an SInt32,
+ *    which occupies 4 bytes. When not all 4 bytes are needed, the
+ *    significant information appears in the low-order byte or bytes.
+ *    Although the response parameter is declared as a variable
+ *    parameter, you cannot use it to pass information to Gestalt or to
+ *    a Gestalt selector function. Gestalt interprets the response
+ *    parameter as an address at which it is to place the result
+ *    returned by the selector function specified by the selector
+ *    parameter. Gestalt ignores any information already at that
+ *    address.
+ *    
+ *    The Apple-defined selector codes fall into two categories:
+ *    environmental selectors, which supply specific environmental
+ *    information you can use to control the behavior of your
+ *    application, and informational selectors, which supply
+ *    information you can't use to determine what hardware or software
+ *    features are available. You can use one of the selector codes
+ *    defined by Apple (listed in the "Constants" section beginning on
+ *    page 1-14 ) or a selector code defined by a third-party
+ *    product.
+ *    
+ *    The meaning of the value that Gestalt returns in the response
+ *    parameter depends on the selector code with which it was called.
+ *    For example, if you call Gestalt using the gestaltTimeMgrVersion
+ *    selector, it returns a version code in the response parameter. In
+ *    this case, a returned value of 3 indicates that the extended Time
+ *    Manager is available.
+ *    
+ *    In most cases, the last few characters in the selector's symbolic
+ *    name form a suffix that indicates what type of value you can
+ *    expect Gestalt to place in the response parameter. For example,
+ *    if the suffix in a Gestalt selector is Size , then Gestalt
+ *    returns a size in the response parameter.
+ *    
+ *    Attr:  A range of 32 bits, the meanings of which are defined by a
+ *    list of constants. Bit 0 is the least significant bit of the
+ *    SInt32.
+ *    Count: A number indicating how many of the indicated type of item
+ *    exist.
+ *    Size: A size, usually in bytes.
+ *    Table: The base address of a table.
+ *    Type: An index to a list of feature descriptions.
+ *    Version: A version number, which can be either a constant with a
+ *    defined meaning or an actual version number, usually stored as
+ *    four hexadecimal digits in the low-order word of the return
+ *    value. Implied decimal points may separate digits. The value
+ *    $0701, for example, returned in response to the
+ *    gestaltSystemVersion selector, represents system software version
+ *    7.0.1.
+ *    
+ *    Selectors that have the suffix Attr deserve special attention.
+ *    They cause Gestalt to return a bit field that your application
+ *    must interpret to determine whether a desired feature is present.
+ *    For example, the application-defined sample function
+ *    MyGetSoundAttr , defined in Listing 1-2 on page 1-6 , returns a
+ *    LongInt that contains the Sound Manager attributes field
+ *    retrieved from Gestalt . To determine whether a particular
+ *    feature is available, you need to look at the designated bit.
+ *  
+ *  Mac OS X threading:
+ *    Thread safe since version 10.3
+ *  
+ *  Parameters:
+ *    
+ *    selector:
+ *      The selector to return information for
+ *    
+ *    response:
+ *      On exit, the requested information whose format depends on the
+ *      selector specified.
+ *  
+ *  Availability:
+ *    Mac OS X:         in version 10.0 and later in CoreServices.framework
+ *    CarbonLib:        in CarbonLib 1.0 and later
+ *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
+ *}
 {$EXTERNALSYM Gestalt}
 function Gestalt(selector : OSType; var response : SInt32 ) : OSErr {AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER}; cdecl; 
 {$IFNDEF CPU64}
+{*
+ *  ReplaceGestalt()   *** DEPRECATED ***
+ *  
+ *  Deprecated:
+ *    Use NewGestaltValue instead wherever possible.
+ *  
+ *  Summary:
+ *    Replaces the gestalt function associated with a selector.
+ *  
+ *  Discussion:
+ *    The ReplaceGestalt function replaces the selector function
+ *    associated with an existing selector code.
+ *    
+ *    So that your function can call the function previously associated
+ *    with the selector, ReplaceGestalt places the address of the old
+ *    selector function in the oldGestaltFunction parameter. If
+ *    ReplaceGestalt returns an error of any type, then the value of
+ *    oldGestaltFunction is undefined.
+ *  
+ *  Mac OS X threading:
+ *    Thread safe since version 10.3
+ *  
+ *  Parameters:
+ *    
+ *    selector:
+ *      the selector to replace
+ *    
+ *    gestaltFunction:
+ *      a UPP for the new selector function
+ *    
+ *    oldGestaltFunction:
+ *      on exit, a pointer to the UPP of the previously associated with
+ *      the specified selector
+ *  
+ *  Availability:
+ *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.3
+ *    CarbonLib:        in CarbonLib 1.0 and later
+ *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
+ *}
 {$EXTERNALSYM ReplaceGestalt}
 function ReplaceGestalt(selector : OSType; 
   gestaltFunction : SelectorFunctionUPP; 
   oldGestaltFunction : SelectorFunctionUPP) : OSErr
    {AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3}; cdecl;
+{*
+ *  NewGestalt()   *** DEPRECATED ***
+ *  
+ *  Deprecated:
+ *    Use NewGestaltValue instead wherever possible.
+ *  
+ *  Summary:
+ *    Adds a selector code to those already recognized by Gestalt.
+ *  
+ *  Discussion:
+ *    The NewGestalt function registers a specified selector code with
+ *    the Gestalt Manager so that when the Gestalt function is called
+ *    with that selector code, the specified selector function is
+ *    executed. Before calling NewGestalt, you must define a selector
+ *    function callback. See SelectorFunctionProcPtr for a description
+ *    of how to define your selector function.
+ *    
+ *    Registering with the Gestalt Manager is a way for software such
+ *    as system extensions to make their presence known to potential
+ *    users of their services.
+ *    
+ *    In Mac OS X, the selector and replacement value are on a
+ *    per-context basis. That means they are available only to the
+ *    application or other code that installs them. You cannot use this
+ *    function to make information available to another process.
+ *     
+ *    A Gestalt selector registered with NewGestalt() can not be
+ *    deleted.
+ *  
+ *  Mac OS X threading:
+ *    Thread safe since version 10.3
+ *  
+ *  Parameters:
+ *    
+ *    selector:
+ *      the selector to create
+ *    
+ *    gestaltFunction:
+ *      a UPP for the new selector function, which Gestalt executes
+ *      when it receives the new selector code. See
+ *      SelectorFunctionProcPtr for more information on the callback
+ *      you need to provide.
+ *  
+ *  Availability:
+ *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.3
+ *    CarbonLib:        in CarbonLib 1.0 and later
+ *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
+ *}
 {$EXTERNALSYM NewGestalt}
 function NewGestalt(selector : OSType; 
   gestaltFunction : SelectorFunctionUPP) : OSErr 
   {AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3}; cdecl;
 {$ENDIF}
+{*
+ *  NewGestaltValue()
+ *  
+ *  Summary:
+ *    Adds a selector code to those already recognized by Gestalt.
+ *  
+ *  Discussion:
+ *    The NewGestalt function registers a specified selector code with
+ *    the Gestalt Manager so that when the Gestalt function is called
+ *    with that selector code, the specified selector function is
+ *    executed. Before calling NewGestalt, you must define a selector
+ *    function callback. See SelectorFunctionProcPtr for a description
+ *    of how to define your selector function.
+ *    
+ *    Registering with the Gestalt Manager is a way for software such
+ *    as system extensions to make their presence known to potential
+ *    users of their services.
+ *    
+ *    In Mac OS X, the selector and replacement value are on a
+ *    per-context basis. That means they are available only to the
+ *    application or other code that installs them. You cannot use this
+ *    function to make information available to another process.
+ *  
+ *  Mac OS X threading:
+ *    Thread safe since version 10.3
+ *  
+ *  Parameters:
+ *    
+ *    selector:
+ *      the selector to create
+ *    
+ *    newValue:
+ *      the value to return for the new selector code.
+ *  
+ *  Availability:
+ *    Mac OS X:         in version 10.0 and later in CoreServices.framework
+ *    CarbonLib:        in CarbonLib 1.0 and later
+ *    Non-Carbon CFM:   in InterfaceLib 7.5 and later
+ *}
 {$EXTERNALSYM NewGestaltValue}
 function NewGestaltValue(selector : OSType; const newValue : SInt32) : OSErr  {AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER}; cdecl;
+{*
+ *  ReplaceGestaltValue()
+ *  
+ *  Summary:
+ *    Replaces the value that the function Gestalt returns for a
+ *    specified selector code with the value provided to the function.
+ *  
+ *  Discussion:
+ *    You use the function ReplaceGestaltValue to replace an existing
+ *    value. You should not call this function to introduce a value
+ *    that doesn't already exist; instead call the function
+ *    NewGestaltValue.
+ *    
+ *    In Mac OS X, the selector and replacement value are on a
+ *    per-context basis. That means they are available only to the
+ *    application or other code that installs them. You cannot use this
+ *    function to make information available to another process.
+ *  
+ *  Mac OS X threading:
+ *    Thread safe since version 10.3
+ *  
+ *  Parameters:
+ *    
+ *    selector:
+ *      the selector to create
+ *    
+ *    replacementValue:
+ *      the new value to return for the new selector code.
+ *  
+ *  Availability:
+ *    Mac OS X:         in version 10.0 and later in CoreServices.framework
+ *    CarbonLib:        in CarbonLib 1.0 and later
+ *    Non-Carbon CFM:   in InterfaceLib 7.5 and later
+ *}
 {$EXTERNALSYM ReplaceGestaltValue}
 function ReplaceGestaltValue(selector : OSType; const replacementValue : SInt32 ) : OSErr {AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER}; cdecl;
+{*
+ *  SetGestaltValue()
+ *  
+ *  Summary:
+ *    Sets the value the function Gestalt will return for a specified
+ *    selector code, installing the selector if it was not already
+ *    installed.
+ *  
+ *  Discussion:
+ *    You use SetGestaltValue to establish a value for a selector,
+ *    without regard to whether the selector was already installed.
+ *     
+ *    In Mac OS X, the selector and replacement value are on a
+ *    per-context basis. That means they are available only to the
+ *    application or other code that installs them. You cannot use this
+ *    function to make information available to another process.
+ *  
+ *  Mac OS X threading:
+ *    Thread safe since version 10.3
+ *  
+ *  Parameters:
+ *    
+ *    selector:
+ *      the selector to create
+ *    
+ *    newValue:
+ *      the new value to return for the new selector code.
+ *  
+ *  Availability:
+ *    Mac OS X:         in version 10.0 and later in CoreServices.framework
+ *    CarbonLib:        in CarbonLib 1.0 and later
+ *    Non-Carbon CFM:   in InterfaceLib 7.5 and later
+ *}
 {$EXTERNALSYM SetGestaltValue}
 function SetGestaltValue(selector : OSType; const newValue : SInt32) : OSErr  {AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER}; cdecl;
+{*
+ *  DeleteGestaltValue()
+ *  
+ *  Summary:
+ *    Deletes a Gestalt selector code so that it is no longer
+ *    recognized by Gestalt.
+ *  
+ *  Discussion:
+ *    After calling this function, subsequent query or replacement
+ *    calls for the selector code will fail as if the selector had
+ *    never been installed 
+ *    
+ *    In Mac OS X, the selector and replacement value are on a
+ *    per-context basis. That means they are available only to the
+ *    application or other code that installs them.
+ *  
+ *  Mac OS X threading:
+ *    Thread safe since version 10.3
+ *  
+ *  Parameters:
+ *    
+ *    selector:
+ *      the selector to delete
+ *  
+ *  Availability:
+ *    Mac OS X:         in version 10.0 and later in CoreServices.framework
+ *    CarbonLib:        in CarbonLib 1.0 and later
+ *    Non-Carbon CFM:   in InterfaceLib 7.5 and later
+ *}
 {$EXTERNALSYM DeleteGestaltValue}
 function DeleteGestaltValue(selector : OSType) : OSErr  {AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER}; cdecl;
+
+{*
+ *  NewSelectorFunctionUPP()
+ *  
+ *  Availability:
+ *    Mac OS X:         in version 10.0 and later in CoreServices.framework
+ *    CarbonLib:        in CarbonLib 1.0 and later
+ *    Non-Carbon CFM:   available as macro/inline
+ *}
 {$EXTERNALSYM NewSelectorFunctionUPP}
 function NewSelectorFunctionUPP(userRoutine : SelectorFunctionProcPtr) : SelectorFunctionUPP {AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER}; cdecl;
+{*
+ *  DisposeSelectorFunctionUPP()
+ *  
+ *  Availability:
+ *    Mac OS X:         in version 10.0 and later in CoreServices.framework
+ *    CarbonLib:        in CarbonLib 1.0 and later
+ *    Non-Carbon CFM:   available as macro/inline
+ *}
 {$EXTERNALSYM DisposeSelectorFunctionUPP}
 procedure DisposeSelectorFunctionUPP(userUPP : SelectorFunctionUPP) {AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER}; cdecl;
+{*
+ *  InvokeSelectorFunctionUPP()
+ *  
+ *  Availability:
+ *    Mac OS X:         in version 10.0 and later in CoreServices.framework
+ *    CarbonLib:        in CarbonLib 1.0 and later
+ *    Non-Carbon CFM:   available as macro/inline
+ *}
 {$EXTERNALSYM InvokeSelectorFunctionUPP}
 function InvokeSelectorFunctionUPP(selector : OSType; var response : SInt32; userUPP : SelectorFunctionUPP) : OSErr {AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER}; cdecl;
  {$ENDIF}
@@ -8613,6 +8953,11 @@ function InvokeSelectorFunctionUPP(selector : OSType; var response : SInt32; use
 implementation
   {$IFDEF DARWIN}
 
+{$DEFINE USE_CARBONCORELIB}
+{/$DEFINE USE_CORESERVICESLIB}
+{$IFDEF USE_CARBONCORELIB}
+  {$UNDEF USE_CORESERVICESLIB}
+{$ENDIF}
 
 function  TCPOPT_CC_HDR(const ccopt : Integer) : Integer; inline;
 begin
@@ -8622,19 +8967,31 @@ begin
       TCPOLEN_CC;
 end;
 
-procedure SysError; external CarbonCoreLib name '_SysError';
-function Gestalt; external CarbonCoreLib name '_Gestalt';
-{$IFNDEF CPU64}
-function ReplaceGestalt; external CarbonCoreLib name '_ReplaceGestalt';
-function NewGestalt; external CarbonCoreLib name '_NewGestalt';
+procedure SysError; external {$IFDEF USE_CORESERVICESLIB}CoreServices{$ENDIF}
+{$IFDEF USE_CARBONCORELIB}CarbonCoreLib{$ENDIF}  name '_SysError';
+function Gestalt; external   {$IFDEF USE_CORESERVICESLIB}CoreServices{$ENDIF}
+{$IFDEF USE_CARBONCORELIB}CarbonCoreLib {$ENDIF} name '_Gestalt';
+    {$IFNDEF CPU64}
+function ReplaceGestalt; external {$IFDEF USE_CORESERVICESLIB}CoreServices{$ENDIF}
+{$IFDEF USE_CARBONCORELIB}CarbonCoreLib {$ENDIF} name '_ReplaceGestalt';
+function NewGestalt; external {$IFDEF USE_CORESERVICESLIB}CoreServices{$ENDIF}
+{$IFDEF USE_CARBONCORELIB}CarbonCoreLib {$ENDIF} name '_NewGestalt';
+    {$ENDIF}
+function NewGestaltValue; external {$IFDEF USE_CORESERVICESLIB}CoreServices{$ENDIF}
+  {$IFDEF USE_CARBONCORELIB}CarbonCoreLib {$ENDIF} name '_NewGestaltValue';
+function ReplaceGestaltValue; external {$IFDEF USE_CORESERVICESLIB}CoreServices{$ENDIF}
+  {$IFDEF USE_CARBONCORELIB}CarbonCoreLib {$ENDIF} name '_ReplaceGestaltValue';
+function SetGestaltValue; external {$IFDEF USE_CORESERVICESLIB}CoreServices{$ENDIF}
+  {$IFDEF USE_CARBONCORELIB}CarbonCoreLib {$ENDIF} name '_SetGestaltValue';
+function DeleteGestaltValue; external  {$IFDEF USE_CORESERVICESLIB}CoreServices{$ENDIF}
+  {$IFDEF USE_CARBONCORELIB}CarbonCoreLib {$ENDIF} name '_DeleteGestaltValue';
+function NewSelectorFunctionUPP; external  {$IFDEF USE_CORESERVICESLIB}CoreServices{$ENDIF}
+  {$IFDEF USE_CARBONCORELIB}CarbonCoreLib {$ENDIF} name '_NewSelectorFunctionUPP';
+procedure DisposeSelectorFunctionUPP; external  {$IFDEF USE_CORESERVICESLIB}CoreServices{$ENDIF}
+  {$IFDEF USE_CARBONCORELIB}CarbonCoreLib {$ENDIF}  name '_DisposeSelectorFunctionUPP';
+function InvokeSelectorFunctionUPP; external {$IFDEF USE_CORESERVICESLIB}CoreServices{$ENDIF}
+  {$IFDEF USE_CARBONCORELIB}CarbonCoreLib {$ENDIF} name '_InvokeSelectorFunctionUPP';
+   
 {$ENDIF}
-function NewGestaltValue; external CarbonCoreLib name '_NewGestaltValue';
-function ReplaceGestaltValue; external CarbonCoreLib name '_ReplaceGestaltValue';
-function SetGestaltValue; external CarbonCoreLib name '_SetGestaltValue';
-function DeleteGestaltValue; external CarbonCoreLib name '_DeleteGestaltValue';
-function NewSelectorFunctionUPP; external CarbonCoreLib name '_NewSelectorFunctionUPP';
-procedure DisposeSelectorFunctionUPP; external CarbonCoreLib name '_DisposeSelectorFunctionUPP';
-function InvokeSelectorFunctionUPP; external CarbonCoreLib name '_InvokeSelectorFunctionUPP';
-  {$ENDIF}
 
 end.
