@@ -128,7 +128,6 @@ type
     function  GetInt64: Int64;
     function  GetString(ALength: Word): string;
     function  GetDate(ALength: Word): TDateTime;
-    procedure SplitLongWord(ALongWord: LongWord; var AHigh: Word; var ALow: Word);
     procedure Skip(ACount: integer);
     procedure CheckForEof(ANumBytesRequested: integer);
     procedure Checksum(ANumBytesToCheck: integer);
@@ -153,7 +152,7 @@ type
   protected
     procedure ParseMessageBlock;
     procedure ParseAttachmentBlock;
-    procedure ParseAttribute(AAttribute: LongWord);
+    procedure ParseAttribute(AAttribute, AType: Word);
     procedure ParseMapiProps(ALength: LongWord);
     procedure ParseMapiProp;
     procedure IsCurrentAttachmentValid;
@@ -1577,7 +1576,7 @@ begin
   end;
   //Note the strings are padded to 4-byte boundaries...
   if (LLength mod 4) > 0 then begin
-    Skip(LLength mod 4);
+    Skip(4 - (LLength mod 4));
   end;
 end;
 
@@ -1736,17 +1735,6 @@ begin
   end;
 end;
 
-procedure TIdCoderTNEF.SplitLongWord(ALongWord: LongWord; var AHigh: Word; var ALow: Word);
-var
-  LTemp: LongWord;
-begin
-  LTemp := ALongWord and $FFFF0000;
-  LTemp := LTemp shr 16;
-  AHigh := Word(LTemp);
-  LTemp := ALongWord and $0000FFFF;
-  ALow  := Word(LTemp);
-end;
-
 procedure TIdCoderTNEF.Parse(const AIn: string; AMsg: TIdMessage; ALog: Boolean = False);
 var
   LIn: TMemoryStream;
@@ -1788,8 +1776,12 @@ begin
 end;
 
 procedure TIdCoderTNEF.ParseMessageBlock;
+var
+  LType, LAttribute: Word;
 begin
-  ParseAttribute(GetLongWord);
+  LAttribute := GetWord;
+  LType := GetWord;
+  ParseAttribute(LAttribute, LType);
 end;
 
 procedure TIdCoderTNEF.IsCurrentAttachmentValid;
@@ -1817,13 +1809,12 @@ end;
 
 procedure TIdCoderTNEF.ParseAttachmentBlock;
 var
-  LAttachmentType: LongWord;
   LType, LAttribute: Word;
   LLength: LongWord;
   LDestStream: TStream;
 begin
-  LAttachmentType := GetLongWord;
-  SplitLongWord(LAttachmentType, LType, LAttribute);
+  LAttribute := GetWord;
+  LType := GetWord;
   if FDoLogging then begin
     DoLogFmt('   ParseAttachmentBlock passed a %s type %s', [GetStringForAttribute(LAttribute), GetStringForType(LType)]);  {Do not localize}
   end;
@@ -1876,14 +1867,13 @@ begin
       if FDoLogging then begin
         DoLogFmt('   ParseAttachmentBlock copied %d bytes to attachment.', [LLength]);  {Do not localize}
       end;
-      Skip(LLength);
       Skip(2);  //Checksum
       end;
     else
       if FDoLogging then begin
-        DoLog('   ParseAttachmentBlock found unknown type, passing to ParseAttribute.');  {Do not localize}
+        DoLogFmt('   ParseAttachmentBlock found unknown attribute: %d, type: %d, passing to ParseAttribute.', [LAttribute, LType]);  {Do not localize}
       end;
-      ParseAttribute(LAttachmentType);
+      ParseAttribute(LAttribute, LType);
   end;
 end;
 
@@ -2544,7 +2534,7 @@ begin
         Skip(8);
       end;
     else
-      raise EIdTnefUnknownMapiType.Create('Encountered unknown MAPI type');  {Do not localize}
+      raise EIdTnefUnknownMapiType.CreateFmt('Encountered unknown MAPI type: %d, attribute: %d', [LType, LAttribute]);  {Do not localize}
     end;
   end;
 end;
@@ -2569,28 +2559,25 @@ begin
   end;
 end;
 
-procedure TIdCoderTNEF.ParseAttribute(AAttribute: LongWord);
+procedure TIdCoderTNEF.ParseAttribute(AAttribute, AType: Word);
 var
-  LType, LAttribute: Word;
   LLength: LongWord;
-  LTemp: LongWord;
-  LLow, LHigh: Word;
+  LMajor, LMinor: Word;
   LShort: Smallint;
 begin
-  SplitLongWord(AAttribute, LType, LAttribute);
   LLength := GetLongWord;
   Checksum(LLength);
-  case LAttribute of
+  case AAttribute of
     IdTNEFattTnefVersion: begin
-      if LType <> IdTNEFAtpDWord then begin
+      if AType <> IdTNEFAtpDWord then begin
         raise EIdTnefUnexpectedType.Create('Expected DWord for TnefVersion');  {Do not localize}
       end;
-      LTemp := GetLongWord;
-      SplitLongWord(LTemp, LHigh, LLow);
+      LMinor := GetWord;
+      LMajor := GetWord;
       if FDoLogging then begin
-        DoLogFmt('     ParseAttribute found TNef Version DWord.  Major version: %d Minor version: %d', [LHigh, LLow]);  {Do not localize}
+        DoLogFmt('     ParseAttribute found TNef Version DWord.  Major version: %d Minor version: %d', [LMajor, LMinor]);  {Do not localize}
       end;
-      if (LHigh <> 1) and (LLow <> 0) then begin
+      if (LMajor <> 1) and (LMinor <> 0) then begin
         if FDoLogging then begin
           DoLog('     Expected a version with Major = 1, Minor = 0.  Some elements may not parse correctly.');  {Do not localize}
         end;
@@ -2601,7 +2588,7 @@ begin
       end;
     end;
     IdTNEFattSubject: begin
-      if LType <> IdTNEFAtpString then begin
+      if AType <> IdTNEFAtpString then begin
         raise EIdTnefUnexpectedType.Create('Expected String for TnefSubject');  {Do not localize}
       end;
       FMsg.Subject := GetString(LLength);
@@ -2611,7 +2598,7 @@ begin
       end;
     end;
     IdTNEFattDateSent: begin
-      if LType <> IdTNEFAtpDate then begin
+      if AType <> IdTNEFAtpDate then begin
         raise EIdTnefUnexpectedType.Create('Expected Date for TnefDateSent');  {Do not localize}
       end;
       FMsg.Date := GetDate(LLength);
@@ -2621,7 +2608,7 @@ begin
       end;
     end;
     IdTNEFattMessageID: begin
-      if LType <> IdTNEFAtpString then begin
+      if AType <> IdTNEFAtpString then begin
         raise EIdTnefUnexpectedType.Create('Expected String for TnefMessageID');  {Do not localize}
       end;
       FMsg.MsgId := GetString(LLength);
@@ -2631,7 +2618,7 @@ begin
       end;
     end;
     IdTNEFattPriority: begin
-      if LType <> IdTNEFAtpShort then begin
+      if AType <> IdTNEFAtpShort then begin
         raise EIdTnefUnexpectedType.Create('Expected Short for TnefPriority');  {Do not localize}
       end;
       LShort := GetWord;
@@ -2665,80 +2652,80 @@ begin
       ParseMapiProps(LLength);
     end;
   else
-    case LType of
+    case AType of
       IdTNEFAtpTriples: begin
         if FDoLogging then begin
           DoLogFmt('     ParseAttribute found AtpTriples type, %s, length: %d',  {Do not localize}
-            [GetStringForAttribute(LAttribute), LLength]);
+            [GetStringForAttribute(AAttribute), LLength]);
         end;
         Skip(LLength);
       end;
       IdTNEFAtpString: begin
         if FDoLogging then begin
           DoLogFmt('     ParseAttribute found AtpString type, %s, length: %d',  {Do not localize}
-            [GetStringForAttribute(LAttribute), LLength]);
+            [GetStringForAttribute(AAttribute), LLength]);
         end;
         Skip(LLength);
       end;
       IdTNEFAtpText: begin
         if FDoLogging then begin
           DoLogFmt('     ParseAttribute found AtpText type, %s, length: %d',  {Do not localize}
-            [GetStringForAttribute(LAttribute), LLength]);
+            [GetStringForAttribute(AAttribute), LLength]);
         end;
         Skip(LLength);
       end;
       IdTNEFAtpDate: begin
         if FDoLogging then begin
           DoLogFmt('     ParseAttribute found AtpDate type, %s, length: %d',  {Do not localize}
-            [GetStringForAttribute(LAttribute), LLength]);
+            [GetStringForAttribute(AAttribute), LLength]);
          end;
         Skip(LLength);
       end;
       IdTNEFAtpShort: begin
         if FDoLogging then begin
-          DoLogFmt('     ParseAttribute found AtpShort type, %s, length: %d', [GetStringForAttribute(LAttribute), LLength]);  {Do not localize}
+          DoLogFmt('     ParseAttribute found AtpShort type, %s, length: %d', [GetStringForAttribute(AAttribute), LLength]);  {Do not localize}
         end;
         Skip(LLength);
       end;
       IdTNEFAtpLong: begin
         if FDoLogging then begin
           DoLogFmt('     ParseAttribute found AtpLong type, %s, length: %d',  {Do not localize}
-            [GetStringForAttribute(LAttribute), LLength]);
+            [GetStringForAttribute(AAttribute), LLength]);
         end;
         Skip(LLength);
       end;
       IdTNEFAtpByte: begin
         if FDoLogging then begin
           DoLogFmt('     ParseAttribute found AtpByte type, %s, length: %d',  {Do not localize}
-            [GetStringForAttribute(LAttribute), LLength]);
+            [GetStringForAttribute(AAttribute), LLength]);
         end;
         Skip(LLength);
       end;
       IdTNEFAtpWord: begin
         if FDoLogging then begin
           DoLogFmt('     ParseAttribute found AtpWord type, %s, length: %d',  {Do not localize}
-            [GetStringForAttribute(LAttribute), LLength]);
+            [GetStringForAttribute(AAttribute), LLength]);
         end;
         Skip(LLength);
       end;
       IdTNEFAtpDWord: begin
         if FDoLogging then begin
           DoLogFmt('     ParseAttribute found AtpDWord type, %s, length: %d',  {Do not localize}
-            [GetStringForAttribute(LAttribute), LLength]);
+            [GetStringForAttribute(AAttribute), LLength]);
         end;
         Skip(LLength);
       end;
       IdTNEFAtpMax: begin
         if FDoLogging then begin
           DoLogFmt('     ParseAttribute found AtpMax type, %s, length: %d',  {Do not localize}
-            [GetStringForAttribute(LAttribute), LLength]);
+            [GetStringForAttribute(AAttribute), LLength]);
         end;
         Skip(LLength);
       end;
     else
       if FDoLogging then begin
         DoLogFmt('     ParseAttribute found unknown type, %s, length: %d',  {Do not localize}
-           [GetStringForAttribute(LAttribute), LLength]);
+           [GetStringForAttribute(AAttribute), LLength]);
       end;
       Skip(LLength);
     end;
@@ -2792,7 +2779,7 @@ begin
     else
       begin
         if FDoLogging then begin
-          DoLogFmt(' Hit unknown block type %d', [LBlockType]);  {Do not localize}
+          DoLogFmt(' Hit unknown block type: %d', [LBlockType]);  {Do not localize}
         end;
         raise EIdTnefUnknownBlockType.Create('Hit unknown block type in TNEF - corrupt TNEF?');  {Do not localize}
       end;
