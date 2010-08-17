@@ -1821,7 +1821,9 @@ begin
 
   Len := GetCharCount(ABytes, AByteIndex, AByteCount);
   SetLength(Result, Len);
-  GetChars(@ABytes[AByteIndex], AByteCount, PWideChar(Result), Len);
+  if Len > 0 then begin
+    GetChars(@ABytes[AByteIndex], AByteCount, PWideChar(Result), Len);
+  end;
 end;
 
 function TIdTextEncoding.GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer;
@@ -1837,12 +1839,15 @@ begin
     raise Exception.CreateResFmt(@RSInvalidCharCount, [AByteCount]);
   if (Length(ABytes) - AByteIndex) < AByteCount then
     raise Exception.CreateResFmt(@RSInvalidCharCount, [AByteCount]);
-
-  Len := GetCharCount(ABytes, AByteIndex, AByteCount);
-  if (ACharIndex < 0) or (ACharIndex > Length(VChars)) then
+  if (ACharIndex < 0) or (ACharIndex >= Length(VChars)) then
     raise Exception.CreateResFmt(@RSInvalidDestinationIndex, [ACharIndex]);
 
-  Result := GetChars(@ABytes[AByteIndex], AByteCount, @VChars[ACharIndex], Len);
+  Len := GetCharCount(ABytes, AByteIndex, AByteCount);
+  if Len > 0 then begin
+    Result := GetChars(@ABytes[AByteIndex], AByteCount, @VChars[ACharIndex], Len);
+  end else begin
+    Result := 0;
+  end;
 end;
 
 {$IFDEF HAS_CLASSPROPERTIES}
