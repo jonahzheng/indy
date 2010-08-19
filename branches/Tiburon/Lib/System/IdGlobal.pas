@@ -784,6 +784,7 @@ type
     function GetByteCount(const AChars: TIdWideChars): Integer; overload;
     function GetByteCount(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer): Integer; overload;
     function GetByteCount(const AStr: TIdUnicodeString): Integer; overload;
+    function GetByteCount(const AStr: TIdUnicodeString; ACharIndex, ACharCount: Integer): Integer; overload;
     function GetBytes(const AChars: TIdWideChars): TIdBytes; overload;
     function GetBytes(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
     function GetBytes(const AStr: TIdUnicodeString): TIdBytes; overload;
@@ -1696,6 +1697,8 @@ class function TIdTextEncoding.GetBufferEncoding(const ABuffer: TIdBytes; var AE
     end;
   end;
 
+var
+  Preamble: TIdBytes;
 begin
   Result := 0;
   if AEncoding = nil then
@@ -1716,8 +1719,9 @@ begin
     Result := Length(AEncoding.GetPreamble);
   end else
   begin
-    if ContainsPreamble(ABuffer, AEncoding.GetPreamble) then
-      Result := Length(AEncoding.GetPreamble);
+    Preamble := AEncoding.GetPreamble;
+    if ContainsPreamble(ABuffer, Preamble) then
+      Result := Length(Preamble);
   end;
 end;
 
@@ -1729,12 +1733,31 @@ end;
 function TIdTextEncoding.GetByteCount(const AChars: TIdWideChars; ACharIndex,
   ACharCount: Integer): Integer;
 begin
+  if ACharIndex < 0 then
+    raise Exception.CreateResFmt(@RSCharIndexOutOfBounds, [ACharIndex]);
+  if ACharCount < 0 then
+    raise Exception.CreateResFmt(@RSInvalidCharCount, [ACharCount]);
+  if (Length(AChars) - ACharIndex) < ACharCount then
+    raise Exception.CreateResFmt(@RSInvalidCharCount, [ACharCount]);
+
   Result := GetByteCount(@AChars[ACharIndex], ACharCount);
 end;
 
 function TIdTextEncoding.GetByteCount(const AStr: TIdUnicodeString): Integer;
 begin
   Result := GetByteCount(PWideChar(AStr), Length(AStr));
+end;
+
+function TIdTextEncoding.GetByteCount(const AStr: TIdUnicodeString; ACharIndex, ACharCount: Integer): Integer;
+begin
+  if ACharIndex < 1 then
+    raise Exception.CreateResFmt(@RSCharIndexOutOfBounds, [ACharIndex]);
+  if ACharCount < 0 then
+    raise Exception.CreateResFmt(@RSInvalidCharCount, [ACharCount]);
+  if (Length(AStr) - ACharIndex + 1) < ACharCount then
+    raise Exception.CreateResFmt(@RSInvalidCharCount, [ACharCount]);
+
+  Result := GetByteCount(PWideChar(@S[ACharIndex]), ACharCount);
 end;
 
 function TIdTextEncoding.GetBytes(const AChars: TIdWideChars): TIdBytes;
@@ -1748,6 +1771,8 @@ end;
 
 function TIdTextEncoding.GetBytes(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer;
   var VBytes: TIdBytes; AByteIndex: Integer): Integer;
+var
+  Len: Integer;
 begin
   if (AChars = nil) and (ACharCount <> 0) then
     raise Exception.CreateRes(@RSInvalidSourceArray);
@@ -1759,10 +1784,13 @@ begin
     raise Exception.CreateResFmt(@RSInvalidCharCount, [ACharCount]);
   if (Length(AChars) - ACharIndex) < ACharCount then
     raise Exception.CreateResFmt(@RSInvalidCharCount, [ACharCount]);
-  if (AByteIndex < 0) or (AByteIndex > Length(VBytes)) then
+  Len := Length(Bytes);
+  if (AByteIndex < 0) or (AByteIndex > Len) then
     raise Exception.CreateResFmt(@RSInvalidDestinationIndex, [AByteIndex]);
+  if Len - AByteIndex < GetByteCount(AChars, ACharIndex, ACharCount) then
+    raise Exception.CreateResFmt(@RSInvalidDestinationArray);
 
-  Result := GetBytes(@AChars[ACharIndex], ACharCount, @VBytes[AByteIndex], Length(VBytes));
+  Result := GetBytes(@AChars[ACharIndex], ACharCount, @VBytes[AByteIndex], Len - AByteIndex);
 end;
 
 function TIdTextEncoding.GetBytes(const AStr: TIdUnicodeString): TIdBytes;
@@ -1776,6 +1804,8 @@ end;
 
 function TIdTextEncoding.GetBytes(const AStr: TIdUnicodeString; ACharIndex, ACharCount: Integer;
   var VBytes: TIdBytes; AByteIndex: Integer): Integer;
+var
+  Len: Integer;
 begin
   if (VBytes = nil) and (ACharCount <> 0) then
     raise Exception.CreateRes(@RSInvalidSourceArray);
@@ -1785,10 +1815,13 @@ begin
     raise Exception.CreateResFmt(@RSInvalidCharCount, [ACharCount]);
   if (Length(AStr) - ACharIndex + 1) < ACharCount then
     raise Exception.CreateResFmt(@RSInvalidCharCount, [ACharCount]);
-  if (AByteIndex < 0) or (AByteIndex > Length(VBytes)) then
+  Len := Length(Bytes);
+  if (AByteIndex < 0) or (AByteIndex > Len) then
     raise Exception.CreateResFmt(@RSInvalidDestinationIndex, [AByteIndex]);
+  if Len - AByteIndex < GetByteCount(AStr, ACharIndex, ACharCount) then
+    raise Exception.CreateRes(@RSInvalidDestinationArray);
 
-  Result := GetBytes(@AStr[ACharIndex], ACharCount, @VBytes[AByteIndex], Length(VBytes));
+  Result := GetBytes(@AStr[ACharIndex], ACharCount, @VBytes[AByteIndex], Len - AByteIndex);
 end;
 
 function TIdTextEncoding.GetCharCount(const ABytes: TIdBytes): Integer;
@@ -1798,6 +1831,15 @@ end;
 
 function TIdTextEncoding.GetCharCount(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): Integer;
 begin
+  if (ABytes = nil) and (AByteCount <> 0) then
+    raise Exception.CreateRes(@RSInvalidSourceArray);
+  if AByteIndex < 0 then
+    raise Exception.CreateResFmt(@RSByteIndexOutOfBounds, [AByteIndex]);
+  if AByteCount < 0 then
+    raise Exception.CreateResFmt(@RSInvalidCharCount, [AByteCount]);
+  if (Length(ABytes) - AByteIndex) < AByteCount then
+    raise Exception.CreateResFmt(@RSInvalidCharCount, [AByteCount]);
+
   Result := GetCharCount(@ABytes[AByteIndex], AByteCount);
 end;
 
@@ -1821,15 +1863,13 @@ begin
 
   Len := GetCharCount(ABytes, AByteIndex, AByteCount);
   SetLength(Result, Len);
-  if Len > 0 then begin
-    GetChars(@ABytes[AByteIndex], AByteCount, PWideChar(Result), Len);
-  end;
+  GetChars(@ABytes[AByteIndex], AByteCount, PWideChar(Result), Len);
 end;
 
 function TIdTextEncoding.GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer;
   var VChars: TIdWideChars; ACharIndex: Integer): Integer;
 var
-  Len: Integer;
+  LCharCount: Integer;
 begin
   if (ABytes = nil) and (AByteCount <> 0) then
     raise Exception.CreateRes(@RSInvalidSourceArray);
@@ -1839,15 +1879,14 @@ begin
     raise Exception.CreateResFmt(@RSInvalidCharCount, [AByteCount]);
   if (Length(ABytes) - AByteIndex) < AByteCount then
     raise Exception.CreateResFmt(@RSInvalidCharCount, [AByteCount]);
-  if (ACharIndex < 0) or (ACharIndex >= Length(VChars)) then
-    raise Exception.CreateResFmt(@RSInvalidDestinationIndex, [ACharIndex]);
 
-  Len := GetCharCount(ABytes, AByteIndex, AByteCount);
-  if Len > 0 then begin
-    Result := GetChars(@ABytes[AByteIndex], AByteCount, @VChars[ACharIndex], Len);
-  end else begin
-    Result := 0;
-  end;
+  LCharCount := GetCharCount(ABytes, AByteIndex, AByteCount);
+  if (ACharIndex < 0) or (ACharIndex > Length(VChars)) then
+    raise Exception.CreateResFmt(@RSInvalidDestinationIndex, [ACharIndex]);
+  if ACharIndex + LCharCount > Length(VChars) then
+    raise Exception.CreateRes(@RSInvalidDestinationArray);
+
+  Result := GetChars(@ABytes[AByteIndex], AByteCount, @VChars[ACharIndex], LCharCount);
 end;
 
 {$IFDEF HAS_CLASSPROPERTIES}
