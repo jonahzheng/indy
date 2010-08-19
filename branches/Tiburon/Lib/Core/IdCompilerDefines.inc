@@ -156,7 +156,7 @@
   {$DEFINE HAS_SAMETEXT}
   {$DEFINE HAS_NAMED_THREADS}
   {.$DEFINE HAS_STATIC_TThread_Queue}
-  {.$DEFINE HAS_STATIC_TThread_Synchronize}
+  {$DEFINE HAS_STATIC_TThread_Synchronize}
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TSelectionEditor}
   {$DEFINE HAS_TStringList_CaseSensitive}
@@ -185,7 +185,7 @@
   {$DEFINE HAS_SAMETEXT}
   {$DEFINE HAS_NAMED_THREADS}
   {.$DEFINE HAS_STATIC_TThread_Queue}
-  {.$DEFINE HAS_STATIC_TThread_Synchronize}
+  {$DEFINE HAS_STATIC_TThread_Synchronize}
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TSelectionEditor}
   {$DEFINE HAS_TStringList_CaseSensitive}
@@ -212,7 +212,7 @@
   {$DEFINE HAS_SAMETEXT}
   {$DEFINE HAS_NAMED_THREADS}
   {.$DEFINE HAS_STATIC_TThread_Queue}
-  {.$DEFINE HAS_STATIC_TThread_Synchronize}
+  {$DEFINE HAS_STATIC_TThread_Synchronize}
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TSelectionEditor}
   {$DEFINE HAS_TStringList_CaseSensitive}
@@ -471,7 +471,7 @@
   {$DEFINE HAS_TStrings_ValueFromIndex}
 {$ENDIF}
 
-//Delphi & C++Builder XE Fulcrum)
+//Delphi & C++Builder XE (Fulcrum)
 {$IFDEF VER220}
 //REMOVE DCC DEFINE after the next Fulcrum beta.
 //It will be defined there.
