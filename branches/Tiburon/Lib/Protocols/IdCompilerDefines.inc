@@ -155,7 +155,6 @@
   {$DEFINE HAS_OPTIONAL_PARAMS}
   {$DEFINE HAS_SAMETEXT}
   {$DEFINE HAS_NAMED_THREADS}
-  {.$DEFINE HAS_STATIC_TThread_Queue}
   {$DEFINE HAS_STATIC_TThread_Synchronize}
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TSelectionEditor}
@@ -211,7 +210,7 @@
   {$DEFINE HAS_OPTIONAL_PARAMS}
   {$DEFINE HAS_SAMETEXT}
   {$DEFINE HAS_NAMED_THREADS}
-  {.$DEFINE HAS_STATIC_TThread_Queue}
+  {$DEFINE HAS_STATIC_TThread_Queue}
   {$DEFINE HAS_STATIC_TThread_Synchronize}
   {$DEFINE HAS_TFormatSettings}
   {$DEFINE HAS_TSelectionEditor}
