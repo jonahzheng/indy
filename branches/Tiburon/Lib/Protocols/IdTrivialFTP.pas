@@ -158,8 +158,6 @@ begin
       raise;
     end;
   end;
-
-  SendAck(0);
 end;
 
 procedure TIdTrivialFTP.InitComponent;
@@ -269,11 +267,12 @@ begin
             end;
           TFTP_ERROR:
             begin
-            RaiseError(Buffer);
+              RaiseError(Buffer);
             end;
           TFTP_OACK:
             begin
               CheckOptionAck(Buffer, True);
+              SendAck(0);
             end;
           else
             begin
@@ -315,7 +314,7 @@ var
   Buffer, LServerFile, LMode, LBlockSize, LBlockOctets, LTransferSize, LTransferOctets: TIdBytes;
   StreamLen: TIdStreamSize;
   LOffset, DataLen: Integer;
-  ExpectedBlockCtr, BlockCtr: Word;
+  ExpectedBlockCtr, BlockCtr, wOp: Word;
   TerminateTransfer: Boolean;
 begin
   try
@@ -378,8 +377,9 @@ begin
         end;
         SetLength(Buffer, DataLen);
         // TODO: validate the correct peer is sending the data...
-        case GStack.NetworkToHost(BytesToWord(Buffer)) of
-          TFTP_ACK:
+        wOp := GStack.NetworkToHost(BytesToWord(Buffer));
+        case wOp of
+          TFTP_ACK, TFTP_OACK:
             begin
               BlockCtr := GStack.NetworkToHost(BytesToWord(Buffer, 2));
               if (BlockCtr = ExpectedBlockCtr) then begin
@@ -388,6 +388,9 @@ begin
                   // end of transfer, a block counter cannot wrap back to 0
                   SendError(Self, FPeerIP, FPeerPort, ErrAllocationExceeded, '');
                   raise EIdTFTPAllocationExceeded.Create('');
+                end;
+                if wOp = TFTP_OACK then begin
+                  CheckOptionAck(Buffer, False);
                 end;
                 Inc(BlockCtr);
                 DataLen := IndyMin(BufferSize-4, StreamLen);
@@ -414,10 +417,6 @@ begin
             begin
               RaiseError(Buffer);
             end;
-          TFTP_OACK:
-            begin
-              CheckOptionAck(Buffer, False);
-           end;
          else
             begin
               SendError(Self, FPeerIP, FPeerPort, ErrIllegalOperation, '');
