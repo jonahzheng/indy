@@ -416,12 +416,29 @@ type
   function ReadStringAsContentType(AStream: TStream; const AContentType: String;
     AQuoteType: TIdHeaderQuotingType
     {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}): String;
+
+  procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings;
+    const AContentType: String; AQuoteType: TIdHeaderQuotingType
+    {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF});
+
+  procedure WriteStringAsContentType(AStream: TStream; const AStr, AContentType: String;
+    AQuoteType: TIdHeaderQuotingType
+    {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
+
+  procedure WriteStringsAsContentType(AStream: TStream; const AStrings: TStrings;
+    const AContentType: String; AQuoteType: TIdHeaderQuotingType
+    {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
+
+  procedure WriteStringAsCharset(AStream: TStream; const AStr, ACharset: string
+    {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
+
+  procedure WriteStringsAsCharset(AStream: TStream; const AStrings: TStrings;
+    const ACharset: string
+    {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
+
   function ReadStringAsCharset(AStream: TStream; const ACharset: String
     {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}): String;
 
-  procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings; const AContentType: String;
-    AQuoteType: TIdHeaderQuotingType
-    {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF});
   procedure ReadStringsAsCharset(AStream: TStream; AStrings: TStrings; const ACharset: string
     {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF});
 
@@ -4264,6 +4281,85 @@ begin
     Result := Indy8BitEncoding(False);
     {$ENDIF}
   end;
+end;
+
+procedure WriteStringAsContentType(AStream: TStream; const AStr, AContentType: String;
+  AQuoteType: TIdHeaderQuotingType
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
+var
+  LEncoding: TIdTextEncoding;
+begin
+  LEncoding := ContentTypeToEncoding(AContentType, AQuoteType);
+  {$IFNDEF DOTNET}
+  try
+  {$ENDIF}
+    WriteStringToStream(AStream, AStr, LEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
+  {$IFNDEF DOTNET}
+  finally
+    LEncoding.Free;
+  end;
+  {$ENDIF}
+end;
+
+procedure WriteStringsAsContentType(AStream: TStream; const AStrings: TStrings;
+  const AContentType: String; AQuoteType: TIdHeaderQuotingType
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
+var
+  LEncoding: TIdTextEncoding;
+begin
+  LEncoding := ContentTypeToEncoding(AContentType, AQuoteType);
+  {$IFNDEF DOTNET}
+  try
+  {$ENDIF}
+    {$IFDEF HAS_TEncoding}
+    AStrings.SaveToStream(AStream, LEncoding);
+    {$ELSE}
+    WriteStringToStream(Astream, AStrings.Text, LEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
+    {$ENDIF}
+  {$IFNDEF DOTNET}
+  finally
+    LEncoding.Free;
+  end;
+  {$ENDIF}
+end;
+
+procedure WriteStringAsCharset(AStream: TStream; const AStr, ACharset: string
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
+var
+  LEncoding: TIdTextEncoding;
+begin
+  LEncoding := CharsetToEncoding(ACharset);
+  {$IFNDEF DOTNET}
+  try
+  {$ENDIF}
+    WriteStringToStream(AStream, AStr, LEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
+  {$IFNDEF DOTNET}
+  finally
+    LEncoding.Free;
+  end;
+  {$ENDIF}
+end;
+
+procedure WriteStringsAsCharset(AStream: TStream; const AStrings: TStrings;
+  const ACharset: string
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
+var
+  LEncoding: TIdTextEncoding;
+begin
+  LEncoding := CharsetToEncoding(ACharset);
+  {$IFNDEF DOTNET}
+  try
+  {$ENDIF}
+    {$IFDEF HAS_TEncoding}
+    AStrings.SaveToStream(AStream, LEncoding);
+    {$ELSE}
+    WriteStringToStream(AStream, AStrings.Text, LEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
+    {$ENDIF}
+  {$IFNDEF DOTNET}
+  finally
+    LEncoding.Free;
+  end;
+  {$ENDIF}
 end;
 
 function ReadStringAsContentType(AStream: TStream; const AContentType: String;
