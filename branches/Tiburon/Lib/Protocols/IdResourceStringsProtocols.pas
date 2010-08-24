@@ -268,6 +268,9 @@ resourcestring
   //HTTP Authentication Digeest
   RSHTTPAuthInvalidHash = 'Unsupported hash algorithm. This implementation supports only MD5 encoding.';
 
+  // HTTP Cookies
+  RSHTTPUnknownCookieVersion = 'Unsupported cookie version: %d';
+
   //SSPI Authentication
   {
   Note: CompleteToken is an API function Name:
