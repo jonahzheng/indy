@@ -1588,18 +1588,18 @@ end;
 procedure TIdCustomHTTP.ProcessCookies(ARequest: TIdHTTPRequest; AResponse: TIdHTTPResponse);
 var
   Temp, Cookies, Cookies2: TStringList;
-  i, j: Integer;
+  i: Integer;
   S, Cur: String;
 
   // RLebeau: a single Set-Cookie header can have more than 1 cookie in it...
   procedure ReadCookies(AHeaders: TIdHeaderList; const AHeader: String; ACookies: TStrings);
   var
-    k: Integer;
+    j: Integer;
   begin
     Temp.Clear;
     AHeaders.Extract(AHeader, Temp);
-    for k := 0 to Temp.Count-1 do begin
-      S := Temp[k];
+    for j := 0 to Temp.Count-1 do begin
+      S := Temp[j];
       while ExtractNextCookie(S, Cur, True) do begin
         ACookies.Add(Cur);
       end;
@@ -1626,20 +1626,6 @@ begin
 
       ReadCookies(FMetaHTTPEquiv.RawHeaders, 'Set-Cookie', Cookies);    {do not localize}
       ReadCookies(FMetaHTTPEquiv.RawHeaders, 'Set-Cookie2', Cookies2);  {do not localize}
-
-      // RLebeau: per RFC 2965:
-      //
-      // "User agents that receive in the same response both a
-      // Set-Cookie and Set-Cookie2 response header for the same
-      // cookie MUST discard the Set-Cookie information and use
-      // only the Set-Cookie2 information."
-      
-      for i := 0 to Cookies2.Count-1 do begin
-        j := Cookies.IndexOfName(Cookies2.Names[i]);
-        if j <> -1 then begin
-          Cookies.Delete(j);
-        end;
-      end;
 
       for i := 0 to Cookies.Count - 1 do begin
         CookieManager.AddServerCookie(Cookies[i], FURI);

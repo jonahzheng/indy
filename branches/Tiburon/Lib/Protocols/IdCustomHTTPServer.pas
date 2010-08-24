@@ -865,9 +865,6 @@ var
     try
       LRequestInfo.RawHeaders.Extract('Cookie', LRawCookies);    {Do not Localize}
       LRequestInfo.Cookies.AddClientCookies(LRawCookies);
-      LRawCookies.Clear;
-      LRequestInfo.RawHeaders.Extract('Cookie2', LRawCookies);    {Do not Localize}
-      LRequestInfo.Cookies.AddClientCookies2(LRawCookies);
     finally
       FreeAndNil(LRawCookies);
     end;
@@ -1257,29 +1254,29 @@ function TIdCustomHTTPServer.GetSessionFromCookie(AContext: TIdContext;
   var VContinueProcessing: Boolean): TIdHTTPSession;
 var
   LIndex: Integer;
-  LSessionId: String;
+  LSessionID: String;
 begin
   Result := nil;
   VContinueProcessing := True;
   if SessionState then
   begin
-    LIndex := AHTTPRequest.Cookies.GetCookieIndex(0, GSessionIDCookie);
-    while (Result = nil) and (LIndex >= 0) and VContinueProcessing do
+    LIndex := AHTTPRequest.Cookies.GetCookieIndex(GSessionIDCookie);
+    while LIndex >= 0 do
     begin
-      LSessionId := AHTTPRequest.Cookies.Items[LIndex].Value;
-      Result := FSessionList.GetSession(LSessionID, AHTTPrequest.RemoteIP);
-      if not Assigned(Result) then begin
-        DoInvalidSession(AContext, AHTTPRequest, AHTTPResponse, VContinueProcessing, LSessionId);
-        if not VContinueProcessing then begin
-          Break;
-        end;
+      LSessionID := AHTTPRequest.Cookies[LIndex].Value;
+      Result := FSessionList.GetSession(LSessionID, AHTTPRequest.RemoteIP);
+      if Assigned(Result) then begin
+        Break;
       end;
-      Inc(LIndex);
-      LIndex := AHTTPRequest.Cookies.GetCookieIndex(LIndex, GSessionIDCookie);
+      DoInvalidSession(AContext, AHTTPRequest, AHTTPResponse, VContinueProcessing, LSessionID);
+      if not VContinueProcessing then begin
+        Break;
+      end;
+      LIndex := AHTTPRequest.Cookies.GetCookieIndex(GSessionIDCookie, LIndex+1);
     end;    { while }
     // check if a session was returned. If not and if AutoStartSession is set to
     // true, Create a new session
-    if FAutoStartSession and VContinueProcessing and (Result = nil) then begin
+    if (Result = nil) and VContinueProcessing and FAutoStartSession then begin
       Result := CreateSession(AContext, AHTTPResponse, AHTTPrequest);
     end;
   end;
@@ -1486,11 +1483,16 @@ procedure TIdHTTPResponseInfo.CloseSession;
 var
   i: Integer;
 begin
-  i := Cookies.GetCookieIndex(0, GSessionIDCookie);
-  if i > -1 then begin
+  i := Cookies.GetCookieIndex(GSessionIDCookie);
+  while i > -1 do begin
     Cookies.Delete(i);
+    i := Cookies.GetCookieIndex(GSessionIDCookie, i);
   end;
-  Cookies.Add.CookieName := GSessionIDCookie;
+  with Cookies.Add do begin
+    CookieName := GSessionIDCookie;
+    MaxAge := 0;
+    Expires := Date-7;
+  end;
   FreeAndNil(FSession);
 end;
 
@@ -1705,7 +1707,7 @@ var
   i: Integer;
   LEncoding: TIdTextEncoding;
   LBufferingStarted: Boolean;
-  LCookie: TIdNetscapeCookie;
+  LCookie: TIdCookieRFC2109;
 begin
   if HeaderHasBeenWritten then begin
     EIdHTTPHeaderAlreadyWritten.Toss(RSHTTPHeaderAlreadyWritten);
