@@ -173,7 +173,7 @@ procedure TIdTrivialFTP.Get(const ServerFile: String; DestinationStream: TStream
 var
   Buffer, LServerFile, LMode, LBlockSize, LBlockOctets, LTransferSize, LTransferOctets: TIdBytes;
   DataLen, LOffset: Integer;
-  ExpectedBlockCtr, BlockCtr: Word;
+  ExpectedBlockCtr, RecvdBlockCtr: Word;
   TerminateTransfer: Boolean;
 begin
   try
@@ -242,8 +242,8 @@ begin
                 SendError(Self, FPeerIP, FPeerPort, ErrIllegalOperation, '');
                 raise EIdTFTPException.CreateFmt(RSTFTPUnexpectedOp, [FPeerIP, FPeerPort]);
               end;
-              BlockCtr := GStack.NetworkToHost(BytesToWord(Buffer, 2));
-              if BlockCtr = ExpectedBlockCtr then
+              RecvdBlockCtr := GStack.NetworkToHost(BytesToWord(Buffer, 2));
+              if RecvdBlockCtr = ExpectedBlockCtr then
               begin
                 DataLen := Length(Buffer) - 4;
                 try
@@ -256,11 +256,11 @@ begin
                     raise;
                   end;
                 end;
-                SendAck(BlockCtr);
-                if BlockCtr = High(Word) then begin
+                SendAck(RecvdBlockCtr);
+                if RecvdBlockCtr = High(Word) then begin
                   TerminateTransfer := True; // end of transfer, a block counter cannot wrap back to 0
                 end else begin
-                  ExpectedBlockCtr := BlockCtr + 1;
+                  ExpectedBlockCtr := RecvdBlockCtr + 1;
                   TerminateTransfer := Length(Buffer) < BufferSize;
                 end;
               end;
@@ -314,8 +314,32 @@ var
   Buffer, LServerFile, LMode, LBlockSize, LBlockOctets, LTransferSize, LTransferOctets: TIdBytes;
   StreamLen: TIdStreamSize;
   LOffset, DataLen: Integer;
-  ExpectedBlockCtr, BlockCtr, wOp: Word;
+  ExpectedBlockCtr, RecvdBlockCtr, wOp: Word;
   TerminateTransfer: Boolean;
+
+  procedure SendDataPacket(const BlockNumber: Word);
+  begin
+    DataLen := IndyMin(BufferSize-4, StreamLen);
+    SetLength(Buffer, 4 + DataLen);
+    CopyTIdWord(GStack.HostToNetwork(Word(TFTP_DATA)), Buffer, 0);
+    CopyTIdWord(GStack.HostToNetwork(BlockNumber), Buffer, 2);
+    try
+      DataLen := ReadTIdBytesFromStream(SourceStream, Buffer, DataLen, 4);
+    except
+      on E: Exception do
+      begin
+        SendError(Self, FPeerIP, FPeerPort, E);
+        raise;
+      end;
+    end;
+    SetLength(Buffer, 4 + DataLen);
+    SendBuffer(FPeerIP, FPeerPort, Buffer);
+    DoWork(wmWrite, DataLen);
+    Dec(StreamLen, DataLen);
+    TerminateTransfer := DataLen < (BufferSize - 4);
+    ExpectedBlockCtr := BlockNumber;
+  end;
+
 begin
   try
     BufferSize := 516;   // BufferSize as specified by RFC 1350
@@ -379,39 +403,33 @@ begin
         // TODO: validate the correct peer is sending the data...
         wOp := GStack.NetworkToHost(BytesToWord(Buffer));
         case wOp of
-          TFTP_ACK, TFTP_OACK:
+          TFTP_ACK:
             begin
-              BlockCtr := GStack.NetworkToHost(BytesToWord(Buffer, 2));
-              if (BlockCtr = ExpectedBlockCtr) then begin
-                if BlockCtr = High(Word) then
+              RecvdBlockCtr := GStack.NetworkToHost(BytesToWord(Buffer, 2));
+              if RecvdBlockCtr = ExpectedBlockCtr then
+              begin
+                if RecvdBlockCtr = High(Word) then
                 begin
-                  // end of transfer, a block counter cannot wrap back to 0
-                  SendError(Self, FPeerIP, FPeerPort, ErrAllocationExceeded, '');
-                  raise EIdTFTPAllocationExceeded.Create('');
-                end;
-                if wOp = TFTP_OACK then begin
-                  CheckOptionAck(Buffer, False);
-                end;
-                Inc(BlockCtr);
-                DataLen := IndyMin(BufferSize-4, StreamLen);
-                SetLength(Buffer, 4 + DataLen);
-                CopyTIdWord(GStack.HostToNetwork(Word(TFTP_DATA)), Buffer, 0);
-                CopyTIdWord(GStack.HostToNetwork(BlockCtr), Buffer, 2);
-                try
-                  ReadTIdBytesFromStream(SourceStream, Buffer, DataLen, 4);
-                except
-                  on E: Exception do
+                  if not TerminateTransfer then
                   begin
-                    SendError(Self, FPeerIP, FPeerPort, E);
-                    raise;
+                    // end of transfer, a block counter cannot wrap back to 0
+                    SendError(Self, FPeerIP, FPeerPort, ErrAllocationExceeded, '');
+                    raise EIdTFTPAllocationExceeded.Create('');
                   end;
+                end else begin
+                  SendDataPacket(RecvdBlockCtr+1);
                 end;
-                SendBuffer(FPeerIP, FPeerPort, Buffer);
-                DoWork(wmWrite, DataLen);
-                Dec(StreamLen, DataLen);
-                TerminateTransfer := DataLen < (BufferSize - 4);
-                ExpectedBlockCtr := BlockCtr;
               end;
+            end;
+          TFTP_OACK:
+            begin
+              if ExpectedBlockCtr <> 0 then
+              begin
+                SendError(Self, FPeerIP, FPeerPort, ErrIllegalOperation, '');
+                raise EIdTFTPException.CreateFmt(RSTFTPUnexpectedOp, [FPeerIP, FPeerPort]);
+              end;
+              CheckOptionAck(Buffer, False);
+              SendDataPacket(1);
             end;
           TFTP_ERROR:
             begin
