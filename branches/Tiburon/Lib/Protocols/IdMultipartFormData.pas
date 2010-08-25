@@ -373,7 +373,9 @@ var
   LItem: TIdFormDataField;
   LEncoding: TIdTextEncoding;
   LStream: TStream;
+  {$IFNDEF HAS_TEncoding}
   LBytes: TIdBytes;
+  {$ENDIF}
 begin
   if not FInitialized then begin
     FInitialized := True;
@@ -721,7 +723,9 @@ var
   LEncoding: TIdTextEncoding;
   LStream: TStream;
   LOldPos: TIdStreamSize;
+  {$IFNDEF HAS_TEncoding}
   LBytes: TIdBytes;
+  {$ENDIF}
   I: Integer;
 begin
   Result := Length(FormatHeader);
