@@ -4238,7 +4238,11 @@ begin
           1200:  Result := TIdUTF16LittleEndianEncoding.Create;
           1201:  Result := TIdUTF16BigEndianEncoding.Create;
           65000: Result := TIdUTF7Encoding.Create;
-          65001: Result := TIdUTF8Encoding.Create;
+
+          // RLebeau: SysUtils.TUTF8Encoding uses the MB_ERR_INVALID_CHARS
+          // flag by default, which we do not want to use, so calling the
+          // overloaded constructor that lets us override that behavior...
+          65001: Result := TIdUTF8Encoding.Create(CP, 0, 0);
         else
           Result := TIdMBCSEncoding.Create(CP);
         end;
