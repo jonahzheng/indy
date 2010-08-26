@@ -1959,7 +1959,11 @@ begin
     1200:  Result := TIdUTF16LittleEndianEncoding.Create;
     1201:  Result := TIdUTF16BigEndianEncoding.Create;
     65000: Result := TIdUTF7Encoding.Create;
-    65001: Result := TIdUTF8Encoding.Create;
+
+    // RLebeau: SysUtils.TUTF8Encoding uses the MB_ERR_INVALID_CHARS
+    // flag by default, which we do not want to use, so calling the
+    // overloaded constructor that lets us override that behavior...
+    65001: Result := TIdUTF8Encoding.Create(ACodePage, 0, 0);
   else
     Result := TIdMBCSEncoding.Create(ACodePage);
   end;
@@ -2024,7 +2028,10 @@ var
 begin
   if GIdUTF8Encoding = nil then
   begin
-    LEncoding := TIdUTF8Encoding.Create;
+    // RLebeau: SysUtils.TUTF8Encoding uses the MB_ERR_INVALID_CHARS
+    // flag by default, which we do not want to use, so calling the
+    // overloaded constructor that lets us override that behavior...
+    LEncoding := TIdUTF8Encoding.Create(CP_UTF8, 0, 0);
     if InterlockedCompareExchangePtr(Pointer(GIdUTF8Encoding), LEncoding, nil) <> nil then
       LEncoding.Free;
   end;
@@ -2344,7 +2351,7 @@ begin
   inherited Create('UTF-8');
 {$ELSE}
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
-  inherited Create(CP_UTF8);
+  inherited Create(CP_UTF8, 0, 0);
   {$ELSE}
   ToDo('Constructor of TIdUTF8Encoding class is not implemented for this platform yet'); {do not localize}
   {$ENDIF}
