@@ -1520,14 +1520,18 @@ begin
   FHttpServer := AServer;
 
   FFreeContentStream := True;
+
+  ResponseNo := GResponseNo;
+  ContentType := ''; //GContentType;
   ContentLength := GFContentLength;
 
   {Some clients may not support folded lines}
   RawHeaders.FoldLines := False;
   FCookies := TIdCookies.Create(Self);
+
   {TODO Specify version - add a class method dummy that calls version}
   ServerSoftware := GServerSoftware;
-  ContentType := ''; //GContentType;
+
 end;
 
 destructor TIdHTTPResponseInfo.Destroy;
