@@ -226,9 +226,6 @@ begin
         SetLength(Buffer, BufferSize);
         DataLen := ReceiveBuffer(Buffer, FPeerIP, FPeerPort, ReceiveTimeout);
         if DataLen <= 0 then begin
-          if TerminateTransfer then begin
-            Break;
-          end;
           // TODO: re-transmit the last sent packet again instead of erroring...
           raise EIdTFTPException.Create(RSTimeOut);
         end;
@@ -237,11 +234,6 @@ begin
         case GStack.NetworkToHost(BytesToWord(Buffer)) of
           TFTP_DATA:
             begin
-              if TerminateTransfer then begin
-                // have already reached the max block counter allowed, can't validate any more...
-                SendError(Self, FPeerIP, FPeerPort, ErrIllegalOperation, '');
-                raise EIdTFTPException.CreateFmt(RSTFTPUnexpectedOp, [FPeerIP, FPeerPort]);
-              end;
               RecvdBlockCtr := GStack.NetworkToHost(BytesToWord(Buffer, 2));
               if RecvdBlockCtr = ExpectedBlockCtr then
               begin
@@ -258,6 +250,11 @@ begin
                 end;
                 SendAck(RecvdBlockCtr);
                 if RecvdBlockCtr = High(Word) then begin
+                  if Length(Buffer) >= BufferSize then begin
+                    // have reached the max block counter allowed, can't validate any more data...
+                    SendError(Self, FPeerIP, FPeerPort, ErrIllegalOperation, '');
+                    raise EIdTFTPException.CreateFmt(RSTFTPUnexpectedOp, [FPeerIP, FPeerPort]);
+                  end;
                   TerminateTransfer := True; // end of transfer, a block counter cannot wrap back to 0
                 end else begin
                   ExpectedBlockCtr := RecvdBlockCtr + 1;
@@ -280,7 +277,7 @@ begin
               raise EIdTFTPException.CreateFmt(RSTFTPUnexpectedOp, [FPeerIP, FPeerPort]);
             end;
         end;
-      until False;
+      until TerminateTransfer;
     finally
       EndWork(wmRead);
     end;
@@ -315,7 +312,7 @@ var
   StreamLen: TIdStreamSize;
   LOffset, DataLen: Integer;
   ExpectedBlockCtr, RecvdBlockCtr, wOp: Word;
-  TerminateTransfer: Boolean;
+  TerminateTransfer, WaitingForAck: Boolean;
 
   procedure SendDataPacket(const BlockNumber: Word);
   begin
@@ -334,6 +331,7 @@ var
     end;
     SetLength(Buffer, 4 + DataLen);
     SendBuffer(FPeerIP, FPeerPort, Buffer);
+    WaitingForAck := True;
     DoWork(wmWrite, DataLen);
     Dec(StreamLen, DataLen);
     TerminateTransfer := DataLen < (BufferSize - 4);
@@ -393,9 +391,6 @@ begin
         SetLength(Buffer, BufferSize);
         DataLen := ReceiveBuffer(Buffer, FPeerIP, FPeerPort, IndyMax(500, ReceiveTimeout));
         if DataLen <= 0 then begin
-          if TerminateTransfer then begin
-            Break;
-          end;
           // TODO: re-transmit the last sent packet again instead of erroring...
           raise EIdTFTPException.Create(RSTimeOut);
         end;
@@ -408,15 +403,15 @@ begin
               RecvdBlockCtr := GStack.NetworkToHost(BytesToWord(Buffer, 2));
               if RecvdBlockCtr = ExpectedBlockCtr then
               begin
-                if RecvdBlockCtr = High(Word) then
+                WaitingForAck := False;
+                if not TerminateTransfer then
                 begin
-                  if not TerminateTransfer then
+                  if RecvdBlockCtr = High(Word) then
                   begin
                     // end of transfer, a block counter cannot wrap back to 0
                     SendError(Self, FPeerIP, FPeerPort, ErrAllocationExceeded, '');
                     raise EIdTFTPAllocationExceeded.Create('');
                   end;
-                end else begin
                   SendDataPacket(RecvdBlockCtr+1);
                 end;
               end;
@@ -441,7 +436,7 @@ begin
               raise EIdTFTPException.CreateFmt(RSTFTPUnexpectedOp, [FPeerIP, FPeerPort]);
             end;
         end;
-      until False;
+      until TerminateTransfer and (not WaitingForAck);
     finally
       EndWork(wmWrite);
     end;
