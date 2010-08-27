@@ -239,6 +239,8 @@ type
     FURI: string;
     FCommand: string;
     FVersion: string;
+    FVersionMajor: Integer;
+    FVersionMinor: Integer;
     FAuthUsername: string;
     FAuthPassword: string;
     FUnparsedParams: string;
@@ -250,6 +252,8 @@ type
   public
     constructor Create; override;
     destructor Destroy; override;
+    //
+    function IsVersionAtLeast(const AMajor, AMinor: Integer): Boolean;
     property Session: TIdHTTPSession read FSession;
     //
     property AuthExists: Boolean read FAuthExists;
@@ -268,6 +272,8 @@ type
     property FormParams: string read FFormParams write FFormParams; // writable for isapi compatibility. Use with care
     property QueryParams: string read FQueryParams write FQueryParams; // writable for isapi compatibility. Use with care
     property Version: string read FVersion;
+    property VersionMajor: Integer read FVersionMajor;
+    property VersionMinor: Integer read FVersionMinor;
   end;
 
   TIdHTTPResponseInfo = class(TIdResponseHeaderInfo)
@@ -284,6 +290,7 @@ type
     FResponseText: string;
     FHTTPServer: TIdCustomHTTPServer;
     FSession: TIdHTTPSession;
+    FRequestInfo: TIdHTTPRequestInfo;
     //
     procedure ReleaseContentStream;
     procedure SetCookies(const AValue: TIdCookies);
@@ -295,7 +302,7 @@ type
     procedure SetServer(const Value: string);
   public
     procedure CloseSession;
-    constructor Create(AConnection: TIdTCPConnection; AServer: TIdCustomHTTPServer ); reintroduce;
+    constructor Create(ARequestInfo: TIdHTTPRequestInfo; AConnection: TIdTCPConnection; AServer: TIdCustomHTTPServer ); reintroduce;
     destructor Destroy; override;
     procedure Redirect(const AURL: string);
     procedure WriteHeader;
@@ -884,7 +891,6 @@ var
   var
     LResponseNo: Integer;
     LResponseText, LContentText, S: String;
-    LMajor, LMinor: Integer;
   begin
     // let the user decide if the request headers are acceptable
     Result := DoHeadersAvailable(AContext, LRequestInfo.URI, LRequestInfo.RawHeaders);
@@ -903,13 +909,9 @@ var
       Exit;
     end;
 
-    // get the HTTP version and check for v1.1 'Host' and 'Expect' headers...
-    S := LRequestInfo.Version;
-    Fetch(S, '/');  {Do not localize}
-    LMajor := IndyStrToInt(Fetch(S, '.'), -1);  {Do not Localize}
-    LMinor := IndyStrToInt(S, -1);
+    // check for HTTP v1.1 'Host' and 'Expect' headers...
 
-    if (LMajor < 1) or ((LMajor = 1) and (LMinor < 1)) then begin
+    if not LRequestInfo.IsVersionAtLeast(1, 1) then begin
       Exit;
     end;
 
@@ -1041,7 +1043,7 @@ begin
           end;
           LRequestInfo := TIdHTTPRequestInfo.Create;
           try
-            LResponseInfo := TIdHTTPResponseInfo.Create(AContext.Connection, Self);
+            LResponseInfo := TIdHTTPResponseInfo.Create(LRequestInfo, AContext.Connection, Self);
             try
               // SG 05.07.99
               // Set the ServerSoftware string to what it's supposed to be.    {Do not Localize}
@@ -1054,6 +1056,12 @@ begin
               // Retrieve the HTTP version
               LRawHTTPCommand := LInputLine;
               LRequestInfo.FVersion := Copy(LInputLine, i + 1, MaxInt);
+
+              s := LRequestInfo.Version;
+              Fetch(s, '/');  {Do not localize}
+              LRequestInfo.FVersionMajor := IndyStrToInt(Fetch(s, '.'), -1);  {Do not Localize}
+              LRequestInfo.FVersionMinor := IndyStrToInt(S, -1);
+
               SetLength(LInputLine, i - 1);
 
               // Retrieve the HTTP header
@@ -1477,6 +1485,12 @@ begin
   inherited Destroy;
 end;
 
+function TIdHTTPRequestInfo.IsVersionAtLeast(const AMajor, AMinor: Integer): Boolean;
+begin
+  Result := (FVersionMajor > AMajor) or
+            ((FVersionMajor = AMajor) and (FVersionMinor >= AMinor));
+end;
+
 { TIdHTTPResponseInfo }
 
 procedure TIdHTTPResponseInfo.CloseSession;
@@ -1496,22 +1510,24 @@ begin
   FreeAndNil(FSession);
 end;
 
-constructor TIdHTTPResponseInfo.Create(AConnection: TIdTCPConnection; AServer: TIdCustomHTTPServer);
+constructor TIdHTTPResponseInfo.Create(ARequestInfo: TIdHTTPRequestInfo;
+  AConnection: TIdTCPConnection; AServer: TIdCustomHTTPServer);
 begin
   inherited Create;
 
+  FRequestInfo := ARequestInfo;
+  FConnection := AConnection;
+  FHttpServer := AServer;
+
   FFreeContentStream := True;
   ContentLength := GFContentLength;
+
   {Some clients may not support folded lines}
   RawHeaders.FoldLines := False;
   FCookies := TIdCookies.Create(Self);
   {TODO Specify version - add a class method dummy that calls version}
   ServerSoftware := GServerSoftware;
   ContentType := ''; //GContentType;
-
-  FConnection := AConnection;
-  FHttpServer := AServer;
-  ResponseNo := GResponseNo;
 end;
 
 destructor TIdHTTPResponseInfo.Destroy;
@@ -1717,10 +1733,10 @@ begin
   if AuthRealm <> '' then
   begin
     ResponseNo := 401;
-    if (Length(ContentText) = 0) and not Assigned(ContentStream) then
+    if (Length(ContentText) = 0) and (not Assigned(ContentStream)) then
     begin
       ContentType := 'text/html; charset=utf-8';    {Do not Localize}
-      ContentText := '<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + RSHTTPUnauthorized + '</B></BODY></HTML>';    {Do not Localize}
+      ContentText := '<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + ResponseText + '</B></BODY></HTML>';    {Do not Localize}
       ContentLength := -1; // calculated below
     end;
   end;
@@ -1770,8 +1786,6 @@ begin
   end;
   try
     // Write HTTP status response
-    // Client will be forced to close the connection. We are not going to support
-    // keep-alive feature for now
     FConnection.IOHandler.WriteLn('HTTP/1.1 ' + IntToStr(ResponseNo) + ' ' + ResponseText);    {Do not Localize}
     // Write headers
     FConnection.IOHandler.Write(RawHeaders);
