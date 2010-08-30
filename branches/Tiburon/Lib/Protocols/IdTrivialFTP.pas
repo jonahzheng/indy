@@ -103,6 +103,7 @@ procedure TIdTrivialFTP.CheckOptionAck(const OptionPacket: TIdBytes; Reading: Bo
 var
   LOptName, LOptValue: String;
   LOffset, Idx, OptionIdx: Integer;
+  LRequestedBlkSize: Integer;
 begin
   LOffset := 2; // skip packet opcode
 
@@ -133,10 +134,11 @@ begin
       case OptionIdx of
         0:
           begin
-            BufferSize := IndyStrToInt(LOptValue) + 4;
-            if (BufferSize < 8) or (BufferSize > 65464) then begin
+            LRequestedBlkSize := IndyStrToInt(LOptValue);
+            if (LRequestedBlkSize < 8) or (LRequestedBlkSize > 65464) then begin
               raise EIdTFTPOptionNegotiationFailed.CreateFmt(RSTFTPUnsupportedOptionValue, [LOptValue, LOptName]);
             end;
+            BufferSize := 4 + LRequestedBlkSize;
           end;
         1:
           begin
@@ -177,7 +179,7 @@ var
   TerminateTransfer: Boolean;
 begin
   try
-    BufferSize := 516;   // BufferSize as specified by RFC 1350
+    BufferSize := 4 + 512;   // 512 as specified by RFC 1350
 
     LServerFile := ToBytes(ServerFile);
     LMode := ToBytes(ModeToStr);
@@ -340,7 +342,7 @@ var
 
 begin
   try
-    BufferSize := 516;   // BufferSize as specified by RFC 1350
+    BufferSize := 4 + 512;   // 512 as specified by RFC 1350
 
     StreamLen := SourceStream.Size - SourceStream.Position;
 
