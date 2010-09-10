@@ -381,7 +381,7 @@ begin
     try
       WriteTIdBytesToStream(LStream, ABytes);
       LStream.Position := 0;
-      EncodeStream(LStream);
+      Result := EncodeStream(LStream);
     finally
       FreeAndNil(LStream);
     end;
