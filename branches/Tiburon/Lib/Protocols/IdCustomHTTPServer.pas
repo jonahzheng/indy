@@ -461,7 +461,7 @@ type
      HTTPResponse: TIdHTTPResponseInfo;
      HTTPRequest: TIdHTTPRequestInfo): TIdHTTPSession;
     destructor Destroy; override;
-    function EndSession(const SessionName: string): boolean;
+    function EndSession(const SessionName: String; const RemoteIP: String = ''): Boolean;
     //
     property MIMETable: TIdThreadSafeMimeTable read FMIMETable;
     property SessionList: TIdHTTPCustomSessionList read FSessionList;
@@ -1246,11 +1246,11 @@ begin
   end;
 end;
 
-function TIdCustomHTTPServer.EndSession(const SessionName: string): boolean;
+function TIdCustomHTTPServer.EndSession(const SessionName: String; const RemoteIP: String = ''): Boolean;
 var
   ASession: TIdHTTPSession;
 begin
-  ASession := SessionList.GetSession(SessionName, '');    {Do not Localize}
+  ASession := SessionList.GetSession(SessionName, RemoteIP);    {Do not Localize}
   Result := Assigned(ASession);
   if Result then begin
     FreeAndNil(ASession);
@@ -1894,7 +1894,7 @@ begin
       ASession := TIdHTTPSession(ASessionList[i]);
       Assert(ASession <> nil);
       // the stale sessions check has been removed... the cleanup thread should suffice plenty
-      if TextIsSame(ASession.FSessionID, SessionID) and ((length(RemoteIP) = 0) or TextIsSame(ASession.RemoteHost, RemoteIP)) then
+      if TextIsSame(ASession.FSessionID, SessionID) and ((Length(RemoteIP) = 0) or TextIsSame(ASession.RemoteHost, RemoteIP)) then
       begin
         // Session found
         ASession.FLastTimeStamp := Now;
