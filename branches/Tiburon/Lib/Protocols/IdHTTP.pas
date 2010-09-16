@@ -366,7 +366,7 @@ type
   TIdHTTPConnectionType = (ctNormal, ctSSL, ctProxy, ctSSLProxy);
 
   // Protocol options
-  TIdHTTPOption = (hoInProcessAuth, hoKeepOrigProtocol, hoForceEncodeParams);
+  TIdHTTPOption = (hoInProcessAuth, hoKeepOrigProtocol, hoForceEncodeParams, hoNonSSLProxyUseConnectVerb);
   TIdHTTPOptions = set of TIdHTTPOption;
 
   // Must be documented
@@ -1465,6 +1465,7 @@ end;
 procedure TIdCustomHTTP.ConnectToHost(ARequest: TIdHTTPRequest; AResponse: TIdHTTPResponse);
 var
   LLocalHTTP: TIdHTTPProtocol;
+  LUseConnectVerb: Boolean;
 begin
   ARequest.FUseProxy := SetHostAndPort;
 
@@ -1473,18 +1474,28 @@ begin
     ARequest.URL := FURI.URI;
   end;
 
+  LUseConnectVerb := False;
+
   case ARequest.UseProxy of
     ctNormal:
-      if (ProtocolVersion = pv1_0) and (Length(ARequest.Connection) = 0) then
       begin
-        ARequest.Connection := 'keep-alive';      {do not localize}
+        if (ProtocolVersion = pv1_0) and (Length(ARequest.Connection) = 0) then
+        begin
+          ARequest.Connection := 'keep-alive';      {do not localize}
+        end;
       end;
     ctSSL, ctSSLProxy:
-      ARequest.Connection := '';
-    ctProxy:
-      if (ProtocolVersion = pv1_0) and (Length(ARequest.Connection) = 0) then
       begin
-        ARequest.ProxyConnection := 'keep-alive'; {do not localize}
+        ARequest.Connection := '';
+        LUseConnectVerb := (ARequest.UseProxy = ctSSLProxy);
+      end;
+    ctProxy:
+      begin
+        if (ProtocolVersion = pv1_0) and (Length(ARequest.Connection) = 0) then
+        begin
+          ARequest.ProxyConnection := 'keep-alive'; {do not localize}
+        end;
+        LUseConnectVerb := hoNonSSLProxyUseConnectVerb in FOptions;
       end;
   end;
 
@@ -1515,7 +1526,7 @@ begin
     end;
   end;
 
-  if ARequest.UseProxy in [ctProxy, ctSSLProxy] then begin
+  if LUseConnectVerb then begin
     LLocalHTTP := TIdHTTPProtocol.Create(Self);
     try
       with LLocalHTTP do begin
