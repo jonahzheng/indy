@@ -89,13 +89,15 @@ type
   {$IFDEF WIN32_OR_WIN64_OR_WINCE}
   z_off_t = TIdC_LONG;
   {$ENDIF}
+  {$EXTERNALSYM alloc_func}
   alloc_func = function(opaque: Pointer; items, size: TIdC_UINT): Pointer;  cdecl;
   {$EXTERNALSYM TAlloc}
   TAlloc     = alloc_func;
+  {$EXTERNALSYM free_func}
   free_func  = procedure(opaque, address: Pointer); cdecl;
-  {$EXTERNALSYM  TFree}
+  {$EXTERNALSYM TFree}
   TFree      = free_func;
-  {$EXTERNALSYM  in_func}
+  {$EXTERNALSYM in_func}
   in_func    = function(opaque: Pointer; var buf: PByte): TIdC_UNSIGNED; cdecl;
   {$EXTERNALSYM TInFunc}
   TInFunc    = in_func;
@@ -103,7 +105,9 @@ type
   out_func   = function(opaque: Pointer; buf: PByte; size: TIdC_UNSIGNED): TIdC_INT; cdecl;
   {$EXTERNALSYM TOutFunc}
   TOutFunc   = out_func;
+  {$EXTERNALSYM z_streamp}
   z_streamp = ^z_stream;
+  {$EXTERNALSYM z_stream}
   z_stream = record
     next_in: PAnsiChar;       (* next input byte *)
     avail_in: TIdC_UINT;    (* number of bytes available at next_in *)
@@ -133,7 +137,9 @@ type
   gzip header information passed to and from zlib routines.  See RFC 1952
   for more details on the meanings of these fields.
 *)
+  {$EXTERNALSYM gz_headerp}
   gz_headerp = ^gz_header;
+  {$EXTERNALSYM gz_header}
   gz_header = record
     text       : TIdC_INT;   //* true if compressed data believed to be text */
     time       : TIdC_ULONG;  //* modification time */
@@ -155,6 +161,8 @@ type
   TgzHeaderRec = gz_header;
 
 type
+{not sure if these should be externalsymed but might not be a bad idea}
+  {$EXTERNALSYM TZStreamType}
   TZStreamType = (
     zsZLib,  //standard zlib stream
     zsGZip,  //gzip stream
@@ -678,7 +686,7 @@ const
   //conventions.  Get the DLL for Win32-x86.
   libzlib = 'zlibwapi.dll'; 
   {$ENDIF}  
-  
+
 constructor EIdZLibStubError.Build(const ATitle : String; AError : LongWord);
 begin
   FTitle := ATitle;
