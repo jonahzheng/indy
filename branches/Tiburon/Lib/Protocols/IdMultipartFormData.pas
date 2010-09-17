@@ -782,11 +782,11 @@ begin
           end;
           {$ENDIF}
           // need to include an explicit CRLF at the end of the data
-          Result := I + 2{CRLF};
+          Result := Result + I + 2{CRLF};
         end
         else if (I >= 1) and (i <= 2) then begin
           // need to include an explicit CRLF at the end of the data
-          Result := LEncoding.GetByteCount(TStrings(FieldObject).Text) + 2{CRLF};
+          Result := Result + LEncoding.GetByteCount(TStrings(FieldObject).Text) + 2{CRLF};
         end else
         begin
           LStream := TIdCalculateSizeStream.Create;
