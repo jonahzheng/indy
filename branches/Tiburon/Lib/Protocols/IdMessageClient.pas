@@ -704,7 +704,7 @@ var
               ReadStringsAsCharSet(LMStream, AMsg.Body, AMsg.CharSet{$IFDEF STRING_IS_ANSI}, LAnsiEncoding{$ENDIF});
             end else begin
               {$IFDEF STRING_IS_ANSI}
-              LAnsiEncoding := ContentTypeToEncoding(VDecoder.Headers.Values[SContentType]);
+              LAnsiEncoding := ContentTypeToEncoding(VDecoder.Headers.Values[SContentType], QuoteMIME);
               {$ENDIF}
               ReadStringsAsContentType(LMStream, AMsg.Body, VDecoder.Headers.Values[SContentType], QuoteMIME{$IFDEF STRING_IS_ANSI}, LAnsiEncoding{$ENDIF});
             end;
@@ -722,7 +722,7 @@ var
           LTxt := TIdText.Create(AMsg.MessageParts);
           try
             {$IFDEF STRING_IS_ANSI}
-            LAnsiEncoding := ContentTypeToEncoding(LHdrs.Values[SContentType]);
+            LAnsiEncoding := ContentTypeToEncoding(LHdrs.Values[SContentType], QuoteMIME);
             try
             {$ENDIF}
               ReadStringsAsContentType(LMStream, LTxt.Body, LHdrs.Values[SContentType], QuoteMIME{$IFDEF STRING_IS_ANSI}, LAnsiEncoding{$ENDIF});
