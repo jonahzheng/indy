@@ -206,7 +206,7 @@ type
 
     function AddFormField(const AFieldName, AFieldValue: string; const ACharset: string = ''): TIdFormDataField;
     function AddObject(const AFieldName, AContentType, ACharset: string; AFileData: TObject; const AFileName: string = ''): TIdFormDataField;
-    function AddFile(const AFieldName, AFileName, AContentType: string): TIdFormDataField;
+    function AddFile(const AFieldName, AFileName: String; const AContentType: string = ''): TIdFormDataField;
 
     procedure Clear;
     
@@ -274,8 +274,8 @@ begin
   Result := LItem;
 end;
 
-function TIdMultiPartFormDataStream.AddFile(const AFieldName, AFileName,
-  AContentType: string): TIdFormDataField;
+function TIdMultiPartFormDataStream.AddFile(const AFieldName, AFileName: String;
+  const AContentType: string = ''): TIdFormDataField;
 var
   LStream: TIdReadFileExclusiveStream;
   LItem: TIdFormDataField;
