@@ -948,9 +948,17 @@ type
   (*$HPPEMIT ''*)
 
 type
-  IdAnsiEncodingType = (encOSDefault, encASCII, encUTF7, encUTF8);
+  IdAnsiEncodingType = (encIndyDefault, encOSDefault, encASCII, encUTF7, encUTF8);
 
-  procedure EnsureEncoding(var VEncoding : TIdTextEncoding; ADefEncoding: IdAnsiEncodingType = encASCII);
+var
+  {RLebeau: using ASCII by default because most Internet protocols that Indy
+  implements are based on ASCII specifically, not Ansi.  Non-ASCII data has
+  to be explicitally allowed by RFCs, in which case the caller should not be
+  using nil TIdTextEncoding objects to begin with...}
+
+  GIdDefaultAnsiEncoding: IdAnsiEncodingType = encASCII;
+
+procedure EnsureEncoding(var VEncoding : TIdTextEncoding; ADefEncoding: IdAnsiEncodingType = encIndyDefault);
 
 type
   TIdAppendFileStream = class(TFileStream)
@@ -1563,20 +1571,20 @@ const
   {$ENDIF}
 {$ENDIF}
 
-procedure EnsureEncoding(var VEncoding : TIdTextEncoding; ADefEncoding: IdAnsiEncodingType = encASCII);
+procedure EnsureEncoding(var VEncoding : TIdTextEncoding; ADefEncoding: IdAnsiEncodingType = encIndyDefault);
 {$IFDEF USEINLINE}inline;{$ENDIF}
 begin
-  {RLebeau: using ASCII by default because most Internet protocols that Indy
-  implements are based on ASCII specifically, not Ansi.  Non-ASCII data has
-  to be explicitally allowed by RFCs, in which case the caller should not be
-  using nil TIdTextEncoding objects to begin with...}
   if VEncoding = nil then
   begin
+    if ADefEncoding = encIndyDefault then begin
+      ADefEncoding := GIdDefaultAnsiEncoding;
+    end;
     case ADefEncoding of
       encASCII: VEncoding := TIdTextEncoding.ASCII;
       encUTF7:  VEncoding := TIdTextEncoding.UTF7;
       encUTF8:  VEncoding := TIdTextEncoding.UTF8;
-      else      VEncoding := TIdTextEncoding.Default;
+    else
+      VEncoding := TIdTextEncoding.Default;
     end;
   end;
 end;
@@ -2868,12 +2876,12 @@ var
   I: Integer;
 {$ENDIF}
 begin
-  // RLebeau: FillChar() is bad to use on Delphi/C++Builder 2009 for filling
+  // RLebeau: FillChar() is bad to use on Delphi/C++Builder 2009+ for filling
   // byte buffers as it is actually designed for filling character buffers
   // instead. Now that Char maps to WideChar, this causes problems for FillChar().
   {$IFDEF STRING_IS_UNICODE}
   //System.&Array.Clear(VBytes, 0, ACount);
-  // RLebeau: use the AValue byte instead.
+  // TODO: optimize this
   for I := 0 to ACount-1 do begin
     VBytes[I] := AValue;
   end;
@@ -5402,7 +5410,9 @@ function RawToBytes(const AValue; const ASize: Integer): TIdBytes;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   SetLength(Result, ASize);
-  Move(AValue, Result[0], ASize);
+  if ASize > 0 then begin
+    Move(AValue, Result[0], ASize);
+  end;
 end;
 {$ENDIF}
 
@@ -5481,7 +5491,9 @@ procedure RawToBytesF(var Bytes: TIdBytes; const AValue; const ASize: Integer);
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   Assert(Length(Bytes) >= ASize);
-  Move(AValue, Bytes[0], ASize);
+  if ASize > 0 then begin
+    Move(AValue, Bytes[0], ASize);
+  end;
 end;
 {$ENDIF}
 
