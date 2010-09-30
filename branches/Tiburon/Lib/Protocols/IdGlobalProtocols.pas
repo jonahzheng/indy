@@ -564,7 +564,7 @@ var
   GIdDefaultCharSet : TIdCharSet = idcs_ISO_8859_1; // idcsISO_8859_1;
   {$ENDIF}
 
-  GEncodingNeeded: TIdEncodingNeededEvent = nil;
+  GIdEncodingNeeded: TIdEncodingNeededEvent = nil;
 
   IndyFalseBoolStrs : array of String;
   IndyTrueBoolStrs : array of String;
@@ -4210,8 +4210,8 @@ begin
   if ACharSet <> '' then
   begin
     // let the user provide a custom encoding first, if desired...
-    if Assigned(GEncodingNeeded) then begin
-      Result := GEncodingNeeded(ACharSet);
+    if Assigned(GIdEncodingNeeded) then begin
+      Result := GIdEncodingNeeded(ACharSet);
       if Assigned(Result) then begin
         Exit;
       end;
