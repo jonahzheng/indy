@@ -1004,11 +1004,9 @@ var
     LStrings := TStringList.Create; try
       LEncoder := AEncoderClass.Create(Self); try
         LStrStream := TMemoryStream.Create; try
-          {$IFDEF HAS_TEncoding}
-          AStrings.SaveToStream(LStrStream, AByteEncoding);
-          {$ELSE}
+          // RLebeau 10/06/2010: not using TStrings.SaveToStream() in D2009+
+          // anymore, as it may save a BOM which we do not want here...
           WriteStringToStream(LStrStream, AStrings.Text, AByteEncoding{$IFDEF STRING_IS_ANSI}, AAnsiEncoding{$ENDIF});
-          {$ENDIF}
           LStrStream.Position := 0;
           LEncoder.Encode(LStrStream, LStrings);
         finally FreeAndNil(LStrStream); end;
