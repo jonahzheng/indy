@@ -1154,9 +1154,9 @@ begin
       {$ENDIF}
         //CC2: Now output AMsg.Body in the chosen encoding...
         if TextIsSame(AMsg.ContentTransferEncoding, 'base64') then begin  {do not localize}
-          EncodeStrings(AMsg.Body, TIdMessageEncoderMIME, LEncoding);
+          EncodeStrings(AMsg.Body, TIdMessageEncoderMIME, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
         end else begin  {'quoted-printable'}
-          EncodeStrings(AMsg.Body, TIdMessageEncoderQuotedPrintable, LEncoding);
+          EncodeStrings(AMsg.Body, TIdMessageEncoderQuotedPrintable, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
         end;
       {$IFNDEF DOTNET}
       finally
