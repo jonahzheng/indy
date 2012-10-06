@@ -1,6 +1,6 @@
 {$IFDEF CONDITIONALEXPRESSIONS}
   // Must be at the top...
-  {$IF COMPILERVERSION >= 24.0}
+  {$IF CompilerVersion >= 24.0}
     {$LEGACYIFEND ON}
   {$IFEND}
 {$ENDIF}
@@ -44,7 +44,7 @@
 {.$DEFINE USE_FASTMM4}
 {$UNDEF USE_FASTMM4}
 
-// Make sure the following is $DEFINE'd only for Delphi/C++Builder 2009 onwards
+// Make sure the following are $DEFINE'd only for Delphi/C++Builder 2009 onwards
 // as specified further below.  The VCL is fully Unicode, where the 'String'
 // type maps to System.UnicodeString, not System.AnsiString anymore
 {$UNDEF STRING_IS_UNICODE}
@@ -54,6 +54,10 @@
 // as specified further below.  This works in conjunction with the
 // STRING_IS_ANSI and STRING_IS_UNICODE defines above.
 {$UNDEF UNICODE_BUT_STRING_IS_ANSI}
+
+// Make sure the following is $DEFINE'd only for suitable environments
+// as specified further below.
+{$UNDEF STRING_IS_IMMUTABLE}
 
 // Make sure the following are $DEFINE'd only for suitable environments
 // as specified further below.
@@ -66,7 +70,7 @@
 // the iconv library to charactor conversions.
 {.$UNDEF USE_ICONV}
 
-//Define for Delphi cross-compiler
+//Define for Delphi cross-compiler targetting Posix
 {$UNDEF USE_VCL_POSIX}
 {$UNDEF HAS_ComponentPlatformsAttribute}
 
@@ -198,6 +202,9 @@
 {$IFDEF VER220}
 //REMOVE DCC DEFINE after the next Fulcrum beta.
 //It will be defined there.
+  {$IFNDEF DCC}
+    {$DEFINE DCC}
+  {$ENDIF}
   {$DEFINE VCL_XE}
   {$IFDEF CBUILDER}
     {$DEFINE CBUILDER_XE}
@@ -206,9 +213,10 @@
   {$ENDIF}
 {$ENDIF}
 
+// DCC is now defined by the Delphi compiler starting in XE2
+
 //Delphi & CBuilder XE2 (Pulsar)
 {$IFDEF VER230}
-  // DCC is now defined by the compiler
   {$DEFINE VCL_XE2}
   {$IFDEF CBUILDER}
     {$DEFINE CBUILDER_XE2}
@@ -219,7 +227,6 @@
 
 //Delphi & CBuilder XE3 (Waterdragon)
 {$IFDEF VER240}
-  // DCC is now defined by the compiler
   {$DEFINE VCL_XE3}
   {$IFDEF CBUILDER}
     {$DEFINE CBUILDER_XE3}
@@ -235,6 +242,7 @@
   // Platform specific conditional. Used for platform specific code.
   {$DEFINE DOTNET}
   {$DEFINE STRING_IS_UNICODE}
+  {$DEFINE STRING_IS_IMMUTABLE}
 {$ENDIF}
 
 // Kylix
@@ -321,18 +329,20 @@
   {$DEFINE DELPHI_7}
 
   // FPC_FULLVERSION was added in FPC 2.2.4
+  // Have to use Declared() or else Delphi compiler chokes, since it
+  // evaluates $IF statements before $IFDEF statements...
 
   {$MACRO ON} // must be on in order to use versioning macros
-  {$IF DEFINED(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20600)}
+  {$IF DECLARED(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20600)}
     {$DEFINE FPC_2_6_0_OR_ABOVE}
   {$IFEND}
-  {$IF DEFINED(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20404)}
+  {$IF DECLARED(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20404)}
     {$DEFINE FPC_2_4_4_OR_ABOVE}
   {$IFEND}
-  {$IF DEFINED(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20402)}
+  {$IF DECLARED(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20402)}
     {$DEFINE FPC_2_4_2_OR_ABOVE}
   {$IFEND}
-  {$IF DEFINED(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20204)}
+  {$IF DECLARED(FPC_FULLVERSION) AND (FPC_FULLVERSION >= 20204)}
     {$DEFINE FPC_2_2_4_OR_ABOVE}
   {$IFEND}
 
@@ -592,9 +602,11 @@
 {$IFDEF VCL_5_OR_ABOVE}
   {$IFNDEF FPC}
     {$IFNDEF KYLIX}
-      {$DEFINE HAS_REMOVEFREENOTIFICATION}
+      {$DEFINE HAS_RemoveFreeNotification}
     {$ENDIF}
+    {$DEFINE HAS_GetObjectProp}
   {$ENDIF}
+  {$DEFINE HAS_TObjectList}
 {$ENDIF}
 
 {$IFDEF VCL_6_OR_ABOVE}
@@ -738,6 +750,17 @@
   {$DEFINE HAS_ComponentPlatformsAttribute}
 {$ENDIF}
 
+{$IFDEF VCL_XE3_OR_ABOVE}
+  {$IFDEF DCC}
+    {$IFDEF NEXTGEN}
+      {$DEFINE DCC_NEXTGEN}
+      {$IFDEF AUTOREFCOUNT}
+        {$DEFINE DCC_NEXTGEN_ARC}
+      {$ENDIF}
+    {$ENDIF}
+  {$ENDIF}
+{$ENDIF}
+
 // Delphi XE+ cross-compiling
 {$IFNDEF FPC}
   {$IFDEF POSIX}
@@ -763,6 +786,24 @@
 {$ELSE}
   {$IFDEF KYLIXCOMPAT}
     {$linklib c}
+  {$ENDIF}
+{$ENDIF}
+
+{$IFDEF DCC_NEXTGEN}
+  {$DEFINE STRING_IS_IMMUTABLE}
+  {$IFDEF DCC_NEXTGEN_ARC}
+    // TODO: move these to a appropriate section. Not doing this yet because
+    // it is a major interface change to switch to Generics and we should
+    // maintain backwards compatibility with earlier compilers for the time
+    // being. Defining them only here for now because the non-Generic versions
+    // of these classes have become deprecated by ARC and so we need to start
+    // taking advantage of the Generics versions...
+    {$DEFINE HAS_UNIT_Generics_Collections}
+    {$DEFINE HAS_UNIT_Generics_Defaults}
+    {$DEFINE HAS_GENERICS_TDictionary}
+    {$DEFINE HAS_GENERICS_TList}
+    {$DEFINE HAS_GENERICS_TObjectList}
+    {$DEFINE HAS_GENERICS_TThreadList}
   {$ENDIF}
 {$ENDIF}
 
@@ -840,9 +881,11 @@
 {$IFDEF WIN32_OR_WIN64}
   {$DEFINE USE_OPENSSL}
   {$DEFINE USE_ZLIB_UNIT}
-  {$DEFINE USE_SSPI}
-  {$IFDEF STRING_IS_UNICODE}
-    {$DEFINE SSPI_UNICODE}
+  {$IFNDEF DCC_NEXTGEN}
+    {$DEFINE USE_SSPI}
+    {$IFDEF STRING_IS_UNICODE}
+      {$DEFINE SSPI_UNICODE}
+    {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 
@@ -909,7 +952,6 @@
 {$IFDEF VCL_CROSS_COMPILE}
   {$IFDEF MACOS}
     {$DEFINE BSD}
-    {$DEFINE DARWIN}
     {$DEFINE USE_SAFELOADLIBRARY}
     {$DEFINE USE_INVALIDATE_MOD_CACHE}
   {$ENDIF}
@@ -931,8 +973,11 @@
 //Do not remove this!!!  This is to work around a conflict.  In DCC, MACOS
 //will mean OS X.  In FreePascal, the DEFINE MACOS means MacIntosh System OS Classic.
 {$IFDEF DCC}
-  {$IFDEF MACOS}
-    {$DEFINE DARWIN}
+  // DCC defines MACOS for both iOS and OS X platforms, need to differentiate
+  {$IFNDEF IOS}
+    {$IFDEF MACOS}
+      {$DEFINE DARWIN}
+    {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 {$IFDEF FPC}

@@ -30,7 +30,9 @@ package IndyProtocols170;
 {$IMPLICITBUILD ON}
 
 requires
+  {$IFNDEF NEXTGEN}
   rtl,
+  {$ENDIF}
   IndySystem170,
   IndyCore170;
 
@@ -46,7 +48,9 @@ contains
   IdAuthenticationDigest in 'IdAuthenticationDigest.pas',
   IdAuthenticationManager in 'IdAuthenticationManager.pas',
   IdAuthenticationNTLM in 'IdAuthenticationNTLM.pas',
+  {$IFNDEF NEXTGEN}
   IdAuthenticationSSPI in 'IdAuthenticationSSPI.pas',
+  {$ENDIF}
   IdBlockCipherIntercept in 'IdBlockCipherIntercept.pas',
   IdChargenServer in 'IdChargenServer.pas',
   IdChargenUDPServer in 'IdChargenUDPServer.pas',
@@ -232,7 +236,9 @@ contains
   IdSSL in 'IdSSL.pas',
   IdSSLOpenSSL in 'IdSSLOpenSSL.pas',
   IdSSLOpenSSLHeaders in 'IdSSLOpenSSLHeaders.pas',
+  {$IFNDEF NEXTGEN}
   IdSSPI in 'IdSSPI.pas',
+  {$ENDIF}
   IdServerInterceptLogBase in 'IdServerInterceptLogBase.pas',
   IdServerInterceptLogEvent in 'IdServerInterceptLogEvent.pas',
   IdServerInterceptLogFile in 'IdServerInterceptLogFile.pas',
@@ -273,3 +279,4 @@ contains
   IdZLibHeaders in 'IdZLibHeaders.pas';
 
 end.
+

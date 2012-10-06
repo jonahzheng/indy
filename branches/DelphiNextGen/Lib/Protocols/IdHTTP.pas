@@ -1342,7 +1342,9 @@ begin
       try
         LOrigStream.CopyFrom(AResponse.ContentStream, 0);
       finally
+        {$IFNDEF DCC_NEXTGEN_ARC}
         AResponse.ContentStream.Free;
+        {$ENDIF}
         AResponse.ContentStream := LOrigStream;
       end;
     end;
@@ -1419,7 +1421,10 @@ var
   Buffer: TIdBytes;
   InBuf, StreamPos, CurPos: TIdStreamSize;
   XmlDec: String;
-  I: Integer;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB: TIdStringBuilder;
+  {$ENDIF}
+  I, Len: Integer;
   Enc: XmlEncoding;
   Signature: LongWord;
 
@@ -1480,11 +1485,24 @@ begin
             case Enc of
               xmlUCS4BE, xmlUCS4LE, xmlUCS4BEOdd, xmlUCS4LEOdd: begin
                 // TODO: implement a UCS-4 TIdTextEncoding class...
-                SetLength(XmlDec, CurPos div XmlNonBOMs[Enc].CharLen);
-                for I := 1 to Length(XmlDec) do begin
+                Len := CurPos div XmlNonBOMs[Enc].CharLen;
+                {$IFDEF STRING_IS_IMMUTABLE}
+                LSB := TIdStringBuilder.Create(Len);
+                {$ELSE}
+                SetLength(XmlDec, Len);
+                {$ENDIF}
+                for I := 1 to Len do begin
                   ReadTIdBytesFromStream(AStream, Buffer, XmlNonBOMs[Enc].CharLen);
+                  {$IFDEF STRING_IS_IMMUTABLE}
+                  LSB.Append(Char(Buffer[XmlUCS4AsciiIndex[Enc]]));
+                  {$ELSE}
                   XmlDec[I] := Char(Buffer[XmlUCS4AsciiIndex[Enc]]);
+                  {$ENDIF}
                 end;
+                {$IFDEF STRING_IS_IMMUTABLE}
+                XmlDec := LSB.ToString;
+                LSB := nil;
+                {$ENDIF}
               end;
               xmlUTF16BE: begin
                 XmlDec := ReadStringFromStream(AStream, CurPos, TIdTextEncoding.BigEndianUnicode);
@@ -1497,10 +1515,19 @@ begin
               end;
               xmlEBCDIC: begin
                 // TODO: implement an EBCDIC TIdTextEncoding class...
+                {$IFDEF STRING_IS_IMMUTABLE}
+                Len := ReadTIdBytesFromStream(AStream, Buffer, CurPos);
+                LSB := TStringBuilder.Create(Len);
+                for I := 0 to Len-1 do begin
+                  LSB.Append(XmlEBCDICTable[Buffer[I]]);
+                end;
+                XmlDec := LSB.ToString;
+                {$ELSE}
                 XmlDec := ReadStringFromStream(AStream, CurPos, Indy8BitEncoding);
                 for I := 1 to Length(XmlDec) do begin
                   XmlDec[I] := XmlEBCDICTable[Byte(XmlDec[I])];
                 end;
+                {$ENDIF}
               end;
             end;
             Break;
@@ -1519,22 +1546,22 @@ begin
       Exit;
     end;
 
-    XmlDec := TrimLeft(Copy(XmlDec, I+8, Length(XmlDec)));
+    XmlDec := TrimLeft(Copy(XmlDec, I+8, MaxInt));
     if not CharEquals(XmlDec, 1, '=') then begin {do not localize}
       Exit;
     end;
 
-    XmlDec := TrimLeft(Copy(XmlDec, 2, Length(XmlDec)));
+    XmlDec := TrimLeft(Copy(XmlDec, 2, MaxInt));
     if XmlDec = '' then begin
       Exit;
     end;
 
-    if XmlDec[1] = #27 then begin
-      XmlDec := Copy(XmlDec, 2, Length(XmlDec));
-      Result := Fetch(XmlDec, #27);
+    if XmlDec[1] = #$27 then begin
+      XmlDec := Copy(XmlDec, 2, MaxInt);
+      Result := Fetch(XmlDec, #$27);
     end
     else if XmlDec[1] = '"' then begin
-      XmlDec := Copy(XmlDec, 2, Length(XmlDec));
+      XmlDec := Copy(XmlDec, 2, MaxInt);
       Result := Fetch(XmlDec, '"');
     end;
   finally
@@ -1736,50 +1763,52 @@ begin
   if LUseConnectVerb then begin
     LLocalHTTP := CreateProtocol;
     try
-      with LLocalHTTP do begin
-        Request.UserAgent := ARequest.UserAgent;
-        Request.Host := ARequest.Host;
-        Request.Pragma := 'no-cache';                       {do not localize}
-        Request.URL := URL.Host + ':' + URL.Port;
-        Request.Method := Id_HTTPMethodConnect;
-        Request.ProxyConnection := 'keep-alive';            {do not localize}
+      LLocalHTTP.Request.UserAgent := ARequest.UserAgent;
+      LLocalHTTP.Request.Host := ARequest.Host;
+      LLocalHTTP.Request.Pragma := 'no-cache';                       {do not localize}
+      LLocalHTTP.Request.URL := URL.Host + ':' + URL.Port;
+      LLocalHTTP.Request.Method := Id_HTTPMethodConnect;
+      LLocalHTTP.Request.ProxyConnection := 'keep-alive';            {do not localize}
 
-        // TODO: change this to nil so data is discarded without wasting memory?
-        Response.ContentStream := TMemoryStream.Create;
+      // TODO: change this to nil so data is discarded without wasting memory?
+      LLocalHTTP.Response.ContentStream := TMemoryStream.Create;
+      {$IFNDEF DCC_NEXTGEN_ARC}
+      try
+      {$ENDIF}
         try
-          try
-            repeat
-              CheckAndConnect(Response);
-              BuildAndSendRequest(nil);
+          repeat
+            CheckAndConnect(LLocalHTTP.Response);
+            LLocalHTTP.BuildAndSendRequest(nil);
 
-              Response.ResponseText := InternalReadLn;
-              if Length(Response.ResponseText) = 0 then begin
-                // Support for HTTP responses without status line and headers
-                Response.ResponseText := 'HTTP/1.0 200 OK'; {do not localize}
-                Response.Connection := 'close';             {do not localize}
-              end else begin
-                RetrieveHeaders(MaxHeaderLines);
-                ProcessCookies(Request, Response);
-              end;
+            LLocalHTTP.Response.ResponseText := InternalReadLn;
+            if Length(LLocalHTTP.Response.ResponseText) = 0 then begin
+              // Support for HTTP responses without status line and headers
+              LLocalHTTP.Response.ResponseText := 'HTTP/1.0 200 OK'; {do not localize}
+              LLocalHTTP.Response.Connection := 'close';             {do not localize}
+            end else begin
+              LLocalHTTP.RetrieveHeaders(MaxHeaderLines);
+              ProcessCookies(LLocalHTTP.Request, LLocalHTTP.Response);
+            end;
 
-              if Response.ResponseCode = 200 then begin
-                // Connection established
-                if (ARequest.UseProxy = ctSSLProxy) and (IOHandler is TIdSSLIOHandlerSocketBase) then begin
-                  TIdSSLIOHandlerSocketBase(IOHandler).PassThrough := False;
-                end;
-                Break;
-              end else begin
-                ProcessResponse([]);
+            if LLocalHTTP.Response.ResponseCode = 200 then begin
+              // Connection established
+              if (ARequest.UseProxy = ctSSLProxy) and (IOHandler is TIdSSLIOHandlerSocketBase) then begin
+                TIdSSLIOHandlerSocketBase(IOHandler).PassThrough := False;
               end;
-            until False;
-          except
-            raise;
-            // TODO: Add property that will contain the error messages.
-          end;
-        finally
-          LLocalHTTP.Response.ContentStream.Free;
+              Break;
+            end else begin
+              LLocalHTTP.ProcessResponse([]);
+            end;
+          until False;
+        except
+          raise;
+          // TODO: Add property that will contain the error messages.
         end;
+      {$IFNDEF DCC_NEXTGEN_ARC}
+      finally
+        LLocalHTTP.Response.ContentStream.Free;
       end;
+      {$ENDIF}
     finally
       FreeAndNil(LLocalHTTP);
     end;
@@ -1862,32 +1891,33 @@ function TIdCustomHTTP.DoOnAuthorization(ARequest: TIdHTTPRequest; AResponse: TI
 var
   i: Integer;
   S: string;
-  Auth: TIdAuthenticationClass;
+  LAuthCls: TIdAuthenticationClass;
+  LAuth: TIdAuthentication;
 begin
   Inc(FAuthRetries);
   if not Assigned(ARequest.Authentication) then begin
     // Find wich Authentication method is supported from us.
-    Auth := nil;
+    LAuthCls := nil;
 
     for i := 0 to AResponse.WWWAuthenticate.Count - 1 do begin
       S := AResponse.WWWAuthenticate[i];
-      Auth := FindAuthClass(Fetch(S));
-      if Assigned(Auth) then begin
+      LAuthCls := FindAuthClass(Fetch(S));
+      if Assigned(LAuthCls) then begin
         Break;
       end;
     end;
 
     // let the user override us, if desired.
     if Assigned(FOnSelectAuthorization) then begin
-      OnSelectAuthorization(Self, Auth, AResponse.WWWAuthenticate);
+      OnSelectAuthorization(Self, LAuthCls, AResponse.WWWAuthenticate);
     end;
 
-    if not Assigned(Auth) then begin
+    if not Assigned(LAuthCls) then begin
       Result := False;
       Exit;
     end;
 
-    ARequest.Authentication := Auth.Create;
+    ARequest.Authentication := LAuthCls.Create;
   end;
 
   // Clear password and reset autorization if previous failed
@@ -1902,33 +1932,32 @@ begin
   if not Result then begin
     Exit;
   end;
-  
-  with ARequest.Authentication do begin
-    Username := ARequest.Username;
-    Password := ARequest.Password;
-    // S.G. 20/10/2003: ToDo: We need to have a marker here to prevent the code to test with the same username/password combo
-    // S.G. 20/10/2003: if they are picked up from properties.
-    Params.Values['Authorization'] := ARequest.Authentication.Authentication; {do not localize}
-    AuthParams := AResponse.WWWAuthenticate;
-  end;
+
+  LAuth := ARequest.Authentication;
+  LAuth.Username := ARequest.Username;
+  LAuth.Password := ARequest.Password;
+  // S.G. 20/10/2003: ToDo: We need to have a marker here to prevent the code to test with the same username/password combo
+  // S.G. 20/10/2003: if they are picked up from properties.
+  LAuth.Params.Values['Authorization'] := ARequest.Authentication.Authentication; {do not localize}
+  LAuth.AuthParams := AResponse.WWWAuthenticate;
 
   Result := False;
 
   repeat
-    case ARequest.Authentication.Next of
+    case LAuth.Next of
       wnAskTheProgram:
         begin // Ask the user porgram to supply us with authorization information
           if Assigned(FOnAuthorization) then
           begin
-            ARequest.Authentication.UserName := ARequest.Username;
-            ARequest.Authentication.Password := ARequest.Password;
+            LAuth.UserName := ARequest.Username;
+            LAuth.Password := ARequest.Password;
 
-            OnAuthorization(Self, ARequest.Authentication, Result);
+            OnAuthorization(Self, LAuth, Result);
 
             if Result then begin
               ARequest.BasicAuthentication := True;
-              ARequest.Username := ARequest.Authentication.UserName;
-              ARequest.Password := ARequest.Authentication.Password;
+              ARequest.Username := LAuth.UserName;
+              ARequest.Password := LAuth.Password;
             end else begin
               Break;
             end;
@@ -1952,32 +1981,33 @@ function TIdCustomHTTP.DoOnProxyAuthorization(ARequest: TIdHTTPRequest; ARespons
 var
   i: Integer;
   S: string;
-  Auth: TIdAuthenticationClass;
+  LAuthCls: TIdAuthenticationClass;
+  LAuth: TIdAuthentication;
 begin
   Inc(FAuthProxyRetries);
   if not Assigned(ProxyParams.Authentication) then begin
     // Find which Authentication method is supported from us.
-    Auth := nil;
+    LAuthCls := nil;
 
     for i := 0 to AResponse.ProxyAuthenticate.Count-1 do begin
       S := AResponse.ProxyAuthenticate[i];
-      Auth := FindAuthClass(Fetch(S));
-      if Assigned(Auth) then begin
+      LAuthCls := FindAuthClass(Fetch(S));
+      if Assigned(LAuthCls) then begin
         Break;
       end;
     end;
 
     // let the user override us, if desired.
     if Assigned(FOnSelectProxyAuthorization) then begin
-      OnSelectProxyAuthorization(self, Auth, AResponse.ProxyAuthenticate);
+      OnSelectProxyAuthorization(Self, LAuthCls, AResponse.ProxyAuthenticate);
     end;
 
-    if not Assigned(Auth) then begin
+    if not Assigned(LAuthCls) then begin
       Result := False;
       Exit;
     end;
 
-    ProxyParams.Authentication := Auth.Create;
+    ProxyParams.Authentication := LAuthCls.Create;
   end;
 
   // RLebeau: should we be looking for a Password as well, like the OnAuthorization handling does?
@@ -1998,29 +2028,28 @@ begin
     Exit;
   end;
 
-  with ProxyParams.Authentication do begin
-    Username := ProxyParams.ProxyUsername;
-    Password := ProxyParams.ProxyPassword;
-    AuthParams := AResponse.ProxyAuthenticate;
-  end;
+  LAuth := ProxyParams.Authentication;
+  LAuth.Username := ProxyParams.ProxyUsername;
+  LAuth.Password := ProxyParams.ProxyPassword;
+  LAuth.AuthParams := AResponse.ProxyAuthenticate;
 
   Result := False;
 
   repeat
-    case ProxyParams.Authentication.Next of
+    case LAuth.Next of
       wnAskTheProgram: // Ask the user porgram to supply us with authorization information
         begin
           if Assigned(OnProxyAuthorization) then begin
-            ProxyParams.Authentication.Username := ProxyParams.ProxyUsername;
-            ProxyParams.Authentication.Password := ProxyParams.ProxyPassword;
+            LAuth.Username := ProxyParams.ProxyUsername;
+            LAuth.Password := ProxyParams.ProxyPassword;
 
-            OnProxyAuthorization(Self, ProxyParams.Authentication, Result);
+            OnProxyAuthorization(Self, LAuth, Result);
             if not Result then begin
               Break;
             end;
 
-            ProxyParams.ProxyUsername := ProxyParams.Authentication.Username;
-            ProxyParams.ProxyPassword := ProxyParams.Authentication.Password;
+            ProxyParams.ProxyUsername := LAuth.Username;
+            ProxyParams.ProxyPassword := LAuth.Password;
           end;
         end;
       wnDoRequest:
@@ -2071,7 +2100,9 @@ begin
     if Assigned(AuthenticationManager) then begin
       AuthenticationManager.AddAuthentication(Request.Authentication, URL);
     end;
+    {$IFNDEF DCC_NEXTGEN_ARC}
     Request.Authentication.Free;
+    {$ENDIF}
     Request.Authentication := nil;
   end;
 

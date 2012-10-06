@@ -126,15 +126,16 @@ uses
 { TIdCustomTransparentProxy }
 
 procedure TIdCustomTransparentProxy.Assign(ASource: TPersistent);
+var
+  LSource: TIdCustomTransparentProxy;
 Begin
   if ASource is TIdCustomTransparentProxy then begin
-    with TIdCustomTransparentProxy(ASource) do begin
-      Self.FHost := Host;
-      Self.FPassword := Password;
-      Self.FPort := Port;
-      Self.FIPVersion := IPVersion;
-      Self.FUsername := Username;
-    end
+    LSource := TIdCustomTransparentProxy(ASource);
+    FHost := LSource.Host;
+    FPassword := LSource.Password;
+    FPort := LSource.Port;
+    FIPVersion := LSource.IPVersion;
+    FUsername := LSource.Username;
   end else begin
     inherited Assign(ASource);
   end;

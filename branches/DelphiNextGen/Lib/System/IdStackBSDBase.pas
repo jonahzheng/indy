@@ -253,9 +253,10 @@ type
     function SendTo(ASocket: TIdStackSocketHandle; const ABuffer: TIdBytes;
       const AOffset: Integer; const ASize: Integer; const AIP: string;
       const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): Integer; override;
-    procedure SetSocketOption( const ASocket: TIdStackSocketHandle;
-      const Alevel, Aoptname: Integer; Aoptval: PAnsiChar;
-      const Aoptlen: Integer); overload; virtual; abstract;
+    procedure SetSocketOption(ASocket: TIdStackSocketHandle; ALevel: TIdSocketOptionLevel;
+      AOptName: TIdSocketOption; AOptVal: Integer); overload; override;
+    procedure SetSocketOption(ASocket: TIdStackSocketHandle; ALevel: TIdSocketOptionLevel;
+      AOptName: TIdSocketOption; const Aoptval; const Aoptlen: Integer); overload; virtual; abstract;
     function TranslateTInAddrToString(var AInAddr; const AIPVersion: TIdIPVersion): string;
     procedure TranslateStringToTInAddr(const AIP: string; var AInAddr; const AIPVersion: TIdIPVersion);
     function WSGetServByName(const AServiceName: string): TIdPort; virtual; abstract;
@@ -270,7 +271,7 @@ type
     function WSSocket(AFamily : Integer; AStruct : TIdSocketType; AProtocol: Integer;
       const AOverlapped: Boolean = False): TIdStackSocketHandle; virtual; abstract;
     procedure WSGetSockOpt(ASocket: TIdStackSocketHandle; Alevel, AOptname: Integer;
-      AOptval: PAnsiChar; var AOptlen: Integer); virtual; abstract;
+      var AOptval; var AOptlen: Integer); virtual; abstract;
     procedure SetBlocking(ASocket: TIdStackSocketHandle;
      const ABlocking: Boolean); virtual; abstract;
     function WouldBlock(const AResult: Integer): Boolean; virtual; abstract;
@@ -338,10 +339,10 @@ var
 begin
   case AIPVersion of
     Id_IPv4: begin
-      with TIdIn4Addr(AInAddr).S_un_b do begin
-        Result := IntToStr(s_b1) + '.' + IntToStr(s_b2) + '.' + IntToStr(s_b3) + '.'    {Do not Localize}
-         + IntToStr(s_b4);
-      end;
+      Result := IntToStr(TIdIn4Addr(AInAddr).S_un_b.s_b1) + '.'   {Do not Localize}
+                + IntToStr(TIdIn4Addr(AInAddr).S_un_b.s_b2) + '.' {Do not Localize}
+                + IntToStr(TIdIn4Addr(AInAddr).S_un_b.s_b3) + '.' {Do not Localize}
+                + IntToStr(TIdIn4Addr(AInAddr).S_un_b.s_b4);
     end;
     Id_IPv6: begin
       Result := '';
@@ -365,12 +366,10 @@ begin
   case AIPVersion of
     Id_IPv4: begin
       LIP := AIP;
-      with TIdIn4Addr(AInAddr).S_un_b do begin
-        s_b1 := IndyStrToInt(Fetch(LIP, '.'));    {Do not Localize}
-        s_b2 := IndyStrToInt(Fetch(LIP, '.'));    {Do not Localize}
-        s_b3 := IndyStrToInt(Fetch(LIP, '.'));    {Do not Localize}
-        s_b4 := IndyStrToInt(Fetch(LIP, '.'));    {Do not Localize}
-      end;
+      TIdIn4Addr(AInAddr).S_un_b.s_b1 := IndyStrToInt(Fetch(LIP, '.'));    {Do not Localize}
+      TIdIn4Addr(AInAddr).S_un_b.s_b2 := IndyStrToInt(Fetch(LIP, '.'));    {Do not Localize}
+      TIdIn4Addr(AInAddr).S_un_b.s_b3 := IndyStrToInt(Fetch(LIP, '.'));    {Do not Localize}
+      TIdIn4Addr(AInAddr).S_un_b.s_b4 := IndyStrToInt(Fetch(LIP, '.'));    {Do not Localize}
     end;
     Id_IPv6: begin
       IPv6ToIdIPv6Address(AIP, LAddress);
@@ -438,6 +437,12 @@ begin
   end;
 end;
 
+procedure TIdStackBSDBase.SetSocketOption(ASocket: TIdStackSocketHandle;
+  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption; AOptVal: Integer);
+begin
+  SetSocketOption(ASocket, ALevel, AOptName, AOptVal, SizeOf(AOptVal));
+end;
+
 procedure TIdStackBSDBase.DropMulticastMembership(AHandle: TIdStackSocketHandle;
   const AGroupIP, ALocalIP : String; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 begin
@@ -476,7 +481,7 @@ begin
     end;
   end;
   LTTL := AValue;
-  GBSDStack.SetSocketOption(AHandle, LLevel, LOpt, PAnsiChar(@LTTL), SizeOf(LTTL));
+  GBSDStack.SetSocketOption(AHandle, LLevel, LOpt, LTTL, SizeOf(LTTL));
 end;
 
 procedure TIdStackBSDBase.SetLoopBack(AHandle: TIdStackSocketHandle;
@@ -501,7 +506,7 @@ begin
     end;
   end;
   LLoopback := Ord(AValue);
-  GBSDStack.SetSocketOption(AHandle, LLevel, LOpt, PAnsiChar(@LLoopback), SizeOf(LLoopback));
+  GBSDStack.SetSocketOption(AHandle, LLevel, LOpt, LLoopback, SizeOf(LLoopback));
 end;
 
 procedure TIdStackBSDBase.MembershipSockOpt(AHandle: TIdStackSocketHandle;
@@ -517,7 +522,7 @@ begin
       begin
         GBSDStack.TranslateStringToTInAddr(AGroupIP, LIP4.IMRMultiAddr, Id_IPv4);
         GBSDStack.TranslateStringToTInAddr(ALocalIP, LIP4.IMRInterface, Id_IPv4);
-        GBSDStack.SetSocketOption(AHandle, Id_IPPROTO_IP, ASockOpt, PAnsiChar(@LIP4), SizeOf(LIP4));
+        GBSDStack.SetSocketOption(AHandle, Id_IPPROTO_IP, ASockOpt, LIP4, SizeOf(LIP4));
       end;
     end;
     Id_IPv6: begin
@@ -529,7 +534,7 @@ begin
         //and even if you could, you would have to convert it into a network adaptor
         //index - Yuk
         LIP6.ipv6mr_interface := 0;
-        GBSDStack.SetSocketOption(AHandle, Id_IPPROTO_IPv6, ASockOpt, PAnsiChar(@LIP6), SizeOf(LIP6));
+        GBSDStack.SetSocketOption(AHandle, Id_IPPROTO_IPv6, ASockOpt, LIP6, SizeOf(LIP6));
       end;
     end;
     else begin

@@ -147,7 +147,15 @@ type
   TIdUserAccount = class(TCollectionItem)
   protected
     FAttributes: TStrings;
+    {$IFDEF DCC_NEXTGEN_ARC}
+    // When AutoRefCounting is enabled, object references MUST be valid objects.
+    // It is common for users to store non-object values, though, so we will
+    // provide separate properties for those purposes
+    FDataObject: TObject;
+    FDataValue: PtrInt;
+    {$ELSE}
     FData: TObject;
+    {$ENDIF}
     FUserName: string;
     FPassword: string;
     FRealName: string;
@@ -161,7 +169,12 @@ type
     //
     function  CheckPassword(const APassword: String): Boolean; virtual;
     //
+    {$IFDEF DCC_NEXTGEN_ARC}
+    property  Data: TObject read FDataObject write FDataObject;
+    property  DataValue: PtrInt read FDataValue write FDataValue;
+    {$ELSE}
     property  Data: TObject read FData write FData;
+    {$ENDIF}
   published
     property  Access: TIdUserAccess read FAccess write FAccess default IdUserAccountDefaultAccess;
     property  Attributes: TStrings read FAttributes write SetAttributes;

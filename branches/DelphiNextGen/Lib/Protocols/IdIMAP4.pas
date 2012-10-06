@@ -459,12 +459,13 @@ type
   EmUTF7Decode = class(EmUTF7Error);
 
 type
+  // TODO: make a TIdTextEncoding descendany class for Modified UTF-7
   TIdMUTF7 = class(TObject)
   public
-    function Encode(const aString : TIdUnicodeString): AnsiString;
-    function Decode(const aString : AnsiString): TIdUnicodeString;
-    function Valid(const aMUTF7String : AnsiString): Boolean;
-    function Append(const aMUTF7String: AnsiString; const aStr: TIdUnicodeString): AnsiString;
+    function Encode(const aString : TIdUnicodeString): String;
+    function Decode(const aString : String): TIdUnicodeString;
+    function Valid(const aMUTF7String : String): Boolean;
+    function Append(const aMUTF7String: String; const aStr: TIdUnicodeString): String;
   end;
 
 { TIdIMAP4 }
@@ -1325,7 +1326,7 @@ end;
 { TIdEMUTF7 }
 
 const
-  b64Chars : array[0..63] of AnsiChar =
+  b64Chars : String =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+,';  {Do not Localize}
 
   b64Index : array [0..127] of Integer = (
@@ -1351,7 +1352,7 @@ const
 
 // TODO: re-write this to derive from IdCoder3To4.pas or IdCoderMIME.pas classes...
 
-function TIdMUTF7.Encode(const aString: TIdUnicodeString): AnsiString;
+function TIdMUTF7.Encode(const aString: TIdUnicodeString): String;
 { -- MUTF7Encode -------------------------------------------------------------
 PRE:  nothing
 POST: returns a string encoded as described in IETF RFC 3501, section 5.1.3
@@ -1367,11 +1368,19 @@ var
   bitShift : Integer;
   x : Integer;
   escaped : Boolean;
+  CharToAppend: Char;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB: TIdStringBuilder;
+  {$ENDIF}
 begin
   Result := '';
   escaped := False;
   bitShift := 0;
   bitBuf := 0;
+
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB := TIdStringBuilder.Create;
+  {$ENDIF}
 
   for x := 1 to Length(aString) do begin
     c := Word(aString[x]);
@@ -1379,19 +1388,41 @@ begin
     if (c <= $7f) and (b64Table[c] <> $FF) or (aString[x] = '&') then begin  // we can directly encode that char
       if escaped then begin
         if (bitShift > 0) then begin  // flush bitbuffer if needed
-          Result := Result + b64Chars[bitBuf shl (6 - bitShift) and $3F];
+          CharToAppend := b64Chars[(bitBuf shl (6 - bitShift) and $3F) + 1];
+          {$IFDEF STRING_IS_IMMUTABLE}
+          LSB.Append(CharToAppend);
+          {$ELSE}
+          Result := Result + CharToAppend;
+          {$ENDIF}
         end;
+        {$IFDEF STRING_IS_IMMUTABLE}
+        LSB.Append(Char('-'));        // leave escape sequence
+        {$ELSE}
         Result := Result + '-';       // leave escape sequence
+        {$ENDIF}
         escaped := False;
       end;
       if (aString[x] = '&') then begin   // escape special char "&"
+        {$IFDEF STRING_IS_IMMUTABLE}
+        LSB.Append('&-');
+        {$ELSE}
         Result := Result + '&-';
+        {$ENDIF}
       end else begin
-        Result := Result + AnsiChar(c);     // store direct translated char
+        CharToAppend := Char(c);
+        {$IFDEF STRING_IS_IMMUTABLE}
+        LSB.Append(CharToAppend);            // store direct translated char
+        {$ELSE}
+        Result := Result + CharToAppend;     // store direct translated char
+        {$ENDIF}
       end;
     end else begin
       if not escaped then begin
+        {$IFDEF STRING_IS_IMMUTABLE}
+        LSB.Append(Char('&'));
+        {$ELSE}
         Result := Result + '&';
+        {$ENDIF}
         bitShift := 0;
         bitBuf := 0;
         escaped := True;
@@ -1400,7 +1431,12 @@ begin
       Inc(bitShift, 16);
       while (bitShift >= 6) do begin    // flush buffer as far as we can
         Dec(bitShift, 6);
-        Result := Result + b64Chars[(bitBuf shr bitShift) and $3F];
+        CharToAppend := b64Chars[((bitBuf shr bitShift) and $3F) + 1];
+        {$IFDEF STRING_IS_IMMUTABLE}
+        LSB.Append(CharToAppend);
+        {$ELSE}
+        Result := Result + CharToAppend;
+        {$ENDIF}
       end;
     end;
   end;
@@ -1409,13 +1445,26 @@ begin
   // of speed (loop)
   if escaped then begin
     if (bitShift > 0) then begin
-      Result := Result + b64Chars[bitBuf shl (6 - bitShift) and $3F];
+      CharToAppend := b64Chars[(bitBuf shl (6 - bitShift) and $3F) + 1];
+      {$IFDEF STRING_IS_IMMUTABLE}
+      LSB.Append(CharToAppend);
+      {$ELSE}
+      Result := Result + CharToAppend;
+      {$ENDIF}
     end;
+    {$IFDEF STRING_IS_IMMUTABLE}
+    LSB.Append(Char('-'));
+    {$ELSE}
     Result := Result + '-';
+    {$ENDIF}
   end;
+
+  {$IFDEF STRING_IS_IMMUTABLE}
+  Result := LSB.ToString;
+  {$ENDIF}
 end;
 
-function TIdMUTF7.Decode(const aString: AnsiString): TIdUnicodeString;
+function TIdMUTF7.Decode(const aString: String): TIdUnicodeString;
 { -- mUTF7Decode -------------------------------------------------------------
 PRE:  aString encoding must conform to IETF RFC 3501, section 5.1.3
 POST: SUCCESS: an 8bit string
@@ -1433,12 +1482,20 @@ var
   bitBuf  : Cardinal;
   escaped : Boolean;
   x, bitShift: Integer;
+  CharToAppend: WideChar;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB: TIdStringBuilder;
+  {$ENDIF}
 begin
   Result := '';
   escaped := False;
   bitShift := 0;
   last := #0;
   bitBuf := 0;
+
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB := TIdStringBuilder.Create;
+  {$ENDIF}
 
   for x := 1 to Length(aString) do begin
     ch := Byte(aString[x]);
@@ -1450,7 +1507,11 @@ begin
         last := '&';
       end
       else if (ch < $80) and (b64Table[ch] <> $FF) then begin
+        {$IFDEF STRING_IS_IMMUTABLE}
+        LSB.Append(WideChar(ch));
+        {$ELSE}
         Result := Result + WideChar(ch);
+        {$ENDIF}
       end else begin
         raise EMUTF7Decode.CreateFmt('Illegal char #%d in UTF7 sequence.', [ch]);    {do not localize}
       end;
@@ -1459,11 +1520,20 @@ begin
       if (aString[x] = '-') then begin
         // extra check for pending bits
         if (last = '&') then begin // special sequence '&-' ?
+          {$IFDEF STRING_IS_IMMUTABLE}
+          LSB.Append(Char('&'));
+          {$ELSE}
           Result := Result + '&';
+          {$ENDIF}
         end else begin
           if (bitShift >= 16) then begin
             Dec(bitShift, 16);
-            Result := Result + WideChar((bitBuf shr bitShift) and $FFFF);
+            CharToAppend := WideChar((bitBuf shr bitShift) and $FFFF);
+            {$IFDEF STRING_IS_IMMUTABLE}
+            LSB.Append(CharToAppend);
+            {$ELSE}
+            Result := Result + CharToAppend;
+            {$ENDIF}
           end;
           if (bitShift > 4) or ((bitBuf and bitMasks[bitShift]) <> 0) then begin  // check for bitboundaries
             raise EMUTF7Decode.Create('Illegal bit sequence in MUTF7 string');       {do not localize}
@@ -1480,18 +1550,27 @@ begin
         Inc(bitShift, 6);
         if (bitShift >= 16) then begin
           Dec(bitShift, 16);
-          Result := Result + WideChar((bitBuf shr bitShift) and $FFFF);
+          CharToAppend := WideChar((bitBuf shr bitShift) and $FFFF);
+          {$IFDEF STRING_IS_IMMUTABLE}
+          LSB.Append(CharToAppend);
+          {$ELSE}
+          Result := Result + CharToAppend;
+          {$ENDIF}
         end;
       end;
       last := #0;
     end;
   end;
   if escaped then begin
-    raise EmUTF7Decode.create('Missing unescape in UTF7 sequence.');           {do not localize}
+    raise EmUTF7Decode.Create('Missing unescape in UTF7 sequence.');           {do not localize}
   end;
+
+  {$IFDEF STRING_IS_IMMUTABLE}
+  Result := LSB.ToString;
+  {$ENDIF}
 end;
 
-function TIdMUTF7.Valid(const aMUTF7String : AnsiString): Boolean;
+function TIdMUTF7.Valid(const aMUTF7String : String): Boolean;
 { -- mUTF7valid -------------------------------------------------------------
 PRE:  NIL
 POST: returns true if string is correctly encoded (as described in mUTF7Encode)
@@ -1508,11 +1587,11 @@ begin
   end;
 end;
 
-function TIdMUTF7.Append(const aMUTF7String: AnsiString; const aStr : TIdUnicodeString): AnsiString;
+function TIdMUTF7.Append(const aMUTF7String: String; const aStr : TIdUnicodeString): String;
 { -- mUTF7Append -------------------------------------------------------------
 PRE:  aMUTF7String is complying to mUTF7Encode's description
 POST: SUCCESS: a concatenation of both input strings in mUTF
-    FAILURE: an exception of EMUTF7Decode or EMUTF7Decode will be raised
+    FAILURE: an exception of EMUTF7Decode or EMUTF7Encode will be raised
 }
 begin
   Result := {mUTF7}Encode({mUTF7}Decode(aMUTF7String) + aStr);
@@ -1575,7 +1654,13 @@ end;
 function TIdIMAP4.DoMUTFEncode(const aString : String): String;
 begin
   try
-    Result := String(FMUTF7.Encode(TIdUnicodeString(aString)));
+    Result := FMUTF7.Encode(
+      {$IFDEF STRING_IS_UNICODE}
+      aString
+      {$ELSE}
+      TIdUnicodeString(aString) // explicit convert to Unicode
+      {$ENDIF}
+    );
   except
     Result := aString;
   end;
@@ -1584,7 +1669,11 @@ end;
 function TIdIMAP4.DoMUTFDecode(const aString : String): String;
 begin
   try
-    Result := String(FMUTF7.Decode(AnsiString(aString)));
+    {$IFDEF STRING_IS_UNICODE}
+    Result := FMUTF7.Decode(aString);
+    {$ELSE}
+    Result := String(FMUTF7.Decode(aString)); // explicit convert to Ansi
+    {$ENDIF}
   except
     Result := aString;
   end;
@@ -1623,17 +1712,17 @@ end;
 function TIdIMAP4.CheckReplyForCapabilities: Boolean;
 var
   I: Integer;
+  LExtra: TStrings;
 begin
   FCapabilities.Clear;
   FHasCapa := False;
-  with TIdReplyIMAP4(FLastCmdResult).Extra do begin
-    for I := 0 to Count-1 do begin
-      if TextStartsWith(Strings[I], 'CAPABILITY ') then begin {Do not Localize}
-        BreakApart(Strings[I], ' ', FCapabilities);           {Do not Localize}
-        FCapabilities.Delete(0);
-        FHasCapa := True;
-        Break;
-      end;
+  LExtra := TIdReplyIMAP4(FLastCmdResult).Extra;
+  for I := 0 to LExtra.Count-1 do begin
+    if TextStartsWith(LExtra.Strings[I], 'CAPABILITY ') then begin {Do not Localize}
+      BreakApart(LExtra.Strings[I], ' ', FCapabilities);           {Do not Localize}
+      FCapabilities.Delete(0);
+      FHasCapa := True;
+      Break;
     end;
   end;
   Result := FHasCapa;
@@ -5598,38 +5687,46 @@ procedure TIdIMAP4.StripCRLFs(var AText: string);
 var
   LPos: integer;
   LLen: integer;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB: TIdStringBuilder;
+  {$ELSE}
   LTemp: string;
   LDestPos: integer;
+  {$ENDIF}
 begin
   //Optimised with the help of Guus Creuwels.
   LPos := 1;
   LLen := Length(AText);
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB := TIdStringBuilder.Create(LLen);
+  {$ELSE}
   SetLength(LTemp, LLen);
   LDestPos := 1;
+  {$ENDIF}
   while LPos <= LLen do begin
     if AText[LPos] = #13 then begin
       //Don't GPF if this is the last char in the string...
       if LPos < LLen then begin
         if AText[LPos+1] = #10 then begin
           Inc(LPos, 2);
-        end else begin
-          LTemp[LDestPos] := AText[LPos];
-          Inc(LPos);
-          Inc(LDestPos);
+          Continue;
         end;
-      end else begin
-        LTemp[LDestPos] := AText[LPos];
-        Inc(LPos);
-        Inc(LDestPos);
       end;
-    end else begin
-      LTemp[LDestPos] := AText[LPos];
-      Inc(LPos);
-      Inc(LDestPos);
     end;
+    {$IFDEF STRING_IS_IMMUTABLE}
+    LSB.Append(AText[LPos]);
+    {$ELSE}
+    LTemp[LDestPos] := AText[LPos];
+    Inc(LDestPos);
+    {$ENDIF}
+    Inc(LPos);
   end;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  AText := LSB.ToString;
+  {$ELSE}
   SetLength(LTemp, LDestPos - 1);
   AText := LTemp;
+  {$ENDIF}
 end;
 
 procedure TIdIMAP4.ReceiveBody(AMsg: TIdMessage; const ADelim: string = '.');  {Do not Localize}

@@ -523,6 +523,10 @@ uses
   System.Threading,
   System.IO,
   System.Text,
+  {$ELSE}
+    {$IFDEF HAS_UNIT_Generics_Collections}
+  System.Generics.Collections,
+    {$ENDIF}
   {$ENDIF}
   {$IFDEF WINDOWS}
     {$IFDEF FPC}
@@ -705,6 +709,24 @@ type
     {$ENDIF}
   {$ENDIF}
 
+  {$IFDEF DCC_NEXTGEN}
+  // the Delphi next-gen compiler is phasing out AnsiChar/AnsiString,
+  // but we still need to deal with Ansi data. Unfortunately, the compiler
+  // won't let us use its secret _AnsiChr types either, so we have to use
+  // Byte instead unless we can find a better solution...
+  TIdAnsiChar = Byte;
+  PIdAnsiChar = MarshaledAString;
+  PPIdAnsiChar = ^PIdAnsiChar;
+  {$ELSE}
+  TIdAnsiChar = AnsiChar;
+  PIdAnsiChar = PAnsiChar;
+    {$IFDEF HAS_PPAnsiChar}
+  PPIdAnsiChar = PPAnsiChar;
+    {$ELSE}
+  PPIdAnsiChar = ^PAnsiChar;
+    {$ENDIF}
+  {$ENDIF}
+
   {$IFDEF STRING_IS_UNICODE}
   TIdWideChar = Char;
   PIdWideChar = PChar;
@@ -785,6 +807,14 @@ type
   {$EXTERNALSYM size_t}
   size_t = PtrUInt;
   {$ENDIF}
+
+  {$IFDEF STRING_IS_IMMUTABLE}
+  // In .NET and Delphi next-gen, strings are immutable (and zero-indexed), so we
+  // need to use a StringBuilder whenever we need to modify individual characters
+  // of a string...
+  TIdStringBuilder = {$IFDEF DOTNET}System.Text.StringBuilder{$ELSE}TStringBuilder{$ENDIF};
+  {$ENDIF}
+
   {
   Delphi/C++Builder 2009+ have a TEncoding class which mirrors System.Text.Encoding
   in .NET, but does not have a TDecoder class which mirrors System.Text.Decoder
@@ -1201,15 +1231,6 @@ type
   {$ENDIF}
   TIdReuseSocket = (rsOSDependent, rsTrue, rsFalse);
 
-  {$IFNDEF HAS_TList_Assign}
-  TIdExtList = class(TList) // We use this hack-class, because TList has no .assign on Delphi 5.
-  public                      // Do NOT add DataMembers to this class !!!
-    procedure Assign(AList: TList);
-  end;
-  {$ELSE}
-  TIdExtList = class(TList);
-  {$ENDIF}
-
   {$IFNDEF STREAM_SIZE_64}
   type
     TSeekOrigin = (soBeginning, soCurrent, soEnd);
@@ -1509,10 +1530,17 @@ procedure CopyTIdString(const ASource: String; const ASourceIndex: Integer;
   ); overload;
 
 // Need to change prob not to use this set
-function CharPosInSet(const AString: string; const ACharPos: Integer; const ASet: String): Integer;
-function CharIsInSet(const AString: string; const ACharPos: Integer; const ASet: String): Boolean;
-function CharIsInEOL(const AString: string; const ACharPos: Integer): Boolean;
-function CharEquals(const AString: string; const ACharPos: Integer; const AValue: Char): Boolean;
+function CharPosInSet(const AString: string; const ACharPos: Integer; const ASet: String): Integer; {$IFDEF STRING_IS_IMMUTABLE}overload;{$ENDIF}
+function CharIsInSet(const AString: string; const ACharPos: Integer; const ASet: String): Boolean; {$IFDEF STRING_IS_IMMUTABLE}overload;{$ENDIF}
+function CharIsInEOL(const AString: string; const ACharPos: Integer): Boolean; {$IFDEF STRING_IS_IMMUTABLE}overload;{$ENDIF}
+function CharEquals(const AString: string; const ACharPos: Integer; const AValue: Char): Boolean; {$IFDEF STRING_IS_IMMUTABLE}overload;{$ENDIF}
+
+{$IFDEF STRING_IS_IMMUTABLE}
+function CharPosInSet(const ASB: TIdStringBuilder; const ACharPos: Integer; const ASet: String): Integer; overload;
+function CharIsInSet(const ASB: TIdStringBuilder; const ACharPos: Integer; const ASet: String): Boolean; overload;
+function CharIsInEOL(const ASB: TIdStringBuilder; const ACharPos: Integer): Boolean; overload;
+function CharEquals(const ASB: TIdStringBuilder; const ACharPos: Integer; const AValue: Char): Boolean; overload;
+{$ENDIF}
 
 function ByteIndex(const AByte: Byte; const ABytes: TIdBytes; const AStartIndex: Integer = 0): Integer;
 function ByteIdxInSet(const ABytes: TIdBytes; const AIndex: Integer; const ASet: TIdBytes): Integer;
@@ -1549,9 +1577,20 @@ function GetThreadHandle(AThread: TThread): TIdThreadHandle;
 function GetTickDiff(const AOldTickCount, ANewTickCount: LongWord): LongWord; //IdICMP uses it
 procedure IdDelete(var s: string; AOffset, ACount: Integer);
 procedure IdInsert(const Source: string; var S: string; Index: Integer);
+
 {$IFNDEF DOTNET}
-function IdPorts: TList;
+type
+  // TODO: use "array of Integer" instead?
+  {$IFDEF HAS_GENERICS_TList}
+  TIdPortList = TList<Integer>; // TODO: use TIdPort instead?
+  {$ELSE}
+  // TODO: flesh out to match TList<Integer> for non-Generics compilers
+  TIdPortList = TList;
+  {$ENDIF}
+
+function IdPorts: TIdPortList;
 {$ENDIF}
+
 function iif(ATest: Boolean; const ATrue: Integer; const AFalse: Integer): Integer; overload;
 function iif(ATest: Boolean; const ATrue: string; const AFalse: string = ''): string; overload; { do not localize }
 function iif(ATest: Boolean; const ATrue: Boolean; const AFalse: Boolean): Boolean; overload;
@@ -1598,6 +1637,7 @@ function IsOctal(const AString: string; const ALength: Integer = -1; const AInde
 {$IFNDEF DOTNET}
 function InterlockedExchangeTHandle(var VTarget: THandle; const AValue: THandle): THandle;
 function InterlockedCompareExchangePtr(var VTarget: Pointer; const AValue, Compare: Pointer): Pointer;
+function InterlockedCompareExchangeObj(var VTarget: TObject; const AValue, Compare: TObject): TObject;
 {$ENDIF}
 function MakeCanonicalIPv4Address(const AAddr: string): string;
 function MakeCanonicalIPv6Address(const AAddr: string): string;
@@ -1632,9 +1672,28 @@ function ServicesFilePath: string;
 procedure IndySetThreadPriority(AThread: TThread; const APriority: TIdThreadPriority; const APolicy: Integer = -MaxInt);
 procedure SetThreadName(const AName: string; {$IFDEF DOTNET}AThread: System.Threading.Thread = nil{$ELSE}AThreadID: LongWord = $FFFFFFFF{$ENDIF});
 procedure IndySleep(ATime: LongWord);
-//in Integer(Strings.Objects[i]) - column position in AData
-procedure SplitColumnsNoTrim(const AData: string; AStrings: TStrings; const ADelim: string = ' ');    {Do not Localize}
-procedure SplitColumns(const AData: string; AStrings: TStrings; const ADelim: string = ' ');    {Do not Localize}
+
+// TODO: create TIdStringPositionList for non-Nextgen compilers...
+{$IFDEF DCC_NEXTGEN}
+type
+  TIdStringPosition = record
+    Value: String;
+    Position: Integer;
+    constructor Create(const AValue: String; const APosition: Integer);
+  end;
+  TIdStringPositionList = TList<TIdStringPosition>;
+{$ENDIF}
+
+//For non-Nextgen compilers: Integer(TStrings.Objects[i]) = column position in AData
+//For Nextgen compilers: use SplitDelimitedString() if column positions are needed
+procedure SplitColumnsNoTrim(const AData: string; AStrings: TStrings; const ADelim: string = ' '); {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use SplitDelimitedString()'{$ENDIF};{$ENDIF} {Do not Localize}
+procedure SplitColumns(const AData: string; AStrings: TStrings; const ADelim: string = ' '); {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use SplitDelimitedString()'{$ENDIF};{$ENDIF}  {Do not Localize}
+
+procedure SplitDelimitedString(const AData: string; AStrings: TStrings; ATrim: Boolean; const ADelim: string = ' '{$IFNDEF DCC_NEXTGEN}; AIncludePositions: Boolean = False{$ENDIF}); {$IFDEF DCC_NEXTGEN}overload;{$ENDIF}  {Do not Localize}
+{$IFDEF DCC_NEXTGEN}
+procedure SplitDelimitedString(const AData: string; AStrings: TIdStringPositionList; ATrim: Boolean; const ADelim: string = ' '); overload;  {Do not Localize}
+{$ENDIF}
+
 function StartsWithACE(const ABytes: TIdBytes): Boolean;
 function StringsReplace(const S: String; const OldPattern, NewPattern: array of string): string;
 function ReplaceOnlyFirst(const S, OldPattern, NewPattern: string): string;
@@ -1684,9 +1743,9 @@ uses
   Posix.SysSocket,
   Posix.Time, Posix.SysTime,
   {$ENDIF}
-  {$IFDEF VCL_CROSS_COMPILE}
-    {$IFDEF MACOSX}
-  CoreServices,
+  {$IFDEF USE_VCL_POSIX}
+    {$IFDEF DARWIN}
+  Macapi.CoreServices,
     {$ENDIF}
   {$ENDIF}
   {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}
@@ -1741,7 +1800,8 @@ end;
 
 {$IFNDEF DOTNET}
 var
-  GIdPorts: TList = nil;
+  // TODO: use "array of Integer" instead?
+  GIdPorts: TIdPortList = nil;
   GId8BitEncoding: TIdTextEncoding = nil;
 
   // RLebeau: ASCII is handled separate from other standard encodings
@@ -1819,7 +1879,7 @@ begin
   if GIdBEUTF16Encoding = nil then
   begin
     LEncoding := TIdUTF16BigEndianEncoding.Create;
-    if InterlockedCompareExchangePtr(Pointer(GIdBEUTF16Encoding), LEncoding, nil) <> nil then
+    if InterlockedCompareExchangeObj(TObject(GIdBEUTF16Encoding), LEncoding, nil) <> nil then
       LEncoding.Free;
   end;
   Result := GIdBEUTF16Encoding;
@@ -2090,9 +2150,7 @@ begin
       LEncoding := TIdMBCSEncoding.Create;
     end;
     {$ELSE}
-    LEncoding := TIdMBCSEncoding.Create;
-    {$ENDIF}
-    if InterlockedCompareExchangePtr(Pointer(GIdDefaultEncoding), LEncoding, nil) <> nil then
+    if InterlockedCompareExchangeObj(TObject(GIdDefaultEncoding), LEncoding, nil) <> nil then
       LEncoding.Free;
   end;
   Result := GIdDefaultEncoding;
@@ -2160,7 +2218,7 @@ begin
   if GIdLEUTF16Encoding = nil then
   begin
     LEncoding := TIdUTF16LittleEndianEncoding.Create;
-    if InterlockedCompareExchangePtr(Pointer(GIdLEUTF16Encoding), LEncoding, nil) <> nil then
+    if InterlockedCompareExchangeObj(TObject(GIdLEUTF16Encoding), LEncoding, nil) <> nil then
       LEncoding.Free;
   end;
   Result := GIdLEUTF16Encoding;
@@ -2177,7 +2235,7 @@ begin
   if GIdUTF7Encoding = nil then
   begin
     LEncoding := TIdUTF7Encoding.Create;
-    if InterlockedCompareExchangePtr(Pointer(GIdUTF7Encoding), LEncoding, nil) <> nil then
+    if InterlockedCompareExchangeObj(TObject(GIdUTF7Encoding), LEncoding, nil) <> nil then
       LEncoding.Free;
   end;
   Result := GIdUTF7Encoding;
@@ -3152,7 +3210,7 @@ begin
   begin
     if GIdASCIIEncoding = nil then begin
       LEncoding := TIdASCIIEncoding.Create;
-      if InterlockedCompareExchangePtr(Pointer(GIdASCIIEncoding), LEncoding, nil) <> nil then begin
+      if InterlockedCompareExchangeObj(TObject(GIdASCIIEncoding), LEncoding, nil) <> nil then begin
         LEncoding.Free;
       end;
     end;
@@ -3251,7 +3309,7 @@ begin
   begin
     if GId8BitEncoding = nil then begin
       LEncoding := TId8BitEncoding.Create;
-      if InterlockedCompareExchangePtr(Pointer(GId8BitEncoding), LEncoding, nil) <> nil then begin
+      if InterlockedCompareExchangeObj(TObject(GId8BitEncoding), LEncoding, nil) <> nil then begin
         LEncoding.Free;
       end;
     end;
@@ -3295,7 +3353,7 @@ begin
   begin
     if GIdUTF8Encoding = nil then begin
       LEncoding := CreateUTF8Encoding;
-      if InterlockedCompareExchangePtr(Pointer(GIdUTF8Encoding), LEncoding, nil) <> nil then begin
+      if InterlockedCompareExchangeObj(TObject(GIdUTF8Encoding), LEncoding, nil) <> nil then begin
         LEncoding.Free;
       end;
     end;
@@ -3410,7 +3468,6 @@ function Impl_InterlockedCompareExchange(var Destination: PtrInt; Exchange, Comp
 begin
   {$IFDEF CPU64}
   // TODO: use LOCK CMPXCHG8B directly so this is more atomic...
-  end;
   {$ELSE}
   // TODO: use LOCK CMPXCHG directly so this is more atomic...
   {$ENDIF}
@@ -3470,6 +3527,18 @@ begin
         {$ENDIF}
       {$ENDIF}
     {$ENDIF}
+  {$ENDIF}
+end;
+
+function InterlockedCompareExchangeObj(var VTarget: TObject; const AValue, Compare: TObject): TObject;
+  {$IFDEF USE_INLINE}inline;{$ENDIF}
+begin
+  {$IFDEF DCC_NEXTGEN_ARC}
+  // for ARC, we have to use the TObject overload of TInterlocked to ensure
+  // that the reference counts of the objects are managed correctly...
+  Result := TInterlocked.CompareExchange(VTarget, AValue, Compare);
+  {$ELSE}
+  Result := TObject(InterlockedCompareExchangePtr(Pointer(VTarget), Pointer(AValue), Pointer(Compare)));
   {$ENDIF}
 end;
 {$ENDIF}
@@ -3699,19 +3768,25 @@ function StartsWithACE(const ABytes: TIdBytes): Boolean;
 const
   cDash = Ord('-');
 var
-  LS: string;
+  LS: {$IFDEF STRING_IS_IMMUTABLE}TIdStringBuilder{$ELSE}string{$ENDIF};
 begin
   Result := False;
-  if Length(ABytes) > 4 then
+  if Length(ABytes) >= 4 then
   begin
     if (ABytes[2] = cDash) and (ABytes[3] = cDash) then
     begin
+      // TODO: just do byte comparisons so String conversions are not needed...
+      {$IFDEF STRING_IS_IMMUTABLE}
+      LS := TIdStringBuilder.Create(2);
+      LS.Append(Char(ABytes[0]));
+      LS.Append(Char(ABytes[1]));
+      {$ELSE}
       SetLength(LS, 2);
-      LS[1] := Char(ABytes[2]);
-      LS[2] := Char(ABytes[3]);
-      if PosInStrArray(LS, ['bl','bq','dq','lq','mq','ra','wq','zq'], False) > -1 then begin {do not localize}
-        Result := True;
-      end;
+      LS[1] := Char(ABytes[0]);
+      LS[2] := Char(ABytes[1]);
+      {$ENDIF}
+      Result := PosInStrArray(LS{$IFDEF STRING_IS_IMMUTABLE}.ToString{$ENDIF},
+        ['bl','bq','dq','lq','mq','ra','wq','zq'], False) > -1;{do not localize}
     end;
   end;
 end;
@@ -3746,10 +3821,21 @@ end;
 //IPv4 address conversion
 function ByteToHex(const AByte: Byte): string;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
+{$IFDEF STRING_IS_IMMUTABLE}
+var
+  LSB: TIdStringBuilder;
+{$ENDIF}
 begin
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB := TIdStringBuilder.Create(2);
+  LSB.Append(IdHexDigits[(AByte and $F0) shr 4]);
+  LSB.Append(IdHexDigits[AByte and $F]);
+  Result := LSB.ToString;
+  {$ELSE}
   SetLength(Result, 2);
   Result[1] := IdHexDigits[(AByte and $F0) shr 4];
   Result[2] := IdHexDigits[AByte and $F];
+  {$ENDIF}
 end;
 
 function LongWordToHex(const ALongWord : LongWord) : String;
@@ -3766,14 +3852,29 @@ function ToHex(const AValue: TIdBytes; const ACount: Integer = -1;
  {$IFDEF USE_INLINE}inline;{$ENDIF}
 var
   I, LCount: Integer;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB: TIdStringBuilder;
+  {$ENDIF}
 begin
   LCount := IndyLength(AValue, ACount, AIndex);
   if LCount > 0 then begin
+    {$IFDEF STRING_IS_IMMUTABLE}
+    LSB := TIdStringBuilder.Create(LCount*2);
+    {$ELSE}
     SetLength(Result, LCount*2);
+    {$ENDIF}
     for I := 0 to LCount-1 do begin
+      {$IFDEF STRING_IS_IMMUTABLE}
+      LSB.Append(IdHexDigits[(AValue[AIndex+I] and $F0) shr 4]);
+      LSB.Append(IdHexDigits[AValue[AIndex+I] and $F]);
+      {$ELSE}
       Result[I*2+1] := IdHexDigits[(AValue[AIndex+I] and $F0) shr 4];
       Result[I*2+2] := IdHexDigits[AValue[AIndex+I] and $F];
+      {$ENDIF}
     end;
+    {$IFDEF STRING_IS_IMMUTABLE}
+    Result := LSB.ToString;
+    {$ENDIF}
   end else begin
     Result := '';
   end;
@@ -3781,25 +3882,38 @@ end;
 
 function ToHex(const AValue: array of LongWord): string;
 var
-{$IFNDEF DOTNET}
-  P: PByteArray;
-{$ENDIF}
-  i: Integer;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB: TIdStringBuilder;
+  {$ENDIF}
+  P: {$IFDEF DOTNET}TIdBytes{$ELSE}PByteArray{$ENDIF};
+  i, j: Integer;
 begin
   Result := '';
   if Length(AValue) > 0 then
   begin
-    {$IFNDEF DOTNET}
-    P := PByteArray(@AValue[0]);
-    SetString(Result, nil, Length(AValue)*4*2);//40
-    for i := 0 to Length(AValue)*4-1 do begin
-      Result[i*2+1] := IdHexDigits[(P^[i] and $F0) shr 4];
-      Result[i*2+2] := IdHexDigits[P^[i] and $F];
-    end;//for
+    {$IFDEF STRING_IS_IMMUTABLE}
+    LSB := TIdStringBuilder.Create(Length(AValue)*SizeOf(LongWord)*2);
     {$ELSE}
-    for i := 0 to Length(AValue)-1 do begin
-      Result := Result + ToHex(ToBytes(AValue[i]));
-    end;
+    SetLength(Result, Length(AValue)*SizeOf(LongWord)*2);
+    {$ENDIF}
+    for i := 0 to High(AValue) do begin
+      {$IFDEF DOTNET}
+      P := ToBytes(AValue[i]);
+      {$ELSE}
+      P := PByteArray(@AValue[i]);
+      {$ENDIF}
+      for j := 0 to SizeOf(LongWord)-1 do begin
+        {$IFDEF STRING_IS_IMMUTABLE}
+        LSB.Append(IdHexDigits[(P[j] and $F0) shr 4]);
+        LSB.Append(IdHexDigits[P[j] and $F]);
+        {$ELSE}
+        Result[(i*SizeOf(LongWord))+(j*2)+1] := IdHexDigits[(P^[j] and $F0) shr 4];
+        Result[(i*SizeOf(LongWord))+(j*2)+2] := IdHexDigits[P^[j] and $F];
+        {$ENDIF}
+      end;
+    end;//for
+    {$IFDEF STRING_IS_IMMUTABLE}
+    Result := LSB.ToString;
     {$ENDIF}
   end;
 end;
@@ -3835,14 +3949,33 @@ end;
 
 function ByteToOctal(const AByte: Byte): string;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
+{$IFDEF STRING_IS_IMMUTABLE}
+var
+  LSB: TIdStringBuilder;
+  C: Char;
+{$ENDIF}
 begin
+  {$IFDEF STRING_IS_IMMUTABLE}
+  C := IdOctalDigits[(AByte shr 6) and $7];
+  if C <> '0' then begin
+    LSB := TIdStringBuilder.Create(4);
+    LSB.Append(Char('0')); {do not localize}
+  end else begin
+    LSB := TIdStringBuilder.Create(3);
+  end;
+  LSB.Append(C);
+  LSB.Append(IdOctalDigits[(AByte shr 3) and $7]);
+  LSB.Append(IdOctalDigits[AByte and $7]);
+  Result := LSB.ToString;
+  {$ELSE}
   SetLength(Result, 3);
   Result[1] := IdOctalDigits[(AByte shr 6) and $7];
   Result[2] := IdOctalDigits[(AByte shr 3) and $7];
   Result[3] := IdOctalDigits[AByte and $7];
-  if Result[1] <> '0' then begin
-    Result := '0' + Result;
+  if Result[1] <> '0' then begin {do not localize}
+    Result := '0' + Result; {do not localize}
   end;
+  {$ENDIF}
 end;
 
 function IPv4ToOctal(const AIPAddress: string): string;
@@ -4327,16 +4460,17 @@ end;
 
 {$IFNDEF DOTNET}
 // IdPorts returns a list of defined ports in /etc/services
-function IdPorts: TList;
+function IdPorts: TIdPortList;
 var
   s: string;
   idx, iPosSlash: {$IFDEF BYTE_COMPARE_SETS}Byte{$ELSE}Integer{$ENDIF};
-  i, iPrev: PtrInt;
+  i: {$IFDEF HAS_GENERICS_TList}Integer{$ELSE}PtrInt{$ENDIF};
+  iPrev: PtrInt;
   sl: TStringList;
 begin
   if GIdPorts = nil then
   begin
-    GIdPorts := TList.Create;
+    GIdPorts := TIdPortList.Create;
     sl := TStringList.Create;
     try
       sl.LoadFromFile(ServicesFilePath);  {do not localize}
@@ -4357,7 +4491,9 @@ begin
           until Ord(s[i]) in IdWhiteSpace;
           i := IndyStrToInt(Copy(s, i+1, iPosSlash-i-1));
           if i <> iPrev then begin
-            GIdPorts.Add(Pointer(i));
+            GIdPorts.Add(
+              {$IFDEF HAS_GENERICS_TList}i{$ELSE}Pointer(i){$ENDIF}
+            );
           end;
           iPrev := i;
         end;
@@ -5196,47 +5332,159 @@ begin
   {$ENDIF}
 end;
 
-procedure SplitColumnsNoTrim(const AData: string; AStrings: TStrings; const ADelim: string);
+procedure SplitColumnsNoTrim(const AData: string; AStrings: TStrings; const ADelim: string = ' ');
+begin
+  SplitDelimitedString(AData, AStrings, False, ADelim{$IFNDEF DCC_NEXTGEN}, True{$ENDIF});
+end;
+
+procedure SplitColumns(const AData: string; AStrings: TStrings; const ADelim: string = ' ');
+begin
+  SplitDelimitedString(AData, AStrings, True, ADelim{$IFNDEF DCC_NEXTGEN}, True{$ENDIF});
+end;
+
+procedure SplitDelimitedString(const AData: string; AStrings: TStrings; ATrim: Boolean;
+  const ADelim: string = ' '{$IFNDEF DCC_NEXTGEN}; AIncludePositions: Boolean = False{$ENDIF});
 var
   i: Integer;
+  LData: string;
   LDelim: Integer; //delim len
   LLeft: string;
-  {$IFDEF DOTNET}
-  LLastPos: Integer;
-  {$ELSE}
-  LLastPos: PtrInt;
-  //note that we use PtrInt instead of Integer because in FPC,
-  //you can't assume a pointer will be exactly 4 bytes.  It could be 8 or possibly
-  //2 bytes.  Remember that that supports operating systems with versions for different
-  //architectures
-  {$ENDIF}
+  LLastPos, LLeadingSpaceCnt: PtrInt;
 begin
   Assert(Assigned(AStrings));
   AStrings.Clear;
   LDelim := Length(ADelim);
   LLastPos := 1;
 
-  i := Pos(ADelim, AData);
-  while I > 0 do begin
-    LLeft := Copy(AData, LLastPos, I - LLastPos); //'abc d' len:=i(=4)-1    {Do not Localize}
-    if LLeft <> '' then begin    {Do not Localize}
-      {$IFDEF DOTNET}
-      AStrings.AddObject(LLeft, TObject(LLastPos));
-      {$ELSE}
-      AStrings.AddObject(LLeft, TObject(PtrInt(LLastPos)));
-      {$ENDIF}
+  if ATrim then begin
+    LData := Trim(AData);
+    if LData = '' then begin //if WhiteStr
+      Exit;
     end;
-    LLastPos := I + LDelim; //first char after Delim
-    i := PosIdx(ADelim, AData, LLastPos);
-  end;
-  if LLastPos <= Length(AData) then begin
-    {$IFDEF DOTNET}
-    AStrings.AddObject(Copy(AData, LLastPos, MaxInt), TObject(LLastPos));
-    {$ELSE}
-    AStrings.AddObject(Copy(AData, LLastPos, MaxInt), TObject(PtrInt(LLastPos)));
-    {$ENDIF}
+
+    LLeadingSpaceCnt := 0;
+    while AData[LLeadingSpaceCnt + 1] <= #32 do begin
+      Inc(LLeadingSpaceCnt);
+    end;
+
+    i := Pos(ADelim, LData);
+    while I > 0 do begin
+      LLeft := Copy(LData, LLastPos, I - LLastPos); //'abc d' len:=i(=4)-1    {Do not Localize}
+      if LLeft > '' then begin    {Do not Localize}
+        {$IFNDEF DCC_NEXTGEN}
+        if AIncludePositions then begin
+          AStrings.AddObject(Trim(LLeft), TObject(LLastPos + LLeadingSpaceCnt));
+        end else
+        {$ENDIF}
+        begin
+          AStrings.Add(Trim(LLeft));
+        end;
+      end;
+      LLastPos := I + LDelim; //first char after Delim
+      i := PosIdx(ADelim, LData, LLastPos);
+    end;//while found
+    if LLastPos <= Length(LData) then begin
+      {$IFNDEF DCC_NEXTGEN}
+      if AIncludePositions then begin
+        AStrings.AddObject(Trim(Copy(LData, LLastPos, MaxInt)), TObject(LLastPos + LLeadingSpaceCnt));
+      end else
+      {$ENDIF}
+      begin
+        AStrings.Add(Trim(Copy(LData, LLastPos, MaxInt)));
+      end;
+    end;
+  end else
+  begin
+    i := Pos(ADelim, AData);
+    while I > 0 do begin
+      LLeft := Copy(AData, LLastPos, I - LLastPos); //'abc d' len:=i(=4)-1    {Do not Localize}
+      if LLeft <> '' then begin    {Do not Localize}
+        {$IFNDEF DCC_NEXTGEN}
+        if AIncludePositions then begin
+          AStrings.AddObject(LLeft, TObject(LLastPos));
+        end else
+        {$ENDIF}
+        begin
+          AStrings.Add(LLeft);
+        end;
+      end;
+      LLastPos := I + LDelim; //first char after Delim
+      i := PosIdx(ADelim, AData, LLastPos);
+    end;
+    if LLastPos <= Length(AData) then begin
+      {$IFNDEF DCC_NEXTGEN}
+      if AIncludePositions then begin
+        AStrings.AddObject(Copy(AData, LLastPos, MaxInt), TObject(LLastPos));
+      end else
+      {$ENDIF}
+      begin
+        AStrings.Add(Copy(AData, LLastPos, MaxInt));
+      end;
+    end;
   end;
 end;
+
+{$IFDEF DCC_NEXTGEN}
+constructor TIdStringPosition.Create(const AValue: String; const APosition: Integer);
+begin
+  Value := AValue;
+  Position := APosition;
+end;
+
+procedure SplitDelimitedString(const AData: string; AStrings: TIdStringPositionList;
+  ATrim: Boolean; const ADelim: string = ' ');
+var
+  i: Integer;
+  LData: string;
+  LDelim: Integer; //delim len
+  LLeft: string;
+  LLastPos, LLeadingSpaceCnt: Integer;
+begin
+  Assert(Assigned(AStrings));
+  AStrings.Clear;
+  LDelim := Length(ADelim);
+  LLastPos := 1;
+
+  if ATrim then begin
+    LData := Trim(AData);
+    if LData = '' then begin //if WhiteStr
+      Exit;
+    end;
+
+    LLeadingSpaceCnt := 0;
+    while AData[LLeadingSpaceCnt + 1] <= #32 do begin
+      Inc(LLeadingSpaceCnt);
+    end;
+
+    i := Pos(ADelim, LData);
+    while I > 0 do begin
+      LLeft := Copy(LData, LLastPos, I - LLastPos); //'abc d' len:=i(=4)-1    {Do not Localize}
+      if LLeft > '' then begin    {Do not Localize}
+        AStrings.Add(TIdStringPosition.Create(Trim(LLeft), LLastPos + LLeadingSpaceCnt));
+      end;
+      LLastPos := I + LDelim; //first char after Delim
+      i := PosIdx(ADelim, LData, LLastPos);
+    end;//while found
+    if LLastPos <= Length(LData) then begin
+      AStrings.Add(TIdStringPosition.Create(Trim(Copy(LData, LLastPos, MaxInt)), LLastPos + LLeadingSpaceCnt));
+    end;
+  end else
+  begin
+    i := Pos(ADelim, AData);
+    while I > 0 do begin
+      LLeft := Copy(AData, LLastPos, I - LLastPos); //'abc d' len:=i(=4)-1    {Do not Localize}
+      if LLeft <> '' then begin    {Do not Localize}
+        AStrings.Add(TIdStringPosition.Create(LLeft, LLastPos));
+      end;
+      LLastPos := I + LDelim; //first char after Delim
+      i := PosIdx(ADelim, AData, LLastPos);
+    end;
+    if LLastPos <= Length(AData) then begin
+      AStrings.Add(TIdStringPosition.Create(Copy(AData, LLastPos, MaxInt), LLastPos));
+    end;
+  end;
+end;
+{$ENDIF}
 
 {$IFDEF DOTNET}
 procedure SetThreadName(const AName: string; AThread: System.Threading.Thread = nil);
@@ -5266,6 +5514,9 @@ type
     Flags: LongWord;    // Reserved for future use. Must be zero
   end;
 var
+        {$IFDEF STRING_IS_UNICODE}
+  LName: AnsiString;
+        {$ENDIF}
   LThreadNameInfo: TThreadNameInfo;
       {$ENDIF}
     {$ENDIF}
@@ -5273,15 +5524,23 @@ var
 begin
   {$IFDEF HAS_NAMED_THREADS}
     {$IFDEF HAS_TThread_NameThreadForDebugging}
-  TThread.NameThreadForDebugging(AnsiString(AName), AThreadID);
+  TThread.NameThreadForDebugging(
+      {$IFNDEF DCC_NEXTGEN}
+    AnsiString(AName)
+      {$ELSE}
+    AName
+      {$ENDIF},
+    AThreadID
+  );
     {$ELSE}
       {$IFDEF WINDOWS}
-  with LThreadNameInfo do begin
-    RecType := $1000;
-    Name := {$IFDEF STRING_IS_UNICODE}PAnsiChar(AnsiString(AName)){$ELSE}PChar(AName){$ENDIF};
-    ThreadID := AThreadID;
-    Flags := 0;
-  end;
+        {$IFDEF STRING_IS_UNICODE}
+  LName := AnsiString(AName);
+        {$ENDIF}
+  LThreadNameInfo.RecType := $1000;
+  LThreadNameInfo.Name := PAnsiChar({$IFDEF STRING_IS_UNICODE}LName{$ELSE}AName{$ENDIF});
+  LThreadNameInfo.ThreadID := AThreadID;
+  LThreadNameInfo.Flags := 0;
   try
     // This is a wierdo Windows way to pass the info in
     RaiseException(MS_VC_EXCEPTION, 0, SizeOf(LThreadNameInfo) div SizeOf(LongWord),
@@ -5295,44 +5554,6 @@ begin
   {$ENDIF}
 end;
 {$ENDIF}
-
-procedure SplitColumns(const AData: string; AStrings: TStrings; const ADelim: string);
-var
-  i: Integer;
-  LData: string;
-  LDelim: Integer; //delim len
-  LLeft: string;
-  LLastPos: Integer;
-  LLeadingSpaceCnt: Integer;
-Begin
-  Assert(Assigned(AStrings));
-  AStrings.Clear;
-  LDelim := Length(ADelim);
-  LLastPos := 1;
-  LData := Trim(AData);
-
-  if LData = '' then begin //if WhiteStr
-    Exit;
-  end;
-
-  LLeadingSpaceCnt := 0;
-  while AData[LLeadingSpaceCnt + 1] <= #32 do begin
-    Inc(LLeadingSpaceCnt);
-  end;
-
-  i := Pos(ADelim, LData);
-  while I > 0 do begin
-    LLeft := Copy(LData, LLastPos, I - LLastPos); //'abc d' len:=i(=4)-1    {Do not Localize}
-    if LLeft > '' then begin    {Do not Localize}
-      AStrings.AddObject(Trim(LLeft), TObject(LLastPos + LLeadingSpaceCnt));
-    end;
-    LLastPos := I + LDelim; //first char after Delim
-    i := PosIdx(ADelim, LData, LLastPos);
-  end;//while found
-  if LLastPos <= Length(LData) then begin
-    AStrings.AddObject(Trim(Copy(LData, LLastPos, MaxInt)), TObject(LLastPos + LLeadingSpaceCnt));
-  end;
-end;
 
 {$IFDEF DOTNET}
   {$IFNDEF DOTNET_2_OR_ABOVE}
@@ -5442,20 +5663,6 @@ function TIdLocalEvent.WaitForEver: TWaitResult;
 begin
   Result := WaitFor(Infinite);
 end;
-
-{ TIdList }
-
-{$IFNDEF HAS_TList_Assign}
-procedure TIdExtList.Assign(AList: TList);
-var
-  I: Integer;
-begin
-  Clear;
-  Capacity := AList.Capacity;
-  for I := 0 to AList.Count - 1 do
-    Add(AList.Items[I]);
-end;
-{$ENDIF}
 
 procedure ToDo(const AMsg: string);
 {$IFDEF USE_INLINE}inline;{$ENDIF}
@@ -5820,6 +6027,9 @@ end;
 function UTCOffsetToStr(const AOffset: TDateTime; const AUseGMTStr: Boolean = False): string;
 var
   AHour, AMin, ASec, AMSec: Word;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB: TIdStringBuilder;
+  {$ENDIF}
 begin
   if (AOffset = 0.0) and AUseGMTStr then
   begin
@@ -5827,12 +6037,23 @@ begin
   end else
   begin
     DecodeTime(AOffset, AHour, AMin, ASec, AMSec);
+    {$IFDEF STRING_IS_IMMUTABLE}
+    LSB := TIdStringBuilder.Create(5);
+    LSB.Append(IndyFormat(' %0.2d%0.2d', [AHour, AMin])); {do not localize}
+    if AOffset < 0.0 then begin
+      LSB[0] := '-'; {do not localize}
+    end else begin
+      LSB[0] := '+'; {do not localize}
+    end;
+    Result := LSB.ToString;
+    {$ELSE}
     Result := IndyFormat(' %0.2d%0.2d', [AHour, AMin]); {do not localize}
     if AOffset < 0.0 then begin
       Result[1] := '-'; {do not localize}
     end else begin
       Result[1] := '+';  {do not localize}
     end;
+    {$ENDIF}
   end;
 end;
 
@@ -7107,6 +7328,75 @@ begin
     Result := AString[ACharPos] = AValue;
   end;
 end;
+
+{$IFDEF STRING_IS_IMMUTABLE}
+
+{$IFDEF DOTNET}
+  {$DEFINE DOTNET_OR_DCC_NEXTGEN}
+{$ENDIF}
+{$IFDEF DCC_NEXTGEN}
+  {$DEFINE DOTNET_OR_DCC_NEXTGEN}
+{$ENDIF}
+
+function CharPosInSet(const ASB: TIdStringBuilder; const ACharPos: Integer; const ASet: String): Integer;
+{$IFDEF USE_INLINE}inline;{$ENDIF}
+{$IFNDEF DOTNET_OR_DCC_NEXTGEN}
+var
+  LChar: Char;
+  I: Integer;
+{$ENDIF}
+begin
+  Result := 0;
+  if ACharPos < 1 then begin
+    EIdException.Toss('Invalid ACharPos');{ do not localize }
+  end;
+  if ACharPos <= ASB.Length then begin
+    {$IFDEF DOTNET_OR_DCC_NEXTGEN}
+    Result := ASet.IndexOf(ASB[ACharPos-1]) + 1;
+    {$ELSE}
+    // RLebeau 5/8/08: Calling Pos() with a Char as input creates a temporary
+    // String.  Normally this is fine, but profiling reveils this to be a big
+    // bottleneck for code that makes a lot of calls to CharIsInSet(), so need
+    // to scan through ASet looking for the character without a conversion...
+    //
+    // Result := IndyPos(ASB[ACharPos-1], ASet);
+    //
+    LChar := ASB[ACharPos-1];
+    for I := 1 to Length(ASet) do begin
+      if ASet[I] = LChar then begin
+        Result := I;
+        Exit;
+      end;
+    end;
+    {$ENDIF}
+  end;
+end;
+
+function CharIsInSet(const ASB: TIdStringBuilder; const ACharPos: Integer; const ASet:  String): Boolean;
+{$IFDEF USE_INLINE}inline;{$ENDIF}
+begin
+  Result := CharPosInSet(ASB, ACharPos, ASet) > 0;
+end;
+
+function CharIsInEOL(const ASB: TIdStringBuilder; const ACharPos: Integer): Boolean;
+{$IFDEF USE_INLINE}inline;{$ENDIF}
+begin
+  Result := CharIsInSet(ASB, ACharPos, EOL);
+end;
+
+function CharEquals(const ASB: TIdStringBuilder; const ACharPos: Integer; const AValue: Char): Boolean;
+{$IFDEF USE_INLINE}inline;{$ENDIF}
+begin
+  if ACharPos < 1 then begin
+    EIdException.Toss('Invalid ACharPos');{ do not localize }
+  end;
+  Result := ACharPos <= ASB.Length;
+  if Result then begin
+    Result := ASB[ACharPos-1] = AValue;
+  end;
+end;
+
+{$ENDIF}
 
 function ByteIndex(const AByte: Byte; const ABytes: TIdBytes; const AStartIndex: Integer = 0): Integer;
 var

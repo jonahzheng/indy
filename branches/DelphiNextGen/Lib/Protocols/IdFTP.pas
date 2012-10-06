@@ -1575,10 +1575,8 @@ begin
       {$ELSE}
       FListResult.Text := ReadStringFromStream(LDest, -1, IOHandler.DefStringEncoding{$IFDEF STRING_IS_ANSI}, IOHandler.DefAnsiEncoding{$ENDIF});
       {$ENDIF}
-      with TIdFTPListResult(FListResult) do begin
-        FDetails := ADetails;
-        FUsedMLS := False;
-      end;
+      TIdFTPListResult(FListResult).FDetails := ADetails;
+      TIdFTPListResult(FListResult).FUsedMLS := False;
       // FDirFormat will be updated in ParseFTPList...
     finally
       FreeAndNil(LDest);
@@ -1609,7 +1607,9 @@ var
 begin
   DoOnDataChannelDestroy;
   if FDataChannel <> nil then begin
+    {$IFNDEF DCC_NEXTGEN_ARC}
     FDataChannel.IOHandler.Free;
+    {$ENDIF}
     FDataChannel.IOHandler := nil;
     FreeAndNil(FDataChannel);
   end;
@@ -2069,13 +2069,14 @@ end;
 { TIdFtpKeepAlive }
 
 procedure TIdFtpKeepAlive.Assign(Source: TPersistent);
+var
+  LSource: TIdFTPKeepAlive;
 begin
   if Source is TIdFTPKeepAlive then begin
-    with TIdFTPKeepAlive(Source) do begin
-      Self.FUseKeepAlive := UseKeepAlive;
-      Self.FIdleTimeMS := IdleTimeMS;
-      Self.FIntervalMS := IntervalMS;
-    end;
+    LSource := TIdFTPKeepAlive(Source);
+    FUseKeepAlive := LSource.UseKeepAlive;
+    FIdleTimeMS := LSource.IdleTimeMS;
+    FIntervalMS := LSource.IntervalMS;
   end else begin
     inherited Assign(Source);
   end;
@@ -2913,15 +2914,16 @@ end;
 { TIdFtpProxySettings }
 
 procedure TIdFtpProxySettings.Assign(Source: TPersistent);
+var
+  LSource: TIdFtpProxySettings;
 begin
   if Source is TIdFtpProxySettings then begin
-    with Source as TIdFtpProxySettings do begin
-      Self.FProxyType := ProxyType;
-      Self.FHost := Host;
-      Self.FUserName := UserName;
-      Self.FPassword := Password;
-      Self.FPort := Port;
-    end;
+    LSource := TIdFtpProxySettings(Source);
+    FProxyType := LSource.ProxyType;
+    FHost := LSource.Host;
+    FUserName := LSource.UserName;
+    FPassword := LSource.Password;
+    FPort := LSource.Port;
   end else begin
     inherited Assign(Source);
   end;
@@ -3122,10 +3124,8 @@ begin
     {$ELSE}
     FListResult.Text := ReadStringFromStream(LDest, -1, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
     {$ENDIF}
-    with TIdFTPListResult(FListResult) do begin
-      FDetails := True;
-      FUsedMLS := True;
-    end;
+    TIdFTPListResult(FListResult).FDetails := True;
+    TIdFTPListResult(FListResult).FUsedMLS := True;
     FDirFormat := MLST;
   finally
     FreeAndNil(LDest);
@@ -3708,13 +3708,14 @@ end;
 { TIdFTPClientIdentifier }
 
 procedure TIdFTPClientIdentifier.Assign(Source: TPersistent);
+var
+  LSource: TIdFTPClientIdentifier;
 begin
   if Source is TIdFTPClientIdentifier then begin
-    with Source as TIdFTPClientIdentifier do begin
-      Self.ClientName  := ClientName;
-      Self.ClientVersion := ClientVersion;
-      Self.PlatformDescription := PlatformDescription;
-    end;
+    LSource := TIdFTPClientIdentifier(Source);
+    ClientName  := LSource.ClientName;
+    ClientVersion := LSource.ClientVersion;
+    PlatformDescription := LSource.PlatformDescription;
   end else begin
     inherited Assign(Source);
   end;
@@ -3907,12 +3908,13 @@ end;
 { TIdFTPTZInfo }
 
 procedure TIdFTPTZInfo.Assign(Source: TPersistent);
+var
+  LSource: TIdFTPTZInfo;
 begin
   if Source is TIdFTPTZInfo then begin
-    with Source as TIdFTPTZInfo do begin
-      Self.FGMTOffset := GMTOffset;
-      Self.FGMTOffsetAvailable := GMTOffsetAvailable;
-    end;
+    LSource := TIdFTPTZInfo(Source);
+    FGMTOffset := LSource.GMTOffset;
+    FGMTOffsetAvailable := LSource.GMTOffsetAvailable;
   end else begin
     inherited Assign(Source);
   end;
@@ -4175,6 +4177,7 @@ var
   LStartPoint : TIdStreamSize;
   LByteCount : TIdStreamSize;  //used instead of AByteCount so we don't exceed the file size
   LHashClass: TIdHashClass;
+  LHash: TIdHash;
 begin
   LLocalCRC := '';
   LRemoteCRC := '';
@@ -4280,11 +4283,11 @@ begin
     LHashClass := TIdHashCRC32;
   end;
 
-  with LHashClass.Create do
+  LHash := LHashClass.Create;
   try
-    LLocalCRC := HashStreamAsHex(ALocalFile, LStartPoint, LByteCount);
+    LLocalCRC := LHash.HashStreamAsHex(ALocalFile, LStartPoint, LByteCount);
   finally
-    Free;
+    LHash.Free;
   end;
 
   if SendCmd(LCmd) = 250 then begin

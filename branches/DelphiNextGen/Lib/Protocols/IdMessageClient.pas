@@ -1538,15 +1538,21 @@ begin
 end;
 
 procedure TIdMessageClient.ProcessMessage(AMsg: TIdMessage; AStream: TStream; AHeaderOnly: Boolean = False);
+var
+  LIOHandler: TIdIOHandlerStreamMsg;
 begin
-  IOHandler := TIdIOHandlerStreamMsg.Create(nil, AStream);
+  LIOHandler := TIdIOHandlerStreamMsg.Create(nil, AStream);
   try
-    TIdIOHandlerStreamMsg(IOHandler).FreeStreams := False;
-    IOHandler.Open;
-    ProcessMessage(AMsg, AHeaderOnly);
+    LIOHandler.FreeStreams := False;
+    IOHandler := LIOHandler;
+    try
+      IOHandler.Open;
+      ProcessMessage(AMsg, AHeaderOnly);
+    finally
+      IOHandler := nil;
+    end;
   finally
-    IOHandler.Free;
-    IOHandler := nil;
+    LIOHandler.Free;
   end;
 end;
 

@@ -688,29 +688,28 @@ procedure TIdTCPConnection.WriteHeader(AHeader: TStrings);
 var
   i: Integer;
   LBufferingStarted: Boolean;
+  LIOHandler: TIdIOHandler;
 begin
   CheckConnected;
-  with IOHandler do
-  begin
-    LBufferingStarted := not WriteBufferingActive;
+  LIOHandler := IOHandler;
+  LBufferingStarted := not LIOHandler.WriteBufferingActive;
+  if LBufferingStarted then begin
+    LIOHandler.WriteBufferOpen;
+  end;
+  try
+    for i := 0 to AHeader.Count -1 do begin
+      // No ReplaceAll flag - we only want to replace the first one
+      LIOHandler.WriteLn(ReplaceOnlyFirst(AHeader[i], '=', ': '));
+    end;
+    LIOHandler.WriteLn;
     if LBufferingStarted then begin
-      WriteBufferOpen;
+       LIOHandler.WriteBufferClose;
     end;
-    try
-      for i := 0 to AHeader.Count -1 do begin
-        // No ReplaceAll flag - we only want to replace the first one
-        WriteLn(ReplaceOnlyFirst(AHeader[i], '=', ': '));
-      end;
-      WriteLn;
-      if LBufferingStarted then begin
-         WriteBufferClose;
-      end;
-    except
-      if LBufferingStarted then begin
-        WriteBufferCancel;
-      end;
-      raise;
+  except
+    if LBufferingStarted then begin
+      LIOHandler.WriteBufferCancel;
     end;
+    raise;
   end;
 end;
 

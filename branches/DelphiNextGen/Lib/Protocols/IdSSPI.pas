@@ -1682,27 +1682,23 @@ type
 
 implementation
 
-procedure SecInvalidateHandle(Var x: SecHandle);
+procedure SecInvalidateHandle(var x: SecHandle);
 begin
-  with x do begin
-    dwLower := PtrUInt(-1);
-    dwUpper := PtrUInt(-1);
-  end;
+  x.dwLower := PtrUInt(-1);
+  x.dwUpper := PtrUInt(-1);
 end;
 
 function SecIsValidHandle(x : SecHandle) : Boolean;
 begin
-  with x do begin
-    // RLebeau: workaround for a bug in D2009. Comparing PtrUInt values does not always work correctly.
-    // Sometimes it causes "W1023 Comparing signed and unsigned types" warnings, other times it causes
-    // "F2084 Internal Error: C12079" errors
-    {$IFDEF VCL_2009}
-    Result := (Integer(dwLower) <> Integer(PtrUInt(-1))) and
-              (Integer(dwUpper) <> Integer(PtrUInt(-1)));
-    {$ELSE}
-    Result := (dwLower <> PtrUInt(-1)) and (dwUpper <> PtrUInt(-1));
-    {$ENDIF}
-  end;
+  // RLebeau: workaround for a bug in D2009. Comparing PtrUInt values does not always work correctly.
+  // Sometimes it causes "W1023 Comparing signed and unsigned types" warnings, other times it causes
+  // "F2084 Internal Error: C12079" errors
+  {$IFDEF VCL_2009}
+  Result := (Integer(x.dwLower) <> Integer(PtrUInt(-1))) and
+            (Integer(x.dwUpper) <> Integer(PtrUInt(-1)));
+  {$ELSE}
+  Result := (x.dwLower <> PtrUInt(-1)) and (x.dwUpper <> PtrUInt(-1));
+  {$ENDIF}
 end;
 
 function SEC_SUCCESS(Status: SECURITY_STATUS): Boolean;

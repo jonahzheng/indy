@@ -205,19 +205,38 @@ function ASNEncUInt(Value: Integer): string;
 var
   x, y: Integer;
   neg: Boolean;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB: TIdStringBuilder;
+  {$ENDIF}
 begin
   neg := Value < 0;
   x := Value;
-  if neg then
+  if neg then begin
     x := x and $7FFFFFFF;
+  end;
   Result := '';     {Do not Localize}
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB := TIdStringBuilder.Create;
+  {$ENDIF}
   repeat
     y := x mod 256;
     x := x div 256;
+    {$IFDEF STRING_IS_IMMUTABLE}
+    LSB.Insert(0, Char(y));
+    {$ELSE}
     Result := Char(y) + Result;
+    {$ENDIF}
   until x = 0;
-  if neg then
+  if neg then begin
+    {$IFDEF STRING_IS_IMMUTABLE}
+    LSB[0] := Char(Ord(LSB[0]) or $80);
+    {$ELSE}
     Result[1] := Char(Ord(Result[1]) or $80);
+    {$ENDIF}
+  end;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  Result := LSB.ToString;
+  {$ENDIF}
 end;
 
 {==============================================================================}

@@ -168,7 +168,7 @@ begin
   while i <= Length(APath) do begin
     {$IFDEF STRING_IS_ANSI}
     if IsLeadChar(APath[i]) then begin
-      Inc(i, 2)
+      Inc(i, 2);
     end else
     {$ENDIF}
     if (APath[i] = '?') or (APath[i] = '#') then begin {Do not Localize}
@@ -176,7 +176,11 @@ begin
       Break;
     end;
     if APath[i] = '\' then begin    {Do not Localize}
+      {$IFDEF STRING_IS_IMMUTABLE}
+      APath := Copy(APath, 1, i-1) + '/' + Copy(APath, i+1, MaxInt);    {Do not Localize}
+      {$ELSE}
       APath[i] := '/';    {Do not Localize}
+      {$ENDIF}
     end;
     Inc(i);
   end;
@@ -478,19 +482,24 @@ end;
 class function TIdURI.URLEncode(const ASrc: string; AByteEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF}
   ): string;
+var
+  LUri: TIdURI;
 begin
-  with TIdURI.Create(ASrc) do try
-    Path := PathEncode(Path, AByteEncoding
+  LUri := TIdURI.Create(ASrc);
+  try
+    LUri.Path := PathEncode(LUri.Path, AByteEncoding
       {$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF}
       );
-    Document := PathEncode(Document, AByteEncoding
+    LUri.Document := PathEncode(LUri.Document, AByteEncoding
       {$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF}
       );
-    Params := ParamsEncode(Params, AByteEncoding
+    LUri.Params := ParamsEncode(LUri.Params, AByteEncoding
       {$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF}
       );
-    Result := URI;
-  finally Free; end;
+    Result := LUri.URI;
+  finally
+    LUri.Free;
+  end;
 end;
 
 function TIdURI.GetFullURI(const AOptionalFields: TIdURIOptionalFieldsSet): String;

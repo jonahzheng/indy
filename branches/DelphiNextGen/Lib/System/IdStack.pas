@@ -917,23 +917,28 @@ end;
 initialization
   //done this way so we can have a separate stack just for FPC under Unix systems
   GStackClass :=
-    {$IFDEF UNIX}
-      {$IFDEF USE_VCL_POSIX}
-      TIdStackVCLPosix;
+    {$IFDEF DCC_NEXTGEN}
+    TIdStackVCLPosix
+    {$ELSE}
+      {$IFDEF UNIX}
+        {$IFDEF USE_VCL_POSIX}
+        TIdStackVCLPosix
+        {$ENDIF}
+        {$IFDEF KYLIXCOMPAT}
+        TIdStackLibc
+        {$ENDIF}
+        {$IFDEF USE_BASEUNIX}
+        TIdStackUnix
+        {$ENDIF}
       {$ENDIF}
-      {$IFDEF KYLIXCOMPAT}
-      TIdStackLibc;
+      {$IFDEF WINDOWS}
+      TIdStackWindows
       {$ENDIF}
-      {$IFDEF USE_BASEUNIX}
-      TIdStackUnix;
+      {$IFDEF DOTNET}
+      TIdStackDotNet
       {$ENDIF}
     {$ENDIF}
-    {$IFDEF WINDOWS}
-    TIdStackWindows;
-    {$ENDIF}
-    {$IFDEF DOTNET}
-    TIdStackDotNet;
-    {$ENDIF}
+  ;
   GStackCriticalSection := TIdCriticalSection.Create;
   {$IFNDEF DOTNET}
     {$IFDEF REGISTER_EXPECTED_MEMORY_LEAK}

@@ -211,7 +211,7 @@ uses
   {$ENDIF}
   {$IFDEF USE_VCL_POSIX}
     {$IFDEF DARWIN}
-    Macapi.CoreServices,
+  Macapi.CoreServices,
     {$ENDIF}
   {$ENDIF}
   IdExceptionCore, IdRawHeaders, IdResourceStringsCore,
@@ -394,6 +394,7 @@ var
   RTTime: LongWord;
   LActualSeqID: word;
   LIcmp: TIdIPv4_ICMP;
+  LIcmpts: TIdICMPTs;
 begin
   Result := False;
 
@@ -460,12 +461,12 @@ begin
       rsTimeStamp:
       begin
         LActualSeqID := LIcmp.icmp_hdr.icmp_hun.echo_seq;
-        with TIdICMPTs.Create do
+        LIcmpts := TIdICMPTs.Create;
         try
-          ReadStruct(FBufReceive, LIpHeaderLen);
-          RTTime := (ttime and $80000000) - (otime and $80000000);
+          LIcmpts.ReadStruct(FBufReceive, LIpHeaderLen);
+          RTTime := (LIcmpts.ttime and $80000000) - (LIcmpts.otime and $80000000);
         finally
-          Free;
+          LIcmpts.Free;
         end;
       end;
     else

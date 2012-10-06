@@ -256,7 +256,10 @@ interface
 
 uses
   Classes,
-  IdBaseComponent, 
+  {$IFDEF HAS_UNIT_Generics_Collections}
+  System.Generics.Collections,
+  {$ENDIF}
+  IdBaseComponent,
   IdComponent,IdContext, IdGlobal, IdException,
   IdIntercept, IdIOHandler, IdIOHandlerStack,
   IdReply, IdScheduler, IdSchedulerOfThread, IdServerIOHandler,
@@ -288,6 +291,13 @@ type
     property OnBeforeRun: TIdNotifyThreadEvent read FOnBeforeRun write FOnBeforeRun;
   End;
 
+  {$IFDEF HAS_GENERICS_TThreadList}
+  TIdListenerThreadList = TThreadList<TIdListenerThread>;
+  {$ELSE}
+  // TODO: flesh out to match TThreadList<TIdListenerThread> for non-Generics compilers
+  TIdListenerThreadList = TThreadList;
+  {$ENDIF}
+
   TIdListenExceptionEvent = procedure(AThread: TIdListenerThread; AException: Exception) of object;
   TIdServerThreadExceptionEvent = procedure(AContext: TIdContext; AException: Exception) of object;
   TIdServerThreadEvent = procedure(AContext: TIdContext) of object;
@@ -311,12 +321,12 @@ type
     FImplicitIOHandler: Boolean;
     FIntercept: TIdServerIntercept;
     FIOHandler: TIdServerIOHandler;
-    FListenerThreads: TThreadList;
+    FListenerThreads: TIdListenerThreadList;
     FListenQueue: integer;
     FMaxConnections: Integer;
     FReuseSocket: TIdReuseSocket;
     FTerminateWaitTime: Integer;
-    FContexts: TThreadList;
+    FContexts: TIdContextThreadList;
     FOnContextCreated: TIdServerThreadEvent;
     FOnConnect: TIdServerThreadEvent;
     FOnDisconnect: TIdServerThreadEvent;
@@ -370,7 +380,7 @@ type
     procedure StartListening;
     procedure StopListening;
     //
-    property Contexts: TThreadList read FContexts;
+    property Contexts: TIdContextThreadList read FContexts;
     property ContextClass: TIdServerContextClass read FContextClass write FContextClass;
     property ImplicitIOHandler: Boolean read FImplicitIOHandler;
     property ImplicitScheduler: Boolean read FImplicitScheduler;
@@ -490,12 +500,15 @@ begin
 end;
 
 procedure TIdCustomTCPServer.ContextDisconnected(AContext: TIdContext);
+var
+  LIntercept: TIdConnectionIntercept;
 begin
   DoDisconnect(AContext);
   if Assigned(AContext.Connection.IOHandler) then begin
-    if Assigned(AContext.Connection.IOHandler.Intercept) then begin
-      AContext.Connection.IOHandler.Intercept.Disconnect;
-      AContext.Connection.IOHandler.Intercept.Free;
+    LIntercept := AContext.Connection.IOHandler.Intercept;
+    if Assigned(LIntercept) then begin
+      LIntercept.Disconnect;
+      LIntercept.Free;
       AContext.Connection.IOHandler.Intercept := nil;
     end;
   end;
@@ -690,11 +703,15 @@ begin
   end;
 end;
 
+type
+  TIdListenerList = TList{$IFDEF HAS_GENERICS_TList}<TIdListenerThread>{$ENDIF};
+
 procedure TIdCustomTCPServer.StartListening;
 var
-  LListenerThreads: TList;
+  LListenerThreads: TIdListenerList;
   LListenerThread: TIdListenerThread;
   I: Integer;
+  LBinding: TIdSocketHandle;
 begin
   LListenerThreads := FListenerThreads.LockList;
   try
@@ -702,16 +719,15 @@ begin
     I := LListenerThreads.Count;
     try
       while I < Bindings.Count do begin
-        with Bindings[I] do begin
-          AllocateSocket;
-          // do not overwrite if the default. This allows ReuseSocket to be set per binding
-          if Self.FReuseSocket <> rsOSDependent then begin
-            ReuseSocket := Self.FReuseSocket;
-          end;
-          DoBeforeBind(Bindings[I]);
-          Bind;
-          UseNagle := Self.FUseNagle;
+        LBinding := Bindings[I];
+        LBinding.AllocateSocket;
+        // do not overwrite if the default. This allows ReuseSocket to be set per binding
+        if FReuseSocket <> rsOSDependent then begin
+          LBinding.ReuseSocket := FReuseSocket;
         end;
+        DoBeforeBind(LBinding);
+        LBinding.Bind;
+        LBinding.UseNagle := FUseNagle;
         Inc(I);
       end;
     except
@@ -730,8 +746,9 @@ begin
     // Set up any threads that are not already running
     for I := LListenerThreads.Count to Bindings.Count - 1 do
     begin
-      Bindings[I].Listen(FListenQueue);
-      LListenerThread := TIdListenerThread.Create(Self, Bindings[I]);
+      LBinding := Bindings[I];
+      LBinding.Listen(FListenQueue);
+      LListenerThread := TIdListenerThread.Create(Self, LBinding);
       try
         LListenerThread.Name := Name + ' Listener #' + IntToStr(I + 1); {do not localize}
         LListenerThread.OnBeforeRun := DoBeforeListenerRun;
@@ -740,7 +757,7 @@ begin
         LListenerThread.Priority := tpListener;
         LListenerThreads.Add(LListenerThread);
       except
-        Bindings[I].CloseSocket;
+        LBinding.CloseSocket;
         FreeAndNil(LListenerThread);
         raise;
       end;
@@ -754,19 +771,19 @@ end;
 //APR-011207: for safe-close Ex: SQL Server ShutDown 1) stop listen 2) wait until all clients go out
 procedure TIdCustomTCPServer.StopListening;
 var
-  LListenerThreads: TList;
+  LListenerThreads: TIdListenerList;
+  LListener: TIdListenerThread;
 begin
   LListenerThreads := FListenerThreads.LockList;
   try
     while LListenerThreads.Count > 0 do begin
-      with TIdListenerThread(LListenerThreads[0]) do begin
-        // Stop listening
-        Terminate;
-        Binding.CloseSocket;
-        // Tear down Listener thread
-        WaitFor;
-        Free;
-      end;
+      LListener := {$IFDEF HAS_GENERICS_TThreadList}LListenerThreads[0]{$ELSE}TIdListenerThread(LListenerThreads[0]){$ENDIF};
+      // Stop listening
+      LListener.Terminate;
+      LListener.Binding.CloseSocket;
+      // Tear down Listener thread
+      LListener.WaitFor;
+      LListener.Free;
       LListenerThreads.Delete(0); // RLebeau 2/17/2006
     end;
   finally
@@ -787,6 +804,7 @@ procedure TIdCustomTCPServer.TerminateAllThreads;
 var
   i: Integer;
   LContext: TIdContext;
+  LList: TList{$IFDEF HAS_GENERICS_TList}<TIdContext>{$ENDIF};
 begin
   // TODO:  reimplement support for TerminateWaitTimeout
 
@@ -794,9 +812,10 @@ begin
   //Kudzu: Its because of notifications. It calls shutdown when the Scheduler is
   // set to nil and then again on destroy.
   if Contexts <> nil then begin
-    with Contexts.LockList do try
-      for i := 0 to Count - 1 do begin
-        LContext := TIdContext(Items[i]);
+    LList := Contexts.LockList;
+    try
+      for i := 0 to LList.Count - 1 do begin
+        LContext := {$IFDEF HAS_GENERICS_TList}LList.Items[i]{$ELSE}TIdContext(LList.Items[i]){$ENDIF};
         Assert(LContext<>nil);
         {$IFDEF STRING_IS_UNICODE}
         AssertClassName(LContext.Connection<>nil, LContext.ClassName);
@@ -808,7 +827,9 @@ begin
         // active data transfer on a separate asociated connection
         DoTerminateContext(LContext);
       end;
-    finally Contexts.UnLockList; end;
+    finally
+      Contexts.UnLockList;
+    end;
   end;
 
   // Scheduler may be nil during destroy which calls TerminateAllThreads
@@ -841,12 +862,12 @@ procedure TIdCustomTCPServer.InitComponent;
 begin
   inherited InitComponent;
   FBindings := TIdSocketHandles.Create(Self);
-  FContexts := TThreadList.Create;
+  FContexts := TIdContextThreadList.Create;
   FContextClass := TIdServerContext;
   //
   FTerminateWaitTime := 5000;
   FListenQueue := IdListenQueueDefault;
-  FListenerThreads := TThreadList.Create;
+  FListenerThreads := TIdListenerThreadList.Create;
   //TODO: When reestablished, use a sleeping thread instead
 //  fSessionTimer := TTimer.Create(self);
   FUseNagle := true; // default
@@ -861,7 +882,7 @@ begin
   try
     TerminateAllThreads;
   finally
-    {//bgo TODO: fix this: and TIdThreadSafeList(Threads).IsCountLessThan(1)}
+    {//bgo TODO: fix this: and Threads.IsCountLessThan(1)}
     // DONE -oAPR: BUG! Threads still live, Mgr dead ;-(
     if ImplicitScheduler then begin
       Scheduler := nil;
@@ -978,7 +999,7 @@ begin
     // ProcessingTimeout := False;
 
     // Check MaxConnections
-    if (Server.MaxConnections > 0) and (not TIdThreadSafeList(Server.Contexts).IsCountLessThan(Server.MaxConnections)) then begin
+    if (Server.MaxConnections > 0) and (not Server.Contexts.IsCountLessThan(Server.MaxConnections)) then begin
       FServer.DoMaxConnectionsExceeded(LIOHandler);
       LPeer.Disconnect;
       Abort;

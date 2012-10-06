@@ -758,11 +758,23 @@ uses
   Macapi.CoreServices,
     {$ENDIF}
   {$ENDIF}
-  IdStack, IdStackConsts, IdResourceStrings, SysUtils;
+  {$IFDEF HAS_UNIT_Generics_Collections}
+  System.Generics.Collections,
+  {$ENDIF}
+  IdStack, IdStackConsts, IdResourceStrings,
+  SysUtils;
+
+type
+  {$IFDEF HAS_GENERICS_TList}
+  TIdIOHandlerClassList = TList<TIdIOHandlerClass>;
+  {$ELSE}
+  // TODO: flesh out to match TList<TIdIOHandlerClass> for non-Generics compilers
+  TIdIOHandlerClassList = TList;
+  {$ENDIF}
 
 var
   GIOHandlerClassDefault: TIdIOHandlerClass = nil;
-  GIOHandlerClassList: TList = nil;
+  GIOHandlerClassList: TIdIOHandlerClassList = nil;
 
 { TIdIOHandler }
 
@@ -865,7 +877,7 @@ end;
 class procedure TIdIOHandler.RegisterIOHandler;
 begin
   if GIOHandlerClassList = nil then begin
-    GIOHandlerClassList := TList.Create;
+    GIOHandlerClassList := TIdIOHandlerClassList.Create;
   end;
   {$IFNDEF DOTNET_EXCLUDE}
   //TODO: Reenable this. Dot net wont allow class references as objects
@@ -885,8 +897,8 @@ var
   i: Integer;
 begin
   for i := GIOHandlerClassList.Count - 1 downto 0 do begin
-    if TIdIOHandlerClass(GIOHandlerClassList.Items[i]).InheritsFrom(ABaseType) then begin
-      Result := TIdIOHandlerClass(GIOHandlerClassList.Items[i]).Create;
+    if TIdIOHandlerClass(GIOHandlerClassList[i]).InheritsFrom(ABaseType) then begin
+      Result := TIdIOHandlerClass(GIOHandlerClassList[i]).Create;
       Exit;
     end;
   end;

@@ -250,26 +250,27 @@ begin
 end;
 
 procedure TIdIOHandlerSocket.ConnectClient;
+var
+  LBinding: TIdSocketHandle;
 begin
-  with Binding do begin
-    DoBeforeBind;
-    // Allocate the socket
-    IPVersion := Self.FIPVersion;
-    AllocateSocket;
-    DoSocketAllocated;
-    // Bind the socket
-    if BoundIP <> '' then begin
-      IP := BoundIP;
-    end;
-    Port := BoundPort;
-    ClientPortMin := BoundPortMin;
-    ClientPortMax := BoundPortMax;
-    ReuseSocket := Self.FReuseSocket;
-    Bind;
-    // Turn off Nagle if specified
-    UseNagle := Self.FUseNagle;
-    DoAfterBind;
+  LBinding := Binding;
+  DoBeforeBind;
+  // Allocate the socket
+  LBinding.IPVersion := FIPVersion;
+  LBinding.AllocateSocket;
+  DoSocketAllocated;
+  // Bind the socket
+  if BoundIP <> '' then begin
+    LBinding.IP := BoundIP;
   end;
+  LBinding.Port := BoundPort;
+  LBinding.ClientPortMin := BoundPortMin;
+  LBinding.ClientPortMax := BoundPortMax;
+  LBinding.ReuseSocket := FReuseSocket;
+  LBinding.Bind;
+  // Turn off Nagle if specified
+  LBinding.UseNagle := FUseNagle;
+  DoAfterBind;
 end;
 
 function TIdIOHandlerSocket.Connected: Boolean;

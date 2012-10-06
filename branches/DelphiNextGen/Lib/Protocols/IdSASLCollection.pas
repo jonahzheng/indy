@@ -94,6 +94,9 @@ type
 implementation
 
 uses
+  {$IFDEF HAS_UNIT_Generics_Collections}
+  System.Generics.Collections,
+  {$ENDIF}
   IdCoderMIME,
   IdGlobal,
   IdGlobalProtocols,
@@ -210,6 +213,14 @@ begin
   Result := TIdSASLListEntry( inherited Insert(Index) );
 end;
 
+type
+  {$IFDEF HAS_GENERICS_TList}
+  TIdSASLList = TList<TIdSASL>;
+  {$ELSE}
+  // TODO: flesh out to match TList<TIdSASL> for non-Generics compilers
+  TIdSASLList = TList;
+  {$ENDIF}
+
 procedure TIdSASLEntries.LoginSASL(const ACmd, AHost, AProtocolName: String; const AOkReplies,
   AContinueReplies: array of string; AClient: TIdTCPConnection;
   ACapaReply: TStrings; const AAuthString: String);
@@ -218,7 +229,7 @@ var
   LE : TIdEncoderMIME;
   LD : TIdDecoderMIME;
   LSupportedSASL : TStrings;
-  LSASLList: TList;
+  LSASLList: TIdSASLList;
   LSASL : TIdSASL;
   LError : TIdReply;
 
@@ -233,7 +244,7 @@ begin
   CheckIfEmpty;
 
   //create a list of mechanisms that both parties support
-  LSASLList := TList.Create;
+  LSASLList := TIdSASLList.Create;
   try
     LSupportedSASL := TStringList.Create;
     try
@@ -265,7 +276,7 @@ begin
         LError := nil;
         try
           for i := 0 to LSASLList.Count-1 do begin
-            LSASL := TIdSASL(LSASLList.Items[i]);
+            LSASL := {$IFDEF HAS_GENERICS_TList}LSASLList.Items[i]{$ELSE}TIdSASL(LSASLList.Items[i]){$ENDIF};
             if not LSASL.IsReadyToStart then begin
               Continue;
             end;

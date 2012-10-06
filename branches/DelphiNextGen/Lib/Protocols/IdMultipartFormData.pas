@@ -286,18 +286,16 @@ begin
     raise;
   end;
 
-  with LItem do begin
-    FFieldName := AFieldName;
-    FFileName := ExtractFileName(AFileName);
-    FFieldStream := LStream;
-    FCanFreeFieldStream := True;
-    if AContentType <> '' then begin
-      FContentType := AContentType;
-    end else begin
-      FContentType := GetMIMETypeFromFile(AFileName);
-    end;
-    FContentTransfer := sContentTransferBinary;
+  LItem.FFieldName := AFieldName;
+  LItem.FFileName := ExtractFileName(AFileName);
+  LItem.FFieldStream := LStream;
+  LItem.FCanFreeFieldStream := True;
+  if AContentType <> '' then begin
+    LItem.ContentType := AContentType;
+  end else begin
+    LItem.FContentType := GetMIMETypeFromFile(AFileName);
   end;
+  LItem.FContentTransfer := sContentTransferBinary;
 
   Result := LItem;
 end;
@@ -309,20 +307,18 @@ var
 begin
   LItem := FFields.Add;
 
-  with LItem do begin
-    FFieldName := AFieldName;
-    FFileName := ExtractFileName(AFileName);
-    FFieldValue := AFieldValue;
-    if AContentType <> '' then begin
-      ContentType := AContentType;
-    end else begin
-      FContentType := sContentTypeTextPlain;
-    end;
-    if ACharset <> '' then begin
-      FCharset := ACharset;
-    end;
-    FContentTransfer := sContentTransferQuotedPrintable;
+  LItem.FFieldName := AFieldName;
+  LItem.FFileName := ExtractFileName(AFileName);
+  LItem.FFieldValue := AFieldValue;
+  if AContentType <> '' then begin
+    LItem.ContentType := AContentType;
+  end else begin
+    LItem.FContentType := sContentTypeTextPlain;
   end;
+  if ACharset <> '' then begin
+    LItem.FCharset := ACharset;
+  end;
+  LItem.FContentTransfer := sContentTransferQuotedPrintable;
 
   Result := LItem;
 end;
@@ -338,20 +334,18 @@ begin
 
   LItem := FFields.Add;
 
-  with LItem do begin
-    FFieldName := AFieldName;
-    FFileName := ExtractFileName(AFileName);
-    FFieldStream := AFieldValue;
-    if AContentType <> '' then begin
-      ContentType := AContentType;
-    end else begin
-      FContentType := GetMIMETypeFromFile(AFileName);
-    end;
-    if ACharset <> '' then begin
-      FCharSet := ACharset;
-    end;
-    FContentTransfer := sContentTransferBinary;
+  LItem.FFieldName := AFieldName;
+  LItem.FFileName := ExtractFileName(AFileName);
+  LItem.FFieldStream := AFieldValue;
+  if AContentType <> '' then begin
+    LItem.ContentType := AContentType;
+  end else begin
+    LItem.FContentType := GetMIMETypeFromFile(AFileName);
   end;
+  if ACharset <> '' then begin
+    LItem.FCharSet := ACharset;
+  end;
+  LItem.FContentTransfer := sContentTransferBinary;
 
   Result := LItem;
 end;

@@ -111,6 +111,11 @@ begin
   try
     LEncoding := TIdTextEncoding.GetEncoding(ACharSet);
     Result := Assigned(LEncoding);
+    {$IFNDEF DOTNET}
+    if Result then begin
+      LEncoding.Free;
+    end;
+    {$ENDIF}
   except
   end;
   {$ELSE}

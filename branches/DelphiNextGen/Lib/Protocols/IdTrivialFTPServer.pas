@@ -45,12 +45,19 @@ interface
 
 uses
   Classes,
+  {$IFDEF HAS_UNIT_Generics_Collections}
+  System.Generics.Collections,
+  {$ENDIF}
   IdAssignedNumbers,
   IdGlobal,
   IdThreadSafe,
   IdTrivialFTPBase,
   IdSocketHandle,
-  IdUDPServer;
+  IdUDPServer
+  {$IFDEF HAS_GENERICS_TObjectList}
+  , IdThread
+  {$ENDIF}
+  ;
 
 type
   TPeerInfo = record
@@ -63,9 +70,11 @@ type
   TTransferCompleteEvent = procedure (Sender: TObject; const Success: Boolean;
     const PeerInfo: TPeerInfo; var AStream: TStream; const WriteOperation: Boolean) of object;
 
+  TIdTFTPThreadList = TIdThreadSafeObjectList{$IFDEF HAS_GENERICS_TObjectList}<TIdThread>{$ENDIF};
+
   TIdTrivialFTPServer = class(TIdUDPServer)
   protected
-    FThreadList: TIdThreadSafeList;
+    FThreadList: TIdTFTPThreadList;
     FOnTransferComplete: TTransferCompleteEvent;
     FOnReadFile,
     FOnWriteFile: TAccessFileEvent;
@@ -114,7 +123,9 @@ uses
   IdGlobalProtocols,
   IdResourceStringsProtocols,
   IdStack,
+  {$IFNDEF HAS_GENERICS_TObjectList}
   IdThread,
+  {$ENDIF}
   IdUDPClient,
   SysUtils;
 
@@ -174,7 +185,7 @@ procedure TIdTrivialFTPServer.InitComponent;
 begin
   inherited InitComponent;
   DefaultPort := IdPORT_TFTP;
-  FThreadList := TIdThreadSafeList.Create;
+  FThreadList := TIdTFTPThreadList.Create;
 end;
 
 procedure TIdTrivialFTPServer.DoReadFile(FileName: String; const Mode: TIdTFTPMode;
@@ -436,16 +447,13 @@ begin
   FreeOnTerminate := True;
   FStream := AStream;
   FFreeStrm := FreeStreamOnTerminate;
-  FUDPClient := TIdUDPClient.Create(nil);
   FOwner := AOwner;
-  with FUDPClient do
-  begin
-    IPVersion := FOwner.IPVersion;
-    ReceiveTimeout := 1500;
-    Host := PeerInfo.PeerIP;
-    Port := PeerInfo.PeerPort;
-    BufferSize := RequestedBlockSize + 4;
-  end;
+  FUDPClient := TIdUDPClient.Create(nil);
+  FUDPClient.IPVersion := FOwner.IPVersion;
+  FUDPClient.ReceiveTimeout := 1500;
+  FUDPClient.Host := PeerInfo.PeerIP;
+  FUDPClient.Port := PeerInfo.PeerPort;
+  FUDPClient.BufferSize := RequestedBlockSize + 4;
   FOwner.FThreadList.Add(Self);
 end;
 

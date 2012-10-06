@@ -114,20 +114,19 @@ uses
 
 { TIdMessageDecoderInfoUUE }
 
-function TIdMessageDecoderInfoUUE.CheckForStart(ASender: TIdMessage;
- const ALine: string): TIdMessageDecoder;
+function TIdMessageDecoderInfoUUE.CheckForStart(ASender: TIdMessage; const ALine: string): TIdMessageDecoder;
 var
   LPermissionCode: integer;
+  LUUE: TIdMessageDecoderUUE;
 begin
   Result := nil;
   if TextStartsWith(ALine, 'begin ') and CharEquals(ALine, 10, ' ') then begin {Do not Localize}
-  LPermissionCode := IndyStrToInt(Copy(ALine, 7, 3), 0);
+    LPermissionCode := IndyStrToInt(Copy(ALine, 7, 3), 0);
     if LPermissionCode > 0 then begin
-      Result := TIdMessageDecoderUUE.Create(ASender);
-      with TIdMessageDecoderUUE(Result) do begin
-        FFilename := Copy(ALine, 11, MaxInt);
-        FPartType := mcptAttachment;
-      end;
+      LUUE := TIdMessageDecoderUUE.Create(ASender);
+      LUUE.FFilename := Copy(ALine, 11, MaxInt);
+      LUUE.FPartType := mcptAttachment;
+      Result := LUUE;
     end;
   end;
 end;
@@ -208,7 +207,7 @@ begin
       LEncoder.Encode(ASrc, ADest, 45);
       WriteStringToStream(ADest, EOL);
     end;
-    WriteStringToStream(ADest, LEncoder.FillChar + EOL + 'end' + EOL); {Do not Localize}
+    WriteStringToStream(ADest, String(LEncoder.FillChar) + EOL + 'end' + EOL); {Do not Localize}
   finally FreeAndNil(LEncoder); end;
 end;
 

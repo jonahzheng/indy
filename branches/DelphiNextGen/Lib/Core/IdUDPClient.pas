@@ -236,23 +236,20 @@ begin
   if FBinding = nil then begin
     FBinding := TIdSocketHandle.Create(nil);
   end;
-  with FBinding do
-  begin
-    if not HandleAllocated then begin
-      IPVersion := Self.FIPVersion;
-      {$IFDEF LINUX}
-      AllocateSocket(LongInt(Id_SOCK_DGRAM));
-      {$ELSE}
-      AllocateSocket(Id_SOCK_DGRAM);
-      {$ENDIF}
-      IP := FBoundIP;
-      Port := FBoundPort;
-      ClientPortMin := FBoundPortMin;
-      ClientPortMax := FBoundPortMax;
-      ReuseSocket := Self.FReuseSocket;
-      Bind;
-      BroadcastEnabledChanged;
-    end;
+  if not FBinding.HandleAllocated then begin
+    FBinding.IPVersion := FIPVersion;
+    {$IFDEF LINUX}
+    FBinding.AllocateSocket(LongInt(Id_SOCK_DGRAM));
+    {$ELSE}
+    FBinding.AllocateSocket(Id_SOCK_DGRAM);
+    {$ENDIF}
+    FBinding.IP := FBoundIP;
+    FBinding.Port := FBoundPort;
+    FBinding.ClientPortMin := FBoundPortMin;
+    FBinding.ClientPortMax := FBoundPortMax;
+    FBinding.ReuseSocket := FReuseSocket;
+    FBinding.Bind;
+    BroadcastEnabledChanged;
   end;
   Result := FBinding;
 end;

@@ -74,6 +74,9 @@ interface
 
 uses
   Classes,
+  {$IFDEF HAS_UNIT_Generics_Collections}
+  System.Generics.Collections,
+  {$ENDIF}
   IdComponent,
   IdException,
   IdGlobal,
@@ -93,7 +96,15 @@ type
     FBuffer: TIdBytes;
     FCurrentException: String;
     FCurrentExceptionClass: TClass;
+    {$IFDEF DCC_NEXTGEN_ARC}
+    // When AutoRefCounting is enabled, object references MUST be valid objects.
+    // It is common for users to store non-object values, though, so we will
+    // provide separate properties for those purpose
+    FDataObject: TObject;
+    FDataValue: PtrInt;
+    {$ELSE}
     FData: TObject;
+    {$ENDIF}
     FServer: TIdUDPServer;
     //
     procedure AfterRun; override;
@@ -110,8 +121,21 @@ type
     property AcceptWait: integer read FAcceptWait write FAcceptWait;
     property Binding: TIdSocketHandle read FBinding;
     property Server: TIdUDPServer read FServer;
+    {$IFDEF DCC_NEXTGEN_ARC}
+    property DataObject: TObject read FDataObject write FDataObject;
+    property DataValue: PtrInt read FDataValue write FDataValue;
+    {$ELSE}
     property Data: TObject read FData write FData;
+    {$ENDIF}
   end;
+
+  // TODO: use TIdThreadSafeObjectList instead?
+  {$IFDEF HAS_GENERICS_TThreadList}
+  TIdUDPListenerThreadList = TThreadList<TIdUDPListenerThread>;
+  {$ELSE}
+  // TODO: flesh out TThreadList<TIdUDPListenerThread> for non-Generics compilers...
+  TIdUDPListenerThreadList = TThreadList;
+  {$ENDIF}
 
   TIdUDPListenerThreadClass = class of TIdUDPListenerThread;
   
@@ -133,7 +157,7 @@ type
   protected
     FBindings: TIdSocketHandles;
     FCurrentBinding: TIdSocketHandle;
-    FListenerThreads: TThreadList;
+    FListenerThreads: TIdUDPListenerThreadList;
     FThreadClass: TIdUDPListenerThreadClass;
     FThreadedEvent: boolean;
     //
@@ -192,9 +216,18 @@ begin
   end;
 end;
 
+type
+  {$IFDEF HAS_GENERICS_TList}
+  TIdUDPListenerList = TList<TIdUDPListenerThread>;
+  {$ELSE}
+  // TODO: flesh out TList<TIdUDPListenerThread> for non-Generics compilers...
+  TIdUDPListenerList = TList;
+  {$ENDIF}
+
 procedure TIdUDPServer.CloseBinding;
 var
-  LListenerThreads: TList;
+  LListenerThreads: TIdUDPListenerList;
+  LListener: TIdUDPListenerThread;
 begin
   // RLebeau 2/17/2006: TIdUDPBase.Destroy() calls CloseBinding()
   if Assigned(FListenerThreads) then
@@ -203,14 +236,13 @@ begin
     try
       while LListenerThreads.Count > 0 do
       begin
-        with TIdUDPListenerThread(LListenerThreads[0]) do begin
-          // Stop listening
-          Stop;
-          Binding.CloseSocket;
-          // Tear down Listener thread
-          WaitFor;
-          Free;
-        end;
+        LListener := {$IFDEF HAS_GENERICS_TThreadList}LListenerThreads[0]{$ELSE}TIdUDPListenerThread(LListenerThreads[0]){$ENDIF};
+        // Stop listening
+        LListener.Stop;
+        LListener.Binding.CloseSocket;
+        // Tear down Listener thread
+        LListener.WaitFor;
+        LListener.Free;
         LListenerThreads.Delete(0); // RLebeau 2/17/2006
       end;
     finally
@@ -271,6 +303,7 @@ function TIdUDPServer.GetBinding: TIdSocketHandle;
 var
   LListenerThread: TIdUDPListenerThread;
   i: Integer;
+  LBinding: TIdSocketHandle;
 begin
   if FCurrentBinding = nil then begin
     if Bindings.Count = 0 then begin
@@ -287,19 +320,18 @@ begin
     i := 0;
     try
       while i < Bindings.Count do begin
-        with Bindings[i] do begin
+        LBinding := Bindings[i];
 {$IFDEF LINUX}
-          AllocateSocket(Integer(Id_SOCK_DGRAM));
+        LBinding.AllocateSocket(Integer(Id_SOCK_DGRAM));
 {$ELSE}
-          AllocateSocket(Id_SOCK_DGRAM);
+        LBinding.AllocateSocket(Id_SOCK_DGRAM);
 {$ENDIF}
-          // do not overwrite if the default. This allows ReuseSocket to be set per binding
-          if Self.FReuseSocket <> rsOSDependent then begin
-            ReuseSocket := Self.FReuseSocket;
-          end;
-          DoBeforeBind(Bindings[i]);
-          Bind;
+        // do not overwrite if the default. This allows ReuseSocket to be set per binding
+        if FReuseSocket <> rsOSDependent then begin
+          LBinding.ReuseSocket := FReuseSocket;
         end;
+        DoBeforeBind(LBinding);
+        LBinding.Bind;
         Inc(i);
       end;
     except
@@ -341,7 +373,7 @@ procedure TIdUDPServer.InitComponent;
 begin
   inherited InitComponent;
   FBindings := TIdSocketHandles.Create(Self);
-  FListenerThreads := TThreadList.Create;
+  FListenerThreads := TIdUDPListenerThreadList.Create;
   FThreadClass := TIdUDPListenerThread;
 end;
 

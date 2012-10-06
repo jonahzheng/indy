@@ -175,21 +175,23 @@ function TIdMessageDecoderInfoYenc.CheckForStart(ASender: TIdMessage; const ALin
     end;
   end;
 
+var
+  LYenc: TIdMessageDecoderYenc;
 begin
   if TextStartsWith(ALine, '=ybegin ') {Do not Localize} then
   begin
-    Result := TIdMessageDecoderYenc.Create(ASender);
-    with TIdMessageDecoderYenc(Result) do
+    LYenc := TIdMessageDecoderYenc.Create(ASender);
     try
-      FSize := GetIntValue(ALine, 'size'); {Do not Localize}
-      FLine := GetIntValue(ALine, 'line'); {Do not Localize}
-      FPart := GetIntValue(ALine, 'part'); {Do not Localize}
-      FFilename := GetName;
-      FPartType := mcptAttachment;
+      LYenc.FSize := GetIntValue(ALine, 'size'); {Do not Localize}
+      LYenc.FLine := GetIntValue(ALine, 'line'); {Do not Localize}
+      LYenc.FPart := GetIntValue(ALine, 'part'); {Do not Localize}
+      LYenc.FFilename := GetName;
+      LYenc.FPartType := mcptAttachment;
     except
-      FreeAndNil(Result);
+      FreeAndNil(LYenc);
       raise;
     end;
+    Result := LYenc;
   end else begin
     Result := nil;
   end;

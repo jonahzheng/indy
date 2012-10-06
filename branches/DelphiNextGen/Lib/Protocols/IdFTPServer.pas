@@ -876,7 +876,7 @@ type
     procedure ReInitialize; override;
 
   public
-    constructor Create(AConnection: TIdTCPConnection; AYarn: TIdYarn; AList: TThreadList = nil); override;
+    constructor Create(AConnection: TIdTCPConnection; AYarn: TIdYarn; AList: TIdContextThreadList = nil); override;
     destructor Destroy; override;
     procedure KillDataChannel;
 
@@ -1347,12 +1347,14 @@ const
 
 function CalculateCheckSum(AHashClass: TIdHashClass; AStrm: TStream; ABeginPos, AEndPos: TIdStreamSize): String;
   {$IFDEF USE_INLINE} inline; {$ENDIF}
+var
+  LHash: TIdHash;
 begin
-  with AHashClass.Create do
+  LHash := AHashClass.Create;
   try
-    Result := HashStreamAsHex(AStrm, ABeginPos, AEndPos-ABeginPos);
+    Result := LHash.HashStreamAsHex(AStrm, ABeginPos, AEndPos-ABeginPos);
   finally
-    Free;
+    LHash.Free;
   end;
 end;
 
@@ -1374,7 +1376,7 @@ end;
 { TIdFTPServer }
 
 constructor TIdFTPServerContext.Create(AConnection: TIdTCPConnection; AYarn: TIdYarn;
-  AList: TThreadList = nil);
+  AList: TIdContextThreadList = nil);
 begin
   inherited Create(AConnection, AYarn, AList);
   FUserSecurity := TIdFTPSecurityOptions.Create;
@@ -2981,6 +2983,7 @@ var
   LPort: TIdPort;
   LParm, LIP : string;
   LContext : TIdFTPServerContext;
+  LDataChannel: TIdTCPClient;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
   if LContext.IsAuthenticated(ASender) then begin
@@ -3028,11 +3031,10 @@ begin
     end;
     {//BGO}
     LContext.CreateDataChannel(False);
-    with TIdTCPClient(LContext.FDataChannel.FDataChannel) do begin
-      Host := LIP;
-      Port := LPort;
-      IPVersion := Id_IPv4;
-    end;
+    LDataChannel := TIdTCPClient(LContext.FDataChannel.FDataChannel);
+    LDataChannel.Host := LIP;
+    LDataChannel.Port := LPort;
+    LDataChannel.IPVersion := Id_IPv4;
     LContext.FDataPort := LPort;
     LContext.FDataPortDenied := False;
     CmdCommandSuccessful(ASender, 200);
@@ -3260,52 +3262,53 @@ end;
 
 procedure TIdFTPServer.CommandALLO(ASender: TIdCommand);
 var
+  LContext: TIdFTPServerContext;
   LALLOSize, s: string;
 begin
-  with TIdFTPServerContext(ASender.Context) do begin
-    if IsAuthenticated(ASender) then begin
-      LALLOSize := '';
-      if Length(ASender.UnparsedParams) > 0 then begin
-        if TextStartsWith(ASender.UnparsedParams, 'R ') then begin {Do not localize}
-          LALLOSize := TrimLeft(Copy(s, 3, MaxInt));
-        end else begin
-          LALLOSize := TrimLeft(ASender.UnparsedParams);
-        end;
-        LALLOSize := Fetch(LALLOSize);
-      end;
-      if LALLOSize <> '' then begin
-        FALLOSize := IndyStrToInt(LALLOSize, 0);
-        CmdCommandSuccessful(ASender, 200);
+  LContext := TIdFTPServerContext(ASender.Context);
+  if LContext.IsAuthenticated(ASender) then begin
+    LALLOSize := '';
+    if Length(ASender.UnparsedParams) > 0 then begin
+      if TextStartsWith(ASender.UnparsedParams, 'R ') then begin {Do not localize}
+        LALLOSize := TrimLeft(Copy(s, 3, MaxInt));
       end else begin
-        ASender.Reply.SetReply(504, RSFTPInvalidForParam);
+        LALLOSize := TrimLeft(ASender.UnparsedParams);
       end;
+      LALLOSize := Fetch(LALLOSize);
+    end;
+    if LALLOSize <> '' then begin
+      LContext.FALLOSize := IndyStrToInt(LALLOSize, 0);
+      CmdCommandSuccessful(ASender, 200);
+    end else begin
+      ASender.Reply.SetReply(504, RSFTPInvalidForParam);
     end;
   end;
 end;
 
 procedure TIdFTPServer.CommandREST(ASender: TIdCommand);
+var
+  LContext: TIdFTPServerContext;
 begin
-  with TIdFTPServerContext(ASender.Context) do begin
-    if IsAuthenticated(ASender) then begin
-      FRESTPos := IndyStrToInt(ASender.UnparsedParams, 0);
-      ASender.Reply.SetReply(350, RSFTPFileActionPending);
-    end;
+  LContext := TIdFTPServerContext(ASender.Context);
+  if LContext.IsAuthenticated(ASender) then begin
+    LContext.FRESTPos := IndyStrToInt(ASender.UnparsedParams, 0);
+    ASender.Reply.SetReply(350, RSFTPFileActionPending);
   end;
 end;
 
 procedure TIdFTPServer.CommandRNFR(ASender: TIdCommand);
 var
+  LContext: TIdFTPServerContext;
   s: string;
 begin
-  with TIdFTPServerContext(ASender.Context) do begin
-    if IsAuthenticated(ASender) then begin
-      s := ASender.UnparsedParams;
-      if Assigned(FOnRenameFile) or Assigned(FTPFileSystem) then begin
-        ASender.Reply.SetReply(350, RSFTPFileActionPending);
-        FRNFR := DoProcessPath(TIdFTPServerContext(ASender.Context), s);
-      end else begin
-        CmdNotImplemented(ASender);
-      end;
+  LContext := TIdFTPServerContext(ASender.Context);
+  if LContext.IsAuthenticated(ASender) then begin
+    s := ASender.UnparsedParams;
+    if Assigned(FOnRenameFile) or Assigned(FTPFileSystem) then begin
+      ASender.Reply.SetReply(350, RSFTPFileActionPending);
+      LContext.FRNFR := DoProcessPath(TIdFTPServerContext(LContext), s);
+    end else begin
+      CmdNotImplemented(ASender);
     end;
   end;
 end;
@@ -3328,20 +3331,21 @@ begin
 end;
 
 procedure TIdFTPServer.CommandABOR(ASender: TIdCommand);
+var
+  LContext: TIdFTPServerContext;
 begin
-  with TIdFTPServerContext(ASender.Context) do begin
-    if IsAuthenticated(ASender) then begin
-      if Assigned(FDataChannel) then begin
-        if not FDataChannel.Stopped then begin
-          FDataChannel.OkReply.SetReply(426, RSFTPDataConnClosedAbnormally);
-          FDataChannel.ErrorReply.SetReply(426, RSFTPDataConnClosedAbnormally);
-          KillDataChannel;
-          ASender.Reply.SetReply(226, RSFTPDataConnClosed);
-          Exit;
-        end;
+  LContext := TIdFTPServerContext(ASender.Context);
+  if LContext.IsAuthenticated(ASender) then begin
+    if Assigned(LContext.FDataChannel) then begin
+      if not LContext.FDataChannel.Stopped then begin
+        LContext.FDataChannel.OkReply.SetReply(426, RSFTPDataConnClosedAbnormally);
+        LContext.FDataChannel.ErrorReply.SetReply(426, RSFTPDataConnClosedAbnormally);
+        LContext.KillDataChannel;
+        ASender.Reply.SetReply(226, RSFTPDataConnClosed);
+        Exit;
       end;
-      CmdCommandSuccessful(ASender, 226);
     end;
+    CmdCommandSuccessful(ASender, 226);
   end;
 end;
 
@@ -3409,11 +3413,12 @@ begin
 end;
 
 procedure TIdFTPServer.CommandPWD(ASender: TIdCommand);
+var
+  LContext: TIdFTPServerContext;
 begin
-  with TIdFTPServerContext(ASender.Context) do begin
-    if IsAuthenticated(ASender) then begin
-      ASender.Reply.SetReply(257, IndyFormat(RSFTPCurrentDirectoryIs, [FCurrentDir]));
-    end;
+  LContext := TIdFTPServerContext(ASender.Context);
+  if LContext.IsAuthenticated(ASender) then begin
+    ASender.Reply.SetReply(257, IndyFormat(RSFTPCurrentDirectoryIs, [LContext.FCurrentDir]));
   end;
 end;
 
@@ -4141,6 +4146,7 @@ var
   LAddrFamily: integer;
   LReqIPVersion: TIdIPVersion;
   LContext : TIdFTPServerContext;
+  LDataChannel: TIdTCPClient;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
   if LContext.IsAuthenticated(ASender) then begin
@@ -4209,11 +4215,10 @@ begin
       Exit;
     end;
     LContext.CreateDataChannel(False);
-    with TIdTCPClient(LContext.FDataChannel.FDataChannel) do begin
-      Host := LIP;
-      Port := LContext.FDataPort;
-      IPVersion := LIPVersion;
-    end;
+    LDataChannel := TIdTCPClient(LContext.FDataChannel.FDataChannel);
+    LDataChannel.Host := LIP;
+    LDataChannel.Port := LContext.FDataPort;
+    LDataChannel.IPVersion := LIPVersion;
     LContext.FDataPortDenied := False;
     CmdCommandSuccessful(ASender, 200);
   end;
@@ -4228,6 +4233,7 @@ var
   LProtocol: integer;
   LProtocols: string;
   LContext : TIdFTPServerContext;
+  LDataChannel: TIdSimpleServer;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
   if LContext.IsAuthenticated(ASender) then begin
@@ -4284,22 +4290,22 @@ begin
     DoOnPASVBeforeBind(LContext, LIP, LBPortMin, LBPortMax, LIPVersion);
 
     LContext.CreateDataChannel(True);
-    with TIdSimpleServer(LContext.FDataChannel.FDataChannel) do begin
-      BoundIP := LIP;
-      if LBPortMin = LBPortMax then begin
-        BoundPort := LBPortMin;
-        BoundPortMin := 0;
-        BoundPortMax := 0;
-      end else begin
-        BoundPort := 0;
-        BoundPortMin := LBPortMin;
-        BoundPortMax := LBPortMax;
-      end;
-      IPVersion := LIPVersion;
-      BeginListen;
-      LIP := Binding.IP;
-      LBPortMin := Binding.Port;
+    LDataChannel := TIdSimpleServer(LContext.FDataChannel.FDataChannel);
+    LDataChannel.BoundIP := LIP;
+    if LBPortMin = LBPortMax then begin
+      LDataChannel.BoundPort := LBPortMin;
+      LDataChannel.BoundPortMin := 0;
+      LDataChannel.BoundPortMax := 0;
+    end else begin
+      LDataChannel.BoundPort := 0;
+      LDataChannel.BoundPortMin := LBPortMin;
+      LDataChannel.BoundPortMax := LBPortMax;
     end;
+    LDataChannel.IPVersion := LIPVersion;
+    LDataChannel.BeginListen;
+    LIP := LDataChannel.Binding.IP;
+    LBPortMin := LDataChannel.Binding.Port;
+
     //Note that only one Port can work with EPSV
     DoOnPASVReply(LContext, LIP, LBPortMin, LIPVersion);
     LParam := '|||' + IntToStr(LBPortMin) + '|'; {Do not localize}
@@ -6148,6 +6154,7 @@ function TIdFTPServer.InternalPASV(ASender: TIdCommand; var VIP : String;
 var
   LContext : TIdFTPServerContext;
   LBPortMin, LBPortMax: TIdPort;
+  LDataChannel: TIdSimpleServer;
 begin
   Result := False;
   LContext := ASender.Context as TIdFTPServerContext;
@@ -6170,22 +6177,21 @@ begin
     DoOnPASVBeforeBind(LContext, VIP, LBPortMin, LBPortMax, VIPVersion);
 
     LContext.CreateDataChannel(True);
-    with TIdSimpleServer(LContext.FDataChannel.FDataChannel) do begin
-      BoundIP := VIP;
-      if LBPortMin = LBPortMax then begin
-        BoundPort := LBPortMin;
-        BoundPortMin := 0;
-        BoundPortMax := 0;
-      end else begin
-        BoundPort := 0;
-        BoundPortMin := LBPortMin;
-        BoundPortMax := LBPortMax;
-      end;
-      IPVersion := VIPVersion;
-      BeginListen;
-      VIP := Binding.IP;
-      VPort := Binding.Port;
+    LDataChannel := TIdSimpleServer(LContext.FDataChannel.FDataChannel);
+    LDataChannel.BoundIP := VIP;
+    if LBPortMin = LBPortMax then begin
+      LDataChannel.BoundPort := LBPortMin;
+      LDataChannel.BoundPortMin := 0;
+      LDataChannel.BoundPortMax := 0;
+    end else begin
+      LDataChannel.BoundPort := 0;
+      LDataChannel.BoundPortMin := LBPortMin;
+      LDataChannel.BoundPortMax := LBPortMax;
     end;
+    LDataChannel.IPVersion := VIPVersion;
+    LDataChannel.BeginListen;
+    VIP := LDataChannel.Binding.IP;
+    VPort := LDataChannel.Binding.Port;
 
     LContext.FPASV := True;
     LContext.FDataPortDenied := False;
@@ -6936,6 +6942,8 @@ constructor TIdDataChannel.Create(APASV: Boolean; AControlContext: TIdFTPServerC
   const ARequirePASVFromSameIP: Boolean; AServer: TIdFTPServer);
 var
   LIO: TIdIOHandlerSocket;
+  LDataChannelSvr: TIdSimpleServer;
+  LDataChannelCli: TIdTCPClient;
 begin
   inherited Create;
   FNegotiateTLS := False;
@@ -6955,26 +6963,24 @@ begin
 
   if APASV then begin
     FDataChannel := TIdSimpleServer.Create(nil);
-    with TIdSimpleServer(FDataChannel) do begin
-      BoundIP := FControlContext.Connection.Socket.Binding.IP;
-      if (AServer.PASVBoundPortMin <> 0) and (AServer.PASVBoundPortMax <> 0) then begin
-        BoundPortMin := AServer.PASVBoundPortMin;
-        BoundPortMax := AServer.PASVBoundPortMax;
-      end else begin
-        BoundPort := AServer.DefaultDataPort;
-      end;
-      IPVersion := FControlContext.Connection.Socket.Binding.IPVersion;
-      OnBeforeBind := AControlContext.PortOnBeforeBind;
-      OnAfterBind := AControlContext.PortOnAfterBind;
+    LDataChannelSvr := TIdSimpleServer(FDataChannel);
+    LDataChannelSvr.BoundIP := FControlContext.Connection.Socket.Binding.IP;
+    if (AServer.PASVBoundPortMin <> 0) and (AServer.PASVBoundPortMax <> 0) then begin
+      LDataChannelSvr.BoundPortMin := AServer.PASVBoundPortMin;
+      LDataChannelSvr.BoundPortMax := AServer.PASVBoundPortMax;
+    end else begin
+      LDataChannelSvr.BoundPort := AServer.DefaultDataPort;
     end;
+    LDataChannelSvr.IPVersion := FControlContext.Connection.Socket.Binding.IPVersion;
+    LDataChannelSvr.OnBeforeBind := AControlContext.PortOnBeforeBind;
+    LDataChannelSvr.OnAfterBind := AControlContext.PortOnAfterBind;
   end else begin
     FDataChannel := TIdTCPClient.Create(nil);
     //the TCPClient for the dataport must be bound to a default port
-    with TIdTCPClient(FDataChannel) do begin
-      BoundIP := FControlContext.Connection.Socket.Binding.IP;
-      BoundPort := AServer.DefaultDataPort;
-      IPVersion := FControlContext.Connection.Socket.Binding.IPVersion;
-    end;
+    LDataChannelCli := TIdTCPClient(FDataChannel);
+    LDataChannelCli.BoundIP := FControlContext.Connection.Socket.Binding.IP;
+    LDataChannelCli.BoundPort := AServer.DefaultDataPort;
+    LDataChannelCli.IPVersion := FControlContext.Connection.Socket.Binding.IPVersion;
   end;
 
   if AControlContext.Server.IOHandler is TIdServerIOHandlerSSLBase then begin
@@ -6996,11 +7002,11 @@ begin
   if LIO is TIdSSLIOHandlerSocketBase then begin
     case AControlContext.DataProtection of
       ftpdpsClear: begin
-          TIdSSLIOHandlerSocketBase(LIO).PassThrough := True;
-        end;
+        TIdSSLIOHandlerSocketBase(LIO).PassThrough := True;
+      end;
       ftpdpsPrivate: begin
-          FNegotiateTLS := True;
-        end;
+        FNegotiateTLS := True;
+      end;
     end;
   end;
 end;
@@ -7010,7 +7016,10 @@ begin
   FreeAndNil(FOKReply);
   FreeAndNil(FErrorReply);
   FreeAndNil(FReply);
+  {$IFNDEF DCC_NEXTGEN}
   FDataChannel.IOHandler.Free;
+  {$ENDIF}
+  FDataChannel.IOHandler := nil;
   FreeAndNil(FDataChannel);
   inherited Destroy;
 end;

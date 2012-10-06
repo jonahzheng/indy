@@ -265,7 +265,7 @@ type
     function GetTLSIsRequired: Boolean;
     procedure SetPipeLining(const AValue : Boolean);
   public
-    constructor Create(AConnection: TIdTCPConnection; AYarn: TIdYarn; AList: TThreadList = nil); override;
+    constructor Create(AConnection: TIdTCPConnection; AYarn: TIdYarn; AList: TIdContextThreadList = nil); override;
     destructor Destroy; override;
     //
     procedure CheckPipeLine;
@@ -795,7 +795,7 @@ begin
           LM := mAccept;
           LParams := TStringList.Create;
           try
-            SplitColumns(S, LParams);
+            SplitDelimitedString(S, LParams, True);
             // RLebeau: check the message size before accepting the message
             if LParams.IndexOfName('SIZE') <> -1 then
             begin
@@ -909,7 +909,7 @@ begin
         if Assigned(FOnRcptTo) then begin
           LParams := TStringList.Create;
           try
-            SplitColumns(S, LParams);
+            SplitDelimitedString(S, LParams, True);
             FOnRcptTo(LContext, EMailAddress.Address, LParams, LAction, LForward);
           finally
             FreeAndNil(LParams);
@@ -1270,7 +1270,7 @@ begin
 end;
 
 constructor TIdSMTPServerContext.Create(AConnection: TIdTCPConnection;
-  AYarn: TIdYarn; AList: TThreadList = nil);
+  AYarn: TIdYarn; AList: TIdContextThreadList = nil);
 begin
   inherited Create(AConnection, AYarn, AList);
   SMTPState := idSMTPNone;

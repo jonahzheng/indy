@@ -81,7 +81,15 @@ type
     FConnection: TComponent;
     FIntercept: TIdConnectionIntercept;
     FIsClient: Boolean;
+    {$IFDEF DCC_NEXTGEN_ARC}
+    // When AutoRefCounting is enabled, object references MUST be valid objects.
+    // It is common for users to store non-object values, though, so we will
+    // provide separate properties for those purposes
+    FDataObject: TObject;
+    FDataValue: PtrInt;
+    {$ELSE}
     FData: TObject;
+    {$ENDIF}
 
     FOnConnect: TIdInterceptNotifyEvent;
     FOnDisconnect: TIdInterceptNotifyEvent;
@@ -100,7 +108,14 @@ type
     //
     property Connection: TComponent read FConnection;
     property IsClient: Boolean read FIsClient;
-    property Data: TObject read FData write FData; // user can use this to keep context
+
+    // user can use this to keep context
+    {$IFDEF DCC_NEXTGEN_ARC}
+    property DataObject: TObject read FDataObject write FDataObject;
+    property DataValue: PtrInt read FDataValue write FDataValue;
+    {$ELSE}
+    property Data: TObject read FData write FData;
+    {$ENDIF}
   published
     property Intercept: TIdConnectionIntercept read FIntercept write SetIntercept;
     property OnConnect: TIdInterceptNotifyEvent read FOnConnect write FOnConnect;

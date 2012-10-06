@@ -162,6 +162,9 @@ interface
 
 uses
   Classes,
+  {$IFDEF HAS_UNIT_Generics_Collections}
+  System.Generics.Collections,
+  {$ENDIF}
   IdAssignedNumbers,
   IdContext, IdException,
   IdGlobal, IdStack,
@@ -352,6 +355,15 @@ type
     property SessionID: String read FSessionID;
   end;
 
+  {$IFDEF HAS_GENERICS_TThreadList}
+  TIdHTTPSessionThreadList = TThreadList<TIdHTTPSession>;
+  TIdHTTPSessionList = TList<TIdHTTPSession>;
+  {$ELSE}
+  // TODO: flesh out to match TThreadList<TIdHTTPSession> and TList<TIdHTTPSession> for non-Generics compilers
+  TIdHTTPSessionThreadList = TThreadList;
+  TIdHTTPSessionList = TList;
+  {$ENDIF}
+
   TIdHTTPCustomSessionList = class(TIdBaseComponent)
   private
     FSessionTimeout: Integer;
@@ -496,15 +508,15 @@ type
 
   TIdHTTPDefaultSessionList = Class(TIdHTTPCustomSessionList)
   protected
-    FSessionList: TThreadList;
+    FSessionList: TIdHTTPSessionThreadList;
     procedure RemoveSession(Session: TIdHTTPSession); override;
     // remove a session surgically when list already locked down (prevent deadlock)
-    procedure RemoveSessionFromLockedList(AIndex: Integer; ALockedSessionList: TList);
+    procedure RemoveSessionFromLockedList(AIndex: Integer; ALockedSessionList: TIdHTTPSessionList);
   protected
     procedure InitComponent; override;
   public
     destructor Destroy; override;
-    property SessionList: TThreadList read FSessionList;
+    property SessionList: TIdHTTPSessionThreadList read FSessionList;
     procedure Clear; override;
     procedure Add(ASession: TIdHTTPSession); override;
     procedure PurgeStaleSessions(PurgeAll: Boolean = false); override;
@@ -593,14 +605,28 @@ const
   MaxChar: Cardinal = Length(CharMap) - 1;
 var
   i: integer;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB: TIdStringBuilder;
+  {$ENDIF}
 begin
   randomize;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  LSB := TIdStringBuilder.Create(NumChar);
+  {$ELSE}
   SetLength(Result, NumChar);
+  {$ENDIF}
   for i := 1 to NumChar do
   begin
     // Add one because CharMap is 1-based
+    {$IFDEF STRING_IS_IMMUTABLE}
+    LSB.Append(CharMap[Random(MaxChar) + 1]);
+    {$ELSE}
     Result[i] := CharMap[Random(MaxChar) + 1];
+    {$ENDIF}
   end;
+  {$IFDEF STRING_IS_IMMUTABLE}
+  Result := LSB.ToString;
+  {$ENDIF}
 end;
 
 function DecodeHTTPCommand(const ACmd: string): THTTPCommandType;
@@ -644,80 +670,113 @@ end;
 
 destructor TIdThreadSafeMimeTable.Destroy;
 begin
-  inherited Lock; try
+  inherited Lock;
+  try
     FreeAndNil(FTable);
-  finally inherited Unlock; end;
+  finally
+    inherited Unlock;
+  end;
   inherited Destroy;
 end;
 
 function TIdThreadSafeMimeTable.GetLoadTypesFromOS: Boolean;
 begin
-  with Lock do try
-    Result := LoadTypesFromOS;
-  finally Unlock; end;
+  Lock;
+  try
+    Result := FTable.LoadTypesFromOS;
+  finally
+    Unlock;
+  end;
 end;
 
 procedure TIdThreadSafeMimeTable.SetLoadTypesFromOS(AValue: Boolean);
 begin
-  with Lock do try
-    LoadTypesFromOS := AValue;
-  finally Unlock; end;
+  Lock;
+  try
+    FTable.LoadTypesFromOS := AValue;
+  finally
+    Unlock;
+  end;
 end;
 
 function TIdThreadSafeMimeTable.GetOnBuildCache: TNotifyEvent;
 begin
-  with Lock do try
-    Result := OnBuildCache;
-  finally Unlock; end;
+  Lock;
+  try
+    Result := FTable.OnBuildCache;
+  finally
+    Unlock;
+  end;
 end;
 
 procedure TIdThreadSafeMimeTable.SetOnBuildCache(AValue: TNotifyEvent);
 begin
-  with Lock do try
-    OnBuildCache := AValue;
-  finally Unlock; end;
+  Lock;
+  try
+    FTable.OnBuildCache := AValue;
+  finally
+    Unlock;
+  end;
 end;
 
 procedure TIdThreadSafeMimeTable.BuildCache;
 begin
-  with Lock do try
-    BuildCache;
-  finally Unlock; end;
+  Lock;
+  try
+    FTable.BuildCache;
+  finally
+    Unlock;
+  end;
 end;
 
 procedure TIdThreadSafeMimeTable.AddMimeType(const Ext, MIMEType: string; const ARaiseOnError: Boolean = True);
 begin
-  with Lock do try
-    AddMimeType(Ext, MIMEType, ARaiseOnError);
-  finally Unlock; end;
+  Lock;
+  try
+    FTable.AddMimeType(Ext, MIMEType, ARaiseOnError);
+  finally
+    Unlock;
+  end;
 end;
 
 function TIdThreadSafeMimeTable.GetFileMIMEType(const AFileName: string): string;
 begin
-  with Lock do try
-    Result := GetFileMIMEType(AFileName);
-  finally Unlock; end;
+  Lock;
+  try
+    Result := FTable.GetFileMIMEType(AFileName);
+  finally
+    Unlock;
+  end;
 end;
 
 function TIdThreadSafeMimeTable.GetDefaultFileExt(const MIMEType: string): string;
 begin
-  with Lock do try
-    Result := GetDefaultFileExt(MIMEType);
-  finally Unlock; end;
+  Lock;
+  try
+    Result := FTable.GetDefaultFileExt(MIMEType);
+  finally
+    Unlock;
+  end;
 end;
 
 procedure TIdThreadSafeMimeTable.LoadFromStrings(const AStrings: TStrings; const MimeSeparator: Char = '=');    {Do not Localize}
 begin
-  with Lock do try
-    LoadFromStrings(AStrings, MimeSeparator);
-  finally Unlock; end;
+  Lock;
+  try
+    FTable.LoadFromStrings(AStrings, MimeSeparator);
+  finally
+    Unlock;
+  end;
 end;
 
 procedure TIdThreadSafeMimeTable.SaveToStrings(const AStrings: TStrings; const MimeSeparator: Char = '=');    {Do not Localize}
 begin
-  with Lock do try
-    SaveToStrings(AStrings, MimeSeparator);
-  finally Unlock; end;
+  Lock;
+  try
+    FTable.SaveToStrings(AStrings, MimeSeparator);
+  finally
+    Unlock;
+  end;
 end;
 
 function TIdThreadSafeMimeTable.Lock: TIdMimeTable;
@@ -850,15 +909,19 @@ function TIdCustomHTTPServer.DoParseAuthentication(ASender: TIdContext;
   const AAuthType, AAuthData: String; var VUsername, VPassword: String): Boolean;
 var
   s: String;
+  LDecoder: TIdDecoderMIME;
 begin
   Result := False;
   if Assigned(FOnParseAuthentication) then begin
     FOnParseAuthentication(ASender, AAuthType, AAuthData, VUsername, VPassword, Result);
   end;
   if (not Result) and TextIsSame(AAuthType, 'Basic') then begin    {Do not Localize}
-    with TIdDecoderMIME.Create do try
-      s := DecodeString(AAuthData);
-    finally Free; end;
+    LDecoder := TIdDecoderMIME.Create;
+    try
+      s := LDecoder.DecodeString(AAuthData);
+    finally
+      LDecoder.Free;
+    end;
     VUsername := Fetch(s, ':');    {Do not Localize}
     VPassword := s;
     Result := True;
@@ -876,6 +939,8 @@ end;
 
 function TIdCustomHTTPServer.CreateSession(AContext: TIdContext; HTTPResponse: TIdHTTPResponseInfo;
   HTTPRequest: TIdHTTPRequestInfo): TIdHTTPSession;
+var
+  LCookie: TIdCookie;
 begin
   if SessionState then begin
     DoOnCreateSession(AContext, Result);
@@ -885,14 +950,13 @@ begin
       FSessionList.Add(Result);
     end;
 
-    with HTTPResponse.Cookies.Add do
-    begin
-      CookieName := GSessionIDCookie;
-      Value := Result.SessionID;
-      Path := '/';    {Do not Localize}
-      // By default the cookie will be valid until the user has closed his browser window.
-      // MaxAge := SessionTimeOut div 1000;
-    end;
+    LCookie := HTTPResponse.Cookies.Add;
+    LCookie.CookieName := GSessionIDCookie;
+    LCookie.Value := Result.SessionID;
+    LCookie.Path := '/';    {Do not Localize}
+
+    // By default the cookie will be valid until the user has closed his browser window.
+    // MaxAge := SessionTimeOut div 1000;
     HTTPResponse.FSession := Result;
     HTTPRequest.FSession := Result;
   end else begin
@@ -1156,205 +1220,205 @@ var
   s, LInputLine, LRawHTTPCommand, LCmd, LContentType, LAuthType: String;
   LURI: TIdURI;
   LContinueProcessing, LCloseConnection: Boolean;
+  LConn: TIdTCPConnection;
 begin
   LContinueProcessing := True;
   Result := False;
   LCloseConnection := not KeepAlive;
   try
     try
+      LConn := AContext.Connection;
       repeat
-        with AContext.Connection do begin
-          LInputLine := InternalReadLn(IOHandler);
-          i := RPos(' ', LInputLine, -1);    {Do not Localize}
-          if i = 0 then begin
-            raise EIdHTTPErrorParsingCommand.Create(RSHTTPErrorParsingCommand);
-          end;
-          LRequestInfo := TIdHTTPRequestInfo.Create(Self);
+        LInputLine := InternalReadLn(LConn.IOHandler);
+        i := RPos(' ', LInputLine, -1);    {Do not Localize}
+        if i = 0 then begin
+          raise EIdHTTPErrorParsingCommand.Create(RSHTTPErrorParsingCommand);
+        end;
+        LRequestInfo := TIdHTTPRequestInfo.Create(Self);
+        try
+          LResponseInfo := TIdHTTPResponseInfo.Create(Self, LRequestInfo, LConn);
           try
-            LResponseInfo := TIdHTTPResponseInfo.Create(Self, LRequestInfo, AContext.Connection);
-            try
-              // SG 05.07.99
-              // Set the ServerSoftware string to what it's supposed to be.    {Do not Localize}
-              LResponseInfo.ServerSoftware := Trim(ServerSoftware);
+            // SG 05.07.99
+            // Set the ServerSoftware string to what it's supposed to be.    {Do not Localize}
+            LResponseInfo.ServerSoftware := Trim(ServerSoftware);
 
-              // S.G. 6/4/2004: Set the maximum number of lines that will be catured
-              // S.G. 6/4/2004: to prevent a remote resource starvation DOS
-              IOHandler.MaxCapturedLines := MaximumHeaderLineCount;
+            // S.G. 6/4/2004: Set the maximum number of lines that will be catured
+            // S.G. 6/4/2004: to prevent a remote resource starvation DOS
+            LConn.IOHandler.MaxCapturedLines := MaximumHeaderLineCount;
 
-              // Retrieve the HTTP version
-              LRawHTTPCommand := LInputLine;
-              LRequestInfo.FVersion := Copy(LInputLine, i + 1, MaxInt);
+            // Retrieve the HTTP version
+            LRawHTTPCommand := LInputLine;
+            LRequestInfo.FVersion := Copy(LInputLine, i + 1, MaxInt);
 
-              s := LRequestInfo.Version;
-              Fetch(s, '/');  {Do not localize}
-              LRequestInfo.FVersionMajor := IndyStrToInt(Fetch(s, '.'), -1);  {Do not Localize}
-              LRequestInfo.FVersionMinor := IndyStrToInt(S, -1);
+            s := LRequestInfo.Version;
+            Fetch(s, '/');  {Do not localize}
+            LRequestInfo.FVersionMajor := IndyStrToInt(Fetch(s, '.'), -1);  {Do not Localize}
+            LRequestInfo.FVersionMinor := IndyStrToInt(S, -1);
 
-              SetLength(LInputLine, i - 1);
+            SetLength(LInputLine, i - 1);
 
-              // Retrieve the HTTP header
-              LRequestInfo.RawHeaders.Clear;
-              IOHandler.Capture(LRequestInfo.RawHeaders, '', False);    {Do not Localize}
-              LRequestInfo.ProcessHeaders;
+            // Retrieve the HTTP header
+            LRequestInfo.RawHeaders.Clear;
+            LConn.IOHandler.Capture(LRequestInfo.RawHeaders, '', False);    {Do not Localize}
+            LRequestInfo.ProcessHeaders;
 
-              // HTTP 1.1 connections are keep-alive by default
-              if not FKeepAlive then begin
-                LResponseInfo.CloseConnection := True;
-              end
-              else if LRequestInfo.IsVersionAtLeast(1, 1) then begin
-                LResponseInfo.CloseConnection := TextIsSame(LRequestInfo.Connection, 'close'); {Do not Localize}
+            // HTTP 1.1 connections are keep-alive by default
+            if not FKeepAlive then begin
+              LResponseInfo.CloseConnection := True;
+            end
+            else if LRequestInfo.IsVersionAtLeast(1, 1) then begin
+              LResponseInfo.CloseConnection := TextIsSame(LRequestInfo.Connection, 'close'); {Do not Localize}
+            end else begin
+              LResponseInfo.CloseConnection := not TextIsSame(LRequestInfo.Connection, 'keep-alive'); {Do not Localize}
+            end;
+
+            {TODO Check for 1.0 only at this point}
+            LCmd := UpperCase(Fetch(LInputLine, ' '));    {Do not Localize}
+
+            s := LRequestInfo.MethodOverride;
+            if s <> '' then begin
+              LCmd := UpperCase(s);
+            end;
+
+            LRequestInfo.FRawHTTPCommand := LRawHTTPCommand;
+            LRequestInfo.FRemoteIP := GetRemoteIP(LConn.Socket);
+            LRequestInfo.FCommand := LCmd;
+            LRequestInfo.FCommandType := DecodeHTTPCommand(LCmd);
+
+            // GET data - may exist with POSTs also
+            LRequestInfo.QueryParams := LInputLine;
+            LInputLine := Fetch(LRequestInfo.FQueryParams, '?');    {Do not Localize}
+
+            // Host
+            // the next line is done in TIdHTTPRequestInfo.ProcessHeaders()...
+            // LRequestInfo.FHost := LRequestInfo.Headers.Values['host'];    {Do not Localize}
+
+            LRequestInfo.FURI := LInputLine;
+
+            // Parse the document input line
+            if LInputLine = '*' then begin    {Do not Localize}
+              LRequestInfo.FDocument := '*';    {Do not Localize}
+            end else begin
+              LURI := TIdURI.Create(LInputLine);
+              try
+                // SG 29/11/01: Per request of Doychin
+                // Try to fill the "host" parameter
+                LRequestInfo.FDocument := TIdURI.URLDecode(LURI.Path) + TIdURI.URLDecode(LURI.Document);
+                if (Length(LURI.Host) > 0) and (Length(LRequestInfo.FHost) = 0) then begin
+                  LRequestInfo.FHost := LURI.Host;
+                end;
+              finally
+                FreeAndNil(LURI);
+              end;
+            end;
+
+            // RLebeau 12/14/2005: provide the user with the headers and let the
+            // user decide whether the response processing should continue...
+            if not HeadersCanContinue then begin
+              Break;
+            end;
+
+            // retreive the base ContentType with attributes omitted
+            LContentType := ExtractHeaderItem(LRequestInfo.ContentType);
+
+            // Grab Params so we can parse them
+            // POSTed data - may exist with GETs also. With GETs, the action
+            // params from the form element will be posted
+            // TODO: Rune this is the area that needs fixed. Ive hacked it for now
+            // Get data can exists with POSTs, but can POST data exist with GETs?
+            // If only the first, the solution is easy. If both - need more
+            // investigation.
+
+            if not PreparePostStream then begin
+              Break;
+            end;
+
+            if LRequestInfo.PostStream <> nil then begin
+              if TextIsSame(LContentType, ContentTypeFormUrlencoded) then
+              begin
+                // decoding percent-encoded octets and applying the CharSet is handled by DecodeAndSetParams() further below...
+                LRequestInfo.FormParams := ReadStringFromStream(LRequestInfo.PostStream, -1, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+                DoneWithPostStream(AContext, LRequestInfo); // don't need the PostStream anymore
+              end;
+            end;
+
+            // glue together parameters passed in the URL and those
+            //
+            // RLebeau: should we really be doing this?  For a GET, it might
+            // makes sense to do, but for a POST the FormParams is the content
+            // and the QueryParams belongs to the URL only, not the content.
+            // We should be keeping everything separate for accuracy...
+            LRequestInfo.UnparsedParams := LRequestInfo.FormParams;
+            if Length(LRequestInfo.QueryParams) > 0 then begin
+              if Length(LRequestInfo.UnparsedParams) = 0 then begin
+                LRequestInfo.FUnparsedParams := LRequestInfo.QueryParams;
               end else begin
-                LResponseInfo.CloseConnection := not TextIsSame(LRequestInfo.Connection, 'keep-alive'); {Do not Localize}
+                LRequestInfo.FUnparsedParams := LRequestInfo.UnparsedParams + '&'  {Do not Localize}
+                 + LRequestInfo.QueryParams;
               end;
+            end;
 
-              {TODO Check for 1.0 only at this point}
-              LCmd := UpperCase(Fetch(LInputLine, ' '));    {Do not Localize}
-
-              s := LRequestInfo.MethodOverride;
-              if s <> '' then begin
-                LCmd := UpperCase(s);
-              end;
-
-              LRequestInfo.FRawHTTPCommand := LRawHTTPCommand;
-              LRequestInfo.FRemoteIP := GetRemoteIP(Socket);
-              LRequestInfo.FCommand := LCmd;
-              LRequestInfo.FCommandType := DecodeHTTPCommand(LCmd);
-
-              // GET data - may exist with POSTs also
-              LRequestInfo.QueryParams := LInputLine;
-              LInputLine := Fetch(LRequestInfo.FQueryParams, '?');    {Do not Localize}
-
-              // Host
-              // the next line is done in TIdHTTPRequestInfo.ProcessHeaders()...
-              // LRequestInfo.FHost := LRequestInfo.Headers.Values['host'];    {Do not Localize}
-
-              LRequestInfo.FURI := LInputLine;
-
-              // Parse the document input line
-              if LInputLine = '*' then begin    {Do not Localize}
-                LRequestInfo.FDocument := '*';    {Do not Localize}
+            // Parse Params
+            if ParseParams then begin
+              if TextIsSame(LContentType, ContentTypeFormUrlencoded) then begin
+                LRequestInfo.DecodeAndSetParams(LRequestInfo.UnparsedParams);
               end else begin
-                LURI := TIdURI.Create(LInputLine);
-                try
-                  // SG 29/11/01: Per request of Doychin
-                  // Try to fill the "host" parameter
-                  LRequestInfo.FDocument := TIdURI.URLDecode(LURI.Path) + TIdURI.URLDecode(LURI.Document);
-                  if (Length(LURI.Host) > 0) and (Length(LRequestInfo.FHost) = 0) then begin
-                    LRequestInfo.FHost := LURI.Host;
-                  end;
-                finally
-                  FreeAndNil(LURI);
-                end;
+                // Parse only query params when content type is not 'application/x-www-form-urlencoded'    {Do not Localize}
+                LRequestInfo.DecodeAndSetParams(LRequestInfo.QueryParams);
               end;
+            end;
 
-              // RLebeau 12/14/2005: provide the user with the headers and let the
-              // user decide whether the response processing should continue...
-              if not HeadersCanContinue then begin
-                Break;
+            // Cookies
+            ReadCookiesFromRequestHeader;
+
+            // Authentication
+            s := LRequestInfo.RawHeaders.Values['Authorization'];    {Do not Localize}
+            if Length(s) > 0 then begin
+              LAuthType := Fetch(s, ' ');
+              LRequestInfo.FAuthExists := DoParseAuthentication(AContext, LAuthType, s, LRequestInfo.FAuthUsername, LRequestInfo.FAuthPassword);
+              if not LRequestInfo.FAuthExists then begin
+                raise EIdHTTPUnsupportedAuthorisationScheme.Create(
+                 RSHTTPUnsupportedAuthorisationScheme);
               end;
+            end;
 
-              // retreive the base ContentType with attributes omitted
-              LContentType := ExtractHeaderItem(LRequestInfo.ContentType);
-
-              // Grab Params so we can parse them
-              // POSTed data - may exist with GETs also. With GETs, the action
-              // params from the form element will be posted
-              // TODO: Rune this is the area that needs fixed. Ive hacked it for now
-              // Get data can exists with POSTs, but can POST data exist with GETs?
-              // If only the first, the solution is easy. If both - need more
-              // investigation.
-
-              if not PreparePostStream then begin
-                Break;
-              end;
-
-              if LRequestInfo.PostStream <> nil then begin
-                if TextIsSame(LContentType, ContentTypeFormUrlencoded) then
-                begin
-                  // decoding percent-encoded octets and applying the CharSet is handled by DecodeAndSetParams() further below...
-                  LRequestInfo.FormParams := ReadStringFromStream(LRequestInfo.PostStream, -1, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
-                  DoneWithPostStream(AContext, LRequestInfo); // don't need the PostStream anymore
-                end;
-              end;
-
-              // glue together parameters passed in the URL and those
-              //
-              // RLebeau: should we really be doing this?  For a GET, it might
-              // makes sense to do, but for a POST the FormParams is the content
-              // and the QueryParams belongs to the URL only, not the content.
-              // We should be keeping everything separate for accuracy...
-              LRequestInfo.UnparsedParams := LRequestInfo.FormParams;
-              if Length(LRequestInfo.QueryParams) > 0 then begin
-                if Length(LRequestInfo.UnparsedParams) = 0 then begin
-                  LRequestInfo.FUnparsedParams := LRequestInfo.QueryParams;
+            // Session management
+            GetSessionFromCookie(AContext, LRequestInfo, LResponseInfo, LContinueProcessing);
+            if LContinueProcessing then begin
+              try
+                // These essentially all "retrieve" so they are all "Get"s
+                if LRequestInfo.CommandType in [hcGET, hcPOST, hcHEAD] then begin
+                  DoCommandGet(AContext, LRequestInfo, LResponseInfo);
                 end else begin
-                  LRequestInfo.FUnparsedParams := LRequestInfo.UnparsedParams + '&'  {Do not Localize}
-                   + LRequestInfo.QueryParams;
+                  DoCommandOther(AContext, LRequestInfo, LResponseInfo);
+                end;
+              except
+                on E: EIdSocketError do begin // don't stop socket exceptions
+                  raise;
+                end;
+                on E: Exception do begin
+                  LResponseInfo.ResponseNo := 500;
+                  LResponseInfo.ContentText := E.Message;
+                  DoCommandError(AContext, LRequestInfo, LResponseInfo, E);
                 end;
               end;
+            end;
 
-              // Parse Params
-              if ParseParams then begin
-                if TextIsSame(LContentType, ContentTypeFormUrlencoded) then begin
-                  LRequestInfo.DecodeAndSetParams(LRequestInfo.UnparsedParams);
-                end else begin
-                  // Parse only query params when content type is not 'application/x-www-form-urlencoded'    {Do not Localize}
-                  LRequestInfo.DecodeAndSetParams(LRequestInfo.QueryParams);
-                end;
-              end;
-
-              // Cookies
-              ReadCookiesFromRequestHeader;
-
-              // Authentication
-              s := LRequestInfo.RawHeaders.Values['Authorization'];    {Do not Localize}
-              if Length(s) > 0 then begin
-                LAuthType := Fetch(s, ' ');
-                LRequestInfo.FAuthExists := DoParseAuthentication(AContext, LAuthType, s, LRequestInfo.FAuthUsername, LRequestInfo.FAuthPassword);
-                if not LRequestInfo.FAuthExists then begin
-                  raise EIdHTTPUnsupportedAuthorisationScheme.Create(
-                   RSHTTPUnsupportedAuthorisationScheme);
-                end;
-              end;
-
-              // Session management
-              GetSessionFromCookie(AContext, LRequestInfo, LResponseInfo, LContinueProcessing);
-              if LContinueProcessing then begin
-                try
-                  // These essentially all "retrieve" so they are all "Get"s
-                  if LRequestInfo.CommandType in [hcGET, hcPOST, hcHEAD] then begin
-                    DoCommandGet(AContext, LRequestInfo, LResponseInfo);
-                  end else begin
-                    DoCommandOther(AContext, LRequestInfo, LResponseInfo);
-                  end;
-                except
-                  on E: EIdSocketError do begin // don't stop socket exceptions
-                    raise;
-                  end;
-                  on E: Exception do begin
-                    LResponseInfo.ResponseNo := 500;
-                    LResponseInfo.ContentText := E.Message;
-                    DoCommandError(AContext, LRequestInfo, LResponseInfo, E);
-                  end;
-                end;
-              end;
-
-              // Write even though WriteContent will, may be a redirect or other
-              if not LResponseInfo.HeaderHasBeenWritten then begin
-                LResponseInfo.WriteHeader;
-              end;
-              // Always check ContentText first
-              if (Length(LResponseInfo.ContentText) > 0)
-               or Assigned(LResponseInfo.ContentStream) then begin
-                LResponseInfo.WriteContent;
-              end;
-            finally
-              LCloseConnection := LResponseInfo.CloseConnection;
-              FreeAndNil(LResponseInfo);
+            // Write even though WriteContent will, may be a redirect or other
+            if not LResponseInfo.HeaderHasBeenWritten then begin
+              LResponseInfo.WriteHeader;
+            end;
+            // Always check ContentText first
+            if (Length(LResponseInfo.ContentText) > 0)
+             or Assigned(LResponseInfo.ContentStream) then begin
+              LResponseInfo.WriteContent;
             end;
           finally
-            FreeAndNil(LRequestInfo);
+            LCloseConnection := LResponseInfo.CloseConnection;
+            FreeAndNil(LResponseInfo);
           end;
+        finally
+          FreeAndNil(LRequestInfo);
         end;
       until LCloseConnection;
     except
@@ -1704,16 +1768,16 @@ end;
 procedure TIdHTTPResponseInfo.CloseSession;
 var
   i: Integer;
+  LCookie: TIdCookie;
 begin
   i := Cookies.GetCookieIndex(GSessionIDCookie);
   while i > -1 do begin
     Cookies.Delete(i);
     i := Cookies.GetCookieIndex(GSessionIDCookie, i);
   end;
-  with Cookies.Add do begin
-    CookieName := GSessionIDCookie;
-    Expires := Date-7;
-  end;
+  LCookie := Cookies.Add;
+  LCookie.CookieName := GSessionIDCookie;
+  LCookie.Expires := Date-7;
   FreeAndNil(FSession);
 end;
 
@@ -1777,20 +1841,17 @@ end;
 procedure TIdHTTPResponseInfo.SetHeaders;
 begin
   inherited SetHeaders;
-  with RawHeaders do
-  begin
-    if Server <> '' then begin
-      Values['Server'] := Server;    {Do not Localize}
-    end;
-    if Location <> '' then begin
-      Values['Location'] := Location;    {Do not Localize}
-    end;
-    if FLastModified > 0 then begin
-      Values['Last-Modified'] := LocalDateTimeToHttpStr(FLastModified); {do not localize}
-    end;
-    if AuthRealm <> '' then begin
-      Values['WWW-Authenticate'] := 'Basic realm="' + AuthRealm + '"';    {Do not Localize}
-    end;
+  if Server <> '' then begin
+    FRawHeaders.Values['Server'] := Server;    {Do not Localize}
+  end;
+  if Location <> '' then begin
+    FRawHeaders.Values['Location'] := Location;    {Do not Localize}
+  end;
+  if FLastModified > 0 then begin
+    FRawHeaders.Values['Last-Modified'] := LocalDateTimeToHttpStr(FLastModified); {do not localize}
+  end;
+  if AuthRealm <> '' then begin
+    FRawHeaders.Values['WWW-Authenticate'] := 'Basic realm="' + AuthRealm + '"';    {Do not Localize}
   end;
 end;
 
@@ -1913,25 +1974,23 @@ begin
    if not HeaderHasBeenWritten then begin
       WriteHeader;
     end;
-    with FConnection do begin
-      // Always check ContentText first
-      if ContentText <> '' then begin
-        LEncoding := CharsetToEncoding(CharSet);
-        IOHandler.Write(ContentText, LEncoding);
-      end
-      else if Assigned(ContentStream) then begin
-        ContentStream.Position := 0;
-        IOHandler.Write(ContentStream);
-      end
-      else begin
-        LEncoding := CharsetToEncoding(CharSet);
-        IOHandler.WriteLn('<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + ResponseText    {Do not Localize}
-         + '</B></BODY></HTML>', LEncoding);    {Do not Localize}
-      end;
-      // Clear All - This signifies that WriteConent has been called.
-      ContentText := '';    {Do not Localize}
-      ReleaseContentStream;
+    // Always check ContentText first
+    if ContentText <> '' then begin
+      LEncoding := CharsetToEncoding(CharSet);
+      FConnection.IOHandler.Write(ContentText, LEncoding);
+    end
+    else if Assigned(ContentStream) then begin
+      ContentStream.Position := 0;
+      FConnection.IOHandler.Write(ContentStream);
+    end
+    else begin
+      LEncoding := CharsetToEncoding(CharSet);
+      FConnection.IOHandler.WriteLn('<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + ResponseText    {Do not Localize}
+       + '</B></BODY></HTML>', LEncoding);    {Do not Localize}
     end;
+    // Clear All - This signifies that WriteConent has been called.
+    ContentText := '';    {Do not Localize}
+    ReleaseContentStream;
   {$IFNDEF DOTNET}
   finally
     if Assigned(LEncoding) then begin
@@ -2055,21 +2114,25 @@ end;
 
 procedure TIdHTTPDefaultSessionList.Clear;
 var
-  ASessionList: TList;
+  ASessionList: TIdHTTPSessionList;
   i: Integer;
+  ASession: TIdHTTPSession;
 begin
   ASessionList := SessionList.LockList;
   try
     for i := ASessionList.Count - 1 DownTo 0 do
-      if ASessionList[i] <> nil then
+    begin
+      ASession := {$IFDEF HAS_GENERICS_TList}ASessionList[i]{$ELSE}TIdHTTPSession(ASessionList[i]){$ENDIF};
+      if ASession <> nil then
       begin
-        TIdHTTPSession(ASessionList[i]).DoSessionEnd;
+        ASession.DoSessionEnd;
         // must set the owner to nil or the session will try to fire the
         // OnSessionEnd event again, and also remove itself from the session
         // list and deadlock
-        TIdHTTPSession(ASessionList[i]).FOwner := nil;
-        TIdHTTPSession(ASessionList[i]).Free;
+        ASession.FOwner := nil;
+        ASession.Free;
       end;
+    end;
     ASessionList.Clear;
     ASessionList.Capacity := SessionCapacity;
   finally
@@ -2105,7 +2168,7 @@ end;
 
 function TIdHTTPDefaultSessionList.GetSession(const SessionID, RemoteIP: string): TIdHTTPSession;
 var
-  ASessionList: TList;
+  ASessionList: TIdHTTPSessionList;
   i: Integer;
   ASession: TIdHTTPSession;
 begin
@@ -2132,18 +2195,24 @@ begin
 end;
 
 procedure TIdHTTPDefaultSessionList.InitComponent;
+var
+  LList: TIdHTTPSessionList;
 begin
   inherited InitComponent;
-
-  FSessionList := TThreadList.Create;
-  FSessionList.LockList.Capacity := SessionCapacity;
-  FSessionList.UnlockList;
+  FSessionList := TIdHTTPSessionThreadList.Create;
+  LList := FSessionList.LockList;
+  try
+    LList.Capacity := SessionCapacity;
+  finally
+    FSessionList.UnlockList;
+  end;
 end;
 
 procedure TIdHTTPDefaultSessionList.PurgeStaleSessions(PurgeAll: Boolean = false);
 var
   i: Integer;
-  aSessionList: TList;
+  aSessionList: TIdHTTPSessionList;
+  aSession: TIdHTTPSession;
 begin
   // S.G. 24/11/00: Added a way to force a session purge (Used when thread is terminated)
   // Get necessary data
@@ -2155,8 +2224,8 @@ begin
     for i := aSessionList.Count - 1 downto 0 do
     begin
       // Identify the stale sessions
-      if Assigned(ASessionList[i]) and
-         (PurgeAll or TIdHTTPSession(aSessionList[i]).IsSessionStale) then
+      aSession := {$IFDEF HAS_GENERICS_TList}aSessionList[i]{$ELSE}TIdHTTPSession(aSessionList[i]){$ENDIF};
+      if Assigned(aSession) and (PurgeAll or aSession.IsSessionStale) then
       begin
         RemoveSessionFromLockedList(i, aSessionList);
       end;
@@ -2168,12 +2237,12 @@ end;
 
 procedure TIdHTTPDefaultSessionList.RemoveSession(Session: TIdHTTPSession);
 var
-  ASessionList: TList;
+  ASessionList: TIdHTTPSessionList;
   Index: integer;
 begin
   ASessionList := SessionList.LockList;
   try
-    Index := ASessionList.IndexOf(TObject(Session));
+    Index := ASessionList.IndexOf(Session);
     if index > -1 then
     begin
       ASessionList.Delete(index);
@@ -2184,13 +2253,16 @@ begin
 end;
 
 procedure TIdHTTPDefaultSessionList.RemoveSessionFromLockedList(AIndex: Integer;
-  ALockedSessionList: TList);
+  ALockedSessionList: TIdHTTPSessionList);
+var
+  ASession: TIdHTTPSession;
 begin
-  TIdHTTPSession(ALockedSessionList[AIndex]).DoSessionEnd;
+  ASession := {$IFDEF HAS_GENERICS_TList}ALockedSessionList[AIndex]{$ELSE}TIdHTTPSession(ALockedSessionList[AIndex]){$ENDIF};
+  ASession.DoSessionEnd;
   // must set the owner to nil or the session will try to fire the OnSessionEnd
   // event again, and also remove itself from the session list and deadlock
-  TIdHTTPSession(ALockedSessionList[AIndex]).FOwner := nil;
-  TIdHTTPSession(ALockedSessionList[AIndex]).Free;
+  ASession.FOwner := nil;
+  ASession.Free;
   ALockedSessionList.Delete(AIndex);
 end;
 

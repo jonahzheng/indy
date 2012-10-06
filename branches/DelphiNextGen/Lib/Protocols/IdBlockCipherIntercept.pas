@@ -212,7 +212,12 @@ end;
 procedure TIdBlockCipherIntercept.CopySettingsFrom(ASrcBlockCipherIntercept: TIdBlockCipherIntercept);
 Begin
   FBlockSize := ASrcBlockCipherIntercept.FBlockSize;
+  {$IFDEF DCC_NEXTGEN_ARC}
+  FDataObject := ASrcBlockCipherIntercept.FDataObject;
+  FDataValue := ASrcBlockCipherIntercept.FDataValue;
+  {$ELSE}
   FData := ASrcBlockCipherIntercept.FData; // not sure that this is actually safe
+  {$ENDIF}
   FOnConnect := ASrcBlockCipherIntercept.FOnConnect;
   FOnDisconnect:= ASrcBlockCipherIntercept.FOnDisconnect;
   FOnReceive := ASrcBlockCipherIntercept.FOnReceive;

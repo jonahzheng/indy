@@ -135,6 +135,7 @@ var
   LBuf : String;
   LFeat : String;
   s : String;
+  LMD5: TIdHashMessageDigest5;
 begin
   LBuf := '';
   FCapabilities.Clear;
@@ -166,11 +167,11 @@ begin
     if FAuthType = datDefault then begin
       if IsCapaSupported('auth') then begin {do not localize}
         if GetFIPSMode and (FPassword <> '') and (FUserName <> '') then begin
-          with TIdHashMessageDigest5.Create do
+          LMD5 := TIdHashMessageDigest5.Create;
           try
-            S := LowerCase(HashStringAsHex(LBuf+Password));
+            S := LowerCase(LMD5.HashStringAsHex(LBuf+Password));
           finally
-            Free;
+            LMD5.Free;
           end;//try
           SendCmd('AUTH ' + Username + ' ' + S, 230); {do not localize}
         end;

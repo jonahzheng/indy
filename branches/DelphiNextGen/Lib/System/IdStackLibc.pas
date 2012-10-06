@@ -105,8 +105,6 @@ type
 
   TIdStackLibc = class(TIdStackBSDBase)
   private
-//    procedure SetSocketOption(ASocket: TIdStackSocketHandle;
-//      ALevel: TIdSocketProtocol; AOptName: TIdSocketOption; AOptVal: Integer);
     procedure WriteChecksumIPv6(s: TIdStackSocketHandle;
       var VBuffer: TIdBytes; const AOffset: Integer; const AIP: String;
       const APort: TIdPort);
@@ -139,7 +137,7 @@ type
     function WSGetServByName(const AServiceName: string): TIdPort; override;
     function WSGetServByPort(const APortNumber: TIdPort): TStrings; override;
     procedure WSGetSockOpt(ASocket: TIdStackSocketHandle;
-      Alevel, AOptname: Integer; AOptval: PAnsiChar; var AOptlen: Integer); override;
+      Alevel, AOptname: Integer; var AOptval; var AOptlen: Integer); override;
     procedure GetSocketOption(ASocket: TIdStackSocketHandle;
       ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
       out AOptVal: Integer); override;
@@ -165,10 +163,8 @@ type
     function WSSocket(AFamily : Integer; AStruct : TIdSocketType; AProtocol: Integer;
       const AOverlapped: Boolean = False): TIdStackSocketHandle; override;
     procedure Disconnect(ASocket: TIdStackSocketHandle); override;
-    procedure SetSocketOption(ASocket: TIdStackSocketHandle; ALevel:TIdSocketOptionLevel;
-      AOptName: TIdSocketOption; AOptVal: Integer); overload;override;
-    procedure SetSocketOption( const ASocket: TIdStackSocketHandle;
-      const Alevel, Aoptname: Integer; Aoptval: PAnsiChar; const Aoptlen: Integer ); overload; override;
+    procedure SetSocketOption(ASocket: TIdStackSocketHandle; ALevel: TIdSocketOptionLevel;
+      AOptName: TIdSocketOption; const Aoptval; const Aoptlen: Integer); override;
     procedure SetKeepAliveValues(ASocket: TIdStackSocketHandle;
       const AEnabled: Boolean; const ATimeMS, AInterval: Integer); override;
     function SupportsIPv6: Boolean; overload; override;
@@ -633,15 +629,10 @@ begin
 end;
 
 procedure TIdStackLibc.SetSocketOption(ASocket: TIdStackSocketHandle;
-  ALevel: TIdSocketProtocol; AOptName: TIdSocketOption; AOptVal: Integer);
+  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
+  const Aoptval; const Aoptlen: Integer);
 begin
-  CheckForSocketError(Libc.setsockopt(ASocket, ALevel, AOptName, PAnsiChar(@AOptVal), SizeOf(AOptVal)));
-end;
-
-procedure TIdStackLibc.SetSocketOption(const ASocket: TIdStackSocketHandle;
-  const Alevel, Aoptname: Integer; Aoptval: PAnsiChar; const Aoptlen: Integer);
-begin
-  CheckForSocketError(Libc.setsockopt(ASocket, ALevel, Aoptname, Aoptval, Aoptlen));
+  CheckForSocketError(Libc.setsockopt(ASocket, ALevel, AOptName, PIdAnsiChar(@Aoptval), Aoptlen));
 end;
 
 function TIdStackLibc.WSGetLastError: Integer;
@@ -942,9 +933,9 @@ begin
 end;
 
 procedure TIdStackLibc.WSGetSockOpt(ASocket: TIdStackSocketHandle; ALevel,
-  AOptname: Integer; AOptval: PAnsiChar; var AOptlen: Integer);
+  AOptname: Integer; var AOptval; var AOptlen: Integer);
 begin
-  CheckForSocketError(Libc.getsockopt(ASocket, ALevel, AOptname, AOptval, LongWord(AOptlen)));
+  CheckForSocketError(Libc.getsockopt(ASocket, ALevel, AOptname, PIdAnsiChar(@AOptval), LongWord(AOptlen)));
 end;
 
 procedure TIdStackLibc.GetSocketOption(ASocket: TIdStackSocketHandle;

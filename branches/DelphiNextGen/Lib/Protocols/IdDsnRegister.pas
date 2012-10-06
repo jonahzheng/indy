@@ -174,8 +174,13 @@ begin
   inherited Edit;
 
   LComp := GetComponent(0);
+
   //done this way to prevent invalid typecast error.
-  LList := TIdSASLEntries(TObject(GetOrdProp(LComp, GetPropInfo)));
+  {$IFDEF HAS_GetObjectProp}
+  LList := TIdSASLEntries(GetObjectProp(LComp, GetPropInfo, TIdSASLEntries));
+  {$ELSE}
+  LList := TObject(GetOrdProp(LComp, GetPropInfo))) as TIdSASLEntries;
+  {$ENDIF}
 
   LF := TfrmSASLListEditor.Create(nil);
   try

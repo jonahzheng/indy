@@ -283,7 +283,7 @@ type
     constructor Create(
       AConnection: TIdTCPConnection;
       AYarn: TIdYarn;
-      AList: TThreadList = nil
+      AList: TIdContextThreadList = nil
       ); override;
     destructor Destroy; override;
     property ConnectionState: TIdIMAP4ConnectionState read FConnectionState;
@@ -638,7 +638,7 @@ begin
   Result.SetReply('BAD', 'Unknown command'); {do not localize}
 end;
 
-constructor TIdIMAP4PeerContext.Create(AConnection: TIdTCPConnection; AYarn: TIdYarn; AList: TThreadList = nil);
+constructor TIdIMAP4PeerContext.Create(AConnection: TIdTCPConnection; AYarn: TIdYarn; AList: TIdContextThreadList = nil);
 begin
   inherited Create(AConnection, AYarn, AList);
   FMailBox := TIdMailBox.Create;
@@ -1349,115 +1349,115 @@ begin
 end;
 
 procedure TIdIMAP4Server.InitializeCommandHandlers;
+var
+  LCommandHandler: TIdCommandHandler;
 begin
-  with CommandHandlers.Add do begin
-    Command := 'CAPABILITY';  {do not localize}
-    OnCommand := DoCommandCAPABILITY;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'NOOP';  {do not localize}
-    OnCommand := DoCommandNOOP;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'LOGOUT';  {do not localize}
-    OnCommand := DoCommandLOGOUT;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'AUTHENTICATE';  {do not localize}
-    OnCommand := DoCommandAUTHENTICATE;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'LOGIN'; {do not localize}
-    OnCommand := DoCommandLOGIN;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'SELECT';  {do not localize}
-    OnCommand := DoCommandSELECT;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'EXAMINE'; {do not localize}
-    OnCommand := DoCommandEXAMINE;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'CREATE';  {do not localize}
-    OnCommand := DoCommandCREATE;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'DELETE';  {do not localize}
-    OnCommand := DoCommandDELETE;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'RENAME';  {do not localize}
-    OnCommand := DoCommandRENAME;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'SUBSCRIBE'; {do not localize}
-    OnCommand := DoCommandSUBSCRIBE;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'UNSUBSCRIBE'; {do not localize}
-    OnCommand := DoCommandUNSUBSCRIBE;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'LIST';  {do not localize}
-    OnCommand := DoCommandLIST;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'LSUB';  {do not localize}
-    OnCommand := DoCommandLSUB;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'STATUS';  {do not localize}
-    OnCommand := DoCommandSTATUS;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'APPEND';  {do not localize}
-    OnCommand := DoCommandAPPEND;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'CHECK'; {do not localize}
-    OnCommand := DoCommandCHECK;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'CLOSE'; {do not localize}
-    OnCommand := DoCommandCLOSE;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'EXPUNGE'; {do not localize}
-    OnCommand := DoCommandEXPUNGE;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'SEARCH';  {do not localize}
-    OnCommand := DoCommandSEARCH;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'FETCH'; {do not localize}
-    OnCommand := DoCommandFETCH;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'STORE'; {do not localize}
-    OnCommand := DoCommandSTORE;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'COPY';  {do not localize}
-    OnCommand := DoCommandCOPY;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'UID'; {do not localize}
-    OnCommand := DoCommandUID;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'X'; {do not localize}
-    OnCommand := DoCommandX;
-  end;
-  with CommandHandlers.Add do begin
-    Command := 'STARTTLS';  {do not localize}
-    OnCommand := DoCommandSTARTTLS;
-  end;
-  with FCommandHandlers do begin
-    OnBeforeCommandHandler := DoBeforeCmd;
-    OnCommandHandlersException := DoCmdHandlersException;
-  end;
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'CAPABILITY';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandCAPABILITY;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'NOOP';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandNOOP;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'LOGOUT';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandLOGOUT;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'AUTHENTICATE';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandAUTHENTICATE;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'LOGIN'; {do not localize}
+  LCommandHandler.OnCommand := DoCommandLOGIN;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'SELECT';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandSELECT;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'EXAMINE'; {do not localize}
+  LCommandHandler.OnCommand := DoCommandEXAMINE;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'CREATE';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandCREATE;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'DELETE';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandDELETE;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'RENAME';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandRENAME;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'SUBSCRIBE'; {do not localize}
+  LCommandHandler.OnCommand := DoCommandSUBSCRIBE;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'UNSUBSCRIBE'; {do not localize}
+  LCommandHandler.OnCommand := DoCommandUNSUBSCRIBE;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'LIST';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandLIST;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'LSUB';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandLSUB;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'STATUS';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandSTATUS;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'APPEND';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandAPPEND;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'CHECK'; {do not localize}
+  LCommandHandler.OnCommand := DoCommandCHECK;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'CLOSE'; {do not localize}
+  LCommandHandler.OnCommand := DoCommandCLOSE;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'EXPUNGE'; {do not localize}
+  LCommandHandler.OnCommand := DoCommandEXPUNGE;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'SEARCH';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandSEARCH;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'FETCH'; {do not localize}
+  LCommandHandler.OnCommand := DoCommandFETCH;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'STORE'; {do not localize}
+  LCommandHandler.OnCommand := DoCommandSTORE;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'COPY';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandCOPY;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'UID'; {do not localize}
+  LCommandHandler.OnCommand := DoCommandUID;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'X'; {do not localize}
+  LCommandHandler.OnCommand := DoCommandX;
+
+  LCommandHandler := CommandHandlers.Add;
+  LCommandHandler.Command := 'STARTTLS';  {do not localize}
+  LCommandHandler.OnCommand := DoCommandSTARTTLS;
+
+  FCommandHandlers.OnBeforeCommandHandler := DoBeforeCmd;
+  FCommandHandlers.OnCommandHandlersException := DoCmdHandlersException;
 end;
 
 //Command handlers

@@ -228,17 +228,19 @@ begin
 end;
 
 class procedure TIdDecoder.DecodeStream(const AIn: string; ADestStream: TStream);
+var
+  LDecoder: TIdDecoder;
 begin
-  with Create(nil) do
+  LDecoder := Create(nil);
   try
-    DecodeBegin(ADestStream);
+    LDecoder.DecodeBegin(ADestStream);
     try
-      Decode(AIn);
+      LDecoder.Decode(AIn);
     finally
-      DecodeEnd;
+      LDecoder.DecodeEnd;
     end;
   finally
-    Free;
+    LDecoder.Free;
   end;
 end;
 
@@ -339,12 +341,14 @@ end;
 class function TIdEncoder.EncodeString(const AIn: string; AByteEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF}
   ): string;
+var
+  LEncoder: TIdEncoder;
 begin
-  with Create(nil) do
+  LEncoder := Create(nil);
   try
-    Result := Encode(AIn, AByteEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
+    Result := LEncoder.Encode(AIn, AByteEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
   finally
-    Free;
+    LEncoder.Free;
   end;
 end;
 
@@ -352,12 +356,14 @@ class procedure TIdEncoder.EncodeString(const AIn: string; ADestStrings: TString
   AByteEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF}
   );
+var
+  LEncoder: TIdEncoder;
 begin
-  with Create(nil) do
+  LEncoder := Create(nil);
   try
-    Encode(AIn, ADestStrings, AByteEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
+    LEncoder.Encode(AIn, ADestStrings, AByteEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
   finally
-    Free;
+    LEncoder.Free;
   end;
 end;
 
@@ -365,12 +371,14 @@ class procedure TIdEncoder.EncodeString(const AIn: string; ADestStream: TStream;
   AByteEncoding: TIdTextEncoding = nil
   {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF}
   );
+var
+  LEncoder: TIdEncoder;
 begin
-  with Create(nil) do
+  LEncoder := Create(nil);
   try
-    Encode(AIn, ADestStream, AByteEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
+    LEncoder.Encode(AIn, ADestStream, AByteEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
   finally
-    Free;
+    LEncoder.Free;
   end;
 end;
 
@@ -425,13 +433,15 @@ begin
 end;
 
 class function TIdEncoder.EncodeStream(ASrcStream: TStream; const ABytes: Integer = -1): string;
+var
+  LEncoder: TIdEncoder;
 begin
   if ASrcStream <> nil then begin
-    with Create(nil) do
+    LEncoder := Create(nil);
     try
-      Result := Encode(ASrcStream, ABytes);
+      Result := LEncoder.Encode(ASrcStream, ABytes);
     finally
-      Free;
+      LEncoder.Free;
     end;
   end else begin
     Result := '';
@@ -439,25 +449,29 @@ begin
 end;
 
 class procedure TIdEncoder.EncodeStream(ASrcStream: TStream; ADestStrings: TStrings; const ABytes: Integer = -1);
+var
+  LEncoder: TIdEncoder;
 begin
   if ASrcStream <> nil then begin
-    with Create(nil) do
+    LEncoder := Create(nil);
     try
-      Encode(ASrcStream, ADestStrings, ABytes);
+      LEncoder.Encode(ASrcStream, ADestStrings, ABytes);
     finally
-      Free;
+      LEncoder.Free;
     end;
   end;
 end;
 
 class procedure TIdEncoder.EncodeStream(ASrcStream: TStream; ADestStream: TStream; const ABytes: Integer = -1);
+var
+  LEncoder: TIdEncoder;
 begin
   if ASrcStream <> nil then begin
-    with Create(nil) do
+    LEncoder := Create(nil);
     try
-      Encode(ASrcStream, ADestStream, ABytes);
+      LEncoder.Encode(ASrcStream, ADestStream, ABytes);
     finally
-      Free;
+      LEncoder.Free;
     end;
   end;
 end;

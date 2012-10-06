@@ -296,6 +296,7 @@ end;
 procedure TIdPOP3.Login;
 var
   S: String;
+  LMD5: TIdHashMessageDigest5;
 begin
   if UseTLS in ExplicitTLSVals then begin
     if SupportsTLS then begin
@@ -314,11 +315,11 @@ begin
       begin
         if FHasAPOP then begin
           CheckMD5Permitted;
-          with TIdHashMessageDigest5.Create do
+          LMD5 := TIdHashMessageDigest5.Create;
           try
-            S := LowerCase(HashStringAsHex(FAPOPToken+Password));
+            S := LowerCase(LMD5.HashStringAsHex(FAPOPToken+Password));
           finally
-            Free;
+            LMD5.Free;
           end;//try
           SendCmd('APOP ' + Username + ' ' + S, ST_OK);    {Do not Localize}
         end else begin
