@@ -1077,7 +1077,7 @@ begin
     LTime.tv_usec := (ATimeout mod 1000) * 1000;
     LTimePtr := @LTime;
   end;
-  Result := Libc.select(MaxLongint, AReadSet, AWriteSet, AExceptSet, LTimePtr);
+  Result := Libc.select(FD_SETSIZE, AReadSet, AWriteSet, AExceptSet, LTimePtr);
 end;
 
 procedure TIdSocketListLibc.GetFDSet(var VSet: TFDSet);
