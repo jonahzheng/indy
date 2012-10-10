@@ -202,7 +202,7 @@ uses
 class procedure TIdDecoder4to3.ConstructDecodeTable(const ACodingTable: string;
   var ADecodeArray: TIdDecodeTable);
 var
-  i: integer;
+  c, i: integer;
 begin
   //TODO: See if we can find an efficient way, or maybe an option to see if the requested
   //decode char is valid, that is it returns a 255 from the DecodeTable, or at maybe
@@ -210,8 +210,14 @@ begin
   for i := Low(ADecodeArray) to High(ADecodeArray) do begin
     ADecodeArray[i] := $FF;
   end;
+  c := 0;
+  {$IFDEF DCC_NEXTGEN}
+  for i := Low(ACodingTable) to High(ACodingTable) do begin
+  {$ELSE}
   for i := 1 to Length(ACodingTable) do begin
-    ADecodeArray[Ord(ACodingTable[i])] := i - 1;
+  {$ENDIF}
+    ADecodeArray[Ord(ACodingTable[i])] := c;
+    Inc(c);
   end;
 end;
 

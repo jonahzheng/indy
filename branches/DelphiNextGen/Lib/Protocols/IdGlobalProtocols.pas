@@ -586,7 +586,7 @@ implementation
 
 uses
   {$IFDEF USE_VCL_POSIX}
-	  {$IFDEF DARWIN}
+    {$IFDEF DARWIN}
   Macapi.CoreServices,
     {$ENDIF}
   {$ENDIF}
@@ -597,17 +597,14 @@ uses
     {$ENDIF}
     {$IFDEF FPC}
       {$IFDEF USE_BASEUNIX}
-      BaseUnix,
-      Unix,
-      DateUtils,
+  BaseUnix,
+  Unix,
+  DateUtils,
       {$ENDIF}
     {$ENDIF}
     {$IFDEF USE_VCL_POSIX}
-      {$IFDEF DARWIN}
-    Macapi.CoreServices,
-      {$ENDIF}
-    DateUtils,
-    Posix.SysStat, Posix.SysTime, Posix.Time, Posix.Unistd,
+  DateUtils,
+  Posix.SysStat, Posix.SysTime, Posix.Time, Posix.Unistd,
     {$ENDIF}
   {$ENDIF}
   {$IFDEF WINDOWS}

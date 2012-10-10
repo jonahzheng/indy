@@ -23563,14 +23563,14 @@ begin
 end;
 {$ENDIF}
 
-
-function OPENSSL_malloc(aSize:TIdC_INT):Pointer;
-{$IFDEF USE_INLINE} inline; {$ENDIF}
-//can also use CRYPTO_mem_leaks(bio)
 {$IFDEF DCC_NEXTGEN}
 const
   cNull: TIdAnsiChar = 0;
 {$ENDIF}
+
+function OPENSSL_malloc(aSize:TIdC_INT):Pointer;
+{$IFDEF USE_INLINE} inline; {$ENDIF}
+//can also use CRYPTO_mem_leaks(bio)
 begin
   Result := CRYPTO_malloc(aSize,
     {$IFDEF DCC_NEXTGEN}

@@ -840,7 +840,7 @@ begin
   {$IFDEF HAS_GENERICS_TList}
   Trap.MIBValues.Clear;
   {$ELSE}
-  Trap.MIBName.Clear;
+  Trap.MIBOID.Clear;
   Trap.MIBValue.Clear;
   {$ENDIF}
   for i := 0 to {$IFDEF HAS_GENERICS_TList}MIBValues{$ELSE}MIBName{$ENDIF}.Count-1 do begin
@@ -887,7 +887,7 @@ begin
       {$IFDEF HAS_GENERICS_TList}
       MIBValues.Add(TIdMIBValue.Create(Trap.ValueOID[i], Trap.Value[i], Trap.ValueType[i]));
       {$ELSE}
-      MIBName(Trap.ValueOID[i]);
+      MIBName.Add(Trap.ValueOID[i]);
       MIBValue.AddObject(Trap.Value[i], TObject(Trap.ValueType[i]));
       {$ENDIF}
     end;

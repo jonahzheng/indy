@@ -1529,7 +1529,7 @@ begin
       end;
       Id_PF_INET6: begin
         APkt.SourceIP := TranslateTInAddrToString(PAddr6^.sin6_addr, Id_IPv6);
-        APkt.SourcePort := ntohs(PAddr6^sin6_port);
+        APkt.SourcePort := ntohs(PAddr6^.sin6_port);
         APkt.SourceIPVersion := Id_IPv6;
       end;
       else begin

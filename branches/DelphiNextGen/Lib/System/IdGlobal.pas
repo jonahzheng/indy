@@ -1879,8 +1879,9 @@ begin
   if GIdBEUTF16Encoding = nil then
   begin
     LEncoding := TIdUTF16BigEndianEncoding.Create;
-    if InterlockedCompareExchangeObj(TObject(GIdBEUTF16Encoding), LEncoding, nil) <> nil then
+    if InterlockedCompareExchangeObj(TObject(GIdBEUTF16Encoding), LEncoding, nil) <> nil then begin
       LEncoding.Free;
+    end;
   end;
   Result := GIdBEUTF16Encoding;
 end;
@@ -2150,8 +2151,11 @@ begin
       LEncoding := TIdMBCSEncoding.Create;
     end;
     {$ELSE}
-    if InterlockedCompareExchangeObj(TObject(GIdDefaultEncoding), LEncoding, nil) <> nil then
+    LEncoding := TIdMBCSEncoding.Create;
+    {$ENDIF}
+    if InterlockedCompareExchangeObj(TObject(GIdDefaultEncoding), LEncoding, nil) <> nil then begin
       LEncoding.Free;
+    end;
   end;
   Result := GIdDefaultEncoding;
 end;
@@ -2218,8 +2222,9 @@ begin
   if GIdLEUTF16Encoding = nil then
   begin
     LEncoding := TIdUTF16LittleEndianEncoding.Create;
-    if InterlockedCompareExchangeObj(TObject(GIdLEUTF16Encoding), LEncoding, nil) <> nil then
+    if InterlockedCompareExchangeObj(TObject(GIdLEUTF16Encoding), LEncoding, nil) <> nil then begin
       LEncoding.Free;
+    end;
   end;
   Result := GIdLEUTF16Encoding;
 end;
@@ -2235,8 +2240,9 @@ begin
   if GIdUTF7Encoding = nil then
   begin
     LEncoding := TIdUTF7Encoding.Create;
-    if InterlockedCompareExchangeObj(TObject(GIdUTF7Encoding), LEncoding, nil) <> nil then
+    if InterlockedCompareExchangeObj(TObject(GIdUTF7Encoding), LEncoding, nil) <> nil then begin
       LEncoding.Free;
+    end;
   end;
   Result := GIdUTF7Encoding;
 end;
