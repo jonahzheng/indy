@@ -1466,7 +1466,7 @@ begin
       {$IFDEF HAS_GENERICS_TObjectList}
       DESortAscFName
       {$ELSE}
-      TIdSortCompare(DESortAscFName)
+      TIdSortCompare(@DESortAscFName)
       {$ENDIF}
     );
     for i := 0 to FSubDirs.Count-1 do begin
@@ -1489,7 +1489,7 @@ begin
       {$IFDEF HAS_GENERICS_TObjectList}
       DESortAscMTime
       {$ELSE}
-      TIdSortCompare(DESortAscMTime
+      TIdSortCompare(@DESortAscMTime)
       {$ENDIF}
     );
     for i := 0 to FSubDirs.Count-1 do begin
@@ -1512,7 +1512,7 @@ begin
       {$IFDEF HAS_GENERICS_TObjectList}
       DESortDescMTime
       {$ELSE}
-      TIdSortCompare(DESortDescMTime)
+      TIdSortCompare(@DESortDescMTime)
       {$ENDIF}
     );
     for i := 0 to FSubDirs.Count -1 do begin
@@ -1532,7 +1532,7 @@ begin
       {$IFDEF HAS_GENERICS_TObjectList}
       DESortDescFName
       {$ELSE}
-      TIdSortCompare(DESortDescFName)
+      TIdSortCompare(@DESortDescFName)
       {$ENDIF}
     );
     for i := 0 to FSubDirs.Count-1 do begin
@@ -1558,7 +1558,7 @@ begin
       {$IFDEF HAS_GENERICS_TObjectList}
       DESortAscFName
       {$ELSE}
-      TIdSortCompare(DESortAscFName)
+      TIdSortCompare(@DESortAscFName)
       {$ENDIF}
     );
     for i := 0 to FSubDirs.Count-1 do begin
@@ -1581,7 +1581,7 @@ begin
       {$IFDEF HAS_GENERICS_TObjectList}
       DESortAscFName
       {$ELSE}
-      TIdSortCompare(DESortAscFName)
+      TIdSortCompare(@DESortAscFName)
       {$ENDIF}
     );
     for i := 0 to FSubDirs.Count-1 do begin
@@ -1604,7 +1604,7 @@ begin
       {$IFDEF HAS_GENERICS_TObjectList}
       DESortAscMTime
       {$ELSE}
-      TIdSortCompare(DESortAscMTime)
+      TIdSortCompare(@DESortAscMTime)
       {$ENDIF}
     );
     for i := 0 to FSubDirs.Count-1 do begin
@@ -1627,7 +1627,7 @@ begin
       {$IFDEF HAS_GENERICS_TObjectList}
       DESortDescFName
       {$ELSE}
-      TIdSortCompare(DESortDescFName)
+      TIdSortCompare(@DESortDescFName)
       {$ENDIF}
     );
     for i := 0 to FSubDirs.Count-1 do begin
