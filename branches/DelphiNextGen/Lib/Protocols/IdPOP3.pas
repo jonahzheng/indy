@@ -375,21 +375,25 @@ begin
   Result := (SendCmd('RSET', '') = ST_OK);    {Do not Localize}
 end;
 
-function TIdPOP3.RetrieveRaw(const aMsgNo: Integer; const aDest: TStrings):
-  boolean;
+function TIdPOP3.RetrieveRaw(const aMsgNo: Integer; const aDest: TStrings): boolean;
+var
+  LEncoding: IIdTextEncoding;
 begin
   Result := (SendCmd('RETR ' + IntToStr(aMsgNo), '') = ST_OK);    {Do not Localize}
   if Result then begin
-    IOHandler.Capture(aDest, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+    LEncoding := IndyTextEncoding_8Bit;
+    IOHandler.Capture(aDest, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
   end;
 end;
 
-function TIdPOP3.RetrieveRaw(const aMsgNo: Integer;
-  const aDest: TStream): boolean;
+function TIdPOP3.RetrieveRaw(const aMsgNo: Integer; const aDest: TStream): boolean;
+var
+  LEncoding: IIdTextEncoding;
 begin
   Result := (SendCmd('RETR ' + IntToStr(aMsgNo), '') = ST_OK);    {Do not Localize}
   if Result then begin
-    IOHandler.Capture(aDest, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+    LEncoding := IndyTextEncoding_8Bit;
+    IOHandler.Capture(aDest, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
   end;
 end;
 
@@ -461,6 +465,8 @@ begin
 end;
 
 function TIdPOP3.UIDL(const ADest: TStrings; const AMsgNum: Integer = -1): Boolean;
+var
+  LEncoding: IIdTextEncoding;
 begin
   if AMsgNum >= 0 then begin
     Result := (SendCmd('UIDL ' + IntToStr(AMsgNum), '') = ST_OK);    {Do not Localize}
@@ -471,7 +477,8 @@ begin
   else begin
     Result := (SendCmd('UIDL', '') = ST_OK);    {Do not Localize}
     if Result then begin
-      IOHandler.Capture(ADest, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+      LEncoding := IndyTextEncoding_8Bit;
+      IOHandler.Capture(ADest, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
     end;
   end;
 end;
@@ -479,6 +486,7 @@ end;
 function TIdPOP3.Top(const AMsgNum: Integer; const ADest: TStrings; const AMaxLines: Integer = 0): boolean;
 var
   Cmd: String;
+  LEncoding: IIdTextEncoding;
 begin
   Cmd := 'TOP ' + IntToStr(AMsgNum); {Do not Localize}
   if AMaxLines <> 0 then begin
@@ -486,7 +494,8 @@ begin
   end;
   Result := (SendCmd(Cmd,'') = ST_OK);
   if Result then begin
-    IOHandler.Capture(ADest, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+    LEncoding := IndyTextEncoding_8Bit;
+    IOHandler.Capture(ADest, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
   end;
 end;
 

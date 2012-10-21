@@ -15,7 +15,7 @@
 {$DEFINE IdIPv4}
 
 {$DEFINE INDY100}
-{$DEFINE 10_5_9}  //so developers can IFDEF for this specific version
+{$DEFINE 10_6_0}  //so developers can IFDEF for this specific version
 
 // When invoking DCC on the command-line, use the -DBCB
 // parameter when generating C++Builder output files!
@@ -58,13 +58,13 @@
 // Make sure the following is $DEFINE'd only for suitable environments
 // as specified further below.
 {$UNDEF STRING_IS_IMMUTABLE}
+{$UNDEF SUPPORTS_ZEROBASEDSTRINGS}
 
 // Make sure the following are $DEFINE'd only for suitable environments
 // as specified further below.
 {$UNDEF HAS_TEncoding}
 {$UNDEF HAS_TCharacter}
 {$UNDEF HAS_TInterlocked}
-{$UNDEF TIdTextEncoding_IS_NATIVE}
 
 // Make sure that this is defined only for environments where we are using
 // the iconv library to charactor conversions.
@@ -226,6 +226,7 @@
 {$ENDIF}
 
 //Delphi & CBuilder XE3 (Waterdragon)
+//Delphi & CBuilder XE4 (Quintessence) - compiler bug?
 {$IFDEF VER240}
   {$DEFINE VCL_XE3}
   {$IFDEF CBUILDER}
@@ -233,7 +234,19 @@
   {$ELSE}
     {$DEFINE DELPHI_XE3}
   {$ENDIF}
-  {$LEGACYIFEND ON}
+{$ENDIF}
+
+//Delphi & CBuilder XE4 (Quintessence)
+{$IFDEF VER250}
+  {$UNDEF VCL_XE3}
+  {$DEFINE VCL_XE4}
+  {$IFDEF CBUILDER}
+    {$UNDEF CBUILDER_XE3}
+    {$DEFINE CBUILDER_XE4}
+  {$ELSE}
+    {$UNDEF DELPHI_XE3}
+    {$DEFINE DELPHI_XE4}
+  {$ENDIF}
 {$ENDIF}
 
 // Delphi.NET
@@ -392,8 +405,16 @@
 
 // end FPC
 
-{$IFDEF VCL_XE3}
+{$IFDEF VCL_XE4}
+  {$DEFINE VCL_XE4_OR_ABOVE}
+{$ENDIF}
+
+{$IFDEF VCL_XE4_OR_ABOVE}
   {$DEFINE VCL_XE3_OR_ABOVE}
+{$ELSE}
+  {$IFDEF VCL_XE3}
+    {$DEFINE VCL_XE3_OR_ABOVE}
+  {$ENDIF}
 {$ENDIF}
 
 {$IFDEF VCL_XE3_OR_ABOVE}
@@ -711,12 +732,6 @@
       // FmtStr() is broken in RTM but was fixed in Update 1
       {$DEFINE BROKEN_FmtStr}
     {$ENDIF}
-    {$IFNDEF VCL_XE_OR_ABOVE}
-      // TEncoding.GetEncoding() and TMBCSEncoding support for codepage 20127
-      // have some bugs in 2009 and 2010 that were finally fixed in XE
-      {$DEFINE BROKEN_TEncoding_GetEncoding}
-      {$DEFINE BROKEN_TMBCSEncoding_CP20127}
-    {$ENDIF}
   {$ENDIF}
   {$DEFINE HAS_CLASSVARS}
   {$DEFINE HAS_DEPRECATED_MSG}
@@ -748,16 +763,25 @@
 {$IFDEF VCL_XE2_OR_ABOVE}
   {$DEFINE HAS_SIZE_T}
   {$DEFINE HAS_ComponentPlatformsAttribute}
+  {$DEFINE HAS_LocaleCharsFromUnicode} // TODO: when was LocaleCharsFromUnicode() introduced?
+  {$DEFINE HAS_UnicodeFromLocaleChars} // TODO: when was UnicodeFromLocaleChars() introduced?
 {$ENDIF}
 
 {$IFDEF VCL_XE3_OR_ABOVE}
   {$IFDEF DCC}
+    {$DEFINE SUPPORTS_ZEROBASEDSTRINGS}
     {$IFDEF NEXTGEN}
       {$DEFINE DCC_NEXTGEN}
       {$IFDEF AUTOREFCOUNT}
         {$DEFINE DCC_NEXTGEN_ARC}
       {$ENDIF}
     {$ENDIF}
+  {$ENDIF}
+{$ENDIF}
+
+{$IFDEF VCL_XE4_OR_ABOVE}
+  {$IFDEF DCC}
+    // TODO
   {$ENDIF}
 {$ENDIF}
 
@@ -1091,13 +1115,7 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
 
 {$IFDEF DOTNET}
   {$DEFINE DOTNET_OR_ICONV}
-  {$DEFINE TIdTextEncoding_IS_NATIVE}
 {$ELSE}
-  {$IFDEF HAS_TEncoding}
-    {$IFNDEF USE_ICONV}
-      {$DEFINE TIdTextEncoding_IS_NATIVE}
-    {$ENDIF}
-  {$ENDIF}
 {$ENDIF}
 {$IFDEF USE_ICONV}
   {$DEFINE DOTNET_OR_ICONV}

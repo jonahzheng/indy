@@ -295,7 +295,7 @@ begin
   Label2.Top := 8;
   Label2.Width := 136;
   Label2.Height := 13;
-  Label2.Caption := RSADlgSLAssigned
+  Label2.Caption := RSADlgSLAssigned;
 
   sbUp := TSpeedButton.Create(Self);
   sbUp.Name := 'sbUp'; {do not localize}

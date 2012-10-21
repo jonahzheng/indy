@@ -405,23 +405,23 @@ type
     // GetInternalResponse is not in IOHandler as some protocols may need to
     // override it. It could be still moved and proxied from here, but at this
     // point it is here.
-    procedure GetInternalResponse(AEncoding: TIdTextEncoding = nil); virtual;
+    procedure GetInternalResponse(AEncoding: IIdTextEncoding = nil); virtual;
     // Reads response using GetInternalResponse which each reply type can define
     // the behaviour. Then checks against expected Code.
     //
     // Seperate one for singles as one of the older Delphi compilers cannot
     // match a single number into an array. IIRC newer ones do.
     function GetResponse(const AAllowedResponse: SmallInt = -1;
-      AEncoding: TIdTextEncoding = nil): SmallInt; overload;
+      AEncoding: IIdTextEncoding = nil): SmallInt; overload;
     function GetResponse(const AAllowedResponses: array of SmallInt;
-      AEncoding: TIdTextEncoding = nil): SmallInt; overload; virtual;
+      AEncoding: IIdTextEncoding = nil): SmallInt; overload; virtual;
     // No array type for strings as ones that use strings are usually bastard
     // protocols like POP3/IMAP which dont include proper substatus anyways.
     //
     // If a case can be made for some other condition this may be expanded
     // in the future
     function GetResponse(const AAllowedResponse: string;
-      AEncoding: TIdTextEncoding = nil): string; overload; virtual;
+      AEncoding: IIdTextEncoding = nil): string; overload; virtual;
     //
     property Greeting: TIdReply read FGreeting write SetGreeting;
     // RaiseExceptionForCmdResult - Overload necesary as a exception as a default param doesnt work
@@ -430,11 +430,11 @@ type
      overload; virtual;
     // These are extended GetResponses, so see the comments for GetResponse
     function SendCmd(AOut: string; const AResponse: SmallInt = -1;
-      AEncoding: TIdTextEncoding = nil): SmallInt; overload;
+      AEncoding: IIdTextEncoding = nil): SmallInt; overload;
     function SendCmd(AOut: string; const AResponse: array of SmallInt;
-      AEncoding: TIdTextEncoding = nil): SmallInt; overload; virtual;
+      AEncoding: IIdTextEncoding = nil): SmallInt; overload; virtual;
     function SendCmd(AOut: string; const AResponse: string;
-      AEncoding: TIdTextEncoding = nil): string; overload;
+      AEncoding: IIdTextEncoding = nil): string; overload;
     //
     procedure WriteHeader(AHeader: TStrings);
     procedure WriteRFCStrings(AStrings: TStrings);
@@ -559,7 +559,7 @@ begin
 end;
 
 function TIdTCPConnection.GetResponse(const AAllowedResponses: array of SmallInt;
-  AEncoding: TIdTextEncoding = nil): SmallInt;
+  AEncoding: IIdTextEncoding = nil): SmallInt;
 begin
   GetInternalResponse(AEncoding);
   Result := CheckResponse(LastCmdResult.NumericCode, AAllowedResponses);
@@ -577,7 +577,7 @@ begin
 end;
 
 function TIdTCPConnection.SendCmd(AOut: string; const AResponse: Array of SmallInt;
-  AEncoding: TIdTextEncoding = nil): SmallInt;
+  AEncoding: IIdTextEncoding = nil): SmallInt;
 begin
   CheckConnected;
   PrepareCmd(AOut);
@@ -714,7 +714,7 @@ begin
 end;
 
 function TIdTCPConnection.SendCmd(AOut: string; const AResponse: SmallInt = -1;
-  AEncoding: TIdTextEncoding = nil): SmallInt;
+  AEncoding: IIdTextEncoding = nil): SmallInt;
 begin
   if AResponse < 0 then begin
     Result := SendCmd(AOut, [], AEncoding);
@@ -753,7 +753,7 @@ begin
   Result := AResponse;
 end;
 
-procedure TIdTCPConnection.GetInternalResponse(AEncoding: TIdTextEncoding = nil);
+procedure TIdTCPConnection.GetInternalResponse(AEncoding: IIdTextEncoding = nil);
 var
   LLine: string;
   LResponse: TStringList;
@@ -779,7 +779,7 @@ begin
 end;
 
 function TIdTCPConnection.GetResponse(const AAllowedResponse: SmallInt = -1;
-  AEncoding: TIdTextEncoding = nil): SmallInt;
+  AEncoding: IIdTextEncoding = nil): SmallInt;
 begin
   if AAllowedResponse < 0 then begin
     Result := GetResponse([], AEncoding);
@@ -789,14 +789,14 @@ begin
 end;
 
 function TIdTCPConnection.GetResponse(const AAllowedResponse: string;
-  AEncoding: TIdTextEncoding = nil): string;
+  AEncoding: IIdTextEncoding = nil): string;
 begin
   GetInternalResponse(AEncoding);
   Result := CheckResponse(LastCmdResult.Code, AAllowedResponse);
 end;
 
 function TIdTCPConnection.SendCmd(AOut: string; const AResponse: string;
-  AEncoding: TIdTextEncoding = nil): string;
+  AEncoding: IIdTextEncoding = nil): string;
 begin
   CheckConnected;
   PrepareCmd(AOut);

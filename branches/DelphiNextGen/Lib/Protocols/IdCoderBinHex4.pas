@@ -413,7 +413,7 @@ begin
   //BinHex4.0 allows filenames to be only 255 bytes long (because the length
   //is stored in a byte), so truncate the filename to 255 bytes...
   {$IFDEF DCC_NEXTGEN}
-  LFileName := TIdTextEncoding.Default.GetBytes(FFileName);
+  LFileName := IndyTextEncoding_OSDefault.GetBytes(FFileName);
   {$ELSE}
     {$IFDEF STRING_IS_UNICODE}
   LFileName := AnsiString(FFileName); // explicit convert to Ansi

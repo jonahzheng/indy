@@ -345,8 +345,10 @@ begin
   lbBindings.OnClick := lbBindingsClick;
 
   ActionList1.Name := 'ActionList1';  {do not localize}
+  {
   ActionList1.Left := 152;
   ActionList1.Top := 32;
+  }
 
   btnBindingsNew.Name := 'btnBindingsNew'; {do not localize}
   btnBindingsNew.Caption := RSBindingNewCaption;

@@ -2387,27 +2387,19 @@ function ParseFactsMLS(AData : String; AResults : TStrings;
 var
   LBuf : TIdBytes;
   LCharSet : String;
-  LEncoding : TIdTextEncoding;
+  LEncoding: IIdTextEncoding;
 begin
-  LBuf := ToBytes(ParseFacts(AData, AResults, AFactDelim, ANameDelim), Indy8bitEncoding{$IFDEF STRING_IS_ANSI}, Indy8bitEncoding{$ENDIF});
+  LEncoding := IndyTextEncoding_8Bit;
+  LBuf := ToBytes(ParseFacts(AData, AResults, AFactDelim, ANameDelim), LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
   LCharSet := AResults.Values['charset'];
   if LCharSet = '' then begin
     LCharSet := 'UTF-8';
   end;
-  LEncoding := CharsetToEncoding(LCharSet);
-  {$IFNDEF DOTNET}
   try
-  {$ENDIF}
-    try
-      Result := BytesToString(LBuf, LEncoding);
-    except
-      Result := BytesToString(LBuf, Indy8bitEncoding);
-    end;
-  {$IFNDEF DOTNET}
-  finally
-    LEncoding.Free;
+    Result := BytesToString(LBuf, CharsetToEncoding(LCharSet));
+  except
+    Result := BytesToString(LBuf, LEncoding);
   end;
-  {$ENDIF}
 end;
 
 

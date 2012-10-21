@@ -702,11 +702,14 @@ begin
 end;
 
 procedure TIdSysLogMessage.SendToHost(const Dest: String);
+var
+  LEncoding: IIdTextEncoding;
 begin
   if not Assigned(FUDPCliComp) then begin
     FUDPCliComp := TIdUDPClient.Create(Self);
   end;
-  (FUDPCliComp as TIdUDPClient).Send(Dest, IdPORT_syslog, EncodeMessage, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+  LEncoding := IndyTextEncoding_8Bit;
+  (FUDPCliComp as TIdUDPClient).Send(Dest, IdPORT_syslog, EncodeMessage, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
 end;
 
 { TIdSysLogMsgPart }

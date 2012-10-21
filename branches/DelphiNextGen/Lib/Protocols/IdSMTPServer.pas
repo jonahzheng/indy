@@ -1017,10 +1017,12 @@ begin
 end;
 
 procedure TIdSMTPServer.CommandDATA(ASender: TIdCommand);
+const
+  BodyEncType: array[TIdSMTPBodyType] of IdTextEncodingType = (encASCII, enc8Bit, enc8Bit);
 var
   LContext : TIdSMTPServerContext;
   LStream: TStream;
-  LEncoding: TIdTextEncoding;
+  LEncoding: IIdTextEncoding;
 begin
   LContext := TIdSMTPServerContext(ASender.Context);
   if LContext.SMTPState <> idSMTPRcpt then begin
@@ -1038,11 +1040,7 @@ begin
       // RLebeau: TODO - do not even create the stream if the OnMsgReceive
       // event is not assigned, or at least create a stream that discards
       // any data received...
-      if LContext.FBodyType = idSMTP7Bit then begin
-        LEncoding := IndyASCIIEncoding;
-      end else begin
-        LEncoding := Indy8BitEncoding;
-      end;
+      LEncoding := IndyTextEncoding(BodyEncType[LContext.FBodyType]);
       SetEnhReply(ASender.Reply, 354, '', RSSMTPSvrStartData, LContext.EHLO);
       ASender.SendReply;
       LContext.PipeLining := False;

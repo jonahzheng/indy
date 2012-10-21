@@ -410,37 +410,37 @@ type
   procedure CommaSeparatedToStringList(AList: TStrings; const Value:string);
   function CompareDateTime(const ADateTime1, ADateTime2 : TDateTime) : Integer;
 
-  function ContentTypeToEncoding(const AContentType: string; AQuoteType: TIdHeaderQuotingType): TIdTextEncoding;
-  function CharsetToEncoding(const ACharset: string): TIdTextEncoding;
+  function ContentTypeToEncoding(const AContentType: string; AQuoteType: TIdHeaderQuotingType): IIdTextEncoding;
+  function CharsetToEncoding(const ACharset: string): IIdTextEncoding;
 
   function ReadStringAsContentType(AStream: TStream; const AContentType: String;
     AQuoteType: TIdHeaderQuotingType
-    {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}): String;
+    {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}): String;
 
   procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings;
     const AContentType: String; AQuoteType: TIdHeaderQuotingType
-    {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF});
+    {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF});
 
   procedure WriteStringAsContentType(AStream: TStream; const AStr, AContentType: String;
     AQuoteType: TIdHeaderQuotingType
-    {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
+    {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding = nil{$ENDIF});
 
   procedure WriteStringsAsContentType(AStream: TStream; const AStrings: TStrings;
     const AContentType: String; AQuoteType: TIdHeaderQuotingType
-    {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
+    {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding = nil{$ENDIF});
 
   procedure WriteStringAsCharset(AStream: TStream; const AStr, ACharset: string
-    {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
+    {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding = nil{$ENDIF});
 
   procedure WriteStringsAsCharset(AStream: TStream; const AStrings: TStrings;
     const ACharset: string
-    {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
+    {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding = nil{$ENDIF});
 
   function ReadStringAsCharset(AStream: TStream; const ACharset: String
-    {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}): String;
+    {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}): String;
 
   procedure ReadStringsAsCharset(AStream: TStream; AStrings: TStrings; const ACharset: string
-    {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF});
+    {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF});
 
   {
   These are for handling binary values that are in Network Byte order.  They call
@@ -556,7 +556,7 @@ type
   procedure ParseMetaHTTPEquiv(AStream: TStream; AStr : TStrings);
 
 type
-  TIdEncodingNeededEvent = function(const ACharset: String): TIdTextEncoding;
+  TIdEncodingNeededEvent = function(const ACharset: String): IIdTextEncoding;
 
 var
   {$IFDEF UNIX}
@@ -3819,10 +3819,13 @@ var
   LMode : TIdHTMLMode;
   LPos : Integer;
   LLen : Integer;
+  LEncoding: IIdTextEncoding;
 begin
 //  AStr.Clear;
   AStream.Position := 0;
-  LRawData := ReadStringFromStream(AStream, -1, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+  LEncoding := IndyTextEncoding_8Bit;
+  LRawData := ReadStringFromStream(AStream, -1, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
+  LEncoding := nil;
   LMode := none;
   LPos := 0;
   LLen := Length(LRawData);
@@ -4553,7 +4556,7 @@ begin
 end;
 
 function ContentTypeToEncoding(const AContentType: String;
-  AQuoteType: TIdHeaderQuotingType): TIdTextEncoding;
+  AQuoteType: TIdHeaderQuotingType): IIdTextEncoding;
 var
   LCharset: String;
 begin
@@ -4561,18 +4564,7 @@ begin
   Result := CharsetToEncoding(LCharset);
 end;
 
-{$IFNDEF DOTNET_OR_ICONV}
-  // SysUtils.TEncoding.GetEncoding() in Delphi 2009 and 2010 does not
-  // implement UTF-7 and UTF-16 correctly.  This was fixed in Delphi XE...
-  {$DEFINE USE_TIdTextEncoding_GetEncoding}
-  {$IFDEF TIdTextEncoding_IS_NATIVE}
-    {$IFDEF BROKEN_TEncoding_GetEncoding}
-      {$UNDEF USE_TIdTextEncoding_GetEncoding}
-    {$ENDIF}
-  {$ENDIF}
-{$ENDIF}
-
-function CharsetToEncoding(const ACharset: String): TIdTextEncoding;
+function CharsetToEncoding(const ACharset: String): IIdTextEncoding;
 {$IFNDEF DOTNET_OR_ICONV}
 var
   CP: Word;
@@ -4598,49 +4590,13 @@ begin
     // maybe the user will know how to encode/decode the data manually
     // as a workaround...
 
-    // RLebeau: on non-DotNet systems, setting the AOwnedByIndy parameter
-    // of Indy...Encoding() to False so that the caller does not have to
-    // figure out whether or not to free the output TIdTextEncoding.
-    // Standard TIdTextEncoding objects are owned by the RTL, and the
-    // encoding objects that Indy...Encoding() normally return are owned
-    // by IdGlobal.pas, and thus should not be freed.  Objects returned
-    // by TIdTextEncoding.GetEncoding() and Indy...Encoding(False) are
-    // not owned by anyone and must always be freed.
-
     try
       {$IFDEF DOTNET_OR_ICONV}
-      Result := TIdTextEncoding.GetEncoding(ACharset);
+      Result := IndyTextEncoding(ACharset);
       {$ELSE}
       CP := CharsetToCodePage(ACharset);
-      case CP of
-        20127:
-          // RLebeau: 20127 is the official codepage for ASCII,
-          // but not all OS versions support that codepage...
-          Result := IndyASCIIEncoding(False);
-        65001:
-          // RLebeau: UTF-8 is handled separate from other standard
-          // encodings because we need to avoid the MB_ERR_INVALID_CHARS
-          // flag regardless of whether TIdTextEncoding is implemented
-          // natively or manually...
-          Result := IndyUTF8Encoding(False);
-        {$IFNDEF USE_TIdTextEncoding_GetEncoding}
-        1200:
-          Result := TIdUTF16LittleEndianEncoding.Create;
-        1201:
-          Result := TIdUTF16BigEndianEncoding.Create;
-        65000:
-          Result := TIdUTF7Encoding.Create;
-        {$ENDIF}
-      else
-        begin
-          if CP <> 0 then begin
-            {$IFDEF USE_TIdTextEncoding_GetEncoding}
-            Result := TIdTextEncoding.GetEncoding(CP);
-            {$ELSE}
-            Result := TIdMBCSEncoding.Create(CP);
-            {$ENDIF}
-          end;
-        end;
+      if CP <> 0 then begin
+        Result := IndyTextEncoding(CP);
       end;
       {$ENDIF}
     except end;
@@ -4666,168 +4622,70 @@ begin
       Exit;
     end;
     }
-    Result := Indy8BitEncoding{$IFNDEF DOTNET}(False){$ENDIF};
+    Result := IndyTextEncoding_8Bit;
   end;
 end;
 
 procedure WriteStringAsContentType(AStream: TStream; const AStr, AContentType: String;
   AQuoteType: TIdHeaderQuotingType
-  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
-var
-  LEncoding: TIdTextEncoding;
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding = nil{$ENDIF});
 begin
-  LEncoding := ContentTypeToEncoding(AContentType, AQuoteType);
-  {$IFNDEF DOTNET}
-  try
-  {$ENDIF}
-    WriteStringToStream(AStream, AStr, LEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
-  {$IFNDEF DOTNET}
-  finally
-    LEncoding.Free;
-  end;
-  {$ENDIF}
+  WriteStringToStream(AStream, AStr, ContentTypeToEncoding(AContentType, AQuoteType){$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
 end;
 
 procedure WriteStringsAsContentType(AStream: TStream; const AStrings: TStrings;
   const AContentType: String; AQuoteType: TIdHeaderQuotingType
-  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
-var
-  LEncoding: TIdTextEncoding;
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding = nil{$ENDIF});
 begin
-  LEncoding := ContentTypeToEncoding(AContentType, AQuoteType);
-  {$IFNDEF DOTNET}
-  try
-  {$ENDIF}
-    // RLebeau 10/06/2010: not using TStrings.SaveToStream() in D2009+
-    // anymore, as it may save a BOM which we do not want here...
-    WriteStringToStream(AStream, AStrings.Text, LEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
-  {$IFNDEF DOTNET}
-  finally
-    LEncoding.Free;
-  end;
-  {$ENDIF}
+  // RLebeau 10/06/2010: not using TStrings.SaveToStream() in D2009+
+  // anymore, as it may save a BOM which we do not want here...
+  WriteStringToStream(AStream, AStrings.Text, ContentTypeToEncoding(AContentType, AQuoteType){$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
 end;
 
 procedure WriteStringAsCharset(AStream: TStream; const AStr, ACharset: string
-  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
-var
-  LEncoding: TIdTextEncoding;
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding = nil{$ENDIF});
 begin
-  LEncoding := CharsetToEncoding(ACharset);
-  {$IFNDEF DOTNET}
-  try
-  {$ENDIF}
-    WriteStringToStream(AStream, AStr, LEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
-  {$IFNDEF DOTNET}
-  finally
-    LEncoding.Free;
-  end;
-  {$ENDIF}
+  WriteStringToStream(AStream, AStr, CharsetToEncoding(ACharset){$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
 end;
 
 procedure WriteStringsAsCharset(AStream: TStream; const AStrings: TStrings;
   const ACharset: string
-  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF});
-var
-  LEncoding: TIdTextEncoding;
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding = nil{$ENDIF});
 begin
-  LEncoding := CharsetToEncoding(ACharset);
-  {$IFNDEF DOTNET}
-  try
-  {$ENDIF}
-    // RLebeau 10/06/2010: not using TStrings.SaveToStream() in D2009+
-    // anymore, as it may save a BOM which we do not want here...
-    WriteStringToStream(AStream, AStrings.Text, LEncoding{$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
-  {$IFNDEF DOTNET}
-  finally
-    LEncoding.Free;
-  end;
-  {$ENDIF}
+  // RLebeau 10/06/2010: not using TStrings.SaveToStream() in D2009+
+  // anymore, as it may save a BOM which we do not want here...
+  WriteStringToStream(AStream, AStrings.Text, CharsetToEncoding(ACharset){$IFDEF STRING_IS_ANSI}, ASrcEncoding{$ENDIF});
 end;
 
 function ReadStringAsContentType(AStream: TStream; const AContentType: String;
   AQuoteType: TIdHeaderQuotingType
-  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
 ): String;
-var
-  LEncoding: TIdTextEncoding;
 begin
-  Result := '';
-  LEncoding := ContentTypeToEncoding(AContentType, AQuoteType);
-  {$IFNDEF DOTNET}
-  try
-  {$ENDIF}
-    Result := ReadStringFromStream(AStream, -1, LEncoding{$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
-  {$IFNDEF DOTNET}
-  finally
-    LEncoding.Free;
-  end;
-  {$ENDIF}
+  Result := ReadStringFromStream(AStream, -1, ContentTypeToEncoding(AContentType, AQuoteType){$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
 end;
 
 procedure ReadStringsAsContentType(AStream: TStream; AStrings: TStrings;
   const AContentType: String; AQuoteType: TIdHeaderQuotingType
-  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
 );
-var
-  LEncoding: TIdTextEncoding;
 begin
-  LEncoding := ContentTypeToEncoding(AContentType, AQuoteType);
-  {$IFNDEF DOTNET}
-  try
-  {$ENDIF}
-    {$IFDEF HAS_TEncoding}
-    AStrings.LoadFromStream(AStream, LEncoding);
-    {$ELSE}
-    AStrings.Text := ReadStringFromStream(AStream, -1, LEncoding{$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
-    {$ENDIF}
-  {$IFNDEF DOTNET}
-  finally
-    LEncoding.Free;
-  end;
-  {$ENDIF}
+  AStrings.Text := ReadStringFromStream(AStream, -1, ContentTypeToEncoding(AContentType, AQuoteType){$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
 end;
 
 function ReadStringAsCharset(AStream: TStream; const ACharset: String
-  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
 ): String;
-//TODO:  Figure out what should happen with Unicode content type.
-var
-  LEncoding: TIdTextEncoding;
 begin
-  Result := '';
-  LEncoding := CharsetToEncoding(ACharset);
-  {$IFNDEF DOTNET}
-  try
-  {$ENDIF}
-    Result := ReadStringFromStream(AStream, -1, LEncoding{$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
-  {$IFNDEF DOTNET}
-  finally
-    LEncoding.Free;
-  end;
-  {$ENDIF}
+  //TODO: Figure out what should happen with Unicode content type.
+  Result := ReadStringFromStream(AStream, -1, CharsetToEncoding(ACharset){$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
 end;
 
 procedure ReadStringsAsCharset(AStream: TStream; AStrings: TStrings; const ACharset: String
-  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
 );
-var
-  LEncoding: TIdTextEncoding;
 begin
-  LEncoding := CharsetToEncoding(ACharset);
-  {$IFNDEF DOTNET}
-  try
-  {$ENDIF}
-    {$IFDEF HAS_TEncoding}
-    AStrings.LoadFromStream(AStream, LEncoding);
-    {$ELSE}
-    AStrings.Text := ReadStringFromStream(AStream, -1, LEncoding{$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
-    {$ENDIF}
-  {$IFNDEF DOTNET}
-  finally
-    LEncoding.Free;
-  end;
-  {$ENDIF}
+  AStrings.Text := ReadStringFromStream(AStream, -1, CharsetToEncoding(ACharset){$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
 end;
 
 { TIdInterfacedObject }

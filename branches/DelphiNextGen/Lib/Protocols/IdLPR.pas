@@ -262,10 +262,13 @@ end;
 procedure TIdLPR.Print(const AText: String);
 var
   LStream: TStream;
+  LEncoding: IIdTextEncoding;
 begin
   LStream := TMemoryStream.Create;
   try
-    WriteStringToStream(LStream, AText, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+    LEncoding := IndyTextEncoding_8Bit;
+    WriteStringToStream(LStream, AText, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
+    LEncoding := nil;
     LStream.Position := 0;
     InternalPrint(LStream);
   finally

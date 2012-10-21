@@ -34,15 +34,13 @@ interface
 {$I IdCompilerDefines.inc}
 
 resourcestring
-  {$IFNDEF TIdTextEncoding_IS_NATIVE}
-  //TIdTextEncoding
+  //IIdTextEncoding
   RSInvalidSourceArray = 'Invalid source array';
   RSInvalidDestinationArray = 'Invalid destination array';
   RSCharIndexOutOfBounds = 'Character index out of bounds (%d)';
   RSByteIndexOutOfBounds = 'Start index out of bounds (%d)';
   RSInvalidCharCount = 'Invalid count (%d)';
   RSInvalidDestinationIndex = 'Invalid destination index (%d)';
-  {$ENDIF}
 
   RSInvalidCodePage = 'Invalid codepage (%d)';
   RSInvalidCharSet = 'Invalid character set (%s)';

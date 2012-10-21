@@ -5865,7 +5865,9 @@ implementation
 //=============================================================
 
 uses
-  IdResourceStrings;
+  IdResourceStrings
+  {$IFDEF VCL_XE4_OR_ABOVE}, AnsiStrings{$ENDIF}
+  ;
   // (c) March 2001,  "Alex Konshin"<alexk@mtgroup.ru>
 
 var
@@ -8806,7 +8808,7 @@ begin
   if snb <> nil then begin
     snb^.snb_family := AF_NETBIOS;
     snb^.snb_type := SnbType;
-    len := StrLen(Name);
+    len := {$IFDEF VCL_XE4_OR_ABOVE}AnsiStrings.{$ENDIF}StrLen(Name);
     if len >= NETBIOS_NAME_LENGTH-1 then begin
       System.Move(Name^, snb^.snb_name, NETBIOS_NAME_LENGTH-1);
     end else begin

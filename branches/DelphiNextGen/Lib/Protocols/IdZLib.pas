@@ -196,7 +196,9 @@ const
 implementation
 
 uses
-  IdGlobalProtocols, IdStream, IdZLibConst;
+  IdGlobalProtocols, IdStream, IdZLibConst
+  {$IFDEF VCL_XE4_OR_ABOVE}, AnsiStrings{$ENDIF}
+  ;
 
 const
   Levels: array [TCompressionLevel] of ShortInt =
@@ -945,7 +947,6 @@ constructor TCompressionStream.CreateEx(CompressionLevel: TCompressionLevel;
   Dest: TStream; const StreamType: TZStreamType;
   const AName: string = ''; ATime: Integer = 0);
 var
-  LEncoding: TIdTextEncoding;
   LBytes: TIdBytes;
   {$IFNDEF DCC_NEXTGEN}
   LName: AnsiString;
@@ -971,23 +972,14 @@ begin
     // so we could technically use that, but since the RFC is very specific
     // about the charset, we'll force it here in case Indy's 8-bit encoding
     // class is changed later on...
-    LEncoding := CharsetToEncoding('ISO-8859-1');
-    {$IFNDEF DOTNET}
-    try
-    {$ENDIF}
-      LBytes := LEncoding.GetBytes(AName);
-    {$IFNDEF DOTNET}
-    finally
-      LEncoding.Free;
-    end;
-    {$ENDIF}
+    LBytes := CharsetToEncoding('ISO-8859-1').GetBytes(AName);
     {$IFDEF DCC_NEXTGEN}
     // TODO: optimize this
     FillChar(FGZHeader.name^, FGZHeader.name_max, 0);
     TMarshal.Copy(LBytes, 0, TPtrWrapper.Create(FGZHeader.name), IndyMin(Length(LBytes), FGZHeader.name_max));
     {$ELSE}
     SetString(LName, PAnsiChar(LBytes), Length(LBytes));
-    StrPLCopy(FGZHeader.name, LName, FGZHeader.name_max);
+    {$IFDEF VCL_XE4_OR_ABOVE}AnsiStrings.{$ENDIF}StrPLCopy(FGZHeader.name, LName, FGZHeader.name_max);
     {$ENDIF}
     deflateSetHeader(FZRec, FGZHeader);
   end;

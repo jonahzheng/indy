@@ -138,10 +138,12 @@ var
   LDecoder: TIdDecoder4to3;
   LLine: string;
   LMsgEnd: Boolean;
+  LEncoding: IIdTextEncoding;
 begin
-  AMsgEnd := False;
   Result := nil;
-  LLine := ReadLnRFC(LMsgEnd, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+  AMsgEnd := False;
+  LEncoding := IndyTextEncoding_8Bit;
+  LLine := ReadLnRFC(LMsgEnd, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
   if LMsgEnd then begin
     Exit;
   end;
@@ -177,7 +179,7 @@ begin
         end else begin
           LDecoder.Decode(LLine);
         end;
-        LLine := ReadLnRFC(LMsgEnd, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+        LLine := ReadLnRFC(LMsgEnd, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
       until TextIsSame(Trim(LLine), 'end') or LMsgEnd;    {Do not Localize}
       LDecoder.DecodeEnd;
     end;

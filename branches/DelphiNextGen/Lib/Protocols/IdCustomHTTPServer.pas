@@ -1221,6 +1221,7 @@ var
   LURI: TIdURI;
   LContinueProcessing, LCloseConnection: Boolean;
   LConn: TIdTCPConnection;
+  LEncoding: IIdTextEncoding;
 begin
   LContinueProcessing := True;
   Result := False;
@@ -1337,7 +1338,8 @@ begin
               if TextIsSame(LContentType, ContentTypeFormUrlencoded) then
               begin
                 // decoding percent-encoded octets and applying the CharSet is handled by DecodeAndSetParams() further below...
-                LRequestInfo.FormParams := ReadStringFromStream(LRequestInfo.PostStream, -1, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+                EnsureEncoding(LEncoding, enc8Bit);
+                LRequestInfo.FormParams := ReadStringFromStream(LRequestInfo.PostStream, -1, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
                 DoneWithPostStream(AContext, LRequestInfo); // don't need the PostStream anymore
               end;
             end;
@@ -1714,7 +1716,7 @@ procedure TIdHTTPRequestInfo.DecodeAndSetParams(const AValue: String);
 var
   i, j : Integer;
   s: string;
-  LEncoding: TIdTextEncoding;
+  LEncoding: IIdTextEncoding;
 begin
   // Convert special characters
   // ampersand '&' separates values    {Do not Localize}
@@ -1722,28 +1724,20 @@ begin
   try
     Params.Clear;
     LEncoding := CharsetToEncoding(CharSet);
-    {$IFNDEF DOTNET}
-    try
-    {$ENDIF}
-      i := 1;
-      while i <= Length(AValue) do
+    i := 1;
+    while i <= Length(AValue) do
+    begin
+      j := i;
+      while (j <= Length(AValue)) and (AValue[j] <> '&') do {do not localize}
       begin
-        j := i;
-        while (j <= Length(AValue)) and (AValue[j] <> '&') do {do not localize}
-        begin
-          Inc(j);
-        end;
-        s := Copy(AValue, i, j-i);
-        // See RFC 1866 section 8.2.1. TP
-        s := StringReplace(s, '+', ' ', [rfReplaceAll]);  {do not localize}
-        Params.Add(TIdURI.URLDecode(s, LEncoding));
-        i := j + 1;
+        Inc(j);
       end;
-    {$IFNDEF DOTNET}
-    finally
-      LEncoding.Free;
+      s := Copy(AValue, i, j-i);
+      // See RFC 1866 section 8.2.1. TP
+      s := StringReplace(s, '+', ' ', [rfReplaceAll]);  {do not localize}
+      Params.Add(TIdURI.URLDecode(s, LEncoding));
+      i := j + 1;
     end;
-    {$ENDIF}
   finally
     Params.EndUpdate;
   end;
@@ -1964,46 +1958,30 @@ begin
 end;
 
 procedure TIdHTTPResponseInfo.WriteContent;
-var
-  LEncoding: TIdTextEncoding;
 begin
-  LEncoding := nil;
-  {$IFNDEF DOTNET}
-  try
-  {$ENDIF}
-   if not HeaderHasBeenWritten then begin
-      WriteHeader;
-    end;
-    // Always check ContentText first
-    if ContentText <> '' then begin
-      LEncoding := CharsetToEncoding(CharSet);
-      FConnection.IOHandler.Write(ContentText, LEncoding);
-    end
-    else if Assigned(ContentStream) then begin
-      ContentStream.Position := 0;
-      FConnection.IOHandler.Write(ContentStream);
-    end
-    else begin
-      LEncoding := CharsetToEncoding(CharSet);
-      FConnection.IOHandler.WriteLn('<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + ResponseText    {Do not Localize}
-       + '</B></BODY></HTML>', LEncoding);    {Do not Localize}
-    end;
-    // Clear All - This signifies that WriteConent has been called.
-    ContentText := '';    {Do not Localize}
-    ReleaseContentStream;
-  {$IFNDEF DOTNET}
-  finally
-    if Assigned(LEncoding) then begin
-      LEncoding.Free;
-    end;
+  if not HeaderHasBeenWritten then begin
+    WriteHeader;
   end;
-  {$ENDIF}
+  // Always check ContentText first
+  if ContentText <> '' then begin
+    FConnection.IOHandler.Write(ContentText, CharsetToEncoding(CharSet));
+  end
+  else if Assigned(ContentStream) then begin
+    ContentStream.Position := 0;
+    FConnection.IOHandler.Write(ContentStream);
+  end
+  else begin
+    FConnection.IOHandler.WriteLn('<HTML><BODY><B>' + IntToStr(ResponseNo) + ' ' + ResponseText    {Do not Localize}
+     + '</B></BODY></HTML>', CharsetToEncoding(CharSet));    {Do not Localize}
+  end;
+  // Clear All - This signifies that WriteConent has been called.
+  ContentText := '';    {Do not Localize}
+  ReleaseContentStream;
 end;
 
 procedure TIdHTTPResponseInfo.WriteHeader;
 var
   i: Integer;
-  LEncoding: TIdTextEncoding;
   LBufferingStarted: Boolean;
 begin
   if HeaderHasBeenWritten then begin
@@ -2049,16 +2027,7 @@ begin
   begin
     // Always check ContentText first
     if ContentText <> '' then begin
-      LEncoding := CharsetToEncoding(CharSet);
-      {$IFNDEF DOTNET}
-      try
-      {$ENDIF}
-        ContentLength := LEncoding.GetByteCount(ContentText);
-      {$IFNDEF DOTNET}
-      finally
-        LEncoding.Free;
-      end;
-      {$ENDIF}
+      ContentLength := CharsetToEncoding(CharSet).GetByteCount(ContentText);
     end
     else if Assigned(ContentStream) then begin
       ContentLength := ContentStream.Size;

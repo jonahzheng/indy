@@ -459,7 +459,7 @@ type
   EmUTF7Decode = class(EmUTF7Error);
 
 type
-  // TODO: make a TIdTextEncoding descendany class for Modified UTF-7
+  // TODO: make an IIdTextEncoding implementation for Modified UTF-7
   TIdMUTF7 = class(TObject)
   public
     function Encode(const aString : TIdUnicodeString): String;
@@ -5747,12 +5747,14 @@ const
   procedure CaptureAndDecodeCharset;
   var
     LMStream: TMemoryStream;
+    LEncoding: IIdTextEncoding;
   begin
     LMStream := TMemoryStream.Create;
     try
-      IOHandler.Capture(LMStream, LDelim, True, Indy8BitEncoding(){$IFDEF STRING_IS_ANSI}, Indy8BitEncoding(){$ENDIF});
+      LEncoding := IndyTextEncoding_8Bit;
+      IOHandler.Capture(LMStream, LDelim, True, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
       LMStream.Position := 0;
-      ReadStringsAsCharSet(LMStream, AMsg.Body, AMsg.CharSet{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding(){$ENDIF});
+      ReadStringsAsCharSet(LMStream, AMsg.Body, AMsg.CharSet{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
     finally
       LMStream.Free;
     end;

@@ -208,11 +208,11 @@ var
   LPartSize: Integer;
   LCrc32: string;
   LMsgEnd: Boolean;
-
   LOutputBuffer: TIdBytes;
   LOutputBufferUsed: Integer;
   LHash: Cardinal;
   LH: TIdHashCRC32;
+  LEncoding: IIdTextEncoding;
 
   procedure FlushOutputBuffer;
   begin
@@ -247,9 +247,9 @@ begin
     //note that we have to do hashing here because there's no seek
     // in the TStream class, changing definitions in this API might
     // break something, and storing in an extra buffer will just eat space
-    while True do
-    begin
-      LLine := ReadLnRFC(LMsgEnd, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+    LEncoding := IndyTextEncoding_8Bit;
+    repeat
+      LLine := ReadLnRFC(LMsgEnd, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
       if (IndyPos('=yend', LowerCase(LLine)) <> 0) or LMsgEnd then {Do not Localize}
       begin
         Break;
@@ -278,7 +278,7 @@ begin
           Inc(LBytesDecoded);
         end;
       end;
-    end;
+    until False;
     LH.HashEnd(LHash);
 
     FlushOutputBuffer;

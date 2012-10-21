@@ -515,8 +515,8 @@ type
     function GetMetaHTTPEquiv: TIdMetaHTTPEquiv;
     procedure SetRequest(Value: TIdHTTPRequest);
 
-    function SetRequestParams(ASource: TStrings; AByteEncoding: TIdTextEncoding
-      {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding{$ENDIF}
+    function SetRequestParams(ASource: TStrings; AByteEncoding: IIdTextEncoding
+      {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding{$ENDIF}
       ): string;
 
     procedure CheckAndConnect(AResponse: TIdHTTPResponse);
@@ -534,38 +534,38 @@ type
     procedure Get(AURL: string; AResponseContent: TStream); overload;
     procedure Get(AURL: string; AResponseContent: TStream; AIgnoreReplies: array of SmallInt); overload;
     function Get(AURL: string
-      {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+      {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
       ): string; overload;
     function Get(AURL: string; AIgnoreReplies: array of SmallInt
-      {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+      {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
       ): string; overload;
 
     procedure Trace(AURL: string; AResponseContent: TStream); overload;
     function Trace(AURL: string
-      {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+      {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
       ): string; overload;
     procedure Head(AURL: string);
 
     function Post(AURL: string; const ASourceFile: String
-      {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+      {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
       ): string; overload;
-    function Post(AURL: string; ASource: TStrings; AByteEncoding: TIdTextEncoding = nil
-      {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil; ADestEncoding: TIdTextEncoding = nil{$ENDIF}): string; overload;
+    function Post(AURL: string; ASource: TStrings; AByteEncoding: IIdTextEncoding = nil
+      {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding = nil; ADestEncoding: IIdTextEncoding = nil{$ENDIF}): string; overload;
     function Post(AURL: string; ASource: TStream
-      {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+      {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
       ): string; overload;
     function Post(AURL: string; ASource: TIdMultiPartFormDataStream
-      {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+      {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
       ): string; overload;
 
     procedure Post(AURL: string; const ASourceFile: String; AResponseContent: TStream); overload;
-    procedure Post(AURL: string; ASource: TStrings; AResponseContent: TStream; AByteEncoding: TIdTextEncoding = nil
-      {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF}); overload;
+    procedure Post(AURL: string; ASource: TStrings; AResponseContent: TStream; AByteEncoding: IIdTextEncoding = nil
+      {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding = nil{$ENDIF}); overload;
     procedure Post(AURL: string; ASource, AResponseContent: TStream); overload;
     procedure Post(AURL: string; ASource: TIdMultiPartFormDataStream; AResponseContent: TStream); overload;
 
     function Put(AURL: string; ASource: TStream
-      {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+      {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
       ): string; overload;
     procedure Put(AURL: string; ASource, AResponseContent: TStream); overload;
 
@@ -769,8 +769,8 @@ end;
 // HTML 5
 // http://www.w3.org/TR/html5/
 
-function WWWFormUrlEncode(const ASrc: string; AByteEncoding: TIdTextEncoding
-  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding{$ENDIF}
+function WWWFormUrlEncode(const ASrc: string; AByteEncoding: IIdTextEncoding
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding{$ENDIF}
   ): string;
 const
   // HTML 4.01 Section 17.13.4 ("Form content types") says:
@@ -894,8 +894,8 @@ begin
   end;
 end;
 
-function TIdCustomHTTP.SetRequestParams(ASource: TStrings; AByteEncoding: TIdTextEncoding
-  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding{$ENDIF}
+function TIdCustomHTTP.SetRequestParams(ASource: TStrings; AByteEncoding: IIdTextEncoding
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding{$ENDIF}
   ): string;
 var
   i: Integer;
@@ -951,7 +951,7 @@ begin
 end;
 
 function TIdCustomHTTP.Post(AURL: string; const ASourceFile: String
-  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
   ): string;
 var
   LSource: TIdReadFileExclusiveStream;
@@ -977,8 +977,8 @@ begin
 end;
 
 procedure TIdCustomHTTP.Post(AURL: string; ASource: TStrings; AResponseContent: TStream;
-  AByteEncoding: TIdTextEncoding = nil
-  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil{$ENDIF}
+  AByteEncoding: IIdTextEncoding = nil
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding = nil{$ENDIF}
   );
 var
   LParams: TMemoryStream;
@@ -1003,8 +1003,8 @@ begin
   end;
 end;
 
-function TIdCustomHTTP.Post(AURL: string; ASource: TStrings; AByteEncoding: TIdTextEncoding = nil
-  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: TIdTextEncoding = nil; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+function TIdCustomHTTP.Post(AURL: string; ASource: TStrings; AByteEncoding: IIdTextEncoding = nil
+  {$IFDEF STRING_IS_ANSI}; ASrcEncoding: IIdTextEncoding = nil; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
   ): string;
 var
   LResponse: TMemoryStream;
@@ -1021,7 +1021,7 @@ begin
 end;
 
 function TIdCustomHTTP.Post(AURL: string; ASource: TStream
-  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
   ): string;
 var
   LResponse: TMemoryStream;
@@ -1043,7 +1043,7 @@ begin
 end;
 
 function TIdCustomHTTP.Put(AURL: string; ASource: TStream
-  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
   ): string;
 var
   LResponse: TMemoryStream;
@@ -1060,14 +1060,14 @@ begin
 end;
 
 function TIdCustomHTTP.Get(AURL: string
-  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
   ): string;
 begin
   Result := Get(AURL, []{$IFDEF STRING_IS_ANSI}, ADestEncoding{$ENDIF});
 end;
 
 function TIdCustomHTTP.Trace(AURL: string
-  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
   ): string;
 var
   LResponse: TMemoryStream;
@@ -1484,7 +1484,7 @@ begin
             AStream.Position := 0;
             case Enc of
               xmlUCS4BE, xmlUCS4LE, xmlUCS4BEOdd, xmlUCS4LEOdd: begin
-                // TODO: implement a UCS-4 TIdTextEncoding class...
+                // TODO: create UCS-4 IIdTextEncoding implementations...
                 Len := CurPos div XmlNonBOMs[Enc].CharLen;
                 {$IFDEF STRING_IS_IMMUTABLE}
                 LSB := TIdStringBuilder.Create(Len);
@@ -1505,16 +1505,16 @@ begin
                 {$ENDIF}
               end;
               xmlUTF16BE: begin
-                XmlDec := ReadStringFromStream(AStream, CurPos, TIdTextEncoding.BigEndianUnicode);
+                XmlDec := ReadStringFromStream(AStream, CurPos, IndyTextEncoding_UTF16BE);
               end;
               xmlUTF16LE: begin
-                XmlDec := ReadStringFromStream(AStream, CurPos, TIdTextEncoding.Unicode);
+                XmlDec := ReadStringFromStream(AStream, CurPos, IndyTextEncoding_UTF16LE);
               end;
               xmlUTF8: begin
-                XmlDec := ReadStringFromStream(AStream, CurPos, Indy8BitEncoding);
+                XmlDec := ReadStringFromStream(AStream, CurPos, IndyTextEncoding_UTF8);
               end;
               xmlEBCDIC: begin
-                // TODO: implement an EBCDIC TIdTextEncoding class...
+                // TODO: create an EBCDIC IIdTextEncoding implementation...
                 {$IFDEF STRING_IS_IMMUTABLE}
                 Len := ReadTIdBytesFromStream(AStream, Buffer, CurPos);
                 LSB := TStringBuilder.Create(Len);
@@ -1523,7 +1523,7 @@ begin
                 end;
                 XmlDec := LSB.ToString;
                 {$ELSE}
-                XmlDec := ReadStringFromStream(AStream, CurPos, Indy8BitEncoding);
+                XmlDec := ReadStringFromStream(AStream, CurPos, IndyTextEncoding_8Bit);
                 for I := 1 to Length(XmlDec) do begin
                   XmlDec[I] := XmlEBCDICTable[Byte(XmlDec[I])];
                 end;
@@ -2153,7 +2153,7 @@ begin
 end;
 
 function TIdCustomHTTP.Post(AURL: string; ASource: TIdMultiPartFormDataStream
-  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
 ): string;
 begin
   Assert(ASource<>nil);
@@ -2647,7 +2647,7 @@ begin
 end;
 
 function TIdCustomHTTP.Get(AURL: string; AIgnoreReplies: array of SmallInt
-  {$IFDEF STRING_IS_ANSI}; ADestEncoding: TIdTextEncoding = nil{$ENDIF}
+  {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
   ): string;
 var
   LStream: TMemoryStream;

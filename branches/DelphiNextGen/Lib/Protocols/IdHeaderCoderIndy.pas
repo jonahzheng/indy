@@ -23,18 +23,14 @@ implementation
 
 {$IFNDEF DOTNET_OR_ICONV}
 uses
-  IdCharsets
-  {$IFDEF MSWINDOWS}
-  , Windows
-  {$ENDIF}
-  ;
+  IdCharsets;
 {$ENDIF}
 
 // TODO: re-write this unit to use IdGlobalProtocol.CharsetToEncoding() instead of TIdTextEncoding.GetEncoding() directly...
 
 class function TIdHeaderCoderIndy.Decode(const ACharSet: string; const AData: TIdBytes): String;
 var
-  LEncoding: TIdTextEncoding;
+  LEncoding: IIdTextEncoding;
   {$IFNDEF DOTNET_OR_ICONV}
   CP: Word;
   {$ENDIF}
@@ -42,30 +38,22 @@ begin
   Result := '';
   try
     {$IFDEF DOTNET_OR_ICONV}
-    LEncoding := TIdTextEncoding.GetEncoding(ACharSet);
+    LEncoding := IndyTextEncoding(ACharSet);
     {$ELSE}
     CP := CharsetToCodePage(ACharSet);
     if CP = 0 then begin
       Exit;
     end;
-    LEncoding := TIdTextEncoding.GetEncoding(CP);
+    LEncoding := IndyTextEncoding(CP);
     {$ENDIF}
-    {$IFNDEF DOTNET}
-    try
-    {$ENDIF}
-      Result := LEncoding.GetString(AData);
-    {$IFNDEF DOTNET}
-    finally
-      LEncoding.Free;
-    end;
-    {$ENDIF}
+    Result := LEncoding.GetString(AData);
   except
   end;
 end;
 
 class function TIdHeaderCoderIndy.Encode(const ACharSet, AData: String): TIdBytes;
 var
-  LEncoding: TIdTextEncoding;
+  LEncoding: IIdTextEncoding;
   {$IFNDEF DOTNET_OR_ICONV}
   CP: Word;
   {$ENDIF}
@@ -73,59 +61,41 @@ begin
   Result := nil;
   try
     {$IFDEF DOTNET_OR_ICONV}
-    LEncoding := TIdTextEncoding.GetEncoding(ACharSet);
+    LEncoding := IndyTextEncoding(ACharSet);
     {$ELSE}
     CP := CharsetToCodePage(ACharSet);
     if CP = 0 then begin
       Exit;
     end;
-    LEncoding := TIdTextEncoding.GetEncoding(CP);
+    LEncoding := IndyTextEncoding(CP);
     {$ENDIF}
-    {$IFNDEF DOTNET}
-    try
-    {$ENDIF}
-      Result := LEncoding.GetBytes(AData);
-    {$IFNDEF DOTNET}
-    finally
-      LEncoding.Free;
-    end;
-    {$ENDIF}
+    Result := LEncoding.GetBytes(AData);
   except
   end;
 end;
 
 class function TIdHeaderCoderIndy.CanHandle(const ACharSet: String): Boolean;
-{$IFDEF DOTNET_OR_ICONV}
-var
-  LEncoding: TIdTextEncoding;
-{$ELSE}
-  {$IFDEF MSWINDOWS}
+{$IFNDEF DOTNET_OR_ICONV}
+  {$IFDEF WINDOWS}
 var
   CP: Word;
-  LCPInfo: TCPInfo;
   {$ENDIF}
 {$ENDIF}
 begin
   Result := False;
-  {$IFDEF DOTNET_OR_ICONV}
   try
-    LEncoding := TIdTextEncoding.GetEncoding(ACharSet);
-    Result := Assigned(LEncoding);
-    {$IFNDEF DOTNET}
-    if Result then begin
-      LEncoding.Free;
+    {$IFDEF DOTNET_OR_ICONV}
+    Result := Assigned(IndyTextEncoding(ACharSet));
+    {$ELSE}
+      {$IFDEF WINDOWS}
+    CP := CharsetToCodePage(ACharSet);
+    if CP <> 0 then begin
+      Result := Assigned(IndyTextEncoding(CP));
     end;
+      {$ENDIF}
     {$ENDIF}
   except
   end;
-  {$ELSE}
-    {$IFDEF MSWINDOWS}
-  CP := CharsetToCodePage(ACharSet);
-  if CP <> 0 then begin
-    Result := GetCPInfo(CP, LCPInfo);
-  end;
-    {$ENDIF}
-  {$ENDIF}
 end;
 
 initialization

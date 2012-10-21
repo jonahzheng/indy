@@ -759,7 +759,7 @@ type
     FDataPort: TIdPort;
     FDataPortMin: TIdPort;
     FDataPortMax: TIdPort;
-    FDefStringEncoding: TIdTextEncoding;
+    FDefStringEncoding: IIdTextEncoding;
     FExternalIP : String;
     FResumeTested: Boolean;
     FServerDesc: string;
@@ -899,7 +899,7 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure SetDataPortProtection(AValue : TIdFTPDataPortSecurity);
     procedure SetAUTHCmd(const AValue : TAuthCmd);
-    procedure SetDefStringEncoding(AValue: TIdTextEncoding);
+    procedure SetDefStringEncoding(AValue: IIdTextEncoding);
     procedure SetUseCCC(const AValue: Boolean);
     procedure SetNATKeepAlive(AValue: TIdFTPKeepAlive);
     procedure IssueFEAT;
@@ -913,7 +913,7 @@ type
     function IsAccountNeeded : Boolean;
     function GetSupportsVerification : Boolean;
   public
-    procedure GetInternalResponse(AEncoding: TIdTextEncoding = nil); override;
+    procedure GetInternalResponse(AEncoding: IIdTextEncoding = nil); override;
     function CheckResponse(const AResponse: SmallInt; const AAllowedResponses: array of SmallInt): SmallInt; override;
 
     function IsExtSupported(const ACmd : String):Boolean;
@@ -1030,7 +1030,7 @@ type
     property DataPort: TIdPort read FDataPort write FDataPort default 0;
     property DataPortMin: TIdPort read FDataPortMin write FDataPortMin default 0;
     property DataPortMax: TIdPort read FDataPortMax write FDataPortMax default 0;
-    property DefStringEncoding : TIdTextEncoding read FDefStringEncoding write SetDefStringEncoding;
+    property DefStringEncoding : IIdTextEncoding read FDefStringEncoding write SetDefStringEncoding;
     property ExternalIP : String read FExternalIP write FExternalIP;
     property Password;
     property TransferType: TIdFTPTransferType read FTransferType write SetTransferType default Id_TIdFTP_TransferType;
@@ -1162,7 +1162,7 @@ begin
   FDataPort := 0;
   FDataPortMin := 0;
   FDataPortMax := 0;
-  FDefStringEncoding := Indy8BitEncoding;
+  FDefStringEncoding := IndyTextEncoding_8Bit;
   FUseExtensionDataPort := DEF_Id_TIdFTP_UseExtendedData;
   FTryNATFastTrack := Id_TIdFTP_UseNATFastTrack;
   FTransferType := Id_TIdFTP_TransferType;
@@ -1274,7 +1274,7 @@ begin
     // RLebeau: must not send/receive UTF-8 before negotiating for it...
     IOHandler.DefStringEncoding := FDefStringEncoding;
     {$IFDEF STRING_IS_ANSI}
-    IOHandler.DefAnsiEncoding := TIdTextEncoding.Default;
+    IOHandler.DefAnsiEncoding := IIdTextEncoding.Default;
     {$ENDIF}
 
     // RLebeau: RFC 959 says that the greeting can be preceeded by a 1xx
@@ -1570,11 +1570,7 @@ begin
       FreeAndNil(FDirectoryListing);
       FDirFormat := '';
       LDest.Position := 0;
-      {$IFDEF HAS_TEncoding}
-      FListResult.LoadFromStream(LDest, IOHandler.DefStringEncoding);
-      {$ELSE}
       FListResult.Text := ReadStringFromStream(LDest, -1, IOHandler.DefStringEncoding{$IFDEF STRING_IS_ANSI}, IOHandler.DefAnsiEncoding{$ENDIF});
-      {$ENDIF}
       TIdFTPListResult(FListResult).FDetails := ADetails;
       TIdFTPListResult(FListResult).FUsedMLS := False;
       // FDirFormat will be updated in ParseFTPList...
@@ -2185,8 +2181,8 @@ begin
   FDataChannel.IOHandler.SendBufferSize := IOHandler.SendBufferSize;
   FDataChannel.IOHandler.RecvBufferSize := IOHandler.RecvBufferSize;
   FDataChannel.IOHandler.LargeStream := True;
- // FDataChannel.IOHandler.DefStringEncoding := Indy8BitEncoding;
- // FDataChannel.IOHandler.DefAnsiEncoding := TIdTextEncoding.Default;
+ // FDataChannel.IOHandler.DefStringEncoding := IndyTextEncoding_8Bit;
+ // FDataChannel.IOHandler.DefAnsiEncoding := IndyTextEncoding_OSDefault;
   FDataChannel.WorkTarget := Self;
 end;
 
@@ -2432,9 +2428,9 @@ begin
     FResumeTested := False;
     FSystemDesc := '';
     FTransferType := Id_TIdFTP_TransferType;
-    IOHandler.DefStringEncoding := Indy8BitEncoding;
+    IOHandler.DefStringEncoding := IndyTextEncoding_8Bit;
     {$IFDEF STRING_IS_ANSI}
-    IOHandler.DefAnsiEncoding := TIdTextEncoding.Default;
+    IOHandler.DefAnsiEncoding := IndyTextEncoding_OSDefault;
     {$ENDIF}
     if FUsingSFTP and (FUseTLS <> utUseImplicitTLS) then begin
       (IOHandler as TIdSSLIOHandlerSocketBase).PassThrough := True;
@@ -2599,7 +2595,7 @@ begin
         Exit;
       end;
     end;
-    IOHandler.DefStringEncoding := IndyUTF8Encoding;
+    IOHandler.DefStringEncoding := IndyTextEncoding_UTF8;
   end;
 end;
 
@@ -3096,6 +3092,7 @@ end;
 procedure TIdFTP.ExtListDir(ADest: TStrings = nil; const ADirectory: string = '');
 var
   LDest: TMemoryStream;
+  LEncoding: IIdTextEncoding;
 begin
   // RLebeau 6/4/2009: According to RFC 3659 Section 7.2:
   //
@@ -3117,13 +3114,11 @@ begin
     FDirFormat := '';
     DoOnRetrievedDir;
     LDest.Position := 0;
-    // RLebeau: using Indy8BitEncoding() here.  TIdFTPListParseBase will
+    // RLebeau: using IndyTextEncoding_8Bit here.  TIdFTPListParseBase will
     // decode UTF-8 sequences later on...
-    {$IFDEF HAS_TEncoding}
-    FListResult.LoadFromStream(LDest, Indy8BitEncoding);
-    {$ELSE}
-    FListResult.Text := ReadStringFromStream(LDest, -1, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
-    {$ENDIF}
+    LEncoding := IndyTextEncoding_8Bit;
+    FListResult.Text := ReadStringFromStream(LDest, -1, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
+    LEncoding := nil;
     TIdFTPListResult(FListResult).FDetails := True;
     TIdFTPListResult(FListResult).FUsedMLS := True;
     FDirFormat := MLST;
@@ -3140,7 +3135,7 @@ var
   i : Integer;
 begin
   ADest.Clear;
-  SendCmd(Trim('MLST ' + AItem), 250, Indy8BitEncoding);  {do not localize}
+  SendCmd(Trim('MLST ' + AItem), 250, IndyTextEncoding_8Bit);  {do not localize}
   for i := 0 to LastCmdResult.Text.Count -1 do begin
     if IndyPos(';', LastCmdResult.Text[i]) > 0 then begin
       ADest.Add(LastCmdResult.Text[i]);
@@ -3422,7 +3417,7 @@ begin
   end;
 end;
 
-procedure TIdFTP.GetInternalResponse(AEncoding: TIdTextEncoding = nil);
+procedure TIdFTP.GetInternalResponse(AEncoding: IIdTextEncoding = nil);
 var
   LLine: string;
   LResponse: TStringList;
@@ -4062,7 +4057,7 @@ begin
   end;
 end;
 
-procedure TIdFTP.SetDefStringEncoding(AValue: TIdTextEncoding);
+procedure TIdFTP.SetDefStringEncoding(AValue: IIdTextEncoding);
 begin
   FDefStringEncoding := AValue;
   if IOHandler <> nil then begin

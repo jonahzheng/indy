@@ -725,12 +725,15 @@ end;
  | received, it will be decoded into Reply.Value                              |
  *----------------------------------------------------------------------------*)
 function TIdSNMP.SendQuery: Boolean;
+var
+  LEncoding: IIdTextEncoding;
 begin
   Reply.Clear;
   Query.Buffer := Query.EncodeBuf;
-  Send(Query.Host, Query.Port, Query.Buffer, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+  LEncoding := IndyTextEncoding_8Bit;
+  Send(Query.Host, Query.Port, Query.Buffer, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
   try
-    Reply.Buffer := ReceiveString(Query.Host, Query.Port, FReceiveTimeout, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+    Reply.Buffer := ReceiveString(Query.Host, Query.Port, FReceiveTimeout, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
   except
     on e : EIdSocketError do
     begin
@@ -782,10 +785,13 @@ end;
  | The function returns 1                                                     |
  *----------------------------------------------------------------------------*)
 function TIdSNMP.SendTrap: Boolean;
+var
+  LEncoding: IIdTextEncoding;
 begin
   Trap.PDUType := PDUTrap;
   Trap.EncodeTrap;
-  Send(Trap.Host, Trap.Port, Trap.Buffer, Indy8BitEncoding{$IFDEF STRING_IS_ANSI}, Indy8BitEncoding{$ENDIF});
+  LEncoding := IndyTextEncoding_8Bit;
+  Send(Trap.Host, Trap.Port, Trap.Buffer, LEncoding{$IFDEF STRING_IS_ANSI}, LEncoding{$ENDIF});
   Result := True;
 end;
 
@@ -813,7 +819,7 @@ begin
   end;
 
   i := fTrapRecvBinding.RecvFrom(LBuffer, Trap.Host, Trap.Port, LIPVersion);
-  Trap.Buffer := BytesToString(LBuffer, 0, i, Indy8BitEncoding);
+  Trap.Buffer := BytesToString(LBuffer, 0, i, IndyTextEncoding_8Bit);
   if Trap.Buffer <> '' then begin    {Do not Localize}
     Trap.DecodeTrap;
     Result := True;

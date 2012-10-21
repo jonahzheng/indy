@@ -392,7 +392,7 @@ var
   lPassword: {$IFDEF STRING_IS_UNICODE}TIdBytes{$ELSE}AnsiString{$ENDIF};
 begin
   {$IFDEF STRING_IS_UNICODE}
-  lPassword := TIdTextEncoding.Default.GetBytes(UpperCase(APassword));
+  lPassword := IndyTextEncoding_OSDefault.GetBytes(UpperCase(APassword));
   {$ELSE}
   lPassword := UpperCase(APassword);
   {$ENDIF}
@@ -432,11 +432,10 @@ var
 {$ENDIF}
 begin
   {$IFDEF STRING_IS_UNICODE}
-  Result := TIdTextEncoding.Unicode.GetBytes(S);
+  Result := IndyTextEncoding_UTF16LE.GetBytes(S);
   {$ELSE}
-  // RLebeau: TODO - should this use TIdTextEncoding.Unicode.GetBytes()
-  // as well?  This logic will not produce a valid Unicode string if
-  // non-ASCII characters are present!
+  // RLebeau: TODO - should this use encUTF16LE as well?  This logic will
+  // not produce a valid Unicode string if non-ASCII characters are present!
   SetLength(Result, Length(S) * SizeOf(WideChar));
   for i := 0 to Length(S)-1 do begin
     Result[i*2] := Byte(S[i+1]);
@@ -457,7 +456,7 @@ begin
   LMD4 := TIdHashMessageDigest4.Create;
   try
     {$IFDEF STRING_IS_UNICODE}
-    nt_hpw128 := LMD4.HashString(APassword, TIdTextEncoding.Unicode);
+    nt_hpw128 := LMD4.HashString(APassword, IndyTextEncoding_UTF16LE);
     {$ELSE}
     nt_hpw128 := LMD4.HashBytes(BuildUnicode(APassword));
     {$ENDIF}
@@ -476,14 +475,16 @@ end;
 
 function BuildType1Message(const ADomain, AHost: String): String;
 var
+  LEncoding: IIdTextEncoding;
   Type_1_Message: type_1_message_header;
   lDomain: TIdBytes;
   lHost: TIdBytes;
   buf: TIdBytes;
 begin
-
-  lDomain := ToBytes(UpperCase(ADomain), IndyASCIIEncoding);
-  lHost := ToBytes(UpperCase(AHost), IndyASCIIEncoding);
+  LEncoding := IndyTextEncoding_ASCII;
+  lDomain := ToBytes(UpperCase(ADomain), LEncoding);
+  lHost := ToBytes(UpperCase(AHost), LEncoding);
+  LEncoding := nil;
 
   FillChar(Type_1_Message, SizeOf(Type_1_Message), #0);
   StrPLCopy(@Type_1_Message.protocol[1], cProtocolStr, 8);

@@ -1345,6 +1345,9 @@ const
     ACCT_HELP_DISABLED =  'ACCT        (specify account); unimplemented.'; {do not localize}
     ACCT_HELP_ENABLED   = 'Syntax: ACCT <SP> <account-information> <CRLF>';
 
+const
+  NLSTEncType: array[Boolean] of IdTextEncodingType = (encASCII, encUTF8);
+
 function CalculateCheckSum(AHashClass: TIdHashClass; AStrm: TStream; ABeginPos, AEndPos: TIdStreamSize): String;
   {$IFDEF USE_INLINE} inline; {$ENDIF}
 var
@@ -2965,7 +2968,7 @@ begin
   LContext := ASender.Context as TIdFTPServerContext;
   if LContext.IsAuthenticated(ASender) then begin
     LContext.ReInitialize;
-    LContext.Connection.IOHandler.DefStringEncoding := Indy8BitEncoding;
+    LContext.Connection.IOHandler.DefStringEncoding := IndyTextEncoding_8Bit;
     ASender.Reply.SetReply(220, RSFTPServiceOpen);
     if (FUseTLS in ExplicitTLSVals) then begin
       LIO := ASender.Context.Connection.IOHandler as TIdSSLIOHandlerSocketBase;
@@ -3587,7 +3590,7 @@ var
   var
     i : Integer;
     LM : TStream;
-    LEncoding: TIdTextEncoding;
+    LEncoding: IIdTextEncoding;
   begin
     //for loops will execute at least once triggering an out of range error.
     //write nothing if AStrings is empty.
@@ -3604,13 +3607,9 @@ var
     thing that looks better than binary junk.
     }
     if PosInStrArray(ASender.CommandHandler.Command, ['LIST', 'NLST', 'MLSD'], False) > -1 then begin
-      if AContext.NLSTUtf8 then begin
-        LEncoding := IndyUTF8Encoding;
-      end else begin
-        LEncoding := IndyASCIIEncoding;
-      end;
+      LEncoding := IndyTextEncoding(NLSTEncType[AContext.NLSTUtf8]);
     end else begin
-      LEncoding := Indy8BitEncoding;
+      LEncoding := IndyTextEncoding_8Bit;
     end;
 
     if AContext.DataMode = dmDeflate then begin
@@ -3760,7 +3759,6 @@ var
   LSwitches, LPath : String;
   i : Integer;
   LContext : TIdFTPServerContext;
-  LEncoding : TIdTextEncoding;
 begin
   LContext := ASender.Context as TIdFTPServerContext;
   LActAsList := (ASender.Params.Count > 0);
@@ -3809,12 +3807,7 @@ begin
         //is written using WriteStrings and I found that with Reply.SetReply, a stat
         //reply could throw off a FTP client.
         LContext.Connection.IOHandler.WriteLn(IndyFormat('213-%s', [RSFTPDataConnToOpen])); {Do not Localize}
-        if TIdFTPServerContext(ASender.Context).NLSTUtf8 then begin
-          LEncoding := IndyUTF8Encoding;
-        end else begin
-          LEncoding := IndyASCIIEncoding;
-        end;
-        LContext.Connection.IOHandler.Write(LStream, False, LEncoding);
+        LContext.Connection.IOHandler.Write(LStream, False, IndyTextEncoding(NLSTEncType[LContext.NLSTUtf8]));
         ASender.PerformReply := True;
         ASender.Reply.SetReply(213, RSFTPCmdEndOfStat);
       finally
@@ -4676,7 +4669,7 @@ procedure TIdFTPServer.DoConnect(AContext: TIdContext);
 var
   LGreeting : TIdReplyRFC;
 begin
-  AContext.Connection.IOHandler.DefStringEncoding := Indy8BitEncoding;
+  AContext.Connection.IOHandler.DefStringEncoding := IndyTextEncoding_8Bit;
   if AContext.Connection.IOHandler is TIdSSLIOHandlerSocketBase then begin
     if FUseTLS = utUseImplicitTLS then begin
       TIdSSLIOHandlerSocketBase(AContext.Connection.IOHandler).PassThrough := False;
@@ -6780,18 +6773,18 @@ begin
       Exit;
     end;
     // enable UTF-8 over control connection
-    LContext.Connection.IOHandler.DefStringEncoding := IndyUTF8Encoding;
+    LContext.Connection.IOHandler.DefStringEncoding := IndyTextEncoding_UTF8;
   end else begin
     // OPTS UTF8 <ON|OFF>
     // non-standard Microsoft IE implementation!!!!
     case PosInStrArray(s, OnOffStates, False) of
       0: begin // 'ON'
            LContext.NLSTUtf8 := True;
-           LContext.Connection.IOHandler.DefStringEncoding := IndyUTF8Encoding;
+           LContext.Connection.IOHandler.DefStringEncoding := IndyTextEncoding_UTF8;
          end;
       1: begin // 'OFF'
            LContext.NLSTUtf8 := False;
-           LContext.Connection.IOHandler.DefStringEncoding := Indy8BitEncoding;
+           LContext.Connection.IOHandler.DefStringEncoding := IndyTextEncoding_8Bit;
          end;
       else
         begin

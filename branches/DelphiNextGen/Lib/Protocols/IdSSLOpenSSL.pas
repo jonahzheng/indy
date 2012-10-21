@@ -811,7 +811,7 @@ begin
       end;
       FillChar(buf^, size, 0);
       {$IFDEF STRING_IS_UNICODE}
-      LPassword := TIdTextEncoding.Default.GetBytes(Password);
+      LPassword := IndyTextEncoding_OSDefault.GetBytes(Password);
       if Length(LPassword) > 0 then begin
         {$IFDEF DCC_NEXTGEN}
         TMarshal.Copy(LPassword, 0, TPtrWrapper.Create(buf), IndyMin(Length(LPassword), size));
@@ -1859,11 +1859,7 @@ begin
       X509_print(LMem, AX509);
       LLen := BIO_get_mem_data( LMem, LBufPtr);
       if (LLen > 0) and Assigned(LBufPtr) then begin
-        {
-        We could have used RawToBytes() but that would have made a copy of the
-        output buffer.
-        }
-        AOut.Text := IndyUTF8Encoding.GetString( TIdBytes(LBufPtr^), 0, LLen);
+        AOut.Text := IndyTextEncoding_UTF8.GetString(PByte(LBufPtr), LLen);
       end;
     finally
       if Assigned(LMem) then begin

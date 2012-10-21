@@ -621,7 +621,7 @@ begin
     CopyTIdLongWord(Ticks, FBufIcmp, LIdx);
     Inc(LIdx, 4);
     if Length(ABuffer) > 0 then begin
-      LBuffer := ToBytes(ABuffer, Indy8BitEncoding);
+      LBuffer := ToBytes(ABuffer, IndyTextEncoding_8Bit);
       CopyTIdBytes(LBuffer, 0, FBufIcmp, LIdx, IndyMin(Length(LBuffer), FPacketSize));
     end;
   finally
@@ -652,7 +652,7 @@ begin
     CopyTIdLongWord(Ticks, FBufIcmp, LIdx);
     Inc(LIdx, 4);
     if Length(ABuffer) > 0 then begin
-      LBuffer := ToBytes(ABuffer, Indy8BitEncoding);
+      LBuffer := ToBytes(ABuffer, IndyTextEncoding_8Bit);
       CopyTIdBytes(LBuffer, 0, FBufIcmp, LIdx, IndyMin(Length(LBuffer), FPacketSize));
     end;
   finally
