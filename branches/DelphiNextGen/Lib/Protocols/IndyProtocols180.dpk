@@ -35,6 +35,12 @@ requires
   IndySystem180,
   IndyCore180;
 
+{$IFNDEF WINDOWS}
+  {$IFDEF MSWINDOWS}
+    {$DEFINE WINDOWS}
+  {$ENDIF}
+{$ENDIF}
+
 contains
   IdASN1Util in 'IdASN1Util.pas',
   IdAllAuthentications in 'IdAllAuthentications.pas',
@@ -47,9 +53,9 @@ contains
   IdAuthenticationDigest in 'IdAuthenticationDigest.pas',
   IdAuthenticationManager in 'IdAuthenticationManager.pas',
   IdAuthenticationNTLM in 'IdAuthenticationNTLM.pas',
-  {$IFNDEF NEXTGEN}
+  {$IFDEF WINDOWS}
   IdAuthenticationSSPI in 'IdAuthenticationSSPI.pas',
-  {$ENDIF}
+  {$IFDEF WINDOWS}
   IdBlockCipherIntercept in 'IdBlockCipherIntercept.pas',
   IdChargenServer in 'IdChargenServer.pas',
   IdChargenUDPServer in 'IdChargenUDPServer.pas',
@@ -235,7 +241,7 @@ contains
   IdSSL in 'IdSSL.pas',
   IdSSLOpenSSL in 'IdSSLOpenSSL.pas',
   IdSSLOpenSSLHeaders in 'IdSSLOpenSSLHeaders.pas',
-  {$IFNDEF NEXTGEN}
+  {$IFDEF WINDOWS}
   IdSSPI in 'IdSSPI.pas',
   {$ENDIF}
   IdServerInterceptLogBase in 'IdServerInterceptLogBase.pas',

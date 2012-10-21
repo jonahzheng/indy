@@ -1892,11 +1892,13 @@ type
     function GetString(const ABytes: array of Byte; AByteIndex, AByteCount: Integer): TIdUnicodeString; overload;
   end;
 
-  {$IFDEF WINDOWS}
-    {$DEFINE WINDOWS_OR_POSIX}
-  {$ENDIF}
-  {$IFDEF POSIX}
-    {$DEFINE WINDOWS_OR_POSIX}
+  {$IFNDEF USE_ICONV}
+    {$IFDEF WINDOWS}
+      {$DEFINE SUPPORTS_CODEPAGE_ENCODING}
+    {$ENDIF}
+    {$IFDEF HAS_LocaleCharsFromUnicode}
+      {$DEFINE SUPPORTS_CODEPAGE_ENCODING}
+    {$ENDIF}
   {$ENDIF}
 
   TIdMBCSEncoding = class(TIdTextEncodingBase)
@@ -1906,7 +1908,7 @@ type
     FToUTF16 : iconv_t;
     FFromUTF16 : iconv_t;
     {$ELSE}
-      {$IFDEF WINDOWS_OR_POSIX}
+      {$IFDEF SUPPORTS_CODEPAGE_ENCODING}
     FCodePage: Cardinal;
     FMBToWCharFlags: Cardinal;
     FWCharToMBFlags: Cardinal;
@@ -1918,7 +1920,7 @@ type
     constructor Create(const CharSet : AnsiString); overload; virtual;
     destructor Destroy; override;
     {$ELSE}
-      {$IFDEF WINDOWS_OR_POSIX}
+      {$IFDEF SUPPORTS_CODEPAGE_ENCODING}
     constructor Create(CodePage: Integer); overload; virtual;
     constructor Create(CodePage, MBToWCharFlags, WCharToMBFlags: Integer); overload; virtual;
       {$ENDIF}
@@ -2531,7 +2533,7 @@ begin
   {$IFDEF USE_ICONV}
   Create(iif(GIdIconvUseLocaleDependantAnsiEncoding, 'char', 'ASCII')); {do not localize}
   {$ELSE}
-    {$IFDEF WINDOWS_OR_POSIX}
+    {$IFDEF SUPPORTS_CODEPAGE_ENCODING}
   Create(CP_ACP, 0, 0);
     {$ELSE}
   ToDo('Constructor of TIdMBCSEncoding class is not implemented for this platform yet'); {do not localize}
@@ -2623,21 +2625,31 @@ begin
   inherited;
 end;
 {$ELSE}
-  {$IFDEF WINDOWS_OR_POSIX}
+  {$IFDEF SUPPORTS_CODEPAGE_ENCODING}
 constructor TIdMBCSEncoding.Create(CodePage: Integer);
 begin
   Create(CodePage, 0, 0);
 end;
 
 constructor TIdMBCSEncoding.Create(CodePage, MBToWCharFlags, WCharToMBFlags: Integer);
+{$IFNDEF WINDOWS}
+const
+  // RLebeau: have to determine the max bytes by manually encoding an actual
+  // Unicode codepoint.  We'll encode the largest codepoint that UTF-16 supports,
+  // U+10FFFF, for now...
+  //
+  cValue: array[0..1] of Word = ($DBFF, $DFFD);
+{$ELSE}
 var
   LCPInfo: TCPInfo;
   LError: Boolean;
+{$ENDIF}
 begin
   FCodePage := CodePage;
   FMBToWCharFlags := MBToWCharFlags;
   FWCharToMBFlags := WCharToMBFlags;
 
+  {$IFDEF WINDOWS}
   LError := not GetCPInfo(FCodePage, LCPInfo);
   if LError and (FCodePage = 20127) then begin
     // RLebeau: 20127 is the official codepage for ASCII, but not
@@ -2654,8 +2666,13 @@ begin
   if LError then begin
     raise EIdException.CreateResFmt(@RSInvalidCodePage, [FCodePage]);
   end;
-
   FMaxCharSize := LCPInfo.MaxCharSize;
+  {$ELSE}
+  FMaxCharSize := LocaleCharsFromUnicode(FCodePage, FWCharToMBFlags, @cValue[0], 2, nil, 0, nil, nil);
+  if FMaxCharSize < 1 then begin
+    raise EIdException.CreateResFmt(@RSInvalidCodePage, [FCodePage]);
+  end;
+  {$ENDIF}
   FIsSingleByte := (FMaxCharSize = 1);
 end;
   {$ENDIF}
@@ -2844,11 +2861,12 @@ begin
   until False;
   {$ELSE}
     {$IFDEF HAS_LocaleCharsFromUnicode}
-  Result := LocaleCharsFromUnicode(FCodePage, FWCharToMBFlags, AChars, ACharCount, {$IFDEF DCC_NEXTGEN}ABytes{$ELSE}PAnsiChar(ABytes){$ENDIF}, AByteCount, nil, nil);
+  Result := LocaleCharsFromUnicode(FCodePage, FWCharToMBFlags, AChars, ACharCount, {$IFDEF DCC_NEXTGEN}Pointer{$ELSE}PAnsiChar{$ENDIF}(ABytes), AByteCount, nil, nil);
     {$ELSE}
       {$IFDEF WINDOWS}
   Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags, AChars, ACharCount, PAnsiChar(ABytes), AByteCount, nil, nil);
       {$ELSE}
+  Result := 0;
   ToDo('GetBytes() method of TIdMBCSEncoding class is not implemented for this platform yet'); {do not localize}
       {$ENDIF}
     {$ENDIF}
@@ -2948,11 +2966,12 @@ begin
   until False;
   {$ELSE}
     {$IFDEF HAS_UnicodeFromLocaleChars}
-  Result := UnicodeFromLocaleChars(FCodePage, FMBToWCharFlags, {$IFDEF DCC_NEXTGEN}ABytes{$ELSE}PAnsiChar(ABytes){$ENDIF}, AByteCount, nil, 0);
+  Result := UnicodeFromLocaleChars(FCodePage, FMBToWCharFlags, {$IFDEF DCC_NEXTGEN}Pointer{$ELSE}PAnsiChar{$ENDIF}(ABytes), AByteCount, nil, 0);
     {$ELSE}
       {$IFDEF WINDOWS}
   Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(ABytes), AByteCount, nil, 0);
       {$ELSE}
+  Result := 0;
   ToDo('GetCharCount() method of TIdMBCSEncoding class is not implemented for this platform yet'); {do not localize}
       {$ENDIF}
     {$ENDIF}
@@ -3058,11 +3077,12 @@ begin
   until False;
   {$ELSE}
     {$IFDEF HAS_UnicodeFromLocaleChars}
-  Result := UnicodeFromLocaleChars(FCodePage, FMBToWCharFlags, {$IFDEF DCC_NEXTGEN}ABytes{$ELSE}PAnsiChar(ABytes){$ENDIF}, AByteCount, AChars, ACharCount);
+  Result := UnicodeFromLocaleChars(FCodePage, FMBToWCharFlags, {$IFDEF DCC_NEXTGEN}Pointer{$ELSE}PAnsiChar{$ENDIF}(ABytes), AByteCount, AChars, ACharCount);
     {$ELSE}
       {$IFDEF WINDOWS}
   Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(ABytes), AByteCount, AChars, ACharCount);
       {$ELSE}
+  Result := 0;
   ToDo('GetChars() method of TIdMBCSEncoding class is not implemented for this platform yet'); {do not localize}
       {$ENDIF}
     {$ENDIF}
