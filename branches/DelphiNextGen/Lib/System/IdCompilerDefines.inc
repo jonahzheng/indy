@@ -755,6 +755,8 @@
 
 {$IFDEF VCL_XE_OR_ABOVE}
   {$DEFINE HAS_TFormatSettings_Object}
+  {$DEFINE HAS_LocaleCharsFromUnicode}
+  {$DEFINE HAS_UnicodeFromLocaleChars}
   {$IFNDEF DOTNET}
     {$DEFINE HAS_TInterlocked}
   {$ENDIF}
@@ -763,8 +765,6 @@
 {$IFDEF VCL_XE2_OR_ABOVE}
   {$DEFINE HAS_SIZE_T}
   {$DEFINE HAS_ComponentPlatformsAttribute}
-  {$DEFINE HAS_LocaleCharsFromUnicode} // TODO: when was LocaleCharsFromUnicode() introduced?
-  {$DEFINE HAS_UnicodeFromLocaleChars} // TODO: when was UnicodeFromLocaleChars() introduced?
 {$ENDIF}
 
 {$IFDEF VCL_XE3_OR_ABOVE}
