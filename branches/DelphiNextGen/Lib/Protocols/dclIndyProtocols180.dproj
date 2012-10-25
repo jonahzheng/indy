@@ -35,6 +35,10 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_BplOutput>..\Output\BPI\$(Platform)\$(Config)</DCC_BplOutput>
+        <DCC_DcuOutput>..\Output\DCU\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_UnitSearchPath>..\Output\DCP\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_DcpOutput>..\Output\DCP\$(Platform)\$(Config)</DCC_DcpOutput>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_N>false</DCC_N>
         <GenDll>true</GenDll>

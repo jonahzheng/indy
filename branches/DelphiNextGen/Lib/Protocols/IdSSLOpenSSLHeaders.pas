@@ -18175,14 +18175,17 @@ end;
 function GetErrorMessage(const AErr : TIdC_ULONG) : String;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 var
-  LErrMsg: array [0..160] of TIdAnsiChar;
   {$IFDEF DCC_NEXTGEN}
+  LErrMsg: array of TIdAnsiChar;
   LWrapper: TPtrWrapper;
+  {$ELSE}
+  LErrMsg: array [0..160] of TIdAnsiChar;
   {$ENDIF}
 begin
   {$IFDEF DCC_NEXTGEN}
+  SetLength(LErrMsg, 161);
   LWrapper := TPtrWrapper.Create(@LErrMsg[0]);
-  ERR_error_string(AErr, LWrapper.ToPointer);
+  ERR_error_string_n(AErr, LWrapper.ToPointer, 160);
   Result := TMarshal.ReadStringAsAnsi(LWrapper);
   {$ELSE}
   ERR_error_string(AErr, LErrMsg);
@@ -21181,12 +21184,15 @@ end;
 // remove this function, it is not used
 function ErrMsg(AErr : TIdC_ULONG) : string;
 var
-  LString: array[0..300] of TIdAnsiChar;
   {$IFDEF DCC_NEXTGEN}
+  LString: array of TIdAnsiChar;
   LWrapper: TPtrWrapper;
+  {$ELSE}
+  LString: array[0..300] of TIdAnsiChar;
   {$ENDIF}
 begin
   {$IFDEF DCC_NEXTGEN}
+  SetLength(LString, 301);
   LWrapper := TPtrWrapper.Create(@LString[0]);
   ERR_error_string_n(AErr, LWrapper.ToPointer, 300);
   Result := TMarshal.ReadStringAsAnsi(LWrapper);

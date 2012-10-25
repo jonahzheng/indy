@@ -174,7 +174,8 @@ type
     FOnBeforeBind: TNotifyEvent;
     FOnAfterBind: TNotifyEvent;
     FOnSocketAllocated: TNotifyEvent;
-    FTransparentProxy: TIdCustomTransparentProxy;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FTransparentProxy: TIdCustomTransparentProxy;
+    FImplicitTransparentProxy: Boolean;
     FUseNagle: Boolean;
     FReuseSocket: TIdReuseSocket;
     FIPVersion: TIdIPVersion;
@@ -281,8 +282,14 @@ end;
 destructor TIdIOHandlerSocket.Destroy;
 begin
   if Assigned(FTransparentProxy) then begin
-    if FTransparentProxy.Owner = nil then begin
+    if FImplicitTransparentProxy then begin
+      {$IFDEF DCC_NEXTGEN_ARC}
+      FTransparentProxy.__ObjRelease;
+      FTransparentProxy := nil;
+      {$ELSE}
       FreeAndNil(FTransparentProxy);
+      {$ENDIF}
+      FImplicitTransparentProxy := False;
     end;
   end;
   FreeAndNil(FBinding);
@@ -408,44 +415,69 @@ procedure TIdIOHandlerSocket.SetTransparentProxy(AProxy : TIdCustomTransparentPr
 var
   LClass: TIdCustomTransparentProxyClass;
 begin
-  // All this is to preserve the compatibility with old version
-  // In the case when we have SocksInfo as object created in runtime without owner form it is treated as temporary object
-  // In the case when the ASocks points to an object with owner it is treated as component on form.
+  if FTransparentProxy <> AProxy then
+  begin
+    // All this is to preserve the compatibility with old version
+    // In the case when we have SocksInfo as object created in runtime without owner form it is treated as temporary object
+    // In the case when the ASocks points to an object with owner it is treated as component on form.
 
-  if Assigned(AProxy) then begin
-    if not Assigned(AProxy.Owner) then begin
-      if Assigned(FTransparentProxy) then begin
-        if Assigned(FTransparentProxy.Owner) then begin
-          FTransparentProxy.RemoveFreeNotification(Self);
+    if Assigned(AProxy) then begin
+      if not Assigned(AProxy.Owner) then begin
+        if Assigned(FTransparentProxy) then begin
+          if not FImplicitTransparentProxy then begin
+            FTransparentProxy.RemoveFreeNotification(Self);
+            FTransparentProxy := nil;
+          end;
+        end;
+        LClass := TIdCustomTransparentProxyClass(AProxy.ClassType);
+        if Assigned(FTransparentProxy) and (FTransparentProxy.ClassType <> LClass) then begin
+          {$IFDEF DCC_NEXTGEN_ARC}
+          FTransparentProxy.__ObjRelease;
           FTransparentProxy := nil;
-        end;
-      end;
-      LClass := TIdCustomTransparentProxyClass(AProxy.ClassType);
-      if Assigned(FTransparentProxy) and (FTransparentProxy.ClassType <> LClass) then begin
-        FreeAndNil(FTransparentProxy);
-      end;
-      if not Assigned(FTransparentProxy) then begin
-        FTransparentProxy := LClass.Create(nil);
-      end;
-      FTransparentProxy.Assign(AProxy);
-    end else begin
-      if Assigned(FTransparentProxy) then begin
-        if not Assigned(FTransparentProxy.Owner) then begin
+          {$ELSE}
           FreeAndNil(FTransparentProxy);
-        end else begin
-          FTransparentProxy.RemoveFreeNotification(Self);
+          {$ENDIF}
+          FImplicitTransparentProxy := False;
         end;
+        if not Assigned(FTransparentProxy) then begin
+          FTransparentProxy := LClass.Create(nil);
+          {$IFDEF DCC_NEXTGEN_ARC}
+          FTransparentProxy.__ObjAddRef;
+          {$ENDIF}
+          FImplicitTransparentProxy := True;
+        end;
+        FTransparentProxy.Assign(AProxy);
+      end else begin
+        if Assigned(FTransparentProxy) then begin
+          if FImplicitTransparentProxy then begin
+            {$IFDEF DCC_NEXTGEN_ARC}
+            FTransparentProxy.__ObjRelease;
+            FTransparentProxy := nil;
+            {$ELSE}
+            FreeAndNil(FTransparentProxy);
+            {$ENDIF}
+            FImplicitTransparentProxy := False;
+          end else begin
+            FTransparentProxy.RemoveFreeNotification(Self);
+          end;
+        end;
+        FTransparentProxy := AProxy;
+        FTransparentProxy.FreeNotification(Self);
       end;
-      FTransparentProxy := AProxy;
-      FTransparentProxy.FreeNotification(Self);
-    end;
-  end
-  else if Assigned(FTransparentProxy) then begin
-    if not Assigned(FTransparentProxy.Owner) then begin
-      FreeAndNil(FTransparentProxy);
-    end else begin
-      FTransparentProxy.RemoveFreeNotification(Self);
-      FTransparentProxy := nil; //remove link
+    end
+    else if Assigned(FTransparentProxy) then begin
+      if FImplicitTransparentProxy then begin
+        {$IFDEF DCC_NEXTGEN_ARC}
+        FTransparentProxy.__ObjRelease;
+        FTransparentProxy := nil;
+        {$ELSE}
+        FreeAndNil(FTransparentProxy);
+        {$ENDIF}
+        FImplicitTransparentProxy := False;
+      end else begin
+        FTransparentProxy.RemoveFreeNotification(Self);
+        FTransparentProxy := nil; //remove link
+      end;
     end;
   end;
 end;
@@ -455,6 +487,10 @@ begin
   // Necessary at design time for Borland SOAP support
   if FTransparentProxy = nil then begin
     FTransparentProxy := TIdSocksInfo.Create(nil); //default
+    {$IFDEF DCC_NEXTGEN_ARC}
+    FTransparentProxy.__ObjAddRef;
+    {$ENDIF}
+    FImplicitTransparentProxy := True;
   end;
   Result := FTransparentProxy;
 end;
@@ -480,6 +516,7 @@ procedure TIdIOHandlerSocket.Notification(AComponent: TComponent; Operation: TOp
 begin
   if (Operation = opRemove) and (AComponent = FTransparentProxy) then begin
     FTransparentProxy := nil;
+    FImplicitTransparentProxy := False;
   end;
   inherited Notification(AComponent, Operation);
 end;

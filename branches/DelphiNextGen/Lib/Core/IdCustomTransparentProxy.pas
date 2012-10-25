@@ -86,7 +86,7 @@ type
     FPort: TIdPort;
     FIPVersion : TIdIPVersion;
     FUsername: String;
-    FChainedProxy: TIdCustomTransparentProxy;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FChainedProxy: TIdCustomTransparentProxy;
     //
     function  GetEnabled: Boolean; virtual; abstract;
     procedure SetEnabled(AValue: Boolean); virtual;
@@ -182,19 +182,22 @@ procedure TIdCustomTransparentProxy.SetChainedProxy(const AValue: TIdCustomTrans
 var
   LNextValue: TIdCustomTransparentProxy;
 begin
-  LNextValue := AValue;
-  while Assigned(LNextValue) do begin
-    if LNextValue = Self then begin
-      raise EIdTransparentProxyCircularLink.CreateFmt(RSInterceptCircularLink, [ClassName]);// -> One EIDCircularLink exception
+  if FChainedProxy <> AValue then
+  begin
+    LNextValue := AValue;
+    while Assigned(LNextValue) do begin
+      if LNextValue = Self then begin
+        raise EIdTransparentProxyCircularLink.CreateFmt(RSInterceptCircularLink, [ClassName]);// -> One EIDCircularLink exception
+      end;
+      LNextValue := LNextValue.FChainedProxy;
     end;
-    LNextValue := LNextValue.FChainedProxy;
-  end;
-  if Assigned(FChainedProxy) then begin
-    FChainedProxy.RemoveFreeNotification(Self);
-  end;
-  FChainedProxy := AValue;
-  if Assigned(FChainedProxy) then begin
-    FChainedProxy.FreeNotification(Self);
+    if Assigned(FChainedProxy) then begin
+      FChainedProxy.RemoveFreeNotification(Self);
+    end;
+    FChainedProxy := AValue;
+    if Assigned(FChainedProxy) then begin
+      FChainedProxy.FreeNotification(Self);
+    end;
   end;
 end;
 

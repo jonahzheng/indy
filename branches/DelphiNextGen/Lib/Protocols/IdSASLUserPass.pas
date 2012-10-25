@@ -41,7 +41,7 @@ uses
 type
   TIdSASLUserPass = class(TIdSASL)
   protected
-    FUserPassProvider: TIdUserPassProvider;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FUserPassProvider: TIdUserPassProvider;
     procedure SetUserPassProvider(const Value: TIdUserPassProvider);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     function GetUsername: string;

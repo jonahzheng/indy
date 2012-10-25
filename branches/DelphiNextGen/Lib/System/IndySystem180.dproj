@@ -40,8 +40,12 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_BplOutput>..\BPI\$(Platform)\$(Config)</DCC_BplOutput>
-        <DCC_DcpOutput>..\DCP\$(Platform)\$(Config)</DCC_DcpOutput>
+        <DCC_ObjOutput>..\Output\OBJ\$(Platform)\$(Config)</DCC_ObjOutput>
+        <DCC_DcuOutput>..\Output\DCU\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_BpiOutput>..\Output\BPI\$(Platform)\$(Config)</DCC_BpiOutput>
+        <DCC_HppOutput>..\Output\HPP\$(Platform)\$(Config)</DCC_HppOutput>
+        <DCC_BplOutput>..\Output\BPI\$(Platform)\$(Config)</DCC_BplOutput>
+        <DCC_DcpOutput>..\Output\DCP\$(Platform)\$(Config)</DCC_DcpOutput>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_Define>VER250;$(DCC_Define)</DCC_Define>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>

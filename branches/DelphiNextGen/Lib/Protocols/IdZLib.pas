@@ -197,7 +197,11 @@ implementation
 
 uses
   IdGlobalProtocols, IdStream, IdZLibConst
-  {$IFDEF VCL_XE4_OR_ABOVE}, AnsiStrings{$ENDIF}
+  {$IFNDEF DCC_NEXTGEN}
+    {$IFDEF VCL_XE4_OR_ABOVE}
+  , AnsiStrings
+    {$ENDIF}
+  {$ENDIF}
   ;
 
 const
@@ -946,6 +950,10 @@ end;
 constructor TCompressionStream.CreateEx(CompressionLevel: TCompressionLevel;
   Dest: TStream; const StreamType: TZStreamType;
   const AName: string = ''; ATime: Integer = 0);
+{$IFDEF DCC_NEXTGEN}
+type
+  PBytes = ^TBytes;
+{$ENDIF}
 var
   LBytes: TIdBytes;
   {$IFNDEF DCC_NEXTGEN}
@@ -976,7 +984,7 @@ begin
     {$IFDEF DCC_NEXTGEN}
     // TODO: optimize this
     FillChar(FGZHeader.name^, FGZHeader.name_max, 0);
-    TMarshal.Copy(LBytes, 0, TPtrWrapper.Create(FGZHeader.name), IndyMin(Length(LBytes), FGZHeader.name_max));
+    TMarshal.Copy(PBytes(@LBytes)^, 0, TPtrWrapper.Create(FGZHeader.name), IndyMin(Length(LBytes), FGZHeader.name_max));
     {$ELSE}
     SetString(LName, PAnsiChar(LBytes), Length(LBytes));
     {$IFDEF VCL_XE4_OR_ABOVE}AnsiStrings.{$ENDIF}StrPLCopy(FGZHeader.name, LName, FGZHeader.name_max);

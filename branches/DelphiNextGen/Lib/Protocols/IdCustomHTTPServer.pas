@@ -415,7 +415,7 @@ type
     FParseParams: Boolean;
     FServerSoftware: string;
     FMIMETable: TIdThreadSafeMimeTable;
-    FSessionList: TIdHTTPCustomSessionList;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FSessionList: TIdHTTPCustomSessionList;
     FImplicitSessionList: Boolean;
     FSessionState: Boolean;
     FSessionTimeOut: Integer;
@@ -968,7 +968,14 @@ destructor TIdCustomHTTPServer.Destroy;
 begin
   Active := False; // Set Active to false in order to close all active sessions.
   FreeAndNil(FMIMETable);
-  FreeAndNil(FSessionList); // RLebeau: remove this? It frees  the USER'S component if still assigned...
+  if FImplicitSessionList then begin
+    {$IFDEF DCC_NEXTGEN_ARC}
+    FSessionList.__ObjRelease;
+    FSessionList := nil;
+    {$ELSE}
+    FreeAndNil(FSessionList);
+    {$ENDIF}
+  end;
   inherited Destroy;
 end;
 
@@ -1514,6 +1521,9 @@ begin
   // set the session timeout and options
   if not Assigned(FSessionList) then begin
     FSessionList := TIdHTTPDefaultSessionList.Create(Self);
+    {$IFDEF DCC_NEXTGEN_ARC}
+    FSessionList.__ObjAddRef;
+    {$ENDIF}
     FImplicitSessionList := True;
   end;
 
@@ -1556,38 +1566,46 @@ end;
 
 procedure TIdCustomHTTPServer.SetSessionList(const AValue: TIdHTTPCustomSessionList);
 var
-  LSessionList: TIdHTTPCustomSessionList;
+  {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} LSessionList: TIdHTTPCustomSessionList;
 begin
-  // RLebeau - is this really needed?  What should happen if this
-  // gets called by Notification() if the sessionList is freed while
-  // the server is still Active?
-  if Active then begin
-    EIdException.Toss(RSHTTPCannotSwitchSessionListWhenActive);
-  end;
+  if FSessionList <> AValue then
+  begin
+    // RLebeau - is this really needed?  What should happen if this
+    // gets called by Notification() if the sessionList is freed while
+    // the server is still Active?
+    if Active then begin
+      EIdException.Toss(RSHTTPCannotSwitchSessionListWhenActive);
+    end;
 
-  // If implicit one already exists free it
-  // Free the default SessionList
-  if FImplicitSessionList then begin
-    // Under D8 notification gets called after .Free of FreeAndNil, but before
-    // its set to nil with a side effect of IDisposable. To counteract this we
-    // set it to nil first.
-    // -Kudzu
-    LSessionList := FSessionList;
-    FSessionList := nil;
-    FreeAndNil(LSessionList);
-    //
-    FImplicitSessionList := False;
-  end;
+    // If implicit one already exists free it
+    // Free the default SessionList
+    if FImplicitSessionList then begin
+      // Under D8 notification gets called after .Free of FreeAndNil, but before
+      // its set to nil with a side effect of IDisposable. To counteract this we
+      // set it to nil first.
+      // -Kudzu
+      LSessionList := FSessionList;
+      FSessionList := nil;
+      {$IFDEF DCC_NEXTGEN_ARC}
+      LSessionList.__ObjRelease;
+      LSessionList := nil;
+      {$ELSE}
+      FreeAndNil(LSessionList);
+      {$ENDIF}
+      //
+      FImplicitSessionList := False;
+    end;
 
-  // Ensure we will no longer be notified when the component is freed
-  if FSessionList <> nil then begin
-    FSessionList.RemoveFreeNotification(Self);
-  end;
-  FSessionList := AValue;
-  // Ensure we will be notified when the component is freed, even is it's on
-  // another form
-  if FSessionList <> nil then begin
-    FSessionList.FreeNotification(Self);
+    // Ensure we will no longer be notified when the component is freed
+    if FSessionList <> nil then begin
+      FSessionList.RemoveFreeNotification(Self);
+    end;
+    FSessionList := AValue;
+    // Ensure we will be notified when the component is freed, even is it's on
+    // another form
+    if FSessionList <> nil then begin
+      FSessionList.FreeNotification(Self);
+    end;
   end;
 end;
 

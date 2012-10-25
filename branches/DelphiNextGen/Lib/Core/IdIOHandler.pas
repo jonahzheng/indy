@@ -448,7 +448,7 @@ type
     // method does not need all of it.
     //
     FInputBuffer: TIdBuffer;
-    FIntercept: TIdConnectionIntercept;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FIntercept: TIdConnectionIntercept;
     FMaxCapturedLines: Integer;
     FMaxLineAction: TIdMaxLineAction;
     FMaxLineLength: Integer;
@@ -824,7 +824,7 @@ end;
 
 procedure TIdIOHandler.SetIntercept(AValue: TIdConnectionIntercept);
 begin
-  if (AValue <> FIntercept) then begin
+  if FIntercept <> AValue then begin
     // remove self from the Intercept's free notification list
     if Assigned(FIntercept) then begin
       FIntercept.RemoveFreeNotification(Self);

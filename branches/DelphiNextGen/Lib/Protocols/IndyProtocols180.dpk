@@ -35,6 +35,7 @@ requires
   IndySystem180,
   IndyCore180;
 
+// RLebeau: cannot use IdCompilerDefines.inc here!
 {$IFNDEF WINDOWS}
   {$IFDEF MSWINDOWS}
     {$DEFINE WINDOWS}
@@ -55,7 +56,7 @@ contains
   IdAuthenticationNTLM in 'IdAuthenticationNTLM.pas',
   {$IFDEF WINDOWS}
   IdAuthenticationSSPI in 'IdAuthenticationSSPI.pas',
-  {$IFDEF WINDOWS}
+  {$ENDIF}
   IdBlockCipherIntercept in 'IdBlockCipherIntercept.pas',
   IdChargenServer in 'IdChargenServer.pas',
   IdChargenUDPServer in 'IdChargenUDPServer.pas',

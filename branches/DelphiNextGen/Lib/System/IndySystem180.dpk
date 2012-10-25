@@ -33,6 +33,7 @@ package IndySystem180;
 requires
   rtl;
 
+// RLebeau: cannot use IdCompilerDefines.inc here!
 {$IFNDEF WINDOWS}
   {$IFDEF MSWINDOWS}
     {$DEFINE WINDOWS}

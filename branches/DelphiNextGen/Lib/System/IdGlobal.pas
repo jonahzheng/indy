@@ -825,28 +825,17 @@ type
 
   IIdTextEncoding = interface(IInterface)
     function GetByteCount(const AChars: TIdWideChars): Integer; overload;
-    {$IFNDEF DOTNET}
-    function GetByteCount(const AChars: array of TIdWideChar): Integer; overload;
-    function GetByteCount(const AChars: PIdWideChar; ACharCount: Integer): Integer; overload;
-    {$ENDIF}
     function GetByteCount(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer): Integer; overload;
     {$IFNDEF DOTNET}
-    function GetByteCount(const AChars: array of TIdWideChar; ACharIndex, ACharCount: Integer): Integer; overload;
+    function GetByteCount(const AChars: PIdWideChar; ACharCount: Integer): Integer; overload;
     {$ENDIF}
     function GetByteCount(const AStr: TIdUnicodeString): Integer; overload;
     function GetByteCount(const AStr: TIdUnicodeString; ACharIndex, ACharCount: Integer): Integer; overload;
     function GetBytes(const AChars: TIdWideChars): TIdBytes; overload;
-    {$IFNDEF DOTNET}
-    function GetBytes(const AChars: array of TIdWideChar): TIdBytes; overload;
-    function GetBytes(const AChars: PIdWideChar; ACharCount: Integer): TIdBytes; overload;
-    {$ENDIF}
     function GetBytes(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer): TIdBytes; overload;
-    {$IFNDEF DOTNET}
-    function GetBytes(const AChars: array of TIdWideChar; ACharIndex, ACharCount: Integer): TIdBytes; overload;
-    {$ENDIF}
     function GetBytes(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
     {$IFNDEF DOTNET}
-    function GetBytes(const AChars: array of TIdWideChar; ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
+    function GetBytes(const AChars: PIdWideChar; ACharCount: Integer): TIdBytes; overload;
     function GetBytes(const AChars: PIdWideChar; ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
     function GetBytes(const AChars: PIdWideChar; ACharCount: Integer; ABytes: PByte; AByteCount: Integer): Integer; overload;
     {$ENDIF}
@@ -854,26 +843,15 @@ type
     function GetBytes(const AStr: TIdUnicodeString; ACharIndex, ACharCount: Integer): TIdBytes; overload;
     function GetBytes(const AStr: TIdUnicodeString; ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
     function GetCharCount(const ABytes: TIdBytes): Integer; overload;
-    {$IFNDEF DOTNET}
-    function GetCharCount(const ABytes: array of Byte): Integer; overload;
-    function GetCharCount(const ABytes: PByte; AByteCount: Integer): Integer; overload;
-    {$ENDIF}
     function GetCharCount(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): Integer; overload;
     {$IFNDEF DOTNET}
-    function GetCharCount(const ABytes: array of Byte; AByteIndex, AByteCount: Integer): Integer; overload;
+    function GetCharCount(const ABytes: PByte; AByteCount: Integer): Integer; overload;
     {$ENDIF}
     function GetChars(const ABytes: TIdBytes): TIdWideChars; overload;
-    {$IFNDEF DOTNET}
-    function GetChars(const ABytes: array of Byte): TIdWideChars; overload;
-    function GetChars(const ABytes: PByte; AByteCount: Integer): TIdWideChars; overload;
-    {$ENDIF}
     function GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): TIdWideChars; overload;
-    {$IFNDEF DOTNET}
-    function GetChars(const ABytes: array of Byte; AByteIndex, AByteCount: Integer): TIdWideChars; overload;
-    {$ENDIF}
     function GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer; var VChars: TIdWideChars; ACharIndex: Integer): Integer; overload;
     {$IFNDEF DOTNET}
-    function GetChars(const ABytes: array of Byte; AByteIndex, AByteCount: Integer; var VChars: TIdWideChars; ACharIndex: Integer): Integer; overload;
+    function GetChars(const ABytes: PByte; AByteCount: Integer): TIdWideChars; overload;
     function GetChars(const ABytes: PByte; AByteCount: Integer; var VChars: TIdWideChars; ACharIndex: Integer): Integer; overload;
     function GetChars(const ABytes: PByte; AByteCount: Integer; AChars: PIdWideChar; ACharCount: Integer): Integer; overload;
     {$ENDIF}
@@ -882,13 +860,9 @@ type
     function GetMaxCharCount(AByteCount: Integer): Integer;
     function GetPreamble: TIdBytes;
     function GetString(const ABytes: TIdBytes): TIdUnicodeString; overload;
-    {$IFNDEF DOTNET}
-    function GetString(const ABytes: array of Byte): TIdUnicodeString; overload;
-    function GetString(const ABytes: PByte; AByteCount: Integer): TIdUnicodeString; overload;
-    {$ENDIF}
     function GetString(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): TIdUnicodeString; overload;
     {$IFNDEF DOTNET}
-    function GetString(const ABytes: array of Byte; AByteIndex, AByteCount: Integer): TIdUnicodeString; overload;
+    function GetString(const ABytes: PByte; AByteCount: Integer): TIdUnicodeString; overload;
     {$ENDIF}
     property IsSingleByte: Boolean read GetIsSingleByte;
   end;
@@ -1849,36 +1823,26 @@ type
     FMaxCharSize: Integer;
   public
     function GetByteCount(const AChars: TIdWideChars): Integer; overload;
-    function GetByteCount(const AChars: array of TIdWideChar): Integer; overload;
-    function GetByteCount(const AChars: PIdWideChar; ACharCount: Integer): Integer; overload; virtual; abstract;
     function GetByteCount(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer): Integer; overload;
-    function GetByteCount(const AChars: array of TIdWideChar; ACharIndex, ACharCount: Integer): Integer; overload;
+    function GetByteCount(const AChars: PIdWideChar; ACharCount: Integer): Integer; overload; virtual; abstract;
     function GetByteCount(const AStr: TIdUnicodeString): Integer; overload;
     function GetByteCount(const AStr: TIdUnicodeString; ACharIndex, ACharCount: Integer): Integer; overload;
     function GetBytes(const AChars: TIdWideChars): TIdBytes; overload;
-    function GetBytes(const AChars: array of TIdWideChar): TIdBytes; overload;
-    function GetBytes(const AChars: PIdWideChar; ACharCount: Integer): TIdBytes; overload;
     function GetBytes(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer): TIdBytes; overload;
-    function GetBytes(const AChars: array of TIdWideChar; ACharIndex, ACharCount: Integer): TIdBytes; overload;
     function GetBytes(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
-    function GetBytes(const AChars: array of TIdWideChar; ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
+    function GetBytes(const AChars: PIdWideChar; ACharCount: Integer): TIdBytes; overload;
     function GetBytes(const AChars: PIdWideChar; ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
     function GetBytes(const AChars: PIdWideChar; ACharCount: Integer; ABytes: PByte; AByteCount: Integer): Integer; overload; virtual; abstract;
     function GetBytes(const AStr: TIdUnicodeString): TIdBytes; overload;
     function GetBytes(const AStr: TIdUnicodeString; ACharIndex, ACharCount: Integer): TIdBytes; overload;
     function GetBytes(const AStr: TIdUnicodeString; ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer; overload;
     function GetCharCount(const ABytes: TIdBytes): Integer; overload;
-    function GetCharCount(const ABytes: array of Byte): Integer; overload;
-    function GetCharCount(const ABytes: PByte; AByteCount: Integer): Integer; overload; virtual; abstract;
     function GetCharCount(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): Integer; overload;
-    function GetCharCount(const ABytes: array of Byte; AByteIndex, AByteCount: Integer): Integer; overload;
+    function GetCharCount(const ABytes: PByte; AByteCount: Integer): Integer; overload; virtual; abstract;
     function GetChars(const ABytes: TIdBytes): TIdWideChars; overload;
-    function GetChars(const ABytes: array of Byte): TIdWideChars; overload;
-    function GetChars(const ABytes: PByte; AByteCount: Integer): TIdWideChars; overload;
     function GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): TIdWideChars; overload;
-    function GetChars(const ABytes: array of Byte; AByteIndex, AByteCount: Integer): TIdWideChars; overload;
     function GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer; var VChars: TIdWideChars; ACharIndex: Integer): Integer; overload;
-    function GetChars(const ABytes: array of Byte; AByteIndex, AByteCount: Integer; var VChars: TIdWideChars; ACharIndex: Integer): Integer; overload;
+    function GetChars(const ABytes: PByte; AByteCount: Integer): TIdWideChars; overload;
     function GetChars(const ABytes: PByte; AByteCount: Integer; var VChars: TIdWideChars; ACharIndex: Integer): Integer; overload;
     function GetChars(const ABytes: PByte; AByteCount: Integer; AChars: PIdWideChar; ACharCount: Integer): Integer; overload; virtual; abstract;
     function GetIsSingleByte: Boolean;
@@ -1886,10 +1850,8 @@ type
     function GetMaxCharCount(AByteCount: Integer): Integer; virtual; abstract;
     function GetPreamble: TIdBytes; virtual;
     function GetString(const ABytes: TIdBytes): TIdUnicodeString; overload;
-    function GetString(const ABytes: array of Byte): TIdUnicodeString; overload;
-    function GetString(const ABytes: PByte; AByteCount: Integer): TIdUnicodeString; overload;
     function GetString(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): TIdUnicodeString; overload;
-    function GetString(const ABytes: array of Byte; AByteIndex, AByteCount: Integer): TIdUnicodeString; overload;
+    function GetString(const ABytes: PByte; AByteCount: Integer): TIdUnicodeString; overload;
   end;
 
   {$IFNDEF USE_ICONV}
@@ -2018,7 +1980,7 @@ type
 // simplicity and backwards compatibility, but internally we need to use
 // the proper String indexing.
 
-function ValidateChars(const AChars: array of TIdWideChar; ACharIndex, ACharCount: Integer): PIdWideChar;
+function ValidateChars(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer): PIdWideChar;
 var
   Len: Integer;
 begin
@@ -2039,7 +2001,7 @@ begin
   end;
 end;
 
-function ValidateBytes(const ABytes: array of Byte; AByteIndex, AByteCount: Integer): PByte; overload;
+function ValidateBytes(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): PByte; overload;
 var
   Len: Integer;
 begin
@@ -2057,7 +2019,7 @@ begin
   end;
 end;
 
-function ValidateBytes(const ABytes: array of Byte; AByteIndex, AByteCount, ANeeded: Integer): PByte; overload;
+function ValidateBytes(const ABytes: TIdBytes; AByteIndex, AByteCount, ANeeded: Integer): PByte; overload;
 var
   Len: Integer;
 begin
@@ -2105,29 +2067,7 @@ begin
   end;
 end;
 
-function TIdTextEncodingBase.GetByteCount(const AChars: array of TIdWideChar): Integer;
-begin
-  if Length(AChars) > 0 then begin
-    Result := GetByteCount(AChars, Length(AChars));
-  end else begin
-    Result := 0;
-  end;
-end;
-
 function TIdTextEncodingBase.GetByteCount(const AChars: TIdWideChars;
-  ACharIndex, ACharCount: Integer): Integer;
-var
-  LChars: PIdWideChar;
-begin
-  LChars := ValidateChars(AChars, ACharIndex, ACharCount);
-  if LChars <> nil then begin
-    Result := GetByteCount(LChars, ACharCount);
-  end else begin
-    Result := 0;
-  end;
-end;
-
-function TIdTextEncodingBase.GetByteCount(const AChars: array of TIdWideChar;
   ACharIndex, ACharCount: Integer): Integer;
 var
   LChars: PIdWideChar;
@@ -2170,16 +2110,25 @@ begin
   end;
 end;
 
-function TIdTextEncodingBase.GetBytes(const AChars: array of TIdWideChar): TIdBytes;
+function TIdTextEncodingBase.GetBytes(const AChars: TIdWideChars;
+  ACharIndex, ACharCount: Integer): TIdBytes;
 var
   Len: Integer;
 begin
-  Len := Length(AChars);
+  Result := nil;
+  Len := GetByteCount(AChars, ACharIndex, ACharCount);
   if Len > 0 then begin
-    Result := GetBytes(@AChars[0], Len);
-  end else begin
-    Result := nil;
+    SetLength(Result, Len);
+    GetBytes(@AChars[ACharIndex], ACharCount, PByte(Result), Len);
   end;
+end;
+
+function TIdTextEncodingBase.GetBytes(const AChars: TIdWideChars;
+  ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer;
+begin
+  Result := GetBytes(
+    ValidateChars(AChars, ACharIndex, ACharCount),
+    ACharCount, VBytes, AByteIndex);
 end;
 
 function TIdTextEncodingBase.GetBytes(const AChars: PIdWideChar; ACharCount: Integer): TIdBytes;
@@ -2192,48 +2141,6 @@ begin
     SetLength(Result, Len);
     GetBytes(AChars, ACharCount, PByte(Result), Len);
   end;
-end;
-
-function TIdTextEncodingBase.GetBytes(const AChars: TIdWideChars;
-  ACharIndex, ACharCount: Integer): TIdBytes;
-var
-  Len: Integer;
-begin
-  Result := nil;
-  Len := GetByteCount(AChars, ACharIndex, ACharCount);
-  if Len > 0 then begin
-    SetLength(Result, Len);
-    GetBytes(@AChars[ACharIndex], ACharCount, PByte(Result), Len);
-  end;
-end;
-
-function TIdTextEncodingBase.GetBytes(const AChars: array of TIdWideChar;
-  ACharIndex, ACharCount: Integer): TIdBytes;
-var
-  Len: Integer;
-begin
-  Result := nil;
-  Len := GetByteCount(AChars, ACharIndex, ACharCount);
-  if Len > 0 then begin
-    SetLength(Result, Len);
-    GetBytes(@AChars[ACharIndex], ACharCount, PByte(Result), Len);
-  end;
-end;
-
-function TIdTextEncodingBase.GetBytes(const AChars: TIdWideChars;
-  ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer;
-begin
-  Result := GetBytes(
-    ValidateChars(AChars, ACharIndex, ACharCount),
-    ACharCount, VBytes, AByteIndex);
-end;
-
-function TIdTextEncodingBase.GetBytes(const AChars: array of TIdWideChar;
-  ACharIndex, ACharCount: Integer; var VBytes: TIdBytes; AByteIndex: Integer): Integer;
-begin
-  Result := GetBytes(
-    ValidateChars(AChars, ACharIndex, ACharCount),
-    ACharCount, VBytes, AByteIndex);
 end;
 
 function TIdTextEncodingBase.GetBytes(const AChars: PIdWideChar; ACharCount: Integer;
@@ -2312,32 +2219,7 @@ begin
   end;
 end;
 
-function TIdTextEncodingBase.GetCharCount(const ABytes: array of Byte): Integer;
-var
-  Len: Integer;
-begin
-  Len := Length(ABytes);
-  if Len > 0 then begin
-    Result := GetCharCount(@ABytes[0], Len);
-  end else begin
-    Result := 0;
-  end;
-end;
-
 function TIdTextEncodingBase.GetCharCount(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): Integer;
-var
-  LBytes: PByte;
-begin
-  LBytes := ValidateBytes(ABytes, AByteIndex, AByteCount);
-  if LBytes <> nil then begin
-    Result := GetCharCount(LBytes, AByteCount);
-  end else begin
-    Result := 0;
-  end;
-end;
-
-function TIdTextEncodingBase.GetCharCount(const ABytes: array of Byte;
-  AByteIndex, AByteCount: Integer): Integer;
 var
   LBytes: PByte;
 begin
@@ -2358,43 +2240,7 @@ begin
   end;
 end;
 
-function TIdTextEncodingBase.GetChars(const ABytes: array of Byte): TIdWideChars;
-var
-  Len: Integer;
-begin
-  Len := Length(ABytes);
-  if Len > 0 then begin
-    Result := GetChars(@ABytes[0], Len);
-  end else begin
-    Result := nil;
-  end;
-end;
-
-function TIdTextEncodingBase.GetChars(const ABytes: PByte; AByteCount: Integer): TIdWideChars;
-var
-  Len: Integer;
-begin
-  Len := GetCharCount(ABytes, AByteCount);
-  if Len > 0 then begin
-    SetLength(Result, Len);
-    GetChars(ABytes, AByteCount, PIdWideChar(Result), Len);
-  end;
-end;
-
 function TIdTextEncodingBase.GetChars(const ABytes: TIdBytes; AByteIndex, AByteCount: Integer): TIdWideChars;
-var
-  Len: Integer;
-begin
-  Result := nil;
-  Len := GetCharCount(ABytes, AByteIndex, AByteCount);
-  if Len > 0 then begin
-    SetLength(Result, Len);
-    GetChars(@ABytes[AByteIndex], AByteCount, PIdWideChar(Result), Len);
-  end;
-end;
-
-function TIdTextEncodingBase.GetChars(const ABytes: array of Byte;
-  AByteIndex, AByteCount: Integer): TIdWideChars;
 var
   Len: Integer;
 begin
@@ -2419,16 +2265,14 @@ begin
   end;
 end;
 
-function TIdTextEncodingBase.GetChars(const ABytes: array of Byte;
-  AByteIndex, AByteCount: Integer; var VChars: TIdWideChars; ACharIndex: Integer): Integer;
+function TIdTextEncodingBase.GetChars(const ABytes: PByte; AByteCount: Integer): TIdWideChars;
 var
-  LBytes: PByte;
+  Len: Integer;
 begin
-  LBytes := ValidateBytes(ABytes, AByteIndex, AByteCount);
-  if LBytes <> nil then begin
-    Result := GetChars(LBytes, AByteCount, VChars, ACharIndex);
-  end else begin
-    Result := 0;
+  Len := GetCharCount(ABytes, AByteCount);
+  if Len > 0 then begin
+    SetLength(Result, Len);
+    GetChars(ABytes, AByteCount, PIdWideChar(Result), Len);
   end;
 end;
 
@@ -2476,30 +2320,6 @@ begin
   end;
 end;
 
-function TIdTextEncodingBase.GetString(const ABytes: array of Byte): TIdUnicodeString;
-var
-  Len: Integer;
-begin
-  Len := Length(ABytes);
-  if Len > 0 then begin
-    Result := GetString(@ABytes[0], Len);
-  end else begin
-    Result := '';
-  end;
-end;
-
-function TIdTextEncodingBase.GetString(const ABytes: PByte; AByteCount: Integer): TIdUnicodeString;
-var
-  Len: Integer;
-begin
-  Result := '';
-  Len := GetCharCount(ABytes, AByteCount);
-  if Len > 0 then begin
-    SetLength(Result, Len);
-    GetChars(ABytes, AByteCount, PIdWideChar(Result), Len);
-  end;
-end;
-
 function TIdTextEncodingBase.GetString(const ABytes: TIdBytes;
   AByteIndex, AByteCount: Integer): TIdUnicodeString;
 var
@@ -2513,16 +2333,15 @@ begin
   end;
 end;
 
-function TIdTextEncodingBase.GetString(const ABytes: array of Byte;
-  AByteIndex, AByteCount: Integer): TIdUnicodeString;
+function TIdTextEncodingBase.GetString(const ABytes: PByte; AByteCount: Integer): TIdUnicodeString;
 var
   Len: Integer;
 begin
   Result := '';
-  Len := GetCharCount(ABytes, AByteIndex, AByteCount);
+  Len := GetCharCount(ABytes, AByteCount);
   if Len > 0 then begin
     SetLength(Result, Len);
-    GetChars(@ABytes[AByteIndex], AByteCount, PIdWideChar(Result), Len);
+    GetChars(ABytes, AByteCount, PIdWideChar(Result), Len);
   end;
 end;
 

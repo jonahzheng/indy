@@ -781,6 +781,10 @@ begin
 end;
 
 function PasswordCallback(buf: PIdAnsiChar; size: TIdC_INT; rwflag: TIdC_INT; userdata: Pointer): TIdC_INT; cdecl;
+{$IFDEF DCC_NEXTGEN}
+type
+  PBytes = ^TBytes;
+{$ENDIF}
 var
   Password: String;
   {$IFDEF STRING_IS_UNICODE}
@@ -814,7 +818,7 @@ begin
       LPassword := IndyTextEncoding_OSDefault.GetBytes(Password);
       if Length(LPassword) > 0 then begin
         {$IFDEF DCC_NEXTGEN}
-        TMarshal.Copy(LPassword, 0, TPtrWrapper.Create(buf), IndyMin(Length(LPassword), size));
+        TMarshal.Copy(PBytes(@LPassword)^, 0, TPtrWrapper.Create(buf), IndyMin(Length(LPassword), size));
         {$ELSE}
         Move(LPassword[0], buf^, IndyMin(Length(LPassword), size));
         {$ENDIF}

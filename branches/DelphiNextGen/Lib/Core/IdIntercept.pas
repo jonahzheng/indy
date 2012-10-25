@@ -79,7 +79,7 @@ type
   TIdConnectionIntercept = class(TIdBaseComponent)
   protected
     FConnection: TComponent;
-    FIntercept: TIdConnectionIntercept;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FIntercept: TIdConnectionIntercept;
     FIsClient: Boolean;
     {$IFDEF DCC_NEXTGEN_ARC}
     // When AutoRefCounting is enabled, object references MUST be valid objects.
@@ -181,23 +181,25 @@ end;
 procedure TIdConnectionIntercept.SetIntercept(AValue: TIdConnectionIntercept);
 var
   LIntercept: TIdConnectionIntercept;
-Begin
-  LIntercept := AValue;
-  while Assigned(LIntercept) do begin
-    if LIntercept = Self then begin //recursion
-      raise EIdInterceptCircularLink.CreateFmt(RSInterceptCircularLink, [ClassName]); // TODO: Resource string and more english
+begin
+  if FIntercept <> AValue then
+  begin
+    LIntercept := AValue;
+    while Assigned(LIntercept) do begin
+      if LIntercept = Self then begin //recursion
+        raise EIdInterceptCircularLink.CreateFmt(RSInterceptCircularLink, [ClassName]); // TODO: Resource string and more english
+      end;
+      LIntercept := LIntercept.Intercept;
     end;
-    LIntercept := LIntercept.Intercept;
-  end;
-
-  // remove self from the Intercept's free notification list    {Do not Localize}
-  if Assigned(FIntercept) then begin
-    FIntercept.RemoveFreeNotification(Self);
-  end;
-  FIntercept := AValue;
-  // add self to the Intercept's free notification list    {Do not Localize}
-  if Assigned(FIntercept) then begin
-    FIntercept.FreeNotification(Self);
+    // remove self from the Intercept's free notification list    {Do not Localize}
+    if Assigned(FIntercept) then begin
+      FIntercept.RemoveFreeNotification(Self);
+    end;
+    FIntercept := AValue;
+    // add self to the Intercept's free notification list    {Do not Localize}
+    if Assigned(FIntercept) then begin
+      FIntercept.FreeNotification(Self);
+    end;
   end;
 end;
 

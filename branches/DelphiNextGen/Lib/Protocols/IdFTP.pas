@@ -799,7 +799,7 @@ type
 
     FTZInfo : TIdFTPTZInfo;
 
-    FCompressor : TIdZLibCompressorBase;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FCompressor : TIdZLibCompressorBase;
     //ZLib settings
     FZLibCompressionLevel : Integer; //7
     FZLibWindowBits : Integer; //-15

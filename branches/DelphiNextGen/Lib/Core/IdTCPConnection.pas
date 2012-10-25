@@ -365,12 +365,12 @@ type
   TIdTCPConnection = class(TIdComponent)
   protected
     FGreeting: TIdReply;
-    FIntercept: TIdConnectionIntercept;
-    FIOHandler: TIdIOHandler;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FIntercept: TIdConnectionIntercept;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FIOHandler: TIdIOHandler;
     FLastCmdResult: TIdReply;
     FManagedIOHandler: Boolean;
     FOnDisconnected: TNotifyEvent;
-    FSocket: TIdIOHandlerSocket;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FSocket: TIdIOHandlerSocket;
     FReplyClass: TIdReplyClass;
     //
     procedure CheckConnected;
@@ -482,6 +482,9 @@ begin
   end else begin
     IOHandler := TIdIOHandler.MakeDefaultIOHandler;
   end;
+  {$IFDEF DCC_NEXTGEN_ARC}
+  FIOHandler.__ObjAddRef;
+  {$ENDIF}
   ManagedIOHandler := True;
 end;
 
@@ -595,6 +598,7 @@ begin
     if (AComponent = FIOHandler) then begin
       FIOHandler := nil;
       FSocket := nil;
+      FManagedIOHandler := False;
     end;
   end;
 end;
@@ -652,14 +656,21 @@ begin
         EIdException.Toss(RSInterceptIsDifferent);
       end;
     end;
-    if ManagedIOHandler and Assigned(FIOHandler) then begin
-      FreeAndNil(FIOHandler);
+    if ManagedIOHandler then begin
+      if Assigned(FIOHandler) then begin
+        {$IFDEF DCC_NEXTGEN_ARC}
+        FIOHandler.__ObjRelease;
+        FIOHandler := nil;
+        {$ELSE}
+        FreeAndNil(FIOHandler);
+        {$ENDIF}
+      end;
+      ManagedIOHandler := False;
     end;
     // Reset this if nil (to match nil, but not needed) or when a new IOHandler is specified
     // If true, code must set it after the IOHandler is set
     // Must do after call to FreeManagedIOHandler
     FSocket := nil;
-    ManagedIOHandler := False;
     // Clear out old values whether setting AValue to nil, or setting a new value
     if Assigned(FIOHandler) then begin
       FIOHandler.WorkTarget := nil;

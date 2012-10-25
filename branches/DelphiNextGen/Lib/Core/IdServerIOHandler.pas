@@ -57,9 +57,8 @@ uses
 type
   TIdServerIOHandler = class(TIdComponent)
   protected
-    FScheduler: TIdScheduler;
-    procedure Notification(AComponent: TComponent; Operation: TOperation);
-      override;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FScheduler: TIdScheduler;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
     // This is a thread and not a yarn. Its the listener thread.
     function Accept(

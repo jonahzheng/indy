@@ -939,7 +939,7 @@ type
     FPASVBoundPortMax : TIdPort;
     FSystemType: string;
     FDefaultDataPort : TIdPort;
-    FUserAccounts: TIdCustomUserManager;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FUserAccounts: TIdCustomUserManager;
     FOnUserAccount : TOnFTPUserAccountEvent;
     FOnAfterUserLogin: TOnAfterUserLoginEvent;
     FOnUserLogin: TOnFTPUserLoginEvent;
@@ -981,7 +981,7 @@ type
     FOnDataPortAfterBind : TOnDataPortBind;
     FOnPASVBeforeBind : TIdOnPASVRange;
     FOnPASVReply : TIdOnPASV;
-    FFTPFileSystem: TIdFTPBaseFileSystem;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FFTPFileSystem: TIdFTPBaseFileSystem;
     FEndOfHelpLine : String;
     FCustomSystID : String;
     FReplyUnknownSITECommand : TIdReply;

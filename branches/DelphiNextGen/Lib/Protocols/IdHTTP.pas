@@ -460,14 +460,14 @@ type
     FAuthRetries: Integer;
     {Retries counter for proxy authorization}
     FAuthProxyRetries: Integer;
-    FCookieManager: TIdCookieManager;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FCookieManager: TIdCookieManager;
     FCompressor : TIdZLibCompressorBase;
     FFreeCookieManager: Boolean;
     {Max retries for authorization}
     FMaxAuthRetries: Integer;
     FMaxHeaderLines: integer;
     FAllowCookies: Boolean;
-    FAuthenticationManager: TIdAuthenticationManager;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FAuthenticationManager: TIdAuthenticationManager;
     FProtocolVersion: TIdHTTPProtocolVersion;
 
     {this is an internal counter for redirects}
@@ -1838,6 +1838,9 @@ var
 begin
   if (not Assigned(FCookieManager)) and AllowCookies then begin
     CookieManager := TIdCookieManager.Create(Self);
+    {$IFDEF DCC_NEXTGEN_ARC}
+    FCookieManager.__ObjAddRef;
+    {$ENDIF}
     FFreeCookieManager := True;
   end;
 
@@ -1859,6 +1862,7 @@ begin
   if Operation = opRemove then begin
     if (AComponent = FCookieManager) then begin
       FCookieManager := nil;
+      FFreeCookieManager := False;
     end else if (AComponent = FAuthenticationManager) then begin
       FAuthenticationManager := nil;
     end else if (AComponent = FCompressor) then begin
@@ -1872,7 +1876,13 @@ begin
   if FCookieManager <> ACookieManager then begin
     if Assigned(FCookieManager) then begin
       if FFreeCookieManager then begin
+        {$IFDEF DCC_NEXTGEN_ARC}
+        FCookieManager.__ObjRelease;
+        FCookieManager := nil;
+        {$ELSE}
         FreeAndNil(FCookieManager);
+        {$ENDIF}
+        FFreeCookieManager := False;
       end else begin
         FCookieManager.RemoveFreeNotification(Self);
       end;

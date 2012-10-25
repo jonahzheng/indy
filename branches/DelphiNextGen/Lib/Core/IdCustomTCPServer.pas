@@ -314,13 +314,13 @@ type
   TIdCustomTCPServer = class(TIdComponent)
   protected
     FActive: Boolean;
-    FScheduler: TIdScheduler;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FScheduler: TIdScheduler;
     FBindings: TIdSocketHandles;
     FContextClass: TIdServerContextClass;
     FImplicitScheduler: Boolean;
     FImplicitIOHandler: Boolean;
-    FIntercept: TIdServerIntercept;
-    FIOHandler: TIdServerIOHandler;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FIntercept: TIdServerIntercept;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FIOHandler: TIdServerIOHandler;
     FListenerThreads: TIdListenerThreadList;
     FListenQueue: integer;
     FMaxConnections: Integer;
@@ -454,7 +454,12 @@ begin
 
   if FIOHandler <> nil then begin
     if FImplicitIOHandler then begin
+      {$IFDEF DCC_NEXTGEN_ARC}
+      FIOHandler.__ObjRelease;
+      FIOHandler := nil;
+      {$ELSE}
       FreeAndNil(FIOHandler);
+      {$ENDIF}
     end else begin
       FIOHandler := nil;
     end;
@@ -645,42 +650,51 @@ end;
 
 procedure TIdCustomTCPServer.SetScheduler(const AValue: TIdScheduler);
 var
-  LScheduler: TIdScheduler;
+  {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} LScheduler: TIdScheduler;
 begin
-  // RLebeau - is this really needed?  What should happen if this
-  // gets called by Notification() if the Scheduler is freed while
-  // the server is still Active?
-  if Active then begin
-    EIdException.Toss(RSTCPServerSchedulerAlreadyActive);
-  end;
+  if FScheduler <> AValue then
+  begin
+    // RLebeau - is this really needed?  What should happen if this
+    // gets called by Notification() if the Scheduler is freed while
+    // the server is still Active?
+    if Active then begin
+      EIdException.Toss(RSTCPServerSchedulerAlreadyActive);
+    end;
 
-  // If implicit one already exists free it
-  // Free the default Thread manager
-  if ImplicitScheduler then begin
-    // Under D8 notification gets called after .Free of FreeAndNil, but before
-    // its set to nil with a side effect of IDisposable. To counteract this we
-    // set it to nil first.
-    // -Kudzu
-    LScheduler := FScheduler;
-    FScheduler := nil;
-    FreeAndNil(LScheduler);
-    //
-    FImplicitScheduler := False;
-  end;
+    // If implicit one already exists free it
+    // Free the default Thread manager
+    if ImplicitScheduler then begin
+      // Under D8 notification gets called after .Free of FreeAndNil, but before
+      // its set to nil with a side effect of IDisposable. To counteract this we
+      // set it to nil first.
+      // -Kudzu
+      LScheduler := FScheduler;
+      FScheduler := nil;
+      {$IFDEF DCC_NEXTGEN_ARC}
+      LScheduler.__ObjRelease;
+      {$ELSE}
+      FreeAndNil(LScheduler);
+      {$ENDIF}
+      //
+      FImplicitScheduler := False;
+    end;
 
-  // Ensure we will no longer be notified when the component is freed
-  if FScheduler <> nil then begin
-    FScheduler.RemoveFreeNotification(Self);
-  end;
-  FScheduler := AValue;
-  // Ensure we will be notified when the component is freed, even is it's on
-  // another form
-  if FScheduler <> nil then begin
-    FScheduler.FreeNotification(Self);
-  end;
+    // Ensure we will no longer be notified when the component is freed
+    if FScheduler <> nil then begin
+      FScheduler.RemoveFreeNotification(Self);
+    end;
 
-  if FIOHandler <> nil then begin
-    FIOHandler.SetScheduler(FScheduler);
+    FScheduler := AValue;
+
+    // Ensure we will be notified when the component is freed, even is it's on
+    // another form
+    if FScheduler <> nil then begin
+      FScheduler.FreeNotification(Self);
+    end;
+
+    if FIOHandler <> nil then begin
+      FIOHandler.SetScheduler(FScheduler);
+    end;
   end;
 end;
 
@@ -690,7 +704,12 @@ begin
     if Assigned(FIOHandler) then begin
       if FImplicitIOHandler then begin
         FImplicitIOHandler := False;
+        {$IFDEF DCC_NEXTGEN_ARC}
+        FIOHandler.__ObjRelease;
+        FIOHandler := nil;
+        {$ELSE}
         FreeAndNil(FIOHandler);
+        {$ENDIF}
       end else begin
         FIOHandler.RemoveFreeNotification(Self);
       end;
@@ -912,6 +931,9 @@ begin
   // Setup IOHandler
   if not Assigned(FIOHandler) then begin
     IOHandler := TIdServerIOHandlerStack.Create(Self);
+    {$IFDEF DCC_NEXTGEN_ARC}
+    FIOHandler.__ObjAddRef;
+    {$ENDIF}
     FImplicitIOHandler := True;
   end;
   IOHandler.Init;
@@ -919,9 +941,12 @@ begin
   // Set up scheduler
   if not Assigned(FScheduler) then begin
     Scheduler := TIdSchedulerOfThreadDefault.Create(Self);
+    {$IFDEF DCC_NEXTGEN_ARC}
+    FScheduler.__ObjAddRef;
+    {$ENDIF}
+    FImplicitScheduler := True;
     // Useful in debugging and for thread names
     FScheduler.Name := Name + 'Scheduler';   {do not localize}
-    FImplicitScheduler := True;
   end;
   FScheduler.Init;
 
