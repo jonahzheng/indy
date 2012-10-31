@@ -473,7 +473,7 @@ end;
 function TIdHTTPAppResponse.GetContent: AnsiString;
 {$IFDEF STRING_IS_UNICODE}
 var
-  LEncoding: TIdTextEncoding;
+  LEncoding: IIdTextEncoding;
   LBytes: TIdBytes;
 {$ENDIF}
 begin
@@ -484,26 +484,15 @@ begin
   // string variables later on...
   Result := '';
   LEncoding := CharsetToEncoding(FResponseInfo.CharSet);
-    {$IFNDEF DOTNET}
-  try
-    {$ENDIF}
-    LBytes := TIdTextEncoding.Unicode.GetBytes(FResponseInfo.ContentText);
-    if LEncoding <> TIdTextEncoding.Unicode then begin
-      LBytes := TIdTextEncoding.Convert(TIdTextEncoding.Unicode, LEncoding, LBytes);
-    end;
+  LBytes := LEncoding.GetBytes(FResponseInfo.ContentText);
     {$IFDEF DOTNET}
-    // RLebeau: how to handle this correctly in .NET?
-    Result := AnsiString(BytesToStringRaw(LBytes));
+  // RLebeau: how to handle this correctly in .NET?
+  Result := AnsiString(BytesToStringRaw(LBytes));
     {$ELSE}
-    SetString(Result, PAnsiChar(LBytes), Length(LBytes));
+  SetString(Result, PAnsiChar(LBytes), Length(LBytes));
       {$IFDEF VCL_2009_OR_ABOVE}
-    SetCodePage(PRawByteString(@Result)^, CharsetToCodePage(FResponseInfo.CharSet), False);
+  SetCodePage(PRawByteString(@Result)^, CharsetToCodePage(FResponseInfo.CharSet), False);
       {$ENDIF}
-    {$ENDIF}
-    {$IFNDEF DOTNET}
-  finally
-    LEncoding.Free;
-  end;
     {$ENDIF}
   {$ELSE}
   Result := FResponseInfo.ContentText;

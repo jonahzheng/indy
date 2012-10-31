@@ -824,6 +824,7 @@ type
 
 
   IIdTextEncoding = interface(IInterface)
+  ['{FA87FAE5-E3E3-4632-8FCA-2FB786848655}']
     function GetByteCount(const AChars: TIdWideChars): Integer; overload;
     function GetByteCount(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer): Integer; overload;
     {$IFNDEF DOTNET}
@@ -3349,23 +3350,23 @@ type
 
 function TEncodingAccess.IndyGetByteCount(Chars: PChar; CharCount: Integer): Integer;
 begin
-  Result := inherited GetByteCount(Chars, CharCount);
+  Result := GetByteCount(Chars, CharCount);
 end;
 
 function TEncodingAccess.IndyGetBytes(Chars: PChar; CharCount: Integer; Bytes: PByte; ByteCount: Integer): Integer;
 begin
-  Result := inherited GetBytes(Chars, CharCount, Bytes, ByteCount);
+  Result := GetBytes(Chars, CharCount, Bytes, ByteCount);
 end;
 
 function TEncodingAccess.IndyGetCharCount(Bytes: PByte; ByteCount: Integer): Integer;
 begin
-  Result := inherited GetCharCount(Bytes, ByteCount);
+  Result := GetCharCount(Bytes, ByteCount);
 end;
 
 function TEncodingAccess.IndyGetChars(Bytes: PByte; ByteCount: Integer;
   Chars: PChar; CharCount: Integer): Integer;
 begin
-  Result := inherited GetChars(Bytes, ByteCount, Chars, CharCount);
+  Result := GetChars(Bytes, ByteCount, Chars, CharCount);
 end;
 
 constructor TIdVCLEncoding.Create(AEncoding: TEncoding);

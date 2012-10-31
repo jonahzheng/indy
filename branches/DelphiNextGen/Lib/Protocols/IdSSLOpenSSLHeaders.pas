@@ -838,6 +838,10 @@ uses
 {.$DEFINE SSLEAY_MACROS}
 
 const
+  {$IFDEF DCC_NEXTGEN}
+  cNull: TIdAnsiChar = 0;
+  {$ENDIF}
+
   {$EXTERNALSYM CONF_MFLAGS_IGNORE_ERRORS}
   CONF_MFLAGS_IGNORE_ERRORS = $1;
   {$EXTERNALSYM CONF_MFLAGS_IGNORE_RETURN_CODES}
@@ -23567,11 +23571,6 @@ function PEM_write_bio_NETSCAPE_CERT_SEQUENCE(bp : PBIO; x : PDSA) : TIdC_INT;
 begin
   Result := _PEM_write_bio_NETSCAPE_CERT_SEQUENCE(bp, x);
 end;
-{$ENDIF}
-
-{$IFDEF DCC_NEXTGEN}
-const
-  cNull: TIdAnsiChar = 0;
 {$ENDIF}
 
 function OPENSSL_malloc(aSize:TIdC_INT):Pointer;
