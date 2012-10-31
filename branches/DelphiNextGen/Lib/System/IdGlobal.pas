@@ -2977,7 +2977,7 @@ begin
   {$IFDEF USE_ICONV}
   inherited Create('UTF-7');
   {$ELSE}
-    {$IFDEF WINDOWS}
+    {$IFDEF SUPPORTS_CODEPAGE_ENCODING}
   inherited Create(CP_UTF7);
     {$ELSE}
   ToDo('Construtor of TIdUTF7Encoding class is not implemented for this platform yet'); {do not localize}
@@ -3026,7 +3026,7 @@ begin
   {$IFDEF USE_ICONV}
   inherited Create('UTF-8');
   {$ELSE}
-    {$IFDEF WINDOWS}
+    {$IFDEF SUPPORTS_CODEPAGE_ENCODING}
   inherited Create(CP_UTF8, 0, 0);
     {$ELSE}
   ToDo('Constructor of TIdUTF8Encoding class is not implemented for this platform yet'); {do not localize}
