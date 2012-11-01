@@ -476,7 +476,9 @@ type
     function GetDestination: string; virtual;
     procedure InitComponent; override;
     procedure InterceptReceive(var VBuffer: TIdBytes);
+    {$IFNDEF DCC_NEXTGEN_ARC}
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    {$ENDIF}
     procedure PerformCapture(const ADest: TObject; out VLineCount: Integer;
      const ADelim: string; AUsesDotTransparency: Boolean; AByteEncoding: IIdTextEncoding = nil
      {$IFDEF STRING_IS_ANSI}; ADestEncoding: IIdTextEncoding = nil{$ENDIF}
@@ -781,10 +783,14 @@ var
 procedure TIdIOHandler.Close;
 //do not do FInputBuffer.Clear; here.
 //it breaks reading when remote connection does a disconnect
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LIntercept: TIdConnectionIntercept;
 begin
   try
-    if Intercept <> nil then begin
-      Intercept.Disconnect;
+    LIntercept := Intercept;
+    if LIntercept <> nil then begin
+      LIntercept.Disconnect;
     end;
   finally
     FOpened := False;
@@ -814,16 +820,23 @@ begin
   FOpened := True;
 end;
 
+// under ARC, all weak references to a freed object get nil'ed automatically
+{$IFNDEF DCC_NEXTGEN_ARC}
 procedure TIdIOHandler.Notification(AComponent: TComponent; Operation: TOperation);
 begin
-  inherited Notification(AComponent, OPeration);
   if (Operation = opRemove) and (AComponent = FIntercept) then begin
     FIntercept := nil;
   end;
+  inherited Notification(AComponent, OPeration);
 end;
+{$ENDIF}
 
 procedure TIdIOHandler.SetIntercept(AValue: TIdConnectionIntercept);
 begin
+  {$IFDEF DCC_NEXTGEN_ARC}
+  // under ARC, all weak references to a freed object get nil'ed automatically
+  FIntercept := AValue;
+  {$ELSE}
   if FIntercept <> AValue then begin
     // remove self from the Intercept's free notification list
     if Assigned(FIntercept) then begin
@@ -831,10 +844,11 @@ begin
     end;
     FIntercept := AValue;
     // add self to the Intercept's free notification list
-    if Assigned(FIntercept) then begin
-      FIntercept.FreeNotification(Self);
+    if Assigned(AValue) then begin
+      AValue.FreeNotification(Self);
     end;
   end;
+  {$ENDIF}
 end;
 
 class procedure TIdIOHandler.SetDefaultClass;
@@ -1472,6 +1486,8 @@ var
   LByteCount: Integer;
   LLastError: Integer;
   LBuffer: TIdBytes;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LIntercept: TIdConnectionIntercept;
 begin
   if ATimeout = IdTimeoutDefault then begin
     // MtW: check for 0 too, for compatibility
@@ -1503,10 +1519,14 @@ begin
               LByteCount := ReadDataFromSource(LBuffer);
               if LByteCount > 0 then begin
                 SetLength(LBuffer, LByteCount);
-                if Intercept <> nil then begin
-                  Intercept.Receive(LBuffer);
+
+                LIntercept := Intercept;
+                if LIntercept <> nil then begin
+                  LIntercept.Receive(LBuffer);
+                  LIntercept := nil;
                   LByteCount := Length(LBuffer);
                 end;
+
                 // Pass through LBuffer first so it can go through Intercept
                 //TODO: If not intercept, we can skip this step
                 InputBuffer.Write(LBuffer);
@@ -2371,9 +2391,13 @@ begin
 end;
 
 procedure TIdIOHandler.InterceptReceive(var VBuffer: TIdBytes);
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LIntercept: TIdConnectionIntercept;
 begin
-  if Intercept <> nil then begin
-    Intercept.Receive(VBuffer);
+  LIntercept := Intercept;
+  if LIntercept <> nil then begin
+    LIntercept.Receive(VBuffer);
   end;
 end;
 
@@ -2411,14 +2435,19 @@ var
   LSize: Integer;
   LByteCount: Integer;
   LLastError: Integer;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LIntercept: TIdConnectionIntercept;
 begin
   // Check if disconnected
   CheckForDisconnect(True, True);
-  if Intercept <> nil then begin
+
+  LIntercept := Intercept;
+  if LIntercept <> nil then begin
     // TODO: pass offset/size parameters to the Intercept
     // so that a copy is no longer needed here
     LTemp := ToBytes(ABuffer, ALength, AOffset);
-    Intercept.Send(LTemp);
+    LIntercept.Send(LTemp);
+    LIntercept := nil;
     LSize := Length(LTemp);
     LPos := 0;
   end else begin

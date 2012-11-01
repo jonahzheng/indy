@@ -28,7 +28,7 @@ package IndyProtocols180;
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Indy 10 Protocols'}
 {$RUNONLY}
-{$IMPLICITBUILD ON}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl,

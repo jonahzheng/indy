@@ -462,7 +462,7 @@ type
     FAuthProxyRetries: Integer;
     {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FCookieManager: TIdCookieManager;
     FCompressor : TIdZLibCompressorBase;
-    FFreeCookieManager: Boolean;
+    FImplicitCookieManager: Boolean;
     {Max retries for authorization}
     FMaxAuthRetries: Integer;
     FMaxHeaderLines: integer;
@@ -1093,11 +1093,15 @@ begin
 end;
 
 procedure TIdCustomHTTP.SetCookies(AURL: TIdURI; ARequest: TIdHTTPRequest);
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LCookieManager: TIdCookieManager;
 begin
-  if Assigned(FCookieManager) and AllowCookies then
+  LCookieManager := FCookieManager;
+  if Assigned(LCookieManager) and AllowCookies then
   begin
     // Send secure cookies only if we have Secured connection
-    FCookieManager.GenerateClientCookies(
+    LCookieManager.GenerateClientCookies(
       AURL,
       TextIsSame(AURL.Protocol, 'HTTPS'), {do not localize}
       ARequest.RawHeaders);
@@ -1835,65 +1839,85 @@ end;
 procedure TIdCustomHTTP.ProcessCookies(ARequest: TIdHTTPRequest; AResponse: TIdHTTPResponse);
 var
   LCookies: TStringList;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LCookieManager: TIdCookieManager;
 begin
-  if (not Assigned(FCookieManager)) and AllowCookies then begin
-    CookieManager := TIdCookieManager.Create(Self);
-    {$IFDEF DCC_NEXTGEN_ARC}
-    FCookieManager.__ObjAddRef;
-    {$ENDIF}
-    FFreeCookieManager := True;
+  LCookieManager := FCookieManager;
+
+  if (not Assigned(LCookieManager)) and AllowCookies then begin
+    LCookieManager := TIdCookieManager.Create(Self);
+    SetCookieManager(LCookieManager);
+    FImplicitCookieManager := True;
   end;
 
-  if Assigned(FCookieManager) and AllowCookies then begin
+  if Assigned(LCookieManager) and AllowCookies then begin
     LCookies := TStringList.Create;
     try
       AResponse.RawHeaders.Extract('Set-Cookie', LCookies);  {do not localize}
       AResponse.MetaHTTPEquiv.RawHeaders.Extract('Set-Cookie', LCookies);    {do not localize}
-      CookieManager.AddServerCookies(LCookies, FURI);
+      LCookieManager.AddServerCookies(LCookies, FURI);
     finally
       FreeAndNil(LCookies);
     end;
   end;
 end;
 
+// under ARC, all weak references to a freed object get nil'ed automatically
+// so this is mostly redundant
 procedure TIdCustomHTTP.Notification(AComponent: TComponent; Operation: TOperation);
 begin
-  inherited Notification(AComponent, Operation);
   if Operation = opRemove then begin
     if (AComponent = FCookieManager) then begin
       FCookieManager := nil;
-      FFreeCookieManager := False;
-    end else if (AComponent = FAuthenticationManager) then begin
+      FImplicitCookieManager := False;
+    end
+    {$IFNDEF DCC_NEXTGEN_ARC}
+    else if (AComponent = FAuthenticationManager) then begin
       FAuthenticationManager := nil;
     end else if (AComponent = FCompressor) then begin
       FCompressor := nil;
-    end;
+    end
+    {$ENDIF}
+    ;
   end;
+  inherited Notification(AComponent, Operation);
 end;
 
 procedure TIdCustomHTTP.SetCookieManager(ACookieManager: TIdCookieManager);
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LCookieManager: TIdCookieManager;
 begin
-  if FCookieManager <> ACookieManager then begin
-    if Assigned(FCookieManager) then begin
-      if FFreeCookieManager then begin
-        {$IFDEF DCC_NEXTGEN_ARC}
-        FCookieManager.__ObjRelease;
+  LCookieManager := FCookieManager;
+
+  if LCookieManager <> ACookieManager then begin
+
+    // under ARC, all weak references to a freed object get nil'ed automatically
+
+    if Assigned(LCookieManager) then begin
+      if FImplicitCookieManager then begin
         FCookieManager := nil;
-        {$ELSE}
-        FreeAndNil(FCookieManager);
+        FImplicitCookieManager := False;
+        {$IFDEF DCC_NEXTGEN_ARC}
+        // have to remove the Owner's strong references so it can be freed
+        RemoveComponent(LCookieManager);
         {$ENDIF}
-        FFreeCookieManager := False;
+        FreeAndNil(LCookieManager);
       end else begin
-        FCookieManager.RemoveFreeNotification(Self);
+        {$IFNDEF DCC_NEXTGEN_ARC}
+        LCookieManager.RemoveFreeNotification(Self);
+        {$ENDIF}
       end;
     end;
 
     FCookieManager := ACookieManager;
-    FFreeCookieManager := False;
+    FImplicitCookieManager := False;
 
-    if Assigned(FCookieManager) then begin
-      FCookieManager.FreeNotification(Self);
+    {$IFNDEF DCC_NEXTGEN_ARC}
+    if Assigned(ACookieManager) then begin
+      ACookieManager.FreeNotification(Self);
     end;
+    {$ENDIF}
   end;
 end;
 
@@ -2102,13 +2126,18 @@ begin
 end;
 
 procedure TIdCustomHTTP.DoOnDisconnected;
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LAuthManager: TIdAuthenticationManager;
 begin
   inherited DoOnDisconnected;
 
   if Assigned(Request.Authentication) and
-    (Request.Authentication.CurrentStep = Request.Authentication.Steps) then begin
-    if Assigned(AuthenticationManager) then begin
-      AuthenticationManager.AddAuthentication(Request.Authentication, URL);
+    (Request.Authentication.CurrentStep = Request.Authentication.Steps) then
+  begin
+    LAuthManager := AuthenticationManager;
+    if Assigned(LAuthManager) then begin
+      LAuthManager.AddAuthentication(Request.Authentication, URL);
     end;
     {$IFNDEF DCC_NEXTGEN_ARC}
     Request.Authentication.Free;
@@ -2124,6 +2153,10 @@ end;
 
 procedure TIdCustomHTTP.SetAuthenticationManager(Value: TIdAuthenticationManager);
 begin
+  {$IFDEF DCC_NEXTGEN_ARC}
+  // under ARC, all weak references to a freed object get nil'ed automatically
+  FAuthenticationManager := Value;
+  {$ELSE}
   if FAuthenticationManager <> Value then begin
     if Assigned(FAuthenticationManager) then begin
       FAuthenticationManager.RemoveFreeNotification(self);
@@ -2133,6 +2166,7 @@ begin
       FAuthenticationManager.FreeNotification(Self);
     end;
   end;
+  {$ENDIF}
 end;
 
 {
@@ -2632,7 +2666,7 @@ begin
   FAuthRetries := 0;
   FAuthProxyRetries := 0;
   AllowCookies := True;
-  FFreeCookieManager := False;
+  FImplicitCookieManager := False;
   FOptions := [hoForceEncodeParams];
 
   FRedirectMax := Id_TIdHTTP_RedirectMax;

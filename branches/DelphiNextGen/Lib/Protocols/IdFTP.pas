@@ -1696,14 +1696,18 @@ var
   LPort: TIdPort;
   LPasvCl : TIdTCPClient;
   LPortSv : TIdSimpleServer;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LCompressor : TIdZLibCompressorBase;
 begin
   FAbortFlag.Value := False;
+  LCompressor := nil;
 
   if FCurrentTransferMode = dmDeflate then begin
-    if not Assigned(FCompressor) then begin
+    LCompressor := FCompressor;
+    if not Assigned(LCompressor) then begin
       raise EIdFTPMissingCompressor.Create(RSFTPMissingCompressor);
     end;
-    if not FCompressor.IsReady then begin
+    if not LCompressor.IsReady then begin
       raise EIdFTPCompressorNotReady.Create(RSFTPCompressorNotReady);
     end;
   end;
@@ -1760,8 +1764,8 @@ begin
               if FUsingSFTP and (FDataPortProtection = ftpdpsPrivate) then begin
                 TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).Passthrough := False;
               end;
-              if FCurrentTransferMode = dmDeflate then begin
-                FCompressor.CompressFTPToIO(ASource, FDataChannel.IOHandler,
+              if Assigned(LCompressor) then begin
+                LCompressor.CompressFTPToIO(ASource, FDataChannel.IOHandler,
                   FZLibCompressionLevel, FZLibWindowBits, FZLibMemLevel, FZLibStratagy);
               end else begin
                 if AFromBeginning then begin
@@ -1838,8 +1842,8 @@ begin
           if FUsingSFTP and (FDataPortProtection = ftpdpsPrivate) then begin
             TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).PassThrough := False;
           end;
-          if FCurrentTransferMode = dmDeflate then begin
-            FCompressor.CompressFTPToIO(ASource, FDataChannel.IOHandler,
+          if Assigned(LCompressor) then begin
+            LCompressor.CompressFTPToIO(ASource, FDataChannel.IOHandler,
               FZLibCompressionLevel, FZLibWindowBits, FZLibMemLevel, FZLibStratagy);
           end else begin
             if AFromBeginning then begin
@@ -1884,14 +1888,18 @@ var
   LPort: TIdPort;
   LPasvCl : TIdTCPClient;
   LPortSv : TIdSimpleServer;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LCompressor: TIdZLibCompressorBase;
 begin
   FAbortFlag.Value := False;
+  LCompressor := nil;
 
   if FCurrentTransferMode = dmDeflate then begin
-    if not Assigned(FCompressor) then begin
+    LCompressor := FCompressor;
+    if not Assigned(LCompressor) then begin
       raise EIdFTPMissingCompressor.Create(RSFTPMissingCompressor);
     end;
-    if not FCompressor.IsReady then begin
+    if not LCompressor.IsReady then begin
       raise EIdFTPCompressorNotReady.Create(RSFTPCompressorNotReady);
     end;
   end;
@@ -1948,8 +1956,8 @@ begin
             if FUsingSFTP and (FDataPortProtection = ftpdpsPrivate) then begin
               TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).Passthrough := False;
             end;
-            if FCurrentTransferMode = dmDeflate then begin
-              FCompressor.DecompressFTPFromIO(LPasvCl.IOHandler, ADest, FZLibWindowBits);
+            if Assigned(LCompressor) then begin
+              LCompressor.DecompressFTPFromIO(LPasvCl.IOHandler, ADest, FZLibWindowBits);
             end else begin
               LPasvCl.IOHandler.ReadStream(ADest, -1, True);
             end;
@@ -2010,8 +2018,8 @@ begin
         if FUsingSFTP and (FDataPortProtection = ftpdpsPrivate) then begin
           TIdSSLIOHandlerSocketBase(FDataChannel.IOHandler).PassThrough := False;
         end;
-        if FCurrentTransferMode = dmDeflate then begin
-          FCompressor.DecompressFTPFromIO(LPortSv.IOHandler, ADest, FZLibWindowBits);
+        if Assigned(LCompressor) then begin
+          LCompressor.DecompressFTPFromIO(LPortSv.IOHandler, ADest, FZLibWindowBits);
         end else begin
           FDataChannel.IOHandler.ReadStream(ADest, -1, True);
         end;
@@ -3402,14 +3410,27 @@ begin
 end;
 
 procedure TIdFTP.SetCompressor(AValue: TIdZLibCompressorBase);
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LCompressor: TIdZLibCompressorBase;
 begin
-  if FCompressor <> AValue then begin
-    if Assigned(FCompressor) then begin
-      FCompressor.RemoveFreeNotification(Self);
+  LCompressor := FCompressor;
+
+  if LCompressor <> AValue then begin
+    // under ARC, all weak references to a freed object get nil'ed automatically
+
+    {$IFNDEF DCC_NEXTGEN_ARC}
+    if Assigned(LCompressor) then begin
+      LCompressor.RemoveFreeNotification(Self);
     end;
+    {$ENDIF}
+
     FCompressor := AValue;
-    if Assigned(FCompressor) then begin
-      FCompressor.FreeNotification(Self);
+
+    if Assigned(AValue) then begin
+      {$IFNDEF DCC_NEXTGEN_ARC}
+      AValue.FreeNotification(Self);
+      {$ENDIF}
     end
     else if Connected then begin
       TransferMode(dmStream);
@@ -3976,10 +3997,10 @@ end;
 
 procedure TIdFTP.Notification(AComponent: TComponent; Operation: TOperation);
 begin
-  inherited Notification(AComponent, Operation);
   if (Operation = opRemove) and (AComponent = FCompressor) then begin
     SetCompressor(nil);
   end;
+  inherited Notification(AComponent, Operation);
 end;
 
 procedure TIdFTP.SendPret(const ACommand: String);

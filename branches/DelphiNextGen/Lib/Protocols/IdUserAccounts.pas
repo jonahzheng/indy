@@ -245,11 +245,12 @@ uses
    end;
 3) procedure Notification(AComponent: TComponent; Operation: TOperation);
    begin
-     inherited Notification(AComponent, Operation);
      ...
      if (Operation = opRemove) and (AComponent = FUserAccounts) then begin
        FUserAccounts := nil;
      end;
+     ...
+     inherited Notification(AComponent, Operation);
    end;
 4) ... if Assigned(FUserAccounts) then begin
    FAuthenticated := FUserAccounts.AuthenticateUser(FUsername, ASender.UnparsedParams);

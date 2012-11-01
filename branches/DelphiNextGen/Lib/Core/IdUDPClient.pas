@@ -98,6 +98,7 @@ type
     procedure DoOnConnected; virtual;
     procedure DoOnDisconnected; virtual;
     procedure InitComponent; override;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     //property methods
     procedure SetIPVersion(const AValue: TIdIPVersion); override;
     procedure SetHost(const AValue : String); override;
@@ -161,15 +162,18 @@ end;
 procedure TIdUDPClient.Connect;
 var
   LIP : String;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LTransparentProxy: TIdCustomTransparentProxy;
 begin
   if Connected then begin
     Disconnect;
   end;
-  if Assigned(FTransparentProxy) then begin
-    if FTransparentProxy.Enabled then begin
+  LTransparentProxy := FTransparentProxy;
+  if Assigned(LTransparentProxy) then begin
+    if LTransparentProxy.Enabled then begin
       //we don't use proxy open because we want to pass a peer's hostname and port
       //in case a proxy type in the future requires this.
-      FTransparentProxy.OpenUDP(Binding, Host, Port);
+      LTransparentProxy.OpenUDP(Binding, Host, Port);
       FProxyOpened := True;
       FConnected := True;
       Exit;  //we're done, the transparentProxy takes care of the work.
@@ -256,16 +260,18 @@ begin
 end;
 
 function TIdUDPClient.GetTransparentProxy: TIdCustomTransparentProxy;
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LTransparentProxy: TIdCustomTransparentProxy;
 begin
+  LTransparentProxy := FTransparentProxy;
   // Necessary at design time for Borland SOAP support
-  if FTransparentProxy = nil then begin
-    FTransparentProxy := TIdSocksInfo.Create(nil); //default
-    {$IFDEF DCC_NEXTGEN_ARC}
-    FTransparentProxy.__ObjAddRef;
-    {$ENDIF}
+  if LTransparentProxy = nil then begin
+    LTransparentProxy := TIdSocksInfo.Create(Self); //default
+    FTransparentProxy := LTransparentProxy;
     FImplicitTransparentProxy := True;
   end;
-  Result := FTransparentProxy;
+  Result := LTransparentProxy;
 end;
 
 procedure TIdUDPClient.InitComponent;
@@ -276,6 +282,17 @@ begin
   FBoundPort := DEF_PORT_ANY;
   FBoundPortMin := DEF_PORT_ANY;
   FBoundPortMax := DEF_PORT_ANY;
+end;
+
+// under ARC, all weak references to a freed object get nil'ed automatically
+// so this is mostly redundant
+procedure TIdUDPClient.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  if (Operation = opRemove) and (AComponent = FTransparentProxy) then begin
+    FTransparentProxy := nil;
+    FImplicitTransparentProxy := False;
+  end;
+  inherited Notification(AComponent, Operation);
 end;
 
 procedure TIdUDPClient.OpenProxy;
@@ -398,78 +415,95 @@ end;
 procedure TIdUDPClient.SetTransparentProxy(AProxy: TIdCustomTransparentProxy);
 var
   LClass: TIdCustomTransparentProxyClass;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LTransparentProxy: TIdCustomTransparentProxy;
 begin
-  if FTransparentProxy <> AProxy then
+  LTransparentProxy := FTransparentProxy;
+
+  if LTransparentProxy <> AProxy then
   begin
     // All this is to preserve the compatibility with old version
     // In the case when we have SocksInfo as object created in runtime without owner form it is treated as temporary object
     // In the case when the ASocks points to an object with owner it is treated as component on form.
 
+    // under ARC, all weak references to a freed object get nil'ed automatically
+
     if Assigned(AProxy) then begin
       if not Assigned(AProxy.Owner) then begin
-        if Assigned(FTransparentProxy) and (not FImplicitTransparentProxy) then begin
-          FTransparentProxy.RemoveFreeNotification(Self);
-          FTransparentProxy := nil;
+        if Assigned(LTransparentProxy) and (not FImplicitTransparentProxy) then begin
+          {$IFNDEF DCC_NEXTGEN_ARC}
+          LTransparentProxy.RemoveFreeNotification(Self);
+          {$ENDIF}
+          LTransparentProxy := nil;
         end;
         LClass := TIdCustomTransparentProxyClass(AProxy.ClassType);
-        if Assigned(FTransparentProxy) and (FTransparentProxy.ClassType <> LClass) then begin
-          {$IFDEF DCC_NEXTGEN_ARC}
-          FTransparentProxy.__ObjRelease;
+        if Assigned(LTransparentProxy) and (LTransparentProxy.ClassType <> LClass) then begin
           FTransparentProxy := nil;
-          {$ELSE}
-          FreeAndNil(FTransparentProxy);
-          {$ENDIF}
           FImplicitTransparentProxy := False;
-        end;
-        if not Assigned(FTransparentProxy) then begin
-          FTransparentProxy := LClass.Create(nil);
           {$IFDEF DCC_NEXTGEN_ARC}
-          FTransparentProxy.__ObjAddRef;
+          // have to remove the Owner's strong references so it can be freed
+          RemoveComponent(LTransparentProxy);
           {$ENDIF}
+          FreeAndNil(LTransparentProxy);
+        end;
+        if not Assigned(LTransparentProxy) then begin
+          LTransparentProxy := LClass.Create(Self);
+          FTransparentProxy := LTransparentProxy;
           FImplicitTransparentProxy := True;
         end;
-        FTransparentProxy.Assign(AProxy);
+        LTransparentProxy.Assign(AProxy);
       end else begin
-        if Assigned(FTransparentProxy) then begin
+        if Assigned(LTransparentProxy) then begin
           if FImplicitTransparentProxy then begin
-            {$IFDEF DCC_NEXTGEN_ARC}
-            FTransparentProxy.__ObjRelease;
             FTransparentProxy := nil;
-            {$ELSE}
-            FreeAndNil(FTransparentProxy);
-            {$ENDIF}
             FImplicitTransparentProxy := False;
+            {$IFDEF DCC_NEXTGEN_ARC}
+            // have to remove the Owner's strong references so it can be freed
+            RemoveComponent(LTransparentProxy);
+            {$ENDIF}
+            FreeAndNil(LTransparentProxy);
           end else begin
-            FTransparentProxy.RemoveFreeNotification(Self);
+            {$IFNDEF DCC_NEXTGEN_ARC}
+            LTransparentProxy.RemoveFreeNotification(Self);
+            {$ENDIF}
           end;
         end;
+
         FTransparentProxy := AProxy;
-        FTransparentProxy.FreeNotification(Self);
+
+        {$IFNDEF DCC_NEXTGEN_ARC}
+        AProxy.FreeNotification(Self);
+        {$ENDIF}
       end;
     end
-    else if Assigned(FTransparentProxy) then begin
+    else if Assigned(LTransparentProxy) then begin
       if FImplicitTransparentProxy then begin
-        {$IFDEF DCC_NEXTGEN_ARC}
-        FTransparentProxy.__ObjRelease;
         FTransparentProxy := nil;
-        {$ELSE}
-        FreeAndNil(FTransparentProxy);
-        {$ENDIF}
         FImplicitTransparentProxy := False;
+        {$IFDEF DCC_NEXTGEN_ARC}
+        // have to remove the Owner's strong references so it can be freed
+        RemoveComponent(LTransparentProxy);
+        {$ENDIF}
+        FreeAndNil(LTransparentProxy);
       end else begin
-        FTransparentProxy.RemoveFreeNotification(Self);
         FTransparentProxy := nil; //remove link
+        {$IFNDEF DCC_NEXTGEN_ARC}
+        LTransparentProxy.RemoveFreeNotification(Self);
+        {$ENDIF}
       end;
     end;
   end;
 end;
 
 function TIdUDPClient.UseProxy: Boolean;
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LTransparentProxy: TIdCustomTransparentProxy;
 begin
-  if Assigned(FTransparentProxy) then begin
-    Result := FTransparentProxy.Enabled;
-  end else begin
-    Result := False;
+  LTransparentProxy := FTransparentProxy;
+  Result := Assigned(LTransparentProxy);
+  if Result then begin
+    Result := LTransparentProxy.Enabled;
   end;
 end;
 

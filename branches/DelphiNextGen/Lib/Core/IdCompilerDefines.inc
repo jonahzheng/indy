@@ -58,7 +58,7 @@
 // Make sure the following is $DEFINE'd only for suitable environments
 // as specified further below.
 {$UNDEF STRING_IS_IMMUTABLE}
-{$UNDEF SUPPORTS_ZEROBASEDSTRINGS}
+{$UNDEF HAS_DIRECTIVE_ZEROBASEDSTRINGS}
 
 // Make sure the following are $DEFINE'd only for suitable environments
 // as specified further below.
@@ -769,7 +769,7 @@
 
 {$IFDEF VCL_XE3_OR_ABOVE}
   {$IFDEF DCC}
-    {$DEFINE SUPPORTS_ZEROBASEDSTRINGS}
+    {$DEFINE HAS_DIRECTIVE_ZEROBASEDSTRINGS}
     {$IFDEF NEXTGEN}
       {$DEFINE DCC_NEXTGEN}
       {$IFDEF AUTOREFCOUNT}

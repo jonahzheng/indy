@@ -40,6 +40,9 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_UNSAFE_VOID_POINTER>true</DCC_UNSAFE_VOID_POINTER>
+        <DCC_IMMUTABLE_STRINGS>true</DCC_IMMUTABLE_STRINGS>
+        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DCC_ObjOutput>..\Output\OBJ\$(Platform)\$(Config)</DCC_ObjOutput>
         <DCC_DcuOutput>..\Output\DCU\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_BpiOutput>..\Output\BPI\$(Platform)\$(Config)</DCC_BpiOutput>

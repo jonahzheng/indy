@@ -41,6 +41,13 @@ uses
   {$ENDIF}
 {$ENDIF}
 
+// RLebeau 10/31/2012: it would take a lot of work to re-write Indy to support
+// both 0-based and 1-based string indexing, so we'll just turn off 0-based
+// indexing for now...
+{$IFDEF HAS_DIRECTIVE_ZEROBASEDSTRINGS}
+  {$ZEROBASEDSTRINGS OFF}
+{$ENDIF}
+
 function CalcUTF16CharLength(const AStr: {$IFDEF STRING_IS_UNICODE}string{$ELSE}TIdWideChars{$ENDIF};
   const AIndex: Integer): Integer;
 {$IFDEF DOTNET}
@@ -123,18 +130,21 @@ begin
   {$ENDIF}
 end;
 
+{$IFDEF DOTNET}
+  {$DEFINE DOTNET_OR_HAS_TCharacter}
+{$ENDIF}
+{$IFDEF HAS_TCharacter}
+  {$DEFINE DOTNET_OR_HAS_TCharacter}
+{$ENDIF}
+
 function GetUTF16Codepoint(const AStr: {$IFDEF STRING_IS_UNICODE}string{$ELSE}TIdWideChars{$ENDIF};
   const AIndex: Integer): Integer;
-{$IFDEF DOTNET}
+{$IFDEF DOTNET_OR_HAS_TCharacter}
   {$IFDEF USE_INLINE}inline;{$ENDIF}
 {$ELSE}
-  {$IFDEF HAS_TCharacter}
-    {$IFDEF USE_INLINE}inline;{$ENDIF}
-  {$ELSE}
 var
   C: WideChar;
   LowSurrogate, HighSurrogate: Integer;
-  {$ENDIF}
 {$ENDIF}
 begin
   {$IFDEF DOTNET}

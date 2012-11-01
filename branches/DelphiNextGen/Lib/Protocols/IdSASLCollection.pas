@@ -55,12 +55,13 @@ uses
 type
   TIdSASLListEntry = class(TCollectionItem)
   protected
-    FSASL : TIdSASL;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FSASL : TIdSASL;
     function GetDisplayName: String; override;
+    procedure SetSASL(AValue : TIdSASL);
   public
     procedure Assign(Source: TPersistent); override;
   published
-    property SASL : TIdSASL read FSASL write FSASL;
+    property SASL : TIdSASL read FSASL write SetSASL;
   end;
 
   TIdSASLEntries = class ( TOwnedCollection )
@@ -109,7 +110,7 @@ uses
 procedure TIdSASLListEntry.Assign(Source: TPersistent);
 begin
   if Source is TIdSASLListEntry then begin
-    FSASL := TIdSASLListEntry(Source).SASL;
+    SASL := TIdSASLListEntry(Source).SASL;
   end else begin
     inherited Assign(Source);
   end;
@@ -121,6 +122,31 @@ begin
     Result := String(FSASL.ServiceName);
   end else begin
     Result := inherited GetDisplayName;
+  end;
+end;
+
+procedure TIdSASLListEntry.SetSASL(AValue : TIdSASL);
+var
+  LCollection: TCollection;
+  LOwner: TPersistent;
+  LOwnerComp: TComponent;
+begin
+  if FSASL <> AValue then begin
+    LOwnerComp := nil;
+    LCollection := Collection;
+    if LCollection <> nil then begin
+      LOwner := LCollection.Owner;
+      if LOwner is TComponent then begin
+        LOwnerComp := TComponent(LOwner);
+      end;
+    end;
+    if (FSASL <> nil) and (LOwnerComp <> nil) then begin
+      FSASL.RemoveFreeNotification(LOwnerComp);
+    end;
+    FSASL := AValue;
+    if (FSASL <> nil) and (LOwnerComp <> nil) then begin
+      FSASL.FreeNotification(LOwnerComp);
+    end;
   end;
 end;
 
@@ -176,7 +202,7 @@ end;
 
 constructor TIdSASLEntries.Create(AOwner: TPersistent);
 begin
-   inherited Create(AOwner, TIdSASLListEntry);
+  inherited Create(AOwner, TIdSASLListEntry);
 end;
 
 procedure TIdSASLEntries.CheckIfEmpty;

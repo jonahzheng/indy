@@ -334,7 +334,7 @@ type
     FContent: TStrings;
     FLastTimeStamp: TDateTime;
     FLock: TIdCriticalSection;
-    FOwner: TIdHTTPCustomSessionList;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FOwner: TIdHTTPCustomSessionList;
     FSessionID: string;
     FRemoteHost: string;
     //
@@ -645,7 +645,7 @@ end;
 type
   TIdHTTPSessionCleanerThread = Class(TIdThread)
   protected
-    FSessionList: TIdHTTPCustomSessionList;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FSessionList: TIdHTTPCustomSessionList;
   public
     constructor Create(SessionList: TIdHTTPCustomSessionList); reintroduce;
     procedure AfterRun; override;
@@ -838,7 +838,7 @@ end;
 destructor TIdHTTPRangeStream.Destroy;
 begin
   if FOwnsSource then begin
-    FSourceStream.Free;
+    FreeAndNil(FSourceStream);
   end;
   inherited Destroy;
 end;
@@ -896,13 +896,15 @@ begin
   FMaximumHeaderLineCount := Id_TId_HTTPMaximumHeaderLineCount;
 end;
 
+// under ARC, all weak references to a freed object get nil'ed automatically
+// so this is mostly redundant
 procedure TIdCustomHTTPServer.Notification(AComponent: TComponent; Operation: TOperation);
 begin
-  inherited Notification(AComponent, Operation);
   if (Operation = opRemove) and (AComponent = FSessionList) then begin
     FSessionList := nil;
     FImplicitSessionList := False;
   end;
+  inherited Notification(AComponent, Operation);
 end;
 
 function TIdCustomHTTPServer.DoParseAuthentication(ASender: TIdContext;
@@ -941,40 +943,49 @@ function TIdCustomHTTPServer.CreateSession(AContext: TIdContext; HTTPResponse: T
   HTTPRequest: TIdHTTPRequestInfo): TIdHTTPSession;
 var
   LCookie: TIdCookie;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LSessionList: TIdHTTPCustomSessionList;
 begin
+  Result := nil;
   if SessionState then begin
-    DoOnCreateSession(AContext, Result);
-    if not Assigned(Result) then begin
-      Result := FSessionList.CreateUniqueSession(HTTPRequest.RemoteIP);
-    end else begin
-      FSessionList.Add(Result);
+    LSessionList := FSessionList;
+    if Assigned(LSessionList) then begin
+      DoOnCreateSession(AContext, Result);
+      if not Assigned(Result) then begin
+        Result := LSessionList.CreateUniqueSession(HTTPRequest.RemoteIP);
+      end else begin
+        LSessionList.Add(Result);
+      end;
+
+      LCookie := HTTPResponse.Cookies.Add;
+      LCookie.CookieName := GSessionIDCookie;
+      LCookie.Value := Result.SessionID;
+      LCookie.Path := '/';    {Do not Localize}
+
+      // By default the cookie will be valid until the user has closed his browser window.
+      // MaxAge := SessionTimeOut div 1000;
+      HTTPResponse.FSession := Result;
+      HTTPRequest.FSession := Result;
     end;
-
-    LCookie := HTTPResponse.Cookies.Add;
-    LCookie.CookieName := GSessionIDCookie;
-    LCookie.Value := Result.SessionID;
-    LCookie.Path := '/';    {Do not Localize}
-
-    // By default the cookie will be valid until the user has closed his browser window.
-    // MaxAge := SessionTimeOut div 1000;
-    HTTPResponse.FSession := Result;
-    HTTPRequest.FSession := Result;
-  end else begin
-    Result := nil;
   end;
 end;
 
 destructor TIdCustomHTTPServer.Destroy;
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LSessionList: TIdHTTPCustomSessionList;
 begin
   Active := False; // Set Active to false in order to close all active sessions.
   FreeAndNil(FMIMETable);
-  if FImplicitSessionList then begin
-    {$IFDEF DCC_NEXTGEN_ARC}
-    FSessionList.__ObjRelease;
+  LSessionList := FSessionList;
+  if Assigned(LSessionList) and FImplicitSessionList then begin
     FSessionList := nil;
-    {$ELSE}
-    FreeAndNil(FSessionList);
+    FImplicitSessionList := False;
+    {$IFDEF DCC_NEXTGEN_ARC}
+    // have to remove the Owner's strong references so it can be freed
+    RemoveComponent(LSessionList);
     {$ENDIF}
+    FreeAndNil(LSessionList);
   end;
   inherited Destroy;
 end;
@@ -1456,12 +1467,23 @@ end;
 
 function TIdCustomHTTPServer.EndSession(const SessionName: String; const RemoteIP: String = ''): Boolean;
 var
-  ASession: TIdHTTPSession;
+  LSession: TIdHTTPSession;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LSessionList: TIdHTTPCustomSessionList;
 begin
-  ASession := SessionList.GetSession(SessionName, RemoteIP);    {Do not Localize}
-  Result := Assigned(ASession);
-  if Result then begin
-    FreeAndNil(ASession);
+  Result := False;
+  LSessionList := SessionList;
+  if Assigned(LSessionList) then begin
+    LSession := SessionList.GetSession(SessionName, RemoteIP);    {Do not Localize}
+    if Assigned(LSession) then begin
+      LSessionList.RemoveSession(LSession);
+      LSession.DoSessionEnd;
+      // must set the owner to nil or the session will try to fire the OnSessionEnd
+      // event again, and also remove itself from the session list and deadlock
+      LSession.FOwner := nil;
+      FreeAndNil(LSession);
+      Result := True;
+    end;
   end;
 end;
 
@@ -1485,18 +1507,23 @@ function TIdCustomHTTPServer.GetSessionFromCookie(AContext: TIdContext;
 var
   LIndex: Integer;
   LSessionID: String;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LSessionList: TIdHTTPCustomSessionList;
 begin
   Result := nil;
   VContinueProcessing := True;
   if SessionState then
   begin
+    LSessionList := FSessionList;
     LIndex := AHTTPRequest.Cookies.GetCookieIndex(GSessionIDCookie);
     while LIndex >= 0 do
     begin
       LSessionID := AHTTPRequest.Cookies[LIndex].Value;
-      Result := FSessionList.GetSession(LSessionID, AHTTPRequest.RemoteIP);
-      if Assigned(Result) then begin
-        Break;
+      if Assigned(LSessionList) then begin
+        Result := LSessionList.GetSession(LSessionID, AHTTPRequest.RemoteIP);
+        if Assigned(Result) then begin
+          Break;
+        end;
       end;
       DoInvalidSession(AContext, AHTTPRequest, AHTTPResponse, VContinueProcessing, LSessionID);
       if not VContinueProcessing then begin
@@ -1515,35 +1542,40 @@ begin
 end;
 
 procedure TIdCustomHTTPServer.Startup;
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LSessionList: TIdHTTPCustomSessionList;
 begin
   inherited Startup;
 
   // set the session timeout and options
-  if not Assigned(FSessionList) then begin
-    FSessionList := TIdHTTPDefaultSessionList.Create(Self);
-    {$IFDEF DCC_NEXTGEN_ARC}
-    FSessionList.__ObjAddRef;
-    {$ENDIF}
+  LSessionList := FSessionList;
+  if not Assigned(LSessionList) then begin
+    LSessionList := TIdHTTPDefaultSessionList.Create(Self);
+    FSessionList := LSessionList;
     FImplicitSessionList := True;
   end;
 
   if FSessionTimeOut <> 0 then begin
-    FSessionList.FSessionTimeout := FSessionTimeOut;
+    LSessionList.FSessionTimeout := FSessionTimeOut;
   end else begin
     FSessionState := False;
   end;
 
   // Session events
-  FSessionList.OnSessionStart := DoSessionStart;
-  FSessionList.OnSessionEnd := DoSessionEnd;
+  LSessionList.OnSessionStart := DoSessionStart;
+  LSessionList.OnSessionEnd := DoSessionEnd;
 
   // If session handling is enabled, create the housekeeper thread
   if SessionState then begin
-    FSessionCleanupThread := TIdHTTPSessionCleanerThread.Create(FSessionList);
+    FSessionCleanupThread := TIdHTTPSessionCleanerThread.Create(LSessionList);
   end;
 end;
 
 procedure TIdCustomHTTPServer.Shutdown;
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LSessionList: TIdHTTPCustomSessionList;
 begin
   // Boost the clear thread priority to give it a good chance to terminate
   if Assigned(FSessionCleanupThread) then begin
@@ -1554,11 +1586,14 @@ begin
 
   // RLebeau: FSessionList might not be assignd yet if Shutdown() is being
   // called due to an exception raised in Startup()...
-  if FImplicitSessionList then begin
-    SessionList := nil;
-  end
-  else if Assigned(FSessionList) then begin
-    FSessionList.Clear;
+  LSessionList := FSessionList;
+  if Assigned(LSessionList) then begin
+    if FImplicitSessionList then begin
+      SetSessionList(nil);
+    end else begin
+      LSessionList.Clear;
+    end;
+    LSessionList := nil;
   end;
 
   inherited Shutdown;
@@ -1566,9 +1601,12 @@ end;
 
 procedure TIdCustomHTTPServer.SetSessionList(const AValue: TIdHTTPCustomSessionList);
 var
-  {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} LSessionList: TIdHTTPCustomSessionList;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LSessionList: TIdHTTPCustomSessionList;
 begin
-  if FSessionList <> AValue then
+  LSessionList := FSessionList;
+
+  if LSessionList <> AValue then
   begin
     // RLebeau - is this really needed?  What should happen if this
     // gets called by Notification() if the sessionList is freed while
@@ -1577,6 +1615,8 @@ begin
       EIdException.Toss(RSHTTPCannotSwitchSessionListWhenActive);
     end;
 
+    // under ARC, all weak references to a freed object get nil'ed automatically
+
     // If implicit one already exists free it
     // Free the default SessionList
     if FImplicitSessionList then begin
@@ -1584,28 +1624,31 @@ begin
       // its set to nil with a side effect of IDisposable. To counteract this we
       // set it to nil first.
       // -Kudzu
-      LSessionList := FSessionList;
       FSessionList := nil;
-      {$IFDEF DCC_NEXTGEN_ARC}
-      LSessionList.__ObjRelease;
-      LSessionList := nil;
-      {$ELSE}
-      FreeAndNil(LSessionList);
-      {$ENDIF}
-      //
       FImplicitSessionList := False;
+      {$IFDEF DCC_NEXTGEN_ARC}
+      // have to remove the Owner's strong references so it can be freed
+      RemoveComponent(LSessionList);
+      {$ENDIF}
+      FreeAndNil(LSessionList);
     end;
 
+    {$IFNDEF DCC_NEXTGEN_ARC}
     // Ensure we will no longer be notified when the component is freed
-    if FSessionList <> nil then begin
-      FSessionList.RemoveFreeNotification(Self);
+    if LSessionList <> nil then begin
+      LSessionList.RemoveFreeNotification(Self);
     end;
+    {$ENDIF}
+
     FSessionList := AValue;
+
+    {$IFNDEF DCC_NEXTGEN_ARC}
     // Ensure we will be notified when the component is freed, even is it's on
     // another form
-    if FSessionList <> nil then begin
-      FSessionList.FreeNotification(Self);
+    if AValue <> nil then begin
+      AValue.FreeNotification(Self);
     end;
+    {$ENDIF}
   end;
 end;
 
@@ -1657,7 +1700,6 @@ begin
   end;
 end;
 
-{TIdSession}
 constructor TIdHTTPSession.CreateInitialized(AOwner: TIdHTTPCustomSessionList; const SessionID, RemoteIP: string);
 begin
   inherited Create;
@@ -1685,7 +1727,7 @@ begin
   FreeAndNil(FContent);
   FreeAndNil(FLock);
   if Assigned(FOwner) then begin
-    FOwner.RemoveSession(self);
+    FOwner.RemoveSession(Self);
   end;
   inherited Destroy;
 end;
@@ -1698,8 +1740,16 @@ begin
 end;
 
 function TIdHTTPSession.IsSessionStale: boolean;
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LOwner: TIdHTTPCustomSessionList;
 begin
-  Result := TimeStampInterval(FLastTimeStamp, Now) > Integer(FOwner.SessionTimeout);
+  LOwner := FOwner;
+  if Assigned(LOwner) then begin
+    Result := TimeStampInterval(FLastTimeStamp, Now) > Integer(LOwner.SessionTimeout);
+  end else begin
+    Result := True;
+  end;
 end;
 
 procedure TIdHTTPSession.Lock;
@@ -2101,27 +2151,27 @@ end;
 
 procedure TIdHTTPDefaultSessionList.Clear;
 var
-  ASessionList: TIdHTTPSessionList;
+  LSessionList: TIdHTTPSessionList;
+  LSession: TIdHTTPSession;
   i: Integer;
-  ASession: TIdHTTPSession;
 begin
-  ASessionList := SessionList.LockList;
+  LSessionList := SessionList.LockList;
   try
-    for i := ASessionList.Count - 1 DownTo 0 do
+    for i := LSessionList.Count - 1 DownTo 0 do
     begin
-      ASession := {$IFDEF HAS_GENERICS_TList}ASessionList[i]{$ELSE}TIdHTTPSession(ASessionList[i]){$ENDIF};
-      if ASession <> nil then
+      LSession := {$IFDEF HAS_GENERICS_TList}LSessionList[i]{$ELSE}TIdHTTPSession(LSessionList[i]){$ENDIF};
+      if LSession <> nil then
       begin
-        ASession.DoSessionEnd;
+        LSession.DoSessionEnd;
         // must set the owner to nil or the session will try to fire the
         // OnSessionEnd event again, and also remove itself from the session
         // list and deadlock
-        ASession.FOwner := nil;
-        ASession.Free;
+        LSession.FOwner := nil;
+        FreeAndNil(LSession);
       end;
     end;
-    ASessionList.Clear;
-    ASessionList.Capacity := SessionCapacity;
+    LSessionList.Clear;
+    LSessionList.Capacity := SessionCapacity;
   finally
     SessionList.UnlockList;
   end;
@@ -2155,24 +2205,23 @@ end;
 
 function TIdHTTPDefaultSessionList.GetSession(const SessionID, RemoteIP: string): TIdHTTPSession;
 var
-  ASessionList: TIdHTTPSessionList;
+  LSessionList: TIdHTTPSessionList;
+  LSession: TIdHTTPSession;
   i: Integer;
-  ASession: TIdHTTPSession;
 begin
   Result := nil;
-  ASessionList := SessionList.LockList;
+  LSessionList := SessionList.LockList;
   try
     // get current time stamp
-    for i := 0 to ASessionList.Count - 1 do
+    for i := 0 to LSessionList.Count - 1 do
     begin
-      ASession := TIdHTTPSession(ASessionList[i]);
-      Assert(ASession <> nil);
+      LSession := TIdHTTPSession(LSessionList[i]);
       // the stale sessions check has been removed... the cleanup thread should suffice plenty
-      if TextIsSame(ASession.FSessionID, SessionID) and ((Length(RemoteIP) = 0) or TextIsSame(ASession.RemoteHost, RemoteIP)) then
+      if Assigned(LSession) and TextIsSame(LSession.FSessionID, SessionID) and ((Length(RemoteIP) = 0) or TextIsSame(LSession.RemoteHost, RemoteIP)) then
       begin
         // Session found
-        ASession.FLastTimeStamp := Now;
-        Result := ASession;
+        LSession.FLastTimeStamp := Now;
+        Result := LSession;
         Break;
       end;
     end;
@@ -2197,24 +2246,24 @@ end;
 
 procedure TIdHTTPDefaultSessionList.PurgeStaleSessions(PurgeAll: Boolean = false);
 var
+  LSessionList: TIdHTTPSessionList;
+  LSession: TIdHTTPSession;
   i: Integer;
-  aSessionList: TIdHTTPSessionList;
-  aSession: TIdHTTPSession;
 begin
   // S.G. 24/11/00: Added a way to force a session purge (Used when thread is terminated)
   // Get necessary data
   Assert(SessionList<>nil);
 
-  aSessionList := SessionList.LockList;
+  LSessionList := SessionList.LockList;
   try
     // Loop though the sessions.
-    for i := aSessionList.Count - 1 downto 0 do
+    for i := LSessionList.Count - 1 downto 0 do
     begin
       // Identify the stale sessions
-      aSession := {$IFDEF HAS_GENERICS_TList}aSessionList[i]{$ELSE}TIdHTTPSession(aSessionList[i]){$ENDIF};
-      if Assigned(aSession) and (PurgeAll or aSession.IsSessionStale) then
+      LSession := {$IFDEF HAS_GENERICS_TList}LSessionList[i]{$ELSE}TIdHTTPSession(LSessionList[i]){$ENDIF};
+      if Assigned(LSession) and (PurgeAll or LSession.IsSessionStale) then
       begin
-        RemoveSessionFromLockedList(i, aSessionList);
+        RemoveSessionFromLockedList(i, LSessionList);
       end;
     end;
   finally
@@ -2224,15 +2273,15 @@ end;
 
 procedure TIdHTTPDefaultSessionList.RemoveSession(Session: TIdHTTPSession);
 var
-  ASessionList: TIdHTTPSessionList;
+  LSessionList: TIdHTTPSessionList;
   Index: integer;
 begin
-  ASessionList := SessionList.LockList;
+  LSessionList := SessionList.LockList;
   try
-    Index := ASessionList.IndexOf(Session);
+    Index := LSessionList.IndexOf(Session);
     if index > -1 then
     begin
-      ASessionList.Delete(index);
+      LSessionList.Delete(index);
     end;
   finally
     SessionList.UnlockList;
@@ -2242,23 +2291,28 @@ end;
 procedure TIdHTTPDefaultSessionList.RemoveSessionFromLockedList(AIndex: Integer;
   ALockedSessionList: TIdHTTPSessionList);
 var
-  ASession: TIdHTTPSession;
+  LSession: TIdHTTPSession;
 begin
-  ASession := {$IFDEF HAS_GENERICS_TList}ALockedSessionList[AIndex]{$ELSE}TIdHTTPSession(ALockedSessionList[AIndex]){$ENDIF};
-  ASession.DoSessionEnd;
+  LSession := {$IFDEF HAS_GENERICS_TList}ALockedSessionList[AIndex]{$ELSE}TIdHTTPSession(ALockedSessionList[AIndex]){$ENDIF};
+  LSession.DoSessionEnd;
   // must set the owner to nil or the session will try to fire the OnSessionEnd
   // event again, and also remove itself from the session list and deadlock
-  ASession.FOwner := nil;
-  ASession.Free;
+  LSession.FOwner := nil;
+  FreeAndNil(LSession);
   ALockedSessionList.Delete(AIndex);
 end;
 
 { TIdHTTPSessionClearThread }
 
 procedure TIdHTTPSessionCleanerThread.AfterRun;
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LSessionList: TIdHTTPCustomSessionList;
 begin
-  if Assigned(FSessionList) then
-    FSessionList.PurgeStaleSessions(true);
+  LSessionList := FSessionList;
+  if Assigned(LSessionList) then begin
+    LSessionList.PurgeStaleSessions(True);
+  end;
   inherited AfterRun;
 end;
 
@@ -2273,10 +2327,14 @@ begin
 end;
 
 procedure TIdHTTPSessionCleanerThread.Run;
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LSessionList: TIdHTTPCustomSessionList;
 begin
   IndySleep(1000);
-  if Assigned(FSessionList) then begin
-    FSessionList.PurgeStaleSessions(Terminated);
+  LSessionList := FSessionList;
+  if Assigned(LSessionList) then begin
+    LSessionList.PurgeStaleSessions(Terminated);
   end;
 end;
 

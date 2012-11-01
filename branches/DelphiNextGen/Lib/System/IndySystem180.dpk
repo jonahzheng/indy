@@ -28,7 +28,7 @@ package IndySystem180;
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Indy 10 System'}
 {$RUNONLY}
-{$IMPLICITBUILD ON}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl;

@@ -62,6 +62,9 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
+  {$IFNDEF DCC_NEXTGEN_ARC}
+  Classes,
+  {$ENDIF}
   IdBaseComponent, IdGlobal, IdResourceStrings,
   IdStack;
 
@@ -110,11 +113,15 @@ type
     FOnWorkBegin: TWorkBeginEvent;
     FOnWorkEnd: TWorkEndEvent;
     FWorkInfos: array[TWorkMode] of TWorkInfo;
-    FWorkTarget: TIdComponent;
+    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FWorkTarget: TIdComponent;
     //
     procedure DoStatus(AStatus: TIdStatus); overload;
     procedure DoStatus(AStatus: TIdStatus; const AArgs: array of const); overload;
     procedure InitComponent; override;
+    {$IFNDEF DCC_NEXTGEN_ARC}
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    {$ENDIF}
+    procedure SetWorkTarget(AValue: TIdComponent);
     //
     property OnWork: TWorkEvent read FOnWork write FOnWork;
     property OnWorkBegin: TWorkBeginEvent read FOnWorkBegin write FOnWorkBegin;
@@ -125,7 +132,7 @@ type
     procedure DoWork(AWorkMode: TWorkMode; const ACount: Int64); virtual;
     procedure EndWork(AWorkMode: TWorkMode); virtual;
     //
-    property WorkTarget: TIdComponent read FWorkTarget write FWorkTarget;
+    property WorkTarget: TIdComponent read FWorkTarget write SetWorkTarget;
   published
     property OnStatus: TIdStatusEvent read FOnStatus write FOnStatus;
   end;
@@ -161,9 +168,13 @@ begin
 end;
 
 procedure TIdComponent.BeginWork(AWorkMode: TWorkMode; const ASize: Int64 = 0);
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LWorkTarget: TIdComponent;
 begin
-  if FWorkTarget <> nil then begin
-    FWorkTarget.BeginWork(AWorkMode, ASize);
+  LWorkTarget := FWorkTarget;
+  if LWorkTarget <> nil then begin
+    LWorkTarget.BeginWork(AWorkMode, ASize);
   end else begin
     Inc(FWorkInfos[AWorkMode].Level);
     if FWorkInfos[AWorkMode].Level = 1 then begin
@@ -177,9 +188,13 @@ begin
 end;
 
 procedure TIdComponent.DoWork(AWorkMode: TWorkMode; const ACount: Int64);
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LWorkTarget: TIdComponent;
 begin
-  if FWorkTarget <> nil then begin
-    FWorkTarget.DoWork(AWorkMode, ACount);
+  LWorkTarget := FWorkTarget;
+  if LWorkTarget <> nil then begin
+    LWorkTarget.DoWork(AWorkMode, ACount);
   end else begin
     if FWorkInfos[AWorkMode].Level > 0 then begin
       Inc(FWorkInfos[AWorkMode].Current, ACount);
@@ -191,9 +206,13 @@ begin
 end;
 
 procedure TIdComponent.EndWork(AWorkMode: TWorkMode);
+var
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LWorkTarget: TIdComponent;
 begin
-  if FWorkTarget <> nil then begin
-    FWorkTarget.EndWork(AWorkMode);
+  LWorkTarget := FWorkTarget;
+  if LWorkTarget <> nil then begin
+    LWorkTarget.EndWork(AWorkMode);
   end else begin
     if FWorkInfos[AWorkMode].Level = 1 then begin
       if Assigned(OnWorkEnd) then begin
@@ -208,6 +227,36 @@ procedure TIdComponent.InitComponent;
 begin
   inherited InitComponent;
   TIdStack.IncUsage;
+end;
+
+// under ARC, all weak references to a freed object get nil'ed automatically
+{$IFNDEF DCC_NEXTGEN_ARC}
+procedure TIdComponent.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  if (Operation = opRemove) and (AComponent = FWorkTarget) then begin
+      FWorkTarget := nil;
+    end;
+  end;
+  inherited Notification(AComponent, Operation);
+end;
+{$ENDIF}
+
+procedure TIdComponent.SetWorkTarget(AValue: TIdComponent);
+begin
+  {$IFDEF DCC_NEXTGEN_ARC}
+  // under ARC, all weak references to a freed object get nil'ed automatically
+  FWorkTarget := AValue;
+  {$ELSE}
+  if FWorkTarget <> AValue then begin
+    if Assigned(FWorkTarget) then begin
+      FWorkTarget.RemoveFreeNotification(Self);
+    end;
+    FWorkTarget := AValue;
+    if Assigned(FWorkTarget) then begin
+      FWorkTarget.RemoveFreeNotification(Self);
+    end;
+  end;
+  {$ENDIF}
 end;
 
 end.

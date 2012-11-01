@@ -58,7 +58,9 @@ type
   TIdServerIOHandler = class(TIdComponent)
   protected
     {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FScheduler: TIdScheduler;
+    {$IFNDEF DCC_NEXTGEN_ARC}
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    {$ENDIF}
   public
     // This is a thread and not a yarn. Its the listener thread.
     function Accept(
@@ -95,17 +97,24 @@ begin
   Result := nil;
 end;
 
+// under ARC, all weak references to a freed object get nil'ed automatically
+{$IFNDEF DCC_NEXTGEN_ARC}
 procedure TIdServerIOHandler.Notification(AComponent: TComponent; Operation: TOperation);
 begin
-  inherited Notification(AComponent, Operation);
   // Remove the reference to the linked Scheduler if it is deleted
   if (Operation = opRemove) and (AComponent = FScheduler) then begin
     FScheduler := nil;
   end;
+  inherited Notification(AComponent, Operation);
 end;
+{$ENDIF}
 
 procedure TIdServerIOHandler.SetScheduler(AScheduler: TIdScheduler);
 begin
+  {$IFDEF DCC_NEXTGEN_ARC}
+  // under ARC, all weak references to a freed object get nil'ed automatically
+  FScheduler := AScheduler;
+  {$ELSE}
   if FScheduler <> AScheduler then begin
     // Remove self from the Scheduler's notification list
     if Assigned(FScheduler) then begin
@@ -117,6 +126,7 @@ begin
       FScheduler.FreeNotification(Self);
     end;
   end;
+  {$ENDIF}
 end;
 
 procedure TIdServerIOHandler.Shutdown;

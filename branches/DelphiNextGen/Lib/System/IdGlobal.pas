@@ -1622,6 +1622,13 @@ const
   {$ENDIF}
 {$ENDIF}
 
+// RLebeau 10/31/2012: it would take a lot of work to re-write Indy to support
+// both 0-based and 1-based string indexing, so we'll just turn off 0-based
+// indexing for now...
+{$IFDEF HAS_DIRECTIVE_ZEROBASEDSTRINGS}
+  {$ZEROBASEDSTRINGS OFF}
+{$ENDIF}
+
 procedure EnsureEncoding(var VEncoding : IIdTextEncoding; ADefEncoding: IdTextEncodingType = encIndyDefault);
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
@@ -1974,13 +1981,6 @@ type
 
 { TIdTextEncodingBase }
 
-// RLebeau: XE3+ supports 0-based and 1-based String indexing, via a new
-// {$ZEROBASEDSTRINGS ON/OFF} compiler directive.  The compiler's Low()
-// function determines if a given String variable starts at index 0 or 1.
-// We'll make the IIdTextEncoding interface contract be 1-based for
-// simplicity and backwards compatibility, but internally we need to use
-// the proper String indexing.
-
 function ValidateChars(const AChars: TIdWideChars; ACharIndex, ACharCount: Integer): PIdWideChar;
 var
   Len: Integer;
@@ -2050,9 +2050,6 @@ begin
     raise Exception.CreateResFmt(@RSInvalidCharCount, [ACharCount]);
   end;
   if ACharCount > 0 then begin
-    {$IFDEF HAS_DIRECTIVE_ZEROBASEDSTRINGS}
-    Dec(ACharIndex, 1-Low(AStr));
-    {$ENDIF}
     Result := @AStr[ACharIndex];
   end else begin
     Result := nil;
@@ -7698,7 +7695,7 @@ end;
 function CharIsInEOL(const AString: string; const ACharPos: Integer): Boolean;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  Result := CharIsInSet(AString, ACharPos, EOL);
+  Result := CharPosInSet(AString, ACharPos, EOL) > 0;
 end;
 
 function CharEquals(const AString: string; const ACharPos: Integer; const AValue: Char): Boolean;
@@ -7765,7 +7762,7 @@ end;
 function CharIsInEOL(const ASB: TIdStringBuilder; const ACharPos: Integer): Boolean;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  Result := CharIsInSet(ASB, ACharPos, EOL);
+  Result := CharPosInSet(ASB, ACharPos, EOL) > 0;
 end;
 
 function CharEquals(const ASB: TIdStringBuilder; const ACharPos: Integer; const AValue: Char): Boolean;
