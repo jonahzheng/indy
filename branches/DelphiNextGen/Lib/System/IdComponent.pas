@@ -234,8 +234,7 @@ end;
 procedure TIdComponent.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   if (Operation = opRemove) and (AComponent = FWorkTarget) then begin
-      FWorkTarget := nil;
-    end;
+    FWorkTarget := nil;
   end;
   inherited Notification(AComponent, Operation);
 end;
@@ -252,8 +251,8 @@ begin
       FWorkTarget.RemoveFreeNotification(Self);
     end;
     FWorkTarget := AValue;
-    if Assigned(FWorkTarget) then begin
-      FWorkTarget.RemoveFreeNotification(Self);
+    if Assigned(AValue) then begin
+      AValue.FreeNotification(Self);
     end;
   end;
   {$ENDIF}
