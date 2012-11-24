@@ -115,7 +115,7 @@ procedure TIdSASLUserPass.SetUserPassProvider(const Value: TIdUserPassProvider);
 begin
   {$IFDEF DCC_NEXTGEN_ARC}
   // under ARC, all weak references to a freed object get nil'ed automatically
-  LUserPassProvider := FUserPassProvider;
+  FUserPassProvider := Value;
   {$ELSE}
   if FUserPassProvider <> Value then begin
     if Assigned(FUserPassProvider) then begin
