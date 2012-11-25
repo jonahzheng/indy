@@ -2157,7 +2157,7 @@ begin
     raise Exception.CreateResFmt(@RSInvalidCharCount, [ACharCount]);
   end;
   Len := Length(VBytes);
-  LByteCount := GetByteCount(AChars, 0, ACharCount);
+  LByteCount := GetByteCount(AChars, ACharCount);
   LBytes := ValidateBytes(VBytes, AByteIndex, Len, LByteCount);
   Dec(Len, AByteIndex);
   if (ACharCount > 0) and (Len > 0) then begin
