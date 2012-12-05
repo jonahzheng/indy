@@ -98,6 +98,8 @@ type
 
   TIdStackLinux = class(TIdStackBSDBase)
   private
+//    procedure SetSocketOption(ASocket: TIdStackSocketHandle;
+//      ALevel: TIdSocketProtocol; AOptName: TIdSocketOption; AOptVal: Integer);
     procedure WriteChecksumIPv6(s: TIdStackSocketHandle;
       var VBuffer: TIdBytes; const AOffset: Integer; const AIP: String;
       const APort: TIdPort);
@@ -130,7 +132,7 @@ type
     function WSGetServByName(const AServiceName: string): TIdPort; override;
     function WSGetServByPort(const APortNumber: TIdPort): TStrings; override;
     procedure WSGetSockOpt(ASocket: TIdStackSocketHandle;
-      Alevel, AOptname: Integer; var AOptval; var AOptlen: Integer); override;
+      Alevel, AOptname: Integer; AOptval: PAnsiChar; var AOptlen: Integer); override;
     procedure GetSocketOption(ASocket: TIdStackSocketHandle;
       ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
       out AOptVal: Integer); override;
@@ -156,8 +158,10 @@ type
     function WSSocket(AFamily : Integer; AStruct : TIdSocketType; AProtocol: Integer;
       const AOverlapped: Boolean = False): TIdStackSocketHandle; override;
     procedure Disconnect(ASocket: TIdStackSocketHandle); override;
-    procedure SetSocketOption(ASocket: TIdStackSocketHandle; ALevel: TIdSocketOptionLevel;
-      AOptName: TIdSocketOption; const Aoptval; const Aoptlen: Integer ); override;
+    procedure SetSocketOption(ASocket: TIdStackSocketHandle; ALevel:TIdSocketOptionLevel;
+      AOptName: TIdSocketOption; AOptVal: Integer); overload;override;
+    procedure SetSocketOption( const ASocket: TIdStackSocketHandle;
+      const Alevel, Aoptname: Integer; Aoptval: PAnsiChar; const Aoptlen: Integer ); overload; override;
     function SupportsIPv6: Boolean; overload; override;
     function CheckIPVersionSupport(const AIPVersion: TIdIPVersion): boolean; override;
     constructor Create; override;
@@ -193,6 +197,8 @@ implementation
 
 uses
   IdResourceStrings,
+  IdResourceStringsKylixCompat,
+  IdResourceStringsUnix,
   IdException,
   SysUtils;
 
@@ -630,10 +636,15 @@ begin
 end;
 
 procedure TIdStackLinux.SetSocketOption(ASocket: TIdStackSocketHandle;
-  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
-  const Aoptval; const Aoptlen: Integer );
+  ALevel: TIdSocketProtocol; AOptName: TIdSocketOption; AOptVal: Integer);
 begin
-  CheckForSocketError(Libc.setsockopt(ASocket, ALevel, Aoptname, PIdAnsiChar(@Aoptval), Aoptlen));
+  CheckForSocketError(Libc.setsockopt(ASocket, ALevel, AOptName, PAnsiChar(@AOptVal), SizeOf(AOptVal)));
+end;
+
+procedure TIdStackLinux.SetSocketOption(const ASocket: TIdStackSocketHandle;
+  const Alevel, Aoptname: Integer; Aoptval: PAnsiChar; const Aoptlen: Integer);
+begin
+  CheckForSocketError(Libc.setsockopt(ASocket, ALevel, Aoptname, Aoptval, Aoptlen));
 end;
 
 function TIdStackLinux.WSGetLastError: Integer;
@@ -768,7 +779,14 @@ begin
   // this won't get IPv6 addresses as I didn't find a way
   // to enumerate IPv6 addresses on a linux machine
 
-  // TODO: use getifaddrs() on platforms that support it
+  // TODO: Using gethostname() and gethostbyname() like this may not always
+  // return just the machine's IP addresses. Technically speaking, they will
+  // return the local hostname, and then return the address(es) to which that
+  // hostname resolves. It is possible for a machine to (a) be configured such
+  // that its name does not resolve to an IP, or (b) be configured such that
+  // its name resolves to multiple IPs, only one of which belongs to the local
+  // machine. For better results, we should use getifaddrs() on platforms that
+  // support it...
 
   LHostName := HostName;
   LAHost := Libc.gethostbyname(PAnsiChar(LHostName));
@@ -938,9 +956,9 @@ begin
 end;
 
 procedure TIdStackLinux.WSGetSockOpt(ASocket: TIdStackSocketHandle; ALevel,
-  AOptname: Integer; var AOptval; var AOptlen: Integer);
+  AOptname: Integer; AOptval: PAnsiChar; var AOptlen: Integer);
 begin
-  CheckForSocketError(Libc.getsockopt(ASocket, ALevel, AOptname, PIdAnsiChar(@AOptval), LongWord(AOptlen)));
+  CheckForSocketError(Libc.getsockopt(ASocket, ALevel, AOptname, AOptval, LongWord(AOptlen)));
 end;
 
 procedure TIdStackLinux.GetSocketOption(ASocket: TIdStackSocketHandle;
@@ -1069,7 +1087,8 @@ begin
     LTime.tv_usec := (ATimeout mod 1000) * 1000;
     LTimePtr := @LTime;
   end;
-  Result := Libc.select(FD_SETSIZE, AReadSet, AWriteSet, AExceptSet, LTimePtr);
+  // TODO: calculate the actual nfds value based on the Sets provided...
+  Result := Libc.select(MaxLongint, AReadSet, AWriteSet, AExceptSet, LTimePtr);
 end;
 
 procedure TIdSocketListLinux.GetFDSet(var VSet: TFDSet);
@@ -1222,7 +1241,7 @@ procedure TIdStackLinux.SetBlocking(ASocket: TIdStackSocketHandle;
   const ABlocking: Boolean);
 begin
   if not ABlocking then begin
-    raise EIdBlockingNotSupported.Create(RSStackNotSupportedOnUnix);
+    raise EIdNonBlockingNotSupported.Create(RSStackNonBlockingNotSupported);
   end;
 end;
 

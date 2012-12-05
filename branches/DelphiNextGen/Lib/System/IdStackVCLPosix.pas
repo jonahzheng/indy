@@ -56,6 +56,8 @@ type
 
   TIdStackVCLPosix = class(TIdStackBSDBase)
   protected
+//    procedure SetSocketOption(ASocket: TIdStackSocketHandle;
+//      ALevel: TIdSocketProtocol; AOptName: TIdSocketOption; AOptVal: Integer);
     procedure WriteChecksumIPv6(s: TIdStackSocketHandle; var VBuffer: TIdBytes;
       const AOffset: Integer; const AIP: String; const APort: TIdPort);
     function GetLastError: Integer;
@@ -87,7 +89,7 @@ type
     function WSGetServByName(const AServiceName: string): TIdPort; override;
     procedure AddServByPortToList(const APortNumber: TIdPort; AAddresses: TStrings); override;
     procedure WSGetSockOpt(ASocket: TIdStackSocketHandle; Alevel, AOptname: Integer;
-      var AOptval; var AOptlen: Integer); override;
+      AOptval: PAnsiChar; var AOptlen: Integer); override;
     procedure GetSocketOption(ASocket: TIdStackSocketHandle;
       ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
       out AOptVal: Integer); override;
@@ -114,7 +116,9 @@ type
       const AOverlapped: Boolean = False): TIdStackSocketHandle; override;
     procedure Disconnect(ASocket: TIdStackSocketHandle); override;
     procedure SetSocketOption(ASocket: TIdStackSocketHandle; ALevel: TIdSocketOptionLevel;
-      AOptName: TIdSocketOption; const Aoptval; const Aoptlen: Integer); override;
+      AOptName: TIdSocketOption; AOptVal: Integer); overload;override;
+    procedure SetSocketOption( const ASocket: TIdStackSocketHandle;
+      const Alevel, Aoptname: Integer; Aoptval: PAnsiChar; const Aoptlen: Integer); overload; override;
     function SupportsIPv6: Boolean; overload; override;
     function CheckIPVersionSupport(const AIPVersion: TIdIPVersion): boolean; override;
     //In Windows, this writes a checksum into a buffer.  In Linux, it would probably
@@ -141,6 +145,8 @@ implementation
 
 uses
   IdResourceStrings,
+  IdResourceStringsUnix,
+  IdResourceStringsVCLPosix,
   IdException,
   IdVCLPosixSupplemental,
   Posix.Base,
@@ -279,6 +285,7 @@ begin
     LTime.tv_usec := (ATimeout mod 1000) * 1000;
     LTimePtr := @LTime;
   end;
+  // TODO: calculate the actual nfds value based on the Sets provided...
   Result := Posix.SysSelect.select(FD_SETSIZE, AReadSet, AWriteSet, AExceptSet, LTimePtr);
 end;
 
@@ -475,11 +482,17 @@ end;
 procedure TIdStackVCLPosix.AddLocalAddressesToList(AAddresses: TStrings);
 var
   LRetVal: Integer;
-  LHostName: string;
+  LHostName: AnsiString;
   Hints: AddrInfo;
   LAddrList, LAddrInfo: pAddrInfo;
 begin
-  // TODO: use getifaddrs() on platforms that support it
+  // TODO: Using gethostname() and getaddrinfo() like this may not always return just
+  // the machine's IP addresses. Technically speaking, they will return the local
+  // hostname, and then return the address(es) to which that hostname resolves.
+  // It is possible for a machine to (a) be configured such that its name does
+  // not resolve to an IP, or (b) be configured such that its name resolves to
+  // multiple IPs, only one of which belongs to the local machine. For better
+  // results, we should use getifaddrs() on platforms that support it...
 
   //IMPORTANT!!!
   //
@@ -489,21 +502,8 @@ begin
   Hints.ai_family := PF_UNSPEC; // returns both IPv4 and IPv6 addresses
   Hints.ai_socktype := SOCK_STREAM;
 
-  LHostName := HostName;
-
-  LRetVal := getaddrinfo(
-    {$IFDEF DCC_NEXTGEN}
-    MarshaledAString(TMarshal.AsAnsi(LHostName))
-    {$ELSE}
-    PAnsiChar(
-      {$IFDEF STRING_IS_ANSI}
-      LHostName
-      {$ELSE}
-      AnsiString(LHostName) // explicit convert to Ansi
-      {$ENDIF}
-    )
-    {$ENDIF},
-    nil, Hints, LAddrList);
+  LHostName := AnsiString(HostName);
+  LRetVal := getaddrinfo( PAnsiChar(LHostName), nil, Hints, LAddrList);
   if LRetVal <> 0 then begin
     raise EIdReverseResolveError.CreateFmt(RSReverseResolveError, [LHostName, gai_strerror(LRetVal), LRetVal]);
   end;
@@ -694,7 +694,7 @@ var
   LBuf : Integer;
 begin
   LLen := SizeOf(Integer);
-  WSGetSockOpt(ASocket, ALevel, AOptName, LBuf, LLen);
+  WSGetSockOpt(ASocket, ALevel, AOptName, PAnsiChar(@LBuf), LLen);
   AOptVal := LBuf;
 end;
 
@@ -706,10 +706,7 @@ var
   LAddrIPv4 : SockAddr_In absolute LAddrStore;
   LAddrIPv6 : sockaddr_in6 absolute LAddrStore;
   LAddr : sockaddr absolute LAddrStore;
-  LHostName : array[0..NI_MAXHOST] of TIdAnsiChar;
-  {$IFDEF DCC_NEXTGEN}
-  LWrapper: TPtrWrapper;
-  {$ENDIF}
+  LHostName : AnsiString;
   LRet : Integer;
   LHints : addrinfo;
   LAddrInfo: pAddrInfo;
@@ -731,17 +728,9 @@ begin
   else
     IPVersionUnsupported;
   end;
-  FillChar(LHostName[0],Length(LHostName),0);
-  {$IFDEF DCC_NEXTGEN}
-  LWrapper := TPtrWrapper.Create(@LHostName[0]);
-  {$ENDIF}
-  LRet := getnameinfo(LAddr,LiSize,
-    {$IFDEF DCC_NEXTGEN}
-    LWrapper.ToPointer
-    {$ELSE}
-    LHostName
-    {$ENDIF},
-    NI_MAXHOST,nil,0,NI_NAMEREQD );
+  SetLength(LHostname,NI_MAXHOST);
+  FillChar(LHostName[1],NI_MAXHOST,0);
+  LRet := getnameinfo(LAddr,LiSize, PAnsiChar(@LHostName[1]),NI_MAXHOST,nil,0,NI_NAMEREQD );
   if LRet <> 0 then begin
     if LRet = EAI_SYSTEM then begin
       RaiseLastOSError;
@@ -765,24 +754,13 @@ we disregard the result and raise an exception.
   FillChar(LHints,SizeOf(LHints),0);
   LHints.ai_socktype := SOCK_DGRAM; //*dummy*/
   LHints.ai_flags := AI_NUMERICHOST;
-  if getaddrinfo(
-    {$IFDEF DCC_NEXTGEN}
-    LWrapper.ToPointer
-    {$ELSE}
-    LHostName
-    {$ENDIF},
-    '0', LHints, LAddrInfo) = 0 then
-  begin
+  if (getaddrinfo(PAnsiChar(LHostName), '0', LHints, LAddrInfo)=0) then begin
     freeaddrinfo(LAddrInfo^);
     Result := '';
     raise EIdMaliciousPtrRecord.Create(RSMaliciousPtrRecord);
   end;
 
-  {$IFDEF DCC_NEXTGEN}
-  Result := TMarshal.ReadStringAsAnsi(LWrapper, NI_MAXHOST);
-  {$ELSE}
   Result := String(LHostName);
-  {$ENDIF}
 end;
 
 function TIdStackVCLPosix.HostByName(const AHostName: string;
@@ -790,6 +768,7 @@ function TIdStackVCLPosix.HostByName(const AHostName: string;
 var
   LAddrInfo: pAddrInfo;
   LHints: AddrInfo;
+  LHost: AnsiString;
   LRetVal: Integer;
 begin
   if not (AIPVersion in [Id_IPv4, Id_IPv6]) then begin
@@ -803,25 +782,14 @@ begin
   LHints.ai_family := IdIPFamily[AIPVersion];
   LHints.ai_socktype := SOCK_STREAM;
   LAddrInfo := nil;
+  LHost := AnsiString(AHostName);
 
-  LRetVal := getaddrinfo(
-    {$IFDEF DCC_NEXTGEN}
-    MarshaledAString(TMarshal.AsAnsi(AHostName))
-    {$ELSE}
-    PAnsiChar(
-      {$IFDEF STRING_IS_ANSI}
-      AHostName
-      {$ELSE}
-      AnsiString(AHostName) // explicit convert to Ansi
-      {$ENDIF}
-    )
-    {$ENDIF},
-    nil, LHints, LAddrInfo);
+  LRetVal := getaddrinfo( PAnsiChar(LHost), nil, LHints, LAddrInfo);
   if LRetVal <> 0 then begin
     if LRetVal = EAI_SYSTEM then begin
       RaiseLastOSError;
     end else begin
-      raise EIdResolveError.CreateFmt(RSReverseResolveError, [AHostName, gai_strerror(LRetVal), LRetVal]);
+      raise EIdResolveError.CreateFmt(RSReverseResolveError, [LHost, gai_strerror(LRetVal), LRetVal]);
     end;
   end;
   try
@@ -897,22 +865,12 @@ begin
 end;
 
 function TIdStackVCLPosix.ReadHostName: string;
-const
-  sMaxHostSize = 250;
 var
-  LStr: array[0..sMaxHostSize] of TIdAnsiChar;
-  {$IFDEF DCC_NEXTGEN}
-  LWrapper: TPtrWrapper;
-  {$ENDIF}
+  LStr: AnsiString;
 begin
-  {$IFDEF DCC_NEXTGEN}
-  LWrapper := TPtrWrapper.Create(@LStr[0]);
-  gethostname(LWrapper.ToPointer, sMaxHostSize);
-  Result := TMarshal.ReadStringAsAnsi(LWrapper, sMaxHostSize);
-  {$ELSE}
-  gethostname(LStr, sMaxHostSize);
-  Result := String(LStr);
-  {$ENDIF}
+  SetLength(LStr, 250);
+  gethostname(PAnsiChar(LStr), 250);
+  Result := String(PAnsiChar(LStr));
 end;
 
 function TIdStackVCLPosix.ReceiveMsg(ASocket: TIdStackSocketHandle;
@@ -977,21 +935,18 @@ begin
       break;
     end;
     case LCurCmsg^.cmsg_type of
-      IPV6_PKTINFO :     //done this way because IPV6_PKTINF and  IP_PKTINFO are both 19
+      IPV6_PKTINFO :     //done this way because IPV6_PKTINF and  IP_PKTINFO
+      //are both 19
       begin
         case LAddr.sa_family of
           Id_PF_INET4: begin
-            {$IFDEF IOS}
-            ToDo('PKTINFO not implemented for IPv4 under iOS yet');
-            {$ELSE}
-              {$IFNDEF DARWIN}
-              //This is not supported in OS X.
-              with Pin_pktinfo(CMSG_DATA(LCurCmsg))^ do begin
-                APkt.DestIP := TranslateTInAddrToString(ipi_addr, Id_IPv4);
-                APkt.DestIF := ipi_ifindex;
-              end;
-              APkt.DestIPVersion := Id_IPv4;
-              {$ENDIF}
+            {$IFNDEF DARWIN}
+            //This is not supported in OS X.
+            with Pin_pktinfo(CMSG_DATA(LCurCmsg))^ do begin
+              APkt.DestIP := TranslateTInAddrToString(ipi_addr, Id_IPv4);
+              APkt.DestIF := ipi_ifindex;
+            end;
+            APkt.DestIPVersion := Id_IPv4;
             {$ENDIF}
           end;
           Id_PF_INET6: begin
@@ -1050,7 +1005,7 @@ procedure TIdStackVCLPosix.SetBlocking(ASocket: TIdStackSocketHandle;
   const ABlocking: Boolean);
 begin
   if not ABlocking then begin
-    raise EIdBlockingNotSupported.Create(RSStackNotSupportedOnUnix);
+    raise EIdNonBlockingNotSupported.Create(RSStackNonBlockingNotSupported);
   end;
 end;
 
@@ -1060,8 +1015,13 @@ begin
 end;
 
 procedure TIdStackVCLPosix.SetSocketOption(ASocket: TIdStackSocketHandle;
-  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
-  const Aoptval; const Aoptlen: Integer);
+  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption; AOptVal: Integer);
+begin
+  CheckForSocketError(Posix.SysSocket.setsockopt(ASocket, ALevel, AOptName, AOptVal, SizeOf(AOptVal)));
+end;
+
+procedure TIdStackVCLPosix.SetSocketOption(const ASocket: TIdStackSocketHandle;
+  const Alevel, Aoptname: Integer; Aoptval: PAnsiChar; const Aoptlen: Integer);
 begin
   CheckForSocketError(Posix.SysSocket.setsockopt(ASocket, ALevel, Aoptname, Aoptval, Aoptlen));
 end;
@@ -1118,20 +1078,10 @@ end;
 function TIdStackVCLPosix.WSGetServByName(const AServiceName: string): TIdPort;
 var
   Lps: PServEnt;
+  LAStr: AnsiString;
 begin
-  Lps := Posix.NetDB.getservbyname(
-    {$IFDEF DCC_NEXTGEN}
-    MarshaledAString(TMarshal.AsAnsi(AServiceName))
-    {$ELSE}
-    PAnsiChar(
-      {$IFDEF STRING_IS_ANSI}
-      AServiceName
-      {$ELSE}
-      AnsiString(AServiceName) // explicit convert to Ansi
-      {$ENDIF}
-    )
-    {$ENDIF},
-    nil);
+  LAStr := AnsiString(AServiceName); // explicit convert to Ansi
+  Lps := Posix.NetDB.getservbyname( PAnsiChar(LAStr), nil);
   if Lps <> nil then begin
     Result := ntohs(Lps^.s_port);
   end else begin
@@ -1149,7 +1099,7 @@ procedure TIdStackVCLPosix.AddServByPortToList(const APortNumber: TIdPort; AAddr
 //function TIdStackVCLPosix.WSGetServByPort(const APortNumber: TIdPort): TStrings;
 type
   PPAnsiCharArray = ^TPAnsiCharArray;
-  TPAnsiCharArray = packed array[0..(MaxLongint div SizeOf(PIdAnsiChar))-1] of PIdAnsiChar;
+  TPAnsiCharArray = packed array[0..(MaxLongint div SizeOf(PAnsiChar))-1] of PAnsiChar;
 var
   Lps: PServEnt;
   Li: Integer;
@@ -1157,25 +1107,19 @@ var
 begin
   Lps := Posix.NetDB.getservbyport(htons(APortNumber), nil);
   if Lps <> nil then begin
-    AAddresses.BeginUpdate;
-    try
-      AAddresses.Add(String(Lps^.s_name));
-      Li := 0;
-      Lp := Pointer(Lps^.s_aliases);
-      while Lp[Li] <> nil do begin
-        AAddresses.Add(String(Lp[Li]));
-        Inc(Li);
-      end;
-    finally
-      AAddresses.EndUpdate;
+    AAddresses.Add(String(Lps^.s_name));
+    Li := 0;
+    Lp := Pointer(Lps^.s_aliases);
+    while Lp[Li] <> nil do begin
+      AAddresses.Add(String(Lp[Li]));
+      Inc(Li);
     end;
   end;
 end;
 
 procedure TIdStackVCLPosix.WSGetSockOpt(ASocket: TIdStackSocketHandle; Alevel,
-  AOptname: Integer; var AOptval; var AOptlen: Integer);
-var
-  s : socklen_t;
+  AOptname: Integer; AOptval: PAnsiChar; var AOptlen: Integer);
+var s : socklen_t;
 begin
   CheckForSocketError(Posix.SysSocket.getsockopt(ASocket, ALevel, AOptname, AOptval, s));
   AOptlen := s;

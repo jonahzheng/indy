@@ -120,6 +120,8 @@ type
 
   TIdStackUnix = class(TIdStackBSDBase)
   protected
+//    procedure SetSocketOption(ASocket: TIdStackSocketHandle;
+//      ALevel: TIdSocketProtocol; AOptName: TIdSocketOption; AOptVal: Integer);
     procedure WriteChecksumIPv6(s: TIdStackSocketHandle; var VBuffer: TIdBytes;
       const AOffset: Integer; const AIP: String; const APort: TIdPort);
     function GetLastError: Integer;
@@ -152,7 +154,7 @@ type
     function WSGetServByName(const AServiceName: string): TIdPort; override;
     procedure AddServByPortToList(const APortNumber: TIdPort; AAddresses: TStrings); override;
     procedure WSGetSockOpt(ASocket: TIdStackSocketHandle; Alevel, AOptname: Integer;
-      var AOptval; var AOptlen: Integer); override;
+      AOptval: PAnsiChar; var AOptlen: Integer); override;
     procedure GetSocketOption(ASocket: TIdStackSocketHandle;
       ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
       out AOptVal: Integer); override;
@@ -179,7 +181,9 @@ type
      const AOverlapped: Boolean = False): TIdStackSocketHandle; override;
     procedure Disconnect(ASocket: TIdStackSocketHandle); override;
     procedure SetSocketOption(ASocket: TIdStackSocketHandle; ALevel: TIdSocketOptionLevel;
-      AOptName: TIdSocketOption; const Aoptval; const Aoptlen: Integer); override;
+      AOptName: TIdSocketOption; AOptVal: Integer); overload;override;
+    procedure SetSocketOption( const ASocket: TIdStackSocketHandle;
+      const Alevel, Aoptname: Integer; Aoptval: PAnsiChar; const Aoptlen: Integer); overload; override;
     procedure SetKeepAliveValues(ASocket: TIdStackSocketHandle;
       const AEnabled: Boolean; const ATimeMS, AInterval: Integer); override;
     function SupportsIPv6: Boolean; overload; override;
@@ -216,6 +220,7 @@ uses
   netdb,
   unix,
   IdResourceStrings,
+  IdResourceStringsUnix,
   IdException,
   SysUtils;
 
@@ -411,7 +416,7 @@ var
   LRetVal : Integer;
 begin
   case AIPVersion of
-    ID_IPv4 :
+    Id_IPv4 :
     begin
       if GetHostByName(AHostName, LH4) then
       begin
@@ -425,7 +430,7 @@ begin
       end;
       Result := NetAddrToStr(LI4[0]);
     end;
-    ID_IPv6 :
+    Id_IPv6 :
     begin
       SetLength(LI6, 10);
       LRetVal :=  ResolveName6(AHostName, LI6);
@@ -651,10 +656,15 @@ begin
 end;
 
 procedure TIdStackUnix.SetSocketOption(ASocket: TIdStackSocketHandle;
-  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
-  const Aoptval; const Aoptlen: Integer);
+  ALevel: TIdSocketProtocol; AOptName: TIdSocketOption; AOptVal: Integer);
 begin
-  CheckForSocketError(fpsetsockopt(ASocket, ALevel, Aoptname, PIdAnsiChar(@Aoptval), Aoptlen));
+  CheckForSocketError(fpSetSockOpt(ASocket, ALevel, AOptName, PAnsiChar(@AOptVal), SizeOf(AOptVal)));
+end;
+
+procedure TIdStackUnix.SetSocketOption(const ASocket: TIdStackSocketHandle;
+  const Alevel, Aoptname: Integer; Aoptval: PAnsiChar; const Aoptlen: Integer);
+begin
+  CheckForSocketError(fpsetsockopt(ASocket, ALevel, Aoptname, Aoptval, Aoptlen));
 end;
 
 function TIdStackUnix.WSGetLastError: Integer;
@@ -748,8 +758,7 @@ begin
   if LHostName = '' then begin
     RaiseLastSocketError;
   end;
-  // this won't get IPv6 addresses as I didn't find a way
-  // to enumerate IPv6 addresses on a linux machine
+  // TODO: support IPv6 addresses via ResolveName6()...
   if ResolveName(LHostName, LI) = 0 then
   begin
     AAddresses.BeginUpdate;
@@ -867,12 +876,12 @@ begin
 end;
 
 procedure TIdStackUnix.WSGetSockOpt(ASocket: TIdStackSocketHandle;
-  ALevel, AOptname: Integer; var AOptval; var AOptlen: Integer);
+  ALevel, AOptname: Integer; AOptval: PAnsiChar; var AOptlen: Integer);
 var
   LP : TSockLen;
 begin
   LP := AOptLen;
-  CheckForSocketError(fpGetSockOpt(ASocket, ALevel, AOptname, PIdAnsiChar(@AOptval), @LP));
+  CheckForSocketError(fpGetSockOpt(ASocket, ALevel, AOptname, AOptval, @LP));
 end;
 
 procedure TIdStackUnix.AddServByPortToList(const APortNumber: TIdPort; AAddresses: TStrings);
@@ -911,7 +920,7 @@ procedure TIdStackUnix.SetBlocking(ASocket: TIdStackSocketHandle;
   const ABlocking: Boolean);
 begin
   if not ABlocking then begin
-    raise EIdBlockingNotSupported.Create(RSStackNotSupportedOnUnix);
+    raise EIdNonBlockingNotSupported.Create(RSStackNonBlockingNotSupported);
   end;
 end;
 
@@ -1086,6 +1095,7 @@ begin
     LTime.tv_usec := (ATimeout mod 1000) * 1000;
     LTimePtr := @LTime;
   end;
+  // TODO: calculate the actual nfds value based on the Sets provided...
   Result := fpSelect(FD_SETSIZE, AReadSet, AWriteSet, AExceptSet, LTimePtr);
 end;
 
