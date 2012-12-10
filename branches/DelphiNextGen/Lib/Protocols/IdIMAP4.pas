@@ -2072,7 +2072,7 @@ begin
     FCmdCounter := 0;
     if FAuthType = iatUserPass then begin
       if Length(Password) <> 0 then begin                              {Do not Localize}
-        SendCmd(NewCmdCounter, IMAP4Commands[cmdLogin] + ' ' + Username + ' ' + Password, ['OK']);   {Do not Localize}
+        SendCmd(NewCmdCounter, IMAP4Commands[cmdLogin] + ' ' + Username + ' "' + Password + '"', ['OK']);   {Do not Localize}
       end else begin
         SendCmd(NewCmdCounter, IMAP4Commands[cmdLogin] + ' ' + Username, ['OK']);          {Do not Localize}
       end;
