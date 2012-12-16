@@ -2533,7 +2533,7 @@ var
   LBytes: array[0..3] of Byte;
   LCharsPtr, LBytesPtr: PAnsiChar;
   LSrcCharSize, LCharSize, LByteSize: size_t;
-  LConsumed: Integer;
+  LCharsRead: Integer;
 {$ENDIF}
 begin
   {$IFDEF USE_ICONV}
@@ -2588,9 +2588,9 @@ begin
     end;
 
     // LCharSize was decremented by the number of bytes read from the input buffer
-    LConsumed := LSrcCharSize-LCharSize) div SizeOf(WideChar);
-    Inc(AChars, LConsumed);
-    Dec(ACharCount, LConsumed);
+    LCharsRead := (LSrcCharSize-LCharSize) div SizeOf(WideChar);
+    Inc(AChars, LCharsRead);
+    Dec(ACharCount, LCharsRead);
     if ACharCount < 1 then
     begin
       // After all characters are handled, the output buffer has to be flushed
@@ -2617,7 +2617,7 @@ function TIdMBCSEncoding.GetBytes(const AChars: PIdWideChar; ACharCount: Integer
 var
   LCharsPtr, LBytesPtr: PAnsiChar;
   LSrcCharSize, LCharSize, LByteSize: size_t;
-  LConsumed: Integer;
+  LCharsRead, LBytesWritten: Integer;
 {$ENDIF}
 begin
   {$IFDEF USE_ICONV}
@@ -2659,16 +2659,18 @@ begin
     end;
 
     // LByteSize was decremented by the number of bytes stored in the output buffer
-    Inc(Result, AByteCount-LByteSize);
+    LBytesWritten := AByteCount - LByteSize;
+    Inc(Result, LBytesWritten);
     if AChars = nil then begin
       Exit;
     end;
-    AByteCount := LByteSize;
+    Inc(ABytes, LBytesWritten);
+    Dec(AByteCount, LBytesWritten);
 
     // LCharSize was decremented by the number of bytes read from the input buffer
-    LConsumed := (LSrcCharSize-LCharSize) div SizeOf(WideChar);
-    Inc(AChars, LConsumed);
-    Dec(ACharCount, LConsumed);
+    LCharsRead := (LSrcCharSize-LCharSize) div SizeOf(WideChar);
+    Inc(AChars, LCharsRead);
+    Dec(ACharCount, LCharsRead);
     if ACharCount < 1 then
     begin
       // After all characters are handled, the output buffer has to be flushed
@@ -2696,7 +2698,7 @@ var
   LChars: array[0..3] of WideChar;
   LBytesPtr, LCharsPtr: PAnsiChar;
   LByteSize, LCharsSize: size_t;
-  I, LMaxBytesSize: Integer;
+  I, LMaxBytesSize, LBytesRead: Integer;
   LConverted: Boolean;
 {$ENDIF}
 begin
@@ -2764,8 +2766,9 @@ begin
         end;
 
         // LByteSize was decremented by the number of bytes read from the input buffer
-        Inc(ABytes, I-LByteSize);
-        Dec(AByteCount, I-LByteSize);
+        LBytesRead := I - LByteSize;
+        Inc(ABytes, LBytesRead);
+        Dec(AByteCount, LBytesRead);
         if AByteCount < 1 then begin
           // After all bytes are handled, the output buffer has to be flushed
           // This is done by running one more iteration, without an input buffer
@@ -2801,7 +2804,7 @@ function TIdMBCSEncoding.GetChars(const ABytes: PByte; AByteCount: Integer; ACha
 var
   LBytesPtr, LCharsPtr: PAnsiChar;
   LByteSize, LCharsSize: size_t;
-  I, LDestCharSize, LMaxBytesSize, LCharsWritten: Integer;
+  I, LDestCharSize, LMaxBytesSize, LBytesRead, LCharsWritten: Integer;
   LConverted: Boolean;
 {$ENDIF}
 begin
@@ -2875,8 +2878,9 @@ begin
         Dec(ACharCount, LCharsWritten);
 
         // LByteSize was decremented by the number of bytes read from the input buffer
-        Inc(ABytes, I-LByteSize);
-        Dec(AByteCount, I-LByteSize);
+        LBytesRead := I - LByteSize;
+        Inc(ABytes, LBytesRead);
+        Dec(AByteCount, LBytesRead);
         if AByteCount < 1 then begin
           // After all bytes are handled, the output buffer has to be flushed
           // This is done by running one more iteration, without an input buffer
