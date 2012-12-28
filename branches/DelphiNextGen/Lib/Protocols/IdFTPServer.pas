@@ -2725,7 +2725,7 @@ begin
       LUserAccounts := FUserAccounts;
       if Assigned(LUserAccounts) then begin
         LChallenge := LUserAccounts.ChallengeUser(LSafe, LContext.Username);
-        LUserAccounts := nil;
+        {$IFDEF DCC_NEXTGEN_ARC}LUserAccounts := nil;{$ENDIF}
         if not LSafe then begin
           //we do this to prevent a potential race attack
           DisconUser(ASender);
@@ -2793,7 +2793,7 @@ begin
         LUserAccounts := FUserAccounts;
         if Assigned(LUserAccounts) then begin
           LContext.FAuthenticated := LUserAccounts.AuthenticateUser(LContext.FUsername, ASender.UnparsedParams);
-          LUserAccounts := nil;
+          {$IFDEF DCC_NEXTGEN_ARC}LUserAccounts := nil;{$ENDIF}
           if LContext.FAuthenticated then begin
             LContext.FPasswordAttempts := 0;
             ASender.Reply.SetReply(230, RSFTPUserLogged);
@@ -3267,7 +3267,7 @@ begin
       try
         if Assigned(LFileSystem) then begin
           LFileSystem.StoreFile(LContext, LTmp1, LAppend, LStream);
-          LFileSystem := nil;
+          {$IFDEF DCC_NEXTGEN_ARC}LFileSystem := nil;{$ENDIF}
         end else begin
           FOnStoreFile(LContext, LTmp1, LAppend, LStream);
         end;
@@ -5223,7 +5223,7 @@ begin
   LUserAccounts := FUserAccounts;
   if Assigned(LUserAccounts) then begin
     LUserAccounts.UserDisconnected(TIdFTPServerContext(AContext).UserName);
-    LUserAccounts := nil;
+    {$IFDEF DCC_NEXTGEN_ARC}LUserAccounts := nil;{$ENDIF}
   end;
   inherited DoDisconnect(AContext);
 end;

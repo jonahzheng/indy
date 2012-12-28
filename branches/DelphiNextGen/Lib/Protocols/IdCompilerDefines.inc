@@ -226,7 +226,7 @@
 {$ENDIF}
 
 //Delphi & CBuilder XE3 (Waterdragon)
-//Delphi & CBuilder XE4 (Quintessence) - compiler bug?
+//Delphi & CBuilder XE4 (Quintessence - early betas only)
 {$IFDEF VER240}
   {$DEFINE VCL_XE3}
   {$IFDEF CBUILDER}

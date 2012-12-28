@@ -1593,7 +1593,7 @@ begin
     end else begin
       LSessionList.Clear;
     end;
-    LSessionList := nil;
+    {$IFDEF DCC_NEXTGEN_ARC}LSessionList := nil;{$ENDIF}
   end;
 
   inherited Shutdown;

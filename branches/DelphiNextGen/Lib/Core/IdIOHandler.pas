@@ -1523,7 +1523,7 @@ begin
                 LIntercept := Intercept;
                 if LIntercept <> nil then begin
                   LIntercept.Receive(LBuffer);
-                  LIntercept := nil;
+                  {$IFDEF DCC_NEXTGEN_ARC}LIntercept := nil;{$ENDIF}
                   LByteCount := Length(LBuffer);
                 end;
 
@@ -2447,7 +2447,7 @@ begin
     // so that a copy is no longer needed here
     LTemp := ToBytes(ABuffer, ALength, AOffset);
     LIntercept.Send(LTemp);
-    LIntercept := nil;
+    {$IFDEF DCC_NEXTGEN_ARC}LIntercept := nil;{$ENDIF}
     LSize := Length(LTemp);
     LPos := 0;
   end else begin

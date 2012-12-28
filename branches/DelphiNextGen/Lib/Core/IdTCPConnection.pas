@@ -515,7 +515,7 @@ begin
   if Assigned(LIOHandler) then begin
     LIOHandler.Close;
     // This will free any managed IOHandlers
-    LIOHandler := nil;
+    {$IFDEF DCC_NEXTGEN_ARC}LIOHandler := nil;{$ENDIF}
     SetIOHandler(nil);
   end;
   FreeAndNil(FLastCmdResult);
@@ -698,7 +698,7 @@ begin
         if LOtherIntercept <> LIntercept then begin
           EIdException.Toss(RSInterceptIsDifferent);
         end;
-        LOtherIntercept := nil;
+        {$IFDEF DCC_NEXTGEN_ARC}LOtherIntercept := nil;{$ENDIF}
       end;
     end;
 
