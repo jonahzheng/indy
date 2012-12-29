@@ -21,80 +21,33 @@ type
 
 implementation
 
-{$IFNDEF DOTNET_OR_ICONV}
 uses
-  IdCharsets;
-{$ENDIF}
-
-// TODO: re-write this unit to use IdGlobalProtocol.CharsetToEncoding() instead of TIdTextEncoding.GetEncoding() directly...
+  IdGlobalProtocols;
 
 class function TIdHeaderCoderIndy.Decode(const ACharSet: string; const AData: TIdBytes): String;
-var
-  LEncoding: IIdTextEncoding;
-  {$IFNDEF DOTNET_OR_ICONV}
-  CP: Word;
-  {$ENDIF}
 begin
-  Result := '';
   try
-    {$IFDEF DOTNET_OR_ICONV}
-    LEncoding := IndyTextEncoding(ACharSet);
-    {$ELSE}
-    CP := CharsetToCodePage(ACharSet);
-    if CP = 0 then begin
-      Exit;
-    end;
-    LEncoding := IndyTextEncoding(CP);
-    {$ENDIF}
-    Result := LEncoding.GetString(AData);
+    Result := CharsetToEncoding(ACharSet).GetString(AData);
   except
+    Result := '';
   end;
 end;
 
 class function TIdHeaderCoderIndy.Encode(const ACharSet, AData: String): TIdBytes;
-var
-  LEncoding: IIdTextEncoding;
-  {$IFNDEF DOTNET_OR_ICONV}
-  CP: Word;
-  {$ENDIF}
 begin
-  Result := nil;
   try
-    {$IFDEF DOTNET_OR_ICONV}
-    LEncoding := IndyTextEncoding(ACharSet);
-    {$ELSE}
-    CP := CharsetToCodePage(ACharSet);
-    if CP = 0 then begin
-      Exit;
-    end;
-    LEncoding := IndyTextEncoding(CP);
-    {$ENDIF}
-    Result := LEncoding.GetBytes(AData);
+    Result := CharsetToEncoding(ACharSet).GetBytes(AData);
   except
+    Result := nil;
   end;
 end;
 
 class function TIdHeaderCoderIndy.CanHandle(const ACharSet: String): Boolean;
-{$IFNDEF DOTNET_OR_ICONV}
-  {$IFDEF WINDOWS}
-var
-  CP: Word;
-  {$ENDIF}
-{$ENDIF}
 begin
-  Result := False;
   try
-    {$IFDEF DOTNET_OR_ICONV}
-    Result := Assigned(IndyTextEncoding(ACharSet));
-    {$ELSE}
-      {$IFDEF WINDOWS}
-    CP := CharsetToCodePage(ACharSet);
-    if CP <> 0 then begin
-      Result := Assigned(IndyTextEncoding(CP));
-    end;
-      {$ENDIF}
-    {$ENDIF}
+    Result := CharsetToEncoding(ACharSet) <> nil;
   except
+    Result := False;
   end;
 end;
 
