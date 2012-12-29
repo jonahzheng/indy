@@ -511,6 +511,7 @@ resourcestring
   RSIMAP4ConnectionStateNonAuthenticated = 'Non Authenticated';
   RSIMAP4ConnectionStateAuthenticated = 'Authenticated';
   RSIMAP4ConnectionStateSelected = 'Selected';
+  RSIMAP4ConnectionStateUnexpectedlyDisconnected = 'Unexpectedly Disconnected';
 
   { Telnet Server }
   RSTELNETSRVUsernamePrompt = 'Username: ';
