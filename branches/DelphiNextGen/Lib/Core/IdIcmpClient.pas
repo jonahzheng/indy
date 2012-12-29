@@ -83,8 +83,6 @@ uses
 const
   DEF_PACKET_SIZE = 32;
   MAX_PACKET_SIZE = 1024;
-  iDEFAULTPACKETSIZE = 128;
-  iDEFAULTREPLYBUFSIZE = 1024;
   Id_TIDICMP_ReceiveTimeout = 5000;
 
 type
@@ -141,6 +139,9 @@ type
 
   TOnReplyEvent = procedure(ASender: TComponent; const AReplyStatus: TReplyStatus) of object;
 
+  // TODO: on MacOSX, can use a UDP socket instead of a RAW socket so that
+  // non-privilege processes do not require root access...
+
   TIdCustomIcmpClient = class(TIdRawClient)
   protected
     FStartTime : LongWord; //this is a fallabk if no packet is returned
@@ -174,7 +175,7 @@ type
     //these are made public in the client
     procedure InternalPing(const AIP : String; const ABuffer: String = ''; SequenceID: Word = 0); overload; {Do not Localize}
     //
-    property PacketSize : Integer read GetPacketSize write SetPacketSize;
+    property PacketSize : Integer read GetPacketSize write SetPacketSize default DEF_PACKET_SIZE;
     property ReplyData: string read FReplydata;
     property ReplyStatus: TReplyStatus read FReplyStatus;
 
@@ -378,7 +379,7 @@ begin
   {$ENDIF}
   wSeqNo := 3489; // SG 25/1/02: Arbitrary Constant <> 0
   FReceiveTimeOut := Id_TIDICMP_ReceiveTimeout;
-  PacketSize := MAX_PACKET_SIZE;
+  FPacketSize := DEF_PACKET_SIZE;
 end;
 
 destructor TIdCustomIcmpClient.Destroy;
@@ -602,10 +603,12 @@ var
   LIcmp: TIdICMPHdr;
   LIdx: LongWord;
   LBuffer: TIdBytes;
+  LBufferLen: Integer;
 begin
-  LBuffer := nil; // keep the compiler happy
+  LBuffer := ToBytes(ABuffer, Indy8BitEncoding);
+  LBufferLen := IndyMin(Length(LBuffer), FPacketSize);
 
-  SetLength(FBufIcmp, ICMP_MIN + SizeOf(LongWord) + FPacketSize);
+  SetLength(FBufIcmp, ICMP_MIN + SizeOf(LongWord) + LBufferLen);
   FillBytes(FBufIcmp, Length(FBufIcmp), 0);
   SetLength(FBufReceive, Length(FBufIcmp) + Id_IP_HSIZE);
 
@@ -620,9 +623,8 @@ begin
     LIcmp.WriteStruct(FBufIcmp, LIdx);
     CopyTIdLongWord(Ticks, FBufIcmp, LIdx);
     Inc(LIdx, 4);
-    if Length(ABuffer) > 0 then begin
-      LBuffer := ToBytes(ABuffer, IndyTextEncoding_8Bit);
-      CopyTIdBytes(LBuffer, 0, FBufIcmp, LIdx, IndyMin(Length(LBuffer), FPacketSize));
+    if LBufferLen > 0 then begin
+      CopyTIdBytes(LBuffer, 0, FBufIcmp, LIdx, LBufferLen);
     end;
   finally
     FreeAndNil(LIcmp);
@@ -635,8 +637,12 @@ var
   LIcmp : TIdicmp6_hdr;
   LIdx : LongWord;
   LBuffer: TIdBytes;
+  LBufferLen: Integer;
 begin
-  SetLength(FBufIcmp, ICMP_MIN + SizeOf(LongWord) + FPacketSize);
+  LBuffer := ToBytes(ABuffer, Indy8BitEncoding);
+  LBufferLen := IndyMin(Length(LBuffer), FPacketSize);
+
+  SetLength(FBufIcmp, ICMP_MIN + SizeOf(LongWord) + LBufferLen);
   FillBytes(FBufIcmp, Length(FBufIcmp), 0);
   SetLength(FBufReceive, Length(FBufIcmp) + (Id_IPv6_HSIZE*2));
 
@@ -651,9 +657,8 @@ begin
     LIcmp.WriteStruct(FBufIcmp, LIdx);
     CopyTIdLongWord(Ticks, FBufIcmp, LIdx);
     Inc(LIdx, 4);
-    if Length(ABuffer) > 0 then begin
-      LBuffer := ToBytes(ABuffer, IndyTextEncoding_8Bit);
-      CopyTIdBytes(LBuffer, 0, FBufIcmp, LIdx, IndyMin(Length(LBuffer), FPacketSize));
+    if LBufferLen > 0 then begin
+      CopyTIdBytes(LBuffer, 0, FBufIcmp, LIdx, LBufferLen);
     end;
   finally
     FreeAndNil(LIcmp);
@@ -752,8 +757,8 @@ begin
     FreeAndNil(LIcmp);
   end;
 end;
-
 {$ENDIF}
+
 procedure TIdCustomIcmpClient.Send(const AHost: string; const APort: TIdPort;
   const ABuffer: TIdBytes);
 var
@@ -784,7 +789,11 @@ end;
 
 procedure TIdCustomIcmpClient.SetPacketSize(const AValue: Integer);
 begin
-  FPacketSize := AValue;
+  if AValue < 0 then begin
+    FPacketSize := 0;
+  end else begin
+    FPacketSize := IndyMin(AValue, MAX_PACKET_SIZE);
+  end;
 end;
 
 procedure TIdCustomIcmpClient.InternalPing(const AIP, ABuffer: String; SequenceID: Word);
