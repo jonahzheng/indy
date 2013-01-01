@@ -303,7 +303,7 @@ end;
 
 procedure TIdCookieManager.CleanupCookieList;
 var
-  i{, LLastCount}: Integer;
+  i: Integer;
   LCookieList: TIdCookieList;
   LCookie: TIdCookie;
 begin
@@ -315,16 +315,6 @@ begin
       if LCookie.IsExpired then
       begin
         // The Cookie has expired. It has to be removed from the collection
-        {
-        LLastCount := LCookieList.Count; // RLebeau
-        LCookie.Free;
-        // RLebeau - the cookie may already be removed from the list via
-        // its destructor.  If that happens then doing so again below can
-        // cause an "index out of bounds" error, so don't do it if not needed.
-        if LLastCount = LCookieList.Count then begin
-          LCookieList.Delete(i);
-        end;
-        }
         LCookieList.Delete(i);
         // must set the Collection to nil or the cookie will try to remove
         // itself from the cookie collection and deadlock
