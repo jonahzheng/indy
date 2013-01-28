@@ -857,7 +857,7 @@ type
   {$EXTERNALSYM SOCKADDR}
   SOCKADDR    = TSockAddr;
   {$EXTERNALSYM PSOCKADDR}
-  PSOCKADDR   = PSockAddrIn;
+  PSOCKADDR   = ^TSockAddr;
   {$EXTERNALSYM LPSOCKADDR}
   LPSOCKADDR   = PSOCKADDR;
 
@@ -7025,6 +7025,8 @@ begin
   FDSet.fd_count := 0;
 end;
 
+{$IFNDEF WINCE}
+
 //Posix aliases
 //    #define CMSGHDR_ALIGN WSA_CMSGHDR_ALIGN
 function CMSGHDR_ALIGN(const Alength: SIZE_T): SIZE_T;
@@ -7141,6 +7143,8 @@ function WSA_CMSG_LEN(const Alength: SIZE_T): SIZE_T;
 begin
   Result := (WSA_CMSGDATA_ALIGN(SizeOf(WSACMSGHDR)) + Alength);
 end;
+
+{$ENDIF} // {$IFNDEF WINCE}
 
 function IP_MSFILTER_SIZE(const numsrc: DWORD): PtrUInt;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
@@ -8594,7 +8598,7 @@ begin
     Result := IN6ADDR_ISANY(PSOCKADDR_IN6(a));
   end else begin
     ASSERT(a^.sa_family = AF_INET);
-    Result := IN4ADDR_ISANY(PSockAddr(a));
+    Result := IN4ADDR_ISANY(PSockAddrIn(a));
   end;
 end;
 
