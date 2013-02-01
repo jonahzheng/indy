@@ -605,7 +605,7 @@ var
   LBuffer: TIdBytes;
   LBufferLen: Integer;
 begin
-  LBuffer := ToBytes(ABuffer, Indy8BitEncoding);
+  LBuffer := ToBytes(ABuffer, IndyTextEncoding_8Bit);
   LBufferLen := IndyMin(Length(LBuffer), FPacketSize);
 
   SetLength(FBufIcmp, ICMP_MIN + SizeOf(LongWord) + LBufferLen);
@@ -639,7 +639,7 @@ var
   LBuffer: TIdBytes;
   LBufferLen: Integer;
 begin
-  LBuffer := ToBytes(ABuffer, Indy8BitEncoding);
+  LBuffer := ToBytes(ABuffer, IndyTextEncoding_8Bit);
   LBufferLen := IndyMin(Length(LBuffer), FPacketSize);
 
   SetLength(FBufIcmp, ICMP_MIN + SizeOf(LongWord) + LBufferLen);
