@@ -890,7 +890,7 @@ type
   function IndyTextEncoding_UTF8: IIdTextEncoding;
 
   // These are for backwards compatibility with past Indy 10 releases
-  function enDefault: IIdTextEncoding; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use a nil IIdTextEncoding pointer'{$ENDIF};{$ENDIF}
+  function enDefault: IIdTextEncoding; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IndyTextEncoding_Default() or a nil IIdTextEncoding pointer'{$ENDIF};{$ENDIF}
   {$NODEFINE enDefault}
   function en7Bit: IIdTextEncoding; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IndyTextEncoding_ASCII()'{$ENDIF};{$ENDIF}
   {$NODEFINE en7Bit}
@@ -3066,17 +3066,19 @@ function TIdUTF16LittleEndianEncoding.GetBytes(const AChars: PIdWideChar; ACharC
 {$IFDEF ENDIAN_BIG}
 var
   I: Integer;
+  LChars: PIdWideChar;
 {$ENDIF}
 begin
   // TODO: verify UTF-16 sequences
   {$IFDEF ENDIAN_BIG}
+  LChars := AChars;
   for I := ACharCount - 1 downto 0 do
   begin
-    Bytes^ := Hi(Word(AChars^));
+    ABytes^ := Hi(Word(LChars^));
     Inc(ABytes);
-    ABytes^ := Lo(Word(AChars^));
+    ABytes^ := Lo(Word(LChars^));
     Inc(ABytes);
-    Inc(AChars);
+    Inc(LChars);
   end;
   Result := ACharCount * SizeOf(WideChar);
   {$ELSE}
@@ -3095,19 +3097,20 @@ function TIdUTF16LittleEndianEncoding.GetChars(const ABytes: PByte; AByteCount: 
   AChars: PIdWideChar; ACharCount: Integer): Integer;
 {$IFDEF ENDIAN_BIG}
 var
-  P: PByte;
+  LBytes1, LBytes2: PByte;
   I: Integer;
 {$ENDIF}
 begin
   // TODO: verify UTF-16 sequences
   {$IFDEF ENDIAN_BIG}
-  P := ABytes;
-  Inc(P);
+  LBytes1 := ABytes;
+  LBytes2 := ABytes;
+  Inc(LBytes2);
   for I := 0 to ACharCount - 1 do
   begin
-    AChars^ := WideChar(MakeWord(P^, ABytes^));
-    Inc(ABytes, 2);
-    Inc(P, 2);
+    AChars^ := WideChar(MakeWord(LBytes2^, LBytes1^));
+    Inc(LBytes1, 2);
+    Inc(LBytes2, 2);
     Inc(AChars);
   end;
   Result := ACharCount;
@@ -3596,7 +3599,7 @@ begin
     // TODO: use thread-safe assignment
     GIdUTF16LittleEndianEncoding := TIdDotNetEncoding.Create(System.Text.Encoding.Unicode);
     {$ELSE}
-    LEncoding := TIdUTF16BigEndianEncoding.Create;
+    LEncoding := TIdUTF16LittleEndianEncoding.Create;
     if InterlockedCompareExchangeIntf(IInterface(GIdUTF16LittleEndianEncoding), LEncoding, nil) <> nil then begin
       LEncoding := nil;
     end;
@@ -3935,7 +3938,7 @@ begin
   Result := AValue;
     {$ENDIF}
     {$IFDEF ENDIAN_BIG}
-  Result := swap(AValue shr 16) or (Longint(swap(AValue and $FFFF)) shl 16);
+  Result := swap(AValue shr 16) or (LongWord(swap(AValue and $FFFF)) shl 16);
     {$ENDIF}
   {$ENDIF}
 end;
@@ -3976,14 +3979,14 @@ function LittleEndianToHost(const AValue : Longword): Longword;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   {$IFDEF DOTNET}
-  //I think that is Little ENdian but I'm not completely sure
+  //I think that is Little Endian but I'm not completely sure
   Result := AValue;
   {$ELSE}
     {$IFDEF ENDIAN_LITTLE}
   Result := AValue;
     {$ENDIF}
     {$IFDEF ENDIAN_BIG}
-  Result := swap(AValue shr 16) or (Longint(swap(AValue and $FFFF)) shl 16);
+  Result := swap(AValue shr 16) or (LongWord(swap(AValue and $FFFF)) shl 16);
     {$ENDIF}
   {$ENDIF}
 end;
@@ -3992,7 +3995,7 @@ function LittleEndianToHost(const AValue : Integer): Integer;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
   {$IFDEF DOTNET}
-  //I think that is Little ENdian but I'm not completely sure
+  //I think that is Little Endian but I'm not completely sure
   Result := AValue;
   {$ELSE}
     {$IFDEF ENDIAN_LITTLE}
