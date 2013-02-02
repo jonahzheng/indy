@@ -1586,7 +1586,11 @@ const
   {$IFDEF DARWIN}
   LIBEXT = '.dylib'; {do not localize}
   {$ELSE}
+    {$IFDEF DCC_NEXTGEN}
+  LIBEXT = '.dylib'; {do not localize}
+    {$ELSE}
   LIBEXT = '.so'; {do not localize}
+    {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 
