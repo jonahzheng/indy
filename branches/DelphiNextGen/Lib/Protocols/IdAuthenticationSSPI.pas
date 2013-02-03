@@ -899,19 +899,19 @@ begin
   Use := aUse;
   if (Length(aDomain) > 0) and (Length(aUserName) > 0) then begin
     {$IFDEF SSPI_UNICODE}
-    ai.User := PWideChar(aUserName);
+    ai.User := PUSHORT(PWideChar(aUserName));
     ai.UserLength := Length(aUserName);
-    ai.Domain := PWideChar(aDomain);
+    ai.Domain := PUSHORT(PWideChar(aDomain));
     ai.DomainLength := Length(aDomain);
-    ai.Password := PWideChar(aPassword);
+    ai.Password := PUSHORT(PWideChar(aPassword));
     ai.PasswordLength := Length(aPassword);
     ai.Flags := SEC_WINNT_AUTH_IDENTITY_UNICODE;
     {$ELSE}
-    ai.User := PAnsiChar(aUserName);
+    ai.User := PUCHAR(PAnsiChar(aUserName));
     ai.UserLength := Length(aUserName);
-    ai.Domain := PAnsiChar(aDomain);
+    ai.Domain := PUCHAR(PAnsiChar(aDomain));
     ai.DomainLength := Length(aDomain);
-    ai.Password := PAnsiChar(aPassword);
+    ai.Password := PUCHAR(PAnsiChar(aPassword));
     ai.PasswordLength := Length(aPassword);
     ai.Flags := SEC_WINNT_AUTH_IDENTITY_ANSI;
     {$ENDIF}
