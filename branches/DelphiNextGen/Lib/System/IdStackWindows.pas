@@ -602,6 +602,7 @@ begin
   PAddr := PSOCKADDR(@LAddr);
   case AIPVersion of
     Id_IPv4: begin
+      PAddr^.sin_family := Id_PF_INET4;
       TranslateStringToTInAddr(AIP, PAddr^.sin_addr, Id_IPv4);
       PAddr^.sin_port := htons(APort);
       LSize := SIZE_TSOCKADDRIN;
