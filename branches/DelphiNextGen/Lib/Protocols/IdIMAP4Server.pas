@@ -604,31 +604,31 @@ end;
 function TIdIMAP4Server.CreateExceptionReply: TIdReply;
 begin
   Result := TIdReplyIMAP4.CreateWithReplyTexts(nil, ReplyTexts);
-  Result.SetReply('BAD', 'Unknown Internal Error'); {do not localize}
+  Result.SetReply(IMAP_BAD, 'Unknown Internal Error'); {do not localize}
 end;
 
 function TIdIMAP4Server.CreateGreeting: TIdReply;
 begin
   Result := TIdReplyIMAP4.CreateWithReplyTexts(nil, ReplyTexts);
-  Result.SetReply('OK', 'Welcome'); {do not localize}
+  Result.SetReply(IMAP_OK, 'Welcome'); {do not localize}
 end;
 
 function TIdIMAP4Server.CreateHelpReply: TIdReply;
 begin
   Result := TIdReplyIMAP4.CreateWithReplyTexts(nil, ReplyTexts);
-  Result.SetReply('OK', 'Help follows'); {do not localize}
+  Result.SetReply(IMAP_OK, 'Help follows'); {do not localize}
 end;
 
 function TIdIMAP4Server.CreateMaxConnectionReply: TIdReply;
 begin
   Result := TIdReplyIMAP4.CreateWithReplyTexts(nil, ReplyTexts);
-  Result.SetReply('BAD', 'Too many connections. Try again later.'); {do not localize}
+  Result.SetReply(IMAP_BAD, 'Too many connections. Try again later.'); {do not localize}
 end;
 
 function TIdIMAP4Server.CreateReplyUnknownCommand: TIdReply;
 begin
   Result := TIdReplyIMAP4.CreateWithReplyTexts(nil, ReplyTexts);
-  Result.SetReply('BAD', 'Unknown command'); {do not localize}
+  Result.SetReply(IMAP_BAD, 'Unknown command'); {do not localize}
 end;
 
 constructor TIdIMAP4PeerContext.Create(AConnection: TIdTCPConnection; AYarn: TIdYarn; AList: TIdContextThreadList = nil);
@@ -1308,13 +1308,13 @@ begin
           end;
           case LStoreMethod of
             sdAdd, sdReplace:
-	      begin
-	        LMessage.Flags := LMessage.Flags + [LCMsgFlags[LFlag]];
-	      end;
+              begin
+                LMessage.Flags := LMessage.Flags + [LCMsgFlags[LFlag]];
+              end;
             sdRemove:
-	      begin
-	        LMessage.Flags := LMessage.Flags - [LCMsgFlags[LFlag]];
-	      end;
+              begin
+                LMessage.Flags := LMessage.Flags - [LCMsgFlags[LFlag]];
+              end;
           end;
         end;
         if not LSilent then begin
@@ -1348,106 +1348,132 @@ begin
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'CAPABILITY';  {do not localize}
   LCommandHandler.OnCommand := DoCommandCAPABILITY;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'NOOP';  {do not localize}
   LCommandHandler.OnCommand := DoCommandNOOP;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'LOGOUT';  {do not localize}
   LCommandHandler.OnCommand := DoCommandLOGOUT;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'AUTHENTICATE';  {do not localize}
   LCommandHandler.OnCommand := DoCommandAUTHENTICATE;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'LOGIN'; {do not localize}
   LCommandHandler.OnCommand := DoCommandLOGIN;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'SELECT';  {do not localize}
   LCommandHandler.OnCommand := DoCommandSELECT;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'EXAMINE'; {do not localize}
   LCommandHandler.OnCommand := DoCommandEXAMINE;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'CREATE';  {do not localize}
   LCommandHandler.OnCommand := DoCommandCREATE;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'DELETE';  {do not localize}
   LCommandHandler.OnCommand := DoCommandDELETE;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'RENAME';  {do not localize}
   LCommandHandler.OnCommand := DoCommandRENAME;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'SUBSCRIBE'; {do not localize}
   LCommandHandler.OnCommand := DoCommandSUBSCRIBE;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'UNSUBSCRIBE'; {do not localize}
   LCommandHandler.OnCommand := DoCommandUNSUBSCRIBE;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'LIST';  {do not localize}
   LCommandHandler.OnCommand := DoCommandLIST;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'LSUB';  {do not localize}
   LCommandHandler.OnCommand := DoCommandLSUB;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'STATUS';  {do not localize}
   LCommandHandler.OnCommand := DoCommandSTATUS;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'APPEND';  {do not localize}
   LCommandHandler.OnCommand := DoCommandAPPEND;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'CHECK'; {do not localize}
   LCommandHandler.OnCommand := DoCommandCHECK;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'CLOSE'; {do not localize}
   LCommandHandler.OnCommand := DoCommandCLOSE;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'EXPUNGE'; {do not localize}
   LCommandHandler.OnCommand := DoCommandEXPUNGE;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'SEARCH';  {do not localize}
   LCommandHandler.OnCommand := DoCommandSEARCH;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'FETCH'; {do not localize}
   LCommandHandler.OnCommand := DoCommandFETCH;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'STORE'; {do not localize}
   LCommandHandler.OnCommand := DoCommandSTORE;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'COPY';  {do not localize}
   LCommandHandler.OnCommand := DoCommandCOPY;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'UID'; {do not localize}
   LCommandHandler.OnCommand := DoCommandUID;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'X'; {do not localize}
   LCommandHandler.OnCommand := DoCommandX;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   LCommandHandler := CommandHandlers.Add;
   LCommandHandler.Command := 'STARTTLS';  {do not localize}
   LCommandHandler.OnCommand := DoCommandSTARTTLS;
+  LCommandHandler.NormalReply.Code := IMAP_OK;
 
   FCommandHandlers.OnBeforeCommandHandler := DoBeforeCmd;
   FCommandHandlers.OnCommandHandlersException := DoCmdHandlersException;
