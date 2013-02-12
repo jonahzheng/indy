@@ -1132,6 +1132,9 @@ uses
   {$ELSE}
   IdStreamVCL,
   {$ENDIF}
+  {$IFDEF HAS_UNIT_Generics_Collections}
+  System.Generics.Collections,
+  {$ENDIF}
   IdCoder,
   IdEMailAddress,
   IdResourceStrings,
@@ -1150,6 +1153,7 @@ uses
   IdReplyIMAP4,
   IdTCPConnection,
   IdSSL,
+  IdSASL,
   SysUtils;
 
 type
@@ -1318,6 +1322,164 @@ const
 function IMAPQuotedStr(const S: String): String;
 begin
   Result := '"' + StringsReplace(S, ['\', '"'], ['\\', '\"']) + '"'; {Do not Localize}
+end;
+
+{ TIdSASLEntriesIMAP4 }
+
+// RLebeau 2/8/2013 - TIdSASLEntries.LoginSASL() uses TIdTCPConnection.SendCmd()
+// but TIdIMAP4 does not override the necessary virtuals to make that SendCmd()
+// work correctly with IMAP.  TIdIMAP reintroduces its own SendCmd() implementation,
+// which TIdSASLEntries does not call.  Until that can be changed, we will have
+// to send the IMAP 'AUTHENTICATE' command manually!  Doing it this way so as
+// not to introduce an interface change that breaks backwards compatibility...
+
+function CheckStrFail(const AStr : String; const AOk, ACont: array of string) : Boolean;
+begin
+  Result := (PosInStrArray(AStr, AOk) = -1) and (PosInStrArray(AStr, ACont) = -1);
+end;
+
+function PerformSASLLogin_IMAP(ASASL: TIdSASL; AEncoder: TIdEncoder;
+  ADecoder: TIdDecoder; AClient : TIdIMAP4): Boolean;
+const
+  AOkReplies: array[0..0] of string = (IMAP_OK);
+  AContinueReplies: array[0..0] of string = (IMAP_CONT);
+var
+  S: String;
+begin
+  Result := False;
+  // TODO: support 'SASL-IR' extension...
+  AClient.SendCmd(AClient.NewCmdCounter, 'AUTHENTICATE ' + String(ASASL.ServiceName), [], True); {Do not Localize}
+  if CheckStrFail(AClient.LastCmdResult.Code, AOkReplies, AContinueReplies) then begin
+    Exit; // this mechanism is not supported
+  end;
+  if (PosInStrArray(AClient.LastCmdResult.Code, AOkReplies) > -1) then begin
+    Result := True;
+    Exit; // we've authenticated successfully :)
+  end;
+  S := ADecoder.DecodeString(TrimRight(AClient.LastCmdResult.Text.Text));
+  S := ASASL.StartAuthenticate(S, AClient.Host, IdGSKSSN_imap);
+  AClient.IOHandler.WriteLn(AEncoder.Encode(S));
+  AClient.GetInternalResponse('', [], True);
+  if CheckStrFail(AClient.LastCmdResult.Code, AOkReplies, AContinueReplies) then
+  begin
+    ASASL.FinishAuthenticate;
+    Exit;
+  end;
+  while PosInStrArray(AClient.LastCmdResult.Code, AContinueReplies) > -1 do begin
+    S := ADecoder.DecodeString(TrimRight(AClient.LastCmdResult.Text.Text));
+    S := ASASL.ContinueAuthenticate(S, AClient.Host, IdGSKSSN_imap);
+    AClient.IOHandler.WriteLn(AEncoder.Encode(S));
+    AClient.GetInternalResponse('', [], True);
+    if CheckStrFail(AClient.LastCmdResult.Code, AOkReplies, AContinueReplies) then
+    begin
+      ASASL.FinishAuthenticate;
+      Exit;
+    end;
+  end;
+  Result := (PosInStrArray(AClient.LastCmdResult.Code, AOkReplies) > -1);
+  ASASL.FinishAuthenticate;
+end;
+
+type
+  {$IFDEF HAS_GENERICS_TList}
+  TIdSASLList = TList<TIdSASL>;
+  {$ELSE}
+  // TODO: flesh out to match TList<TIdSASL> for non-Generics compilers
+  TIdSASLList = TList;
+  {$ENDIF}
+
+  TIdSASLEntriesIMAP4 = class(TIdSASLEntries)
+  public
+    procedure LoginSASL_IMAP(AClient: TIdIMAP4);
+  end;
+
+procedure TIdSASLEntriesIMAP4.LoginSASL_IMAP(AClient: TIdIMAP4);
+var
+  i : Integer;
+  LE : TIdEncoderMIME;
+  LD : TIdDecoderMIME;
+  LSupportedSASL : TStrings;
+  LSASLList: TIdSASLList;
+  LSASL : TIdSASL;
+  LError : TIdReply;
+
+  function SetupErrorReply: TIdReply;
+  begin
+    Result := TIdReplyClass(AClient.LastCmdResult.ClassType).Create(nil);
+    Result.Assign(AClient.LastCmdResult);
+  end;
+
+begin
+  // make sure the collection is not empty
+  CheckIfEmpty;
+
+  //create a list of mechanisms that both parties support
+  LSASLList := TIdSASLList.Create;
+  try
+    LSupportedSASL := TStringList.Create;
+    try
+      ParseCapaReplyToList(AClient.FCapabilities, LSupportedSASL, 'AUTH'); {Do not Localize}
+      for i := Count-1 downto 0 do begin
+        LSASL := Items[i].SASL;
+        if LSASL <> nil then begin
+          if not LSASL.IsAuthProtocolAvailable(LSupportedSASL) then begin
+            Continue;
+          end;
+          if LSASLList.IndexOf(LSASL) = -1 then begin
+            LSASLList.Add(LSASL);
+          end;
+        end;
+      end;
+    finally
+      FreeAndNil(LSupportedSASL);
+    end;
+
+    if LSASLList.Count = 0 then begin
+      EIdSASLNotSupported.Toss(RSSASLNotSupported);
+    end;
+
+    //now do it
+    LE := nil;
+    try
+      LD := nil;
+      try
+        LError := nil;
+        try
+          for i := 0 to LSASLList.Count-1 do begin
+            LSASL := {$IFDEF HAS_GENERICS_TList}LSASLList.Items[i]{$ELSE}TIdSASL(LSASLList.Items[i]){$ENDIF};
+            if not LSASL.IsReadyToStart then begin
+              Continue;
+            end;
+            if not Assigned(LE) then begin
+              LE := TIdEncoderMIME.Create(nil);
+            end;
+            if not Assigned(LD) then begin
+              LD := TIdDecoderMIME.Create(nil);
+            end;
+            if PerformSASLLogin_IMAP(LSASL, LE, LD, AClient) then begin
+              Exit;
+            end;
+            if not Assigned(LError) then begin
+              LError := SetupErrorReply;
+            end;
+          end;
+          if Assigned(LError) then begin
+            LError.RaiseReplyError;
+          end else begin
+            EIdSASLNotReady.Toss(RSSASLNotReady);
+          end;
+        finally
+          FreeAndNil(LError);
+        end;
+      finally
+        FreeAndNil(LD);
+      end;
+    finally
+      FreeAndNil(LE);
+    end;
+  finally
+    FreeAndNil(LSASLList);
+  end;
 end;
 
 { TIdIMAP4WorkHelper }
@@ -1748,7 +1910,10 @@ begin
   for I := 0 to LExtra.Count-1 do begin
     if TextStartsWith(LExtra.Strings[I], 'CAPABILITY ') then begin {Do not Localize}
       BreakApart(LExtra.Strings[I], ' ', FCapabilities);           {Do not Localize}
-      FCapabilities.Delete(0);
+      // RLebeau: do not delete the first item anymore! It specifies the IMAP
+      // version/revision, which is needed to support certain extensions, like
+      // 'IMAP4rev1'...
+      {FCapabilities.Delete(0);}
       FHasCapa := True;
       Break;
     end;
@@ -2094,9 +2259,9 @@ begin
     FCmdCounter := 0;
     if FAuthType = iatUserPass then begin
       if Length(Password) <> 0 then begin                              {Do not Localize}
-        SendCmd(NewCmdCounter, IMAP4Commands[cmdLogin] + ' ' + Username + ' ' + IMAPQuotedStr(Password), ['OK']);   {Do not Localize}
+        SendCmd(NewCmdCounter, IMAP4Commands[cmdLogin] + ' ' + Username + ' ' + IMAPQuotedStr(Password), [IMAP_OK]);   {Do not Localize}
       end else begin
-        SendCmd(NewCmdCounter, IMAP4Commands[cmdLogin] + ' ' + Username, ['OK']);          {Do not Localize}
+        SendCmd(NewCmdCounter, IMAP4Commands[cmdLogin] + ' ' + Username, [IMAP_OK]);          {Do not Localize}
       end;
       if LastCmdResult.Code <> IMAP_OK then begin
         RaiseExceptionForLastCmdResult;
@@ -2106,7 +2271,8 @@ begin
       if not FHasCapa then begin
         Capability;
       end;
-      FSASLMechanisms.LoginSASL('AUTHENTICATE', FHost, IdGSKSSN_imap, ['* OK'], ['* +'], Self, FCapabilities);     {Do not Localize}
+      // FSASLMechanisms.LoginSASL('AUTHENTICATE', FHost, IdGSKSSN_imap, [IMAP_OK], [IMAP_CONT], Self, FCapabilities);     {Do not Localize}
+      TIdSASLEntriesIMAP4(FSASLMechanisms).LoginSASL_IMAP(Self);
     end;
     FConnectionState := csAuthenticated;
     // RLebeau: check if the response includes new Capabilities, if not then query for them...
@@ -2144,7 +2310,13 @@ begin
       if LastCmdResult.Code = IMAP_PREAUTH then begin
         FConnectionState := csAuthenticated;
         FCmdCounter := 0;
-        Capability;
+        // RLebeau: check if the greeting includes initial Capabilities, if not then query for them...
+        if not CheckReplyForCapabilities then begin
+          Capability;
+        end;
+      end else begin
+        // RLebeau: check if the greeting includes initial Capabilities...
+        CheckReplyForCapabilities;
       end;
     end;
     if AAutoLogin then begin
@@ -2161,7 +2333,8 @@ procedure TIdIMAP4.InitComponent;
 begin
   inherited InitComponent;
   FMailBox := TIdMailBox.Create(Self);
-  FSASLMechanisms := TIdSASLEntries.Create(Self);
+  //FSASLMechanisms := TIdSASLEntries.Create(Self);
+  FSASLMechanisms := TIdSASLEntriesIMAP4.Create(Self);
   Port := IdPORT_IMAP4;
   FLineStruct := TIdIMAPLineStruct.Create;
   FCapabilities := TStringList.Create;
@@ -2230,12 +2403,19 @@ begin
   ASlCapability.Clear;
   SendCmd(NewCmdCounter, IMAP4Commands[CmdCapability], [IMAP4Commands[CmdCapability]]);
   if LastCmdResult.Code = IMAP_OK then begin
-    if LastCmdResult.Text.Count > 0 then begin
-      BreakApart(LastCmdResult.Text[0], ' ', ASlCapability);        {Do not Localize}
+    // RLebeau: logically, the text should go in LastCmdResult.Text,
+    // but it actually ends up in TIdReplyIMAP4.Extra instead...
+    if TIdReplyIMAP4(LastCmdResult).Extra.Count > 0 then begin
+      BreakApart(TIdReplyIMAP4(LastCmdResult).Extra[0], ' ', ASlCapability);        {Do not Localize}
     end;
+    // RLebeau: do not delete the first item anymore! It specifies the IMAP
+    // version/revision, which is needed to support certain extensions, like
+    // 'IMAP4rev1'...
+    {
     if ASlCapability.Count > 0 then begin
       ASlCapability.Delete(0);
     end;
+    }
     Result := True;
   end;
 end;
@@ -2977,7 +3157,7 @@ begin
       to get the size of the message we are going to send...}
       LLength := Length(LHeadersAsBytes) + (LStream.Size - LStream.Position);
 
-      LUseNonSyncLiteral := IsCapabilityListed('LITERAL+');
+      LUseNonSyncLiteral := IsCapabilityListed('LITERAL+');         {Do not Localize}
       if LUseNonSyncLiteral then begin
         LMsgLiteral := '{' + IntToStr ( LLength ) + '+}';           {Do not Localize}
       end else begin
@@ -3106,7 +3286,7 @@ begin
         TIdStreamHelper.Seek(LTempStream, -4, soCurrent);
       until False;
 
-      LUseNonSyncLiteral := IsCapabilityListed('LITERAL+'); {do not localize}
+      LUseNonSyncLiteral := IsCapabilityListed('LITERAL+');     {Do not Localize}
       if LUseNonSyncLiteral then begin
         LMsgLiteral := '{' + IntToStr(LLength) + '+}';          {Do not Localize}
       end else begin
@@ -3150,7 +3330,7 @@ begin
         addition to the count in LLength, because this CRLF terminates the
         APPEND command...}
         IOHandler.WriteLn;
-        if GetInternalResponse(GetCmdCounter, [IMAP4Commands[cmdAppend]], False) = IMAP_OK then begin
+        if GetInternalResponse(LastCmdCounter, [IMAP4Commands[cmdAppend]], False) = IMAP_OK then begin
           Result := True;
         end;
       except
