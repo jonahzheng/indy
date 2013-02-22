@@ -17179,6 +17179,7 @@ procedure Unload;
 {$IFNDEF STATICLOAD_OPENSSL}
 function WhichFailedToLoad: String;
 function GetCryptLibHandle : Integer;
+procedure IdOpenSSLSetLibPath(const APath: String);
 {$ENDIF}
 //
 procedure InitializeRandom;
@@ -17726,8 +17727,6 @@ function RAND_status() : integer;
 function RAND_event(iMsg : UINT; wp : wparam; lp : lparam) : integer;
 procedure RAND_screen();
 {$ENDIF}
-
-procedure IdOpenSSLSetLibPath(const APath: String);
 
 implementation
 

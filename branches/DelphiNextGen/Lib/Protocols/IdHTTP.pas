@@ -1269,6 +1269,7 @@ begin
     AResponse.ContentStream := TMemoryStream.Create;
   end;
 
+  LCompressor := Compressor;
   try
     // we need to determine what type of decompression may need to be used
     // before we read from the IOHandler.  If there is compression, then we
@@ -1276,7 +1277,6 @@ begin
     // If no compression is used, ContentStream will be used directly
 
     if Assigned(AResponse.ContentStream) then begin
-      LCompressor := Compressor;
       if Assigned(LCompressor) and LCompressor.IsReady then begin
         LDecMeth := PosInStrArray(AResponse.ContentEncoding, ['deflate', 'gzip'], False) + 1;  {do not localize}
       end;
