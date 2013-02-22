@@ -461,14 +461,14 @@ type
     FAuthRetries: Integer;
     {Retries counter for proxy authorization}
     FAuthProxyRetries: Integer;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FCookieManager: TIdCookieManager;
-    FCompressor : TIdZLibCompressorBase;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FCookieManager: TIdCookieManager;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FCompressor : TIdZLibCompressorBase;
     FImplicitCookieManager: Boolean;
     {Max retries for authorization}
     FMaxAuthRetries: Integer;
     FMaxHeaderLines: integer;
     FAllowCookies: Boolean;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FAuthenticationManager: TIdAuthenticationManager;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FAuthenticationManager: TIdAuthenticationManager;
     FProtocolVersion: TIdHTTPProtocolVersion;
 
     {this is an internal counter for redirects}
@@ -1194,6 +1194,8 @@ var
   //1 - deflate
   //2 - gzip
   LTrailHeader: String;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LCompressor: TIdZLibCompressorBase;
 
   function ChunkSize: integer;
   var
@@ -1274,7 +1276,8 @@ begin
     // If no compression is used, ContentStream will be used directly
 
     if Assigned(AResponse.ContentStream) then begin
-      if Assigned(Compressor) and Compressor.IsReady then begin
+      LCompressor := Compressor;
+      if Assigned(LCompressor) and LCompressor.IsReady then begin
         LDecMeth := PosInStrArray(AResponse.ContentEncoding, ['deflate', 'gzip'], False) + 1;  {do not localize}
       end;
       if LDecMeth > 0 then begin
@@ -1333,8 +1336,8 @@ begin
       if LDecMeth > 0 then begin
         LS.Position := 0;
         case LDecMeth of
-          1 : Compressor.DecompressDeflateStream(LS, AResponse.ContentStream);
-          2 : Compressor.DecompressGZipStream(LS, AResponse.ContentStream);
+          1 : LCompressor.DecompressDeflateStream(LS, AResponse.ContentStream);
+          2 : LCompressor.DecompressGZipStream(LS, AResponse.ContentStream);
         end;
       end;
     finally
@@ -1351,7 +1354,7 @@ begin
       try
         LOrigStream.CopyFrom(AResponse.ContentStream, 0);
       finally
-        {$IFNDEF DCC_NEXTGEN_ARC}
+        {$IFNDEF USE_OBJECT_ARC}
         AResponse.ContentStream.Free;
         {$ENDIF}
         AResponse.ContentStream := LOrigStream;
@@ -1709,6 +1712,8 @@ procedure TIdCustomHTTP.ConnectToHost(ARequest: TIdHTTPRequest; AResponse: TIdHT
 var
   LLocalHTTP: TIdHTTPProtocol;
   LUseConnectVerb: Boolean;
+  // under ARC, convert a weak reference to a strong reference before working with it
+  LCompressor: TIdZLibCompressorBase;
 begin
   ARequest.FUseProxy := SetHostAndPort;
 
@@ -1742,7 +1747,8 @@ begin
       end;
   end;
 
-  if Assigned(FCompressor) and FCompressor.IsReady then begin
+  LCompressor := FCompressor;
+  if Assigned(LCompressor) and LCompressor.IsReady then begin
     if IndyPos('deflate', ARequest.AcceptEncoding) = 0 then  {do not localize}
     begin
       if ARequest.AcceptEncoding <> '' then begin {do not localize}
@@ -1760,6 +1766,7 @@ begin
       end;
     end;
   end;
+  {$IFDEF USE_OBJECT_ARC}LCompressor := nil;{$ENDIF}
 
   if IndyPos('identity', ARequest.AcceptEncoding) = 0 then begin  {do not localize}
     if ARequest.AcceptEncoding <> '' then begin
@@ -1781,7 +1788,7 @@ begin
 
       // TODO: change this to nil so data is discarded without wasting memory?
       LLocalHTTP.Response.ContentStream := TMemoryStream.Create;
-      {$IFNDEF DCC_NEXTGEN_ARC}
+      {$IFNDEF USE_OBJECT_ARC}
       try
       {$ENDIF}
         try
@@ -1813,7 +1820,7 @@ begin
           raise;
           // TODO: Add property that will contain the error messages.
         end;
-      {$IFNDEF DCC_NEXTGEN_ARC}
+      {$IFNDEF USE_OBJECT_ARC}
       finally
         LLocalHTTP.Response.ContentStream.Free;
       end;
@@ -1876,7 +1883,7 @@ begin
       FCookieManager := nil;
       FImplicitCookieManager := False;
     end
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     else if (AComponent = FAuthenticationManager) then begin
       FAuthenticationManager := nil;
     end else if (AComponent = FCompressor) then begin
@@ -1903,13 +1910,13 @@ begin
       if FImplicitCookieManager then begin
         FCookieManager := nil;
         FImplicitCookieManager := False;
-        {$IFDEF DCC_NEXTGEN_ARC}
+        {$IFDEF USE_OBJECT_ARC}
         // have to remove the Owner's strong references so it can be freed
         RemoveComponent(LCookieManager);
         {$ENDIF}
         FreeAndNil(LCookieManager);
       end else begin
-        {$IFNDEF DCC_NEXTGEN_ARC}
+        {$IFNDEF USE_OBJECT_ARC}
         LCookieManager.RemoveFreeNotification(Self);
         {$ENDIF}
       end;
@@ -1918,7 +1925,7 @@ begin
     FCookieManager := ACookieManager;
     FImplicitCookieManager := False;
 
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     if Assigned(ACookieManager) then begin
       ACookieManager.FreeNotification(Self);
     end;
@@ -2144,7 +2151,7 @@ begin
     if Assigned(LAuthManager) then begin
       LAuthManager.AddAuthentication(Request.Authentication, URL);
     end;
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     Request.Authentication.Free;
     {$ENDIF}
     Request.Authentication := nil;
@@ -2158,7 +2165,7 @@ end;
 
 procedure TIdCustomHTTP.SetAuthenticationManager(Value: TIdAuthenticationManager);
 begin
-  {$IFDEF DCC_NEXTGEN_ARC}
+  {$IFDEF USE_OBJECT_ARC}
   // under ARC, all weak references to a freed object get nil'ed automatically
   FAuthenticationManager := Value;
   {$ELSE}

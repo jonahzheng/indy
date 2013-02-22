@@ -76,7 +76,7 @@ interface
 {$IFNDEF HAS_STATIC_TThread_Queue}
   {$DEFINE NotifyThreadNeeded}
 {$ELSE}
-  {$IFNDEF DCC_NEXTGEN_ARC}
+  {$IFNDEF USE_OBJECT_ARC}
     {$DEFINE TNotify_InternalDoNotify_Needed}
   {$ENDIF}
 {$ENDIF}
@@ -262,17 +262,17 @@ end;
 procedure TIdNotify.Notify;
 begin
   if InMainThread and (not MainThreadUsesNotify) then begin
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     try
     {$ENDIF}
       DoNotify;
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     finally
       Free;
     end;
     {$ENDIF}
   end else begin
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     try
     {$ENDIF}
       {$IFDEF HAS_STATIC_TThread_Queue}
@@ -287,7 +287,7 @@ begin
       CreateNotifyThread;
       GNotifyThread.AddNotification(Self);
       {$ENDIF}
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     except
       Free;
       raise;
@@ -360,17 +360,17 @@ begin
 end;
 
 destructor TIdNotifyThread.Destroy;
-{$IFNDEF DCC_NEXTGEN_ARC}
 var
+  {$IFNDEF USE_OBJECT_ARC}
   LNotify: TIdNotify;
-{$ENDIF}
+  {$ENDIF}
   LList: TIdNotifyList;
 begin
   // Free remaining Notifications if there is somthing that is still in
   // the queue after thread was terminated
   LList := FNotifications.LockList;
   try
-    {$IFDEF DCC_NEXTGEN_ARC}
+    {$IFDEF USE_OBJECT_ARC}
     LList.Clear; // Items are auto-freed
     {$ELSE}
     while LList.Count > 0 do begin

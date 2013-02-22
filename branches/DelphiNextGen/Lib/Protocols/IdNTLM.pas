@@ -276,11 +276,9 @@ const
 implementation
 
 uses
-  {$IFDEF STRING_IS_UNICODE}
-    {$IFNDEF DCC_NEXTGEN}
+  {$IFDEF HAS_UNIT_AnsiStrings}
   AnsiStrings,
   {$ENDIF}
-    {$ENDIF}
   SysUtils,
   {$IFDEF DOTNET}
   System.Text,

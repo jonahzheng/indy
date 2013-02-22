@@ -57,7 +57,7 @@ type
 
   TIdSASLListEntry = class(TCollectionItem)
   protected
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FSASL : TIdSASL;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FSASL : TIdSASL;
     function GetDisplayName: String; override;
     function GetOwnerComponent: TComponent;
     function GetSASLEntries: TIdSASLEntries;

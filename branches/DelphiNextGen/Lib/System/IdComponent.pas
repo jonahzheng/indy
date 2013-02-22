@@ -62,7 +62,7 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  {$IFNDEF DCC_NEXTGEN_ARC}
+  {$IFNDEF USE_OBJECT_ARC}
   Classes,
   {$ENDIF}
   IdBaseComponent, IdGlobal, IdResourceStrings,
@@ -113,12 +113,12 @@ type
     FOnWorkBegin: TWorkBeginEvent;
     FOnWorkEnd: TWorkEndEvent;
     FWorkInfos: array[TWorkMode] of TWorkInfo;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FWorkTarget: TIdComponent;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FWorkTarget: TIdComponent;
     //
     procedure DoStatus(AStatus: TIdStatus); overload;
     procedure DoStatus(AStatus: TIdStatus; const AArgs: array of const); overload;
     procedure InitComponent; override;
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     {$ENDIF}
     procedure SetWorkTarget(AValue: TIdComponent);
@@ -230,7 +230,7 @@ begin
 end;
 
 // under ARC, all weak references to a freed object get nil'ed automatically
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 procedure TIdComponent.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   if (Operation = opRemove) and (AComponent = FWorkTarget) then begin
@@ -242,7 +242,7 @@ end;
 
 procedure TIdComponent.SetWorkTarget(AValue: TIdComponent);
 begin
-  {$IFDEF DCC_NEXTGEN_ARC}
+  {$IFDEF USE_OBJECT_ARC}
   // under ARC, all weak references to a freed object get nil'ed automatically
   FWorkTarget := AValue;
   {$ELSE}

@@ -57,8 +57,8 @@ uses
 type
   TIdServerIOHandler = class(TIdComponent)
   protected
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FScheduler: TIdScheduler;
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FScheduler: TIdScheduler;
+    {$IFNDEF USE_OBJECT_ARC}
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     {$ENDIF}
   public
@@ -98,7 +98,7 @@ begin
 end;
 
 // under ARC, all weak references to a freed object get nil'ed automatically
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 procedure TIdServerIOHandler.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   // Remove the reference to the linked Scheduler if it is deleted
@@ -111,7 +111,7 @@ end;
 
 procedure TIdServerIOHandler.SetScheduler(AScheduler: TIdScheduler);
 begin
-  {$IFDEF DCC_NEXTGEN_ARC}
+  {$IFDEF USE_OBJECT_ARC}
   // under ARC, all weak references to a freed object get nil'ed automatically
   FScheduler := AScheduler;
   {$ELSE}

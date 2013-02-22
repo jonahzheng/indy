@@ -314,13 +314,13 @@ type
   TIdCustomTCPServer = class(TIdComponent)
   protected
     FActive: Boolean;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FScheduler: TIdScheduler;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FScheduler: TIdScheduler;
     FBindings: TIdSocketHandles;
     FContextClass: TIdServerContextClass;
     FImplicitScheduler: Boolean;
     FImplicitIOHandler: Boolean;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FIntercept: TIdServerIntercept;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FIOHandler: TIdServerIOHandler;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FIntercept: TIdServerIntercept;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FIOHandler: TIdServerIOHandler;
     FListenerThreads: TIdListenerThreadList;
     FListenQueue: integer;
     FMaxConnections: Integer;
@@ -636,7 +636,7 @@ end;
 
 procedure TIdCustomTCPServer.SetIntercept(const AValue: TIdServerIntercept);
 begin
-  {$IFDEF DCC_NEXTGEN_ARC}
+  {$IFDEF USE_OBJECT_ARC}
   // under ARC, all weak references to a freed object get nil'ed automatically
   FIntercept := AValue;
   {$ELSE}
@@ -683,14 +683,14 @@ begin
       // -Kudzu
       FScheduler := nil;
       FImplicitScheduler := False;
-      {$IFDEF DCC_NEXTGEN_ARC}
+      {$IFDEF USE_OBJECT_ARC}
       // have to remove the Owner's strong references so it can be freed
       RemoveComponent(LScheduler);
       {$ENDIF}
       FreeAndNil(LScheduler);
     end;
 
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     // Ensure we will no longer be notified when the component is freed
     if LScheduler <> nil then begin
       LScheduler.RemoveFreeNotification(Self);
@@ -699,7 +699,7 @@ begin
 
     FScheduler := AValue;
 
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     // Ensure we will be notified when the component is freed, even is it's on
     // another form
     if AValue <> nil then begin
@@ -725,14 +725,14 @@ begin
     if FImplicitIOHandler then begin
       FIOHandler := nil;
       FImplicitIOHandler := False;
-      {$IFDEF DCC_NEXTGEN_ARC}
+      {$IFDEF USE_OBJECT_ARC}
       // have to remove the Owner's strong references so it can be freed
       RemoveComponent(LIOHandler);
       {$ENDIF}
       FreeAndNil(LIOHandler);
     end;
 
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     // Ensure we will no longer be notified when the component is freed
     if Assigned(LIOHandler) then begin
       LIOHandler.RemoveFreeNotification(Self);
@@ -742,7 +742,7 @@ begin
     FIOHandler := AValue;
 
     if AValue <> nil then begin
-      {$IFNDEF DCC_NEXTGEN_ARC}
+      {$IFNDEF USE_OBJECT_ARC}
       // Ensure we will be notified when the component is freed, even is it's on
       // another form
       AValue.FreeNotification(Self);

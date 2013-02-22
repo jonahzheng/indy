@@ -79,9 +79,9 @@ type
   TIdConnectionIntercept = class(TIdBaseComponent)
   protected
     FConnection: TComponent;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FIntercept: TIdConnectionIntercept;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FIntercept: TIdConnectionIntercept;
     FIsClient: Boolean;
-    {$IFDEF DCC_NEXTGEN_ARC}
+    {$IFDEF USE_OBJECT_ARC}
     // When AutoRefCounting is enabled, object references MUST be valid objects.
     // It is common for users to store non-object values, though, so we will
     // provide separate properties for those purposes
@@ -97,7 +97,7 @@ type
     FOnSend: TIdInterceptStreamEvent;
     //
     procedure InitComponent; override;
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     {$ENDIF}
     procedure SetIntercept(AValue: TIdConnectionIntercept);
@@ -112,7 +112,7 @@ type
     property IsClient: Boolean read FIsClient;
 
     // user can use this to keep context
-    {$IFDEF DCC_NEXTGEN_ARC}
+    {$IFDEF USE_OBJECT_ARC}
     property DataObject: TObject read FDataObject write FDataObject;
     property DataValue: PtrInt read FDataValue write FDataValue;
     {$ELSE}
@@ -215,7 +215,7 @@ begin
 
     // under ARC, all weak references to a freed object get nil'ed automatically
 
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     // remove self from the Intercept's free notification list    {Do not Localize}
     if Assigned(LIntercept) then begin
       LIntercept.RemoveFreeNotification(Self);
@@ -224,7 +224,7 @@ begin
 
     FIntercept := AValue;
 
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     // add self to the Intercept's free notification list    {Do not Localize}
     if Assigned(AValue) then begin
       AValue.FreeNotification(Self);
@@ -234,7 +234,7 @@ begin
 end;
 
 // under ARC, all weak references to a freed object get nil'ed automatically
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 procedure TIdConnectionIntercept.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   if (Operation = opRemove) and (AComponent = Intercept) then begin

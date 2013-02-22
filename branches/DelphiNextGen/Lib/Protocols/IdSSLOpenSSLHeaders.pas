@@ -846,7 +846,7 @@ uses
 {.$DEFINE SSLEAY_MACROS}
 
 const
-  {$IFDEF DCC_NEXTGEN}
+  {$IFNDEF HAS_PAnsiChar}
   cNull: TIdAnsiChar = 0;
   {$ENDIF}
 
@@ -18190,15 +18190,12 @@ end;
 function GetErrorMessage(const AErr : TIdC_ULONG) : String;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
 var
-  {$IFDEF DCC_NEXTGEN}
-  LErrMsg: array of TIdAnsiChar;
-  LWrapper: TPtrWrapper;
-  {$ELSE}
   LErrMsg: array [0..160] of TIdAnsiChar;
+  {$IFDEF USE_MARSHALLED_PTRS}
+  LWrapper: TPtrWrapper;
   {$ENDIF}
 begin
-  {$IFDEF DCC_NEXTGEN}
-  SetLength(LErrMsg, 161);
+  {$IFDEF USE_MARSHALLED_PTRS}
   LWrapper := TPtrWrapper.Create(@LErrMsg[0]);
   ERR_error_string_n(AErr, LWrapper.ToPointer, 160);
   Result := TMarshal.ReadStringAsAnsi(LWrapper);
@@ -21210,15 +21207,12 @@ end;
 // remove this function, it is not used
 function ErrMsg(AErr : TIdC_ULONG) : string;
 var
-  {$IFDEF DCC_NEXTGEN}
-  LString: array of TIdAnsiChar;
-  LWrapper: TPtrWrapper;
-  {$ELSE}
   LString: array[0..300] of TIdAnsiChar;
+  {$IFDEF USE_MARSHALLED_PTRS}
+  LWrapper: TPtrWrapper;
   {$ENDIF}
 begin
-  {$IFDEF DCC_NEXTGEN}
-  SetLength(LString, 301);
+  {$IFDEF USE_MARSHALLED_PTRS}
   LWrapper := TPtrWrapper.Create(@LString[0]);
   ERR_error_string_n(AErr, LWrapper.ToPointer, 300);
   Result := TMarshal.ReadStringAsAnsi(LWrapper);
@@ -22788,7 +22782,7 @@ function UTC_Time_Decode(UCTtime : PASN1_UTCTIME; var year, month, day, hour, mi
 var
   i, tz_dir: Integer;
   time_str: string;
-  {$IFNDEF DCC_NEXTGEN}
+  {$IFNDEF USE_MARSHALLED_PTRS}
     {$IFNDEF STRING_IS_ANSI}
   LTemp: AnsiString;
     {$ENDIF}
@@ -22798,7 +22792,7 @@ begin
   if UCTtime^.length < 12 then begin
     Exit;
   end;
-  {$IFDEF DCC_NEXTGEN}
+  {$IFDEF USE_MARSHALLED_PTRS}
   time_str := TMarshal.ReadStringAsAnsi(TPtrWrapper.Create(UCTtime^.data), UCTtime^.length);
   {$ELSE}
     {$IFDEF STRING_IS_ANSI}
@@ -23324,13 +23318,13 @@ end;
 {$IFNDEF OPENSSL_NO_TLSEXT}
 function SSL_set_tlsext_host_name(s : PSSL; name : string) : TIdC_LONG;
  {$IFDEF USE_INLINE} inline; {$ENDIF}
-{$IFDEF DCC_NEXTGEN}
+{$IFDEF USE_MARSHALLED_PTRS}
 var
   M: TMarshaller;
 {$ENDIF}
 begin
   Result := SSL_ctrl(s, SSL_CTRL_SET_TLSEXT_HOSTNAME, TLSEXT_NAMETYPE_host_name,
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
     M.AsAnsi(name).ToPointer
     {$ELSE}
     PAnsiChar(
@@ -24299,7 +24293,7 @@ function OPENSSL_malloc(aSize:TIdC_INT):Pointer;
 //can also use CRYPTO_mem_leaks(bio)
 begin
   Result := CRYPTO_malloc(aSize,
-    {$IFDEF DCC_NEXTGEN}
+    {$IFNDEF HAS_PAnsiChar}
     @cNull
     {$ELSE}
     ''

@@ -174,7 +174,7 @@ type
     FOnBeforeBind: TNotifyEvent;
     FOnAfterBind: TNotifyEvent;
     FOnSocketAllocated: TNotifyEvent;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FTransparentProxy: TIdCustomTransparentProxy;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FTransparentProxy: TIdCustomTransparentProxy;
     FImplicitTransparentProxy: Boolean;
     FUseNagle: Boolean;
     FReuseSocket: TIdReuseSocket;
@@ -421,7 +421,7 @@ begin
       if not Assigned(AProxy.Owner) then begin
         if Assigned(LTransparentProxy) and (not FImplicitTransparentProxy) then begin
           FTransparentProxy := nil;
-          {$IFNDEF DCC_NEXTGEN_ARC}
+          {$IFNDEF USE_OBJECT_ARC}
           LTransparentProxy.RemoveFreeNotification(Self);
           {$ENDIF}
         end;
@@ -429,7 +429,7 @@ begin
         if Assigned(LTransparentProxy) and (LTransparentProxy.ClassType <> LClass) then begin
           FTransparentProxy := nil;
           FImplicitTransparentProxy := False;
-          {$IFDEF DCC_NEXTGEN_ARC}
+          {$IFDEF USE_OBJECT_ARC}
           // have to remove the Owner's strong references so it can be freed
           RemoveComponent(LTransparentProxy);
           {$ENDIF}
@@ -446,18 +446,18 @@ begin
           if FImplicitTransparentProxy then begin
             FTransparentProxy := nil;
             FImplicitTransparentProxy := False;
-            {$IFDEF DCC_NEXTGEN_ARC}
+            {$IFDEF USE_OBJECT_ARC}
             RemoveComponent(LTransparentProxy);
             {$ENDIF}
             FreeAndNil(LTransparentProxy);
           end else begin
-            {$IFNDEF DCC_NEXTGEN_ARC}
+            {$IFNDEF USE_OBJECT_ARC}
             LTransparentProxy.RemoveFreeNotification(Self);
             {$ENDIF}
           end;
         end;
         FTransparentProxy := AProxy;
-        {$IFNDEF DCC_NEXTGEN_ARC}
+        {$IFNDEF USE_OBJECT_ARC}
         AProxy.FreeNotification(Self);
         {$ENDIF}
       end;
@@ -466,13 +466,13 @@ begin
       if FImplicitTransparentProxy then begin
         FTransparentProxy := nil;
         FImplicitTransparentProxy := False;
-        {$IFDEF DCC_NEXTGEN_ARC}
+        {$IFDEF USE_OBJECT_ARC}
         RemoveComponent(LTransparentProxy);
         {$ENDIF}
         FreeAndNil(LTransparentProxy);
       end else begin
         FTransparentProxy := nil;
-        {$IFNDEF DCC_NEXTGEN_ARC}
+        {$IFNDEF USE_OBJECT_ARC}
         LTransparentProxy.RemoveFreeNotification(Self);
         {$ENDIF}
       end;

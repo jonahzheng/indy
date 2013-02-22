@@ -362,7 +362,7 @@ type
     procedure SetServer(const Value: TIdDNS_UDPServer);
   public
     constructor Create(Server: TIdDNS_UDPServer);
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     destructor Destroy; override;
     {$ENDIF}
     property Server : TIdDNS_UDPServer read FServer write SetServer;
@@ -744,7 +744,7 @@ end;
 
 procedure TIdMWayTreeNode.SetTreeNode(Index: Integer; const Value: TIdMWayTreeNode);
 begin
-  {$IFNDEF DCC_NEXTGEN_ARC}
+  {$IFNDEF USE_OBJECT_ARC}
   SubTree.Items[Index].Free;
   {$ENDIF}
   SubTree.Items[Index] := Value;
@@ -3605,7 +3605,7 @@ begin
   FServer := Server;
 end;
 
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 destructor TIdDNSMap.Destroy;
 var
   I : Integer;

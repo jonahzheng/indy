@@ -365,12 +365,12 @@ type
   TIdTCPConnection = class(TIdComponent)
   protected
     FGreeting: TIdReply;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FIntercept: TIdConnectionIntercept;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FIOHandler: TIdIOHandler;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FIntercept: TIdConnectionIntercept;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FIOHandler: TIdIOHandler;
     FLastCmdResult: TIdReply;
     FManagedIOHandler: Boolean;
     FOnDisconnected: TNotifyEvent;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FSocket: TIdIOHandlerSocket;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FSocket: TIdIOHandlerSocket;
     FReplyClass: TIdReplyClass;
     //
     procedure CheckConnected;
@@ -515,7 +515,7 @@ begin
   if Assigned(LIOHandler) then begin
     LIOHandler.Close;
     // This will free any managed IOHandlers
-    {$IFDEF DCC_NEXTGEN_ARC}LIOHandler := nil;{$ENDIF}
+    {$IFDEF USE_OBJECT_ARC}LIOHandler := nil;{$ENDIF}
     SetIOHandler(nil);
   end;
   FreeAndNil(FLastCmdResult);
@@ -607,7 +607,7 @@ end;
 procedure TIdTCPConnection.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   if (Operation = opRemove) then begin
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     if (AComponent = FIntercept) then begin
       FIntercept := nil;
     end else
@@ -650,7 +650,7 @@ begin
       end;
     end;
 
-    {$IFDEF DCC_NEXTGEN_ARC}
+    {$IFDEF USE_OBJECT_ARC}
     // under ARC, all weak references to a freed object get nil'ed automatically
     FIntercept := AValue;
     {$ELSE}
@@ -698,14 +698,14 @@ begin
         if LOtherIntercept <> LIntercept then begin
           EIdException.Toss(RSInterceptIsDifferent);
         end;
-        {$IFDEF DCC_NEXTGEN_ARC}LOtherIntercept := nil;{$ENDIF}
+        {$IFDEF USE_OBJECT_ARC}LOtherIntercept := nil;{$ENDIF}
       end;
     end;
 
     if ManagedIOHandler then begin
       if Assigned(LIOHandler) then begin
         FIOHandler := nil;
-        {$IFDEF DCC_NEXTGEN_ARC}
+        {$IFDEF USE_OBJECT_ARC}
         RemoveComponent(LIOHandler);
         {$ENDIF}
         FreeAndNil(LIOHandler);
@@ -723,13 +723,13 @@ begin
     // Clear out old values whether setting AValue to nil, or setting a new value
     if Assigned(LIOHandler) then begin
       LIOHandler.WorkTarget := nil;
-      {$IFNDEF DCC_NEXTGEN_ARC}
+      {$IFNDEF USE_OBJECT_ARC}
       LIOHandler.RemoveFreeNotification(Self);
       {$ENDIF}
     end;
 
     if Assigned(AValue) then begin
-      {$IFNDEF DCC_NEXTGEN_ARC}
+      {$IFNDEF USE_OBJECT_ARC}
       // add self to the IOHandler's free notification list
       AValue.FreeNotification(Self);
       {$ENDIF}

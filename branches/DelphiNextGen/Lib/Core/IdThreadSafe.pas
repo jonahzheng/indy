@@ -215,17 +215,17 @@ type
   {$ELSE}
   TIdThreadSafeObjectList = class(TIdThreadSafeList)
   {$ENDIF}
-  {$IFNDEF DCC_NEXTGEN_ARC}
+  {$IFNDEF USE_OBJECT_ARC}
   private
     FOwnsObjects: Boolean;
   {$ENDIF}
   public
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     constructor Create; override;
     destructor Destroy; override;
     {$ENDIF}
     procedure ClearAndFree;
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     property OwnsObjects: Boolean read FOwnsObjects write FOwnsObjects;
     {$ENDIF}
   end;
@@ -674,7 +674,7 @@ end;
 
 { TIdThreadSafeObjectList }
 
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 
 constructor TIdThreadSafeObjectList{$IFDEF HAS_GENERICS_TObjectList}<T>{$ENDIF}.Create;
 begin
@@ -697,7 +697,7 @@ var
 begin
   LList := LockList;
   try
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     for i := 0 to LList.Count-1 do begin
       {$IFDEF HAS_GENERICS_TList}LList[i]{$ELSE}TObject(LList[i]){$ENDIF}.Free;
     end;

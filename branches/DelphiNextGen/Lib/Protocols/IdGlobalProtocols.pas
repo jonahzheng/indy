@@ -1712,7 +1712,7 @@ var
 var
     {$IFDEF USE_VCL_POSIX}
   LRec : _Stat;
-      {$IFDEF DCC_NEXTGEN}
+      {$IFDEF USE_MARSHALLED_PTRS}
   M: TMarshaller;
       {$ENDIF}
     {$ELSE}
@@ -1773,7 +1773,7 @@ begin
     {$IFDEF USE_VCL_POSIX}
   //This is messy with IFDEF's but I want to be able to handle 63 bit file sizes.
   if stat(
-      {$IFDEF DCC_NEXTGEN}
+      {$IFDEF USE_MARSHALLED_PTRS}
     M.AsAnsi(AFileName).ToPointer
       {$ELSE}
     PAnsiChar(
@@ -1831,7 +1831,7 @@ var
   LTime : Integer;
   {$IFDEF USE_VCL_POSIX}
   LRec : _Stat;
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
   M: TMarshaller;
     {$ENDIF}
   {$ENDIF}
@@ -1885,7 +1885,7 @@ begin
     {$ENDIF}
     {$IFDEF USE_VCL_POSIX}
   if stat(
-      {$IFDEF DCC_NEXTGEN}
+      {$IFDEF USE_MARSHALLED_PTRS}
     M.AsAnsi(AFileName).ToPointer
       {$ELSE}
     PAnsiChar(
@@ -4464,7 +4464,7 @@ function IndyComputerName: string;
 {$IFDEF UNIX}
 var
   LHost: array[0..256] of TIdAnsiChar;
-  {$IFDEF DCC_NEXTGEN}
+  {$IFDEF USE_MARSHALLED_PTRS}
   LWrapper: TPtrWrapper;
   {$ENDIF}
 {$ENDIF}
@@ -4487,18 +4487,18 @@ begin
   Result := GetHostName;
     {$ENDIF}
     {$IFDEF USE_VCL_POSIX}
-      {$IFDEF DCC_NEXTGEN}
+      {$IFDEF USE_MARSHALLED_PTRS}
   LWrapper := TPtrWrapper.Create(@LHost[0]);
       {$ENDIF}
   if Posix.Unistd.gethostname(
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
     LWrapper.ToPointer
     {$ELSE}
     LHost
     {$ENDIF},
     255) <> -1 then
   begin
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
     Result := TMarshal.ReadStringAsAnsi(LWrapper);
     {$ELSE}
     Result := String(LHost);

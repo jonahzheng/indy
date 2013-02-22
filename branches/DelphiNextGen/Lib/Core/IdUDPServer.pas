@@ -96,7 +96,7 @@ type
     FBuffer: TIdBytes;
     FCurrentException: String;
     FCurrentExceptionClass: TClass;
-    {$IFDEF DCC_NEXTGEN_ARC}
+    {$IFDEF USE_OBJECT_ARC}
     // When AutoRefCounting is enabled, object references MUST be valid objects.
     // It is common for users to store non-object values, though, so we will
     // provide separate properties for those purpose
@@ -121,7 +121,7 @@ type
     property AcceptWait: integer read FAcceptWait write FAcceptWait;
     property Binding: TIdSocketHandle read FBinding;
     property Server: TIdUDPServer read FServer;
-    {$IFDEF DCC_NEXTGEN_ARC}
+    {$IFDEF USE_OBJECT_ARC}
     property DataObject: TObject read FDataObject write FDataObject;
     property DataValue: PtrInt read FDataValue write FDataValue;
     {$ELSE}

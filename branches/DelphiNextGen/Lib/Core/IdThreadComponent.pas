@@ -131,10 +131,10 @@ type
     procedure DoStopped(AThread: TIdThread); virtual; //thev
     procedure DoTerminate(Sender: TObject); virtual; //thev
     function GetActive: Boolean;
-    {$IFDEF DCC_NEXTGEN}
-    // When AutoRefCounting is enabled, object references MUST be valid objects.
-    // It is common for users to store non-object values, though, so we will
-    // provide separate properties for those purposes
+    {$IFDEF USE_OBJECT_ARC}
+    // When ARC is enabled, object references MUST be valid objects.
+    // It is common for users to store non-object values, though, so
+    // we will provide separate properties for those purposes
     function GetDataObject: TObject;
     function GetDataValue: PtrInt;
     {$ELSE}
@@ -153,7 +153,7 @@ type
     function IsRunning: Boolean;
     procedure Loaded; override;
     procedure SetActive(const AValue: Boolean); virtual;
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_OBJECT_ARC}
     procedure SetDataObject(const AValue: TObject);
     procedure SetDataValue(const AValue: PtrInt);
     {$ELSE}
@@ -174,7 +174,7 @@ type
     procedure TerminateAndWaitFor; virtual;
     function WaitFor: LongWord;
     // Properties
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_OBJECT_ARC}
     property DataObject: TObject read GetDataObject write SetDataObject;
     property DataValue: PtrInt read GetDataValue write SetDataValue;
     {$ELSE}
@@ -365,7 +365,7 @@ begin
   end;
 end;
 
-{$IFDEF DCC_NEXTGEN}
+{$IFDEF USE_OBJECT_ARC}
 
 function TIdThreadComponent.GetDataObject: TObject;
 begin
@@ -476,7 +476,7 @@ begin
   end;
 end;
 
-{$IFDEF DCC_NEXTGEN}
+{$IFDEF USE_OBJECT_ARC}
 
 procedure TIdThreadComponent.SetDataObject(const AValue: TObject);
 begin

@@ -284,13 +284,13 @@ var
   LFrm: TfrmAbout;
 begin
   LFrm := TfrmAbout.Create;
-  {$IFNDEF DCC_NEXTGEN_ARC}
+  {$IFNDEF USE_OBJECT_ARC}
   try
   {$ENDIF}
      LFrm.Version := IndyFormat(RSAAboutBoxVersion, [AProductVersion]);
      LFrm.ProductName := AProductName;
      LFrm.ShowModal;
-  {$IFNDEF DCC_NEXTGEN_ARC}
+  {$IFNDEF USE_OBJECT_ARC}
   finally
     LFrm.Free;
   end;

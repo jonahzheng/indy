@@ -197,10 +197,8 @@ implementation
 
 uses
   IdGlobalProtocols, IdStream, IdZLibConst
-  {$IFNDEF DCC_NEXTGEN}
-    {$IFDEF VCL_XE4_OR_ABOVE}
+  {$IFDEF HAS_AnsiStrings_StrPLCopy}
   , AnsiStrings
-    {$ENDIF}
   {$ENDIF}
   ;
 
@@ -950,13 +948,13 @@ end;
 constructor TCompressionStream.CreateEx(CompressionLevel: TCompressionLevel;
   Dest: TStream; const StreamType: TZStreamType;
   const AName: string = ''; ATime: Integer = 0);
-{$IFDEF DCC_NEXTGEN}
+{$IFDEF USE_MARSHALLED_PTRS}
 type
-  PBytes = ^TBytes;
+  TBytesPtr = ^TBytes;
 {$ENDIF}
 var
   LBytes: TIdBytes;
-  {$IFNDEF DCC_NEXTGEN}
+  {$IFDEF HAS_AnsiString}
   LName: AnsiString;
   {$ENDIF}
 begin
@@ -981,13 +979,13 @@ begin
     // about the charset, we'll force it here in case Indy's 8-bit encoding
     // class is changed later on...
     LBytes := CharsetToEncoding('ISO-8859-1').GetBytes(AName);
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
     // TODO: optimize this
     FillChar(FGZHeader.name^, FGZHeader.name_max, 0);
-    TMarshal.Copy(PBytes(@LBytes)^, 0, TPtrWrapper.Create(FGZHeader.name), IndyMin(Length(LBytes), FGZHeader.name_max));
+    TMarshal.Copy(TBytesPtr(@LBytes)^, 0, TPtrWrapper.Create(FGZHeader.name), IndyMin(Length(LBytes), FGZHeader.name_max));
     {$ELSE}
     SetString(LName, PAnsiChar(LBytes), Length(LBytes));
-    {$IFDEF VCL_XE4_OR_ABOVE}AnsiStrings.{$ENDIF}StrPLCopy(FGZHeader.name, LName, FGZHeader.name_max);
+    {$IFDEF HAS_AnsiStrings_StrPLCopy}AnsiStrings.{$ENDIF}StrPLCopy(FGZHeader.name, LName, FGZHeader.name_max);
     {$ENDIF}
     deflateSetHeader(FZRec, FGZHeader);
   end;

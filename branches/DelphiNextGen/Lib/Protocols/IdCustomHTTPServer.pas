@@ -334,7 +334,7 @@ type
     FContent: TStrings;
     FLastTimeStamp: TDateTime;
     FLock: TIdCriticalSection;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FOwner: TIdHTTPCustomSessionList;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FOwner: TIdHTTPCustomSessionList;
     FSessionID: string;
     FRemoteHost: string;
     //
@@ -415,7 +415,7 @@ type
     FParseParams: Boolean;
     FServerSoftware: string;
     FMIMETable: TIdThreadSafeMimeTable;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FSessionList: TIdHTTPCustomSessionList;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FSessionList: TIdHTTPCustomSessionList;
     FImplicitSessionList: Boolean;
     FSessionState: Boolean;
     FSessionTimeOut: Integer;
@@ -645,7 +645,7 @@ end;
 type
   TIdHTTPSessionCleanerThread = Class(TIdThread)
   protected
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FSessionList: TIdHTTPCustomSessionList;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FSessionList: TIdHTTPCustomSessionList;
   public
     constructor Create(SessionList: TIdHTTPCustomSessionList); reintroduce;
     procedure AfterRun; override;
@@ -981,7 +981,7 @@ begin
   if Assigned(LSessionList) and FImplicitSessionList then begin
     FSessionList := nil;
     FImplicitSessionList := False;
-    {$IFDEF DCC_NEXTGEN_ARC}
+    {$IFDEF USE_OBJECT_ARC}
     // have to remove the Owner's strong references so it can be freed
     RemoveComponent(LSessionList);
     {$ENDIF}
@@ -1593,7 +1593,7 @@ begin
     end else begin
       LSessionList.Clear;
     end;
-    {$IFDEF DCC_NEXTGEN_ARC}LSessionList := nil;{$ENDIF}
+    {$IFDEF USE_OBJECT_ARC}LSessionList := nil;{$ENDIF}
   end;
 
   inherited Shutdown;
@@ -1626,14 +1626,14 @@ begin
       // -Kudzu
       FSessionList := nil;
       FImplicitSessionList := False;
-      {$IFDEF DCC_NEXTGEN_ARC}
+      {$IFDEF USE_OBJECT_ARC}
       // have to remove the Owner's strong references so it can be freed
       RemoveComponent(LSessionList);
       {$ENDIF}
       FreeAndNil(LSessionList);
     end;
 
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     // Ensure we will no longer be notified when the component is freed
     if LSessionList <> nil then begin
       LSessionList.RemoveFreeNotification(Self);
@@ -1642,7 +1642,7 @@ begin
 
     FSessionList := AValue;
 
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     // Ensure we will be notified when the component is freed, even is it's on
     // another form
     if AValue <> nil then begin

@@ -55,6 +55,19 @@
 // STRING_IS_ANSI and STRING_IS_UNICODE defines above.
 {$UNDEF UNICODE_BUT_STRING_IS_ANSI}
 
+// Make sure the following are $DEFINE'd only for suitable environments
+// as specified further below.  Delphi/C++Builder Mobile/NextGen compilers
+// do not support Ansi data types anymore, and is moving away from raw
+// pointers as well.
+{$DEFINE HAS_AnsiString}
+{$DEFINE HAS_AnsiChar}
+{$DEFINE HAS_PAnsiChar}
+{$UNDEF HAS_PPAnsiChar}
+{$UNDEF NO_ANSI_TYPES}
+{$UNDEF USE_MARSHALLED_PTRS}
+{$UNDEF HAS_MarshaledAString}
+{$UNDEF USE_OBJECT_ARC}
+
 // Make sure the following is $DEFINE'd only for suitable environments
 // as specified further below.
 {$UNDEF STRING_IS_IMMUTABLE}
@@ -728,6 +741,7 @@
     {$DEFINE HAS_TCharacter}
     {$DEFINE HAS_InterlockedCompareExchangePointer}
     {$DEFINE HAS_WIDE_TCharArray}
+    {$DEFINE HAS_UNIT_AnsiStrings}
     {$IFDEF VCL_2009}
       // TODO: need to differentiate between RTM and Update 1
       // FmtStr() is broken in RTM but was fixed in Update 1
@@ -768,21 +782,20 @@
 {$ENDIF}
 
 {$IFDEF VCL_XE3_OR_ABOVE}
-  {$IFDEF DCC}
-    {$DEFINE HAS_DIRECTIVE_ZEROBASEDSTRINGS}
-    {$IFDEF NEXTGEN}
-      {$DEFINE DCC_NEXTGEN}
-      {$IFDEF AUTOREFCOUNT}
-        {$DEFINE DCC_NEXTGEN_ARC}
-      {$ENDIF}
+  {$DEFINE HAS_DIRECTIVE_ZEROBASEDSTRINGS}
+  {$DEFINE HAS_SysUtils_TStringHelper}
+  {$IFDEF NEXTGEN}
+    {$DEFINE DCC_NEXTGEN}
+    {$DEFINE HAS_MarshaledAString}
+    {$DEFINE USE_MARSHALLED_PTRS}
+    {$IFDEF AUTOREFCOUNT}
+      {$DEFINE USE_OBJECT_ARC}
     {$ENDIF}
   {$ENDIF}
 {$ENDIF}
 
 {$IFDEF VCL_XE4_OR_ABOVE}
-  {$IFDEF DCC}
-    // TODO
-  {$ENDIF}
+  {$DEFINE HAS_AnsiStrings_StrPLCopy}
 {$ENDIF}
 
 // Delphi XE+ cross-compiling
@@ -810,24 +823,6 @@
 {$ELSE}
   {$IFDEF KYLIXCOMPAT}
     {$linklib c}
-  {$ENDIF}
-{$ENDIF}
-
-{$IFDEF DCC_NEXTGEN}
-  {$DEFINE STRING_IS_IMMUTABLE}
-  {$IFDEF DCC_NEXTGEN_ARC}
-    // TODO: move these to a appropriate section. Not doing this yet because
-    // it is a major interface change to switch to Generics and we should
-    // maintain backwards compatibility with earlier compilers for the time
-    // being. Defining them only here for now because the non-Generic versions
-    // of these classes have become deprecated by ARC and so we need to start
-    // taking advantage of the Generics versions...
-    {$DEFINE HAS_UNIT_Generics_Collections}
-    {$DEFINE HAS_UNIT_Generics_Defaults}
-    {$DEFINE HAS_GENERICS_TDictionary}
-    {$DEFINE HAS_GENERICS_TList}
-    {$DEFINE HAS_GENERICS_TObjectList}
-    {$DEFINE HAS_GENERICS_TThreadList}
   {$ENDIF}
 {$ENDIF}
 
@@ -893,6 +888,34 @@
   {$IFDEF UNICODE}
     {$DEFINE UNICODE_BUT_STRING_IS_ANSI}
   {$ENDIF}
+{$ENDIF}
+
+{$IFDEF DCC_NEXTGEN}
+  {$DEFINE NO_ANSI_TYPES}
+  {$DEFINE STRING_IS_IMMUTABLE}
+  {$IFDEF USE_OBJECT_ARC}
+    // TODO: move these to an appropriate section. Not doing this yet because
+    // it is a major interface change to switch to Generics and we should
+    // maintain backwards compatibility with earlier compilers for the time
+    // being. Defining them only here for now because the non-Generic versions
+    // of these classes have become deprecated by ARC and so we need to start
+    // taking advantage of the Generics versions...
+    {$DEFINE HAS_UNIT_Generics_Collections}
+    {$DEFINE HAS_UNIT_Generics_Defaults}
+    {$DEFINE HAS_GENERICS_TDictionary}
+    {$DEFINE HAS_GENERICS_TList}
+    {$DEFINE HAS_GENERICS_TObjectList}
+    {$DEFINE HAS_GENERICS_TThreadList}
+  {$ENDIF}
+{$ENDIF}
+
+{$IFDEF NO_ANSI_TYPES}
+  {$UNDEF HAS_AnsiString}
+  {$UNDEF HAS_AnsiChar}
+  {$UNDEF HAS_PAnsiChar}
+  {$UNDEF HAS_PPAnsiChar}
+  {$UNDEF HAS_UNIT_AnsiStrings}
+  {$UNDEF HAS_AnsiStrings_StrPLCopy}
 {$ENDIF}
 
 {$IFDEF WIN32}

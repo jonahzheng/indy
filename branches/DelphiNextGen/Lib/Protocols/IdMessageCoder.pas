@@ -222,12 +222,12 @@ begin
 end;
 
 destructor TIdMessageDecoderList.Destroy;
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 var
   i: integer;
 {$ENDIF}
 begin
-  {$IFNDEF DCC_NEXTGEN_ARC}
+  {$IFNDEF USE_OBJECT_ARC}
   for i := 0 to FMessageCoders.Count - 1 do begin
     TIdMessageDecoderInfo(FMessageCoders.Objects[i]).Free;
   end;
@@ -453,12 +453,12 @@ begin
 end;
 
 destructor TIdMessageEncoderList.Destroy;
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 var
   i: integer;
 {$ENDIF}
 begin
-  {$IFNDEF DCC_NEXTGEN_ARC}
+  {$IFNDEF USE_OBJECT_ARC}
   for i := 0 to FMessageCoders.Count - 1 do begin
     TIdMessageEncoderInfo(FMessageCoders.Objects[i]).Free;
   end;

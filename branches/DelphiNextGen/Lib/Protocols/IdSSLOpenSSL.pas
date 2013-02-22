@@ -782,9 +782,9 @@ begin
 end;
 
 function PasswordCallback(buf: PIdAnsiChar; size: TIdC_INT; rwflag: TIdC_INT; userdata: Pointer): TIdC_INT; cdecl;
-{$IFDEF DCC_NEXTGEN}
+{$IFDEF USE_MARSHALLED_PTRS}
 type
-  PBytes = ^TBytes;
+  TBytesPtr = ^TBytes;
 {$ENDIF}
 var
   Password: String;
@@ -818,8 +818,8 @@ begin
       {$IFDEF STRING_IS_UNICODE}
       LPassword := IndyTextEncoding_OSDefault.GetBytes(Password);
       if Length(LPassword) > 0 then begin
-        {$IFDEF DCC_NEXTGEN}
-        TMarshal.Copy(PBytes(@LPassword)^, 0, TPtrWrapper.Create(buf), IndyMin(Length(LPassword), size));
+        {$IFDEF USE_MARSHALLED_PTRS}
+        TMarshal.Copy(TBytesPtr(@LPassword)^, 0, TPtrWrapper.Create(buf), IndyMin(Length(LPassword), size));
         {$ELSE}
         Move(LPassword[0], buf^, IndyMin(Length(LPassword), size));
         {$ENDIF}
@@ -1556,13 +1556,13 @@ end;
   {$IFDEF UNIX}
 
 function IndySSL_load_client_CA_file(const AFileName: String) : PSTACK_OF_X509_NAME;
-{$IFDEF DCC_NEXTGEN}
+{$IFDEF USE_MARSHALLED_PTRS}
 var
   M: TMarshaller;
 {$ENDIF}
 begin
   Result := SSL_load_client_CA_file(
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
     M.AsAnsi(AFileName, CP_UTF8).ToPointer
     {$ELSE}
     PAnsiChar(UTF8String(AFileName))
@@ -1573,13 +1573,13 @@ end;
 function IndySSL_CTX_use_PrivateKey_file(ctx: PSSL_CTX; const AFileName: String;
   AType: Integer): TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
-{$IFDEF DCC_NEXTGEN}
+{$IFDEF USE_MARSHALLED_PTRS}
 var
   M: TMarshaller;
 {$ENDIF}
 begin
   Result := SSL_CTX_use_PrivateKey_file(ctx,
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
     M.AsAnsi(AFileName, CP_UTF8).ToPointer
     {$ELSE}
     PAnsiChar(UTF8String(AFileName))
@@ -1590,13 +1590,13 @@ end;
 function IndySSL_CTX_use_certificate_file(ctx: PSSL_CTX;
   const AFileName: String; AType: Integer): TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
-{$IFDEF DCC_NEXTGEN}
+{$IFDEF USE_MARSHALLED_PTRS}
 var
   M: TMarshaller;
 {$ENDIF}
 begin
   Result := SSL_CTX_use_certificate_file(ctx,
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
     M.AsAnsi(AFileName, CP_UTF8).ToPointer
     {$ELSE}
     PAnsiChar(UTF8String(AFileName))
@@ -1607,7 +1607,7 @@ end;
 function IndyX509_STORE_load_locations(ctx: PX509_STORE;
   const AFileName, APathName: String): TIdC_INT;
 {$IFDEF USE_INLINE} inline; {$ENDIF}
-{$IFDEF DCC_NEXTGEN}
+{$IFDEF USE_MARSHALLED_PTRS}
 var
   M: TMarshaller;
 {$ENDIF}
@@ -1619,7 +1619,7 @@ begin
   // PAnsiChar cast is applied to the raw data and thus can be nil...
   //
   Result := X509_STORE_load_locations(ctx,
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
     M.AsAnsi(AFileName, CP_UTF8).ToPointer,
     M.AsAnsi(APathName, CP_UTF8).ToPointer
     {$ELSE}
@@ -1642,13 +1642,13 @@ var
   B: PBIO;
   LDH: PDH;
   j: Integer;
-  {$IFDEF DCC_NEXTGEN}
+  {$IFDEF USE_MARSHALLED_PTRS}
   M: TMarshaller;
   {$ENDIF}
 begin
   Result := 0;
   B := BIO_new_file(
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
     M.AsAnsi(AFileName, CP_UTF8).ToPointer
     {$ELSE}
     PAnsiChar(UTF8String(AFileName))
@@ -2080,7 +2080,7 @@ end;
 procedure UnLoadOpenSSLLibrary;
 // allow the user to call unload directly?
 // will then need to implement reference count
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 var
   i: Integer;
   LList: TIdCriticalSectionList;
@@ -2096,7 +2096,7 @@ begin
   FreeAndNil(LockPassCB);
   FreeAndNil(LockVerifyCB);
   if Assigned(CallbackLockList) then begin
-    {$IFDEF DCC_NEXTGEN_ARC}
+    {$IFDEF USE_OBJECT_ARC}
     CallbackLockList.Clear; // Items are auto-freed
     {$ELSE}
     LList := CallbackLockList.LockList;
@@ -2697,7 +2697,7 @@ var
   SSLMethod: PSSL_METHOD;
   error: TIdC_INT;
 //  pCAname: PSTACK_X509_NAME;
-  {$IFDEF DCC_NEXTGEN}
+  {$IFDEF USE_MARSHALLED_PTRS}
   M: TMarshaller;
   {$ENDIF}
 begin
@@ -2775,7 +2775,7 @@ an invalid MAC when doing SSL.}
   //if_SSL_CTX_set_tmp_rsa_callback(hSSLContext, @RSACallback);
   if fCipherList <> '' then begin    {Do not Localize}
     error := SSL_CTX_set_cipher_list(fContext,
-      {$IFDEF DCC_NEXTGEN}
+      {$IFDEF USE_MARSHALLED_PTRS}
       M.AsAnsi(fCipherList).ToPointer
       {$ELSE}
       PAnsiChar(
@@ -2789,7 +2789,7 @@ an invalid MAC when doing SSL.}
     );
   end else begin
     error := SSL_CTX_set_cipher_list(fContext,
-      {$IFDEF DCC_NEXTGEN}
+      {$IFDEF USE_MARSHALLED_PTRS}
       M.AsAnsi(SSL_DEFAULT_CIPHER_LIST).ToPointer
       {$ELSE}
       SSL_DEFAULT_CIPHER_LIST

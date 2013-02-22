@@ -41,9 +41,9 @@ uses
 type
   TIdSASLUserPass = class(TIdSASL)
   protected
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FUserPassProvider: TIdUserPassProvider;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FUserPassProvider: TIdUserPassProvider;
     procedure SetUserPassProvider(const Value: TIdUserPassProvider);
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     {$ENDIF}
     function GetUsername: string;
@@ -101,7 +101,7 @@ begin
 end;
 
 // under ARC, all weak references to a freed object get nil'ed automatically
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 procedure TIdSASLUserPass.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   if (Operation = opRemove) and (AComponent = FUserPassProvider) then begin
@@ -113,7 +113,7 @@ end;
 
 procedure TIdSASLUserPass.SetUserPassProvider(const Value: TIdUserPassProvider);
 begin
-  {$IFDEF DCC_NEXTGEN_ARC}
+  {$IFDEF USE_OBJECT_ARC}
   // under ARC, all weak references to a freed object get nil'ed automatically
   FUserPassProvider := Value;
   {$ELSE}

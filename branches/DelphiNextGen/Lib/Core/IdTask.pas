@@ -29,7 +29,7 @@ interface
 {$i IdCompilerDefines.inc}
 
 uses
-  {$IFDEF DCC_NEXTGEN_ARC}
+  {$IFDEF USE_OBJECT_ARC}
   IdGlobal,
   {$ENDIF}
   IdYarn,
@@ -39,10 +39,10 @@ type
   TIdTask = class(TObject)
   protected
     FBeforeRunDone: Boolean;
-    {$IFDEF DCC_NEXTGEN_ARC}
-    // When AutoRefCounting is enabled, object references MUST be valid objects.
-    // It is common for users to store non-object values, though, so we will
-    // provide separate properties for those purposes
+    {$IFDEF USE_OBJECT_ARC}
+    // When ARC is enabled, object references MUST be valid objects.
+    // It is common for users to store non-object values, though, so
+    // we will provide separate properties for those purposes
     FDataObject: TObject;
     FDataValue: PtrInt;
     {$ELSE}
@@ -69,7 +69,7 @@ type
     // BeforeRunDone property to allow flexibility in alternative schedulers
     property BeforeRunDone: Boolean read FBeforeRunDone;
     //
-    {$IFDEF DCC_NEXTGEN_ARC}
+    {$IFDEF USE_OBJECT_ARC}
     property DataObject: TObject read FDataObject write FDataObject;
     property DataValue: PtrInt read FDataValue write FDataValue;
     {$ELSE}
@@ -80,7 +80,7 @@ type
 
 implementation
 
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 uses
   IdGlobal;
 {$ENDIF}
@@ -110,8 +110,8 @@ destructor TIdTask.Destroy;
 begin
   // Dont free the yarn, that is the responsibilty of the thread / fiber.
   // .Yarn here is just a reference, not an ownership
-  FreeAndNil({$IFDEF DCC_NEXTGEN_ARC}FDataObject{$ELSE}FData{$ENDIF});
-  {$IFDEF DCC_NEXTGEN_ARC}
+  FreeAndNil({$IFDEF USE_OBJECT_ARC}FDataObject{$ELSE}FData{$ENDIF});
+  {$IFDEF USE_OBJECT_ARC}
   FDataValue := 0;
   {$ENDIF}
   inherited Destroy;

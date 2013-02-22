@@ -86,12 +86,12 @@ type
     FPort: TIdPort;
     FIPVersion : TIdIPVersion;
     FUsername: String;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FChainedProxy: TIdCustomTransparentProxy;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FChainedProxy: TIdCustomTransparentProxy;
     //
     function  GetEnabled: Boolean; virtual; abstract;
     procedure SetEnabled(AValue: Boolean); virtual;
     procedure MakeConnection(AIOHandler: TIdIOHandler; const AHost: string; const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); virtual; abstract;
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     {$ENDIF}
     procedure SetChainedProxy(const AValue: TIdCustomTransparentProxy);
@@ -177,7 +177,7 @@ Begin
 End;
 
 // under ARC, all weak references to a freed object get nil'ed automatically
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 procedure TIdCustomTransparentProxy.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   if (Operation = opRemove) and (AComponent = FChainedProxy) then begin
@@ -207,7 +207,7 @@ begin
 
     // under ARC, all weak references to a freed object get nil'ed automatically
 
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     if Assigned(LChainedProxy) then begin
       LChainedProxy.RemoveFreeNotification(Self);
     end;
@@ -215,7 +215,7 @@ begin
 
     FChainedProxy := AValue;
 
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     if Assigned(AValue) then begin
       AValue.FreeNotification(Self);
     end;

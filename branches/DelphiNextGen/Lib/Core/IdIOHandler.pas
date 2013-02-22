@@ -448,7 +448,7 @@ type
     // method does not need all of it.
     //
     FInputBuffer: TIdBuffer;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FIntercept: TIdConnectionIntercept;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FIntercept: TIdConnectionIntercept;
     FMaxCapturedLines: Integer;
     FMaxLineAction: TIdMaxLineAction;
     FMaxLineLength: Integer;
@@ -476,7 +476,7 @@ type
     function GetDestination: string; virtual;
     procedure InitComponent; override;
     procedure InterceptReceive(var VBuffer: TIdBytes);
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     {$ENDIF}
     procedure PerformCapture(const ADest: TObject; out VLineCount: Integer;
@@ -821,7 +821,7 @@ begin
 end;
 
 // under ARC, all weak references to a freed object get nil'ed automatically
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 procedure TIdIOHandler.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   if (Operation = opRemove) and (AComponent = FIntercept) then begin
@@ -833,7 +833,7 @@ end;
 
 procedure TIdIOHandler.SetIntercept(AValue: TIdConnectionIntercept);
 begin
-  {$IFDEF DCC_NEXTGEN_ARC}
+  {$IFDEF USE_OBJECT_ARC}
   // under ARC, all weak references to a freed object get nil'ed automatically
   FIntercept := AValue;
   {$ELSE}
@@ -1523,7 +1523,7 @@ begin
                 LIntercept := Intercept;
                 if LIntercept <> nil then begin
                   LIntercept.Receive(LBuffer);
-                  {$IFDEF DCC_NEXTGEN_ARC}LIntercept := nil;{$ENDIF}
+                  {$IFDEF USE_OBJECT_ARC}LIntercept := nil;{$ENDIF}
                   LByteCount := Length(LBuffer);
                 end;
 
@@ -2447,7 +2447,7 @@ begin
     // so that a copy is no longer needed here
     LTemp := ToBytes(ABuffer, ALength, AOffset);
     LIntercept.Send(LTemp);
-    {$IFDEF DCC_NEXTGEN_ARC}LIntercept := nil;{$ENDIF}
+    {$IFDEF USE_OBJECT_ARC}LIntercept := nil;{$ENDIF}
     LSize := Length(LTemp);
     LPos := 0;
   end else begin

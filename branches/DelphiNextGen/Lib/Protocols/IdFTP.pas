@@ -799,7 +799,7 @@ type
 
     FTZInfo : TIdFTPTZInfo;
 
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FCompressor : TIdZLibCompressorBase;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FCompressor : TIdZLibCompressorBase;
     //ZLib settings
     FZLibCompressionLevel : Integer; //7
     FZLibWindowBits : Integer; //-15
@@ -1603,7 +1603,7 @@ var
 begin
   DoOnDataChannelDestroy;
   if FDataChannel <> nil then begin
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     FDataChannel.IOHandler.Free;
     {$ENDIF}
     FDataChannel.IOHandler := nil;
@@ -3419,7 +3419,7 @@ begin
   if LCompressor <> AValue then begin
     // under ARC, all weak references to a freed object get nil'ed automatically
 
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     if Assigned(LCompressor) then begin
       LCompressor.RemoveFreeNotification(Self);
     end;
@@ -3428,7 +3428,7 @@ begin
     FCompressor := AValue;
 
     if Assigned(AValue) then begin
-      {$IFNDEF DCC_NEXTGEN_ARC}
+      {$IFNDEF USE_OBJECT_ARC}
       AValue.FreeNotification(Self);
       {$ENDIF}
     end

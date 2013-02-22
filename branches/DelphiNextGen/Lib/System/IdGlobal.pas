@@ -708,22 +708,31 @@ type
     {$ENDIF}
   {$ENDIF}
 
-  {$IFDEF DCC_NEXTGEN}
   // the Delphi next-gen compiler eliminates AnsiString/AnsiChar/PAnsiChar,
   // but we still need to deal with Ansi data. Unfortunately, the compiler
   // won't let us use its secret _AnsiChr types either, so we have to use
   // Byte instead unless we can find a better solution...
-  TIdAnsiChar = Byte;
-  PIdAnsiChar = MarshaledAString;
-  PPIdAnsiChar = ^PIdAnsiChar;
-  {$ELSE}
+
+  {$IFDEF HAS_AnsiChar}
   TIdAnsiChar = AnsiChar;
+  {$ELSE}
+  TIdAnsiChar = Byte;
+  {$ENDIF}
+
+  {$IFDEF HAS_PAnsiChar}
   PIdAnsiChar = PAnsiChar;
-    {$IFDEF HAS_PPAnsiChar}
-  PPIdAnsiChar = PPAnsiChar;
+  {$ELSE}
+    {$IFDEF HAS_MarshaledAString}
+  PIdAnsiChar = MarshaledAString;
     {$ELSE}
-  PPIdAnsiChar = ^PAnsiChar;
+  PIdAnsiChar = PByte;
     {$ENDIF}
+  {$ENDIF}
+
+  {$IFDEF HAS_PPAnsiChar}
+  PPIdAnsiChar = PPAnsiChar;
+  {$ELSE}
+  PPIdAnsiChar = ^PIdAnsiChar;
   {$ENDIF}
 
   {$IFDEF STRING_IS_UNICODE}
@@ -1533,7 +1542,7 @@ procedure SetThreadName(const AName: string; {$IFDEF DOTNET}AThread: System.Thre
 procedure IndySleep(ATime: LongWord);
 
 // TODO: create TIdStringPositionList for non-Nextgen compilers...
-{$IFDEF DCC_NEXTGEN}
+{$IFDEF USE_OBJECT_ARC}
 type
   TIdStringPosition = record
     Value: String;
@@ -1548,8 +1557,8 @@ type
 procedure SplitColumnsNoTrim(const AData: string; AStrings: TStrings; const ADelim: string = ' '); {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use SplitDelimitedString()'{$ENDIF};{$ENDIF} {Do not Localize}
 procedure SplitColumns(const AData: string; AStrings: TStrings; const ADelim: string = ' '); {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use SplitDelimitedString()'{$ENDIF};{$ENDIF}  {Do not Localize}
 
-procedure SplitDelimitedString(const AData: string; AStrings: TStrings; ATrim: Boolean; const ADelim: string = ' '{$IFNDEF DCC_NEXTGEN}; AIncludePositions: Boolean = False{$ENDIF}); {$IFDEF DCC_NEXTGEN}overload;{$ENDIF}  {Do not Localize}
-{$IFDEF DCC_NEXTGEN}
+procedure SplitDelimitedString(const AData: string; AStrings: TStrings; ATrim: Boolean; const ADelim: string = ' '{$IFNDEF USE_OBJECT_ARC}; AIncludePositions: Boolean = False{$ENDIF}); {$IFDEF USE_OBJECT_ARC}overload;{$ENDIF}  {Do not Localize}
+{$IFDEF USE_OBJECT_ARC}
 procedure SplitDelimitedString(const AData: string; AStrings: TIdStringPositionList; ATrim: Boolean; const ADelim: string = ' '); overload;  {Do not Localize}
 {$ENDIF}
 
@@ -2448,7 +2457,7 @@ const
   cUTF16CharSet = {$IFDEF ENDIAN_BIG}'UTF-16BE'{$ELSE}'UTF-16LE'{$ENDIF}; {do not localize}
 var
   LToCharSet, LFromCharSet, LFlags: String;
-  {$IFDEF DCC_NEXTGEN}
+  {$IFDEF USE_MARSHALLED_PTRS}
   M: TMarshaller;
   {$ENDIF}
 begin
@@ -2471,7 +2480,7 @@ begin
   end;
 
   Result := iconv_open(
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
     M.AsAnsi(LToCharSet).ToPointer,
     M.AsAnsi(LFromCharSet).ToPointer
     {$ELSE}
@@ -2696,7 +2705,7 @@ begin
   end;
   {$ELSE}
     {$IFDEF HAS_LocaleCharsFromUnicode}
-  Result := LocaleCharsFromUnicode(FCodePage, FWCharToMBFlags, AChars, ACharCount, {$IFDEF DCC_NEXTGEN}Pointer{$ELSE}PAnsiChar{$ENDIF}(ABytes), AByteCount, nil, nil);
+  Result := LocaleCharsFromUnicode(FCodePage, FWCharToMBFlags, AChars, ACharCount, {$IFNDEF HAS_PAnsiChar}Pointer{$ELSE}PAnsiChar{$ENDIF}(ABytes), AByteCount, nil, nil);
     {$ELSE}
       {$IFDEF WINDOWS}
   Result := WideCharToMultiByte(FCodePage, FWCharToMBFlags, AChars, ACharCount, PAnsiChar(ABytes), AByteCount, nil, nil);
@@ -2808,7 +2817,7 @@ begin
   end;
   {$ELSE}
     {$IFDEF HAS_UnicodeFromLocaleChars}
-  Result := UnicodeFromLocaleChars(FCodePage, FMBToWCharFlags, {$IFDEF DCC_NEXTGEN}Pointer{$ELSE}PAnsiChar{$ENDIF}(ABytes), AByteCount, nil, 0);
+  Result := UnicodeFromLocaleChars(FCodePage, FMBToWCharFlags, {$IFNDEF HAS_PAnsiChar}Pointer{$ELSE}PAnsiChar{$ENDIF}(ABytes), AByteCount, nil, 0);
     {$ELSE}
       {$IFDEF WINDOWS}
   Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(ABytes), AByteCount, nil, 0);
@@ -2926,7 +2935,7 @@ begin
   end;
   {$ELSE}
     {$IFDEF HAS_UnicodeFromLocaleChars}
-  Result := UnicodeFromLocaleChars(FCodePage, FMBToWCharFlags, {$IFDEF DCC_NEXTGEN}Pointer{$ELSE}PAnsiChar{$ENDIF}(ABytes), AByteCount, AChars, ACharCount);
+  Result := UnicodeFromLocaleChars(FCodePage, FMBToWCharFlags, {$IFNDEF HAS_PAnsiChar}Pointer{$ELSE}PAnsiChar{$ENDIF}(ABytes), AByteCount, AChars, ACharCount);
     {$ELSE}
       {$IFDEF WINDOWS}
   Result := MultiByteToWideChar(FCodePage, FMBToWCharFlags, PAnsiChar(ABytes), AByteCount, AChars, ACharCount);
@@ -3957,7 +3966,7 @@ end;
 function InterlockedCompareExchangeObj(var VTarget: TObject; const AValue, Compare: TObject): TObject;
   {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
-  {$IFDEF DCC_NEXTGEN_ARC}
+  {$IFDEF USE_OBJECT_ARC}
   // for ARC, we have to use the TObject overload of TInterlocked to ensure
   // that the reference counts of the objects are managed correctly...
   Result := TInterlocked.CompareExchange(VTarget, AValue, Compare);
@@ -5771,16 +5780,16 @@ end;
 
 procedure SplitColumnsNoTrim(const AData: string; AStrings: TStrings; const ADelim: string = ' ');
 begin
-  SplitDelimitedString(AData, AStrings, False, ADelim{$IFNDEF DCC_NEXTGEN}, True{$ENDIF});
+  SplitDelimitedString(AData, AStrings, False, ADelim{$IFNDEF USE_OBJECT_ARC}, True{$ENDIF});
 end;
 
 procedure SplitColumns(const AData: string; AStrings: TStrings; const ADelim: string = ' ');
 begin
-  SplitDelimitedString(AData, AStrings, True, ADelim{$IFNDEF DCC_NEXTGEN}, True{$ENDIF});
+  SplitDelimitedString(AData, AStrings, True, ADelim{$IFNDEF USE_OBJECT_ARC}, True{$ENDIF});
 end;
 
 procedure SplitDelimitedString(const AData: string; AStrings: TStrings; ATrim: Boolean;
-  const ADelim: string = ' '{$IFNDEF DCC_NEXTGEN}; AIncludePositions: Boolean = False{$ENDIF});
+  const ADelim: string = ' '{$IFNDEF USE_OBJECT_ARC}; AIncludePositions: Boolean = False{$ENDIF});
 var
   i: Integer;
   LData: string;
@@ -5808,7 +5817,7 @@ begin
     while I > 0 do begin
       LLeft := Copy(LData, LLastPos, I - LLastPos); //'abc d' len:=i(=4)-1    {Do not Localize}
       if LLeft > '' then begin    {Do not Localize}
-        {$IFNDEF DCC_NEXTGEN}
+        {$IFNDEF USE_OBJECT_ARC}
         if AIncludePositions then begin
           AStrings.AddObject(Trim(LLeft), TObject(LLastPos + LLeadingSpaceCnt));
         end else
@@ -5821,7 +5830,7 @@ begin
       i := PosIdx(ADelim, LData, LLastPos);
     end;//while found
     if LLastPos <= Length(LData) then begin
-      {$IFNDEF DCC_NEXTGEN}
+      {$IFNDEF USE_OBJECT_ARC}
       if AIncludePositions then begin
         AStrings.AddObject(Trim(Copy(LData, LLastPos, MaxInt)), TObject(LLastPos + LLeadingSpaceCnt));
       end else
@@ -5836,7 +5845,7 @@ begin
     while I > 0 do begin
       LLeft := Copy(AData, LLastPos, I - LLastPos); //'abc d' len:=i(=4)-1    {Do not Localize}
       if LLeft <> '' then begin    {Do not Localize}
-        {$IFNDEF DCC_NEXTGEN}
+        {$IFNDEF USE_OBJECT_ARC}
         if AIncludePositions then begin
           AStrings.AddObject(LLeft, TObject(LLastPos));
         end else
@@ -5849,7 +5858,7 @@ begin
       i := PosIdx(ADelim, AData, LLastPos);
     end;
     if LLastPos <= Length(AData) then begin
-      {$IFNDEF DCC_NEXTGEN}
+      {$IFNDEF USE_OBJECT_ARC}
       if AIncludePositions then begin
         AStrings.AddObject(Copy(AData, LLastPos, MaxInt), TObject(LLastPos));
       end else
@@ -5861,7 +5870,7 @@ begin
   end;
 end;
 
-{$IFDEF DCC_NEXTGEN}
+{$IFDEF USE_OBJECT_ARC}
 constructor TIdStringPosition.Create(const AValue: String; const APosition: Integer);
 begin
   Value := AValue;
@@ -5962,7 +5971,7 @@ begin
   {$IFDEF HAS_NAMED_THREADS}
     {$IFDEF HAS_TThread_NameThreadForDebugging}
   TThread.NameThreadForDebugging(
-      {$IFNDEF DCC_NEXTGEN}
+      {$IFDEF HAS_AnsiString}
     AnsiString(AName) // explicit convert to Ansi
       {$ELSE}
     AName
@@ -7796,15 +7805,15 @@ end;
 {$IFDEF STRING_IS_IMMUTABLE}
 
 {$IFDEF DOTNET}
-  {$DEFINE DOTNET_OR_DCC_NEXTGEN}
+  {$DEFINE HAS_STRING_IndexOf}
 {$ENDIF}
-{$IFDEF DCC_NEXTGEN}
-  {$DEFINE DOTNET_OR_DCC_NEXTGEN}
+{$IFDEF HAS_SysUtils_TStringHelper}
+  {$DEFINE HAS_STRING_IndexOf}
 {$ENDIF}
 
 function CharPosInSet(const ASB: TIdStringBuilder; const ACharPos: Integer; const ASet: String): Integer;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
-{$IFNDEF DOTNET_OR_DCC_NEXTGEN}
+{$IFNDEF HAS_STRING_IndexOf}
 var
   LChar: Char;
   I: Integer;
@@ -7815,7 +7824,7 @@ begin
     EIdException.Toss('Invalid ACharPos');{ do not localize }
   end;
   if ACharPos <= ASB.Length then begin
-    {$IFDEF DOTNET_OR_DCC_NEXTGEN}
+    {$IFDEF HAS_STRING_IndexOf}
     Result := ASet.IndexOf(ASB[ACharPos-1]) + 1;
     {$ELSE}
     // RLebeau 5/8/08: Calling Pos() with a Char as input creates a temporary

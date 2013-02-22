@@ -401,7 +401,7 @@ var
   LBlocks: Integer;
   LOut: TIdBytes;
   LSSize, LTemp: Integer;
-  LFileName: {$IFDEF DCC_NEXTGEN}TIdBytes{$ELSE}AnsiString{$ENDIF};
+  LFileName: {$IFDEF HAS_AnsiString}AnsiString{$ELSE}TIdBytes{$ENDIF};
   LCRC: word;
   LRemainder: integer;
 begin
@@ -412,7 +412,7 @@ begin
   LSSize := IndyLength(ASrcStream, ABytes);
   //BinHex4.0 allows filenames to be only 255 bytes long (because the length
   //is stored in a byte), so truncate the filename to 255 bytes...
-  {$IFDEF DCC_NEXTGEN}
+  {$IFNDEF HAS_AnsiString}
   LFileName := IndyTextEncoding_OSDefault.GetBytes(FFileName);
   {$ELSE}
     {$IFDEF STRING_IS_UNICODE}
@@ -428,7 +428,7 @@ begin
   SetLength(LOut, 1+Length(LFileName)+1+4+4+2+4+4+2+LSSize+2);
   LOut[0] := Length(LFileName);               //Length of filename in 1st byte
   for LN := 1 to Length(LFileName) do begin
-    LOut[LN] := {$IFDEF DCC_NEXTGEN}LFileName[LN-1]{$ELSE}Byte(LFileName[LN]){$ENDIF};
+    LOut[LN] := {$IFNDEF HAS_AnsiString}LFileName[LN-1]{$ELSE}Byte(LFileName[LN]){$ENDIF};
   end;
   LOffset := 1+Length(LFileName);             //Points to byte after filename
   LOut[LOffset] := 0;                         //Version

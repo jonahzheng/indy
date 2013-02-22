@@ -939,7 +939,7 @@ type
     FPASVBoundPortMax : TIdPort;
     FSystemType: string;
     FDefaultDataPort : TIdPort;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FUserAccounts: TIdCustomUserManager;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FUserAccounts: TIdCustomUserManager;
     FOnUserAccount : TOnFTPUserAccountEvent;
     FOnAfterUserLogin: TOnAfterUserLoginEvent;
     FOnUserLogin: TOnFTPUserLoginEvent;
@@ -981,7 +981,7 @@ type
     FOnDataPortAfterBind : TOnDataPortBind;
     FOnPASVBeforeBind : TIdOnPASVRange;
     FOnPASVReply : TIdOnPASV;
-    {$IFDEF DCC_NEXTGEN_ARC}[Weak]{$ENDIF} FFTPFileSystem: TIdFTPBaseFileSystem;
+    {$IFDEF USE_OBJECT_ARC}[Weak]{$ENDIF} FFTPFileSystem: TIdFTPBaseFileSystem;
     FEndOfHelpLine : String;
     FCustomSystID : String;
     FReplyUnknownSITECommand : TIdReply;
@@ -1150,7 +1150,7 @@ type
     procedure ListDirectory(ASender: TIdFTPServerContext; ADirectory: string;
       ADirContents: TStrings; ADetails: Boolean; const ACmd : String = 'LIST';
       const ASwitches : String = ''); {do not localize}
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     {$ENDIF}
     procedure SetAnonymousAccounts(const AValue: TStrings);
@@ -2603,7 +2603,7 @@ begin
   if LUserAccounts <> AValue then begin
     // under ARC, all weak references to a freed object get nil'ed automatically
 
-    {$IFNDEF DCC_NEXTGEN_ARC}
+    {$IFNDEF USE_OBJECT_ARC}
     if Assigned(LUserAccounts) then begin
       LUserAccounts.RemoveFreeNotification(Self);
     end;
@@ -2612,7 +2612,7 @@ begin
     FUserAccounts := AValue;
 
     if Assigned(AValue) then begin
-      {$IFNDEF DCC_NEXTGEN_ARC}
+      {$IFNDEF USE_OBJECT_ARC}
       AValue.FreeNotification(Self);
       {$ENDIF}
       FOnUserAccount := nil;
@@ -2628,7 +2628,7 @@ end;
 
 procedure TIdFTPServer.SetFTPFileSystem(const AValue: TIdFTPBaseFileSystem);
 begin
-  {$IFDEF DCC_NEXTGEN_ARC}
+  {$IFDEF USE_OBJECT_ARC}
   // under ARC, all weak references to a freed object get nil'ed automatically
   FFTPFileSystem := AValue;
   {$ELSE}
@@ -2655,7 +2655,7 @@ begin
 end;
 
 // under ARC, all weak references to a freed object get nil'ed automatically
-{$IFNDEF DCC_NEXTGEN_ARC}
+{$IFNDEF USE_OBJECT_ARC}
 procedure TIdFTPServer.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   if Operation = opRemove then begin
@@ -2725,7 +2725,7 @@ begin
       LUserAccounts := FUserAccounts;
       if Assigned(LUserAccounts) then begin
         LChallenge := LUserAccounts.ChallengeUser(LSafe, LContext.Username);
-        {$IFDEF DCC_NEXTGEN_ARC}LUserAccounts := nil;{$ENDIF}
+        {$IFDEF USE_OBJECT_ARC}LUserAccounts := nil;{$ENDIF}
         if not LSafe then begin
           //we do this to prevent a potential race attack
           DisconUser(ASender);
@@ -2793,7 +2793,7 @@ begin
         LUserAccounts := FUserAccounts;
         if Assigned(LUserAccounts) then begin
           LContext.FAuthenticated := LUserAccounts.AuthenticateUser(LContext.FUsername, ASender.UnparsedParams);
-          {$IFDEF DCC_NEXTGEN_ARC}LUserAccounts := nil;{$ENDIF}
+          {$IFDEF USE_OBJECT_ARC}LUserAccounts := nil;{$ENDIF}
           if LContext.FAuthenticated then begin
             LContext.FPasswordAttempts := 0;
             ASender.Reply.SetReply(230, RSFTPUserLogged);
@@ -3267,7 +3267,7 @@ begin
       try
         if Assigned(LFileSystem) then begin
           LFileSystem.StoreFile(LContext, LTmp1, LAppend, LStream);
-          {$IFDEF DCC_NEXTGEN_ARC}LFileSystem := nil;{$ENDIF}
+          {$IFDEF USE_OBJECT_ARC}LFileSystem := nil;{$ENDIF}
         end else begin
           FOnStoreFile(LContext, LTmp1, LAppend, LStream);
         end;
@@ -5223,7 +5223,7 @@ begin
   LUserAccounts := FUserAccounts;
   if Assigned(LUserAccounts) then begin
     LUserAccounts.UserDisconnected(TIdFTPServerContext(AContext).UserName);
-    {$IFDEF DCC_NEXTGEN_ARC}LUserAccounts := nil;{$ENDIF}
+    {$IFDEF USE_OBJECT_ARC}LUserAccounts := nil;{$ENDIF}
   end;
   inherited DoDisconnect(AContext);
 end;
@@ -7142,7 +7142,7 @@ begin
   FreeAndNil(FOKReply);
   FreeAndNil(FErrorReply);
   FreeAndNil(FReply);
-  {$IFNDEF DCC_NEXTGEN}
+  {$IFNDEF USE_OBJECT_ARC}
   FDataChannel.IOHandler.Free;
   {$ENDIF}
   FDataChannel.IOHandler := nil;

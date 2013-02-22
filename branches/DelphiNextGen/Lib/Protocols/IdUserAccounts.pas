@@ -147,10 +147,10 @@ type
   TIdUserAccount = class(TCollectionItem)
   protected
     FAttributes: TStrings;
-    {$IFDEF DCC_NEXTGEN_ARC}
-    // When AutoRefCounting is enabled, object references MUST be valid objects.
-    // It is common for users to store non-object values, though, so we will
-    // provide separate properties for those purposes
+    {$IFDEF USE_OBJECT_ARC}
+    // When ARC is enabled, object references MUST be valid objects.
+    // It is common for users to store non-object values, though, so
+    // we will provide separate properties for those purposes
     FDataObject: TObject;
     FDataValue: PtrInt;
     {$ELSE}
@@ -169,7 +169,7 @@ type
     //
     function  CheckPassword(const APassword: String): Boolean; virtual;
     //
-    {$IFDEF DCC_NEXTGEN_ARC}
+    {$IFDEF USE_OBJECT_ARC}
     property  Data: TObject read FDataObject write FDataObject;
     property  DataValue: PtrInt read FDataValue write FDataValue;
     {$ELSE}
