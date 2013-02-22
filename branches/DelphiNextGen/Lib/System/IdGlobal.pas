@@ -901,6 +901,10 @@ type
 
   function Indy8BitEncoding{$IFNDEF DOTNET}(const AOwnedByIndy: Boolean = True){$ENDIF}: IIdTextEncoding; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IndyTextEncoding_8Bit()'{$ENDIF};{$ENDIF}
   function IndyASCIIEncoding{$IFNDEF DOTNET}(const AOwnedByIndy: Boolean = True){$ENDIF}: IIdTextEncoding; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IndyTextEncoding_ASCII()'{$ENDIF};{$ENDIF}
+  function IndyUTF16BigEndianEncoding{$IFNDEF DOTNET}(const AOwnedByIndy: Boolean = True){$ENDIF}: IIdTextEncoding; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IndyTextEncoding_UTF16BE()'{$ENDIF};{$ENDIF}
+  function IndyUTF16LittleEndianEncoding{$IFNDEF DOTNET}(const AOwnedByIndy: Boolean = True){$ENDIF}: IIdTextEncoding; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IndyTextEncoding_UTF16LE()'{$ENDIF};{$ENDIF}
+  function IndyOSDefaultEncoding{$IFNDEF DOTNET}(const AOwnedByIndy: Boolean = True){$ENDIF}: IIdTextEncoding; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IndyTextEncoding_OSDefault()'{$ENDIF};{$ENDIF}
+  function IndyUTF7Encoding{$IFNDEF DOTNET}(const AOwnedByIndy: Boolean = True){$ENDIF}: IIdTextEncoding; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IndyTextEncoding_UTF7()'{$ENDIF};{$ENDIF}
   function IndyUTF8Encoding{$IFNDEF DOTNET}(const AOwnedByIndy: Boolean = True){$ENDIF}: IIdTextEncoding; {$IFDEF HAS_DEPRECATED}deprecated{$IFDEF HAS_DEPRECATED_MSG} 'Use IndyTextEncoding_UTF8()'{$ENDIF};{$ENDIF}
 
   (*$HPPEMIT '// These are helper macros to handle differences between C++Builder versions'*)
@@ -1866,6 +1870,7 @@ type
     function GetString(const ABytes: PByte; AByteCount: Integer): TIdUnicodeString; overload;
   end;
 
+  {$UNDEF SUPPORTS_CODEPAGE_ENCODING}
   {$IFNDEF USE_ICONV}
     {$IFDEF WINDOWS}
       {$DEFINE SUPPORTS_CODEPAGE_ENCODING}
@@ -1878,7 +1883,7 @@ type
   TIdMBCSEncoding = class(TIdTextEncodingBase)
   private
     {$IFDEF USE_ICONV}
-    FCharSet: AnsiString;
+    FCharSet: String;
     {$ELSE}
       {$IFDEF SUPPORTS_CODEPAGE_ENCODING}
     FCodePage: Cardinal;
@@ -1889,7 +1894,7 @@ type
   public
     constructor Create; overload; virtual;
     {$IFDEF USE_ICONV}
-    constructor Create(const CharSet : AnsiString); overload; virtual;
+    constructor Create(const CharSet: String); overload; virtual;
     {$ELSE}
       {$IFDEF SUPPORTS_CODEPAGE_ENCODING}
     constructor Create(CodePage: Integer); overload; virtual;
@@ -2360,47 +2365,7 @@ begin
 end;
 
 {$IFDEF USE_ICONV}
-function CreateIconvHandle(const ACharSet: AnsiString; AToUTF16: Boolean): iconv_t;
-const
-  // RLebeau: iconv() outputs a UTF-16 BOM if data is converted to the generic
-  // "UTF-16" charset.  We do not want that, so we will use the "UTF-16LE/BE"
-  // charset explicitally instead so no BOM is outputted. This also saves us
-  // from having to manually detect the presense of a BOM and strip it out.
-  //
-  // TODO: should we be using UTF-16LE or UTF-16BE on big-endian systems?
-  // Delphi uses UTF-16LE, but what does FreePascal use? Let's err on the
-  // side of caution until we know otherwise...
-  //
-  cUTF16CharSet = {$IFDEF ENDIAN_BIG}'UTF-16BE'{$ELSE}'UTF-16LE'{$ENDIF}; {do not localize}
-var
-  LFlags: AnsiString;
-begin
-  // on some systems, //IGNORE must be specified before //TRANSLIT if they
-  // are used together, otherwise //IGNORE gets ignored!
-  LFlags := '';
-  if GIdIconvIgnoreIllegalChars then begin
-    LFlags := LFlags + '//IGNORE'; {do not localize}
-  end;
-  if GIdIconvUseTransliteration then begin
-    LFlags := LFlags + '//TRANSLIT'; {do not localize}
-  end;
-
-  if AToUTF16 then begin
-    Result := iconv_open(PAnsiChar(cUTF16CharSet + LFlags), PAnsiChar(ACharSet));
-  end else begin
-    Result := iconv_open(PAnsiChar(ACharSet + LFlags), cUTF16CharSet);
-  end;
-
-  if Result = iconv_t(-1) then begin
-    if LFlags <> '' then begin
-      raise EIdException.CreateResFmt(@RSInvalidCharSetConvWithFlags, [ACharSet, cUTF16CharSet, LFlags]);
-    end else begin
-      raise EIdException.CreateResFmt(@RSInvalidCharSetConv, [ACharSet, cUTF16CharSet]);
-    end;
-  end;
-end;
-
-constructor TIdMBCSEncoding.Create(const CharSet: AnsiString);
+constructor TIdMBCSEncoding.Create(const CharSet: String);
 const
   // RLebeau: iconv() does not provide a maximum character byte size like
   // Microsoft does, so have to determine the max bytes by manually encoding
@@ -2469,6 +2434,72 @@ end;
 {$ENDIF}
 
 {$IFDEF USE_ICONV}
+function CreateIconvHandle(const ACharSet: String; AToUTF16: Boolean): iconv_t;
+const
+  // RLebeau: iconv() outputs a UTF-16 BOM if data is converted to the generic
+  // "UTF-16" charset.  We do not want that, so we will use the "UTF-16LE/BE"
+  // charset explicitally instead so no BOM is outputted. This also saves us
+  // from having to manually detect the presense of a BOM and strip it out.
+  //
+  // TODO: should we be using UTF-16LE or UTF-16BE on big-endian systems?
+  // Delphi uses UTF-16LE, but what does FreePascal use? Let's err on the
+  // side of caution until we know otherwise...
+  //
+  cUTF16CharSet = {$IFDEF ENDIAN_BIG}'UTF-16BE'{$ELSE}'UTF-16LE'{$ENDIF}; {do not localize}
+var
+  LToCharSet, LFromCharSet, LFlags: String;
+  {$IFDEF DCC_NEXTGEN}
+  M: TMarshaller;
+  {$ENDIF}
+begin
+  // on some systems, //IGNORE must be specified before //TRANSLIT if they
+  // are used together, otherwise //IGNORE gets ignored!
+  LFlags := '';
+  if GIdIconvIgnoreIllegalChars then begin
+    LFlags := LFlags + '//IGNORE'; {do not localize}
+  end;
+  if GIdIconvUseTransliteration then begin
+    LFlags := LFlags + '//TRANSLIT'; {do not localize}
+  end;
+
+  if AToUTF16 then begin
+    LToCharSet := cUTF16CharSet + LFlags; // explicit convert to Ansi
+    LFromCharSet := ACharSet; // explicit convert to Ansi
+  end else begin
+    LToCharSet := ACharSet + LFlags; // explicit convert to Ansi
+    LFromCharSet := cUTF16CharSet;
+  end;
+
+  Result := iconv_open(
+    {$IFDEF DCC_NEXTGEN}
+    M.AsAnsi(LToCharSet).ToPointer,
+    M.AsAnsi(LFromCharSet).ToPointer
+    {$ELSE}
+    PAnsiChar(
+      {$IFDEF STRING_IS_ANSI}
+      LToCharSet
+      {$ELSE}
+      AnsiString(LToCharSet) // explicit convert to Ansi
+      {$ENDIF}
+    ),
+    PAnsiChar(
+      {$IFDEF STRING_IS_ANSI}
+      LFromCharSet
+      {$ELSE}
+      AnsiString(LFromCharSet) // explicit convert to Ansi
+      {$ENDIF}
+    )
+    {$ENDIF}
+  );
+  if Result = iconv_t(-1) then begin
+    if LFlags <> '' then begin
+      raise EIdException.CreateResFmt(@RSInvalidCharSetConvWithFlags, [ACharSet, cUTF16CharSet, LFlags]);
+    end else begin
+      raise EIdException.CreateResFmt(@RSInvalidCharSetConv, [ACharSet, cUTF16CharSet]);
+    end;
+  end;
+end;
+
 function CalcUTF16ByteSize(AChars: PWideChar; ACharCount: Integer): Integer;
 var
   C: WideChar;
@@ -3698,6 +3729,50 @@ begin
   Result := IndyTextEncoding_ASCII;
 end;
 
+function IndyUTF16BigEndianEncoding{$IFNDEF DOTNET}(const AOwnedByIndy: Boolean = True){$ENDIF}: IIdTextEncoding;
+begin
+  {$IFNDEF DOTNET}
+  if not AOwnedByIndy then begin
+    Result := TIdUTF16BigEndianEncoding.Create;
+    Exit;
+  end;
+  {$ENDIF}
+  Result := IndyTextEncoding_UTF16BE;
+end;
+
+function IndyUTF16LittleEndianEncoding{$IFNDEF DOTNET}(const AOwnedByIndy: Boolean = True){$ENDIF}: IIdTextEncoding;
+begin
+  {$IFNDEF DOTNET}
+  if not AOwnedByIndy then begin
+    Result := TIdUTF16LittleEndianEncoding.Create;
+    Exit;
+  end;
+  {$ENDIF}
+  Result := IndyTextEncoding_UTF16LE;
+end;
+
+function IndyOSDefaultEncoding{$IFNDEF DOTNET}(const AOwnedByIndy: Boolean = True){$ENDIF}: IIdTextEncoding;
+begin
+  {$IFNDEF DOTNET}
+  if not AOwnedByIndy then begin
+    Result := TIdMBCSEncoding.Create;
+    Exit;
+  end;
+  {$ENDIF}
+  Result := IndyTextEncoding_OSDefault;
+end;
+
+function IndyUTF7Encoding{$IFNDEF DOTNET}(const AOwnedByIndy: Boolean = True){$ENDIF}: IIdTextEncoding;
+begin
+  {$IFNDEF DOTNET}
+  if not AOwnedByIndy then begin
+    Result := TIdUTF7Encoding.Create;
+    Exit;
+  end;
+  {$ENDIF}
+  Result := IndyTextEncoding_UTF7;
+end;
+
 function IndyUTF8Encoding{$IFNDEF DOTNET}(const AOwnedByIndy: Boolean = True){$ENDIF}: IIdTextEncoding;
 begin
   {$IFNDEF DOTNET}
@@ -3712,11 +3787,15 @@ end;
 {$IFDEF UNIX}
 function HackLoadFileName(const ALibName, ALibVer : String) : string;  {$IFDEF USE_INLINE} inline; {$ENDIF}
 begin
- {$IFDEF DARWIN}
+  {$IFDEF DARWIN}
   Result := ALibName+ALibVer+LIBEXT;
- {$ELSE}
+  {$ELSE}
+    {$IFDEF IOS}
+  Result := ALibName+ALibVer+LIBEXT;
+    {$ELSE}
   Result := ALibName+LIBEXT+ALibVer;
- {$ENDIF}
+    {$ENDIF}
+  {$ENDIF}
 end;
 
 function HackLoad(const ALibName : String; const ALibVersions : array of String) : HMODULE;
@@ -5884,7 +5963,7 @@ begin
     {$IFDEF HAS_TThread_NameThreadForDebugging}
   TThread.NameThreadForDebugging(
       {$IFNDEF DCC_NEXTGEN}
-    AnsiString(AName)
+    AnsiString(AName) // explicit convert to Ansi
       {$ELSE}
     AName
       {$ENDIF},
@@ -5893,7 +5972,7 @@ begin
     {$ELSE}
       {$IFDEF WINDOWS}
         {$IFDEF STRING_IS_UNICODE}
-  LName := AnsiString(AName);
+  LName := AnsiString(AName); // explicit convert to Ansi
         {$ENDIF}
   LThreadNameInfo.RecType := $1000;
   LThreadNameInfo.Name := PAnsiChar({$IFDEF STRING_IS_UNICODE}LName{$ELSE}AName{$ENDIF});

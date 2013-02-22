@@ -667,6 +667,10 @@ uses
   IdResourceStringsCore, IdResourceStringsProtocols, IdGlobalProtocols,
   IdIOHandler, IdIOHandlerSocket;
 
+{$IFDEF HAS_DIRECTIVE_ZEROBASEDSTRINGS}
+  {$ZEROBASEDSTRINGS OFF}
+{$ENDIF}
+
 const
   ProtocolVersionString: array[TIdHTTPProtocolVersion] of string = ('1.0', '1.1'); {do not localize}
 
