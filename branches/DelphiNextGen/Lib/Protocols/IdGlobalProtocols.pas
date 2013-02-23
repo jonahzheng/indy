@@ -4465,7 +4465,7 @@ function IndyComputerName: string;
 var
   LHost: array[0..256] of TIdAnsiChar;
   {$IFDEF USE_MARSHALLED_PTRS}
-  LWrapper: TPtrWrapper;
+  LHostPtr: TPtrWrapper;
   {$ENDIF}
 {$ENDIF}
 {$IFDEF WINDOWS}
@@ -4488,19 +4488,20 @@ begin
     {$ENDIF}
     {$IFDEF USE_VCL_POSIX}
       {$IFDEF USE_MARSHALLED_PTRS}
-  LWrapper := TPtrWrapper.Create(@LHost[0]);
+  LHostPtr := TPtrWrapper.Create(@LHost[0]);
       {$ENDIF}
   if Posix.Unistd.gethostname(
     {$IFDEF USE_MARSHALLED_PTRS}
-    LWrapper.ToPointer
+    LHostPtr.ToPointer
     {$ELSE}
     LHost
     {$ENDIF},
     255) <> -1 then
   begin
     {$IFDEF USE_MARSHALLED_PTRS}
-    Result := TMarshal.ReadStringAsAnsi(LWrapper);
+    Result := TMarshal.ReadStringAsAnsiUpTo(DefaultSystemCodePage, LHostPtr, 255);
     {$ELSE}
+    LHost[256] := TIdAnsiChar(0);
     Result := String(LHost);
     {$ENDIF}
   end;

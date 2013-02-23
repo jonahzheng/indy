@@ -18191,15 +18191,21 @@ function GetErrorMessage(const AErr : TIdC_ULONG) : String;
 var
   LErrMsg: array [0..160] of TIdAnsiChar;
   {$IFDEF USE_MARSHALLED_PTRS}
-  LWrapper: TPtrWrapper;
+  LErrMsgPtr: TPtrWrapper;
   {$ENDIF}
 begin
   {$IFDEF USE_MARSHALLED_PTRS}
-  LWrapper := TPtrWrapper.Create(@LErrMsg[0]);
-  ERR_error_string_n(AErr, LWrapper.ToPointer, 160);
-  Result := TMarshal.ReadStringAsAnsi(LWrapper);
+  LErrMsgPtr := TPtrWrapper.Create(@LErrMsg[0]);
+  {$ENDIF}
+  ERR_error_string_n(AErr,
+    {$IFDEF USE_MARSHALLED_PTRS}
+    LErrMsgPtr.ToPointer
+    {$ELSE}
+    LErrMsg
+    {$ENDIF}, 160);
+  {$IFDEF USE_MARSHALLED_PTRS}
+  Result := TMarshal.ReadStringAsAnsi(LErrMsgPtr);
   {$ELSE}
-  ERR_error_string(AErr, LErrMsg);
   Result := String(LErrMsg);
   {$ENDIF}
 end;
@@ -21208,15 +21214,21 @@ function ErrMsg(AErr : TIdC_ULONG) : string;
 var
   LString: array[0..300] of TIdAnsiChar;
   {$IFDEF USE_MARSHALLED_PTRS}
-  LWrapper: TPtrWrapper;
+  LStringPtr: TPtrWrapper;
   {$ENDIF}
 begin
   {$IFDEF USE_MARSHALLED_PTRS}
-  LWrapper := TPtrWrapper.Create(@LString[0]);
-  ERR_error_string_n(AErr, LWrapper.ToPointer, 300);
-  Result := TMarshal.ReadStringAsAnsi(LWrapper);
+  LStringPtr := TPtrWrapper.Create(@LString[0]);
+  {$ENDIF}
+  ERR_error_string_n(AErr,
+    {$IFDEF USE_MARSHALLED_PTRS}
+    LStringPtr.ToPointer
+    {$ELSE}
+    LString
+    {$ENDIF}, 300);
+  {$IFDEF USE_MARSHALLED_PTRS}
+  Result := TMarshal.ReadStringAsAnsi(LStringPtr);
   {$ELSE}
-  ERR_error_string_n(AErr, LString, 300);
   Result := String(LString);
   {$ENDIF}
 end;

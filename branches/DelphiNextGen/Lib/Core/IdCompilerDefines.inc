@@ -239,7 +239,7 @@
 {$ENDIF}
 
 //Delphi & CBuilder XE3 (Waterdragon)
-//Delphi & CBuilder XE4 (Quintessence - early betas only)
+//Delphi & CBuilder XE3.5 (Quintessence - early betas only)
 {$IFDEF VER240}
   {$DEFINE VCL_XE3}
   {$IFDEF CBUILDER}
@@ -249,16 +249,16 @@
   {$ENDIF}
 {$ENDIF}
 
-//Delphi & CBuilder XE4 (Quintessence)
+//Delphi & CBuilder XE3.5 (Quintessence)
 {$IFDEF VER250}
   {$UNDEF VCL_XE3}
-  {$DEFINE VCL_XE4}
+  {$DEFINE VCL_XE35}
   {$IFDEF CBUILDER}
     {$UNDEF CBUILDER_XE3}
-    {$DEFINE CBUILDER_XE4}
+    {$DEFINE CBUILDER_XE35}
   {$ELSE}
     {$UNDEF DELPHI_XE3}
-    {$DEFINE DELPHI_XE4}
+    {$DEFINE DELPHI_XE35}
   {$ENDIF}
 {$ENDIF}
 
@@ -418,11 +418,11 @@
 
 // end FPC
 
-{$IFDEF VCL_XE4}
-  {$DEFINE VCL_XE4_OR_ABOVE}
+{$IFDEF VCL_XE35}
+  {$DEFINE VCL_XE35_OR_ABOVE}
 {$ENDIF}
 
-{$IFDEF VCL_XE4_OR_ABOVE}
+{$IFDEF VCL_XE35_OR_ABOVE}
   {$DEFINE VCL_XE3_OR_ABOVE}
 {$ELSE}
   {$IFDEF VCL_XE3}
@@ -590,7 +590,7 @@
     {$IFDEF CPUX64}
       //any 64-bit CPU
       {$DEFINE CPU64}
-      //AMD64 compatible chip architecture 
+      //AMD64 compatible chip architecture
       {$DEFINE CPUX86_64}  //historical name for AMD64
       {$DEFINE CPUAMD64}
     {$ENDIF}
@@ -794,8 +794,10 @@
   {$ENDIF}
 {$ENDIF}
 
-{$IFDEF VCL_XE4_OR_ABOVE}
+{$IFDEF VCL_XE35_OR_ABOVE}
   {$DEFINE HAS_AnsiStrings_StrPLCopy}
+  {$DEFINE HAS_AnsiStrings_StrLen}
+  {$DEFINE HAS_Character_TCharHelper}
 {$ENDIF}
 
 // Delphi XE+ cross-compiling
@@ -1058,7 +1060,7 @@ word to an 8 bit byte and an 8 bit byte field named sa_len was added.
 {$ENDIF}
 
 // Do NOT remove these IFDEF's.  They are here because InterlockedExchange
-// only handles 32bit values.  Some Operating Systems may have 64bit  
+// only handles 32bit values.  Some Operating Systems may have 64bit
 // THandles.  This is not always tied to the platform architecture.
 
 {$IFDEF AMIGA}
@@ -1221,7 +1223,7 @@ it's a LongInt.
 {Take advantage of some TCP features specific to some stacks.
 They work somewhat similarly but there's a key difference.
 In Linux, TCP_CORK is turned on to send fixed packet sizes and
-when turned-off (uncorked), any remaining data is sent. With 
+when turned-off (uncorked), any remaining data is sent. With
 TCP_NOPUSH, this might not happen and remaining data is only sent
 before disconnect.  TCP_KEEPIDLE and TCP_KEEPINTVL so the IFDEF LINUX and IFDEF
 SOLARIS instead of IFDEF UNIX is not an error, it's deliberate.}

@@ -5034,6 +5034,7 @@ end;
 function IsAlpha(const AChar: Char): Boolean;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
+  // TODO: under XE3.5+, use TCharHelper.IsLetter() instead
   // TODO: under D2009+, use TCharacter.IsLetter() instead
 
   // Do not use IsCharAlpha or IsCharAlphaNumeric - they are Win32 routines
@@ -5164,6 +5165,7 @@ end;
 function IsNumeric(const AChar: Char): Boolean;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
 begin
+  // TODO: under XE3.5+, use TCharHelper.IsDigit() instead
   // TODO: under D2009+, use TCharacter.IsDigit() instead
 
   // Do not use IsCharAlpha or IsCharAlphaNumeric - they are Win32 routines
@@ -7805,15 +7807,15 @@ end;
 {$IFDEF STRING_IS_IMMUTABLE}
 
 {$IFDEF DOTNET}
-  {$DEFINE HAS_STRING_IndexOf}
+  {$DEFINE HAS_String_IndexOf}
 {$ENDIF}
 {$IFDEF HAS_SysUtils_TStringHelper}
-  {$DEFINE HAS_STRING_IndexOf}
+  {$DEFINE HAS_String_IndexOf}
 {$ENDIF}
 
 function CharPosInSet(const ASB: TIdStringBuilder; const ACharPos: Integer; const ASet: String): Integer;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
-{$IFNDEF HAS_STRING_IndexOf}
+{$IFNDEF HAS_String_IndexOf}
 var
   LChar: Char;
   I: Integer;
@@ -7824,7 +7826,7 @@ begin
     EIdException.Toss('Invalid ACharPos');{ do not localize }
   end;
   if ACharPos <= ASB.Length then begin
-    {$IFDEF HAS_STRING_IndexOf}
+    {$IFDEF HAS_String_IndexOf}
     Result := ASet.IndexOf(ASB[ACharPos-1]) + 1;
     {$ELSE}
     // RLebeau 5/8/08: Calling Pos() with a Char as input creates a temporary
