@@ -324,9 +324,9 @@ uses
     {$IFDEF HAS_UNIT_IpTypes}
   , IpTypes
     {$ENDIF}
-    {.$IFDEF HAS_UNIT_IpHlpApi}
+    {$IFDEF HAS_UNIT_IpHlpApi}
   , IpHlpApi
-    {.$ENDIF}
+    {$ENDIF}
   {$ENDIF}
   ;
 
@@ -363,8 +363,8 @@ const
   GAA_FLAG_INCLUDE_PREFIX         = $0010;
   GAA_FLAG_SKIP_FRIENDLY_NAME     = $0020;
   IP_ADAPTER_RECEIVE_ONLY         = $08;
-  IF_TYPE_SOFTWARE_LOOPBACK       = 24;
   {$ENDIF}
+  IF_TYPE_SOFTWARE_LOOPBACK       = 24;
 
 type
   PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS = ^IP_UNIDIRECTIONAL_ADAPTER_ADDRESS;
@@ -644,14 +644,12 @@ type
   TGetUniDirectionalAdapterInfo = function(pIPIfInfo: PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS; var dwOutBufLen: ULONG): DWORD; stdcall;
   TGetAdaptersInfo = function(pAdapterInfo: PIP_ADAPTER_INFO; var pOutBufLen: ULONG): DWORD; stdcall;
   TGetAdaptersAddresses = function(Family: ULONG; Flags: DWORD; Reserved: PVOID; pAdapterAddresses: PIP_ADAPTER_ADDRESSES; var OutBufLen: ULONG): DWORD; stdcall;
-  TConvertLengthToIpv4Mask = function(MaskLength: ULONG; var Mask: ULONG): NETIO_STATUS; stdcall;
 
 var
   hIpHlpApi: THandle = 0;
   GetUniDirectionalAdapterInfo: TGetUniDirectionalAdapterInfo = nil;
   GetAdaptersInfo: TGetAdaptersInfo = nil;
   GetAdaptersAddresses: TGetAdaptersAddresses = nil;
-  ConvertLengthToIpv4Mask: TConvertLengthToIpv4Mask = nil;
 
 function FixupIPHelperStub(const AName:{$IFDEF WINCE}TIdUnicodeString{$ELSE}string{$ENDIF}; DefImpl: Pointer): Pointer;
 {$IFDEF USE_INLINE}inline;{$ENDIF}
@@ -701,28 +699,11 @@ begin
   Result := GetAdaptersAddresses(Family, Flags, Reserved, pAdapterAddresses, OutBufLen);
 end;
 
-function Impl_ConvertLengthToIpv4Mask(MaskLength: ULONG; var Mask: ULONG): NETIO_STATUS; stdcall;
-begin
-  Mask := INADDR_NONE; // TODO: implement manually
-  if MaskLength > 32 then begin
-    Result := ERROR_INVALID_PARAMETER;
-  end else begin
-    Result := ERROR_NOT_SUPPORTED;
-  end;
-end;
-
-function Stub_ConvertLengthToIpv4Mask(MaskLength: ULONG; var Mask: ULONG): NETIO_STATUS; stdcall;
-begin
-  @ConvertLengthToIpv4Mask := FixupIPHelperStub('ConvertLengthToIpv4Mask', @Impl_ConvertLengthToIpv4Mask); {Do not localize}
-  Result := ConvertLengthToIpv4Mask(MaskLength, Mask);
-end;
-
 procedure InitializeIPHelperStubs;
 begin
   GetUniDirectionalAdapterInfo := Stub_GetUniDirectionalAdapterInfo;
   GetAdaptersInfo := Stub_GetAdaptersInfo;
   GetAdaptersAddresses := Stub_GetAdaptersAddresses;
-  ConvertLengthToIpv4Mask := Stub_ConvertLengthToIpv4Mask;
 end;
 
 procedure InitializeIPHelperAPI;
