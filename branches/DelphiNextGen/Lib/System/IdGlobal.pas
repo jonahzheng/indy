@@ -1628,7 +1628,13 @@ uses
   //do not bring in our IdIconv unit if we are using the libc unit directly.
   {$IFDEF USE_ICONV_UNIT}IdIconv, {$ENDIF}
   IdResourceStrings,
-  IdStream;
+  IdStream,
+  {$IFDEF DOTNET}
+  IdStreamNET
+  {$ELSE}
+  IdStreamVCL
+  {$ENDIF}
+  ;
 
 {$IFDEF FPC}
   {$IFDEF WINCE}

@@ -118,6 +118,8 @@ uses
   {$IFDEF VCL_XE3_OR_ABOVE}
   System.Classes,
   System.Types,
+  {$ELSE}
+  Classes,
   {$ENDIF}
   IdGlobal, SysUtils;
 
