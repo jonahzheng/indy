@@ -272,8 +272,6 @@ type
     function WSTranslateSocketErrorMsg(const AErr: integer): string; override;
     function WSGetLastError: Integer; override;
     procedure WSSetLastError(const AErr : Integer); override;
-    procedure WSGetSockOpt(ASocket: TIdStackSocketHandle; Alevel, AOptname: Integer;
-      var AOptval; var AOptlen: Integer); override;
     //
     procedure Bind(ASocket: TIdStackSocketHandle; const AIP: string;
      const APort: TIdPort; const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION); override;
@@ -286,11 +284,10 @@ type
      var VPort: TIdPort; var VIPVersion: TIdIPVersion); override;
     procedure GetSocketName(ASocket: TIdStackSocketHandle; var VIP: string;
      var VPort: TIdPort; var VIPVersion: TIdIPVersion); override;
-    procedure GetSocketOption(ASocket: TIdStackSocketHandle;
-      ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
-      out AOptVal: Integer); override;
+    procedure GetSocketOption(ASocket: TIdStackSocketHandle; ALevel: TIdSocketOptionLevel;
+      AOptName: TIdSocketOption; var AOptVal; var AOptLen: Integer); override;
     procedure SetSocketOption(ASocket: TIdStackSocketHandle; ALevel: TIdSocketOptionLevel;
-      AOptName: TIdSocketOption; const Aoptval; const Aoptlen: Integer); override;
+      AOptName: TIdSocketOption; const AOptVal; const AOptLen: Integer); override;
     function IOControl(const s:  TIdStackSocketHandle; const cmd: LongWord; var arg: LongWord): Integer; override;
     function SupportsIPv6: Boolean; override;
     function CheckIPVersionSupport(const AIPVersion: TIdIPVersion): boolean; override;
@@ -311,12 +308,31 @@ var
 
 implementation
 
+// RLebeau: this is still a work in progress...
+{.$DEFINE USE_IPHLPAPI}
+
+{$IFDEF USE_IPHLPAPI}
+  {$IFDEF VCL_XE2_OR_ABOVE}
+    {$DEFINE HAS_UNIT_IpTypes}
+    {$DEFINE HAS_UNIT_IpHlpApi}
+  {$ENDIF}
+{$ENDIF}
+
 uses
-  IdIDN, IdResourceStrings, IdWship6;
+  IdIDN, IdResourceStrings, IdWship6
+  {$IFDEF USE_IPHLPAPI}
+    {$IFDEF HAS_UNIT_IpTypes}
+  , IpTypes
+    {$ENDIF}
+    {.$IFDEF HAS_UNIT_IpHlpApi}
+  , IpHlpApi
+    {.$ENDIF}
+  {$ENDIF}
+  ;
 
 {$IFNDEF WINCE}
 type
-  TGetFileSizeEx = function (hFile : THandle; var lpFileSize : LARGE_INTEGER) : BOOL; stdcall;
+  TGetFileSizeEx = function(hFile : THandle; var lpFileSize : LARGE_INTEGER) : BOOL; stdcall;
 {$ENDIF}
 
 const
@@ -324,9 +340,411 @@ const
 
 var
   GStarted: Boolean = False;
-{$IFNDEF WINCE}
+  {$IFNDEF WINCE}
   GetFileSizeEx : TGetFileSizeEx = nil;
+  {$ENDIF}
+
+{ IPHLPAPI support }
+
+{$IFDEF USE_IPHLPAPI}
+
+const
+  IPHLPAPI_DLL = 'iphlpapi.dll';
+  {$IFNDEF HAS_UNIT_IpTypes}
+  MAX_ADAPTER_DESCRIPTION_LENGTH  = 128;
+  MAX_ADAPTER_NAME_LENGTH         = 256;
+  MAX_ADAPTER_ADDRESS_LENGTH      = 8;
+  MAX_DHCPV6_DUID_LENGTH          = 130;
+  MAX_DNS_SUFFIX_STRING_LENGTH    = 256;
+  GAA_FLAG_SKIP_UNICAST           = $0001;
+  GAA_FLAG_SKIP_ANYCAST           = $0002;
+  GAA_FLAG_SKIP_MULTICAST         = $0004;
+  GAA_FLAG_SKIP_DNS_SERVER        = $0008;
+  GAA_FLAG_INCLUDE_PREFIX         = $0010;
+  GAA_FLAG_SKIP_FRIENDLY_NAME     = $0020;
+  IP_ADAPTER_RECEIVE_ONLY         = $08;
+  IF_TYPE_SOFTWARE_LOOPBACK       = 24;
+  {$ENDIF}
+
+type
+  PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS = ^IP_UNIDIRECTIONAL_ADAPTER_ADDRESS;
+  IP_UNIDIRECTIONAL_ADAPTER_ADDRESS = record
+    NumAdapters: ULONG;
+    Address: array[0..0] of TInAddr;
+  end;
+
+  {$IFNDEF HAS_UNIT_IpTypes}
+
+  time_t                  = TIdNativeInt;
+  IFTYPE                  = ULONG;
+  IF_INDEX                = ULONG;
+  NET_IF_COMPARTMENT_ID   = UINT32;
+  NET_IF_NETWORK_GUID     = TGUID;
+
+  IP_PREFIX_ORIGIN = (
+    IpPrefixOriginOther,
+    IpPrefixOriginManual,
+    IpPrefixOriginWellKnown,
+    IpPrefixOriginDhcp,
+    IpPrefixOriginRouterAdvertisement);
+
+  IP_SUFFIX_ORIGIN = (
+    IpSuffixOriginOther,
+    IpSuffixOriginManual,
+    IpSuffixOriginWellKnown,
+    IpSuffixOriginDhcp,
+    IpSuffixOriginLinkLayerAddress,
+    IpSuffixOriginRandom);
+
+  IP_DAD_STATE = (
+    IpDadStateInvalid,
+    IpDadStateTentative,
+    IpDadStateDuplicate,
+    IpDadStateDeprecated,
+    IpDadStatePreferred);
+
+  IF_OPER_STATUS = (
+    IfOperStatusUp,
+    IfOperStatusDown,
+    IfOperStatusTesting,
+    IfOperStatusUnknown,
+    IfOperStatusDormant,
+    IfOperStatusNotPresent,
+    IfOperStatusLowerLayerDown);
+
+  NET_IF_CONNECTION_TYPE = (
+    NetIfConnectionDedicated,
+    NetIfConnectionPassive,
+    NetIfConnectionDemand,
+    NetIfConnectionMaximum);
+
+  TUNNEL_TYPE = (
+    TunnelTypeNone,
+    TunnelTypeOther,
+    TunnelTypeDirect,
+    TunnelType6To4,
+    TunnelTypeIsatap,
+    TunnelTypeTeredo,
+    TunnelTypeIPHTTPS);
+
+  IP_ADDRESS_STRING = record
+    S: array [0..15] of AnsiChar;
+  end;
+  IP_MASK_STRING = IP_ADDRESS_STRING;
+
+  PIP_ADDR_STRING = ^IP_ADDR_STRING;
+  IP_ADDR_STRING = record
+    Next: PIP_ADDR_STRING;
+    IpAddress: IP_ADDRESS_STRING;
+    IpMask: IP_MASK_STRING;
+    Context: DWORD;
+  end;
+
+  PIP_ADAPTER_INFO = ^IP_ADAPTER_INFO;
+  IP_ADAPTER_INFO = record
+    Next: PIP_ADAPTER_INFO;
+    ComboIndex: DWORD;
+    AdapterName: array [0..MAX_ADAPTER_NAME_LENGTH + 3] of AnsiChar;
+    Description: array [0..MAX_ADAPTER_DESCRIPTION_LENGTH + 3] of AnsiChar;
+    AddressLength: UINT;
+    Address: array [0..MAX_ADAPTER_ADDRESS_LENGTH - 1] of BYTE;
+    Index: DWORD;
+    Type_: UINT;
+    DhcpEnabled: UINT;
+    CurrentIpAddress: PIP_ADDR_STRING;
+    IpAddressList: IP_ADDR_STRING;
+    GatewayList: IP_ADDR_STRING;
+    DhcpServer: IP_ADDR_STRING;
+    HaveWins: BOOL;
+    PrimaryWinsServer: IP_ADDR_STRING;
+    SecondaryWinsServer: IP_ADDR_STRING;
+    LeaseObtained: time_t;
+    LeaseExpires: time_t;
+  end;
+
+  SOCKET_ADDRESS = record
+    lpSockaddr: IdWinsock2.LPSOCKADDR;
+    iSockaddrLength: Integer;
+  end;
+
+  PIP_ADAPTER_UNICAST_ADDRESS = ^IP_ADAPTER_UNICAST_ADDRESS;
+  IP_ADAPTER_UNICAST_ADDRESS = record
+    Union: record
+      case Integer of
+        0: (
+          Alignment: ULONGLONG);
+        1: (
+          Length: ULONG;
+          Flags: DWORD);
+    end;
+    Next: PIP_ADAPTER_UNICAST_ADDRESS;
+    Address: SOCKET_ADDRESS;
+    PrefixOrigin: IP_PREFIX_ORIGIN;
+    SuffixOrigin: IP_SUFFIX_ORIGIN;
+    DadState: IP_DAD_STATE;
+    ValidLifetime: ULONG;
+    PreferredLifetime: ULONG;
+    LeaseLifetime: ULONG;
+    OnLinkPrefixLength: UCHAR;
+  end;
+
+  PIP_ADAPTER_ANYCAST_ADDRESS = ^IP_ADAPTER_ANYCAST_ADDRESS;
+  IP_ADAPTER_ANYCAST_ADDRESS = record
+    Union: record
+      case Integer of
+        0: (
+          Alignment: ULONGLONG);
+        1: (
+          Length: ULONG;
+          Flags: DWORD);
+    end;
+    Next: PIP_ADAPTER_ANYCAST_ADDRESS;
+    Address: SOCKET_ADDRESS;
+  end;
+
+  PIP_ADAPTER_MULTICAST_ADDRESS = ^IP_ADAPTER_MULTICAST_ADDRESS;
+  IP_ADAPTER_MULTICAST_ADDRESS = record
+    Union: record
+      case Integer of
+        0: (
+          Alignment: ULONGLONG);
+        1: (
+          Length: ULONG;
+          Flags: DWORD);
+    end;
+    Next: PIP_ADAPTER_MULTICAST_ADDRESS;
+    Address: SOCKET_ADDRESS;
+  end;
+
+  PIP_ADAPTER_DNS_SERVER_ADDRESS = ^IP_ADAPTER_DNS_SERVER_ADDRESS;
+  IP_ADAPTER_DNS_SERVER_ADDRESS = record
+    Union: record
+      case Integer of
+        0: (
+          Alignment: ULONGLONG);
+        1: (
+          Length: ULONG;
+          Reserved: DWORD);
+    end;
+    Next: PIP_ADAPTER_DNS_SERVER_ADDRESS;
+    Address: SOCKET_ADDRESS;
+  end;
+
+  PIP_ADAPTER_PREFIX = ^IP_ADAPTER_PREFIX;
+  IP_ADAPTER_PREFIX = record
+    Union: record
+    case Integer of
+      0: (
+        Alignment: ULONGLONG);
+      1: (
+        Length: ULONG;
+        Flags: DWORD);
+    end;
+    Next: PIP_ADAPTER_PREFIX;
+    Address: SOCKET_ADDRESS;
+    PrefixLength: ULONG;
+  end;
+
+  PIP_ADAPTER_WINS_SERVER_ADDRESS_LH = ^IP_ADAPTER_WINS_SERVER_ADDRESS_LH;
+  IP_ADAPTER_WINS_SERVER_ADDRESS_LH = record
+    Union: record
+      case Integer of
+        0: (
+          Alignment: ULONGLONG);
+        1: (
+          Length: ULONG;
+          Reserved: DWORD);
+    end;
+    Next: PIP_ADAPTER_WINS_SERVER_ADDRESS_LH;
+    Address: SOCKET_ADDRESS;
+  end;
+
+  PIP_ADAPTER_GATEWAY_ADDRESS_LH = ^IP_ADAPTER_GATEWAY_ADDRESS_LH;
+  IP_ADAPTER_GATEWAY_ADDRESS_LH = record
+    Union: record
+      case Integer of
+        0: (
+          Alignment: ULONGLONG);
+        1: (
+          Length: ULONG;
+          Reserved: DWORD);
+    end;
+    Next: PIP_ADAPTER_GATEWAY_ADDRESS_LH;
+    Address: SOCKET_ADDRESS;
+  end;
+
+  IF_LUID = record
+    case Integer of
+      0: (
+          Value: ULONG64);
+      1: (
+          Info: ULONG64);
+  end;
+
+  PIP_ADAPTER_DNS_SUFFIX = ^IP_ADAPTER_DNS_SUFFIX;
+  IP_ADAPTER_DNS_SUFFIX = record
+    Next: PIP_ADAPTER_DNS_SUFFIX;
+    AString: array[0..MAX_DNS_SUFFIX_STRING_LENGTH - 1] of WCHAR;
+  end;
+
+  PIP_ADAPTER_ADDRESSES = ^IP_ADAPTER_ADDRESSES;
+  IP_ADAPTER_ADDRESSES = record
+    Union: record
+      case Integer of
+        0: (
+          Alignment: ULONGLONG);
+        1: (
+          Length: ULONG;
+          IfIndex: DWORD);
+    end;
+    Next: PIP_ADAPTER_ADDRESSES;
+    AdapterName: PAnsiChar;
+    FirstUnicastAddress: PIP_ADAPTER_UNICAST_ADDRESS;
+    FirstAnycastAddress: PIP_ADAPTER_ANYCAST_ADDRESS;
+    FirstMulticastAddress: PIP_ADAPTER_MULTICAST_ADDRESS;
+    FirstDnsServerAddress: PIP_ADAPTER_DNS_SERVER_ADDRESS;
+    DnsSuffix: PWCHAR;
+    Description: PWCHAR;
+    FriendlyName: PWCHAR;
+    PhysicalAddress: array [0..MAX_ADAPTER_ADDRESS_LENGTH - 1] of BYTE;
+    PhysicalAddressLength: DWORD;
+    Flags: DWORD;
+    Mtu: DWORD;
+    IfType: IFTYPE;
+    OperStatus: IF_OPER_STATUS;
+    Ipv6IfIndex: IF_INDEX;
+    ZoneIndices: array [0..15] of DWORD;
+    FirstPrefix: PIP_ADAPTER_PREFIX;
+    TransmitLinkSpeed: ULONG64;
+    ReceiveLinkSpeed: ULONG64;
+    FirstWinsServerAddress: PIP_ADAPTER_WINS_SERVER_ADDRESS_LH;
+    FirstGatewayAddress: PIP_ADAPTER_GATEWAY_ADDRESS_LH;
+    Ipv4Metric: ULONG;
+    Ipv6Metric: ULONG;
+    Luid: IF_LUID;
+    Dhcpv4Server: SOCKET_ADDRESS;
+    CompartmentId: NET_IF_COMPARTMENT_ID;
+    NetworkGuid: NET_IF_NETWORK_GUID;
+    ConnectionType: NET_IF_CONNECTION_TYPE;
+    TunnelType: TUNNEL_TYPE;
+    //
+    // DHCP v6 Info.
+    //
+    Dhcpv6Server: SOCKET_ADDRESS;
+    Dhcpv6ClientDuid: array [0..MAX_DHCPV6_DUID_LENGTH - 1] of Byte;
+    Dhcpv6ClientDuidLength: ULONG;
+    Dhcpv6Iaid: ULONG;
+    FirstDnsSuffix: PIP_ADAPTER_DNS_SUFFIX;
+  end;
+
+  {$ENDIF}
+
+  NETIO_STATUS = DWORD;
+
+  TGetUniDirectionalAdapterInfo = function(pIPIfInfo: PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS; var dwOutBufLen: ULONG): DWORD; stdcall;
+  TGetAdaptersInfo = function(pAdapterInfo: PIP_ADAPTER_INFO; var pOutBufLen: ULONG): DWORD; stdcall;
+  TGetAdaptersAddresses = function(Family: ULONG; Flags: DWORD; Reserved: PVOID; pAdapterAddresses: PIP_ADAPTER_ADDRESSES; var OutBufLen: ULONG): DWORD; stdcall;
+  TConvertLengthToIpv4Mask = function(MaskLength: ULONG; var Mask: ULONG): NETIO_STATUS; stdcall;
+
+var
+  hIpHlpApi: THandle = 0;
+  GetUniDirectionalAdapterInfo: TGetUniDirectionalAdapterInfo = nil;
+  GetAdaptersInfo: TGetAdaptersInfo = nil;
+  GetAdaptersAddresses: TGetAdaptersAddresses = nil;
+  ConvertLengthToIpv4Mask: TConvertLengthToIpv4Mask = nil;
+
+function FixupIPHelperStub(const AName:{$IFDEF WINCE}TIdUnicodeString{$ELSE}string{$ENDIF}; DefImpl: Pointer): Pointer;
+{$IFDEF USE_INLINE}inline;{$ENDIF}
+begin
+  Result := nil;
+  if hIpHlpApi <> 0 then begin
+    Result := Windows.GetProcAddress(hIpHlpApi, {$IFDEF WINCE}PWideChar{$ELSE}PChar{$ENDIF}(AName));
+  end;
+  if Result = nil then begin
+    Result := DefImpl;
+  end;
+end;
+
+function Impl_GetUniDirectionalAdapterInfo(pIPIfInfo: PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS; var dwOutBufLen: ULONG): DWORD; stdcall;
+begin
+  dwOutBufLen := 0;
+  Result := ERROR_NOT_SUPPORTED;
+end;
+
+function Stub_GetUniDirectionalAdapterInfo(pIPIfInfo: PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS; var dwOutBufLen: ULONG): DWORD; stdcall;
+begin
+  @GetUniDirectionalAdapterInfo := FixupIPHelperStub('GetUniDirectionalAdapterInfo', @Impl_GetUniDirectionalAdapterInfo); {Do not localize}
+  Result := GetUniDirectionalAdapterInfo(pIPIfInfo, dwOutBufLen);
+end;
+
+function Impl_GetAdaptersInfo(pAdapterInfo: PIP_ADAPTER_INFO; var pOutBufLen: ULONG): DWORD; stdcall;
+begin
+  pOutBufLen := 0;
+  Result := ERROR_NOT_SUPPORTED;
+end;
+
+function Stub_GetAdaptersInfo(pAdapterInfo: PIP_ADAPTER_INFO; var pOutBufLen: ULONG): DWORD; stdcall;
+begin
+  @GetAdaptersInfo := FixupIPHelperStub('GetAdaptersInfo', @Impl_GetAdaptersInfo); {Do not localize}
+  Result := GetAdaptersInfo(pAdapterInfo, pOutBufLen);
+end;
+
+function Impl_GetAdaptersAddresses(Family: ULONG; Flags: DWORD; Reserved: PVOID; pAdapterAddresses: PIP_ADAPTER_ADDRESSES; var OutBufLen: ULONG): DWORD; stdcall;
+begin
+  OutBufLen := 0;
+  Result := ERROR_NOT_SUPPORTED;
+end;
+
+function Stub_GetAdaptersAddresses(Family: ULONG; Flags: DWORD; Reserved: PVOID; pAdapterAddresses: PIP_ADAPTER_ADDRESSES; var OutBufLen: ULONG): DWORD; stdcall;
+begin
+  @GetAdaptersAddresses := FixupIPHelperStub('GetAdaptersAddresses', @Impl_GetAdaptersAddresses); {Do not localize}
+  Result := GetAdaptersAddresses(Family, Flags, Reserved, pAdapterAddresses, OutBufLen);
+end;
+
+function Impl_ConvertLengthToIpv4Mask(MaskLength: ULONG; var Mask: ULONG): NETIO_STATUS; stdcall;
+begin
+  Mask := INADDR_NONE; // TODO: implement manually
+  if MaskLength > 32 then begin
+    Result := ERROR_INVALID_PARAMETER;
+  end else begin
+    Result := ERROR_NOT_SUPPORTED;
+  end;
+end;
+
+function Stub_ConvertLengthToIpv4Mask(MaskLength: ULONG; var Mask: ULONG): NETIO_STATUS; stdcall;
+begin
+  @ConvertLengthToIpv4Mask := FixupIPHelperStub('ConvertLengthToIpv4Mask', @Impl_ConvertLengthToIpv4Mask); {Do not localize}
+  Result := ConvertLengthToIpv4Mask(MaskLength, Mask);
+end;
+
+procedure InitializeIPHelperStubs;
+begin
+  GetUniDirectionalAdapterInfo := Stub_GetUniDirectionalAdapterInfo;
+  GetAdaptersInfo := Stub_GetAdaptersInfo;
+  GetAdaptersAddresses := Stub_GetAdaptersAddresses;
+  ConvertLengthToIpv4Mask := Stub_ConvertLengthToIpv4Mask;
+end;
+
+procedure InitializeIPHelperAPI;
+begin
+  if hIpHlpApi = 0 then begin
+    hIpHlpApi := SafeLoadLibrary(IPHLPAPI_DLL);
+  end;
+end;
+
+procedure UninitializeIPHelperAPI;
+begin
+  if hIpHlpApi <> 0 then
+  begin
+    FreeLibrary(hIpHlpApi);
+    hIpHlpApi := 0;
+  end;
+  InitializeIPHelperStubs;
+end;
+
 {$ENDIF}
+
+{ TIdStackWindows }
 
 constructor TIdStackWindows.Create;
 begin
@@ -336,6 +754,9 @@ begin
       InitializeWinSock;
       IdWship6.InitLibrary;
       IdIDN.InitIDNLibrary;
+      {$IFDEF USE_IPHLPAPI}
+      InitializeIPHelperAPI;
+      {$ENDIF}
     except
       on E: Exception do begin
         raise EIdStackInitializationFailed.Create(E.Message);
@@ -356,22 +777,20 @@ function TIdStackWindows.Accept(ASocket: TIdStackSocketHandle;
   var VIP: string; var VPort: TIdPort; var VIPVersion: TIdIPVersion): TIdStackSocketHandle;
 var
   LSize: Integer;
-  LAddr: TSockAddrIn6;
-  PAddr: PSOCKADDR;
+  LAddr: SOCKADDR_STORAGE;
 begin
   LSize := SizeOf(LAddr);
-  PAddr := PSOCKADDR(@LAddr);
-  Result := IdWinsock2.accept(ASocket, PAddr, @LSize);
+  Result := IdWinsock2.accept(ASocket, IdWinsock2.PSOCKADDR(@LAddr), @LSize);
   if Result <> INVALID_SOCKET then begin
-    case LAddr.sin6_family of
+    case LAddr.ss_family of
       Id_PF_INET4: begin
-        VIP := TranslateTInAddrToString(PAddr^.sin_addr, Id_IPv4);
-        VPort := ntohs(PAddr^.sin_port);
+        VIP := TranslateTInAddrToString(PSockAddrIn(@LAddr)^.sin_addr, Id_IPv4);
+        VPort := ntohs(PSockAddrIn(@LAddr)^.sin_port);
         VIPVersion := Id_IPv4;
       end;
       Id_PF_INET6: begin
-        VIP := TranslateTInAddrToString(LAddr.sin6_addr, Id_IPv6);
-        VPort := ntohs(LAddr.sin6_port);
+        VIP := TranslateTInAddrToString(PSockAddrIn6(@LAddr)^.sin6_addr, Id_IPv6);
+        VPort := ntohs(PSockAddrIn6(@LAddr)^.sin6_port);
         VIPVersion := Id_IPv6;
       end;
       else begin
@@ -387,27 +806,25 @@ procedure TIdStackWindows.Bind(ASocket: TIdStackSocketHandle;
   const AIP: string; const APort: TIdPort;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 var
-  LAddr: TSockAddrIn6;
+  LAddr: SOCKADDR_STORAGE;
   LSize: Integer;
-  PAddr: PSOCKADDR;
 begin
   FillChar(LAddr, SizeOf(LAddr), 0);
-  PAddr := PSOCKADDR(@LAddr);
   case AIPVersion of
     Id_IPv4: begin
-      PAddr^.sin_family := Id_PF_INET4;
+      PSockAddrIn(@LAddr)^.sin_family := Id_PF_INET4;
       if AIP <> '' then begin
-        TranslateStringToTInAddr(AIP, PAddr^.sin_addr, Id_IPv4);
+        TranslateStringToTInAddr(AIP, PSockAddrIn(@LAddr)^.sin_addr, Id_IPv4);
       end;
-      PAddr^.sin_port := htons(APort);
+      PSockAddrIn(@LAddr)^.sin_port := htons(APort);
       LSize := SIZE_TSOCKADDRIN;
     end;
     Id_IPv6: begin
-      LAddr.sin6_family := Id_PF_INET6;
+      PSockAddrIn6(@LAddr)^.sin6_family := Id_PF_INET6;
       if AIP <> '' then begin
-        TranslateStringToTInAddr(AIP, LAddr.sin6_addr, Id_IPv6);
+        TranslateStringToTInAddr(AIP, PSockAddrIn6(@LAddr)^.sin6_addr, Id_IPv6);
       end;
-      LAddr.sin6_port := htons(APort);
+      PSockAddrIn6(@LAddr)^.sin6_port := htons(APort);
       LSize := SIZE_TSOCKADDRIN6;
     end;
     else begin
@@ -415,7 +832,7 @@ begin
       IPVersionUnsupported;
     end;
   end;
-  CheckForSocketError(IdWinsock2.bind(ASocket, PAddr, LSize));
+  CheckForSocketError(IdWinsock2.bind(ASocket, IdWinsock2.PSOCKADDR(@LAddr), LSize));
 end;
 
 function TIdStackWindows.WSCloseSocket(ASocket: TIdStackSocketHandle): Integer;
@@ -557,24 +974,21 @@ function TIdStackWindows.RecvFrom(const ASocket: TIdStackSocketHandle;
   var VPort: TIdPort; var VIPVersion: TIdIPVersion): Integer;
 var
   LSize: Integer;
-  LAddr: TSockAddrIn6;
-  PAddr: PSOCKADDR;
+  LAddr: SOCKADDR_STORAGE;
 begin
   LSize := SizeOf(LAddr);
-  Paddr := PSOCKADDR(@LAddr);
-  Result := IdWinsock2.recvfrom(ASocket, VBuffer, ALength, AFlags, PAddr, @LSize);
+  Result := IdWinsock2.recvfrom(ASocket, VBuffer, ALength, AFlags, IdWinsock2.PSOCKADDR(@LAddr), @LSize);
   if Result >= 0 then
   begin
-    case LAddr.sin6_family of
+    case LAddr.ss_family of
       Id_PF_INET4: begin
-        VIP := TranslateTInAddrToString(PAddr^.sin_addr, Id_IPv4);
-        VIP := TranslateTInAddrToString(PAddr^.sin_addr, Id_IPv4);
-        VPort := ntohs(PAddr^.sin_port);
+        VIP := TranslateTInAddrToString(PSockAddrIn(@LAddr)^.sin_addr, Id_IPv4);
+        VPort := ntohs(PSockAddrIn(@LAddr)^.sin_port);
         VIPVersion := Id_IPv4;
       end;
       Id_PF_INET6: begin
-        VIP := TranslateTInAddrToString(LAddr.sin6_addr, Id_IPv6);
-        VPort := ntohs(LAddr.sin6_port);
+        VIP := TranslateTInAddrToString(PSockAddrIn6(@LAddr)^.sin6_addr, Id_IPv6);
+        VPort := ntohs(PSockAddrIn6(@LAddr)^.sin6_port);
         VIPVersion := Id_IPv6;
       end;
       else begin
@@ -594,23 +1008,21 @@ procedure TIdStackWindows.WSSendTo(ASocket: TIdStackSocketHandle;
   const ABuffer; const ABufferLength, AFlags: Integer; const AIP: string;
   const APort: TIdPort; AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 var
-  LAddr: TSockAddrIn6;
+  LAddr: SOCKADDR_STORAGE;
   LSize: Integer;
-  PAddr: PSOCKADDR;
 begin
   FillChar(LAddr, SizeOf(LAddr), 0);
-  PAddr := PSOCKADDR(@LAddr);
   case AIPVersion of
     Id_IPv4: begin
-      PAddr^.sin_family := Id_PF_INET4;
-      TranslateStringToTInAddr(AIP, PAddr^.sin_addr, Id_IPv4);
-      PAddr^.sin_port := htons(APort);
+      PSockAddrIn(@LAddr)^.sin_family := Id_PF_INET4;
+      TranslateStringToTInAddr(AIP, PSockAddrIn(@LAddr)^.sin_addr, Id_IPv4);
+      PSockAddrIn(@LAddr)^.sin_port := htons(APort);
       LSize := SIZE_TSOCKADDRIN;
     end;
     Id_IPv6: begin
-      LAddr.sin6_family := Id_PF_INET6;
-      TranslateStringToTInAddr(AIP, LAddr.sin6_addr, Id_IPv6);
-      LAddr.sin6_port := htons(APort);
+      PSockAddrIn6(@LAddr)^.sin6_family := Id_PF_INET6;
+      TranslateStringToTInAddr(AIP, PSockAddrIn6(@LAddr)^.sin6_addr, Id_IPv6);
+      PSockAddrIn6(@LAddr)^.sin6_port := htons(APort);
       LSize := SIZE_TSOCKADDRIN6;
     end;
     else begin
@@ -618,7 +1030,7 @@ begin
       IPVersionUnsupported;
     end;
   end;
-  LSize := IdWinsock2.sendto(ASocket, ABuffer, ABufferLength, AFlags, PAddr, LSize);
+  LSize := IdWinsock2.sendto(ASocket, ABuffer, ABufferLength, AFlags, IdWinsock2.PSOCKADDR(@LAddr), LSize);
   if LSize = Id_SOCKET_ERROR then begin
     // TODO: move this into RaiseLastSocketError() directly
     if WSGetLastError() = Id_WSAEMSGSIZE then begin
@@ -755,44 +1167,265 @@ begin
 end;
 
 procedure TIdStackWindows.AddLocalAddressesToList(AAddresses: TStrings);
-{$IFNDEF WINCE}
+{$IFNDEF USE_IPHLPAPI}
+  {$IFNDEF WINCE}
 type
   TaPInAddr = array[0..250] of PInAddr;
   PaPInAddr = ^TaPInAddr;
+  {$ENDIF}
 {$ENDIF}
 var
-  {$IFNDEF WINCE}
+  {$IFDEF USE_IPHLPAPI}
+
+  function GetLocalAddressesByAdaptersAddresses: Boolean;
+  var
+    Ret: DWORD;
+    BufLen: ULONG;
+    Adapter, Adapters: PIP_ADAPTER_ADDRESSES;
+    UnicastAddr: PIP_ADAPTER_UNICAST_ADDRESS;
+  begin
+    // assume True unless ERROR_NOT_SUPPORTED is reported...
+    Result := True;
+
+    // MSDN says:
+    // The recommended method of calling the GetAdaptersAddresses function is
+    // to pre-allocate a 15KB working buffer pointed to by the AdapterAddresses
+    // parameter. On typical computers, this dramatically reduces the chances
+    // that the GetAdaptersAddresses function returns ERROR_BUFFER_OVERFLOW,
+    // which would require calling GetAdaptersAddresses function multiple times.
+
+    BufLen := 1024*15;
+    GetMem(Adapters, BufLen);
+    try
+      repeat
+        Ret := GetAdaptersAddresses(PF_UNSPEC, GAA_FLAG_SKIP_ANYCAST or GAA_FLAG_SKIP_MULTICAST or GAA_FLAG_SKIP_DNS_SERVER or GAA_FLAG_SKIP_FRIENDLY_NAME, nil, Adapters, BufLen);
+        case Ret of
+          ERROR_SUCCESS:
+          begin
+            // Windows CE versions earlier than 4.1 may return ERROR_SUCCESS and
+            // BufLen=0 if no adapter info is available, instead of returning
+            // ERROR_NO_DATA as documented...
+            if BufLen = 0 then begin
+              Exit;
+            end;
+            Break;
+          end;
+          ERROR_NOT_SUPPORTED:
+          begin
+            Result := False;
+            Exit;
+          end;
+          ERROR_NO_DATA,
+          ERROR_ADDRESS_NOT_ASSOCIATED:
+            Exit;
+          ERROR_BUFFER_OVERFLOW:
+            ReallocMem(Adapters, BufLen);
+        else
+          SetLastError(Ret);
+          IndyRaiseLastError;
+        end;
+      until False;
+
+      if Ret = ERROR_SUCCESS then
+      begin
+        AAddresses.BeginUpdate;
+        try
+          Adapter := Adapters;
+          repeat
+            if (Adapter.IfType <> IF_TYPE_SOFTWARE_LOOPBACK) and ((Adapter.Flags and IP_ADAPTER_RECEIVE_ONLY) = 0) then
+            begin
+              UnicastAddr := Adapter^.FirstUnicastAddress;
+              while UnicastAddr <> nil do
+              begin
+                case UnicastAddr^.Address.lpSockaddr.sin_family of
+                  AF_INET: begin
+                    AAddresses.Add(TranslateTInAddrToString(PSockAddrIn(UnicastAddr^.Address.lpSockaddr)^.sin_addr, Id_IPv4));
+                  end;
+                  AF_INET6: begin
+                    AAddresses.Add(TranslateTInAddrToString(PSockAddrIn6(UnicastAddr^.Address.lpSockaddr)^.sin6_addr, Id_IPv6));
+                  end;
+                end;
+                UnicastAddr := UnicastAddr^.Next;
+              end;
+            end;
+            Adapter := Adapter^.Next;
+          until Adapter = nil;
+        finally
+          AAddresses.EndUpdate;
+        end;
+      end;
+    finally
+      FreeMem(Adapters);
+    end;
+  end;
+
+  procedure GetUniDirAddresseses(AUniDirAddresses: TStrings);
+  var
+    Ret: DWORD;
+    BufLen: ULONG;
+    Adapters: PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS;
+    pUniDirAddr: PInAddr;
+    I: ULONG;
+  begin
+    BufLen := 1024*15;
+    GetMem(Adapters, BufLen);
+    try
+      repeat
+        Ret := GetUniDirectionalAdapterInfo(Adapters, BufLen);
+        case Ret of
+          ERROR_SUCCESS:
+          begin
+            if BufLen = 0 then begin
+              Exit;
+            end;
+            Break;
+          end;
+          ERROR_NOT_SUPPORTED,
+          ERROR_NO_DATA:
+            Exit;
+          ERROR_MORE_DATA:
+            ReallocMem(Adapters, BufLen);
+        else
+          SetLastError(Ret);
+          IndyRaiseLastError;
+        end;
+      until False;
+
+      if Ret = ERROR_SUCCESS then
+      begin
+        if Adapters^.NumAdapters > 0 then
+        begin
+          pUniDirAddr := @(Adapters^.Address[0]);
+          for I := 0 to Adapters^.NumAdapters-1 do begin
+            AUniDirAddresses.Add(TranslateTInAddrToString(pUniDirAddr^, Id_IPv4));
+            Inc(pUniDirAddr);
+          end;
+        end;
+      end;
+    finally
+      FreeMem(Adapters);
+    end;
+  end;
+
+  procedure GetLocalAddressesByAdaptersInfo;
+  var
+    Ret: DWORD;
+    BufLen: ULONG;
+    UniDirAddresses: TStringList;
+    Adapter, Adapters: PIP_ADAPTER_INFO;
+    IPAddr: PIP_ADDR_STRING;
+    IPStr: String;
+  begin
+    BufLen := 1024*15;
+    GetMem(Adapters, BufLen);
+    try
+      repeat
+        Ret := GetAdaptersInfo(Adapters, BufLen);
+        case Ret of
+          ERROR_SUCCESS:
+          begin
+            // Windows CE versions earlier than 4.1 may return ERROR_SUCCESS and
+            // BufLen=0 if no adapter info is available, instead of returning
+            // ERROR_NO_DATA as documented...
+            if BufLen = 0 then begin
+              Exit;
+            end;
+            Break;
+          end;
+          ERROR_NOT_SUPPORTED,
+          ERROR_NO_DATA:
+            Exit;
+          ERROR_BUFFER_OVERFLOW:
+            ReallocMem(Adapters, BufLen);
+        else
+          SetLastError(Ret);
+          IndyRaiseLastError;
+        end;
+      until False;
+
+      if Ret = ERROR_SUCCESS then
+      begin
+        // on XP and later, GetAdaptersInfo() includes uni-directional adapters.
+        // Need to use GetUniDirectionalAdapterInfo() to filter them out of the
+        // list ...
+
+        UniDirAddresses := TStringList.Create;
+        try
+          GetUniDirAddresseses(UniDirAddresses);
+
+          AAddresses.BeginUpdate;
+          try
+            Adapter := Adapters;
+            repeat
+              IPAddr := @(Adapter^.IpAddressList);
+              repeat
+                IPStr := String(IPAddr^.IpAddress.S);
+                if (IPStr <> '') and (IPStr <> '0.0.0.0') then
+                begin
+                  if UniDirAddresses.IndexOf(IPStr) = -1 then begin
+                    AAddresses.Add(IPStr);
+                  end;
+                end;
+                IPAddr := IPAddr^.Next;
+              until IPAddr = nil;
+              Adapter := Adapter^.Next;
+            until Adapter = nil;
+          finally
+            AAddresses.EndUpdate;
+          end;
+        finally
+          UniDirAddresses.Free;
+        end;
+      end;
+    finally
+      FreeMem(Adapters);
+    end;
+  end;
+
+  {$ELSE}
+
+    {$IFNDEF WINCE}
   i: integer;
   AHost: PHostEnt;
   PAdrPtr: PaPInAddr;
-  {$ENDIF}
-  {$IFDEF UNICODE}
+    {$ENDIF}
+    {$IFDEF UNICODE}
   Hints: TAddrInfoW;
   LAddrList, LAddrInfo: pAddrInfoW;
-  {$ELSE}
+    {$ELSE}
   Hints: TAddrInfo;
   LAddrList, LAddrInfo: pAddrInfo;
-  {$ENDIF}
+    {$ENDIF}
   RetVal: Integer;
   LHostName: String;
-  {$IFDEF STRING_IS_UNICODE}
+    {$IFDEF STRING_IS_UNICODE}
   LTemp: AnsiString;
-  {$ELSE}
-    {$IFDEF UNICODE_BUT_STRING_IS_ANSI}
+    {$ELSE}
+      {$IFDEF UNICODE_BUT_STRING_IS_ANSI}
   LTemp: TIdUnicodeString;
+      {$ENDIF}
     {$ENDIF}
+
   {$ENDIF}
 begin
-  // TODO: Using gethostname() and gethostbyname/getaddrinfo() like this may
-  // not always return just the machine's IP addresses. Technically speaking,
-  // they will return the local hostname, and then return the address(es) to
-  // which that hostname resolves. It is possible for a machine to (a) be
-  // configured such that its name does not resolve to an IP, or (b) be
-  // configured such that its name resolves to multiple IPs, only one of which
-  // belongs to the local machine. For better results, we should use the Win32
-  // API GetAdaptersInfo() and/or GetAdaptersAddresses() functions instead.
-  // GetAdaptersInfo() only supports IPv4, but GetAdaptersAddresses() supports
-  // both IPv4 and IPv6...
+  // Using gethostname() and gethostbyname/getaddrinfo() may not always return
+  // just the machine's IP addresses. Technically speaking, they will return
+  // the local hostname, and then return the address(es) to which that hostname
+  // resolves. It is possible for a machine to (a) be configured such that its
+  // name does not resolve to an IP, or (b) be configured such that its name
+  // resolves to multiple IPs, only one of which belongs to the local machine.
+  // For better results, we should use the Win32 API GetAdaptersInfo() and/or
+  // GetAdaptersAddresses() functions instead.  GetAdaptersInfo() only supports
+  // IPv4, but GetAdaptersAddresses() supports both IPv4 and IPv6...
+
+  {$IFDEF USE_IPHLPAPI}
+
+  // try GetAdaptersAddresses() first, then fall back to GetAdaptersInfo()...
+  if not GetLocalAddressesByAdaptersAddresses then begin
+    GetLocalAddressesByAdaptersInfo;
+  end;
+
+  {$ELSE}
 
   LHostName := HostName;
 
@@ -851,15 +1484,17 @@ begin
     try
       LAddrInfo := LAddrList;
       repeat
-        AAddresses.Add(TranslateTInAddrToString(LAddrInfo^.ai_addr^.sin_addr, Id_IPv4));
+        AAddresses.Add(TranslateTInAddrToString(PSockAddr_In(LAddrInfo^.ai_addr)^.sin_addr, Id_IPv4));
         LAddrInfo := LAddrInfo^.ai_next;
       until LAddrInfo = nil;
-    finally;
+    finally
       AAddresses.EndUpdate;
     end;
   finally
     freeaddrinfo(LAddrList);
   end;
+
+  {$ENDIF}
 end;
 
 { TIdStackVersionWinsock }
@@ -873,40 +1508,25 @@ procedure TIdStackWindows.GetSocketName(ASocket: TIdStackSocketHandle;
   var VIP: string; var VPort: TIdPort; var VIPVersion: TIdIPVersion);
 var
   LSize: Integer;
-  LAddr: TSockAddrIn6;
-  PAddr: PSOCKADDR;
+  LAddr: SOCKADDR_STORAGE;
 begin
   LSize := SizeOf(LAddr);
-  PAddr := PSOCKADDR(@LAddr);
-  CheckForSocketError(getsockname(ASocket, PAddr, LSize));
-  case LAddr.sin6_family of
+  CheckForSocketError(getsockname(ASocket, IdWinsock2.PSOCKADDR(@LAddr), LSize));
+  case LAddr.ss_family of
     Id_PF_INET4: begin
-      VIP := TranslateTInAddrToString(PAddr^.sin_addr, Id_IPv4);
-      VPort := ntohs(PAddr^.sin_port);
+      VIP := TranslateTInAddrToString(PSockAddrIn(@LAddr)^.sin_addr, Id_IPv4);
+      VPort := ntohs(PSockAddrIn(@LAddr)^.sin_port);
       VIPVersion := Id_IPv4;
     end;
     Id_PF_INET6: begin
-      VIP := TranslateTInAddrToString(LAddr.sin6_addr, Id_IPv6);
-      VPort := Ntohs(LAddr.sin6_port);
+      VIP := TranslateTInAddrToString(PSockAddrIn6(@LAddr)^.sin6_addr, Id_IPv6);
+      VPort := Ntohs(PSockAddrIn6(@LAddr)^.sin6_port);
       VIPVersion := Id_IPv6;
     end;
     else begin
       IPVersionUnsupported;
     end;
   end;
-end;
-
-procedure TIdStackWindows.WSGetSockOpt(ASocket: TIdStackSocketHandle;
-  Alevel, AOptname: Integer; var AOptval; var AOptlen: Integer);
-begin
-  CheckForSocketError(
-    getsockopt(ASocket, ALevel, AOptname,
-    {$IFDEF DCC_NEXTGEN}
-    {PAnsiChar}@AOptval
-    {$ELSE}
-    PAnsiChar(@AOptval)
-    {$ENDIF},
-    AOptlen));
 end;
 
 { TIdSocketListWindows }
@@ -1037,7 +1657,7 @@ begin
   end;
   LResult := IdWinsock2.select(0, AReadSet, AWriteSet, AExceptSet, LTimePtr);
   //TODO: Remove this cast
-  Result := GBSDStack.CheckForSocketError(LResult) > 0;
+  Result := GStack.CheckForSocketError(LResult) > 0;
 end;
 
 function TIdSocketListWindows.SelectReadList(var VSocketList: TIdSocketList;
@@ -1148,11 +1768,15 @@ end;
 
 function TIdStackWindows.HostByName(const AHostName: string;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION): string;
+{$IFNDEF WINCE}
+type
+  TaPInAddr = array[0..250] of PInAddr;
+  PaPInAddr = ^TaPInAddr;
+{$ENDIF}
 var
-  LPa: PAnsiChar;
-  LSa: TInAddr;
   {$IFNDEF WINCE}
   LHost: PHostEnt;
+  PAdrPtr: PaPInAddr;
   {$ENDIF}
   {$IFDEF UNICODE}
   LAddrInfo: pAddrInfoW;
@@ -1177,24 +1801,22 @@ begin
       Id_IPv4:
         begin
           LHost := IdWinsock2.gethostbyname(
-            {$IFDEF STRING_IS_UNICODE}
-            PAnsiChar(AnsiString(AHostName)) // explicit convert to Ansi
-            {$ELSE}
-            PAnsiChar(AHostName)
-            {$ENDIF}
+            PAnsiChar(
+              {$IFDEF STRING_IS_UNICODE}
+              AnsiString(AHostName) // explicit convert to Ansi
+              {$ELSE}
+              AHostName
+              {$ENDIF}
+              )
             );
           if LHost = nil then begin
             RaiseLastSocketError;
           end;
           // TODO: gethostbyname() might return other things besides IPv4
-          // addresses, so we should be validating the address type before
-          // attempting the conversion...
-          LPa := LHost^.h_address_list^;
-          LSa.S_un_b.s_b1 := Ord(LPa[0]);
-          LSa.S_un_b.s_b2 := Ord(LPa[1]);
-          LSa.S_un_b.s_b3 := Ord(LPa[2]);
-          LSa.S_un_b.s_b4 := Ord(LPa[3]);
-          Result := TranslateTInAddrToString(LSa, Id_IPv4);
+          // addresses, so we should be validating the address type
+          // before attempting the conversion...
+          PAdrPtr := PAPInAddr(LHost^.h_address_list);
+          Result := TranslateTInAddrToString(PAdrPtr^[0]^, Id_IPv4);
         end;
       Id_IPv6: begin
         raise EIdIPv6Unavailable.Create(RSIPv6Unavailable);
@@ -1251,23 +1873,21 @@ procedure TIdStackWindows.Connect(const ASocket: TIdStackSocketHandle;
   const AIP: string; const APort: TIdPort;
   const AIPVersion: TIdIPVersion = ID_DEFAULT_IP_VERSION);
 var
-  LAddr: TSockAddrIn6;
+  LAddr: SOCKADDR_STORAGE;
   LSize: Integer;
-  PAddr: PSOCKADDR;
 begin
   FillChar(LAddr, SizeOf(LAddr), 0);
-  PAddr := PSOCKADDR(@LAddr);
   case AIPVersion of
     Id_IPv4: begin
-      PAddr^.sin_family := Id_PF_INET4;
-      TranslateStringToTInAddr(AIP, PAddr^.sin_addr, Id_IPv4);
-      PAddr^.sin_port := htons(APort);
+      PSockAddrIn(@LAddr)^.sin_family := Id_PF_INET4;
+      TranslateStringToTInAddr(AIP, PSockAddrIn(@LAddr)^.sin_addr, Id_IPv4);
+      PSockAddrIn(@LAddr)^.sin_port := htons(APort);
       LSize := SIZE_TSOCKADDRIN;
     end;
     Id_IPv6: begin
-      LAddr.sin6_family := Id_PF_INET6;
-      TranslateStringToTInAddr(AIP, LAddr.sin6_addr, Id_IPv6);
-      LAddr.sin6_port := htons(APort);
+      PSockAddrIn6(@LAddr)^.sin6_family := Id_PF_INET6;
+      TranslateStringToTInAddr(AIP, PSockAddrIn6(@LAddr)^.sin6_addr, Id_IPv6);
+      PSockAddrIn6(@LAddr)^.sin6_port := htons(APort);
       LSize := SIZE_TSOCKADDRIN6;
     end;
     else begin
@@ -1275,28 +1895,26 @@ begin
       IPVersionUnsupported;
     end;
   end;
-  CheckForSocketError(IdWinsock2.connect(ASocket, PAddr, LSize));
+  CheckForSocketError(IdWinsock2.connect(ASocket, IdWinsock2.PSOCKADDR(@LAddr), LSize));
 end;
 
 procedure TIdStackWindows.GetPeerName(ASocket: TIdStackSocketHandle;
   var VIP: string; var VPort: TIdPort; var VIPVersion: TIdIPVersion);
 var
   LSize: Integer;
-  LAddr: TSockAddrIn6;
-  PAddr: PSOCKADDR;
+  LAddr: SOCKADDR_STORAGE;
 begin
   LSize := SizeOf(LAddr);
-  PAddr := PSOCKADDR(@LAddr);
-  CheckForSocketError(IdWinsock2.getpeername(ASocket, PAddr, LSize));
-  case LAddr.sin6_family of
+  CheckForSocketError(IdWinsock2.getpeername(ASocket, IdWinsock2.PSOCKADDR(@LAddr), LSize));
+  case LAddr.ss_family of
     Id_PF_INET4: begin
-      VIP := TranslateTInAddrToString(PAddr^.sin_addr, Id_IPv4);
-      VPort := ntohs(PAddr^.sin_port);
+      VIP := TranslateTInAddrToString(PSockAddrIn(@LAddr)^.sin_addr, Id_IPv4);
+      VPort := ntohs(PSockAddrIn(@LAddr)^.sin_port);
       VIPVersion := Id_IPv4;
     end;
     Id_PF_INET6: begin
-      VIP := TranslateTInAddrToString(LAddr.sin6_addr, Id_IPv6);
-      VPort := ntohs(LAddr.sin6_port);
+      VIP := TranslateTInAddrToString(PSockAddrIn6(@LAddr)^.sin6_addr, Id_IPv6);
+      VPort := ntohs(PSockAddrIn6(@LAddr)^.sin6_port);
       VIPVersion := Id_IPv6;
     end;
     else begin
@@ -1313,29 +1931,38 @@ begin
   WSCloseSocket(ASocket);
 end;
 
+procedure TIdStackWindows.GetSocketOption(ASocket: TIdStackSocketHandle;
+  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption; var AOptVal;
+  var AOptLen: Integer);
+begin
+  CheckForSocketError(
+    getsockopt(ASocket, ALevel, AOptName,
+      {$IFNDEF HAS_PAnsiChar}
+      // TODO: use TPtrWrapper here?
+      {PAnsiChar}@AOptVal
+      {$ELSE}
+      PAnsiChar(@AOptVal)
+      {$ENDIF},
+      AOptLen
+    )
+  );
+end;
+
 procedure TIdStackWindows.SetSocketOption(ASocket: TIdStackSocketHandle;
-  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
-  const Aoptval; const Aoptlen: Integer);
+  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption; const AOptVal;
+  const AOptLen: Integer);
 begin
   CheckForSocketError(
     setsockopt(ASocket, ALevel, Aoptname,
-      {$IFDEF DCC_NEXTGEN}
-      {PAnsiChar}@Aoptval
+      {$IFNDEF HAS_PAnsiChar}
+      // TODO: use TPtrWrapper here?
+      {PAnsiChar}@AOptVal
       {$ELSE}
-      PAnsiChar(@Aoptval)
+      PAnsiChar(@AOptVal)
       {$ENDIF},
-      Aoptlen));
-end;
-
-procedure TIdStackWindows.GetSocketOption(ASocket: TIdStackSocketHandle;
-  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption; out AOptVal: Integer);
-var
-  LLen : Integer;
-  LBuf : Integer;
-begin
-  LLen := SIZE_INTEGER;
-  WSGetSockOpt(ASocket, ALevel, AOptName, LBuf, LLen);
-  AOptVal := LBuf;
+      AOptLen
+    )
+  );
 end;
 
 {
@@ -1385,7 +2012,7 @@ end;
 procedure TIdStackWindows.WSQuerryIPv6Route(ASocket: TIdStackSocketHandle;
   const AIP: String; const APort: TIdPort; var VSource; var VDest);
 var
-  Llocalif : SOCKADDR_STORAGE;
+  Llocalif : TSockAddrIn6;
   LAddr : TSockAddrIn6;
   Bytes : LongWord;
 begin
@@ -1403,7 +2030,7 @@ begin
   // Find out which local interface for the destination
   CheckForSocketError(WSAIoctl(ASocket, SIO_ROUTING_INTERFACE_QUERY,
     @LAddr, SizeOf(LAddr), @Llocalif, SizeOf(Llocalif), @Bytes, nil, nil));
-  Move(PSOCKADDR_IN6(@Llocalif)^.sin6_addr, VSource, SizeOf(in6_addr));
+  Move(Llocalif.sin6_addr, VSource, SizeOf(in6_addr));
 end;
 
 procedure TIdStackWindows.WriteChecksum(s: TIdStackSocketHandle;
@@ -1462,7 +2089,7 @@ begin
   Inc(LIdx, SIZE_TSOCKADDRIN6);
   //use a word so you don't wind up using the wrong network byte order function
   LC := LongWord(Length(VBuffer));
-  CopyTIdLongWord(GStack.HostToNetwork(LC), LTmp, LIdx);
+  CopyTIdLongWord(HostToNetwork(LC), LTmp, LIdx);
   Inc(LIdx, 4);
   //36
   //zero the next three bytes
@@ -1489,8 +2116,7 @@ var
   {$IFNDEF WINCE}
   LSize: PtrUInt;
   LAddr: TIdBytes;
-  PAddr: PSockAddrIn;
-  PAddr6: PSockAddrIn6;
+  PAddr: PSOCKADDR_STORAGE;
   LMsg : TWSAMSG;
   LMsgBuf : TWSABUF;
   LControl : TIdBytes;
@@ -1525,24 +2151,24 @@ begin
     // WSARecvMsg() does not like the SOCKADDR variable being allocated on the
     // stack, at least on my tests with Windows 7.  So we will allocate it on
     // the heap instead to keep WinSock happy...
-    SetLength(LAddr, SizeOf(TSockAddrIn6));
-    PAddr := PSockAddrIn(@LAddr[0]);
-    PAddr6 := PSockAddrIn6(@LAddr[0]);
-    LMsg.name := PSOCKADDR(PAddr);
+    SetLength(LAddr, SizeOf(SOCKADDR_STORAGE));
+    PAddr := PSOCKADDR_STORAGE(@LAddr[0]);
+
+    LMsg.name := IdWinsock2.PSOCKADDR(PAddr);
     LMsg.namelen := Length(LAddr);
 
     CheckForSocketError(WSARecvMsg(ASocket, @LMsg, Result, nil, nil));
     APkt.Reset;
 
-    case PAddr6^.sin6_family of
+    case PAddr^.ss_family of
       Id_PF_INET4: begin
-        APkt.SourceIP := TranslateTInAddrToString(PAddr^.sin_addr, Id_IPv4);
-        APkt.SourcePort := ntohs(PAddr^.sin_port);
+        APkt.SourceIP := TranslateTInAddrToString(PSockAddrIn(PAddr)^.sin_addr, Id_IPv4);
+        APkt.SourcePort := ntohs(PSockAddrIn(PAddr)^.sin_port);
         APkt.SourceIPVersion := Id_IPv4;
       end;
       Id_PF_INET6: begin
-        APkt.SourceIP := TranslateTInAddrToString(PAddr6^.sin6_addr, Id_IPv6);
-        APkt.SourcePort := ntohs(PAddr6^.sin6_port);
+        APkt.SourceIP := TranslateTInAddrToString(PSockAddrIn6(PAddr)^.sin6_addr, Id_IPv6);
+        APkt.SourcePort := ntohs(PSockAddrIn6(PAddr)^.sin6_port);
         APkt.SourceIPVersion := Id_IPv6;
       end;
       else begin
@@ -1560,7 +2186,7 @@ begin
       case LCurCmsg^.cmsg_type of
         IP_PKTINFO :     //done this way because IPV6_PKTINF and  IP_PKTINFO are both 19
         begin
-          case PAddr6^.sin6_family of
+          case PAddr^.ss_family of
             Id_PF_INET4: begin
               PPktInfo := PInPktInfo(WSA_CMSG_DATA(LCurCmsg));
               APkt.DestIP := TranslateTInAddrToString(PPktInfo^.ipi_addr, Id_IPv4);
@@ -1684,11 +2310,15 @@ initialization
     GServeFileProc := ServeFile;
   end;
   {$ENDIF}
+  {$IFDEF USE_IPHLPAPI}
+  InitializeIPHelperStubs;
+  {$ENDIF}
 finalization
-  if GStarted then begin
-    IdWship6.CloseLibrary;
-    UninitializeWinSock;
-    GStarted := False;
-  end;
+  IdWship6.CloseLibrary;
+  UninitializeWinSock;
+  {$IFDEF USE_IPHLPAPI}
+  UninitializeIPHelperAPI;
+  {$ENDIF}
+  GStarted := False;
 
 end.

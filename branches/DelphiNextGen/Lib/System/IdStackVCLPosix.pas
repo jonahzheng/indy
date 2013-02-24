@@ -86,11 +86,6 @@ type
     procedure WSSetLastError(const AErr : Integer); override;
     function WSGetServByName(const AServiceName: string): TIdPort; override;
     procedure AddServByPortToList(const APortNumber: TIdPort; AAddresses: TStrings); override;
-    procedure WSGetSockOpt(ASocket: TIdStackSocketHandle; Alevel, AOptname: Integer;
-      var AOptval; var AOptlen: Integer); override;
-    procedure GetSocketOption(ASocket: TIdStackSocketHandle;
-      ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
-      out AOptVal: Integer); override;
     procedure GetPeerName(ASocket: TIdStackSocketHandle; var VIP: string;
      var VPort: TIdPort; var VIPVersion: TIdIPVersion); override;
     procedure GetSocketName(ASocket: TIdStackSocketHandle; var VIP: string;
@@ -113,8 +108,10 @@ type
     function WSSocket(AFamily : Integer; AStruct : TIdSocketType; AProtocol: Integer;
       const AOverlapped: Boolean = False): TIdStackSocketHandle; override;
     procedure Disconnect(ASocket: TIdStackSocketHandle); override;
+    procedure GetSocketOption(ASocket: TIdStackSocketHandle; ALevel: TIdSocketOptionLevel;
+      AOptName: TIdSocketOption; var AOptVal; var AOptLen: Integer); override;
     procedure SetSocketOption(ASocket: TIdStackSocketHandle; ALevel: TIdSocketOptionLevel;
-      AOptName: TIdSocketOption; const Aoptval; const Aoptlen: Integer); override;
+      AOptName: TIdSocketOption; const AOptVal; const AOptLen: Integer); override;
     function SupportsIPv6: Boolean; overload; override;
     function CheckIPVersionSupport(const AIPVersion: TIdIPVersion): boolean; override;
     //In Windows, this writes a checksum into a buffer.  In Linux, it would probably
@@ -477,10 +474,17 @@ end;
 
 procedure TIdStackVCLPosix.AddLocalAddressesToList(AAddresses: TStrings);
 var
+  {$IFDEF HAS_getifaddrs}
+  LAddrList, LAddrInfo: pifaddrs;
+  {$ELSE}
   LRetVal: Integer;
   LHostName: string;
   Hints: AddrInfo;
   LAddrList, LAddrInfo: pAddrInfo;
+    {$IFDEF USE_MARSHALLED_PTRS}
+  M: TMarshaller;
+    {$ENDIF}
+  {$ENDIF}
 begin
   // TODO: Using gethostname() and getaddrinfo() like this may not always return just
   // the machine's IP addresses. Technically speaking, they will return the local
@@ -489,6 +493,36 @@ begin
   // not resolve to an IP, or (b) be configured such that its name resolves to
   // multiple IPs, only one of which belongs to the local machine. For better
   // results, we should use getifaddrs() on platforms that support it...
+
+  {$IFDEF HAS_getifaddrs}
+
+  if getifaddrs(@LAddrList) = 0 then // TODO: raise an exception if it fails
+  try
+    AAddresses.BeginUpdate;
+    try
+      LAddrInfo := LAddrList;
+      repeat
+        if (LAddrInfo^.ifa_addr <> nil) and ((LAddrInfo^.ifa_flags and IFF_LOOPBACK) = 0) then
+        begin
+          case LAddrInfo^.ifa_addr^.sa_family of
+            Id_PF_INET4: begin
+              AAddresses.Add(TranslateTInAddrToString( PSockAddr_In(LAddrInfo^.ifa_addr)^.sin_addr, Id_IPv4));
+            end;
+            Id_PF_INET6: begin
+              AAddresses.Add(TranslateTInAddrToString( PSockAddr_In6(LAddrInfo^.ifa_addr)^.sin6_addr, Id_IPv6));
+            end;
+          end;
+        end;
+        LAddrInfo := LAddrInfo^.ifa_next;
+      until LAddrInfo = nil;
+    finally
+      Addresses.EndUpdate;
+    end;
+  finally
+    freeifaddrs(LAddrList);
+  end;
+
+  {$ELSE}
 
   //IMPORTANT!!!
   //
@@ -501,8 +535,8 @@ begin
   LHostName := HostName;
 
   LRetVal := getaddrinfo(
-    {$IFDEF DCC_NEXTGEN}
-    MarshaledAString(TMarshal.AsAnsi(LHostName))
+    {$IFDEF USE_MARSHALLED_PTRS}
+    M.AsAnsi(LHostName).ToPointer
     {$ELSE}
     PAnsiChar(
       {$IFDEF STRING_IS_ANSI}
@@ -521,7 +555,7 @@ begin
     try
       LAddrInfo := LAddrList;
       repeat
-        case LAddrInfo^.ai_addr^.sa_family  of
+        case LAddrInfo^.ai_addr^.sa_family of
         Id_PF_INET4 :
           begin
             AAddresses.Add(TranslateTInAddrToString( PSockAddr_In(LAddrInfo^.ai_addr)^.sin_addr, Id_IPv4));
@@ -533,12 +567,14 @@ begin
         end;
         LAddrInfo := LAddrInfo^.ai_next;
       until LAddrInfo = nil;
-    finally;
+    finally
       AAddresses.EndUpdate;
     end;
   finally
     freeaddrinfo(LAddrList^);
   end;
+
+  {$ENDIF}
 end;
 
 procedure TIdStackVCLPosix.Bind(ASocket: TIdStackSocketHandle;
@@ -695,18 +731,6 @@ begin
   end;
 end;
 
-procedure TIdStackVCLPosix.GetSocketOption(ASocket: TIdStackSocketHandle;
-  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
-  out AOptVal: Integer);
-var
-  LLen : Integer;
-  LBuf : Integer;
-begin
-  LLen := SizeOf(Integer);
-  WSGetSockOpt(ASocket, ALevel, AOptName, LBuf, LLen);
-  AOptVal := LBuf;
-end;
-
 function TIdStackVCLPosix.HostByAddress(const AAddress: string;
   const AIPVersion: TIdIPVersion): string;
 var
@@ -716,7 +740,7 @@ var
   LAddrIPv6 : sockaddr_in6 absolute LAddrStore;
   LAddr : sockaddr absolute LAddrStore;
   LHostName : array[0..NI_MAXHOST] of TIdAnsiChar;
-  {$IFDEF DCC_NEXTGEN}
+  {$IFDEF USE_MARSHALLED_PTRS}
   LWrapper: TPtrWrapper;
   {$ENDIF}
   LRet : Integer;
@@ -741,11 +765,11 @@ begin
     IPVersionUnsupported;
   end;
   FillChar(LHostName[0],Length(LHostName),0);
-  {$IFDEF DCC_NEXTGEN}
+  {$IFDEF USE_MARSHALLED_PTRS}
   LWrapper := TPtrWrapper.Create(@LHostName[0]);
   {$ENDIF}
   LRet := getnameinfo(LAddr,LiSize,
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
     LWrapper.ToPointer
     {$ELSE}
     LHostName
@@ -775,7 +799,7 @@ we disregard the result and raise an exception.
   LHints.ai_socktype := SOCK_DGRAM; //*dummy*/
   LHints.ai_flags := AI_NUMERICHOST;
   if getaddrinfo(
-    {$IFDEF DCC_NEXTGEN}
+    {$IFDEF USE_MARSHALLED_PTRS}
     LWrapper.ToPointer
     {$ELSE}
     LHostName
@@ -787,7 +811,7 @@ we disregard the result and raise an exception.
     raise EIdMaliciousPtrRecord.Create(RSMaliciousPtrRecord);
   end;
 
-  {$IFDEF DCC_NEXTGEN}
+  {$IFDEF USE_MARSHALLED_PTRS}
   Result := TMarshal.ReadStringAsAnsi(LWrapper, NI_MAXHOST);
   {$ELSE}
   Result := String(LHostName);
@@ -800,6 +824,9 @@ var
   LAddrInfo: pAddrInfo;
   LHints: AddrInfo;
   LRetVal: Integer;
+  {$IFDEF USE_MARSHALLED_PTRS}
+  M: TMarshaller;
+  {$ENDIF}
 begin
   if not (AIPVersion in [Id_IPv4, Id_IPv6]) then begin
     IPVersionUnsupported;
@@ -814,8 +841,8 @@ begin
   LAddrInfo := nil;
 
   LRetVal := getaddrinfo(
-    {$IFDEF DCC_NEXTGEN}
-    MarshaledAString(TMarshal.AsAnsi(AHostName))
+    {$IFDEF USE_MARSHALLED_PTRS}
+    M.AsAnsi(AHostName).ToPointer
     {$ELSE}
     PAnsiChar(
       {$IFDEF STRING_IS_ANSI}
@@ -910,11 +937,11 @@ const
   sMaxHostSize = 250;
 var
   LStr: array[0..sMaxHostSize] of TIdAnsiChar;
-  {$IFDEF DCC_NEXTGEN}
+  {$IFDEF USE_MARSHALLED_PTRS}
   LWrapper: TPtrWrapper;
   {$ENDIF}
 begin
-  {$IFDEF DCC_NEXTGEN}
+  {$IFDEF USE_MARSHALLED_PTRS}
   LWrapper := TPtrWrapper.Create(@LStr[0]);
   gethostname(LWrapper.ToPointer, sMaxHostSize);
   Result := TMarshal.ReadStringAsAnsi(LWrapper, sMaxHostSize);
@@ -1068,11 +1095,22 @@ begin
   __error^ := AError;
 end;
 
-procedure TIdStackVCLPosix.SetSocketOption(ASocket: TIdStackSocketHandle;
-  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption;
-  const Aoptval; const Aoptlen: Integer);
+procedure TIdStackVCLPosix.GetSocketOption(ASocket: TIdStackSocketHandle;
+  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption; var AOptVal;
+  var AOptLen: Integer);
+var
+  LLen : socklen_t;
 begin
-  CheckForSocketError(Posix.SysSocket.setsockopt(ASocket, ALevel, Aoptname, Aoptval, Aoptlen));
+  LLen := AOptLen;
+  CheckForSocketError(Posix.SysSocket.getsockopt(ASocket, ALevel, AOptName, AOptVal, LLen));
+  AOptLen := LLen;
+end;
+
+procedure TIdStackVCLPosix.SetSocketOption(ASocket: TIdStackSocketHandle;
+  ALevel: TIdSocketOptionLevel; AOptName: TIdSocketOption; const AOptVal;
+  const AOptLen: Integer);
+begin
+  CheckForSocketError(Posix.SysSocket.setsockopt(ASocket, ALevel, AOptName, AOptVal, AOptLen));
 end;
 
 function TIdStackVCLPosix.SupportsIPv6: Boolean;
@@ -1127,10 +1165,13 @@ end;
 function TIdStackVCLPosix.WSGetServByName(const AServiceName: string): TIdPort;
 var
   Lps: PServEnt;
+  {$IFDEF USE_MARSHALLED_PTRS}
+  M: TMarshaller;
+  {$ENDIF}
 begin
   Lps := Posix.NetDB.getservbyname(
-    {$IFDEF DCC_NEXTGEN}
-    MarshaledAString(TMarshal.AsAnsi(AServiceName))
+    {$IFDEF USE_MARSHALLED_PTRS}
+    M.AsAnsi(AServiceName).ToPointer
     {$ELSE}
     PAnsiChar(
       {$IFDEF STRING_IS_ANSI}
@@ -1179,15 +1220,6 @@ begin
       AAddresses.EndUpdate;
     end;
   end;
-end;
-
-procedure TIdStackVCLPosix.WSGetSockOpt(ASocket: TIdStackSocketHandle; Alevel,
-  AOptname: Integer; var AOptval; var AOptlen: Integer);
-var
-  s : socklen_t;
-begin
-  CheckForSocketError(Posix.SysSocket.getsockopt(ASocket, ALevel, AOptname, AOptval, s));
-  AOptlen := s;
 end;
 
 function TIdStackVCLPosix.WSRecv(ASocket: TIdStackSocketHandle; var ABuffer;
@@ -1266,7 +1298,7 @@ function TIdStackVCLPosix.WSSocket(AFamily : Integer; AStruct : TIdSocketType; A
 begin
   Result := Posix.SysSocket.socket(AFamily, AStruct, AProtocol);
   if Result <> INVALID_SOCKET then begin
-    Self.SetSocketOption(Result,SOL_SOCKET,SO_NOSIGPIPE,1);
+    SetSocketOption(Result, SOL_SOCKET, SO_NOSIGPIPE, 1);
   end;
 end;
 
