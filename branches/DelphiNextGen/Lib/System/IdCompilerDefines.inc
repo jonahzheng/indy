@@ -638,8 +638,8 @@
     {$IFNDEF KYLIX}
       {$DEFINE HAS_RemoveFreeNotification}
     {$ENDIF}
-    {$DEFINE HAS_GetObjectProp}
   {$ENDIF}
+  {$DEFINE HAS_GetObjectProp}
   {$DEFINE HAS_TObjectList}
 {$ENDIF}
 
