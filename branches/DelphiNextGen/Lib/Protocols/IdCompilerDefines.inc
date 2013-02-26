@@ -26,6 +26,8 @@
 {$ENDIF}
 
 {$UNDEF USE_OPENSSL}
+{$UNDEF STATICLOAD_OPENSSL}
+
 {$UNDEF USE_ZLIB_UNIT}
 {$UNDEF USE_SSPI}
 
@@ -958,6 +960,12 @@
 {$IFDEF CPUARM}
   {$IFDEF IOS}
     {$DEFINE USE_OPENSSL}
+    // RLebeau: For iOS, OpenSSL cannot be used as an external library, it must
+    // be statically linked into the app.  Users who want to use OpenSSL in iOS
+    // apps will need to include the IdSSLOpenSSLHeaders_static unit in their
+    // uses clause. It hooks up the statically linked functions for the
+    // IdSSLOpenSSLHeaders unit to use...
+    {$DEFINE STATICLOAD_OPENSSL}
   {$ENDIF}
 {$ENDIF}
 
