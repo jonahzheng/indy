@@ -767,12 +767,15 @@
   // Native(U)Int are finally ok to use now
   {$DEFINE HAS_NativeInt}
   {$DEFINE HAS_NativeUInt}
+  {$DEFINE HAS_USHORT}
 {$ENDIF}
 
 {$IFDEF VCL_XE_OR_ABOVE}
   {$DEFINE HAS_TFormatSettings_Object}
   {$DEFINE HAS_LocaleCharsFromUnicode}
   {$DEFINE HAS_UnicodeFromLocaleChars}
+  {$DEFINE HAS_PVOID}
+  {$DEFINE HAS_ULONG64}
   {$IFNDEF DOTNET}
     {$DEFINE HAS_TInterlocked}
   {$ENDIF}
@@ -780,6 +783,7 @@
 
 {$IFDEF VCL_XE2_OR_ABOVE}
   {$DEFINE HAS_SIZE_T}
+  {$DEFINE HAS_LONG}
   {$DEFINE HAS_ComponentPlatformsAttribute}
 {$ENDIF}
 

@@ -230,6 +230,8 @@ type
   {$EXTERNALSYM LPWSAEVENT}
   LPWSAEVENT = PWSAEVENT;
 
+  // Must define the following types because the older versions of Delphi do not support them
+
   {$IFNDEF HAS_ULONG_PTR}
   {$EXTERNALSYM ULONG_PTR}
   ULONG_PTR = PtrUInt;
@@ -238,6 +240,26 @@ type
   {$IFNDEF HAS_DWORD_PTR}
   {$EXTERNALSYM DWORD_PTR}
   DWORD_PTR = PtrUInt;
+  {$ENDIF}
+
+  {$IFNDEF HAS_USHORT}
+  {$EXTERNALSYM USHORT}
+  USHORT = Word;
+  {$ENDIF}
+
+  {$IFNDEF HAS_PVOID}
+  {$EXTERNALSYM PVOID}
+  PVOID = Pointer;
+  {$ENDIF}
+
+  {$IFNDEF HAS_ULONG64}
+  {$EXTERNALSYM ULONG64}
+  ULONG64 = UInt64;
+  {$ENDIF}
+
+  {$IFNDEF HAS_LONG}
+  {$EXTERNALSYM LONG}
+  LONG = Longint;
   {$ENDIF}
 
 const
