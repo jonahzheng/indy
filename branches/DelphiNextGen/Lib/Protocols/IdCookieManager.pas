@@ -181,7 +181,7 @@ begin
               {$IFDEF HAS_GENERICS_TList}
               TComparer<TIdCookie>.Construct(SortCookiesFunc)
               {$ELSE}
-              @SortCookiesFunc
+              TListSortCompare(@SortCookiesFunc)
               {$ENDIF}
             );
           end;
