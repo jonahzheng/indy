@@ -1366,7 +1366,7 @@ begin
     Exit;
   end;
   while PosInStrArray(AClient.LastCmdResult.Code, AContinueReplies) > -1 do begin
-    S := ADecoder.DecodeString(TrimRight((TIdReplyIMAP4(AClient.LastCmdResult).Extra.Text));
+    S := ADecoder.DecodeString(TrimRight(TIdReplyIMAP4(AClient.LastCmdResult).Extra.Text));
     S := ASASL.ContinueAuthenticate(S, AClient.Host, IdGSKSSN_imap);
     AClient.IOHandler.WriteLn(AEncoder.Encode(S));
     AClient.GetInternalResponse('', [], True);
