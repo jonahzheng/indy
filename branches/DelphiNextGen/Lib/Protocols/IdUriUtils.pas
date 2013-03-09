@@ -4,15 +4,6 @@ interface
 
 {$i IdCompilerDefines.inc}
 
-uses
-  IdGlobal
-  {$IFNDEF DOTNET}
-    {$IFNDEF HAS_TCharacter}
-  , IdException
-    {$ENDIF}
-  {$ENDIF}
-  ;
-
 {$IFDEF DOTNET}
   {$DEFINE HAS_ConvertToUtf32}
 {$ENDIF}
@@ -22,6 +13,27 @@ uses
 {$IFDEF HAS_Character_TCharHelper}
   {$DEFINE HAS_ConvertToUtf32}
 {$ENDIF}
+
+{$IFDEF DOTNET}
+  {$DEFINE HAS_String_IndexOf}
+{$ENDIF}
+{$IFDEF HAS_SysUtils_TStringHelper}
+  {$DEFINE HAS_String_IndexOf}
+{$ENDIF}
+
+uses
+  IdGlobal
+  {$IFNDEF DOTNET}
+    {$IFDEF HAS_ConvertToUtf32}
+  , Character
+    {$ELSE}
+  , IdException
+    {$ENDIF}
+    {$IFDEF HAS_String_IndexOf}
+  , SysUtils
+    {$ENDIF}
+  {$ENDIF}
+  ;
 
 {$IFNDEF HAS_ConvertToUtf32}
 type
@@ -42,18 +54,10 @@ function GetUTF16Codepoint(const AStr: {$IFDEF STRING_IS_UNICODE}string{$ELSE}TI
 
 implementation
 
-{$IFNDEF DOTNET}
+{$IFNDEF HAS_ConvertToUtf32}
 uses
-  {$IFDEF HAS_ConvertToUtf32}
-  Character
-  {$ELSE}
   IdResourceStringsProtocols,
-  IdResourceStringsUriUtils
-  {$ENDIF}
-  {$IFDEF HAS_SysUtils_TStringHelper}
-  , SysUtils
-  {$ENDIF}
-  ;
+  IdResourceStringsUriUtils;
 {$ENDIF}
 
 // RLebeau 10/31/2012: it would take a lot of work to re-write Indy to support
@@ -117,13 +121,6 @@ begin
     {$ENDIF}
   {$ENDIF}
 end;
-
-{$IFDEF DOTNET}
-  {$DEFINE HAS_String_IndexOf}
-{$ENDIF}
-{$IFDEF HAS_SysUtils_TStringHelper}
-  {$DEFINE HAS_String_IndexOf}
-{$ENDIF}
 
 function WideCharIsInSet(const ASet: TIdUnicodeString; const AChar: WideChar): Boolean;
 {$IFDEF HAS_String_IndexOf}
