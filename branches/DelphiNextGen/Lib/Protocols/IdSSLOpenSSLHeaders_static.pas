@@ -10,9 +10,13 @@ interface
 
 implementation
 
-{$IF STATICLOAD_OPENSSL}
+{$IFDEF STATICLOAD_OPENSSL}
 uses
   IdGlobal, Posix.SysTypes, IdCTypes, IdSSLOpenSSLHeaders;
+
+const
+  SSL_LIB_name         = 'libssl.a'; {Do not Localize}
+  SSLCLIB_LIB_name     = 'libcrypto.a'; {Do not Localize}
 
 function SSL_CTX_set_cipher_list_func(_para1: PSSL_CTX; const str: PIdAnsiChar): TIdC_INT cdecl; external SSL_LIB_NAME name 'SSL_CTX_set_cipher_list';
 
