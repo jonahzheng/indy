@@ -136,7 +136,7 @@ function SSL_CTX_load_verify_locations_func(ctx: PSSL_CTX; const CAfile: PIdAnsi
 
 function SSL_get_session_func(const ssl: PSSL): PSSL_SESSION cdecl; external SSL_LIB_NAME name 'SSL_get_session';
 
-//function SSLeay_add_ssl_algorithms_func: TIdC_INT cdecl; external SSL_LIB_NAME name 'SSLeay_add_ssl_algorithms';
+function SSLeay_add_ssl_algorithms_func: TIdC_INT cdecl; external SSL_LIB_NAME name 'SSL_library_init';
 
 function SSL_SESSION_get_id_func(const s: PSSL_SESSION; length: PIdC_UINT): PIdAnsiChar cdecl; external SSL_LIB_NAME name 'SSL_SESSION_get_id';
 
@@ -709,7 +709,7 @@ begin
   SSL_set_shutdown := SSL_set_shutdown_proc;
   SSL_CTX_load_verify_locations := SSL_CTX_load_verify_locations_func;
   SSL_get_session := SSL_get_session_func;
-//  SSLeay_add_ssl_algorithms := SSLeay_add_ssl_algorithms_func;
+  SSLeay_add_ssl_algorithms := SSLeay_add_ssl_algorithms_func;
   SSL_SESSION_get_id := SSL_SESSION_get_id_func;
   SSL_copy_session_id := SSL_copy_session_id_proc;
    // CRYPTO LIB
