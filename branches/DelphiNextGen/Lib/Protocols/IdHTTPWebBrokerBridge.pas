@@ -586,6 +586,7 @@ begin
         Result := FContentType;
       end else begin
         Result := AnsiString(FResponseInfo.ContentType);
+      end;
     end;
     INDEX_RESP_ContentVersion    :Result := AnsiString(FResponseInfo.ContentVersion);
     INDEX_RESP_DerivedFrom       :Result := AnsiString(FResponseInfo.CustomHeaders.Values['Derived-From']); {do not localize}
@@ -649,16 +650,14 @@ end;
 procedure TIdHTTPAppResponse.SetContent(const AValue: AnsiString);
 var
   LValue : string;
-  {$IFDEF STRING_IS_UNICODE}
-  LEncoding: IIdTextEncoding;
-  {$ENDIF}
 begin
   {$IFDEF STRING_IS_UNICODE}
   // RLebeau 3/28/2013: decode the content using the specified charset.
   if FResponseInfo.CharSet <> '' then begin
-    LEncoding := CharsetToEncoding(FResponseInfo.CharSet);
     // AValue contains Encoded bytes
-    LValue := LEncoding.GetString(BytesOf(AValue));
+    if AValue <> '' then begin
+      LValue := CharsetToEncoding(FResponseInfo.CharSet).GetString(RawToBytes(PAnsiChar(AValue)^, Length(AValue)));
+    end;
   end else begin
     LValue := string(AValue);
   end;
