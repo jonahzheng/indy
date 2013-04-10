@@ -18323,7 +18323,7 @@ var
   {$ELSE}
   hIdSSL    : HMODULE = 0;
   hIdCrypto : HMODULE = 0;
-  FFailedFunctionLoadList : TStringList;
+  FFailedLoadList : TStringList;
   {$ENDIF}
 
   _RAND_bytes : TRAND_bytes = nil;
@@ -21171,7 +21171,7 @@ function LoadFunction(const FceName: {$IFDEF WINCE}TIdUnicodeString{$ELSE}string
 begin
   Result := {$IFDEF WINDOWS}Windows.{$ENDIF}GetProcAddress(hIdSSL, {$IFDEF WINCE}PWideChar{$ELSE}PChar{$ENDIF}(FceName));
   if (Result = nil) and ACritical then begin
-    FFailedFunctionLoadList.Add(FceName); {do not localize}
+    FFailedLoadList.Add(FceName); {do not localize}
   end;
 end;
 
@@ -21179,7 +21179,7 @@ function LoadFunctionCLib(const FceName: {$IFDEF WINCE}TIdUnicodeString{$ELSE}st
 begin
   Result := {$IFDEF WINDOWS}Windows.{$ENDIF}GetProcAddress(hIdCrypto, {$IFDEF WINCE}PWideChar{$ELSE}PChar{$ENDIF}(FceName));
   if (Result = nil) and ACritical then begin
-    FFailedFunctionLoadList.Add(FceName); {do not localize}
+    FFailedLoadList.Add(FceName); {do not localize}
   end;
 end;
 
@@ -21198,7 +21198,7 @@ begin
   if Result = nil then begin
     Result := {$IFDEF WINDOWS}Windows.{$ENDIF}GetProcAddress(hIdCrypto, {$IFDEF WINCE}PWideChar{$ELSE}PChar{$ENDIF}(ANewName));
     if (Result = nil) and ACritical then begin
-      FFailedFunctionLoadList.Add(AOldName);
+      FFailedLoadList.Add(AOldName);
     end;
   end;
 end;
@@ -21307,18 +21307,19 @@ begin
 {$ELSE}
 
   Result := False;
-  Assert(FFailedFunctionLoadList<>nil);
+  Assert(FFailedLoadList<>nil);
 
-  if (hIdCrypto <> 0) and (hIdSSL <> 0) and (FFailedFunctionLoadList.Count = 0) then begin
+  if (hIdCrypto <> 0) and (hIdSSL <> 0) and (FFailedLoadList.Count = 0) then begin
     Result := True;
     Exit;
   end;
 
-  FFailedFunctionLoadList.Clear;
+  FFailedLoadList.Clear;
 
   if hIdCrypto = 0 then begin
     hIdCrypto := LoadSSLCryptoLibrary;
     if hIdCrypto = 0 then begin
+      FFailedLoadList.Add(IndyFormat(RSOSSFailedToLoad, [GIdOpenSSLPath + SSLCLIB_DLL_name]));
       Exit;
     end;
   end;
@@ -21326,6 +21327,7 @@ begin
   if hIdSSL = 0 then begin
     hIdSSL := LoadSSLLibrary;
     if hIdSSL = 0 then begin
+      FFailedLoadList.Add(IndyFormat(RSOSSFailedToLoad, [GIdOpenSSLPath + SSL_DLL_name]));
       Exit;
     end;
   end;
@@ -21705,7 +21707,7 @@ we have to handle both cases.
   @_FIPS_mode := LoadFunctionCLib(fn_FIPS_mode,False);
   {$ENDIF}
 
-  Result := (FFailedFunctionLoadList.Count = 0);
+  Result := (FFailedLoadList.Count = 0);
 
 {$ENDIF}
 end;
@@ -22125,16 +22127,8 @@ end;
 {$IFNDEF STATICLOAD_OPENSSL}
 function WhichFailedToLoad: string;
 begin
-  Assert(FFailedFunctionLoadList<>nil);
-  if hIdSSL = 0 then begin
-    Result := IndyFormat(RSOSSFailedToLoad, [GIdOpenSSLPath + SSL_DLL_name]);
-  end
-  else if hIdCrypto = 0 then begin
-    Result := IndyFormat(RSOSSFailedToLoad, [GIdOpenSSLPath + SSLCLIB_DLL_name]);
-  end
-  else begin
-    Result := FFailedFunctionLoadList.CommaText;
- end;
+  Assert(FFailedLoadList<>nil);
+  Result := FFailedLoadList.CommaText;
 end;
 {$ENDIF}
 
@@ -24069,7 +24063,7 @@ initialization
   {$IFDEF STATICLOAD_OPENSSL}
   InitializeFuncPointers;
   {$ELSE}
-  FFailedFunctionLoadList := TStringList.Create;
+  FFailedLoadList := TStringList.Create;
   {$ENDIF}
   SetFIPSMode := OpenSSLSetFIPSMode;
   GetFIPSMode := OpenSSLGetFIPSMode;
@@ -24109,7 +24103,7 @@ initialization
   FinalHMACInst := OpenSSLFinalHMACInst;
 {$IFNDEF STATICLOAD_OPENSSL}
 finalization
-  FreeAndNil(FFailedFunctionLoadList);
+  FreeAndNil(FFailedLoadList);
 {$ENDIF}
 
 end.
