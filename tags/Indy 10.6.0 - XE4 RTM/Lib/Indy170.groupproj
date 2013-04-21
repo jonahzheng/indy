@@ -1,0 +1,60 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{3EFF6827-E659-44A6-A6D2-8C839C3BED60}</ProjectGuid>
+		</PropertyGroup>
+		<ItemGroup>
+			<Projects Include="System\IndySystem170.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="Core\IndyCore170.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="Protocols\IndyProtocols170.dproj">
+				<Dependencies/>
+			</Projects>
+		</ItemGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Default.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Default.Personality/>
+			</BorlandProject>
+		</ProjectExtensions>
+		<Target Name="IndySystem170">
+			<MSBuild Projects="System\IndySystem170.dproj"/>
+		</Target>
+		<Target Name="IndySystem170:Clean">
+			<MSBuild Projects="System\IndySystem170.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="IndySystem170:Make">
+			<MSBuild Projects="System\IndySystem170.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="IndyCore170">
+			<MSBuild Projects="Core\IndyCore170.dproj"/>
+		</Target>
+		<Target Name="IndyCore170:Clean">
+			<MSBuild Projects="Core\IndyCore170.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="IndyCore170:Make">
+			<MSBuild Projects="Core\IndyCore170.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="IndyProtocols170">
+			<MSBuild Projects="Protocols\IndyProtocols170.dproj"/>
+		</Target>
+		<Target Name="IndyProtocols170:Clean">
+			<MSBuild Projects="Protocols\IndyProtocols170.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="IndyProtocols170:Make">
+			<MSBuild Projects="Protocols\IndyProtocols170.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="Build">
+			<CallTarget Targets="IndySystem170;IndyCore170;IndyProtocols170"/>
+		</Target>
+		<Target Name="Clean">
+			<CallTarget Targets="IndySystem170:Clean;IndyCore170:Clean;IndyProtocols170:Clean"/>
+		</Target>
+		<Target Name="Make">
+			<CallTarget Targets="IndySystem170:Make;IndyCore170:Make;IndyProtocols170:Make"/>
+		</Target>
+		<Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+	</Project>
